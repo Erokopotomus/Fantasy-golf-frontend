@@ -1,0 +1,182 @@
+import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import Button from '../common/Button'
+
+const Navbar = () => {
+  const { user, logout } = useAuth()
+  const location = useLocation()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const isActive = (path) => location.pathname === path
+
+  const navLinkStyles = (path) => `
+    px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+    ${isActive(path)
+      ? 'bg-dark-tertiary text-white'
+      : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'
+    }
+  `
+
+  const mobileNavLinkStyles = (path) => `
+    block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300
+    ${isActive(path)
+      ? 'bg-dark-tertiary text-white'
+      : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'
+    }
+  `
+
+  return (
+    <nav className="bg-dark-secondary border-b border-dark-border sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center shadow-button">
+              <svg
+                className="w-5 h-5 text-white"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold text-white">Fantasy Golf</span>
+          </Link>
+
+          {/* Desktop Navigation Links */}
+          <div className="hidden md:flex items-center gap-1">
+            {user ? (
+              <>
+                <Link to="/dashboard" className={navLinkStyles('/dashboard')}>
+                  Dashboard
+                </Link>
+                <Link to="/leagues" className={navLinkStyles('/leagues')}>
+                  My Leagues
+                </Link>
+                <Link to="/draft" className={navLinkStyles('/draft')}>
+                  Draft
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/#features" className={navLinkStyles('/#features')}>
+                  Features
+                </Link>
+                <Link to="/#how-it-works" className={navLinkStyles('/#how-it-works')}>
+                  How It Works
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Right side - Auth buttons & Mobile menu toggle */}
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <div className="hidden sm:flex items-center gap-2 text-sm text-text-secondary">
+                  <div className="w-8 h-8 bg-accent-green rounded-full flex items-center justify-center text-white font-semibold shadow-button">
+                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <span className="hidden lg:block">{user.name || user.email}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={logout}>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="hidden sm:block">
+                  <Button variant="ghost" size="sm">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button variant="primary" size="sm">
+                    Sign Up Free
+                  </Button>
+                </Link>
+              </>
+            )}
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-dark-tertiary text-text-secondary hover:text-white transition-all duration-300"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-dark-secondary border-t border-dark-border animate-slide-down">
+          <div className="px-4 py-4 space-y-2">
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className={mobileNavLinkStyles('/dashboard')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/leagues"
+                  className={mobileNavLinkStyles('/leagues')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  My Leagues
+                </Link>
+                <Link
+                  to="/draft"
+                  className={mobileNavLinkStyles('/draft')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Draft
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/#features"
+                  className={mobileNavLinkStyles('/#features')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Features
+                </Link>
+                <Link
+                  to="/#how-it-works"
+                  className={mobileNavLinkStyles('/#how-it-works')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  How It Works
+                </Link>
+                <Link
+                  to="/login"
+                  className={mobileNavLinkStyles('/login')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Log In
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
+  )
+}
+
+export default Navbar

@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #1a1d26;
+  color: #ffffff;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1d26;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3d4354;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4d5364;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid #17b978;
+  outline-offset: 2px;
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-accent-green to-accent-blue bg-clip-text text-transparent;
+  }
+
+  .card {
+    @apply bg-dark-secondary rounded-xl border border-dark-border;
+  }
+
+  .card-hover {
+    @apply hover:bg-dark-tertiary hover:border-text-muted hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300;
+  }
+
+  .card-interactive {
+    @apply shadow-card hover:shadow-card-hover hover:scale-[1.02] hover:border-accent-green/50 transition-all duration-300 cursor-pointer;
+  }
+
+  .btn-press {
+    @apply active:scale-[0.98] transition-transform duration-150;
+  }
+}
+
+/* Component styles */
+@layer components {
+  .input-focus-glow {
+    @apply focus:shadow-glow-green;
+  }
+
+  .feature-card {
+    @apply bg-dark-primary p-6 rounded-xl border border-dark-border
+           hover:border-accent-green/50 hover:shadow-card-hover hover:scale-[1.02]
+           transition-all duration-300 cursor-pointer;
+  }
+
+  .quick-action-btn {
+    @apply w-full flex items-center gap-3 p-3 rounded-lg bg-dark-tertiary
+           hover:bg-dark-border hover:shadow-card transition-all duration-300
+           text-left active:scale-[0.98];
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin;
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    @apply bg-dark-tertiary animate-pulse rounded;
+  }
+
+  /* Thin scrollbar for activity feeds */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #3d4354 transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #3d4354;
+    border-radius: 2px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #4d5364;
+  }
+}
+
+/* Typography improvements */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply leading-tight;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+}
