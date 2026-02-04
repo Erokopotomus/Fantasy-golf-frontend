@@ -1,8 +1,11 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDraftContext } from '../context/DraftContext'
 import { mockApi } from '../services/mockApi'
 
 export const useDraft = (leagueId) => {
+  const [recentPick, setRecentPick] = useState(null)
+  const aiPickTimeoutRef = useRef(null)
+  const isAiPickingRef = useRef(false)
   const {
     draft,
     league,
@@ -51,6 +54,9 @@ export const useDraft = (leagueId) => {
       setLoading(true)
       const result = await mockApi.draft.makePick(draft?.id, playerId)
       dispatchPick(result)
+      setRecentPick(result)
+      // Clear recent pick after 3 seconds
+      setTimeout(() => setRecentPick(null), 3000)
       return result
     } catch (err) {
       setError(err.message)
@@ -130,6 +136,119 @@ export const useDraft = (leagueId) => {
       .filter(Boolean)
   }, [picks, players])
 
+  // Calculate next pick info based on snake draft order
+  const getNextPickInfo = useCallback((currentPicks, teams, rosterSize) => {
+    const totalTeams = teams.length
+    const pickNumber = currentPicks.length
+    const totalPicks = totalTeams * rosterSize
+
+    if (pickNumber >= totalPicks) {
+      return { complete: true }
+    }
+
+    const round = Math.floor(pickNumber / totalTeams) + 1
+    const pickInRound = pickNumber % totalTeams
+    const isReverseRound = round % 2 === 0
+    const orderIndex = isReverseRound ? totalTeams - 1 - pickInRound : pickInRound
+    const team = teams[orderIndex]
+
+    return {
+      round,
+      pick: pickNumber + 1,
+      teamId: team?.id,
+      teamName: team?.name,
+      isUserTurn: team?.id === 'team-1',
+      complete: false,
+    }
+  }, [])
+
+  // Simulate AI making a pick
+  const simulateAIPick = useCallback(async (currentPicks, currentPlayers, currentDraft, currentLeague) => {
+    if (!currentDraft || isAiPickingRef.current) return
+
+    isAiPickingRef.current = true
+
+    const available = currentPlayers.filter(p => !p.drafted)
+    if (available.length === 0) {
+      isAiPickingRef.current = false
+      return
+    }
+
+    const nextInfo = getNextPickInfo(currentPicks, currentDraft.teams, currentLeague?.settings?.rosterSize || 6)
+    if (nextInfo.complete || nextInfo.isUserTurn) {
+      isAiPickingRef.current = false
+      return
+    }
+
+    // AI picks the best available player (by rank) with some randomness
+    const topAvailable = available.slice(0, 5)
+    const randomIndex = Math.floor(Math.random() * Math.min(3, topAvailable.length))
+    const selectedPlayer = topAvailable[randomIndex]
+
+    // Simulate delay for AI "thinking"
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000))
+
+    const aiPick = {
+      id: `pick-${currentPicks.length + 1}`,
+      pickNumber: currentPicks.length + 1,
+      round: nextInfo.round,
+      roundPick: (currentPicks.length % currentDraft.teams.length) + 1,
+      teamId: nextInfo.teamId,
+      teamName: nextInfo.teamName,
+      playerId: selectedPlayer.id,
+      playerName: selectedPlayer.name,
+      playerFlag: selectedPlayer.countryFlag,
+      playerRank: selectedPlayer.rank,
+    }
+
+    dispatchPick(aiPick)
+    setRecentPick(aiPick)
+
+    // Clear recent pick after 3 seconds
+    setTimeout(() => setRecentPick(null), 3000)
+    isAiPickingRef.current = false
+  }, [getNextPickInfo, dispatchPick])
+
+  // Update current pick info whenever picks change
+  useEffect(() => {
+    if (!draft || !league) return
+
+    const nextInfo = getNextPickInfo(picks, draft.teams, league?.settings?.rosterSize || 6)
+
+    if (nextInfo.complete) {
+      setCurrentPick({ ...nextInfo })
+      return
+    }
+
+    setCurrentPick(nextInfo, nextInfo.isUserTurn, 90)
+
+    // If it's AI's turn, schedule their pick
+    if (!nextInfo.isUserTurn && !isPaused && !isAiPickingRef.current) {
+      if (aiPickTimeoutRef.current) {
+        clearTimeout(aiPickTimeoutRef.current)
+      }
+      aiPickTimeoutRef.current = setTimeout(() => {
+        simulateAIPick(picks, players, draft, league)
+      }, 2000)
+    }
+
+    return () => {
+      if (aiPickTimeoutRef.current) {
+        clearTimeout(aiPickTimeoutRef.current)
+      }
+    }
+  }, [picks.length, draft, league, players, isPaused, getNextPickInfo, setCurrentPick, simulateAIPick])
+
+  // Clear AI timeout when paused
+  useEffect(() => {
+    if (isPaused) {
+      if (aiPickTimeoutRef.current) {
+        clearTimeout(aiPickTimeoutRef.current)
+      }
+      isAiPickingRef.current = false
+    }
+  }, [isPaused])
+
   return {
     draft,
     league,
@@ -143,6 +262,7 @@ export const useDraft = (leagueId) => {
     isPaused,
     loading,
     error,
+    recentPick,
     makePick,
     nominatePlayer,
     placeBid,

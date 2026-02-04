@@ -9,7 +9,9 @@ import DraftQueue from '../components/draft/DraftQueue'
 import DraftBoard from '../components/draft/DraftBoard'
 import BidPanel from '../components/draft/BidPanel'
 import PickHistory from '../components/draft/PickHistory'
+import PickAnnouncement from '../components/draft/PickAnnouncement'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
+import ChatPanel from '../components/chat/ChatPanel'
 import Card from '../components/common/Card'
 
 const DraftRoomContent = () => {
@@ -27,6 +29,7 @@ const DraftRoomContent = () => {
     isPaused,
     loading,
     error,
+    recentPick,
     makePick,
     nominatePlayer,
     placeBid,
@@ -192,7 +195,7 @@ const DraftRoomContent = () => {
 
             {/* Right Column - Queue and History */}
             <div className="lg:col-span-3 space-y-4">
-              <div className="h-[300px]">
+              <div className="h-[250px]">
                 <DraftQueue
                   queue={queue}
                   onRemove={removeFromQueue}
@@ -201,7 +204,14 @@ const DraftRoomContent = () => {
                   isUserTurn={isUserTurn}
                 />
               </div>
-              <PickHistory picks={picks} limit={5} />
+              <PickHistory picks={picks} limit={4} />
+              <ChatPanel
+                leagueId={leagueId}
+                leagueName={league?.name}
+                memberCount={league?.memberCount}
+                collapsible
+                defaultCollapsed
+              />
             </div>
           </div>
 
@@ -224,6 +234,12 @@ const DraftRoomContent = () => {
         player={detailPlayer}
         isOpen={isModalOpen}
         onClose={closePlayerDetail}
+      />
+
+      {/* Pick Announcement */}
+      <PickAnnouncement
+        pick={recentPick}
+        isUserPick={recentPick?.teamId === 'team-1'}
       />
     </div>
   )
