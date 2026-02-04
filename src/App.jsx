@@ -6,6 +6,12 @@ import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
+import CreateLeague from './pages/CreateLeague'
+import JoinLeague from './pages/JoinLeague'
+import DraftRoom from './pages/DraftRoom'
+import TeamRoster from './pages/TeamRoster'
+import WaiverWire from './pages/WaiverWire'
+import Players from './pages/Players'
 
 function App() {
   return (
@@ -21,6 +27,54 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/create"
+            element={
+              <ProtectedRoute>
+                <CreateLeague />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/join"
+            element={
+              <ProtectedRoute>
+                <JoinLeague />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/draft"
+            element={
+              <ProtectedRoute>
+                <DraftRoom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/roster"
+            element={
+              <ProtectedRoute>
+                <TeamRoster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/waivers"
+            element={
+              <ProtectedRoute>
+                <WaiverWire />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/players"
+            element={
+              <ProtectedRoute>
+                <Players />
               </ProtectedRoute>
             }
           />

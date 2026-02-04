@@ -57,6 +57,9 @@ const Navbar = () => {
                 <Link to="/draft" className={navLinkStyles('/draft')}>
                   Draft
                 </Link>
+                <Link to="/players" className={navLinkStyles('/players')}>
+                  Players
+                </Link>
               </>
             ) : (
               <>
@@ -145,6 +148,13 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Draft
+                </Link>
+                <Link
+                  to="/players"
+                  className={mobileNavLinkStyles('/players')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Players
                 </Link>
               </>
             ) : (
