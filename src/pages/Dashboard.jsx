@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLeagues } from '../hooks/useLeagues'
 import { useTournaments } from '../hooks/useTournaments'
@@ -41,29 +41,32 @@ const LeagueCardSkeleton = () => (
 
 const Dashboard = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const { leagues, loading: leaguesLoading } = useLeagues()
   const { currentTournament, loading: tournamentsLoading } = useTournaments()
   const { activity, loading: activityLoading } = useActivity(8)
   const { stats, loading: statsLoading } = useStats()
 
   const handleViewLeague = (league) => {
-    console.log('View league:', league.id)
-    // TODO: Navigate to league page
+    navigate(`/leagues/${league.id}/roster`)
   }
 
   const handleManageLineup = (league) => {
-    console.log('Manage lineup for:', league.id)
-    // TODO: Navigate to lineup management
+    navigate(`/leagues/${league.id}/roster`)
   }
 
   const handleSetLineup = (tournament) => {
-    console.log('Set lineup for:', tournament.id)
-    // TODO: Navigate to lineup setting
+    // Navigate to roster page for the first league (to set lineup)
+    if (leagues && leagues.length > 0) {
+      navigate(`/leagues/${leagues[0].id}/roster`)
+    }
   }
 
   const handleViewTournament = (tournament) => {
-    console.log('View tournament:', tournament.id)
-    // TODO: Navigate to tournament page
+    // Navigate to draft page as tournament view
+    if (leagues && leagues.length > 0) {
+      navigate(`/leagues/${leagues[0].id}/draft`)
+    }
   }
 
   const hasLeagues = leagues && leagues.length > 0
