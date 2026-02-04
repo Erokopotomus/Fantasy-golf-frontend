@@ -12,6 +12,8 @@ import DraftRoom from './pages/DraftRoom'
 import TeamRoster from './pages/TeamRoster'
 import WaiverWire from './pages/WaiverWire'
 import Players from './pages/Players'
+import Leagues from './pages/Leagues'
+import Draft from './pages/Draft'
 
 function App() {
   return (
@@ -27,6 +29,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues"
+            element={
+              <ProtectedRoute>
+                <Leagues />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/draft"
+            element={
+              <ProtectedRoute>
+                <Draft />
               </ProtectedRoute>
             }
           />
