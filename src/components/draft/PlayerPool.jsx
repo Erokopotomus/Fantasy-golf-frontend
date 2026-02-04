@@ -10,6 +10,7 @@ const PlayerPool = ({
   isUserTurn,
   queue,
   draftType,
+  onViewPlayer,
 }) => {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('rank')
@@ -126,13 +127,16 @@ const PlayerPool = ({
                   #{player.rank}
                 </td>
                 <td className="py-3 pr-2">
-                  <div className="flex items-center gap-2">
+                  <button
+                    className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+                    onClick={() => onViewPlayer?.(player)}
+                  >
                     <span className="text-lg">{player.countryFlag}</span>
                     <div>
-                      <p className="text-white font-medium text-sm">{player.name}</p>
+                      <p className="text-white font-medium text-sm hover:text-accent-green transition-colors">{player.name}</p>
                       <p className="text-text-muted text-xs">{player.country}</p>
                     </div>
-                  </div>
+                  </button>
                 </td>
                 <td className="py-3 pr-2 text-right">
                   <span className={`font-medium ${

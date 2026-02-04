@@ -4,12 +4,14 @@ import { useRoster } from '../hooks/useRoster'
 import { useLineup } from '../hooks/useLineup'
 import { useTrades } from '../hooks/useTrades'
 import { useTournaments } from '../hooks/useTournaments'
+import { usePlayerDetail } from '../hooks/usePlayerDetail'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import RosterList from '../components/roster/RosterList'
 import LineupEditor from '../components/roster/LineupEditor'
 import TradeProposal from '../components/roster/TradeProposal'
 import TradeReview from '../components/roster/TradeReview'
+import PlayerDetailModal from '../components/players/PlayerDetailModal'
 
 const TeamRoster = () => {
   const { leagueId } = useParams()
@@ -17,6 +19,7 @@ const TeamRoster = () => {
   const { activeLineup, setActiveLineup, setLineup, loading: lineupLoading, saved } = useLineup(leagueId)
   const { pendingTrades, proposeTrade, acceptTrade, rejectTrade, cancelTrade, actionLoading } = useTrades(leagueId)
   const { currentTournament } = useTournaments()
+  const { selectedPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
 
   const [isEditing, setIsEditing] = useState(false)
   const [showTradeModal, setShowTradeModal] = useState(false)
@@ -147,6 +150,7 @@ const TeamRoster = () => {
                 onTogglePlayer={handleTogglePlayer}
                 onDropPlayer={handleDropPlayer}
                 onTradePlayer={handleTradePlayer}
+                onViewPlayer={openPlayerDetail}
               />
             </div>
 
@@ -193,6 +197,13 @@ const TeamRoster = () => {
           onClose={() => setShowTradeModal(false)}
         />
       )}
+
+      {/* Player Detail Modal */}
+      <PlayerDetailModal
+        player={selectedPlayer}
+        isOpen={isModalOpen}
+        onClose={closePlayerDetail}
+      />
     </div>
   )
 }

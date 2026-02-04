@@ -1,13 +1,16 @@
 import { useParams, Link } from 'react-router-dom'
 import { useWaivers } from '../hooks/useWaivers'
 import { useRoster } from '../hooks/useRoster'
+import { usePlayerDetail } from '../hooks/usePlayerDetail'
 import Card from '../components/common/Card'
 import WaiverWireList from '../components/roster/WaiverWireList'
+import PlayerDetailModal from '../components/players/PlayerDetailModal'
 
 const WaiverWire = () => {
   const { leagueId } = useParams()
   const { availablePlayers, loading, claimLoading, error, claimPlayer } = useWaivers(leagueId)
   const { roster, refetch: refetchRoster } = useRoster(leagueId)
+  const { selectedPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
 
   const handleClaim = async (playerId, dropPlayerId) => {
     try {
@@ -93,9 +96,17 @@ const WaiverWire = () => {
             roster={roster}
             onClaim={handleClaim}
             loading={claimLoading}
+            onViewPlayer={openPlayerDetail}
           />
         </div>
       </main>
+
+      {/* Player Detail Modal */}
+      <PlayerDetailModal
+        player={selectedPlayer}
+        isOpen={isModalOpen}
+        onClose={closePlayerDetail}
+      />
     </div>
   )
 }

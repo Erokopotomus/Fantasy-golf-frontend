@@ -8,6 +8,7 @@ const PlayerSlot = ({
   onToggle,
   onDrop,
   onTrade,
+  onView,
 }) => {
   if (!player) {
     return (
@@ -34,13 +35,16 @@ const PlayerSlot = ({
         : 'bg-dark-tertiary border border-dark-border'
       }
     `}>
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+      <button
+        className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+        onClick={() => onView?.(player)}
+      >
         <div className="w-12 h-12 bg-dark-primary rounded-lg flex items-center justify-center flex-shrink-0">
           <span className="text-2xl">{player.countryFlag}</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-white font-medium truncate">{player.name}</span>
+            <span className="text-white font-medium truncate hover:text-accent-green transition-colors">{player.name}</span>
             <PlayerStatusBadge status={player.status || 'active'} />
           </div>
           <div className="flex items-center gap-3 text-sm text-text-muted">
@@ -48,7 +52,7 @@ const PlayerSlot = ({
             <span>SG: {player.stats?.sgTotal?.toFixed(2) || '—'}</span>
           </div>
         </div>
-      </div>
+      </button>
 
       {/* Tournament Status */}
       {player.tournamentStatus && (

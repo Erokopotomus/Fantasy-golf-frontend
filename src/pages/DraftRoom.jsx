@@ -2,12 +2,14 @@ import { useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { DraftProvider } from '../context/DraftContext'
 import { useDraft } from '../hooks/useDraft'
+import { usePlayerDetail } from '../hooks/usePlayerDetail'
 import DraftHeader from '../components/draft/DraftHeader'
 import PlayerPool from '../components/draft/PlayerPool'
 import DraftQueue from '../components/draft/DraftQueue'
 import DraftBoard from '../components/draft/DraftBoard'
 import BidPanel from '../components/draft/BidPanel'
 import PickHistory from '../components/draft/PickHistory'
+import PlayerDetailModal from '../components/players/PlayerDetailModal'
 import Card from '../components/common/Card'
 
 const DraftRoomContent = () => {
@@ -38,6 +40,7 @@ const DraftRoomContent = () => {
 
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [isNominating, setIsNominating] = useState(false)
+  const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
 
   const handleSelectPlayer = useCallback(async (player) => {
     if (draft?.type === 'auction') {
@@ -159,6 +162,7 @@ const DraftRoomContent = () => {
                   isUserTurn={isUserTurn}
                   queue={queue}
                   draftType={draft?.type}
+                  onViewPlayer={openPlayerDetail}
                 />
               </div>
             </div>
@@ -214,6 +218,13 @@ const DraftRoomContent = () => {
           )}
         </div>
       </main>
+
+      {/* Player Detail Modal */}
+      <PlayerDetailModal
+        player={detailPlayer}
+        isOpen={isModalOpen}
+        onClose={closePlayerDetail}
+      />
     </div>
   )
 }

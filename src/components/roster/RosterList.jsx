@@ -8,6 +8,7 @@ const RosterList = ({
   onTogglePlayer,
   onDropPlayer,
   onTradePlayer,
+  onViewPlayer,
 }) => {
   const activePlayers = roster.filter(p => activeLineup.includes(p.id))
   const benchedPlayers = roster.filter(p => !activeLineup.includes(p.id))
@@ -33,6 +34,7 @@ const RosterList = ({
                 onToggle={onTogglePlayer}
                 onDrop={onDropPlayer}
                 onTrade={onTradePlayer}
+                onView={onViewPlayer}
               />
             ))
           ) : (
@@ -62,6 +64,7 @@ const RosterList = ({
                 onToggle={onTogglePlayer}
                 onDrop={onDropPlayer}
                 onTrade={onTradePlayer}
+                onView={onViewPlayer}
               />
             ))
           ) : (

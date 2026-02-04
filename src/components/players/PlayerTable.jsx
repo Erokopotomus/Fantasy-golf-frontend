@@ -9,6 +9,7 @@ const PlayerTable = ({
   selectedIds,
   canSelect,
   compareMode,
+  onViewPlayer,
 }) => {
   const SortHeader = ({ field, children, className = '' }) => (
     <th className={`p-3 text-left ${className}`}>
@@ -72,10 +73,13 @@ const PlayerTable = ({
                   #{player.rank}
                 </td>
                 <td className="p-3">
-                  <div className="flex items-center gap-3">
+                  <button
+                    className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity"
+                    onClick={() => onViewPlayer?.(player)}
+                  >
                     <span className="text-xl">{player.countryFlag}</span>
                     <div>
-                      <p className="text-white font-medium">{player.name}</p>
+                      <p className="text-white font-medium hover:text-accent-green transition-colors">{player.name}</p>
                       <p className="text-text-muted text-xs">{player.country}</p>
                     </div>
                     {player.owned && (
@@ -83,7 +87,7 @@ const PlayerTable = ({
                         Owned
                       </span>
                     )}
-                  </div>
+                  </button>
                 </td>
                 <td className="p-3 text-right">
                   <span className={`font-medium ${
@@ -119,7 +123,11 @@ const PlayerTable = ({
                   </div>
                 </td>
                 <td className="p-3">
-                  <Button size="sm" variant="ghost">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onViewPlayer?.(player)}
+                  >
                     View
                   </Button>
                 </td>

@@ -8,6 +8,7 @@ const WaiverWireList = ({
   roster,
   onClaim,
   loading,
+  onViewPlayer,
 }) => {
   const [search, setSearch] = useState('')
   const [selectedPlayer, setSelectedPlayer] = useState(null)
@@ -70,19 +71,24 @@ const WaiverWireList = ({
               key={player.id}
               className="flex items-center gap-4 p-3 bg-dark-tertiary rounded-lg hover:bg-dark-border transition-colors"
             >
-              <div className="w-10 h-10 bg-dark-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-xl">{player.countryFlag}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-medium truncate">{player.name}</span>
-                  <span className="text-text-muted text-sm">#{player.rank}</span>
+              <button
+                className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+                onClick={() => onViewPlayer?.(player)}
+              >
+                <div className="w-10 h-10 bg-dark-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">{player.countryFlag}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-text-muted">
-                  <span>SG: {player.stats?.sgTotal?.toFixed(2) || '—'}</span>
-                  <span className="truncate">{player.recentForm?.slice(0, 3).join(', ') || '—'}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-medium truncate hover:text-accent-green transition-colors">{player.name}</span>
+                    <span className="text-text-muted text-sm">#{player.rank}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-text-muted">
+                    <span>SG: {player.stats?.sgTotal?.toFixed(2) || '—'}</span>
+                    <span className="truncate">{player.recentForm?.slice(0, 3).join(', ') || '—'}</span>
+                  </div>
                 </div>
-              </div>
+              </button>
               <Button
                 size="sm"
                 onClick={() => handleClaimClick(player)}
