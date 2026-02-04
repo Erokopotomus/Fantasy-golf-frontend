@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useLeagues } from '../hooks/useLeagues'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 
 const Leagues = () => {
   const { leagues, loading, error } = useLeagues()
+  const navigate = useNavigate()
 
   if (loading) {
     return (
@@ -69,7 +70,12 @@ const Leagues = () => {
           ) : (
             <div className="space-y-4">
               {leagues.map((league) => (
-                <Card key={league.id} hover>
+                <Card
+                  key={league.id}
+                  hover
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/leagues/${league.id}`)}
+                >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     {/* League Info */}
                     <div className="flex-1">
@@ -98,7 +104,7 @@ const Leagues = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <Link to={`/leagues/${league.id}/roster`}>
                         <Button variant="secondary" size="sm">Roster</Button>
                       </Link>

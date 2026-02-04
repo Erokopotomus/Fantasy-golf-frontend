@@ -14,8 +14,17 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
   const rankDisplay = getRankDisplay(userRank)
   const pointsBehind = userRank > 1 ? leader.points - userPoints : 0
 
+  const handleCardClick = () => {
+    onView?.(league)
+  }
+
+  const handleButtonClick = (e, callback) => {
+    e.stopPropagation()
+    callback?.(league)
+  }
+
   return (
-    <Card className="group" hover>
+    <Card className="group cursor-pointer" hover onClick={handleCardClick}>
       <div className="flex items-start justify-between mb-4">
         <div className="min-w-0 flex-1">
           <h3 className="text-white font-semibold text-base sm:text-lg truncate group-hover:text-accent-green transition-colors">
@@ -103,14 +112,14 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           size="sm"
           variant="outline"
           className="flex-1"
-          onClick={() => onView?.(league)}
+          onClick={(e) => handleButtonClick(e, onView)}
         >
           View League
         </Button>
         <Button
           size="sm"
           className="flex-1"
-          onClick={() => onManageLineup?.(league)}
+          onClick={(e) => handleButtonClick(e, onManageLineup)}
         >
           Manage Lineup
         </Button>
