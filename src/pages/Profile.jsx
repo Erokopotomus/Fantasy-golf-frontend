@@ -1,24 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 
 const Profile = () => {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
   })
+
+  // Update form data when user changes
+  useEffect(() => {
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+    })
+  }, [user])
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
   const handleSave = () => {
-    // In a real app, this would call an API to update the user
+    updateUser(formData)
     setIsEditing(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
   }
 
   const stats = {
@@ -33,6 +44,17 @@ const Profile = () => {
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6">My Profile</h1>
+
+          {saved && (
+            <Card className="mb-6 border-accent-green bg-accent-green/10">
+              <div className="flex items-center gap-3 text-accent-green">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Profile updated successfully!</span>
+              </div>
+            </Card>
+          )}
 
           {/* Profile Card */}
           <Card className="mb-6">
