@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react'
 import { mockApi } from '../services/mockApi'
+import { useNotifications } from '../context/NotificationContext'
 
 export const useLineup = (leagueId) => {
+  const { notify } = useNotifications()
   const [activeLineup, setActiveLineup] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -15,14 +17,16 @@ export const useLineup = (leagueId) => {
       const result = await mockApi.roster.setLineup(leagueId, tournamentId, playerIds)
       setActiveLineup(playerIds)
       setSaved(true)
+      notify.lineup('Lineup Saved', `${playerIds.length} players set for the tournament`)
       return result
     } catch (err) {
       setError(err.message)
+      notify.error('Save Failed', err.message)
       throw err
     } finally {
       setLoading(false)
     }
-  }, [leagueId])
+  }, [leagueId, notify])
 
   const clearSaved = useCallback(() => {
     setSaved(false)

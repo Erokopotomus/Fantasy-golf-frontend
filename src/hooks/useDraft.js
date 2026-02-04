@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDraftContext } from '../context/DraftContext'
+import { useNotifications } from '../context/NotificationContext'
 import { mockApi } from '../services/mockApi'
 
 export const useDraft = (leagueId) => {
   const [recentPick, setRecentPick] = useState(null)
   const aiPickTimeoutRef = useRef(null)
   const isAiPickingRef = useRef(false)
+  const lastNotifiedTurnRef = useRef(null)
+  const { notify } = useNotifications()
   const {
     draft,
     league,
@@ -221,6 +224,12 @@ export const useDraft = (leagueId) => {
     }
 
     setCurrentPick(nextInfo, nextInfo.isUserTurn, 90)
+
+    // Notify user when it's their turn
+    if (nextInfo.isUserTurn && lastNotifiedTurnRef.current !== nextInfo.pick) {
+      lastNotifiedTurnRef.current = nextInfo.pick
+      notify.draft('Your Turn!', `Round ${nextInfo.round}, Pick #${nextInfo.pick}`)
+    }
 
     // If it's AI's turn, schedule their pick
     if (!nextInfo.isUserTurn && !isPaused && !isAiPickingRef.current) {

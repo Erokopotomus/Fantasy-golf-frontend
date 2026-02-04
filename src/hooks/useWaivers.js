@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { mockApi } from '../services/mockApi'
+import { useNotifications } from '../context/NotificationContext'
 
 export const useWaivers = (leagueId) => {
+  const { notify } = useNotifications()
   const [availablePlayers, setAvailablePlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [claimLoading, setClaimLoading] = useState(false)
@@ -33,14 +35,16 @@ export const useWaivers = (leagueId) => {
       const result = await mockApi.waivers.claimPlayer(leagueId, playerId, dropPlayerId)
       // Remove claimed player from available list
       setAvailablePlayers(prev => prev.filter(p => p.id !== playerId))
+      notify.success('Player Claimed', `${result.player?.name || 'Player'} added to your roster`)
       return result
     } catch (err) {
       setError(err.message)
+      notify.error('Claim Failed', err.message)
       throw err
     } finally {
       setClaimLoading(false)
     }
-  }, [leagueId])
+  }, [leagueId, notify])
 
   return {
     availablePlayers,

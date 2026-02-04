@@ -1,7 +1,9 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
+import NotificationContainer from './components/notifications/NotificationContainer'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -20,9 +22,11 @@ import Profile from './pages/Profile'
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-dark-primary">
-        <Navbar />
-        <Routes>
+      <NotificationProvider>
+        <div className="min-h-screen bg-dark-primary">
+          <Navbar />
+          <NotificationContainer />
+          <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -114,8 +118,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-        </Routes>
-      </div>
+          </Routes>
+        </div>
+      </NotificationProvider>
     </AuthProvider>
   )
 }

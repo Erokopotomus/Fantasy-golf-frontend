@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { mockApi } from '../services/mockApi'
+import { useNotifications } from '../context/NotificationContext'
 
 export const useTrades = (leagueId) => {
+  const { notify } = useNotifications()
+  const previousIncomingCountRef = useRef(0)
   const [pendingTrades, setPendingTrades] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -26,20 +29,43 @@ export const useTrades = (leagueId) => {
     }
   }, [leagueId, fetchTrades])
 
+  // Check for new incoming trades and notify
+  useEffect(() => {
+    const incomingTrades = pendingTrades.filter(t => t.isIncoming)
+    const newIncomingCount = incomingTrades.length
+
+    if (newIncomingCount > previousIncomingCountRef.current && previousIncomingCountRef.current > 0) {
+      const newestTrade = incomingTrades[incomingTrades.length - 1]
+      notify.trade(
+        'Trade Proposal Received',
+        `${newestTrade?.otherTeamName || 'Someone'} wants to trade with you`,
+        {
+          action: {
+            label: 'View Trade',
+            onClick: () => window.location.href = `/leagues/${leagueId}/roster`,
+          },
+        }
+      )
+    }
+    previousIncomingCountRef.current = newIncomingCount
+  }, [pendingTrades, leagueId, notify])
+
   const proposeTrade = useCallback(async (tradeData) => {
     try {
       setActionLoading(true)
       setError(null)
       const result = await mockApi.trades.propose(leagueId, tradeData)
       setPendingTrades(prev => [...prev, result])
+      notify.success('Trade Proposed', `Trade offer sent to ${tradeData.toTeamName}`)
       return result
     } catch (err) {
       setError(err.message)
+      notify.error('Trade Failed', err.message)
       throw err
     } finally {
       setActionLoading(false)
     }
-  }, [leagueId])
+  }, [leagueId, notify])
 
   const acceptTrade = useCallback(async (tradeId) => {
     try {
@@ -47,13 +73,15 @@ export const useTrades = (leagueId) => {
       setError(null)
       await mockApi.trades.accept(tradeId)
       setPendingTrades(prev => prev.filter(t => t.id !== tradeId))
+      notify.success('Trade Accepted', 'Players have been swapped')
     } catch (err) {
       setError(err.message)
+      notify.error('Trade Failed', err.message)
       throw err
     } finally {
       setActionLoading(false)
     }
-  }, [])
+  }, [notify])
 
   const rejectTrade = useCallback(async (tradeId) => {
     try {
