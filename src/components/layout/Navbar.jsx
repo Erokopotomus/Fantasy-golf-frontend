@@ -7,6 +7,7 @@ const Navbar = () => {
   const { user, logout } = useAuth()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const isActive = (path) => location.pathname === path
 
@@ -77,13 +78,72 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <div className="hidden sm:flex items-center gap-2 text-sm text-text-secondary">
-                  <div className="w-8 h-8 bg-accent-green rounded-full flex items-center justify-center text-white font-semibold shadow-button">
-                    {user.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <span className="hidden lg:block">{user.name || user.email}</span>
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="hidden sm:flex items-center gap-2 text-sm text-text-secondary hover:text-white transition-colors p-1 rounded-lg hover:bg-dark-tertiary"
+                  >
+                    <div className="w-8 h-8 bg-accent-green rounded-full flex items-center justify-center text-white font-semibold shadow-button">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className="hidden lg:block">{user.name || user.email}</span>
+                    <svg className={`w-4 h-4 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Profile Dropdown */}
+                  {profileMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setProfileMenuOpen(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-48 bg-dark-secondary border border-dark-border rounded-lg shadow-lg z-20 py-1">
+                        <Link
+                          to="/profile"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-dark-tertiary transition-colors"
+                          onClick={() => setProfileMenuOpen(false)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            My Profile
+                          </div>
+                        </Link>
+                        <Link
+                          to="/leagues"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-dark-tertiary transition-colors"
+                          onClick={() => setProfileMenuOpen(false)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            My Leagues
+                          </div>
+                        </Link>
+                        <div className="border-t border-dark-border my-1" />
+                        <button
+                          onClick={() => {
+                            setProfileMenuOpen(false)
+                            logout()
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-dark-tertiary transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Logout
+                          </div>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <Button variant="ghost" size="sm" onClick={logout} className="sm:hidden">
                   Logout
                 </Button>
               </>

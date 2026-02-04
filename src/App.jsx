@@ -14,6 +14,7 @@ import WaiverWire from './pages/WaiverWire'
 import Players from './pages/Players'
 import Leagues from './pages/Leagues'
 import Draft from './pages/Draft'
+import Profile from './pages/Profile'
 
 function App() {
   return (
@@ -93,6 +94,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Players />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />
