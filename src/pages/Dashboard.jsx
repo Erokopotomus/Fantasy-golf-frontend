@@ -96,30 +96,38 @@ const Dashboard = () => {
               </>
             ) : (
               <>
-                <Card className="text-center" hover>
-                  <p className="text-text-muted text-xs sm:text-sm mb-1">Active Leagues</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">
-                    {stats?.activeLeagues ?? 0}
-                  </p>
-                </Card>
-                <Card className="text-center" hover>
-                  <p className="text-text-muted text-xs sm:text-sm mb-1">Total Points</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-accent-green">
-                    {stats?.totalPoints?.toLocaleString() ?? '—'}
-                  </p>
-                </Card>
-                <Card className="text-center" hover>
-                  <p className="text-text-muted text-xs sm:text-sm mb-1">Best Finish</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-yellow-400">
-                    {stats?.bestFinish ? `${stats.bestFinish}${stats.bestFinish === 1 ? 'st' : stats.bestFinish === 2 ? 'nd' : stats.bestFinish === 3 ? 'rd' : 'th'}` : '—'}
-                  </p>
-                </Card>
-                <Card className="text-center" hover>
-                  <p className="text-text-muted text-xs sm:text-sm mb-1">Win Rate</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">
-                    {stats?.winRate !== undefined ? `${stats.winRate}%` : '—'}
-                  </p>
-                </Card>
+                <Link to="/leagues">
+                  <Card className="text-center" hover>
+                    <p className="text-text-muted text-xs sm:text-sm mb-1">Active Leagues</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                      {stats?.activeLeagues ?? 0}
+                    </p>
+                  </Card>
+                </Link>
+                <Link to="/profile">
+                  <Card className="text-center" hover>
+                    <p className="text-text-muted text-xs sm:text-sm mb-1">Total Points</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-accent-green">
+                      {stats?.totalPoints?.toLocaleString() ?? '—'}
+                    </p>
+                  </Card>
+                </Link>
+                <Link to="/leagues">
+                  <Card className="text-center" hover>
+                    <p className="text-text-muted text-xs sm:text-sm mb-1">Best Finish</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-yellow-400">
+                      {stats?.bestFinish ? `${stats.bestFinish}${stats.bestFinish === 1 ? 'st' : stats.bestFinish === 2 ? 'nd' : stats.bestFinish === 3 ? 'rd' : 'th'}` : '—'}
+                    </p>
+                  </Card>
+                </Link>
+                <Link to="/profile">
+                  <Card className="text-center" hover>
+                    <p className="text-text-muted text-xs sm:text-sm mb-1">Win Rate</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                      {stats?.winRate !== undefined ? `${stats.winRate}%` : '—'}
+                    </p>
+                  </Card>
+                </Link>
               </>
             )}
           </div>
