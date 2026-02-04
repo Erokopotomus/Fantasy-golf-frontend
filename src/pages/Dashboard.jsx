@@ -48,7 +48,7 @@ const Dashboard = () => {
   const { stats, loading: statsLoading } = useStats()
 
   const handleViewLeague = (league) => {
-    navigate(`/leagues/${league.id}/roster`)
+    navigate(`/leagues/${league.id}`)
   }
 
   const handleManageLineup = (league) => {

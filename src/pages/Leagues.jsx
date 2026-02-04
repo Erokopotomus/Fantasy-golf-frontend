@@ -105,7 +105,9 @@ const Leagues = () => {
                       <Link to={`/leagues/${league.id}/draft`}>
                         <Button variant="secondary" size="sm">Draft</Button>
                       </Link>
-                      <Button size="sm">View</Button>
+                      <Link to={`/leagues/${league.id}`}>
+                        <Button size="sm">View</Button>
+                      </Link>
                     </div>
                   </div>
 

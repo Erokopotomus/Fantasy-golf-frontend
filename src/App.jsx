@@ -13,6 +13,7 @@ import TeamRoster from './pages/TeamRoster'
 import WaiverWire from './pages/WaiverWire'
 import Players from './pages/Players'
 import Leagues from './pages/Leagues'
+import LeagueHome from './pages/LeagueHome'
 import Draft from './pages/Draft'
 import Profile from './pages/Profile'
 
@@ -62,6 +63,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <JoinLeague />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId"
+            element={
+              <ProtectedRoute>
+                <LeagueHome />
               </ProtectedRoute>
             }
           />

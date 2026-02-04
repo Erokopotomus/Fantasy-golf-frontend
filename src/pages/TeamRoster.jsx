@@ -4,6 +4,7 @@ import { useRoster } from '../hooks/useRoster'
 import { useLineup } from '../hooks/useLineup'
 import { useTrades } from '../hooks/useTrades'
 import { useTournaments } from '../hooks/useTournaments'
+import { useLeagues } from '../hooks/useLeagues'
 import { usePlayerDetail } from '../hooks/usePlayerDetail'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -12,6 +13,7 @@ import LineupEditor from '../components/roster/LineupEditor'
 import TradeProposal from '../components/roster/TradeProposal'
 import TradeReview from '../components/roster/TradeReview'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
+import ChatPanel from '../components/chat/ChatPanel'
 
 const TeamRoster = () => {
   const { leagueId } = useParams()
@@ -19,7 +21,10 @@ const TeamRoster = () => {
   const { activeLineup, setActiveLineup, setLineup, loading: lineupLoading, saved } = useLineup(leagueId)
   const { pendingTrades, proposeTrade, acceptTrade, rejectTrade, cancelTrade, actionLoading } = useTrades(leagueId)
   const { currentTournament } = useTournaments()
+  const { leagues } = useLeagues()
   const { selectedPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
+
+  const league = leagues?.find(l => l.id === leagueId)
 
   const [isEditing, setIsEditing] = useState(false)
   const [showTradeModal, setShowTradeModal] = useState(false)
@@ -182,6 +187,15 @@ const TeamRoster = () => {
               >
                 Propose Trade
               </Button>
+
+              {/* League Chat */}
+              <ChatPanel
+                leagueId={leagueId}
+                leagueName={league?.name}
+                memberCount={league?.memberCount}
+                collapsible
+                defaultCollapsed
+              />
             </div>
           </div>
         </div>

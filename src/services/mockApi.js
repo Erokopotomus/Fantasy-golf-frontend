@@ -542,6 +542,194 @@ const mockPendingTrades = [
   },
 ]
 
+// Mock chat messages per league
+const mockChatMessages = {
+  'league-1': [
+    {
+      id: 'msg-1',
+      type: 'system',
+      content: 'League "Weekend Warriors" was created',
+      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-2',
+      type: 'system',
+      content: 'Draft completed! Good luck everyone!',
+      timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-3',
+      type: 'message',
+      userId: 'user-2',
+      userName: 'Mike S.',
+      userAvatar: 'MS',
+      content: 'Great draft everyone! Excited for the season.',
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-4',
+      type: 'message',
+      userId: '1',
+      userName: 'Demo User',
+      userAvatar: 'DU',
+      content: 'Same here! I think I got a solid team this year.',
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 1000 * 60 * 5).toISOString(),
+    },
+    {
+      id: 'msg-5',
+      type: 'message',
+      userId: 'user-3',
+      userName: 'Sarah K.',
+      userAvatar: 'SK',
+      content: 'Anyone watching The Players this weekend?',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-6',
+      type: 'activity',
+      activityType: 'trade',
+      content: 'Mike S. traded Collin Morikawa to Sarah K. for Tommy Fleetwood',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-7',
+      type: 'message',
+      userId: 'user-4',
+      userName: 'James T.',
+      userAvatar: 'JT',
+      content: 'Wow that trade is interesting. Sarah might have won that one.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 1000 * 60 * 30).toISOString(),
+    },
+    {
+      id: 'msg-8',
+      type: 'message',
+      userId: 'user-2',
+      userName: 'Mike S.',
+      userAvatar: 'MS',
+      content: 'We\'ll see about that! Morikawa has been struggling with his putter lately.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 1000 * 60 * 45).toISOString(),
+    },
+    {
+      id: 'msg-9',
+      type: 'activity',
+      activityType: 'waiver',
+      content: 'Demo User picked up Ludvig Aberg from waivers',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-10',
+      type: 'message',
+      userId: 'user-5',
+      userName: 'Emma W.',
+      userAvatar: 'EW',
+      content: 'Nice pickup! Aberg has been on fire lately 🔥',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 1000 * 60 * 15).toISOString(),
+    },
+    {
+      id: 'msg-11',
+      type: 'message',
+      userId: '1',
+      userName: 'Demo User',
+      userAvatar: 'DU',
+      content: 'Thanks! I had my eye on him for a while. His ball striking is elite.',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 1000 * 60 * 20).toISOString(),
+    },
+    {
+      id: 'msg-12',
+      type: 'message',
+      userId: 'user-6',
+      userName: 'Chris L.',
+      userAvatar: 'CL',
+      content: 'Anyone want to make a trade? Looking to move Cantlay.',
+      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-13',
+      type: 'message',
+      userId: 'user-3',
+      userName: 'Sarah K.',
+      userAvatar: 'SK',
+      content: '@Chris L. I might be interested. What are you looking for?',
+      timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-14',
+      type: 'activity',
+      activityType: 'lineup',
+      content: 'Lineup deadline for The Players Championship is in 2 hours!',
+      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-15',
+      type: 'message',
+      userId: 'user-7',
+      userName: 'Alex R.',
+      userAvatar: 'AR',
+      content: 'Thanks for the reminder! Almost forgot to set my lineup.',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+  ],
+  'league-2': [
+    {
+      id: 'msg-201',
+      type: 'system',
+      content: 'League "Office Masters League" was created',
+      timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-202',
+      type: 'message',
+      userId: 'user-9',
+      userName: 'Rachel M.',
+      userAvatar: 'RM',
+      content: 'Welcome everyone to the Office Masters League!',
+      timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-203',
+      type: 'message',
+      userId: 'user-10',
+      userName: 'David H.',
+      userAvatar: 'DH',
+      content: 'This is going to be fun. Good luck to all!',
+      timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ],
+  'league-3': [
+    {
+      id: 'msg-301',
+      type: 'system',
+      content: 'League "Golf Buddies 2024" was created',
+      timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'msg-302',
+      type: 'message',
+      userId: '1',
+      userName: 'Demo User',
+      userAvatar: 'DU',
+      content: 'Hey everyone! Glad we could get the gang together for some fantasy golf.',
+      timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ],
+}
+
+// Get/save chat messages from localStorage for persistence
+const getChatMessages = (leagueId) => {
+  const key = `mockChat_${leagueId}`
+  const stored = localStorage.getItem(key)
+  if (stored) {
+    return JSON.parse(stored)
+  }
+  // Initialize with mock data if exists
+  return mockChatMessages[leagueId] || []
+}
+
+const saveChatMessages = (leagueId, messages) => {
+  const key = `mockChat_${leagueId}`
+  localStorage.setItem(key, JSON.stringify(messages))
+}
+
 // Mock draft data
 const mockDraftState = {
   id: 'draft-1',
@@ -1076,6 +1264,63 @@ export const mockApi = {
         mockPendingTrades.splice(index, 1)
       }
       return { success: true }
+    },
+  },
+
+  // Chat endpoints
+  chat: {
+    async getMessages(leagueId, limit = 50) {
+      await delay(300)
+      const messages = getChatMessages(leagueId)
+      // Return most recent messages
+      return messages.slice(-limit)
+    },
+
+    async sendMessage(leagueId, userId, userName, userAvatar, content) {
+      await delay(200)
+      const messages = getChatMessages(leagueId)
+      const newMessage = {
+        id: `msg-${Date.now()}`,
+        type: 'message',
+        userId,
+        userName,
+        userAvatar,
+        content,
+        timestamp: new Date().toISOString(),
+      }
+      messages.push(newMessage)
+      saveChatMessages(leagueId, messages)
+      return newMessage
+    },
+
+    async postSystemMessage(leagueId, content, activityType = null) {
+      await delay(100)
+      const messages = getChatMessages(leagueId)
+      const newMessage = {
+        id: `msg-${Date.now()}`,
+        type: activityType ? 'activity' : 'system',
+        activityType,
+        content,
+        timestamp: new Date().toISOString(),
+      }
+      messages.push(newMessage)
+      saveChatMessages(leagueId, messages)
+      return newMessage
+    },
+
+    async getUnreadCount(leagueId, lastReadTimestamp) {
+      await delay(100)
+      const messages = getChatMessages(leagueId)
+      if (!lastReadTimestamp) return messages.length
+      return messages.filter(m => new Date(m.timestamp) > new Date(lastReadTimestamp)).length
+    },
+
+    // Simulates real-time updates by returning messages after a timestamp
+    async pollMessages(leagueId, afterTimestamp) {
+      await delay(100)
+      const messages = getChatMessages(leagueId)
+      if (!afterTimestamp) return messages
+      return messages.filter(m => new Date(m.timestamp) > new Date(afterTimestamp))
     },
   },
 }
