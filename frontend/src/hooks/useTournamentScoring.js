@@ -1,6 +1,39 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import api from '../services/api'
 
+/**
+ * Flatten API leaderboard entry into the shape components expect:
+ * { id, name, countryFlag, position, score, today, thru, fantasyPoints, ... }
+ */
+function flattenEntry(entry) {
+  const player = entry.player || {}
+  // "today" from API is last round raw score; convert to toPar (par 72)
+  const todayRaw = entry.today
+  const todayToPar = todayRaw != null ? todayRaw - 72 : null
+
+  return {
+    id: player.id,
+    name: player.name,
+    country: player.country,
+    countryFlag: player.countryFlag,
+    headshotUrl: player.headshotUrl,
+    owgrRank: player.owgrRank,
+    primaryTour: player.primaryTour,
+    position: entry.positionTied ? `T${entry.position}` : entry.position,
+    score: entry.totalToPar,
+    today: todayToPar,
+    thru: entry.thru,
+    status: entry.status,
+    totalScore: entry.totalScore,
+    rounds: entry.rounds,
+    fantasyPoints: entry.fantasyPoints,
+    breakdown: entry.breakdown,
+    eagles: entry.eagles,
+    birdies: entry.birdies,
+    bogeys: entry.bogeys,
+  }
+}
+
 export const useTournamentScoring = (tournamentId, leagueId = null) => {
   const [tournament, setTournament] = useState(null)
   const [leaderboard, setLeaderboard] = useState([])
@@ -29,18 +62,19 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
       const results = await Promise.all(promises)
 
       setTournament(results[0]?.tournament || null)
-      setLeaderboard(results[1]?.leaderboard || [])
+
+      // Flatten leaderboard entries to match component expectations
+      const rawLeaderboard = results[1]?.leaderboard || []
+      setLeaderboard(rawLeaderboard.map(flattenEntry))
 
       // Extract user's players from league scoring data
       if (results[2]?.teams) {
-        // Find user's team and get their players' performances
         const allPlayerIds = new Set()
         for (const team of results[2].teams) {
           for (const player of team.players) {
             allPlayerIds.add(player.playerId)
           }
         }
-        // Mark leaderboard entries that are on user's team
         setMyPlayers(results[2].teams)
       }
     } catch (err) {
