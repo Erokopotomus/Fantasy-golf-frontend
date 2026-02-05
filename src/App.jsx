@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
+import MobileNav from './components/layout/MobileNav'
 import NotificationContainer from './components/notifications/NotificationContainer'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -18,6 +19,8 @@ import Leagues from './pages/Leagues'
 import LeagueHome from './pages/LeagueHome'
 import Draft from './pages/Draft'
 import Profile from './pages/Profile'
+import TournamentScoring from './pages/TournamentScoring'
+import Standings from './pages/Standings'
 
 function App() {
   return (
@@ -25,7 +28,9 @@ function App() {
       <NotificationProvider>
         <div className="min-h-screen bg-dark-primary">
           <Navbar />
+          <MobileNav />
           <NotificationContainer />
+          <main className="pb-20 md:pb-0">
           <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -118,7 +123,24 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/tournaments/:tournamentId"
+            element={
+              <ProtectedRoute>
+                <TournamentScoring />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/standings"
+            element={
+              <ProtectedRoute>
+                <Standings />
+              </ProtectedRoute>
+            }
+          />
           </Routes>
+          </main>
         </div>
       </NotificationProvider>
     </AuthProvider>

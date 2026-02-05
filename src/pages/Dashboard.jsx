@@ -63,9 +63,9 @@ const Dashboard = () => {
   }
 
   const handleViewTournament = (tournament) => {
-    // Navigate to draft page as tournament view
-    if (leagues && leagues.length > 0) {
-      navigate(`/leagues/${leagues[0].id}/draft`)
+    // Navigate to tournament scoring view
+    if (tournament) {
+      navigate(`/tournaments/${tournament.id}${leagues?.length > 0 ? `?league=${leagues[0].id}` : ''}`)
     }
   }
 

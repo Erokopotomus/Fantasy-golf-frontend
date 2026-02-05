@@ -44,6 +44,34 @@ const generateToken = (userId) => {
   return `${header}.${payload}.${signature}`
 }
 
+// Helper function to generate random hole scores for a round
+const generateHoleScores = () => {
+  const pars = [4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5]
+  return pars.map(par => {
+    const rand = Math.random()
+    if (rand < 0.02) return par - 2 // Eagle
+    if (rand < 0.15) return par - 1 // Birdie
+    if (rand < 0.70) return par // Par
+    if (rand < 0.92) return par + 1 // Bogey
+    return par + 2 // Double bogey
+  })
+}
+
+// Calculate fantasy points based on tournament position
+const calculateFantasyPoints = (status) => {
+  if (!status) return 0
+  const position = status.position
+  if (position === '1st') return 100
+  if (position === '2nd' || position === 'T2') return 75
+  if (position === '3rd' || position === 'T3') return 60
+  const posNum = parseInt(position.replace('T', ''))
+  if (posNum <= 5) return 50
+  if (posNum <= 10) return 35
+  if (posNum <= 20) return 20
+  if (posNum <= 30) return 10
+  return 5
+}
+
 // ============================================
 // MOCK DATA - Leagues, Teams, Players, Activity
 // ============================================
@@ -938,6 +966,84 @@ export const mockApi = {
         joined: true,
       }
     },
+
+    async getStandings(leagueId) {
+      await delay(500)
+      const league = mockLeagues.find(l => l.id === leagueId)
+      if (!league) {
+        throw new Error('League not found')
+      }
+
+      // Generate standings data from league standings
+      const standings = (league.standings || []).map((team, index) => ({
+        id: `team-${index}`,
+        userId: team.userId,
+        name: team.name || `Team ${index + 1}`,
+        ownerName: team.name,
+        avatar: team.avatar || '⛳',
+        rank: index + 1,
+        wins: Math.floor(Math.random() * 5) + 1,
+        losses: Math.floor(Math.random() * 4),
+        ties: Math.floor(Math.random() * 2),
+        totalPoints: team.points || 0,
+        avgPoints: team.points ? team.points / 4 : 0,
+        trend: Math.floor(Math.random() * 5) - 2, // -2 to +2
+      }))
+
+      // Generate weekly results (past tournaments)
+      const weeklyResults = [
+        {
+          tournamentId: 'tourney-3',
+          tournamentName: 'Arnold Palmer Invitational',
+          dates: 'Mar 7-10',
+          status: 'completed',
+          results: standings.map((team, idx) => ({
+            teamId: team.id,
+            userId: team.userId,
+            teamName: team.name,
+            points: Math.floor(Math.random() * 100) + 50,
+          })).sort((a, b) => b.points - a.points),
+        },
+        {
+          tournamentId: 'tourney-past-1',
+          tournamentName: 'Genesis Invitational',
+          dates: 'Feb 15-18',
+          status: 'completed',
+          results: standings.map((team, idx) => ({
+            teamId: team.id,
+            userId: team.userId,
+            teamName: team.name,
+            points: Math.floor(Math.random() * 100) + 50,
+          })).sort((a, b) => b.points - a.points),
+        },
+        {
+          tournamentId: 'tourney-past-2',
+          tournamentName: 'WM Phoenix Open',
+          dates: 'Feb 8-11',
+          status: 'completed',
+          results: standings.map((team, idx) => ({
+            teamId: team.id,
+            userId: team.userId,
+            teamName: team.name,
+            points: Math.floor(Math.random() * 100) + 50,
+          })).sort((a, b) => b.points - a.points),
+        },
+        {
+          tournamentId: 'tourney-past-3',
+          tournamentName: 'AT&T Pebble Beach',
+          dates: 'Feb 1-4',
+          status: 'completed',
+          results: standings.map((team, idx) => ({
+            teamId: team.id,
+            userId: team.userId,
+            teamName: team.name,
+            points: Math.floor(Math.random() * 100) + 50,
+          })).sort((a, b) => b.points - a.points),
+        },
+      ]
+
+      return { standings, weeklyResults }
+    },
   },
 
   // Tournament endpoints
@@ -959,6 +1065,56 @@ export const mockApi = {
         .filter(t => t.status === 'upcoming')
         .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
       return upcoming[0] || null
+    },
+
+    async getById(tournamentId) {
+      await delay(300)
+      return mockTournaments.find(t => t.id === tournamentId) || null
+    },
+
+    async getScoring(tournamentId, leagueId = null) {
+      await delay(400)
+      const tournament = mockTournaments.find(t => t.id === tournamentId) || mockTournaments[0]
+
+      // Generate leaderboard from players with tournament status
+      const playersInTournament = mockPlayers
+        .filter(p => p.tournamentStatus)
+        .map(p => ({
+          ...p,
+          ...p.tournamentStatus,
+          today: Math.floor(Math.random() * 5) - 2, // Random today score
+          holes: generateHoleScores(),
+        }))
+        .sort((a, b) => {
+          const aScore = parseInt(a.score) || 0
+          const bScore = parseInt(b.score) || 0
+          return aScore - bScore
+        })
+
+      // My players (owned players with tournament status)
+      const myPlayers = mockPlayers
+        .filter(p => p.owned && p.tournamentStatus)
+        .map(p => {
+          const leaderboardEntry = playersInTournament.find(lp => lp.id === p.id)
+          return {
+            ...p,
+            ...p.tournamentStatus,
+            today: leaderboardEntry?.today || 0,
+            holes: leaderboardEntry?.holes || generateHoleScores(),
+            fantasyPoints: calculateFantasyPoints(p.tournamentStatus),
+          }
+        })
+
+      return {
+        tournament: {
+          ...tournament,
+          status: 'in-progress',
+          currentRound: 2,
+          cut: -2,
+        },
+        leaderboard: playersInTournament,
+        myPlayers,
+      }
     },
   },
 

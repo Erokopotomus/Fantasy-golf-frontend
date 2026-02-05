@@ -132,3 +132,201 @@ body {
     @apply leading-relaxed;
   }
 }
+
+/* ============================================
+   MOBILE-FIRST ENHANCEMENTS
+   ============================================ */
+
+/* Safe area insets for notched devices */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Prevent pull-to-refresh on mobile when scrolling content */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* Touch feedback improvements */
+@layer utilities {
+  .touch-feedback {
+    @apply active:opacity-70 active:scale-[0.98] transition-all duration-150;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Mobile-optimized card interactions */
+@layer components {
+  .mobile-card {
+    @apply active:scale-[0.99] active:opacity-90 transition-all duration-150;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Bottom navigation bar styles */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-dark-secondary border-t border-dark-border;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .bottom-nav-item {
+    @apply flex flex-col items-center justify-center py-2 px-3 text-text-secondary
+           transition-colors duration-200 active:text-accent-green;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-item.active {
+    @apply text-accent-green;
+  }
+
+  .bottom-nav-item svg {
+    @apply w-6 h-6 mb-1;
+  }
+
+  .bottom-nav-item span {
+    @apply text-xs font-medium;
+  }
+}
+
+/* Mobile-specific breakpoint styles */
+@media (max-width: 640px) {
+  /* Larger touch targets on mobile */
+  button, a, [role="button"] {
+    min-height: 44px;
+  }
+
+  /* Better text sizing for mobile */
+  .text-2xl {
+    font-size: 1.375rem;
+  }
+
+  /* Full-width buttons on mobile */
+  .mobile-full-width {
+    width: 100%;
+  }
+
+  /* Horizontal scroll containers */
+  .mobile-scroll-x {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-scroll-x > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* Card stack for mobile */
+  .mobile-card-stack {
+    @apply space-y-3;
+  }
+
+  /* Better modal positioning on mobile */
+  .mobile-modal {
+    @apply fixed inset-x-4 bottom-4 top-auto max-h-[80vh] rounded-xl;
+  }
+
+  /* Sheet-style modals from bottom */
+  .mobile-sheet {
+    @apply fixed inset-x-0 bottom-0 rounded-t-2xl max-h-[90vh];
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  /* Prevent body scroll when modal is open */
+  body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+}
+
+/* Improve table scrolling on mobile */
+@media (max-width: 768px) {
+  .table-wrapper {
+    @apply overflow-x-auto -mx-4 px-4;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Sticky first column on tables */
+  .table-sticky-col th:first-child,
+  .table-sticky-col td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    @apply bg-dark-secondary;
+  }
+}
+
+/* Smooth momentum scrolling for iOS */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Animation for slide up sheets */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Swipe indicator for bottom sheets */
+.swipe-indicator {
+  @apply w-10 h-1 bg-dark-border rounded-full mx-auto mb-4;
+}
+
+/* Pull to refresh indicator */
+.pull-indicator {
+  @apply h-12 flex items-center justify-center text-text-muted;
+}
+
+/* Floating action button */
+.fab {
+  @apply fixed bottom-20 right-4 w-14 h-14 rounded-full bg-accent-green
+         flex items-center justify-center shadow-lg shadow-accent-green/30
+         active:scale-95 transition-transform z-40;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
+}
+
+@media (min-width: 768px) {
+  .fab {
+    @apply bottom-6 right-6;
+  }
+}
