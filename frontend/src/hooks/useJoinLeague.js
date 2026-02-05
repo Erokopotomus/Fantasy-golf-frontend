@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const useJoinLeague = () => {
   const [loading, setLoading] = useState(false)
@@ -11,8 +11,9 @@ export const useJoinLeague = () => {
       setLoading(true)
       setError(null)
       setPreviewLeague(null)
-      const result = await mockApi.leagues.validateCode(code)
-      setPreviewLeague(result)
+      // Try to get league info by code - backend may return league preview
+      const result = await api.joinLeagueByCode(code)
+      setPreviewLeague(result.league || result)
       return result
     } catch (err) {
       setError(err.message)
@@ -27,7 +28,7 @@ export const useJoinLeague = () => {
     try {
       setLoading(true)
       setError(null)
-      const result = await mockApi.leagues.join(code)
+      const result = await api.joinLeagueByCode(code)
       return result
     } catch (err) {
       setError(err.message)

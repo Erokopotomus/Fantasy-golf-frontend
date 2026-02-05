@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const useTournaments = () => {
   const [tournaments, setTournaments] = useState([])
@@ -11,14 +11,26 @@ export const useTournaments = () => {
     try {
       setLoading(true)
       setError(null)
-      const [upcoming, current] = await Promise.all([
-        mockApi.tournaments.getUpcoming(),
-        mockApi.tournaments.getCurrent(),
+
+      // Fetch all tournaments and current tournament
+      const [allData, currentData] = await Promise.all([
+        api.getTournaments(),
+        api.getCurrentTournament().catch(() => null), // Don't fail if no current tournament
       ])
+
+      // Handle response format
+      const tournamentList = allData.tournaments || allData || []
+
+      // Filter for upcoming tournaments
+      const upcoming = tournamentList.filter(t =>
+        t.status === 'UPCOMING' || t.status === 'IN_PROGRESS'
+      )
+
       setTournaments(upcoming)
-      setCurrentTournament(current)
+      setCurrentTournament(currentData?.tournament || currentData || null)
     } catch (err) {
       setError(err.message)
+      setTournaments([])
     } finally {
       setLoading(false)
     }

@@ -1,41 +1,65 @@
 import { useState, useEffect, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
-export const useRoster = (leagueId) => {
+export const useRoster = (teamId) => {
   const [roster, setRoster] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const fetchRoster = useCallback(async () => {
+    if (!teamId) {
+      setRoster([])
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
-      const data = await mockApi.roster.getRoster(leagueId)
-      setRoster(data)
+      const data = await api.getTeam(teamId)
+      // Team data includes roster entries
+      setRoster(data.roster || data.team?.roster || [])
     } catch (err) {
       setError(err.message)
+      setRoster([])
     } finally {
       setLoading(false)
     }
-  }, [leagueId])
+  }, [teamId])
 
   useEffect(() => {
-    if (leagueId) {
-      fetchRoster()
-    }
-  }, [leagueId, fetchRoster])
+    fetchRoster()
+  }, [fetchRoster])
 
   const dropPlayer = useCallback(async (playerId) => {
+    if (!teamId) return
+
     try {
-      await mockApi.roster.dropPlayer(leagueId, playerId)
-      setRoster(prev => prev.filter(p => p.id !== playerId))
+      await api.dropPlayerFromRoster(teamId, playerId)
+      setRoster(prev => prev.filter(entry =>
+        entry.playerId !== playerId && entry.player?.id !== playerId
+      ))
     } catch (err) {
       setError(err.message)
       throw err
     }
-  }, [leagueId])
+  }, [teamId])
 
-  return { roster, loading, error, refetch: fetchRoster, dropPlayer }
+  const addPlayer = useCallback(async (playerId) => {
+    if (!teamId) return
+
+    try {
+      const result = await api.addPlayerToRoster(teamId, playerId)
+      // Refetch to get updated roster
+      await fetchRoster()
+      return result
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [teamId, fetchRoster])
+
+  return { roster, loading, error, refetch: fetchRoster, dropPlayer, addPlayer }
 }
 
 export default useRoster

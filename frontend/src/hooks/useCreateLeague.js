@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const useCreateLeague = () => {
   const [loading, setLoading] = useState(false)
@@ -9,7 +9,7 @@ export const useCreateLeague = () => {
     try {
       setLoading(true)
       setError(null)
-      const result = await mockApi.leagues.create(leagueData)
+      const result = await api.createLeague(leagueData)
       return result
     } catch (err) {
       setError(err.message)

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
+// User stats - no backend endpoint yet, returns defaults for now
+// TODO: Add /api/users/me/stats endpoint when ready
 
 export const useStats = () => {
   const [stats, setStats] = useState(null)
@@ -10,8 +11,14 @@ export const useStats = () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await mockApi.stats.get()
-      setStats(data)
+      // No backend endpoint yet - return default stats
+      // When backend is ready: const data = await api.getUserStats()
+      setStats({
+        totalLeagues: 0,
+        activeTeams: 0,
+        totalPoints: 0,
+        rank: '-',
+      })
     } catch (err) {
       setError(err.message)
     } finally {

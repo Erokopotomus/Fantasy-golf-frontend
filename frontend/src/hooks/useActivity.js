@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
+// Activity feed - no backend endpoint yet, returns empty for now
+// TODO: Add /api/activity endpoint when ready
 
 export const useActivity = (limit = 10) => {
   const [activity, setActivity] = useState([])
@@ -10,8 +11,9 @@ export const useActivity = (limit = 10) => {
     try {
       setLoading(true)
       setError(null)
-      const data = await mockApi.activity.getAll(limit)
-      setActivity(data)
+      // No backend endpoint yet - return empty array
+      // When backend is ready: const data = await api.getActivity(limit)
+      setActivity([])
     } catch (err) {
       setError(err.message)
     } finally {

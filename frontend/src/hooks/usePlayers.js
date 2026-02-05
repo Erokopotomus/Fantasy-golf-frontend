@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const usePlayers = (initialParams = {}) => {
   const [players, setPlayers] = useState([])
@@ -7,7 +7,7 @@ export const usePlayers = (initialParams = {}) => {
   const [error, setError] = useState(null)
   const [params, setParams] = useState({
     search: '',
-    sortBy: 'rank',
+    sortBy: 'owgrRank',
     sortDir: 'asc',
     minRank: 1,
     maxRank: 100,
@@ -23,14 +23,17 @@ export const usePlayers = (initialParams = {}) => {
     try {
       setLoading(true)
       setError(null)
-      const data = await mockApi.players.getAll(params)
-      setPlayers(data.players)
+      const data = await api.getPlayers()
+      // Handle both array response and object with players property
+      const playerList = data.players || data || []
+      setPlayers(playerList)
     } catch (err) {
       setError(err.message)
+      setPlayers([])
     } finally {
       setLoading(false)
     }
-  }, [params])
+  }, [])
 
   useEffect(() => {
     fetchPlayers()
@@ -51,27 +54,28 @@ export const usePlayers = (initialParams = {}) => {
     if (params.search) {
       const searchLower = params.search.toLowerCase()
       result = result.filter(p =>
-        p.name.toLowerCase().includes(searchLower) ||
-        p.country.toLowerCase().includes(searchLower)
+        p.name?.toLowerCase().includes(searchLower) ||
+        p.country?.toLowerCase().includes(searchLower)
       )
     }
 
-    // Rank filter
-    result = result.filter(p =>
-      p.rank >= params.minRank && p.rank <= params.maxRank
-    )
+    // Rank filter (use owgrRank from new schema)
+    result = result.filter(p => {
+      const rank = p.owgrRank || p.rank || 999
+      return rank >= params.minRank && rank <= params.maxRank
+    })
 
     // Country filter
     if (params.country) {
       result = result.filter(p =>
-        p.country.toLowerCase() === params.country.toLowerCase()
+        p.country?.toLowerCase() === params.country.toLowerCase()
       )
     }
 
     // Min SG filter
     if (params.minSgTotal !== null) {
       result = result.filter(p =>
-        (p.stats?.sgTotal || 0) >= params.minSgTotal
+        (p.sgTotal || 0) >= params.minSgTotal
       )
     }
 
@@ -87,28 +91,30 @@ export const usePlayers = (initialParams = {}) => {
       let aVal, bVal
       switch (params.sortBy) {
         case 'name':
-          aVal = a.name
-          bVal = b.name
+          aVal = a.name || ''
+          bVal = b.name || ''
           break
         case 'sgTotal':
-          aVal = a.stats?.sgTotal || 0
-          bVal = b.stats?.sgTotal || 0
+          aVal = a.sgTotal || 0
+          bVal = b.sgTotal || 0
           break
         case 'sgOffTee':
-          aVal = a.stats?.sgOffTee || 0
-          bVal = b.stats?.sgOffTee || 0
+          aVal = a.sgOffTee || 0
+          bVal = b.sgOffTee || 0
           break
         case 'sgApproach':
-          aVal = a.stats?.sgApproach || 0
-          bVal = b.stats?.sgApproach || 0
+          aVal = a.sgApproach || 0
+          bVal = b.sgApproach || 0
           break
         case 'sgPutting':
-          aVal = a.stats?.sgPutting || 0
-          bVal = b.stats?.sgPutting || 0
+          aVal = a.sgPutting || 0
+          bVal = b.sgPutting || 0
           break
+        case 'owgrRank':
+        case 'rank':
         default:
-          aVal = a.rank
-          bVal = b.rank
+          aVal = a.owgrRank || a.rank || 999
+          bVal = b.owgrRank || b.rank || 999
       }
       if (typeof aVal === 'string') {
         return params.sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
