@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
-// Toggle this to switch between mock and real API
-// Set to false when backend is ready
-const USE_MOCK_API = true
+// Toggle via environment variable - defaults to mock for local dev
+const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API !== 'false'
 
 const AuthContext = createContext(null)
 
@@ -40,21 +40,9 @@ export const AuthProvider = ({ children }) => {
       let data
 
       if (USE_MOCK_API) {
-        // Use mock API
         data = await mockApi.auth.login(email, password)
       } else {
-        // Use real API
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        })
-
-        data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Login failed')
-        }
+        data = await api.login(email, password)
       }
 
       localStorage.setItem('token', data.token)
@@ -72,21 +60,9 @@ export const AuthProvider = ({ children }) => {
       let data
 
       if (USE_MOCK_API) {
-        // Use mock API
         data = await mockApi.auth.register(name, email, password)
       } else {
-        // Use real API
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password }),
-        })
-
-        data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Signup failed')
-        }
+        data = await api.signup(name, email, password)
       }
 
       localStorage.setItem('token', data.token)

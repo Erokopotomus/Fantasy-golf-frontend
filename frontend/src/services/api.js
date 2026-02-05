@@ -1,0 +1,236 @@
+// Real API service for Clutch backend
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+
+class ApiService {
+  constructor() {
+    this.baseUrl = API_URL
+    this.token = localStorage.getItem('clutch_token')
+  }
+
+  setToken(token) {
+    this.token = token
+    if (token) {
+      localStorage.setItem('clutch_token', token)
+    } else {
+      localStorage.removeItem('clutch_token')
+    }
+  }
+
+  async request(endpoint, options = {}) {
+    const url = `${this.baseUrl}${endpoint}`
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    }
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Request failed')
+    }
+
+    return data
+  }
+
+  // Auth
+  async signup(name, email, password) {
+    const data = await this.request('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    })
+    this.setToken(data.token)
+    return data
+  }
+
+  async login(email, password) {
+    const data = await this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+    this.setToken(data.token)
+    return data
+  }
+
+  async getMe() {
+    return this.request('/auth/me')
+  }
+
+  logout() {
+    this.setToken(null)
+  }
+
+  // Users
+  async getProfile() {
+    return this.request('/users/me')
+  }
+
+  async updateProfile(data) {
+    return this.request('/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  // Leagues
+  async getLeagues() {
+    return this.request('/leagues')
+  }
+
+  async getLeague(id) {
+    return this.request(`/leagues/${id}`)
+  }
+
+  async createLeague(data) {
+    return this.request('/leagues', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async joinLeague(id, inviteCode) {
+    return this.request(`/leagues/${id}/join`, {
+      method: 'POST',
+      body: JSON.stringify({ inviteCode }),
+    })
+  }
+
+  async joinLeagueByCode(inviteCode) {
+    return this.request('/leagues/join-by-code', {
+      method: 'POST',
+      body: JSON.stringify({ inviteCode }),
+    })
+  }
+
+  async getLeagueMessages(leagueId, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/leagues/${leagueId}/messages${params ? '?' + params : ''}`)
+  }
+
+  async sendMessage(leagueId, content) {
+    return this.request(`/leagues/${leagueId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    })
+  }
+
+  // Players
+  async getPlayers(options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/players${params ? '?' + params : ''}`)
+  }
+
+  async getPlayer(id) {
+    return this.request(`/players/${id}`)
+  }
+
+  async getPlayerStats(id) {
+    return this.request(`/players/${id}/stats`)
+  }
+
+  // Teams
+  async getTeam(id) {
+    return this.request(`/teams/${id}`)
+  }
+
+  async updateTeam(id, data) {
+    return this.request(`/teams/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async addPlayerToRoster(teamId, playerId) {
+    return this.request(`/teams/${teamId}/roster/add`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId }),
+    })
+  }
+
+  async dropPlayerFromRoster(teamId, playerId) {
+    return this.request(`/teams/${teamId}/roster/drop`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId }),
+    })
+  }
+
+  // Drafts
+  async getDraft(id) {
+    return this.request(`/drafts/${id}`)
+  }
+
+  async startDraft(id) {
+    return this.request(`/drafts/${id}/start`, {
+      method: 'POST',
+    })
+  }
+
+  async makeDraftPick(draftId, playerId, amount) {
+    return this.request(`/drafts/${draftId}/pick`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId, amount }),
+    })
+  }
+
+  // Trades
+  async getTrades(options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/trades${params ? '?' + params : ''}`)
+  }
+
+  async proposeTrade(data) {
+    return this.request('/trades', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async acceptTrade(id) {
+    return this.request(`/trades/${id}/accept`, {
+      method: 'POST',
+    })
+  }
+
+  async rejectTrade(id) {
+    return this.request(`/trades/${id}/reject`, {
+      method: 'POST',
+    })
+  }
+
+  async cancelTrade(id) {
+    return this.request(`/trades/${id}/cancel`, {
+      method: 'POST',
+    })
+  }
+
+  // Tournaments
+  async getTournaments(options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/tournaments${params ? '?' + params : ''}`)
+  }
+
+  async getCurrentTournament() {
+    return this.request('/tournaments/current')
+  }
+
+  async getTournament(id) {
+    return this.request(`/tournaments/${id}`)
+  }
+
+  async getTournamentLeaderboard(id) {
+    return this.request(`/tournaments/${id}/leaderboard`)
+  }
+}
+
+export const api = new ApiService()
+export default api
