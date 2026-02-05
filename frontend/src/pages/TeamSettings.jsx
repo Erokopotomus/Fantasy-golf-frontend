@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
+import ImageUpload from '../components/common/ImageUpload'
 import { useLeague } from '../hooks/useLeague'
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../context/NotificationContext'
@@ -214,37 +215,16 @@ const TeamSettings = () => {
                 ))}
               </div>
             ) : (
-              /* Custom Avatar URL */
+              /* Custom Image Upload */
               <div className="space-y-4">
-                <Input
-                  label="Image URL"
-                  value={customAvatarUrl}
-                  onChange={(e) => setCustomAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/your-avatar.png"
+                <ImageUpload
+                  currentImage={customAvatarUrl}
+                  onUpload={(url) => setCustomAvatarUrl(url)}
+                  size={200}
                 />
-                <p className="text-text-muted text-xs">
-                  Enter a URL to an image. For best results, use a square image (e.g., 200x200 pixels).
+                <p className="text-text-muted text-xs text-center">
+                  Your image will be automatically resized and cropped to a square.
                 </p>
-
-                {customAvatarUrl && (
-                  <div className="flex items-center gap-4 p-3 bg-dark-tertiary rounded-lg">
-                    <div className="w-16 h-16 bg-dark-primary rounded-lg overflow-hidden flex items-center justify-center">
-                      <img
-                        src={customAvatarUrl}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none'
-                          e.target.parentElement.innerHTML = '<span class="text-red-400 text-xs">Invalid URL</span>'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">Preview</p>
-                      <p className="text-text-muted text-xs">How your avatar will appear</p>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </Card>
