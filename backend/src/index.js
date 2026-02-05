@@ -47,8 +47,16 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       return callback(null, true)
     }
+    // Allow any localhost port for development
+    if (origin.includes('localhost')) {
+      return callback(null, true)
+    }
     // Allow any vercel.app subdomain
     if (origin.endsWith('.vercel.app')) {
+      return callback(null, true)
+    }
+    // Allow custom domain
+    if (origin.includes('clutchfantasysports.com')) {
       return callback(null, true)
     }
     return callback(new Error('Not allowed by CORS'), false)
