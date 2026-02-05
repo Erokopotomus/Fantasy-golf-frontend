@@ -12,7 +12,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
       search,
       limit = 100,
       offset = 0,
-      sortBy = 'rank',
+      sortBy = 'owgrRank',
       sortOrder = 'asc',
       available,
       leagueId
