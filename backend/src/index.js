@@ -52,6 +52,22 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// One-time seed endpoint (remove after seeding)
+app.post('/api/seed', async (req, res) => {
+  const { secret } = req.body
+  if (secret !== process.env.SEED_SECRET && secret !== 'clutch-seed-2025') {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  try {
+    const { execSync } = require('child_process')
+    execSync('npm run db:seed', { stdio: 'inherit', cwd: process.cwd() })
+    res.json({ success: true, message: 'Database seeded successfully' })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
