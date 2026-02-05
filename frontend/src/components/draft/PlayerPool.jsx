@@ -81,7 +81,7 @@ const PlayerPool = ({
 
   return (
     <Card className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-white">Available Players</h3>
         <span className="text-text-muted text-sm">
           {filteredPlayers.length} available
@@ -92,7 +92,7 @@ const PlayerPool = ({
         placeholder="Search players..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-4"
+        className="mb-3"
         icon={
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -123,10 +123,10 @@ const PlayerPool = ({
                 key={player.id}
                 className="border-b border-dark-border/50 hover:bg-dark-tertiary/50 transition-colors"
               >
-                <td className="py-3 pr-2 text-text-muted text-sm">
+                <td className="py-2 pr-2 text-text-muted text-sm">
                   #{player.rank}
                 </td>
-                <td className="py-3 pr-2">
+                <td className="py-2 pr-2">
                   <button
                     className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
                     onClick={() => onViewPlayer?.(player)}
@@ -145,7 +145,7 @@ const PlayerPool = ({
                     {player.stats?.sgTotal?.toFixed(2) || '—'}
                   </span>
                 </td>
-                <td className="py-3">
+                <td className="py-2">
                   <div className="flex gap-1 justify-end">
                     {isUserTurn && (
                       <Button

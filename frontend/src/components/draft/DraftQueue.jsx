@@ -71,7 +71,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
               onDragOver={(e) => handleDragOver(e, index)}
               onDragEnd={handleDragEnd}
               className={`
-                flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-move
+                flex items-center gap-3 p-2 bg-dark-tertiary rounded-lg cursor-move
                 transition-all duration-200
                 ${draggedIndex === index ? 'opacity-50 scale-95' : 'hover:bg-dark-border'}
               `}

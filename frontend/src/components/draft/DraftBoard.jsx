@@ -47,7 +47,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick }) => {
                     <td key={`${team.id}-${round}`} className="p-1">
                       <div
                         className={`
-                          rounded-lg p-2 min-h-[60px] text-center transition-all
+                          rounded-lg p-1.5 min-h-[48px] text-center transition-all
                           ${isCurrent
                             ? 'bg-accent-green/20 border-2 border-accent-green animate-pulse'
                             : pick

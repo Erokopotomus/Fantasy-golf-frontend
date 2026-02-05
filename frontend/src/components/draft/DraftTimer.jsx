@@ -18,12 +18,12 @@ const DraftTimer = ({ onTimeout }) => {
   }
 
   return (
-    <div className="bg-dark-tertiary rounded-lg p-4">
+    <div className="bg-dark-tertiary rounded-lg p-3">
       <div className="text-center">
         <p className="text-text-muted text-sm mb-1">
           {isPaused ? 'PAUSED' : 'Time Remaining'}
         </p>
-        <p className={`text-4xl font-mono font-bold ${getTimerColor()}`}>
+        <p className={`text-3xl font-mono font-bold ${getTimerColor()}`}>
           {formattedTime}
         </p>
       </div>

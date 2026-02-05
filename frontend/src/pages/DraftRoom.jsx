@@ -8,6 +8,7 @@ import DraftHeader from '../components/draft/DraftHeader'
 import PlayerPool from '../components/draft/PlayerPool'
 import DraftQueue from '../components/draft/DraftQueue'
 import DraftBoard from '../components/draft/DraftBoard'
+import DraftDashboard from '../components/draft/DraftDashboard'
 import BidPanel from '../components/draft/BidPanel'
 import PickHistory from '../components/draft/PickHistory'
 import PickAnnouncement from '../components/draft/PickAnnouncement'
@@ -47,6 +48,7 @@ const DraftRoomContent = () => {
 
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [isNominating, setIsNominating] = useState(false)
+  const [activeTab, setActiveTab] = useState('draft')
   const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
 
   const handleSelectPlayer = useCallback(async (player) => {
@@ -144,79 +146,117 @@ const DraftRoomContent = () => {
         onTimeout={handleTimeout}
       />
 
-      <main className="pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-6">
-            {/* Left Column - Player Pool */}
-            <div className="lg:col-span-5">
-              <div className="h-[600px]">
-                <PlayerPool
-                  players={availablePlayers}
-                  onSelectPlayer={handleSelectPlayer}
-                  onAddToQueue={addToQueue}
-                  isUserTurn={isUserTurn}
-                  queue={queue}
-                  draftType={draft?.type}
-                  onViewPlayer={openPlayerDetail}
-                />
-              </div>
-            </div>
-
-            {/* Center Column - Draft Board or Bid Panel */}
-            <div className="lg:col-span-4">
-              {draft?.type === 'auction' ? (
-                <BidPanel
-                  currentBid={currentBid}
-                  userBudget={userBudget}
-                  isUserTurn={isUserTurn}
-                  isNominating={isNominating}
-                  onBid={handleBid}
-                  onPass={handlePass}
-                  onNominate={handleNominate}
-                  selectedPlayer={selectedPlayer}
-                />
-              ) : (
-                <DraftBoard
-                  picks={picks}
-                  teams={teams}
-                  rosterSize={rosterSize}
-                  currentPick={currentPick}
-                />
-              )}
-            </div>
-
-            {/* Right Column - Queue and History */}
-            <div className="lg:col-span-3 space-y-4">
-              <div className="h-[250px]">
-                <DraftQueue
-                  queue={queue}
-                  onRemove={removeFromQueue}
-                  onReorder={reorderQueue}
-                  onSelect={handleSelectPlayer}
-                  isUserTurn={isUserTurn}
-                />
-              </div>
-              <PickHistory picks={picks} limit={4} />
-              <ChatPanel
-                leagueId={leagueId}
-                leagueName={league?.name}
-                memberCount={league?.memberCount}
-                collapsible
-                defaultCollapsed
-              />
-            </div>
+      {/* Tab Bar */}
+      <div className="bg-dark-secondary border-b border-dark-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-1">
+            {['draft', 'dashboard'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm font-medium capitalize transition-colors relative ${
+                  activeTab === tab
+                    ? 'text-accent-green'
+                    : 'text-text-muted hover:text-white'
+                }`}
+              >
+                {tab === 'draft' ? 'Draft' : 'Dashboard'}
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-green" />
+                )}
+              </button>
+            ))}
           </div>
+        </div>
+      </div>
 
-          {/* Full Width Draft Board for Auction */}
-          {draft?.type === 'auction' && (
-            <div className="mt-6">
-              <DraftBoard
+      <main className="pb-4 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {activeTab === 'dashboard' ? (
+            <div className="mt-3">
+              <DraftDashboard
                 picks={picks}
                 teams={teams}
+                players={players}
                 rosterSize={rosterSize}
-                currentPick={currentPick}
+                draft={draft}
               />
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3" style={{ minHeight: 'calc(100vh - 200px)' }}>
+                {/* Left Column - Player Pool */}
+                <div className="lg:col-span-5 flex flex-col" style={{ maxHeight: 'calc(100vh - 210px)' }}>
+                  <div className="flex-1 min-h-0">
+                    <PlayerPool
+                      players={availablePlayers}
+                      onSelectPlayer={handleSelectPlayer}
+                      onAddToQueue={addToQueue}
+                      isUserTurn={isUserTurn}
+                      queue={queue}
+                      draftType={draft?.type}
+                      onViewPlayer={openPlayerDetail}
+                    />
+                  </div>
+                </div>
+
+                {/* Center Column - Draft Board or Bid Panel */}
+                <div className="lg:col-span-4">
+                  {draft?.type === 'auction' ? (
+                    <BidPanel
+                      currentBid={currentBid}
+                      userBudget={userBudget}
+                      isUserTurn={isUserTurn}
+                      isNominating={isNominating}
+                      onBid={handleBid}
+                      onPass={handlePass}
+                      onNominate={handleNominate}
+                      selectedPlayer={selectedPlayer}
+                    />
+                  ) : (
+                    <DraftBoard
+                      picks={picks}
+                      teams={teams}
+                      rosterSize={rosterSize}
+                      currentPick={currentPick}
+                    />
+                  )}
+                </div>
+
+                {/* Right Column - Queue and History */}
+                <div className="lg:col-span-3 flex flex-col gap-3" style={{ maxHeight: 'calc(100vh - 210px)' }}>
+                  <div className="flex-shrink-0" style={{ maxHeight: '40%' }}>
+                    <DraftQueue
+                      queue={queue}
+                      onRemove={removeFromQueue}
+                      onReorder={reorderQueue}
+                      onSelect={handleSelectPlayer}
+                      isUserTurn={isUserTurn}
+                    />
+                  </div>
+                  <PickHistory picks={picks} limit={4} />
+                  <ChatPanel
+                    leagueId={leagueId}
+                    leagueName={league?.name}
+                    memberCount={league?.memberCount}
+                    collapsible
+                    defaultCollapsed
+                  />
+                </div>
+              </div>
+
+              {/* Full Width Draft Board for Auction */}
+              {draft?.type === 'auction' && (
+                <div className="mt-4">
+                  <DraftBoard
+                    picks={picks}
+                    teams={teams}
+                    rosterSize={rosterSize}
+                    currentPick={currentPick}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
