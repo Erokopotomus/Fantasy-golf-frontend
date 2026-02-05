@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Input from '../components/common/Input'
 import Button from '../components/common/Button'
@@ -7,9 +7,23 @@ import { useJoinLeague } from '../hooks/useJoinLeague'
 
 const JoinLeague = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { validateCode, joinLeague, loading, error, previewLeague, clearPreview } = useJoinLeague()
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState('')
+
+  // Auto-fill code from URL parameter
+  useEffect(() => {
+    const urlCode = searchParams.get('code')
+    if (urlCode) {
+      const cleanCode = urlCode.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+      setCode(cleanCode)
+      // Auto-validate if we have a full code
+      if (cleanCode.length === 6) {
+        validateCode(cleanCode).catch(() => {})
+      }
+    }
+  }, [searchParams, validateCode])
 
   const handleCodeChange = (e) => {
     const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
-import { useLeagues } from '../hooks/useLeagues'
+import { useLeague } from '../hooks/useLeague'
 import { useNotifications } from '../context/NotificationContext'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
 import FullLeagueSettings from '../components/league/settings/FullLeagueSettings'
@@ -13,10 +13,9 @@ import OneAndDoneSettings from '../components/league/settings/OneAndDoneSettings
 
 const LeagueSettings = () => {
   const { leagueId } = useParams()
-  const { leagues, loading } = useLeagues()
+  const { league, loading, isCommissioner } = useLeague(leagueId)
   const { notify } = useNotifications()
-
-  const league = leagues?.find(l => l.id === leagueId)
+  const [copied, setCopied] = useState(false)
   const { format, formatSettings } = useLeagueFormat(league)
 
   const [settings, setSettings] = useState({
@@ -73,6 +72,44 @@ const LeagueSettings = () => {
 
   const handleSave = () => {
     notify.success('Settings Saved', 'League settings have been updated')
+  }
+
+  const inviteCode = league?.inviteCode || league?.joinCode
+  const inviteLink = inviteCode ? `${window.location.origin}/leagues/join?code=${inviteCode}` : ''
+
+  const copyInviteCode = () => {
+    if (inviteCode) {
+      navigator.clipboard.writeText(inviteCode)
+      setCopied(true)
+      notify.success('Copied!', 'Invite code copied to clipboard')
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const copyInviteLink = () => {
+    if (inviteLink) {
+      navigator.clipboard.writeText(inviteLink)
+      setCopied(true)
+      notify.success('Copied!', 'Invite link copied to clipboard')
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const shareInvite = async () => {
+    if (navigator.share && inviteLink) {
+      try {
+        await navigator.share({
+          title: `Join ${league.name} on Clutch`,
+          text: `Join my fantasy golf league "${league.name}"! Use code: ${inviteCode}`,
+          url: inviteLink
+        })
+      } catch (err) {
+        // User cancelled or share failed, fall back to copy
+        copyInviteLink()
+      }
+    } else {
+      copyInviteLink()
+    }
   }
 
   const handleFormatSettingsChange = (newFormatSettings) => {
@@ -342,46 +379,129 @@ const LeagueSettings = () => {
 
       {/* Members */}
       {activeTab === 'members' && (
-        <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">League Members</h3>
-          <div className="space-y-2">
-            {(league.standings || []).map((member, index) => (
-              <div
-                key={member.userId}
-                className="flex items-center justify-between p-3 bg-dark-tertiary rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-dark-primary flex items-center justify-center text-sm font-semibold text-text-secondary">
-                    {member.avatar}
-                  </div>
-                  <div>
-                    <p className="text-white font-medium">{member.name}</p>
-                    <p className="text-text-muted text-xs">
-                      {index === 0 ? 'Commissioner' : 'Member'}
-                    </p>
-                  </div>
-                </div>
-                {index !== 0 && (
-                  <button className="text-text-muted hover:text-red-400 transition-colors text-sm">
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="space-y-6">
+          {/* Invite Code Section */}
+          <Card className="border-accent-green/30">
+            <h3 className="text-lg font-semibold text-white mb-4">Invite Members</h3>
 
-          <div className="mt-6 pt-6 border-t border-dark-border">
-            <h4 className="text-sm font-medium text-text-secondary mb-3">Invite New Members</h4>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter email address"
-                className="flex-1 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
-              />
-              <Button>Invite</Button>
+            {/* Invite Code Display */}
+            <div className="bg-dark-primary rounded-lg p-4 mb-4">
+              <p className="text-text-muted text-xs mb-2">LEAGUE INVITE CODE</p>
+              <div className="flex items-center justify-between">
+                <span className="text-3xl font-mono tracking-[0.3em] text-accent-green font-bold">
+                  {inviteCode || '------'}
+                </span>
+                <button
+                  onClick={copyInviteCode}
+                  className="p-2 bg-dark-tertiary hover:bg-dark-border rounded-lg transition-colors"
+                  title="Copy code"
+                >
+                  {copied ? (
+                    <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        </Card>
+
+            {/* Share Options */}
+            <div className="flex gap-3">
+              <Button onClick={copyInviteLink} variant="secondary" className="flex-1">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Copy Link
+              </Button>
+              <Button onClick={shareInvite} className="flex-1">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Share
+              </Button>
+            </div>
+
+            <p className="text-text-muted text-xs mt-3">
+              Share this code with friends to invite them to your league. They can enter it at the Join League page.
+            </p>
+          </Card>
+
+          {/* Members List */}
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">League Members</h3>
+              <span className="text-text-muted text-sm">
+                {league?.members?.length || 0} / {league?.maxTeams || 10}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {(league?.members || []).map((member) => {
+                const isOwner = member.role === 'OWNER'
+                return (
+                  <div
+                    key={member.userId || member.user?.id}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      isOwner ? 'bg-accent-green/10 border border-accent-green/30' : 'bg-dark-tertiary'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-dark-primary flex items-center justify-center text-sm font-semibold text-text-secondary">
+                        {member.user?.avatar || member.user?.name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div>
+                        <p className={`font-medium ${isOwner ? 'text-accent-green' : 'text-white'}`}>
+                          {member.user?.name || 'Unknown'}
+                        </p>
+                        <p className="text-text-muted text-xs flex items-center gap-1">
+                          {isOwner ? (
+                            <>
+                              <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                              Commissioner
+                            </>
+                          ) : 'Member'}
+                        </p>
+                      </div>
+                    </div>
+                    {isCommissioner && !isOwner && (
+                      <button className="text-text-muted hover:text-red-400 transition-colors text-sm">
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Empty state if no members loaded yet */}
+            {(!league?.members || league.members.length === 0) && (
+              <div className="text-center py-8 text-text-muted">
+                <p>No members data available</p>
+              </div>
+            )}
+          </Card>
+
+          {/* Commissioner Note */}
+          {!isCommissioner && (
+            <Card className="bg-dark-tertiary/50 border-dark-border">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-text-muted flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-text-secondary text-sm">
+                    Only the league commissioner can invite or remove members.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
       )}
     </div>
   )
