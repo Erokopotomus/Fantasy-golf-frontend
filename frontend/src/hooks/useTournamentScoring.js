@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const useTournamentScoring = (tournamentId, leagueId = null) => {
   const [tournament, setTournament] = useState(null)
@@ -10,12 +10,39 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
   const pollIntervalRef = useRef(null)
 
   const fetchScoring = useCallback(async () => {
+    if (!tournamentId) return
+
     try {
       setError(null)
-      const data = await mockApi.tournaments.getScoring(tournamentId, leagueId)
-      setTournament(data.tournament)
-      setLeaderboard(data.leaderboard)
-      setMyPlayers(data.myPlayers)
+
+      // Fetch tournament details and leaderboard in parallel
+      const promises = [
+        api.getTournament(tournamentId),
+        api.getTournamentLeaderboard(tournamentId),
+      ]
+
+      // If we have a leagueId, also fetch league-specific scoring
+      if (leagueId) {
+        promises.push(api.getLeagueScoring(leagueId, tournamentId))
+      }
+
+      const results = await Promise.all(promises)
+
+      setTournament(results[0]?.tournament || null)
+      setLeaderboard(results[1]?.leaderboard || [])
+
+      // Extract user's players from league scoring data
+      if (results[2]?.teams) {
+        // Find user's team and get their players' performances
+        const allPlayerIds = new Set()
+        for (const team of results[2].teams) {
+          for (const player of team.players) {
+            allPlayerIds.add(player.playerId)
+          }
+        }
+        // Mark leaderboard entries that are on user's team
+        setMyPlayers(results[2].teams)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -28,7 +55,7 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
       setLoading(true)
       fetchScoring()
 
-      // Poll for updates every 30 seconds (simulating live scoring)
+      // Poll for updates every 30 seconds
       pollIntervalRef.current = setInterval(fetchScoring, 30000)
     }
 
@@ -39,11 +66,6 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
     }
   }, [tournamentId, fetchScoring])
 
-  const simulateScoreUpdate = useCallback(() => {
-    // Manually trigger a score update for testing
-    fetchScoring()
-  }, [fetchScoring])
-
   return {
     tournament,
     leaderboard,
@@ -51,7 +73,6 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
     loading,
     error,
     refetch: fetchScoring,
-    simulateScoreUpdate,
   }
 }
 

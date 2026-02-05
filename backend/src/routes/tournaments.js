@@ -1,6 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { optionalAuth } = require('../middleware/auth')
+const { calculateFantasyPoints, getDefaultScoringConfig } = require('../services/scoringService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -69,7 +70,7 @@ router.get('/:id', async (req, res, next) => {
                 name: true,
                 country: true,
                 countryFlag: true,
-                imageUrl: true
+                headshotUrl: true
               }
             }
           },
@@ -94,40 +95,78 @@ router.get('/:id', async (req, res, next) => {
 // GET /api/tournaments/:id/leaderboard - Get tournament leaderboard
 router.get('/:id/leaderboard', async (req, res, next) => {
   try {
-    const performances = await prisma.performance.findMany({
-      where: { tournamentId: req.params.id },
-      include: {
-        player: {
-          select: {
-            id: true,
-            name: true,
-            country: true,
-            countryFlag: true,
-            imageUrl: true,
-            rank: true
-          }
-        }
-      },
-      orderBy: [
-        { position: 'asc' },
-        { totalScore: 'asc' }
-      ]
-    })
+    const { scoringPreset } = req.query
 
-    const leaderboard = performances.map((perf, index) => ({
-      position: perf.position || index + 1,
-      player: perf.player,
-      totalScore: perf.totalScore,
-      today: perf.score,
-      thru: 18, // Would come from live data
-      rounds: {
-        r1: perf.round1,
-        r2: perf.round2,
-        r3: perf.round3,
-        r4: perf.round4
-      },
-      fantasyPoints: perf.fantasyPoints
-    }))
+    const [performances, allRoundScores] = await Promise.all([
+      prisma.performance.findMany({
+        where: { tournamentId: req.params.id },
+        include: {
+          player: {
+            select: {
+              id: true,
+              name: true,
+              country: true,
+              countryFlag: true,
+              headshotUrl: true,
+              owgrRank: true,
+              primaryTour: true,
+            }
+          },
+        },
+        orderBy: [
+          { position: 'asc' },
+          { totalScore: 'asc' }
+        ]
+      }),
+      prisma.roundScore.findMany({
+        where: { tournamentId: req.params.id },
+        orderBy: { roundNumber: 'asc' },
+      }),
+    ])
+
+    // Index round scores by playerId
+    const roundScoresByPlayer = {}
+    for (const rs of allRoundScores) {
+      if (!roundScoresByPlayer[rs.playerId]) roundScoresByPlayer[rs.playerId] = []
+      roundScoresByPlayer[rs.playerId].push(rs)
+    }
+
+    // Determine scoring config
+    const scoringConfig = scoringPreset
+      ? getDefaultScoringConfig(scoringPreset)
+      : getDefaultScoringConfig('standard')
+
+    const leaderboard = performances.map((perf, index) => {
+      // Attach round scores for bonus calculation
+      const perfWithRounds = { ...perf, roundScores: roundScoresByPlayer[perf.playerId] || [] }
+      const { total: fantasyPoints, breakdown } = calculateFantasyPoints(perfWithRounds, scoringConfig)
+
+      // Derive "today" score from last completed round
+      const completedRounds = [perf.round1, perf.round2, perf.round3, perf.round4].filter((r) => r != null)
+      const today = completedRounds.length > 0 ? completedRounds[completedRounds.length - 1] : null
+
+      return {
+        position: perf.position || index + 1,
+        positionTied: perf.positionTied,
+        player: perf.player,
+        totalScore: perf.totalScore,
+        totalToPar: perf.totalToPar,
+        today,
+        thru: perf.status === 'CUT' ? 'CUT' : 18,
+        status: perf.status,
+        rounds: {
+          r1: perf.round1,
+          r2: perf.round2,
+          r3: perf.round3,
+          r4: perf.round4
+        },
+        fantasyPoints,
+        breakdown,
+        eagles: perf.eagles,
+        birdies: perf.birdies,
+        bogeys: perf.bogeys,
+      }
+    })
 
     res.json({ leaderboard })
   } catch (error) {

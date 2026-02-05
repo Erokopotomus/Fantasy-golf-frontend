@@ -1,6 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
+const { calculateLeagueStandings, calculateTournamentScoring } = require('../services/scoringService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -497,6 +498,59 @@ router.post('/:id/messages', authenticate, async (req, res, next) => {
     io.to(`league-${req.params.id}`).emit('new-message', message)
 
     res.status(201).json({ message })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/leagues/:id/standings - Get league standings
+router.get('/:id/standings', authenticate, async (req, res, next) => {
+  try {
+    // Verify league membership
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: {
+        members: { select: { userId: true } },
+      },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isMember = league.members.some((m) => m.userId === req.user.id)
+    if (!isMember && !league.isPublic) {
+      return res.status(403).json({ error: { message: 'Not authorized to view this league' } })
+    }
+
+    const data = await calculateLeagueStandings(req.params.id, prisma)
+    res.json(data)
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/leagues/:id/scoring/:tournamentId - Get per-team scoring for a tournament
+router.get('/:id/scoring/:tournamentId', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: {
+        members: { select: { userId: true } },
+      },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isMember = league.members.some((m) => m.userId === req.user.id)
+    if (!isMember && !league.isPublic) {
+      return res.status(403).json({ error: { message: 'Not authorized to view this league' } })
+    }
+
+    const data = await calculateTournamentScoring(req.params.tournamentId, req.params.id, prisma)
+    res.json(data)
   } catch (error) {
     next(error)
   }

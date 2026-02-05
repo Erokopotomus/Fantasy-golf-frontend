@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const useStandings = (leagueId) => {
   const [standings, setStandings] = useState([])
@@ -16,9 +16,9 @@ export const useStandings = (leagueId) => {
 
     try {
       setError(null)
-      const data = await mockApi.leagues.getStandings(leagueId)
-      setStandings(data.standings)
-      setWeeklyResults(data.weeklyResults)
+      const data = await api.getLeagueStandings(leagueId)
+      setStandings(data.standings || [])
+      setWeeklyResults(data.weeklyResults || [])
     } catch (err) {
       setError(err.message)
     } finally {

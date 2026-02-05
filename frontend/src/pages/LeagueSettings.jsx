@@ -12,6 +12,7 @@ import HeadToHeadSettings from '../components/league/settings/HeadToHeadSettings
 import RotoSettings from '../components/league/settings/RotoSettings'
 import SurvivorSettings from '../components/league/settings/SurvivorSettings'
 import OneAndDoneSettings from '../components/league/settings/OneAndDoneSettings'
+import ScoringSettings from '../components/league/settings/ScoringSettings'
 
 const LeagueSettings = () => {
   const { leagueId } = useParams()
@@ -346,50 +347,13 @@ const LeagueSettings = () => {
 
       {/* Scoring Settings */}
       {activeTab === 'scoring' && (
-        <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">Scoring Settings</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Scoring Type
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
-                  <input
-                    type="radio"
-                    name="scoringType"
-                    value="standard"
-                    checked={settings.scoringType === 'standard'}
-                    onChange={(e) => setSettings({ ...settings, scoringType: e.target.value })}
-                    className="text-accent-green"
-                  />
-                  <div>
-                    <p className="text-white font-medium">Standard</p>
-                    <p className="text-text-muted text-xs">Points based on finish position</p>
-                  </div>
-                </label>
-                <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
-                  <input
-                    type="radio"
-                    name="scoringType"
-                    value="strokes-gained"
-                    checked={settings.scoringType === 'strokes-gained'}
-                    onChange={(e) => setSettings({ ...settings, scoringType: e.target.value })}
-                    className="text-accent-green"
-                  />
-                  <div>
-                    <p className="text-white font-medium">Strokes Gained</p>
-                    <p className="text-text-muted text-xs">Advanced stats-based scoring</p>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <Button onClick={handleSave} loading={saving}>Save Changes</Button>
-            </div>
-          </div>
-        </Card>
+        <div className="space-y-6">
+          <ScoringSettings
+            settings={settings}
+            onChange={(scoringUpdates) => setSettings({ ...settings, ...scoringUpdates })}
+          />
+          <Button onClick={handleSave} loading={saving}>Save Scoring Settings</Button>
+        </div>
       )}
 
       {/* Trade Settings */}

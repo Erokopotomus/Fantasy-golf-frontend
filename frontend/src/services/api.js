@@ -270,8 +270,18 @@ class ApiService {
     return this.request(`/tournaments/${id}`)
   }
 
-  async getTournamentLeaderboard(id) {
-    return this.request(`/tournaments/${id}/leaderboard`)
+  async getTournamentLeaderboard(id, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/tournaments/${id}/leaderboard${params ? '?' + params : ''}`)
+  }
+
+  // Standings & Scoring
+  async getLeagueStandings(leagueId) {
+    return this.request(`/leagues/${leagueId}/standings`)
+  }
+
+  async getLeagueScoring(leagueId, tournamentId) {
+    return this.request(`/leagues/${leagueId}/scoring/${tournamentId}`)
   }
 }
 

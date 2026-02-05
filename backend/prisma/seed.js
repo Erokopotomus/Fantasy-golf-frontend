@@ -1,10 +1,10 @@
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')
+const { calculateFantasyPoints, getDefaultScoringConfig } = require('../src/services/scoringService')
 
 const prisma = new PrismaClient()
 
 // Top 50 PGA Tour Players (2024-25 Season)
-// Updated field names to match new schema: rank -> owgrRank, top10s -> top10s (same)
 const players = [
   { name: 'Scottie Scheffler', country: 'USA', countryFlag: '🇺🇸', owgrRank: 1, owgr: 12.85, avgScore: 69.2, sgTotal: 2.45, sgPutting: 0.35, sgApproach: 0.95, sgOffTee: 0.72, sgAroundGreen: 0.43, top10s: 15, wins: 9, cutsMade: 22, primaryTour: 'PGA' },
   { name: 'Xander Schauffele', country: 'USA', countryFlag: '🇺🇸', owgrRank: 2, owgr: 10.24, avgScore: 69.5, sgTotal: 2.12, sgPutting: 0.42, sgApproach: 0.78, sgOffTee: 0.55, sgAroundGreen: 0.37, top10s: 14, wins: 4, cutsMade: 21, primaryTour: 'PGA' },
@@ -59,7 +59,6 @@ const players = [
 ]
 
 // 2024-25 PGA Tour Schedule
-// Updated to use new schema fields: tour, isMajor, isSignature, isPlayoff
 const tournaments = [
   // January - Signature Events
   { name: 'The Sentry', location: 'Kapalua Resort (Plantation) - Maui, Hawaii', startDate: new Date('2025-01-02'), endDate: new Date('2025-01-05'), purse: 20000000, status: 'COMPLETED', tour: 'PGA', isSignature: true },
@@ -112,6 +111,227 @@ const tournaments = [
   { name: 'TOUR Championship', location: 'East Lake Golf Club - Atlanta, Georgia', startDate: new Date('2025-08-28'), endDate: new Date('2025-08-31'), purse: 100000000, status: 'UPCOMING', tour: 'PGA', isPlayoff: true },
 ]
 
+// Seeded random number generator for reproducible data
+function seededRandom(seed) {
+  let s = seed
+  return function () {
+    s = (s * 16807) % 2147483647
+    return (s - 1) / 2147483646
+  }
+}
+
+/**
+ * Generate realistic performance data for a tournament
+ * @param {Object[]} dbPlayers - All players from DB
+ * @param {Object} tournament - Tournament record
+ * @param {number} seed - Random seed
+ * @returns {{ performances: Object[], roundScores: Object[] }}
+ */
+function generateTournamentPerformances(dbPlayers, tournament, seed) {
+  const rng = seededRandom(seed)
+  const coursePar = 72
+
+  // Pick 40-48 players for this tournament
+  const fieldSize = 40 + Math.floor(rng() * 9)
+  // Shuffle players deterministically and take fieldSize
+  const shuffled = [...dbPlayers].sort((a, b) => rng() - 0.5)
+  const field = shuffled.slice(0, fieldSize)
+
+  const performances = []
+  const roundScores = []
+
+  for (const player of field) {
+    // Base scoring ability from sgTotal (higher SG = lower scores)
+    const sgBase = player.sgTotal || 0.5
+    const baseScore = coursePar - sgBase
+
+    // Generate 4 round scores with variance
+    const rounds = []
+    let totalStrokes = 0
+    for (let r = 1; r <= 4; r++) {
+      const variance = (rng() - 0.5) * 6 // +/- 3 strokes variance
+      const roundScore = Math.round(baseScore + variance)
+      rounds.push(roundScore)
+      totalStrokes += roundScore
+    }
+
+    const totalToPar = totalStrokes - coursePar * 4
+
+    // Generate per-round hole distributions
+    for (let r = 1; r <= 4; r++) {
+      const score = rounds[r - 1]
+      const toPar = score - coursePar
+      const stats = generateHoleDistribution(toPar, rng)
+
+      roundScores.push({
+        tournamentId: tournament.id,
+        playerId: player.id,
+        roundNumber: r,
+        score,
+        toPar,
+        eagles: stats.eagles,
+        birdies: stats.birdies,
+        pars: stats.pars,
+        bogeys: stats.bogeys,
+        doubleBogeys: stats.doubleBogeys,
+        worseThanDouble: stats.worseThanDouble,
+        bogeyFree: stats.bogeys === 0 && stats.doubleBogeys === 0 && stats.worseThanDouble === 0,
+        consecutiveBirdies: stats.birdies >= 3 ? Math.min(stats.birdies, 3 + Math.floor(rng() * 2)) : Math.floor(rng() * Math.min(stats.birdies, 3)),
+      })
+    }
+
+    // Aggregate hole stats across all rounds
+    const playerRounds = roundScores.filter((rs) => rs.playerId === player.id && rs.tournamentId === tournament.id)
+    const totalEagles = playerRounds.reduce((s, r) => s + r.eagles, 0)
+    const totalBirdies = playerRounds.reduce((s, r) => s + r.birdies, 0)
+    const totalPars = playerRounds.reduce((s, r) => s + r.pars, 0)
+    const totalBogeys = playerRounds.reduce((s, r) => s + r.bogeys, 0)
+    const totalDoubles = playerRounds.reduce((s, r) => s + r.doubleBogeys, 0)
+    const totalWorse = playerRounds.reduce((s, r) => s + r.worseThanDouble, 0)
+
+    // SG for this tournament (slight variance from career)
+    const sgTournament = sgBase + (rng() - 0.5) * 0.8
+
+    performances.push({
+      tournamentId: tournament.id,
+      playerId: player.id,
+      totalScore: totalStrokes,
+      totalToPar,
+      round1: rounds[0],
+      round2: rounds[1],
+      round3: rounds[2],
+      round4: rounds[3],
+      eagles: totalEagles,
+      birdies: totalBirdies,
+      pars: totalPars,
+      bogeys: totalBogeys,
+      doubleBogeys: totalDoubles,
+      worseThanDouble: totalWorse,
+      sgTotal: Math.round(sgTournament * 100) / 100,
+      status: 'ACTIVE',
+      _roundScoresForCalc: playerRounds, // temp, used for fantasy calc
+    })
+  }
+
+  // Sort by totalToPar to assign positions
+  performances.sort((a, b) => a.totalToPar - b.totalToPar)
+
+  // Bottom ~8 players get CUT status
+  const cutCount = Math.min(8, Math.floor(fieldSize * 0.18))
+  for (let i = performances.length - cutCount; i < performances.length; i++) {
+    performances[i].status = 'CUT'
+    // CUT players only have 2 rounds
+    performances[i].round3 = null
+    performances[i].round4 = null
+    performances[i].totalScore = performances[i].round1 + performances[i].round2
+    performances[i].totalToPar = performances[i].totalScore - coursePar * 2
+  }
+
+  // Re-sort active players by totalToPar, then cut players at end
+  const active = performances.filter((p) => p.status === 'ACTIVE').sort((a, b) => a.totalToPar - b.totalToPar)
+  const cut = performances.filter((p) => p.status === 'CUT').sort((a, b) => a.totalToPar - b.totalToPar)
+
+  // Assign positions with ties
+  let pos = 1
+  for (let i = 0; i < active.length; i++) {
+    if (i > 0 && active[i].totalToPar === active[i - 1].totalToPar) {
+      active[i].position = active[i - 1].position
+      active[i].positionTied = true
+      active[i - 1].positionTied = true
+    } else {
+      active[i].position = pos
+    }
+    pos++
+  }
+  // Cut players don't get a position
+  for (const p of cut) {
+    p.position = null
+  }
+
+  const allPerfs = [...active, ...cut]
+
+  // Calculate fantasy points for each performance
+  const scoringConfig = getDefaultScoringConfig('standard')
+  for (const perf of allPerfs) {
+    const perfForCalc = {
+      ...perf,
+      roundScores: perf._roundScoresForCalc || [],
+    }
+    const { total } = calculateFantasyPoints(perfForCalc, scoringConfig)
+    perf.fantasyPoints = total
+    delete perf._roundScoresForCalc
+  }
+
+  return { performances: allPerfs, roundScores }
+}
+
+/**
+ * Generate realistic hole distribution for a round
+ */
+function generateHoleDistribution(toPar, rng) {
+  // Start with a baseline par-level round
+  let eagles = 0
+  let birdies = 0
+  let pars = 14
+  let bogeys = 0
+  let doubleBogeys = 0
+  let worseThanDouble = 0
+
+  // Adjust based on toPar
+  if (toPar <= -6) {
+    // Exceptional round (-6 or better)
+    birdies = 7 + Math.floor(rng() * 2)
+    eagles = Math.floor(rng() * 2)
+    bogeys = Math.max(0, 1 + Math.floor(rng() * 2) - 1)
+  } else if (toPar <= -3) {
+    birdies = 4 + Math.floor(rng() * 3)
+    eagles = rng() < 0.15 ? 1 : 0
+    bogeys = Math.max(0, Math.floor(rng() * 2))
+  } else if (toPar <= 0) {
+    birdies = 2 + Math.floor(rng() * 3)
+    eagles = rng() < 0.05 ? 1 : 0
+    bogeys = birdies + eagles - Math.abs(toPar) // balance to hit toPar
+    if (bogeys < 0) bogeys = 0
+  } else if (toPar <= 3) {
+    birdies = 1 + Math.floor(rng() * 2)
+    bogeys = 2 + Math.floor(rng() * 3)
+    doubleBogeys = rng() < 0.3 ? 1 : 0
+  } else {
+    // Bad round (+4 or worse)
+    birdies = Math.floor(rng() * 2)
+    bogeys = 3 + Math.floor(rng() * 3)
+    doubleBogeys = 1 + Math.floor(rng() * 2)
+    worseThanDouble = rng() < 0.2 ? 1 : 0
+  }
+
+  // Ensure it sums to 18 holes and matches toPar
+  pars = 18 - eagles - birdies - bogeys - doubleBogeys - worseThanDouble
+  if (pars < 0) {
+    // Reduce excess
+    const excess = -pars
+    bogeys = Math.max(0, bogeys - excess)
+    pars = 18 - eagles - birdies - bogeys - doubleBogeys - worseThanDouble
+  }
+  if (pars < 0) pars = 0
+
+  // Verify toPar consistency, adjust birdies/bogeys slightly if needed
+  const calcToPar = -2 * eagles - birdies + bogeys + 2 * doubleBogeys + 3 * worseThanDouble
+  const diff = toPar - calcToPar
+  if (diff > 0 && pars > 0) {
+    // Need more over-par: convert pars to bogeys
+    const adjust = Math.min(diff, pars)
+    bogeys += adjust
+    pars -= adjust
+  } else if (diff < 0 && pars > 0) {
+    // Need more under-par: convert pars to birdies
+    const adjust = Math.min(-diff, pars)
+    birdies += adjust
+    pars -= adjust
+  }
+
+  return { eagles, birdies, pars, bogeys, doubleBogeys, worseThanDouble }
+}
+
 async function main() {
   console.log('🌱 Starting seed...')
 
@@ -130,27 +350,78 @@ async function main() {
   })
   console.log(`   ✅ Demo user: ${demoUser.email}`)
 
+  // Clear dependent data first (order matters for foreign keys)
+  console.log('🧹 Clearing existing data...')
+  await prisma.holeScore.deleteMany()
+  await prisma.roundScore.deleteMany()
+  await prisma.performance.deleteMany()
+  await prisma.liveScore.deleteMany()
+  await prisma.draftPick.deleteMany()
+  await prisma.rosterEntry.deleteMany()
+  await prisma.playerPrediction.deleteMany()
+  await prisma.playerDFSEntry.deleteMany()
+  await prisma.playerCourseHistory.deleteMany()
+  await prisma.pick.deleteMany()
+
   // Clear and reseed players
   console.log('🏌️ Seeding players...')
   await prisma.player.deleteMany()
+  const dbPlayers = []
   for (const player of players) {
-    await prisma.player.create({ data: player })
+    const created = await prisma.player.create({ data: player })
+    dbPlayers.push(created)
   }
   console.log(`   ✅ Created ${players.length} players`)
 
   // Clear and reseed tournaments
   console.log('🏆 Seeding tournaments...')
   await prisma.tournament.deleteMany()
+  const dbTournaments = []
   for (const tournament of tournaments) {
-    await prisma.tournament.create({ data: tournament })
+    const created = await prisma.tournament.create({ data: tournament })
+    dbTournaments.push(created)
   }
   console.log(`   ✅ Created ${tournaments.length} tournaments`)
+
+  // Generate performance data for COMPLETED tournaments
+  console.log('📊 Generating performance data for completed tournaments...')
+  const completedTournaments = dbTournaments.filter((t) => t.status === 'COMPLETED')
+  let totalPerfs = 0
+  let totalRounds = 0
+
+  for (let i = 0; i < completedTournaments.length; i++) {
+    const tournament = completedTournaments[i]
+    const seed = 42 + i * 1000 // deterministic seed per tournament
+    const { performances, roundScores } = generateTournamentPerformances(dbPlayers, tournament, seed)
+
+    // Insert performances
+    for (const perf of performances) {
+      await prisma.performance.create({ data: perf })
+    }
+    totalPerfs += performances.length
+
+    // Insert round scores (skip rounds for CUT players after round 2)
+    for (const rs of roundScores) {
+      const perf = performances.find((p) => p.playerId === rs.playerId)
+      if (perf && perf.status === 'CUT' && rs.roundNumber > 2) continue
+      await prisma.roundScore.create({ data: rs })
+    }
+    totalRounds += roundScores.filter((rs) => {
+      const perf = performances.find((p) => p.playerId === rs.playerId)
+      return !(perf && perf.status === 'CUT' && rs.roundNumber > 2)
+    }).length
+
+    const cutCount = performances.filter((p) => p.status === 'CUT').length
+    console.log(`   ✅ ${tournament.name}: ${performances.length} players (${cutCount} cuts)`)
+  }
 
   console.log('')
   console.log('✨ Seed complete!')
   console.log(`   - 1 demo user (demo@example.com / password123)`)
   console.log(`   - ${players.length} PGA Tour players`)
   console.log(`   - ${tournaments.length} tournaments (2024-25 season)`)
+  console.log(`   - ${totalPerfs} performance records`)
+  console.log(`   - ${totalRounds} round score records`)
 }
 
 main()
