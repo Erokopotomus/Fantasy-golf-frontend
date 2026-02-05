@@ -26,6 +26,7 @@ import Standings from './pages/Standings'
 import PlayerProfile from './pages/PlayerProfile'
 import TradeCenter from './pages/TradeCenter'
 import LeagueSettings from './pages/LeagueSettings'
+import TeamSettings from './pages/TeamSettings'
 import News from './pages/News'
 // Format-specific pages
 import Matchups from './pages/Matchups'
@@ -109,6 +110,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TeamRoster />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/team-settings"
+            element={
+              <ProtectedRoute>
+                <TeamSettings />
               </ProtectedRoute>
             }
           />

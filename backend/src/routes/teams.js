@@ -35,10 +35,10 @@ router.get('/:id', authenticate, async (req, res, next) => {
   }
 })
 
-// PATCH /api/teams/:id - Update team (name, etc.)
+// PATCH /api/teams/:id - Update team (name, avatar, etc.)
 router.patch('/:id', authenticate, async (req, res, next) => {
   try {
-    const { name } = req.body
+    const { name, avatar, avatarUrl } = req.body
 
     const team = await prisma.team.findUnique({
       where: { id: req.params.id }
@@ -52,9 +52,20 @@ router.patch('/:id', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Not authorized' } })
     }
 
+    // Build update data - only include fields that were provided
+    const updateData = {}
+    if (name !== undefined) updateData.name = name
+    if (avatar !== undefined) updateData.avatar = avatar
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl
+
     const updatedTeam = await prisma.team.update({
       where: { id: req.params.id },
-      data: { name }
+      data: updateData,
+      include: {
+        league: {
+          select: { id: true, name: true }
+        }
+      }
     })
 
     res.json({ team: updatedTeam })

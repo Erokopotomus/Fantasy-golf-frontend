@@ -86,6 +86,8 @@ model LeagueMember {
 model Team {
   id            String    @id @default(cuid())
   name          String
+  avatar        String?
+  avatarUrl     String?
   totalPoints   Float     @default(0)
   wins          Int       @default(0)
   losses        Int       @default(0)
