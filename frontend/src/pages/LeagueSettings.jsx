@@ -32,6 +32,8 @@ const LeagueSettings = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
 
+  const [saving, setSaving] = useState(false)
+
   const [settings, setSettings] = useState({
     name: league?.name || '',
     scoringType: league?.settings?.scoringType || 'standard',
@@ -93,8 +95,6 @@ const LeagueSettings = () => {
       </div>
     )
   }
-
-  const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
     if (!isCommissioner) {
