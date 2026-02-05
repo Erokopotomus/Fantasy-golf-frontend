@@ -26,7 +26,21 @@ export const usePlayers = (initialParams = {}) => {
       const data = await api.getPlayers()
       // Handle both array response and object with players property
       const playerList = data.players || data || []
-      setPlayers(playerList)
+      // Transform players to match frontend expectations
+      const transformedPlayers = playerList.map(p => ({
+        ...p,
+        rank: p.owgrRank || p.rank,
+        stats: {
+          sgTotal: p.sgTotal,
+          sgOffTee: p.sgOffTee,
+          sgApproach: p.sgApproach,
+          sgAroundGreen: p.sgAroundGreen,
+          sgPutting: p.sgPutting,
+          sgTeeToGreen: p.sgTeeToGreen,
+        },
+        countryFlag: getCountryFlag(p.country),
+      }))
+      setPlayers(transformedPlayers)
     } catch (err) {
       setError(err.message)
       setPlayers([])
@@ -34,6 +48,20 @@ export const usePlayers = (initialParams = {}) => {
       setLoading(false)
     }
   }, [])
+
+  // Helper to get country flag emoji
+  const getCountryFlag = (country) => {
+    const flags = {
+      'USA': '🇺🇸', 'NIR': '🇬🇧', 'ESP': '🇪🇸', 'JPN': '🇯🇵', 'NOR': '🇳🇴',
+      'KOR': '🇰🇷', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'IRL': '🇮🇪', 'AUS': '🇦🇺', 'RSA': '🇿🇦',
+      'SWE': '🇸🇪', 'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'CAN': '🇨🇦', 'FRA': '🇫🇷', 'GER': '🇩🇪',
+      'CHI': '🇨🇱', 'ARG': '🇦🇷', 'MEX': '🇲🇽', 'COL': '🇨🇴', 'BEL': '🇧🇪',
+      'ITA': '🇮🇹', 'AUT': '🇦🇹', 'DEN': '🇩🇰', 'FIN': '🇫🇮', 'NED': '🇳🇱',
+      'THA': '🇹🇭', 'CHN': '🇨🇳', 'TPE': '🇹🇼', 'IND': '🇮🇳', 'PHI': '🇵🇭',
+      'ZIM': '🇿🇼', 'VEN': '🇻🇪', 'PAR': '🇵🇾', 'PUR': '🇵🇷',
+    }
+    return flags[country] || '🏳️'
+  }
 
   useEffect(() => {
     fetchPlayers()

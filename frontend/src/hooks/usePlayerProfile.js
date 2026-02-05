@@ -1,6 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import api from '../services/api'
 
+// Helper to get country flag emoji
+const getCountryFlag = (country) => {
+  const flags = {
+    'USA': '🇺🇸', 'NIR': '🇬🇧', 'ESP': '🇪🇸', 'JPN': '🇯🇵', 'NOR': '🇳🇴',
+    'KOR': '🇰🇷', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'IRL': '🇮🇪', 'AUS': '🇦🇺', 'RSA': '🇿🇦',
+    'SWE': '🇸🇪', 'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'CAN': '🇨🇦', 'FRA': '🇫🇷', 'GER': '🇩🇪',
+    'CHI': '🇨🇱', 'ARG': '🇦🇷', 'MEX': '🇲🇽', 'COL': '🇨🇴', 'BEL': '🇧🇪',
+    'ITA': '🇮🇹', 'AUT': '🇦🇹', 'DEN': '🇩🇰', 'FIN': '🇫🇮', 'NED': '🇳🇱',
+    'THA': '🇹🇭', 'CHN': '🇨🇳', 'TPE': '🇹🇼', 'IND': '🇮🇳', 'PHI': '🇵🇭',
+    'ZIM': '🇿🇼', 'VEN': '🇻🇪', 'PAR': '🇵🇾', 'PUR': '🇵🇷',
+  }
+  return flags[country] || '🏳️'
+}
+
 export const usePlayerProfile = (playerId) => {
   const [player, setPlayer] = useState(null)
   const [courseHistory, setCourseHistory] = useState([])
@@ -17,14 +31,32 @@ export const usePlayerProfile = (playerId) => {
     try {
       setError(null)
       const data = await api.getPlayer(playerId)
-      setPlayer(data.player)
+      const p = data.player
+
+      // Transform player to match frontend expectations
+      const transformedPlayer = p ? {
+        ...p,
+        rank: p.owgrRank || p.rank,
+        stats: {
+          sgTotal: p.sgTotal,
+          sgOffTee: p.sgOffTee,
+          sgApproach: p.sgApproach,
+          sgAroundGreen: p.sgAroundGreen,
+          sgPutting: p.sgPutting,
+          sgTeeToGreen: p.sgTeeToGreen,
+        },
+        countryFlag: getCountryFlag(p.country),
+      } : null
+
+      setPlayer(transformedPlayer)
+
       // Tournament history comes from player.performances
-      const performances = data.player?.performances || []
-      setTournamentHistory(performances.map(p => ({
-        tournament: p.tournament?.name,
-        date: p.tournament?.startDate,
-        position: p.position,
-        points: p.fantasyPoints
+      const performances = p?.performances || []
+      setTournamentHistory(performances.map(perf => ({
+        tournament: perf.tournament?.name,
+        date: perf.tournament?.startDate,
+        position: perf.position,
+        points: perf.fantasyPoints
       })))
       // Course history - not yet implemented in backend
       setCourseHistory([])
