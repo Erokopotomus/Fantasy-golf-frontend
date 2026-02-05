@@ -35,15 +35,9 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center shadow-button">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <circle cx="12" cy="12" r="10" />
-              </svg>
+              <span className="text-white font-black text-lg">C</span>
             </div>
-            <span className="text-xl font-bold text-white">Fantasy Golf</span>
+            <span className="text-xl font-bold text-white">Clutch</span>
           </Link>
 
           {/* Desktop Navigation Links */}

@@ -41,11 +41,9 @@ const Login = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 bg-accent-green rounded-lg flex items-center justify-center shadow-button">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" />
-              </svg>
+              <span className="text-white font-black text-xl">C</span>
             </div>
-            <span className="text-2xl font-bold text-white">Fantasy Golf</span>
+            <span className="text-2xl font-bold text-white">Clutch</span>
           </Link>
 
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back</h1>

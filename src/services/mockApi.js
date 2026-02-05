@@ -849,7 +849,7 @@ const mockNews = [
     summary: 'Add percentage up 45% this week. Rostered in 67% of leagues.',
     impact: 'positive',
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-    source: 'Fantasy Golf HQ',
+    source: 'Clutch HQ',
   },
   {
     id: 'news-3',
@@ -901,7 +901,7 @@ const mockNews = [
     summary: 'Missed cut in 3 of last 5 events. Consider benching.',
     impact: 'negative',
     timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
-    source: 'Fantasy Golf HQ',
+    source: 'Clutch HQ',
   },
   {
     id: 'news-7',
@@ -940,7 +940,7 @@ const mockNews = [
     summary: 'Strong recent form and favorable course history. Under-owned.',
     impact: 'positive',
     timestamp: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
-    source: 'Fantasy Golf HQ',
+    source: 'Clutch HQ',
   },
   {
     id: 'news-10',

@@ -9,14 +9,12 @@ const Footer = () => {
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
+                <span className="text-white font-black text-lg">C</span>
               </div>
-              <span className="text-xl font-bold text-white">Fantasy Golf</span>
+              <span className="text-xl font-bold text-white">Clutch</span>
             </Link>
             <p className="text-text-secondary text-sm">
-              The best season-long fantasy golf experience. Draft players, compete with friends, and win.
+              Season-long fantasy sports. Draft players, compete with friends, and make clutch moves to win.
             </p>
           </div>
 
@@ -85,7 +83,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-dark-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-text-muted text-sm">
-            &copy; {new Date().getFullYear()} Fantasy Golf. All rights reserved.
+            &copy; {new Date().getFullYear()} Clutch. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-text-muted hover:text-white transition-colors">

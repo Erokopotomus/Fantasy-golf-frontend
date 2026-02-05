@@ -12,8 +12,8 @@ const OnboardingModal = () => {
     {
       id: 'welcome',
       icon: '⛳',
-      title: 'Welcome to Fantasy Golf!',
-      description: 'Build your dream golf roster, compete against friends, and track live tournament scoring.',
+      title: 'Welcome to Clutch!',
+      description: 'Build your dream roster, compete against friends, and track live scoring.',
       image: null,
       features: [
         'Draft top PGA Tour players',
