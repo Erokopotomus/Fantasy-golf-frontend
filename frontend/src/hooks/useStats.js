@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-// User stats - no backend endpoint yet, returns defaults for now
-// TODO: Add /api/users/me/stats endpoint when ready
+import api from '../services/api'
 
 export const useStats = () => {
   const [stats, setStats] = useState(null)
@@ -11,16 +10,52 @@ export const useStats = () => {
     try {
       setLoading(true)
       setError(null)
-      // No backend endpoint yet - return default stats
-      // When backend is ready: const data = await api.getUserStats()
+
+      // Derive stats from leagues data
+      const data = await api.getLeagues()
+      const leagues = data.leagues || data || []
+
+      const activeLeagues = leagues.length
+      const totalPoints = leagues.reduce((sum, l) => {
+        const teamPts = l.teams?.[0]?.totalPoints || 0
+        return sum + teamPts
+      }, 0)
+
+      // Find best finish (lowest rank across leagues)
+      let bestFinish = null
+      leagues.forEach(l => {
+        if (l.userRank && (!bestFinish || l.userRank < bestFinish)) {
+          bestFinish = l.userRank
+        }
+      })
+
+      // Win rate from team records
+      let totalWins = 0
+      let totalGames = 0
+      leagues.forEach(l => {
+        const team = l.teams?.[0]
+        if (team) {
+          totalWins += team.wins || 0
+          totalGames += (team.wins || 0) + (team.losses || 0)
+        }
+      })
+      const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : undefined
+
       setStats({
-        totalLeagues: 0,
-        activeTeams: 0,
-        totalPoints: 0,
-        rank: '-',
+        activeLeagues,
+        totalPoints: totalPoints || undefined,
+        bestFinish,
+        winRate,
       })
     } catch (err) {
       setError(err.message)
+      // Fallback to zeros if API fails
+      setStats({
+        activeLeagues: 0,
+        totalPoints: undefined,
+        bestFinish: null,
+        winRate: undefined,
+      })
     } finally {
       setLoading(false)
     }

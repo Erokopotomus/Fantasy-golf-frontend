@@ -28,6 +28,8 @@ import TradeCenter from './pages/TradeCenter'
 import LeagueSettings from './pages/LeagueSettings'
 import TeamSettings from './pages/TeamSettings'
 import News from './pages/News'
+import MockDraft from './pages/MockDraft'
+import MockDraftRoom from './pages/MockDraftRoom'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -190,6 +192,23 @@ function App() {
             element={
               <ProtectedRoute>
                 <News />
+              </ProtectedRoute>
+            }
+          />
+          {/* Mock Draft routes */}
+          <Route
+            path="/mock-draft"
+            element={
+              <ProtectedRoute>
+                <MockDraft />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mock-draft/room"
+            element={
+              <ProtectedRoute>
+                <MockDraftRoom />
               </ProtectedRoute>
             }
           />

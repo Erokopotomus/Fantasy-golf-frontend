@@ -152,6 +152,28 @@ const Dashboard = () => {
             )}
           </div>
 
+          {/* Mock Draft Banner */}
+          <Link to="/mock-draft" className="block mb-6 sm:mb-8 group">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-accent-green/20 via-dark-secondary to-yellow-500/20 border border-accent-green/30 p-5 sm:p-6 hover:border-accent-green/50 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-accent-green/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Mock Draft</h3>
+                    <p className="text-text-secondary text-sm">Practice your draft strategy against AI opponents</p>
+                  </div>
+                </div>
+                <svg className="w-5 h-5 text-text-muted group-hover:text-accent-green group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Left Column - My Leagues */}
@@ -254,6 +276,18 @@ const Dashboard = () => {
                     <div className="min-w-0">
                       <p className="text-white font-medium text-sm">Join League</p>
                       <p className="text-text-muted text-xs">Enter with a code</p>
+                    </div>
+                  </Link>
+
+                  <Link to="/mock-draft" className="quick-action-btn group">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-medium text-sm">Mock Draft</p>
+                      <p className="text-text-muted text-xs">Practice against AI</p>
                     </div>
                   </Link>
 
