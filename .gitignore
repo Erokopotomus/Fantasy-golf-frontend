@@ -1,13 +1,17 @@
 # Dependencies
 node_modules/
 
-# Build output
-dist/
-
-# Environment files
+# Environment
 .env
 .env.local
 .env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
 
 # IDE
 .idea/
@@ -15,14 +19,6 @@ dist/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-
-# Cache
-.cache/
-.eslintcache
+# Build
+dist/
+build/
