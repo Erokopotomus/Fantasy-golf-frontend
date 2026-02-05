@@ -21,6 +21,9 @@ import Draft from './pages/Draft'
 import Profile from './pages/Profile'
 import TournamentScoring from './pages/TournamentScoring'
 import Standings from './pages/Standings'
+import PlayerProfile from './pages/PlayerProfile'
+import TradeCenter from './pages/TradeCenter'
+import LeagueSettings from './pages/LeagueSettings'
 
 function App() {
   return (
@@ -136,6 +139,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <Standings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/players/:playerId"
+            element={
+              <ProtectedRoute>
+                <PlayerProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/trades"
+            element={
+              <ProtectedRoute>
+                <TradeCenter />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/settings"
+            element={
+              <ProtectedRoute>
+                <LeagueSettings />
               </ProtectedRoute>
             }
           />

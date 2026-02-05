@@ -1,18 +1,17 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { usePlayerComparison } from '../hooks/usePlayerComparison'
-import { usePlayerDetail } from '../hooks/usePlayerDetail'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import PlayerSearch from '../components/players/PlayerSearch'
 import PlayerFilters from '../components/players/PlayerFilters'
 import PlayerTable from '../components/players/PlayerTable'
 import PlayerComparison from '../components/players/PlayerComparison'
-import PlayerDetailModal from '../components/players/PlayerDetailModal'
 
 const Players = () => {
+  const navigate = useNavigate()
   const [compareMode, setCompareMode] = useState(false)
-  const { selectedPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
   const {
     players,
     totalPlayers,
@@ -179,7 +178,7 @@ const Players = () => {
                       selectedIds={selectedPlayers.map(p => p.id)}
                       canSelect={canAddMore}
                       compareMode={compareMode}
-                      onViewPlayer={openPlayerDetail}
+                      onViewPlayer={(player) => navigate(`/players/${player.id}`)}
                     />
 
                     {/* Pagination */}
@@ -230,12 +229,6 @@ const Players = () => {
         </div>
       </main>
 
-      {/* Player Detail Modal */}
-      <PlayerDetailModal
-        player={selectedPlayer}
-        isOpen={isModalOpen}
-        onClose={closePlayerDetail}
-      />
     </div>
   )
 }

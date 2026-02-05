@@ -1157,6 +1157,56 @@ export const mockApi = {
       const players = mockPlayers.filter(p => playerIds.includes(p.id))
       return players
     },
+
+    async getProfile(playerId) {
+      await delay(400)
+      const player = mockPlayers.find(p => p.id === playerId)
+      if (!player) {
+        throw new Error('Player not found')
+      }
+
+      // Generate course history
+      const courses = [
+        { name: 'TPC Sawgrass', par: 72 },
+        { name: 'Augusta National', par: 72 },
+        { name: 'Pebble Beach', par: 72 },
+        { name: 'St Andrews', par: 72 },
+        { name: 'Torrey Pines', par: 72 },
+      ]
+
+      const courseHistory = courses.map(course => ({
+        ...course,
+        rounds: Math.floor(Math.random() * 20) + 4,
+        avgScore: course.par + (Math.random() * 4 - 2),
+        bestFinish: ['1st', 'T2', 'T3', 'T5', 'T8', 'T12'][Math.floor(Math.random() * 6)],
+        wins: Math.random() > 0.7 ? Math.floor(Math.random() * 3) + 1 : 0,
+      }))
+
+      // Generate tournament history
+      const tournamentNames = [
+        'The Players Championship',
+        'Arnold Palmer Invitational',
+        'Genesis Invitational',
+        'WM Phoenix Open',
+        'AT&T Pebble Beach',
+        'Farmers Insurance Open',
+        'The American Express',
+        'Sony Open',
+      ]
+
+      const tournamentHistory = tournamentNames.map((name, i) => ({
+        name,
+        position: player.recentForm?.[i % player.recentForm.length] || 'T25',
+        score: Math.floor(Math.random() * 16) - 12,
+        earnings: `$${(Math.random() * 2000000 + 100000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
+      }))
+
+      return {
+        player,
+        courseHistory,
+        tournamentHistory,
+      }
+    },
   },
 
   // Activity endpoints
@@ -1369,6 +1419,42 @@ export const mockApi = {
 
   // Trade endpoints
   trades: {
+    async getAll(leagueId) {
+      await delay(400)
+      const league = mockLeagues.find(l => l.id === leagueId)
+
+      // Generate league members with rosters
+      const members = (league?.standings || [])
+        .filter(s => s.userId !== '1') // Exclude current user
+        .map(s => ({
+          id: s.userId,
+          name: s.name,
+          roster: mockPlayers.slice(6, 12).map(p => ({ ...p })), // Give them some players
+        }))
+
+      // Trade history
+      const history = [
+        {
+          id: 'trade-h1',
+          description: 'You traded Patrick Cantlay to Mike S. for Collin Morikawa',
+          date: 'Feb 1, 2024',
+          status: 'completed',
+        },
+        {
+          id: 'trade-h2',
+          description: 'Sarah K. traded Tommy Fleetwood to you for Ludvig Aberg',
+          date: 'Jan 28, 2024',
+          status: 'completed',
+        },
+      ]
+
+      return {
+        pending: mockPendingTrades,
+        history,
+        members,
+      }
+    },
+
     async getPending(leagueId) {
       await delay(400)
       return mockPendingTrades

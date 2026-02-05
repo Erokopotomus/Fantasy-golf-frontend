@@ -101,6 +101,20 @@ const LeagueHome = () => {
               >
                 Standings
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(`/leagues/${leagueId}/trades`)}
+              >
+                Trades
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(`/leagues/${leagueId}/settings`)}
+              >
+                Settings
+              </Button>
             </div>
           </div>
 
