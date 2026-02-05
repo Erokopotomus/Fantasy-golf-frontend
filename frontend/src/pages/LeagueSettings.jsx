@@ -26,6 +26,10 @@ const LeagueSettings = () => {
     tradeDeadline: league?.settings?.tradeDeadline || '',
     waiverType: 'rolling',
     waiverPriority: 'reverse-standings',
+    waiverClearDay: 'wednesday',
+    waiverClearTime: '12:00',
+    faabBudget: 100,
+    waiverPeriodHours: 24,
     formatSettings: league?.settings?.formatSettings || {},
   })
 
@@ -39,6 +43,12 @@ const LeagueSettings = () => {
         name: league.name,
         scoringType: league.settings?.scoringType || 'standard',
         rosterSize: league.settings?.rosterSize || 6,
+        waiverType: league.settings?.waiverType || 'rolling',
+        waiverPriority: league.settings?.waiverPriority || 'reverse-standings',
+        waiverClearDay: league.settings?.waiverClearDay || 'wednesday',
+        waiverClearTime: league.settings?.waiverClearTime || '12:00',
+        faabBudget: league.settings?.faabBudget || 100,
+        waiverPeriodHours: league.settings?.waiverPeriodHours || 24,
         formatSettings: league.settings?.formatSettings || {},
       }))
     }
@@ -337,44 +347,212 @@ const LeagueSettings = () => {
 
       {/* Waiver Settings */}
       {activeTab === 'waivers' && (
-        <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">Waiver Settings</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Waiver Type
-              </label>
-              <select
-                value={settings.waiverType}
-                onChange={(e) => setSettings({ ...settings, waiverType: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
-              >
-                <option value="rolling">Rolling Waivers</option>
-                <option value="faab">FAAB (Auction)</option>
-                <option value="none">Free Agency (No Waivers)</option>
-              </select>
-            </div>
+        <div className="space-y-6">
+          <Card>
+            <h3 className="text-lg font-semibold text-white mb-4">Waiver System</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Waiver Type
+                </label>
+                <div className="space-y-2">
+                  <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
+                    settings.waiverType === 'rolling' ? 'bg-accent-green/10 border-accent-green/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="waiverType"
+                      value="rolling"
+                      checked={settings.waiverType === 'rolling'}
+                      onChange={(e) => setSettings({ ...settings, waiverType: e.target.value })}
+                      className="mt-1 text-accent-green"
+                    />
+                    <div>
+                      <p className="text-white font-medium">Rolling Waivers</p>
+                      <p className="text-text-muted text-xs">Claims process in priority order. Priority shifts after successful claims.</p>
+                    </div>
+                  </label>
+                  <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
+                    settings.waiverType === 'faab' ? 'bg-accent-green/10 border-accent-green/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="waiverType"
+                      value="faab"
+                      checked={settings.waiverType === 'faab'}
+                      onChange={(e) => setSettings({ ...settings, waiverType: e.target.value })}
+                      className="mt-1 text-accent-green"
+                    />
+                    <div>
+                      <p className="text-white font-medium">FAAB (Free Agent Auction Budget)</p>
+                      <p className="text-text-muted text-xs">Blind auction bidding. Highest bid wins the player.</p>
+                    </div>
+                  </label>
+                  <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
+                    settings.waiverType === 'none' ? 'bg-accent-green/10 border-accent-green/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="waiverType"
+                      value="none"
+                      checked={settings.waiverType === 'none'}
+                      onChange={(e) => setSettings({ ...settings, waiverType: e.target.value })}
+                      className="mt-1 text-accent-green"
+                    />
+                    <div>
+                      <p className="text-white font-medium">Free Agency (No Waivers)</p>
+                      <p className="text-text-muted text-xs">First come, first served. Players can be added instantly.</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Waiver Priority
-              </label>
-              <select
-                value={settings.waiverPriority}
-                onChange={(e) => setSettings({ ...settings, waiverPriority: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
-              >
-                <option value="reverse-standings">Reverse Standings</option>
-                <option value="rolling">Rolling (resets after claim)</option>
-                <option value="weekly-reset">Weekly Reset</option>
-              </select>
+              {/* Waiver Priority - only show for rolling waivers */}
+              {settings.waiverType === 'rolling' && (
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Waiver Priority
+                  </label>
+                  <select
+                    value={settings.waiverPriority}
+                    onChange={(e) => setSettings({ ...settings, waiverPriority: e.target.value })}
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                  >
+                    <option value="reverse-standings">Reverse Standings (worst team picks first)</option>
+                    <option value="rolling">Rolling (resets to last after successful claim)</option>
+                    <option value="weekly-reset">Weekly Reset (resets to reverse standings each week)</option>
+                  </select>
+                </div>
+              )}
             </div>
+          </Card>
 
-            <div className="pt-4">
-              <Button onClick={handleSave}>Save Changes</Button>
+          {/* FAAB Budget - only show for FAAB */}
+          {settings.waiverType === 'faab' && (
+            <Card>
+              <h3 className="text-lg font-semibold text-white mb-4">FAAB Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Season Budget per Team
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <span className="text-text-muted">$</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="1000"
+                      value={settings.faabBudget}
+                      onChange={(e) => setSettings({ ...settings, faabBudget: parseInt(e.target.value) || 100 })}
+                      className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                    />
+                  </div>
+                  <p className="text-text-muted text-xs mt-2">
+                    Each team gets this budget to spend on waiver claims for the entire season.
+                  </p>
+                </div>
+
+                <div className="bg-dark-tertiary rounded-lg p-4">
+                  <p className="text-text-secondary text-sm">
+                    <span className="text-accent-green font-medium">How FAAB works:</span> Teams submit blind bids on players.
+                    When waivers process, highest bid wins. Tied bids go to the team with worse standings.
+                    $0 bids are allowed. Budget doesn't reset.
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Waiver Clear Schedule */}
+          {settings.waiverType !== 'none' && (
+            <Card>
+              <h3 className="text-lg font-semibold text-white mb-4">Waiver Processing Schedule</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Waivers Clear On
+                    </label>
+                    <select
+                      value={settings.waiverClearDay}
+                      onChange={(e) => setSettings({ ...settings, waiverClearDay: e.target.value })}
+                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                    >
+                      <option value="sunday">Sunday</option>
+                      <option value="monday">Monday</option>
+                      <option value="tuesday">Tuesday</option>
+                      <option value="wednesday">Wednesday</option>
+                      <option value="thursday">Thursday</option>
+                      <option value="friday">Friday</option>
+                      <option value="saturday">Saturday</option>
+                      <option value="daily">Daily</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Clear Time
+                    </label>
+                    <select
+                      value={settings.waiverClearTime}
+                      onChange={(e) => setSettings({ ...settings, waiverClearTime: e.target.value })}
+                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                    >
+                      <option value="00:00">12:00 AM (Midnight)</option>
+                      <option value="03:00">3:00 AM</option>
+                      <option value="06:00">6:00 AM</option>
+                      <option value="09:00">9:00 AM</option>
+                      <option value="12:00">12:00 PM (Noon)</option>
+                      <option value="15:00">3:00 PM</option>
+                      <option value="18:00">6:00 PM</option>
+                      <option value="21:00">9:00 PM</option>
+                    </select>
+                  </div>
+                </div>
+                <p className="text-text-muted text-xs">
+                  All times are in Eastern Time (ET). Waiver claims submitted before this time will be processed.
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {/* Dropped Player Waiver Period */}
+          <Card>
+            <h3 className="text-lg font-semibold text-white mb-4">Dropped Player Rules</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Waiver Period After Drop
+                </label>
+                <select
+                  value={settings.waiverPeriodHours}
+                  onChange={(e) => setSettings({ ...settings, waiverPeriodHours: parseInt(e.target.value) })}
+                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                >
+                  <option value="0">No waiver period (immediate free agent)</option>
+                  <option value="24">24 hours</option>
+                  <option value="48">48 hours</option>
+                  <option value="72">72 hours</option>
+                  <option value="168">1 week</option>
+                  <option value="-1">Until next waiver clear</option>
+                </select>
+                <p className="text-text-muted text-xs mt-2">
+                  How long a dropped player must go through waivers before becoming a free agent.
+                </p>
+              </div>
+
+              {settings.waiverType === 'none' && settings.waiverPeriodHours > 0 && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                  <p className="text-yellow-400 text-sm">
+                    Note: With "No Waivers" selected, dropped players will still have a {settings.waiverPeriodHours}-hour
+                    waiting period before they can be picked up.
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          <Button onClick={handleSave}>Save Waiver Settings</Button>
+        </div>
       )}
 
       {/* Members */}
