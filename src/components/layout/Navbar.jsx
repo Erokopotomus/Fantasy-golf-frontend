@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import Button from '../common/Button'
+import SearchButton from '../search/SearchButton'
 
 const Navbar = () => {
   const { user, logout } = useAuth()
@@ -61,6 +62,12 @@ const Navbar = () => {
                 <Link to="/players" className={navLinkStyles('/players')}>
                   Players
                 </Link>
+                <Link to="/news" className={navLinkStyles('/news')}>
+                  News
+                </Link>
+                <div className="ml-2">
+                  <SearchButton />
+                </div>
               </>
             ) : (
               <>
@@ -215,6 +222,13 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Players
+                </Link>
+                <Link
+                  to="/news"
+                  className={mobileNavLinkStyles('/news')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  News
                 </Link>
               </>
             ) : (

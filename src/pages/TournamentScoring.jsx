@@ -4,14 +4,18 @@ import TournamentHeader from '../components/tournament/TournamentHeader'
 import TournamentLeaderboard from '../components/tournament/TournamentLeaderboard'
 import MyPlayersPanel from '../components/tournament/MyPlayersPanel'
 import PlayerScoreCard from '../components/tournament/PlayerScoreCard'
+import LiveScoreIndicator from '../components/tournament/LiveScoreIndicator'
 import useTournamentScoring from '../hooks/useTournamentScoring'
+import useLiveScoring from '../hooks/useLiveScoring'
 
 const TournamentScoring = () => {
   const { tournamentId } = useParams()
   const [searchParams] = useSearchParams()
   const leagueId = searchParams.get('league')
 
-  const { tournament, leaderboard, myPlayers, loading, error, refetch } = useTournamentScoring(tournamentId, leagueId)
+  const { tournament, leaderboard: initialLeaderboard, myPlayers, loading, error, refetch } = useTournamentScoring(tournamentId, leagueId)
+  const myPlayerIds = myPlayers?.map(p => p.id) || []
+  const { leaderboard, recentChanges, isLive, toggleLive } = useLiveScoring(initialLeaderboard, myPlayerIds, !loading)
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [showMyPlayers, setShowMyPlayers] = useState(true)
 
@@ -42,18 +46,19 @@ const TournamentScoring = () => {
     )
   }
 
-  const myPlayerIds = myPlayers.map(p => p.id)
-
   return (
     <div className="space-y-6">
-      {/* Tournament Header */}
-      <TournamentHeader tournament={tournament} />
+      {/* Tournament Header with Live Indicator */}
+      <div className="flex items-start justify-between gap-4">
+        <TournamentHeader tournament={tournament} />
+        <LiveScoreIndicator isLive={isLive} onToggle={toggleLive} />
+      </div>
 
       {/* Mobile Toggle for My Players */}
       <div className="lg:hidden">
         <button
           onClick={() => setShowMyPlayers(!showMyPlayers)}
-          className="w-full flex items-center justify-between p-4 bg-dark-card rounded-lg border border-dark-border"
+          className="w-full flex items-center justify-between p-4 bg-dark-secondary rounded-lg border border-dark-border"
         >
           <span className="font-medium text-white">My Players ({myPlayers.length})</span>
           <svg
@@ -85,6 +90,7 @@ const TournamentScoring = () => {
             cut={tournament?.cut}
             onSelectPlayer={setSelectedPlayer}
             myPlayerIds={myPlayerIds}
+            recentChanges={recentChanges}
           />
         </div>
 
@@ -109,12 +115,23 @@ const TournamentScoring = () => {
         </div>
       </div>
 
-      {/* Auto-refresh indicator */}
+      {/* Live status indicator */}
       <div className="flex items-center justify-center gap-2 text-text-muted text-sm">
-        <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <span>Scores update every 30 seconds</span>
+        {isLive ? (
+          <>
+            <svg className="w-4 h-4 animate-spin text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Live scoring active</span>
+          </>
+        ) : (
+          <>
+            <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Live scoring paused</span>
+          </>
+        )}
         <button
           onClick={refetch}
           className="ml-2 text-accent-green hover:underline"

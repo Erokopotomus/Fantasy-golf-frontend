@@ -1,0 +1,177 @@
+import { useNavigate } from 'react-router-dom'
+
+const NewsCard = ({ item, compact = false }) => {
+  const navigate = useNavigate()
+
+  const getTypeConfig = (type) => {
+    const configs = {
+      injury: {
+        icon: '🏥',
+        label: 'Injury',
+        bg: 'bg-red-500/20',
+        border: 'border-red-500/30',
+        text: 'text-red-400',
+      },
+      withdrawal: {
+        icon: '⛔',
+        label: 'Withdrawal',
+        bg: 'bg-orange-500/20',
+        border: 'border-orange-500/30',
+        text: 'text-orange-400',
+      },
+      trending: {
+        icon: '📈',
+        label: 'Trending',
+        bg: 'bg-blue-500/20',
+        border: 'border-blue-500/30',
+        text: 'text-blue-400',
+      },
+      hot: {
+        icon: '🔥',
+        label: 'Hot',
+        bg: 'bg-accent-green/20',
+        border: 'border-accent-green/30',
+        text: 'text-accent-green',
+      },
+      cold: {
+        icon: '❄️',
+        label: 'Cold',
+        bg: 'bg-cyan-500/20',
+        border: 'border-cyan-500/30',
+        text: 'text-cyan-400',
+      },
+      'course-fit': {
+        icon: '⛳',
+        label: 'Course Fit',
+        bg: 'bg-purple-500/20',
+        border: 'border-purple-500/30',
+        text: 'text-purple-400',
+      },
+      'roster-alert': {
+        icon: '⏰',
+        label: 'Alert',
+        bg: 'bg-yellow-500/20',
+        border: 'border-yellow-500/30',
+        text: 'text-yellow-400',
+      },
+    }
+    return configs[type] || configs.trending
+  }
+
+  const getImpactStyle = (impact) => {
+    if (impact === 'positive') return 'text-accent-green'
+    if (impact === 'negative') return 'text-red-400'
+    return 'text-text-muted'
+  }
+
+  const getPriorityIndicator = (priority) => {
+    if (priority === 'high') return 'border-l-4 border-l-red-500'
+    if (priority === 'medium') return 'border-l-4 border-l-yellow-500'
+    return 'border-l-4 border-l-dark-border'
+  }
+
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date()
+    const then = new Date(timestamp)
+    const diffMs = now - then
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    return `${diffDays}d ago`
+  }
+
+  const config = getTypeConfig(item.type)
+
+  const handlePlayerClick = () => {
+    if (item.playerId) {
+      navigate(`/players/${item.playerId}`)
+    }
+  }
+
+  if (compact) {
+    return (
+      <div
+        className={`
+          p-3 bg-dark-secondary rounded-lg border border-dark-border
+          ${getPriorityIndicator(item.priority)}
+          hover:bg-dark-tertiary transition-colors cursor-pointer
+        `}
+        onClick={handlePlayerClick}
+      >
+        <div className="flex items-start gap-3">
+          <span className={`text-lg ${config.text}`}>{config.icon}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-white font-medium line-clamp-2">{item.headline}</p>
+            <div className="flex items-center gap-2 mt-1 text-xs text-text-muted">
+              {item.playerFlag && <span>{item.playerFlag}</span>}
+              <span>{formatTimeAgo(item.timestamp)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`
+        p-4 bg-dark-secondary rounded-lg border border-dark-border
+        ${getPriorityIndicator(item.priority)}
+        hover:bg-dark-tertiary transition-colors
+      `}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2">
+          <span className={`
+            inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+            ${config.bg} ${config.text}
+          `}>
+            <span>{config.icon}</span>
+            <span>{config.label}</span>
+          </span>
+          {item.priority === 'high' && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+              Important
+            </span>
+          )}
+        </div>
+        <span className="text-xs text-text-muted whitespace-nowrap">
+          {formatTimeAgo(item.timestamp)}
+        </span>
+      </div>
+
+      {/* Player info (if applicable) */}
+      {item.playerName && (
+        <button
+          onClick={handlePlayerClick}
+          className="flex items-center gap-2 mb-2 hover:text-accent-green transition-colors"
+        >
+          <span className="text-lg">{item.playerFlag}</span>
+          <span className="font-medium text-white">{item.playerName}</span>
+        </button>
+      )}
+
+      {/* Content */}
+      <h4 className="text-white font-semibold mb-2">{item.headline}</h4>
+      <p className="text-sm text-text-secondary mb-3">{item.summary}</p>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-text-muted">Source: {item.source}</span>
+        {item.impact && (
+          <span className={`font-medium ${getImpactStyle(item.impact)}`}>
+            {item.impact === 'positive' && '↑ Positive'}
+            {item.impact === 'negative' && '↓ Negative'}
+            {item.impact === 'neutral' && '→ Neutral'}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default NewsCard

@@ -1,6 +1,7 @@
 import Card from '../common/Card'
+import ScoreChangeAnimation from './ScoreChangeAnimation'
 
-const TournamentLeaderboard = ({ leaderboard, cut, onSelectPlayer, myPlayerIds = [] }) => {
+const TournamentLeaderboard = ({ leaderboard, cut, onSelectPlayer, myPlayerIds = [], recentChanges = {} }) => {
   const getPositionStyle = (position) => {
     if (position === '1st') return 'text-yellow-400 font-bold'
     if (position === '2nd' || position === 'T2') return 'text-gray-300 font-semibold'
@@ -44,27 +45,43 @@ const TournamentLeaderboard = ({ leaderboard, cut, onSelectPlayer, myPlayerIds =
             {leaderboard.map((player, index) => {
               const isMyPlayer = myPlayerIds.includes(player.id)
               const isCutLine = cut && parseInt(player.score) === cut
+              const recentChange = recentChanges[player.id]
+              const hasRecentChange = recentChange && (Date.now() - recentChange.timestamp < 3000)
 
               return (
                 <tr
                   key={player.id}
                   onClick={() => onSelectPlayer?.(player)}
                   className={`
-                    border-b border-dark-border/50 transition-colors cursor-pointer
+                    border-b border-dark-border/50 transition-all cursor-pointer
                     ${isMyPlayer ? 'bg-accent-green/10' : 'hover:bg-dark-tertiary/50'}
                     ${isCutLine ? 'border-b-2 border-b-red-500/50' : ''}
+                    ${hasRecentChange ? 'bg-dark-tertiary/30' : ''}
                   `}
                 >
                   <td className={`p-3 ${getPositionStyle(player.position)}`}>
-                    {player.position}
+                    <div className="flex items-center gap-1">
+                      <span>{player.position}</span>
+                      {player.positionChange && player.positionChange !== 0 && (
+                        <span className={`text-xs ${player.positionChange > 0 ? 'text-accent-green' : 'text-red-400'}`}>
+                          {player.positionChange > 0 ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{player.countryFlag}</span>
-                      <div>
-                        <p className={`font-medium ${isMyPlayer ? 'text-accent-green' : 'text-white'}`}>
-                          {player.name}
-                        </p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className={`font-medium ${isMyPlayer ? 'text-accent-green' : 'text-white'}`}>
+                            {player.name}
+                          </p>
+                          <ScoreChangeAnimation
+                            type={recentChange?.type}
+                            show={hasRecentChange}
+                          />
+                        </div>
                         {isMyPlayer && (
                           <span className="text-xs text-accent-green">My Player</span>
                         )}

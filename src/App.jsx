@@ -1,10 +1,12 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
+import { OnboardingProvider } from './context/OnboardingContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import MobileNav from './components/layout/MobileNav'
 import NotificationContainer from './components/notifications/NotificationContainer'
+import OnboardingModal from './components/onboarding/OnboardingModal'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -24,15 +26,18 @@ import Standings from './pages/Standings'
 import PlayerProfile from './pages/PlayerProfile'
 import TradeCenter from './pages/TradeCenter'
 import LeagueSettings from './pages/LeagueSettings'
+import News from './pages/News'
 
 function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
+        <OnboardingProvider>
         <div className="min-h-screen bg-dark-primary">
           <Navbar />
           <MobileNav />
           <NotificationContainer />
+          <OnboardingModal />
           <main className="pb-20 md:pb-0">
           <Routes>
           <Route path="/" element={<Landing />} />
@@ -166,9 +171,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/news"
+            element={
+              <ProtectedRoute>
+                <News />
+              </ProtectedRoute>
+            }
+          />
           </Routes>
           </main>
         </div>
+        </OnboardingProvider>
       </NotificationProvider>
     </AuthProvider>
   )

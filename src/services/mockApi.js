@@ -549,6 +549,140 @@ const mockUserStats = {
   weeklyChange: '+12',
 }
 
+// Mock news data
+const mockNews = [
+  {
+    id: 'news-1',
+    type: 'injury',
+    priority: 'high',
+    playerId: 'player-6',
+    playerName: 'Xander Schauffele',
+    playerFlag: '🇺🇸',
+    headline: 'Xander Schauffele withdraws from The Players Championship',
+    summary: 'Schauffele has withdrawn citing a back injury. He is expected to miss 2-3 weeks.',
+    impact: 'negative',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    source: 'PGA Tour',
+  },
+  {
+    id: 'news-2',
+    type: 'trending',
+    priority: 'medium',
+    playerId: 'player-8',
+    playerName: 'Ludvig Aberg',
+    playerFlag: '🇸🇪',
+    headline: 'Ludvig Aberg surges in ownership after Masters runner-up',
+    summary: 'Add percentage up 45% this week. Rostered in 67% of leagues.',
+    impact: 'positive',
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    source: 'Fantasy Golf HQ',
+  },
+  {
+    id: 'news-3',
+    type: 'withdrawal',
+    priority: 'high',
+    playerId: 'player-26',
+    playerName: 'Justin Thomas',
+    playerFlag: '🇺🇸',
+    headline: 'Justin Thomas WD from upcoming tournament',
+    summary: 'Thomas has withdrawn to rest ahead of major championship season.',
+    impact: 'negative',
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    source: 'PGA Tour',
+  },
+  {
+    id: 'news-4',
+    type: 'hot',
+    priority: 'medium',
+    playerId: 'player-1',
+    playerName: 'Scottie Scheffler',
+    playerFlag: '🇺🇸',
+    headline: 'Scottie Scheffler leads strokes gained this season',
+    summary: 'World #1 averaging +2.45 SG Total, the highest mark in 5 years.',
+    impact: 'positive',
+    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+    source: 'DataGolf',
+  },
+  {
+    id: 'news-5',
+    type: 'injury',
+    priority: 'low',
+    playerId: 'player-22',
+    playerName: 'Jordan Spieth',
+    playerFlag: '🇺🇸',
+    headline: 'Jordan Spieth dealing with wrist discomfort',
+    summary: 'Spieth mentioned minor wrist issues but plans to play through.',
+    impact: 'neutral',
+    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    source: 'Golf Channel',
+  },
+  {
+    id: 'news-6',
+    type: 'cold',
+    priority: 'medium',
+    playerId: 'player-34',
+    playerName: 'Brooks Koepka',
+    playerFlag: '🇺🇸',
+    headline: 'Brooks Koepka struggles continue',
+    summary: 'Missed cut in 3 of last 5 events. Consider benching.',
+    impact: 'negative',
+    timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+    source: 'Fantasy Golf HQ',
+  },
+  {
+    id: 'news-7',
+    type: 'course-fit',
+    priority: 'medium',
+    playerId: 'player-3',
+    playerName: 'Jon Rahm',
+    playerFlag: '🇪🇸',
+    headline: 'Jon Rahm historically dominates at TPC Sawgrass',
+    summary: '3 top-5 finishes in last 4 appearances. Course suits his game.',
+    impact: 'positive',
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    source: 'Course Fit Analysis',
+  },
+  {
+    id: 'news-8',
+    type: 'roster-alert',
+    priority: 'high',
+    playerId: null,
+    playerName: null,
+    playerFlag: null,
+    headline: 'Lineup deadline in 2 hours!',
+    summary: 'The Players Championship lineups lock at 7:00 AM ET Thursday.',
+    impact: 'neutral',
+    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    source: 'System',
+  },
+  {
+    id: 'news-9',
+    type: 'trending',
+    priority: 'low',
+    playerId: 'player-15',
+    playerName: 'Sahith Theegala',
+    playerFlag: '🇺🇸',
+    headline: 'Sahith Theegala generating buzz as sleeper pick',
+    summary: 'Strong recent form and favorable course history. Under-owned.',
+    impact: 'positive',
+    timestamp: new Date(Date.now() - 30 * 60 * 60 * 1000).toISOString(),
+    source: 'Fantasy Golf HQ',
+  },
+  {
+    id: 'news-10',
+    type: 'hot',
+    priority: 'medium',
+    playerId: 'player-2',
+    playerName: 'Rory McIlroy',
+    playerFlag: '🇬🇧',
+    headline: 'Rory McIlroy putting improvement paying dividends',
+    summary: 'Up to +0.35 SG Putting over last 8 rounds, a career-best stretch.',
+    impact: 'positive',
+    timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString(),
+    source: 'DataGolf',
+  },
+]
+
 // Mock roster data
 const mockRoster = [
   { ...mockPlayers[0], isActive: true, status: 'active' },
@@ -1563,6 +1697,164 @@ export const mockApi = {
       const messages = getChatMessages(leagueId)
       if (!afterTimestamp) return messages
       return messages.filter(m => new Date(m.timestamp) > new Date(afterTimestamp))
+    },
+  },
+
+  // Global search endpoint
+  search: {
+    async query(searchQuery, options = {}) {
+      await delay(300)
+
+      if (!searchQuery || searchQuery.trim().length < 2) {
+        return { players: [], leagues: [], tournaments: [], news: [] }
+      }
+
+      const query = searchQuery.toLowerCase().trim()
+      const { types = ['players', 'leagues', 'tournaments', 'news'], limit = 5 } = options
+
+      const results = {
+        players: [],
+        leagues: [],
+        tournaments: [],
+        news: [],
+      }
+
+      // Search players
+      if (types.includes('players')) {
+        results.players = mockPlayers
+          .filter(p =>
+            p.name.toLowerCase().includes(query) ||
+            p.country.toLowerCase().includes(query)
+          )
+          .slice(0, limit)
+          .map(p => ({
+            id: p.id,
+            type: 'player',
+            name: p.name,
+            subtitle: `Rank #${p.rank} · ${p.countryFlag} ${p.country}`,
+            icon: p.countryFlag,
+            url: `/players/${p.id}`,
+          }))
+      }
+
+      // Search leagues
+      if (types.includes('leagues')) {
+        results.leagues = mockLeagues
+          .filter(l =>
+            l.name.toLowerCase().includes(query) ||
+            l.type.toLowerCase().includes(query)
+          )
+          .slice(0, limit)
+          .map(l => ({
+            id: l.id,
+            type: 'league',
+            name: l.name,
+            subtitle: `${l.type} · ${l.memberCount}/${l.maxMembers} members`,
+            icon: '🏆',
+            url: `/leagues/${l.id}`,
+          }))
+      }
+
+      // Search tournaments
+      if (types.includes('tournaments')) {
+        results.tournaments = mockTournaments
+          .filter(t =>
+            t.name.toLowerCase().includes(query) ||
+            t.course.toLowerCase().includes(query) ||
+            t.location.toLowerCase().includes(query)
+          )
+          .slice(0, limit)
+          .map(t => ({
+            id: t.id,
+            type: 'tournament',
+            name: t.name,
+            subtitle: `${t.course} · ${t.location}`,
+            icon: '⛳',
+            url: `/tournaments/${t.id}`,
+          }))
+      }
+
+      // Search news
+      if (types.includes('news')) {
+        results.news = mockNews
+          .filter(n =>
+            n.headline.toLowerCase().includes(query) ||
+            (n.playerName && n.playerName.toLowerCase().includes(query)) ||
+            n.summary.toLowerCase().includes(query)
+          )
+          .slice(0, limit)
+          .map(n => ({
+            id: n.id,
+            type: 'news',
+            name: n.headline,
+            subtitle: n.playerName ? `${n.playerFlag} ${n.playerName}` : n.source,
+            icon: n.type === 'injury' ? '🏥' : n.type === 'trending' ? '📈' : '📰',
+            url: n.playerId ? `/players/${n.playerId}` : '/news',
+          }))
+      }
+
+      return results
+    },
+  },
+
+  // News endpoints
+  news: {
+    async getAll(options = {}) {
+      await delay(400)
+      let news = [...mockNews]
+
+      // Filter by type if specified
+      if (options.type) {
+        news = news.filter(n => n.type === options.type)
+      }
+
+      // Filter by priority if specified
+      if (options.priority) {
+        news = news.filter(n => n.priority === options.priority)
+      }
+
+      // Filter by player ID if specified
+      if (options.playerId) {
+        news = news.filter(n => n.playerId === options.playerId)
+      }
+
+      // Sort by timestamp (newest first)
+      news.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+      // Limit results
+      if (options.limit) {
+        news = news.slice(0, options.limit)
+      }
+
+      return news
+    },
+
+    async getHighPriority() {
+      await delay(300)
+      return mockNews
+        .filter(n => n.priority === 'high')
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    },
+
+    async getByPlayer(playerId) {
+      await delay(300)
+      return mockNews
+        .filter(n => n.playerId === playerId)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    },
+
+    async getInjuryReports() {
+      await delay(300)
+      return mockNews
+        .filter(n => n.type === 'injury' || n.type === 'withdrawal')
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    },
+
+    async getTrending() {
+      await delay(300)
+      return mockNews
+        .filter(n => n.type === 'trending' || n.type === 'hot')
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
     },
   },
 }
