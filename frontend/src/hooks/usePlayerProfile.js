@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const usePlayerProfile = (playerId) => {
   const [player, setPlayer] = useState(null)
@@ -16,10 +16,18 @@ export const usePlayerProfile = (playerId) => {
 
     try {
       setError(null)
-      const data = await mockApi.players.getProfile(playerId)
+      const data = await api.getPlayer(playerId)
       setPlayer(data.player)
-      setCourseHistory(data.courseHistory)
-      setTournamentHistory(data.tournamentHistory)
+      // Tournament history comes from player.performances
+      const performances = data.player?.performances || []
+      setTournamentHistory(performances.map(p => ({
+        tournament: p.tournament?.name,
+        date: p.tournament?.startDate,
+        position: p.position,
+        points: p.fantasyPoints
+      })))
+      // Course history - not yet implemented in backend
+      setCourseHistory([])
     } catch (err) {
       setError(err.message)
     } finally {
