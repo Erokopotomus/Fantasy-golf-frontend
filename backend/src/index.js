@@ -19,15 +19,40 @@ const app = express()
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true)
+      if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
+        return callback(null, true)
+      }
+      return callback(null, false)
+    },
     methods: ['GET', 'POST']
   }
 })
 
+// CORS - allow multiple origins
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://clutch-pied.vercel.app',
+  process.env.FRONTEND_URL
+].filter(Boolean)
+
 // Middleware
 app.use(helmet())
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+    // Allow any vercel.app subdomain
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true)
+    }
+    return callback(new Error('Not allowed by CORS'), false)
+  },
   credentials: true
 }))
 app.use(morgan('dev'))
