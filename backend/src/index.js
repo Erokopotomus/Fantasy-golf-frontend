@@ -120,10 +120,12 @@ io.on('connection', (socket) => {
   // Leave rooms
   socket.on('leave-league', (leagueId) => {
     socket.leave(`league-${leagueId}`)
+    console.log(`Socket ${socket.id} left league-${leagueId}`)
   })
 
   socket.on('leave-draft', (draftId) => {
     socket.leave(`draft-${draftId}`)
+    console.log(`Socket ${socket.id} left draft-${draftId}`)
   })
 
   // Chat message

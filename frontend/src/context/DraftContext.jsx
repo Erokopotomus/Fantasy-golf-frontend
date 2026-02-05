@@ -51,9 +51,17 @@ function draftReducer(state, action) {
     case 'SET_TIMER':
       return { ...state, timerSeconds: action.payload }
     case 'PAUSE_DRAFT':
-      return { ...state, isPaused: true }
+      return {
+        ...state,
+        isPaused: true,
+        draft: state.draft ? { ...state.draft, status: 'PAUSED' } : null,
+      }
     case 'RESUME_DRAFT':
-      return { ...state, isPaused: false }
+      return {
+        ...state,
+        isPaused: false,
+        draft: state.draft ? { ...state.draft, status: 'IN_PROGRESS' } : null,
+      }
     case 'ADD_TO_QUEUE':
       if (state.queue.find(p => p.id === action.payload.id)) {
         return state

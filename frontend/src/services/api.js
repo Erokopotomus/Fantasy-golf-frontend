@@ -185,6 +185,16 @@ class ApiService {
     return this.request(`/drafts/${id}`)
   }
 
+  async getDraftByLeague(leagueId) {
+    return this.request(`/drafts/league/${leagueId}`)
+  }
+
+  async createDraft(leagueId) {
+    return this.request(`/leagues/${leagueId}/draft`, {
+      method: 'POST',
+    })
+  }
+
   async startDraft(id) {
     return this.request(`/drafts/${id}/start`, {
       method: 'POST',
@@ -195,6 +205,23 @@ class ApiService {
     return this.request(`/drafts/${draftId}/pick`, {
       method: 'POST',
       body: JSON.stringify({ playerId, amount }),
+    })
+  }
+
+  async getDraftPlayers(draftId, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/drafts/${draftId}/players${params ? '?' + params : ''}`)
+  }
+
+  async pauseDraft(draftId) {
+    return this.request(`/drafts/${draftId}/pause`, {
+      method: 'POST',
+    })
+  }
+
+  async resumeDraft(draftId) {
+    return this.request(`/drafts/${draftId}/resume`, {
+      method: 'POST',
     })
   }
 

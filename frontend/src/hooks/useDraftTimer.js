@@ -1,48 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useDraftContext } from '../context/DraftContext'
 
 export const useDraftTimer = (onTimeout) => {
-  const { timerSeconds, setTimer, isPaused } = useDraftContext()
-  const intervalRef = useRef(null)
-  const onTimeoutRef = useRef(onTimeout)
+  const { timerSeconds, isPaused } = useDraftContext()
 
-  useEffect(() => {
-    onTimeoutRef.current = onTimeout
-  }, [onTimeout])
-
-  const startTimer = useCallback((seconds) => {
-    setTimer(seconds)
-  }, [setTimer])
-
-  const stopTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-  }, [])
-
-  useEffect(() => {
-    if (isPaused || timerSeconds <= 0) {
-      stopTimer()
-      return
-    }
-
-    intervalRef.current = setInterval(() => {
-      setTimer((prev) => {
-        const newValue = prev - 1
-        if (newValue <= 0) {
-          stopTimer()
-          if (onTimeoutRef.current) {
-            onTimeoutRef.current()
-          }
-          return 0
-        }
-        return newValue
-      })
-    }, 1000)
-
-    return () => stopTimer()
-  }, [isPaused, timerSeconds > 0, setTimer, stopTimer])
+  // Timer countdown is now managed by useDraft via pickDeadline from server.
+  // This hook just reads the timer value and formats it.
 
   const formatTime = useCallback((seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -52,8 +15,8 @@ export const useDraftTimer = (onTimeout) => {
 
   return {
     timerSeconds,
-    startTimer,
-    stopTimer,
+    startTimer: () => {},
+    stopTimer: () => {},
     formatTime,
     formattedTime: formatTime(timerSeconds),
     isRunning: timerSeconds > 0 && !isPaused,

@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useLeagues } from '../hooks/useLeagues'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
+import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import ChatPanel from '../components/chat/ChatPanel'
@@ -8,10 +11,31 @@ import ChatPanel from '../components/chat/ChatPanel'
 const LeagueHome = () => {
   const { leagueId } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { leagues, loading } = useLeagues()
+  const [creatingDraft, setCreatingDraft] = useState(false)
 
   const league = leagues?.find(l => l.id === leagueId)
   const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
+
+  const isCommissioner = league?.ownerId === user?.id || league?.owner?.id === user?.id
+  const latestDraft = league?.drafts?.[0]
+  const draftStatus = latestDraft?.status
+  const hasDraftRecord = !!latestDraft
+  const isDraftScheduledOrInProgress = draftStatus === 'SCHEDULED' || draftStatus === 'IN_PROGRESS' || draftStatus === 'PAUSED'
+  const isDraftComplete = draftStatus === 'COMPLETED'
+
+  const handleCreateDraft = async () => {
+    try {
+      setCreatingDraft(true)
+      await api.createDraft(leagueId)
+      navigate(`/leagues/${leagueId}/draft`)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setCreatingDraft(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -174,6 +198,62 @@ const LeagueHome = () => {
               </Button>
             </div>
           </div>
+
+          {/* Draft Status Banner */}
+          {hasDraft && !isOneAndDone && (
+            <div className="mb-6">
+              {!hasDraftRecord && isCommissioner && (
+                <Card className="border-accent-green/30 bg-gradient-to-r from-accent-green/10 to-dark-secondary">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Ready to Draft?</h3>
+                      <p className="text-text-secondary text-sm">Create a draft for this league to get started.</p>
+                    </div>
+                    <Button onClick={handleCreateDraft} disabled={creatingDraft}>
+                      {creatingDraft ? 'Creating...' : 'Create Draft'}
+                    </Button>
+                  </div>
+                </Card>
+              )}
+              {isDraftScheduledOrInProgress && (
+                <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-dark-secondary">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        {draftStatus === 'SCHEDULED' ? 'Draft Scheduled' :
+                         draftStatus === 'PAUSED' ? 'Draft Paused' : 'Draft In Progress'}
+                      </h3>
+                      <p className="text-text-secondary text-sm">
+                        {draftStatus === 'SCHEDULED'
+                          ? 'The draft is set up and ready to start.'
+                          : draftStatus === 'PAUSED'
+                          ? 'The commissioner has paused the draft.'
+                          : 'The draft is live! Join the draft room now.'}
+                      </p>
+                    </div>
+                    <Button onClick={() => navigate(`/leagues/${leagueId}/draft`)}>
+                      Enter Draft Room
+                    </Button>
+                  </div>
+                </Card>
+              )}
+              {isDraftComplete && (
+                <Card className="border-dark-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-accent-green/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">Draft Complete</h3>
+                      <p className="text-text-muted text-sm">The draft has finished. Manage your roster below.</p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Standings & Info */}

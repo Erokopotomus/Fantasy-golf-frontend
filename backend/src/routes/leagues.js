@@ -392,6 +392,63 @@ router.post('/join-by-code', authenticate, async (req, res, next) => {
   }
 })
 
+// POST /api/leagues/:id/draft - Create a draft for this league (commissioner only)
+router.post('/:id/draft', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: {
+        drafts: {
+          where: { status: { not: 'COMPLETED' } }
+        }
+      }
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can create a draft' } })
+    }
+
+    // Prevent duplicate active drafts
+    if (league.drafts.length > 0) {
+      return res.status(400).json({ error: { message: 'An active draft already exists for this league' } })
+    }
+
+    const timePerPick = league.settings?.timePerPick || 90
+    const totalRounds = league.settings?.rosterSize || 6
+
+    const draft = await prisma.draft.create({
+      data: {
+        leagueId: league.id,
+        timePerPick,
+        totalRounds,
+        status: 'SCHEDULED',
+      },
+      include: {
+        league: {
+          include: {
+            teams: {
+              include: {
+                user: { select: { id: true, name: true, avatar: true } }
+              }
+            },
+            owner: { select: { id: true, name: true } }
+          }
+        },
+        picks: true,
+        draftOrder: true
+      }
+    })
+
+    res.status(201).json({ draft })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/leagues/:id/messages - Get league chat messages
 router.get('/:id/messages', authenticate, async (req, res, next) => {
   try {

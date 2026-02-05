@@ -91,7 +91,8 @@ const Draft = () => {
                 const typeLabel = draftTypeLabels[draftType] || draftType
                 const hasDraft = league.drafts?.length > 0
                 const draftStatus = hasDraft ? league.drafts[0].status : null
-                const isDraftReady = !hasDraft || draftStatus === 'PENDING'
+                const isDraftReady = !hasDraft || draftStatus === 'SCHEDULED'
+                const isDraftInProgress = draftStatus === 'IN_PROGRESS' || draftStatus === 'PAUSED'
                 const isDraftComplete = draftStatus === 'COMPLETED'
 
                 return (
@@ -103,6 +104,11 @@ const Draft = () => {
                           {isDraftReady && (
                             <span className="px-2 py-0.5 rounded text-xs font-medium bg-accent-green/20 text-accent-green">
                               {memberCount >= maxMembers ? 'Ready to Draft' : 'Pre-Draft'}
+                            </span>
+                          )}
+                          {isDraftInProgress && (
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                              {draftStatus === 'PAUSED' ? 'Paused' : 'Live'}
                             </span>
                           )}
                           {isDraftComplete && (
@@ -124,8 +130,8 @@ const Draft = () => {
                       </div>
 
                       <Link to={`/leagues/${league.id}/draft`}>
-                        <Button variant={isDraftReady && memberCount >= maxMembers ? 'primary' : 'secondary'}>
-                          {isDraftReady ? 'Enter Draft' : 'View Draft'}
+                        <Button variant={isDraftInProgress || (isDraftReady && memberCount >= maxMembers) ? 'primary' : 'secondary'}>
+                          {isDraftInProgress ? 'Join Draft' : isDraftReady ? 'Enter Draft' : 'View Draft'}
                         </Button>
                       </Link>
                     </div>
@@ -150,11 +156,13 @@ const Draft = () => {
                         <div>
                           <p className="text-text-muted text-xs">Status</p>
                           <p className={`font-medium ${
+                            isDraftInProgress ? 'text-yellow-400' :
                             isDraftReady && memberCount >= maxMembers ? 'text-accent-green' :
                             isDraftReady ? 'text-yellow-400' :
                             'text-text-secondary'
                           }`}>
-                            {isDraftReady && memberCount >= maxMembers ? 'Ready' :
+                            {isDraftInProgress ? (draftStatus === 'PAUSED' ? 'Paused' : 'In Progress') :
+                             isDraftReady && memberCount >= maxMembers ? 'Ready' :
                              isDraftReady ? 'Waiting for Members' :
                              'Completed'}
                           </p>

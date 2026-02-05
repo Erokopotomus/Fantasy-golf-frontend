@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { DraftProvider } from '../context/DraftContext'
+import { useAuth } from '../context/AuthContext'
 import { useDraft } from '../hooks/useDraft'
 import { usePlayerDetail } from '../hooks/usePlayerDetail'
 import DraftHeader from '../components/draft/DraftHeader'
@@ -16,6 +17,7 @@ import Card from '../components/common/Card'
 
 const DraftRoomContent = () => {
   const { leagueId } = useParams()
+  const { user } = useAuth()
   const {
     draft,
     league,
@@ -37,7 +39,9 @@ const DraftRoomContent = () => {
     removeFromQueue,
     reorderQueue,
     pauseDraft,
+    resumeDraft,
     startDraft,
+    handleTimeout,
     getAvailablePlayers,
   } = useDraft(leagueId)
 
@@ -81,20 +85,7 @@ const DraftRoomContent = () => {
     console.log('Passed on bid')
   }, [])
 
-  const handleTimeout = useCallback(async () => {
-    if (isUserTurn && queue.length > 0) {
-      // Auto-pick from queue
-      const topPick = queue[0]
-      if (draft?.type === 'auction') {
-        await nominatePlayer(topPick.id, 1)
-      } else {
-        await makePick(topPick.id)
-      }
-      removeFromQueue(topPick.id)
-    }
-  }, [isUserTurn, queue, draft?.type, nominatePlayer, makePick, removeFromQueue])
-
-  const isCommissioner = league?.commissionerId === '1' // Mock check
+  const isCommissioner = league?.ownerId === user?.id
 
   if (loading) {
     return (
@@ -148,6 +139,7 @@ const DraftRoomContent = () => {
         isPaused={isPaused}
         isCommissioner={isCommissioner}
         onPause={pauseDraft}
+        onResume={resumeDraft}
         onStart={startDraft}
         onTimeout={handleTimeout}
       />
@@ -239,7 +231,7 @@ const DraftRoomContent = () => {
       {/* Pick Announcement */}
       <PickAnnouncement
         pick={recentPick}
-        isUserPick={recentPick?.teamId === 'team-1'}
+        isUserPick={recentPick?.teamId === draft?.userTeamId}
       />
     </div>
   )
