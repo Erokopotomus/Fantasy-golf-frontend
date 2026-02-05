@@ -42,11 +42,15 @@ const Landing = () => {
                 Get Started Free
               </Button>
             </Link>
-            <Link to="/#how-it-works">
-              <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
-                Learn More
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              className="sm:w-auto"
+              onClick={() => document.getElementById('formats')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Learn More
+            </Button>
           </div>
         </div>
 
