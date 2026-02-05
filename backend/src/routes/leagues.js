@@ -44,21 +44,56 @@ router.get('/', authenticate, async (req, res, next) => {
 // POST /api/leagues - Create a new league
 router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { name, format, draftType, maxTeams, isPublic, settings } = req.body
+    const { name, format, draftType, maxTeams, maxMembers, isPublic, settings, formatSettings, rosterSize, scoringType, budget } = req.body
+
+    // Map frontend format strings to enum values
+    const formatMap = {
+      'full-league': 'FULL_LEAGUE',
+      'head-to-head': 'HEAD_TO_HEAD',
+      'roto': 'ROTO',
+      'survivor': 'SURVIVOR',
+      'one-and-done': 'ONE_AND_DONE',
+    }
+
+    const draftTypeMap = {
+      'snake': 'SNAKE',
+      'auction': 'AUCTION',
+      'none': 'NONE',
+    }
+
+    const resolvedFormat = formatMap[format] || format || 'FULL_LEAGUE'
+    const resolvedDraftType = draftTypeMap[draftType] || draftType || 'SNAKE'
+    const resolvedMaxTeams = maxTeams || maxMembers || 10
+
+    // Combine settings
+    const combinedSettings = {
+      ...(settings || {}),
+      ...(formatSettings || {}),
+      rosterSize: rosterSize || 6,
+      scoringType: scoringType || 'standard',
+      budget: budget || null,
+    }
 
     const league = await prisma.league.create({
       data: {
         name,
-        format: format || 'FULL_LEAGUE',
-        draftType: draftType || 'SNAKE',
-        maxTeams: maxTeams || 10,
+        format: resolvedFormat,
+        draftType: resolvedDraftType,
+        maxTeams: resolvedMaxTeams,
         isPublic: isPublic || false,
-        settings: settings || {},
+        settings: combinedSettings,
         ownerId: req.user.id,
         members: {
           create: {
             userId: req.user.id,
             role: 'OWNER'
+          }
+        },
+        // Also create a team for the owner
+        teams: {
+          create: {
+            name: `${req.user.name}'s Team`,
+            userId: req.user.id
           }
         }
       },
@@ -72,7 +107,15 @@ router.post('/', authenticate, async (req, res, next) => {
       }
     })
 
-    res.status(201).json({ league })
+    // Return with joinCode alias for frontend compatibility
+    res.status(201).json({
+      ...league,
+      joinCode: league.inviteCode,
+      league: {
+        ...league,
+        joinCode: league.inviteCode
+      }
+    })
   } catch (error) {
     next(error)
   }
