@@ -27,6 +27,11 @@ import PlayerProfile from './pages/PlayerProfile'
 import TradeCenter from './pages/TradeCenter'
 import LeagueSettings from './pages/LeagueSettings'
 import News from './pages/News'
+// Format-specific pages
+import Matchups from './pages/Matchups'
+import CategoryStandings from './pages/CategoryStandings'
+import SurvivorBoard from './pages/SurvivorBoard'
+import PickCenter from './pages/PickCenter'
 
 function App() {
   return (
@@ -176,6 +181,39 @@ function App() {
             element={
               <ProtectedRoute>
                 <News />
+              </ProtectedRoute>
+            }
+          />
+          {/* Format-specific routes */}
+          <Route
+            path="/leagues/:leagueId/matchups"
+            element={
+              <ProtectedRoute>
+                <Matchups />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/categories"
+            element={
+              <ProtectedRoute>
+                <CategoryStandings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/survivor"
+            element={
+              <ProtectedRoute>
+                <SurvivorBoard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/picks"
+            element={
+              <ProtectedRoute>
+                <PickCenter />
               </ProtectedRoute>
             }
           />

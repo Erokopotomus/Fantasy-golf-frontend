@@ -1,9 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import { useLeagues } from '../hooks/useLeagues'
 import { useNotifications } from '../context/NotificationContext'
+import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
+import FullLeagueSettings from '../components/league/settings/FullLeagueSettings'
+import HeadToHeadSettings from '../components/league/settings/HeadToHeadSettings'
+import RotoSettings from '../components/league/settings/RotoSettings'
+import SurvivorSettings from '../components/league/settings/SurvivorSettings'
+import OneAndDoneSettings from '../components/league/settings/OneAndDoneSettings'
 
 const LeagueSettings = () => {
   const { leagueId } = useParams()
@@ -11,6 +17,7 @@ const LeagueSettings = () => {
   const { notify } = useNotifications()
 
   const league = leagues?.find(l => l.id === leagueId)
+  const { format, formatSettings } = useLeagueFormat(league)
 
   const [settings, setSettings] = useState({
     name: league?.name || '',
@@ -20,9 +27,23 @@ const LeagueSettings = () => {
     tradeDeadline: league?.settings?.tradeDeadline || '',
     waiverType: 'rolling',
     waiverPriority: 'reverse-standings',
+    formatSettings: league?.settings?.formatSettings || {},
   })
 
   const [activeTab, setActiveTab] = useState('general')
+
+  // Update settings when league loads
+  useEffect(() => {
+    if (league) {
+      setSettings(prev => ({
+        ...prev,
+        name: league.name,
+        scoringType: league.settings?.scoringType || 'standard',
+        rosterSize: league.settings?.rosterSize || 6,
+        formatSettings: league.settings?.formatSettings || {},
+      }))
+    }
+  }, [league])
 
   if (loading) {
     return (
@@ -54,8 +75,30 @@ const LeagueSettings = () => {
     notify.success('Settings Saved', 'League settings have been updated')
   }
 
+  const handleFormatSettingsChange = (newFormatSettings) => {
+    setSettings(prev => ({ ...prev, formatSettings: newFormatSettings }))
+  }
+
+  const renderFormatSettings = () => {
+    switch (league?.format) {
+      case 'full-league':
+        return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+      case 'head-to-head':
+        return <HeadToHeadSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+      case 'roto':
+        return <RotoSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+      case 'survivor':
+        return <SurvivorSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+      case 'one-and-done':
+        return <OneAndDoneSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+      default:
+        return null
+    }
+  }
+
   const tabs = [
     { id: 'general', label: 'General' },
+    { id: 'format', label: format?.name || 'Format' },
     { id: 'scoring', label: 'Scoring' },
     { id: 'trades', label: 'Trades' },
     { id: 'waivers', label: 'Waivers' },
@@ -128,11 +171,44 @@ const LeagueSettings = () => {
               </select>
             </div>
 
+            {/* League Format Info */}
+            {league?.format && (
+              <div className="pt-4 border-t border-dark-border">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  League Format
+                </label>
+                <div className="p-3 bg-dark-tertiary rounded-lg border border-dark-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-accent-green/20 flex items-center justify-center text-accent-green">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{format?.name}</p>
+                      <p className="text-xs text-text-muted">{format?.description}</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-text-muted mt-2">
+                  League format cannot be changed after creation
+                </p>
+              </div>
+            )}
+
             <div className="pt-4">
               <Button onClick={handleSave}>Save Changes</Button>
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Format Settings */}
+      {activeTab === 'format' && (
+        <div className="space-y-6">
+          {renderFormatSettings()}
+          <Button onClick={handleSave}>Save Format Settings</Button>
+        </div>
       )}
 
       {/* Scoring Settings */}

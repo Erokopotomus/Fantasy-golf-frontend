@@ -80,11 +80,13 @@ const mockLeagues = [
   {
     id: 'league-1',
     name: 'Weekend Warriors',
-    type: 'snake',
+    draftType: 'snake',
+    format: 'full-league',
     memberCount: 8,
     maxMembers: 10,
     status: 'active',
     currentRound: 'The Players Championship',
+    currentWeek: 4,
     userRank: 2,
     userPoints: 1245,
     leader: { name: 'Mike S.', points: 1312 },
@@ -93,6 +95,10 @@ const mockLeagues = [
       rosterSize: 6,
       scoringType: 'standard',
       tradeDeadline: '2024-08-01',
+      formatSettings: {
+        segments: 4,
+        pointsPerPosition: { 1: 100, 2: 75, 3: 60, top5: 50, top10: 35, top20: 20, top30: 10, made_cut: 5 }
+      }
     },
     standings: [
       { rank: 1, userId: 'user-2', name: 'Mike S.', points: 1312, avatar: 'MS' },
@@ -108,11 +114,13 @@ const mockLeagues = [
   {
     id: 'league-2',
     name: 'Office Masters League',
-    type: 'auction',
+    draftType: 'auction',
+    format: 'head-to-head',
     memberCount: 12,
     maxMembers: 12,
     status: 'active',
     currentRound: 'The Players Championship',
+    currentWeek: 4,
     userRank: 5,
     userPoints: 2156,
     leader: { name: 'Rachel M.', points: 2489 },
@@ -122,24 +130,32 @@ const mockLeagues = [
       scoringType: 'strokes-gained',
       budget: 100,
       tradeDeadline: '2024-08-15',
+      formatSettings: {
+        playoffTeams: 4,
+        playoffFormat: 'single-elimination',
+        regularSeasonWeeks: 12,
+        tiebreakers: ['total-points', 'head-to-head']
+      }
     },
     standings: [
-      { rank: 1, userId: 'user-9', name: 'Rachel M.', points: 2489, avatar: 'RM' },
-      { rank: 2, userId: 'user-10', name: 'David H.', points: 2401, avatar: 'DH' },
-      { rank: 3, userId: 'user-11', name: 'Lisa C.', points: 2345, avatar: 'LC' },
-      { rank: 4, userId: 'user-12', name: 'Tom B.', points: 2278, avatar: 'TB' },
-      { rank: 5, userId: '1', name: 'Demo User', points: 2156, avatar: 'DU' },
-      { rank: 6, userId: 'user-13', name: 'Kate M.', points: 2089, avatar: 'KM' },
+      { rank: 1, userId: 'user-9', name: 'Rachel M.', points: 2489, avatar: 'RM', wins: 3, losses: 1, ties: 0 },
+      { rank: 2, userId: 'user-10', name: 'David H.', points: 2401, avatar: 'DH', wins: 3, losses: 1, ties: 0 },
+      { rank: 3, userId: 'user-11', name: 'Lisa C.', points: 2345, avatar: 'LC', wins: 2, losses: 1, ties: 1 },
+      { rank: 4, userId: 'user-12', name: 'Tom B.', points: 2278, avatar: 'TB', wins: 2, losses: 2, ties: 0 },
+      { rank: 5, userId: '1', name: 'Demo User', points: 2156, avatar: 'DU', wins: 2, losses: 2, ties: 0 },
+      { rank: 6, userId: 'user-13', name: 'Kate M.', points: 2089, avatar: 'KM', wins: 1, losses: 3, ties: 0 },
     ],
   },
   {
     id: 'league-3',
     name: 'Golf Buddies 2024',
-    type: 'snake',
+    draftType: 'snake',
+    format: 'roto',
     memberCount: 6,
     maxMembers: 8,
     status: 'active',
     currentRound: 'The Players Championship',
+    currentWeek: 4,
     userRank: 1,
     userPoints: 876,
     leader: { name: 'Demo User', points: 876 },
@@ -147,17 +163,275 @@ const mockLeagues = [
     settings: {
       rosterSize: 6,
       scoringType: 'standard',
+      formatSettings: {
+        categories: ['wins', 'top10s', 'cuts_made', 'birdies', 'eagles', 'scoring_avg']
+      }
     },
     standings: [
-      { rank: 1, userId: '1', name: 'Demo User', points: 876, avatar: 'DU' },
-      { rank: 2, userId: 'user-14', name: 'Ben W.', points: 834, avatar: 'BW' },
-      { rank: 3, userId: 'user-15', name: 'Amy G.', points: 798, avatar: 'AG' },
-      { rank: 4, userId: 'user-16', name: 'Nick T.', points: 756, avatar: 'NT' },
-      { rank: 5, userId: 'user-17', name: 'Sophie L.', points: 712, avatar: 'SL' },
-      { rank: 6, userId: 'user-18', name: 'Dan R.', points: 678, avatar: 'DR' },
+      { rank: 1, userId: '1', name: 'Demo User', points: 876, avatar: 'DU', rotoPoints: 42 },
+      { rank: 2, userId: 'user-14', name: 'Ben W.', points: 834, avatar: 'BW', rotoPoints: 38 },
+      { rank: 3, userId: 'user-15', name: 'Amy G.', points: 798, avatar: 'AG', rotoPoints: 35 },
+      { rank: 4, userId: 'user-16', name: 'Nick T.', points: 756, avatar: 'NT', rotoPoints: 32 },
+      { rank: 5, userId: 'user-17', name: 'Sophie L.', points: 712, avatar: 'SL', rotoPoints: 28 },
+      { rank: 6, userId: 'user-18', name: 'Dan R.', points: 678, avatar: 'DR', rotoPoints: 25 },
+    ],
+  },
+  {
+    id: 'league-4',
+    name: 'Survivor Golf Club',
+    draftType: 'snake',
+    format: 'survivor',
+    memberCount: 10,
+    maxMembers: 12,
+    status: 'active',
+    currentRound: 'The Players Championship',
+    currentWeek: 4,
+    userRank: 3,
+    userPoints: 445,
+    leader: { name: 'Tyler M.', points: 512 },
+    createdAt: '2024-01-20T00:00:00Z',
+    settings: {
+      rosterSize: 6,
+      scoringType: 'standard',
+      formatSettings: {
+        eliminationsPerWeek: 1,
+        buyBacks: { allowed: true, max: 1 }
+      }
+    },
+    standings: [
+      { rank: 1, userId: 'user-20', name: 'Tyler M.', points: 512, avatar: 'TM', status: 'alive' },
+      { rank: 2, userId: 'user-21', name: 'Jen B.', points: 489, avatar: 'JB', status: 'alive' },
+      { rank: 3, userId: '1', name: 'Demo User', points: 445, avatar: 'DU', status: 'alive' },
+      { rank: 4, userId: 'user-22', name: 'Mark K.', points: 423, avatar: 'MK', status: 'alive' },
+      { rank: 5, userId: 'user-23', name: 'Anna S.', points: 398, avatar: 'AS', status: 'alive' },
+      { rank: 6, userId: 'user-24', name: 'Pete R.', points: 367, avatar: 'PR', status: 'alive' },
+      { rank: 7, userId: 'user-25', name: 'Carol W.', points: 312, avatar: 'CW', status: 'alive' },
+      { rank: 8, userId: 'user-26', name: 'Steve D.', points: 256, avatar: 'SD', status: 'buyback' },
+      { rank: 9, userId: 'user-27', name: 'Laura T.', points: 189, avatar: 'LT', status: 'eliminated', eliminatedWeek: 3 },
+      { rank: 10, userId: 'user-28', name: 'Dave M.', points: 145, avatar: 'DM', status: 'eliminated', eliminatedWeek: 2 },
+    ],
+  },
+  {
+    id: 'league-5',
+    name: 'Pick Em Pool',
+    draftType: 'none',
+    format: 'one-and-done',
+    memberCount: 8,
+    maxMembers: 20,
+    status: 'active',
+    currentRound: 'The Players Championship',
+    currentWeek: 4,
+    userRank: 2,
+    userPoints: 385,
+    leader: { name: 'Kevin L.', points: 412 },
+    createdAt: '2024-01-10T00:00:00Z',
+    settings: {
+      rosterSize: 1,
+      scoringType: 'standard',
+      formatSettings: {
+        tiers: [
+          { tier: 1, maxRank: 10, multiplier: 1.0 },
+          { tier: 2, maxRank: 30, multiplier: 1.25 },
+          { tier: 3, maxRank: 60, multiplier: 1.5 },
+          { tier: 4, maxRank: null, multiplier: 2.0 }
+        ],
+        majorMultiplier: 1.5
+      }
+    },
+    standings: [
+      { rank: 1, userId: 'user-30', name: 'Kevin L.', points: 412, avatar: 'KL', usedPlayers: 4 },
+      { rank: 2, userId: '1', name: 'Demo User', points: 385, avatar: 'DU', usedPlayers: 4 },
+      { rank: 3, userId: 'user-31', name: 'Michelle R.', points: 356, avatar: 'MR', usedPlayers: 4 },
+      { rank: 4, userId: 'user-32', name: 'Brian T.', points: 334, avatar: 'BT', usedPlayers: 4 },
+      { rank: 5, userId: 'user-33', name: 'Stacy K.', points: 312, avatar: 'SK', usedPlayers: 3 },
+      { rank: 6, userId: 'user-34', name: 'Rob W.', points: 289, avatar: 'RW', usedPlayers: 4 },
+      { rank: 7, userId: 'user-35', name: 'Nancy P.', points: 267, avatar: 'NP', usedPlayers: 4 },
+      { rank: 8, userId: 'user-36', name: 'Greg H.', points: 234, avatar: 'GH', usedPlayers: 3 },
     ],
   },
 ]
+
+// Head-to-Head matchup data
+const mockMatchups = {
+  'league-2': {
+    schedule: [
+      {
+        week: 1,
+        tournament: 'Farmers Insurance Open',
+        matchups: [
+          { home: 'user-9', away: 'user-13', homeScore: 142, awayScore: 128, completed: true },
+          { home: 'user-10', away: 'user-12', homeScore: 156, awayScore: 134, completed: true },
+          { home: 'user-11', away: '1', homeScore: 145, awayScore: 138, completed: true },
+        ]
+      },
+      {
+        week: 2,
+        tournament: 'AT&T Pebble Beach',
+        matchups: [
+          { home: 'user-9', away: 'user-12', homeScore: 167, awayScore: 143, completed: true },
+          { home: 'user-10', away: '1', homeScore: 151, awayScore: 158, completed: true },
+          { home: 'user-11', away: 'user-13', homeScore: 139, awayScore: 139, completed: true },
+        ]
+      },
+      {
+        week: 3,
+        tournament: 'WM Phoenix Open',
+        matchups: [
+          { home: '1', away: 'user-9', homeScore: 172, awayScore: 165, completed: true },
+          { home: 'user-12', away: 'user-11', homeScore: 148, awayScore: 152, completed: true },
+          { home: 'user-13', away: 'user-10', homeScore: 134, awayScore: 156, completed: true },
+        ]
+      },
+      {
+        week: 4,
+        tournament: 'The Players Championship',
+        matchups: [
+          { home: '1', away: 'user-11', homeScore: null, awayScore: null, completed: false },
+          { home: 'user-9', away: 'user-10', homeScore: null, awayScore: null, completed: false },
+          { home: 'user-12', away: 'user-13', homeScore: null, awayScore: null, completed: false },
+        ]
+      },
+    ],
+    playoffs: null, // No playoffs yet
+  }
+}
+
+// Roto category standings
+const mockRotoCategories = {
+  'league-3': {
+    categories: ['wins', 'top10s', 'cuts_made', 'birdies', 'eagles', 'scoring_avg'],
+    categoryLabels: {
+      wins: 'Wins',
+      top10s: 'Top 10s',
+      cuts_made: 'Cuts Made',
+      birdies: 'Total Birdies',
+      eagles: 'Total Eagles',
+      scoring_avg: 'Scoring Avg'
+    },
+    standings: [
+      {
+        userId: '1', name: 'Demo User', avatar: 'DU', totalRotoPoints: 42,
+        categories: {
+          wins: { value: 2, rank: 1, points: 6 },
+          top10s: { value: 8, rank: 2, points: 5 },
+          cuts_made: { value: 12, rank: 1, points: 6 },
+          birdies: { value: 156, rank: 3, points: 4 },
+          eagles: { value: 8, rank: 1, points: 6 },
+          scoring_avg: { value: 69.8, rank: 1, points: 6 },
+        }
+      },
+      {
+        userId: 'user-14', name: 'Ben W.', avatar: 'BW', totalRotoPoints: 38,
+        categories: {
+          wins: { value: 1, rank: 2, points: 5 },
+          top10s: { value: 9, rank: 1, points: 6 },
+          cuts_made: { value: 11, rank: 2, points: 5 },
+          birdies: { value: 162, rank: 2, points: 5 },
+          eagles: { value: 6, rank: 2, points: 5 },
+          scoring_avg: { value: 70.2, rank: 3, points: 4 },
+        }
+      },
+      {
+        userId: 'user-15', name: 'Amy G.', avatar: 'AG', totalRotoPoints: 35,
+        categories: {
+          wins: { value: 1, rank: 2, points: 5 },
+          top10s: { value: 7, rank: 3, points: 4 },
+          cuts_made: { value: 10, rank: 3, points: 4 },
+          birdies: { value: 168, rank: 1, points: 6 },
+          eagles: { value: 5, rank: 3, points: 4 },
+          scoring_avg: { value: 70.1, rank: 2, points: 5 },
+        }
+      },
+      {
+        userId: 'user-16', name: 'Nick T.', avatar: 'NT', totalRotoPoints: 32,
+        categories: {
+          wins: { value: 0, rank: 4, points: 3 },
+          top10s: { value: 6, rank: 4, points: 3 },
+          cuts_made: { value: 10, rank: 3, points: 4 },
+          birdies: { value: 145, rank: 4, points: 3 },
+          eagles: { value: 4, rank: 4, points: 3 },
+          scoring_avg: { value: 70.5, rank: 4, points: 3 },
+        }
+      },
+      {
+        userId: 'user-17', name: 'Sophie L.', avatar: 'SL', totalRotoPoints: 28,
+        categories: {
+          wins: { value: 0, rank: 4, points: 3 },
+          top10s: { value: 5, rank: 5, points: 2 },
+          cuts_made: { value: 9, rank: 5, points: 2 },
+          birdies: { value: 138, rank: 5, points: 2 },
+          eagles: { value: 3, rank: 5, points: 2 },
+          scoring_avg: { value: 70.8, rank: 5, points: 2 },
+        }
+      },
+      {
+        userId: 'user-18', name: 'Dan R.', avatar: 'DR', totalRotoPoints: 25,
+        categories: {
+          wins: { value: 0, rank: 4, points: 3 },
+          top10s: { value: 4, rank: 6, points: 1 },
+          cuts_made: { value: 8, rank: 6, points: 1 },
+          birdies: { value: 125, rank: 6, points: 1 },
+          eagles: { value: 2, rank: 6, points: 1 },
+          scoring_avg: { value: 71.2, rank: 6, points: 1 },
+        }
+      },
+    ]
+  }
+}
+
+// Survivor format data
+const mockSurvivorData = {
+  'league-4': {
+    currentWeek: 4,
+    eliminationsPerWeek: 1,
+    buyBacksAllowed: true,
+    maxBuyBacks: 1,
+    eliminations: [
+      { week: 2, userId: 'user-28', name: 'Dave M.', points: 45, usedBuyBack: false },
+      { week: 3, userId: 'user-27', name: 'Laura T.', points: 52, usedBuyBack: false },
+    ],
+    buyBacks: [
+      { week: 3, userId: 'user-26', name: 'Steve D.', cost: 0 }
+    ],
+    teamsAlive: 8,
+    teamsEliminated: 2,
+  }
+}
+
+// One-and-Done picks data
+const mockOneAndDonePicks = {
+  'league-5': {
+    currentTournament: 'tourney-1',
+    userPicks: {
+      '1': {
+        usedPlayers: ['player-8', 'player-15', 'player-23', 'player-32'],
+        picks: [
+          { tournamentId: 'tourney-past-3', playerId: 'player-8', playerName: 'Ludvig Aberg', tier: 1, multiplier: 1.0, points: 75, position: 'T5' },
+          { tournamentId: 'tourney-past-2', playerId: 'player-15', playerName: 'Sahith Theegala', tier: 2, multiplier: 1.25, points: 94, position: 'T8' },
+          { tournamentId: 'tourney-past-1', playerId: 'player-23', playerName: 'Tom Kim', tier: 3, multiplier: 1.5, points: 105, position: 'T12' },
+          { tournamentId: 'tourney-3', playerId: 'player-32', playerName: 'Rickie Fowler', tier: 4, multiplier: 2.0, points: 110, position: 'T15' },
+        ],
+        currentPick: null,
+      },
+      'user-30': {
+        usedPlayers: ['player-1', 'player-12', 'player-25', 'player-38'],
+        picks: [
+          { tournamentId: 'tourney-past-3', playerId: 'player-1', playerName: 'Scottie Scheffler', tier: 1, multiplier: 1.0, points: 100, position: '1st' },
+          { tournamentId: 'tourney-past-2', playerId: 'player-12', playerName: 'Matt Fitzpatrick', tier: 2, multiplier: 1.25, points: 81, position: 'T10' },
+          { tournamentId: 'tourney-past-1', playerId: 'player-25', playerName: 'Keegan Bradley', tier: 3, multiplier: 1.5, points: 98, position: 'T9' },
+          { tournamentId: 'tourney-3', playerId: 'player-38', playerName: 'Nick Taylor', tier: 4, multiplier: 2.0, points: 130, position: 'T8' },
+        ],
+        currentPick: null,
+      }
+    },
+    tiers: [
+      { tier: 1, maxRank: 10, multiplier: 1.0, label: 'Elite (1-10)' },
+      { tier: 2, maxRank: 30, multiplier: 1.25, label: 'Star (11-30)' },
+      { tier: 3, maxRank: 60, multiplier: 1.5, label: 'Rising (31-60)' },
+      { tier: 4, maxRank: null, multiplier: 2.0, label: 'Sleeper (61+)' },
+    ],
+  }
+}
 
 const mockPlayers = [
   {
@@ -1035,17 +1309,22 @@ export const mockApi = {
       const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       const newLeague = {
         id: `league-${Date.now()}`,
-        ...leagueData,
+        name: leagueData.name,
+        draftType: leagueData.draftType || 'snake',
+        format: leagueData.format || 'full-league',
         joinCode,
         memberCount: 1,
-        status: 'draft-pending',
+        maxMembers: leagueData.maxMembers || 10,
+        status: leagueData.format === 'one-and-done' ? 'active' : 'draft-pending',
+        currentWeek: 1,
         userRank: 1,
         userPoints: 0,
         createdAt: new Date().toISOString(),
         settings: {
-          rosterSize: leagueData.rosterSize,
-          scoringType: leagueData.scoringType,
+          rosterSize: leagueData.format === 'one-and-done' ? 1 : (leagueData.rosterSize || 6),
+          scoringType: leagueData.scoringType || 'standard',
           budget: leagueData.budget,
+          formatSettings: leagueData.formatSettings || {},
         },
         standings: [],
       }
@@ -1177,6 +1456,139 @@ export const mockApi = {
       ]
 
       return { standings, weeklyResults }
+    },
+  },
+
+  // Matchups endpoints (Head-to-Head format)
+  matchups: {
+    async getSchedule(leagueId) {
+      await delay(400)
+      const league = mockLeagues.find(l => l.id === leagueId)
+      if (!league || league.format !== 'head-to-head') {
+        throw new Error('League not found or not a head-to-head league')
+      }
+      return mockMatchups[leagueId] || { schedule: [], playoffs: null }
+    },
+
+    async getCurrentWeek(leagueId) {
+      await delay(300)
+      const league = mockLeagues.find(l => l.id === leagueId)
+      if (!league) throw new Error('League not found')
+
+      const matchupData = mockMatchups[leagueId]
+      if (!matchupData) return null
+
+      const currentWeek = league.currentWeek || 1
+      const weekData = matchupData.schedule.find(w => w.week === currentWeek)
+      return weekData || null
+    },
+
+    async getPlayoffBracket(leagueId) {
+      await delay(400)
+      const matchupData = mockMatchups[leagueId]
+      return matchupData?.playoffs || null
+    },
+  },
+
+  // Roto endpoints
+  roto: {
+    async getCategories(leagueId) {
+      await delay(400)
+      const league = mockLeagues.find(l => l.id === leagueId)
+      if (!league || league.format !== 'roto') {
+        throw new Error('League not found or not a roto league')
+      }
+      return mockRotoCategories[leagueId] || null
+    },
+
+    async getCategoryStandings(leagueId) {
+      await delay(500)
+      const rotoData = mockRotoCategories[leagueId]
+      if (!rotoData) throw new Error('Roto data not found')
+      return rotoData.standings
+    },
+  },
+
+  // Survivor endpoints
+  survivor: {
+    async getStatus(leagueId) {
+      await delay(400)
+      const league = mockLeagues.find(l => l.id === leagueId)
+      if (!league || league.format !== 'survivor') {
+        throw new Error('League not found or not a survivor league')
+      }
+      return mockSurvivorData[leagueId] || null
+    },
+
+    async useBuyBack(leagueId, userId) {
+      await delay(600)
+      // Mock buy-back logic
+      const survivorData = mockSurvivorData[leagueId]
+      if (!survivorData) throw new Error('Survivor data not found')
+
+      // Check if user is eliminated and has buy-back available
+      const league = mockLeagues.find(l => l.id === leagueId)
+      const userStanding = league?.standings?.find(s => s.userId === userId)
+
+      if (!userStanding || userStanding.status !== 'eliminated') {
+        throw new Error('User not eligible for buy-back')
+      }
+
+      return { success: true, message: 'Buy-back successful!' }
+    },
+  },
+
+  // One-and-Done endpoints
+  oneAndDone: {
+    async getPicks(leagueId, userId) {
+      await delay(400)
+      const oadData = mockOneAndDonePicks[leagueId]
+      if (!oadData) throw new Error('One-and-Done data not found')
+
+      return {
+        userPicks: oadData.userPicks[userId] || { usedPlayers: [], picks: [], currentPick: null },
+        tiers: oadData.tiers,
+        currentTournament: oadData.currentTournament,
+      }
+    },
+
+    async makePick(leagueId, userId, playerId, tournamentId) {
+      await delay(600)
+      const oadData = mockOneAndDonePicks[leagueId]
+      if (!oadData) throw new Error('One-and-Done data not found')
+
+      const userPicks = oadData.userPicks[userId]
+      if (userPicks?.usedPlayers?.includes(playerId)) {
+        throw new Error('You have already used this player')
+      }
+
+      const player = mockPlayers.find(p => p.id === playerId)
+      if (!player) throw new Error('Player not found')
+
+      // Determine tier based on rank
+      const tier = oadData.tiers.find(t =>
+        t.maxRank === null || player.rank <= t.maxRank
+      )
+
+      return {
+        success: true,
+        pick: {
+          tournamentId,
+          playerId,
+          playerName: player.name,
+          tier: tier?.tier || 4,
+          multiplier: tier?.multiplier || 2.0,
+        }
+      }
+    },
+
+    async getLeaderboard(leagueId) {
+      await delay(400)
+      const league = mockLeagues.find(l => l.id === leagueId)
+      if (!league || league.format !== 'one-and-done') {
+        throw new Error('League not found or not a one-and-done league')
+      }
+      return league.standings || []
     },
   },
 

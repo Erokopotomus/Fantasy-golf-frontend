@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useLeagues } from '../hooks/useLeagues'
+import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import ChatPanel from '../components/chat/ChatPanel'
@@ -10,6 +11,7 @@ const LeagueHome = () => {
   const { leagues, loading } = useLeagues()
 
   const league = leagues?.find(l => l.id === leagueId)
+  const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
 
   if (loading) {
     return (
@@ -58,7 +60,13 @@ const LeagueHome = () => {
               </Link>
               <h1 className="text-2xl sm:text-3xl font-bold text-white">{league.name}</h1>
               <div className="flex items-center gap-3 mt-1">
-                <span className="text-text-secondary capitalize">{league.type} Draft</span>
+                <span className="text-text-secondary">{format?.name || 'League'}</span>
+                {hasDraft && (
+                  <>
+                    <span className="text-text-muted">•</span>
+                    <span className="text-text-secondary capitalize">{league.draftType} Draft</span>
+                  </>
+                )}
                 <span className="text-text-muted">•</span>
                 <span className="text-text-secondary">{league.memberCount} members</span>
                 <span className="text-text-muted">•</span>
@@ -73,27 +81,74 @@ const LeagueHome = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/roster`)}
-              >
-                My Roster
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/draft`)}
-              >
-                Draft Room
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/waivers`)}
-              >
-                Waivers
-              </Button>
+              {/* Standard buttons for leagues with rosters */}
+              {!isOneAndDone && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate(`/leagues/${leagueId}/roster`)}
+                  >
+                    My Roster
+                  </Button>
+                  {hasDraft && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/leagues/${leagueId}/draft`)}
+                    >
+                      Draft Room
+                    </Button>
+                  )}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate(`/leagues/${leagueId}/waivers`)}
+                  >
+                    Waivers
+                  </Button>
+                </>
+              )}
+
+              {/* Format-specific buttons */}
+              {isHeadToHead && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/leagues/${leagueId}/matchups`)}
+                >
+                  Matchups
+                </Button>
+              )}
+              {isRoto && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/leagues/${leagueId}/categories`)}
+                >
+                  Categories
+                </Button>
+              )}
+              {isSurvivor && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/leagues/${leagueId}/survivor`)}
+                >
+                  Survivor Board
+                </Button>
+              )}
+              {isOneAndDone && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/leagues/${leagueId}/picks`)}
+                >
+                  Pick Center
+                </Button>
+              )}
+
+              {/* Common buttons */}
               <Button
                 variant="secondary"
                 size="sm"
@@ -101,13 +156,15 @@ const LeagueHome = () => {
               >
                 Standings
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/trades`)}
-              >
-                Trades
-              </Button>
+              {!isOneAndDone && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/leagues/${leagueId}/trades`)}
+                >
+                  Trades
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 size="sm"
@@ -187,13 +244,21 @@ const LeagueHome = () => {
                 <h3 className="text-lg font-semibold text-white mb-4">League Settings</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-text-muted">Draft Type</span>
-                    <span className="text-white capitalize">{league.type}</span>
+                    <span className="text-text-muted">Format</span>
+                    <span className="text-accent-green">{format?.name || 'League'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">Roster Size</span>
-                    <span className="text-white">{league.settings?.rosterSize || 6} players</span>
-                  </div>
+                  {hasDraft && (
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Draft Type</span>
+                      <span className="text-white capitalize">{league.draftType}</span>
+                    </div>
+                  )}
+                  {!isOneAndDone && (
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Roster Size</span>
+                      <span className="text-white">{league.settings?.rosterSize || 6} players</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-text-muted">Scoring</span>
                     <span className="text-white capitalize">{league.settings?.scoringType || 'Standard'}</span>

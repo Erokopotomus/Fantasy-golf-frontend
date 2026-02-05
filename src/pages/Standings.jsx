@@ -1,16 +1,32 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useLeagues } from '../hooks/useLeagues'
+import { useLeagueFormat } from '../hooks/useLeagueFormat'
 import StandingsTable from '../components/standings/StandingsTable'
 import WeeklyBreakdown from '../components/standings/WeeklyBreakdown'
+import H2HStandings from '../components/standings/H2HStandings'
+import RotoStandings from '../components/standings/RotoStandings'
+import SurvivorStandings from '../components/standings/SurvivorStandings'
+import OADStandings from '../components/standings/OADStandings'
 import Card from '../components/common/Card'
 import useStandings from '../hooks/useStandings'
+import useMatchups from '../hooks/useMatchups'
+import useRotoCategories from '../hooks/useRotoCategories'
+import useSurvivor from '../hooks/useSurvivor'
 
 const Standings = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
-  const { standings, weeklyResults, loading, error, refetch } = useStandings(leagueId)
+  const { leagues, loading: leaguesLoading } = useLeagues()
+  const league = leagues?.find(l => l.id === leagueId)
+  const { format, isHeadToHead, isRoto, isSurvivor, isOneAndDone, isFullLeague } = useLeagueFormat(league)
 
-  if (loading) {
+  const { standings, weeklyResults, loading, error, refetch } = useStandings(leagueId)
+  const { schedule, calculateStandings } = useMatchups(leagueId)
+  const { standings: rotoStandings } = useRotoCategories(leagueId)
+  const { survivorData } = useSurvivor(leagueId)
+
+  if (loading || leaguesLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -53,7 +69,16 @@ const Standings = () => {
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">League Standings</h1>
+        <Link
+          to={`/leagues/${leagueId}`}
+          className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to League
+        </Link>
+        <h1 className="text-2xl font-bold text-white">{format?.name || 'League'} Standings</h1>
         <p className="text-text-secondary">Season performance and rankings</p>
       </div>
 
@@ -92,18 +117,88 @@ const Standings = () => {
         </Card>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Standings Table - 2 columns */}
-        <div className="lg:col-span-2">
-          <StandingsTable standings={standings} currentUserId={user?.id} />
+      {/* Main Content Grid - Format-Aware */}
+      {isHeadToHead && (
+        <div className="space-y-6">
+          <H2HStandings standings={league?.standings || []} currentUserId={user?.id} />
+          <Card>
+            <h3 className="text-lg font-semibold text-white mb-4">Tournament Results</h3>
+            <WeeklyBreakdown results={weeklyResults} currentUserId={user?.id} />
+          </Card>
         </div>
+      )}
 
-        {/* Weekly Results - 1 column */}
-        <div>
-          <WeeklyBreakdown results={weeklyResults} currentUserId={user?.id} />
+      {isRoto && (
+        <div className="space-y-6">
+          <RotoStandings standings={rotoStandings} currentUserId={user?.id} />
+          <div className="text-center">
+            <Link
+              to={`/leagues/${leagueId}/categories`}
+              className="text-accent-green hover:underline"
+            >
+              View Full Category Breakdown
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
+
+      {isSurvivor && (
+        <div className="space-y-6">
+          <SurvivorStandings
+            standings={league?.standings || []}
+            survivorData={survivorData}
+            currentUserId={user?.id}
+          />
+          <div className="text-center">
+            <Link
+              to={`/leagues/${leagueId}/survivor`}
+              className="text-accent-green hover:underline"
+            >
+              View Survivor Board
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {isOneAndDone && (
+        <div className="space-y-6">
+          <OADStandings standings={league?.standings || []} currentUserId={user?.id} />
+          <div className="text-center">
+            <Link
+              to={`/leagues/${leagueId}/picks`}
+              className="text-accent-green hover:underline"
+            >
+              Go to Pick Center
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {isFullLeague && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Standings Table - 2 columns */}
+          <div className="lg:col-span-2">
+            <StandingsTable standings={standings} currentUserId={user?.id} />
+          </div>
+
+          {/* Weekly Results - 1 column */}
+          <div>
+            <WeeklyBreakdown results={weeklyResults} currentUserId={user?.id} />
+          </div>
+        </div>
+      )}
+
+      {/* Fallback for unknown format */}
+      {!isHeadToHead && !isRoto && !isSurvivor && !isOneAndDone && !isFullLeague && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <StandingsTable standings={standings} currentUserId={user?.id} />
+          </div>
+          <div>
+            <WeeklyBreakdown results={weeklyResults} currentUserId={user?.id} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
