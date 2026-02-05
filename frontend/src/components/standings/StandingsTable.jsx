@@ -88,7 +88,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
                   <td className="p-3 text-center font-medium text-accent-green">{team.wins}</td>
                   <td className="p-3 text-center font-medium text-red-400">{team.losses}</td>
                   <td className="p-3 text-center font-medium text-text-secondary">{team.ties}</td>
-                  <td className="p-3 text-right font-bold text-white">{team.totalPoints.toLocaleString()}</td>
+                  <td className="p-3 text-right font-bold text-white">{(team.totalPoints || 0).toLocaleString()}</td>
                   <td className="p-3 text-right text-text-secondary hidden sm:table-cell">
                     {typeof team.avgPoints === 'number' ? team.avgPoints.toFixed(1) : '-'}
                   </td>

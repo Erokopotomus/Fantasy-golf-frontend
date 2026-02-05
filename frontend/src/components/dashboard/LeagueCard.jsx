@@ -55,7 +55,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
         <div className="flex justify-between items-center">
           <div>
             <p className="text-text-muted text-xs">Your Points</p>
-            <p className="text-white font-semibold text-lg">{userPoints.toLocaleString()}</p>
+            <p className="text-white font-semibold text-lg">{(userPoints || 0).toLocaleString()}</p>
           </div>
           {userRank > 1 && (
             <div className="text-right">
@@ -100,7 +100,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
                     {entry.name}
                   </span>
                 </div>
-                <span className="text-text-secondary font-medium">{entry.points.toLocaleString()}</span>
+                <span className="text-text-secondary font-medium">{(entry.points || 0).toLocaleString()}</span>
               </div>
             ))}
           </div>

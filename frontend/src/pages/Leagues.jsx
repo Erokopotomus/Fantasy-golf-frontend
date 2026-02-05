@@ -137,7 +137,7 @@ const Leagues = () => {
                               {standing.name}
                             </span>
                             <span className="text-xs text-text-muted">
-                              {standing.points.toLocaleString()}
+                              {(standing.points || 0).toLocaleString()}
                             </span>
                           </div>
                         ))}
