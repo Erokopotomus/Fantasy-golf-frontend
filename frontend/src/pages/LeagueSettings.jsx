@@ -94,8 +94,39 @@ const LeagueSettings = () => {
     )
   }
 
-  const handleSave = () => {
-    notify.success('Settings Saved', 'League settings have been updated')
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!isCommissioner) {
+      notify.error('Error', 'Only the commissioner can update settings')
+      return
+    }
+
+    setSaving(true)
+    try {
+      await api.updateLeague(leagueId, {
+        name: settings.name,
+        settings: {
+          scoringType: settings.scoringType,
+          rosterSize: settings.rosterSize,
+          tradeReview: settings.tradeReview,
+          tradeDeadline: settings.tradeDeadline,
+          waiverType: settings.waiverType,
+          waiverPriority: settings.waiverPriority,
+          waiverClearDay: settings.waiverClearDay,
+          waiverClearTime: settings.waiverClearTime,
+          faabBudget: settings.faabBudget,
+          waiverPeriodHours: settings.waiverPeriodHours,
+          formatSettings: settings.formatSettings,
+        }
+      })
+      notify.success('Settings Saved', 'League settings have been updated')
+      refetch() // Refresh league data
+    } catch (error) {
+      notify.error('Error', error.message || 'Failed to save settings')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const inviteCode = league?.inviteCode || league?.joinCode
@@ -299,7 +330,7 @@ const LeagueSettings = () => {
             )}
 
             <div className="pt-4">
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSave} loading={saving}>Save Changes</Button>
             </div>
           </div>
         </Card>
@@ -309,7 +340,7 @@ const LeagueSettings = () => {
       {activeTab === 'format' && (
         <div className="space-y-6">
           {renderFormatSettings()}
-          <Button onClick={handleSave}>Save Format Settings</Button>
+          <Button onClick={handleSave} loading={saving}>Save Format Settings</Button>
         </div>
       )}
 
@@ -355,7 +386,7 @@ const LeagueSettings = () => {
             </div>
 
             <div className="pt-4">
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSave} loading={saving}>Save Changes</Button>
             </div>
           </div>
         </Card>
@@ -394,7 +425,7 @@ const LeagueSettings = () => {
             </div>
 
             <div className="pt-4">
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSave} loading={saving}>Save Changes</Button>
             </div>
           </div>
         </Card>
@@ -606,7 +637,7 @@ const LeagueSettings = () => {
             </div>
           </Card>
 
-          <Button onClick={handleSave}>Save Waiver Settings</Button>
+          <Button onClick={handleSave} loading={saving}>Save Waiver Settings</Button>
         </div>
       )}
 
