@@ -21,14 +21,14 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for existing token on mount
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('clutch_token')
     const userData = localStorage.getItem('user')
 
     if (token && userData) {
       try {
         setUser(JSON.parse(userData))
       } catch (e) {
-        localStorage.removeItem('token')
+        localStorage.removeItem('clutch_token')
         localStorage.removeItem('user')
       }
     }
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         data = await api.login(email, password)
       }
 
-      localStorage.setItem('token', data.token)
+      localStorage.setItem('clutch_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
       setUser(data.user)
 
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
         data = await api.signup(name, email, password)
       }
 
-      localStorage.setItem('token', data.token)
+      localStorage.setItem('clutch_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
       setUser(data.user)
 
@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
+    localStorage.removeItem('clutch_token')
     localStorage.removeItem('user')
     setUser(null)
   }
