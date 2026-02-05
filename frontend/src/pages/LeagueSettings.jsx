@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import Input from '../components/common/Input'
 import { useLeague } from '../hooks/useLeague'
 import { useNotifications } from '../context/NotificationContext'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
+import api from '../services/api'
 import FullLeagueSettings from '../components/league/settings/FullLeagueSettings'
 import HeadToHeadSettings from '../components/league/settings/HeadToHeadSettings'
 import RotoSettings from '../components/league/settings/RotoSettings'
@@ -13,10 +15,22 @@ import OneAndDoneSettings from '../components/league/settings/OneAndDoneSettings
 
 const LeagueSettings = () => {
   const { leagueId } = useParams()
-  const { league, loading, isCommissioner } = useLeague(leagueId)
+  const navigate = useNavigate()
+  const { league, loading, isCommissioner, refetch } = useLeague(leagueId)
   const { notify } = useNotifications()
   const [copied, setCopied] = useState(false)
   const { format, formatSettings } = useLeagueFormat(league)
+
+  // Format change state
+  const [newFormat, setNewFormat] = useState('')
+  const [showFormatConfirm, setShowFormatConfirm] = useState(false)
+  const [formatChanging, setFormatChanging] = useState(false)
+
+  // Delete league state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteStep, setDeleteStep] = useState(1)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const [settings, setSettings] = useState({
     name: league?.name || '',
@@ -143,6 +157,46 @@ const LeagueSettings = () => {
     }
   }
 
+  // Check if format can be safely changed (before draft or no games played)
+  const canChangeFormat = league?.status === 'draft-pending' ||
+    league?.status === 'DRAFT_PENDING' ||
+    league?.status === 'setup'
+
+  const handleFormatChange = async () => {
+    if (!newFormat || newFormat === league?.format) return
+
+    setFormatChanging(true)
+    try {
+      await api.updateLeague(leagueId, { format: newFormat })
+      notify.success('Format Changed', `League format updated to ${LEAGUE_FORMATS[newFormat]?.name || newFormat}`)
+      setShowFormatConfirm(false)
+      setNewFormat('')
+      refetch()
+    } catch (error) {
+      notify.error('Error', error.message || 'Failed to change format')
+    } finally {
+      setFormatChanging(false)
+    }
+  }
+
+  const handleDeleteLeague = async () => {
+    setDeleting(true)
+    try {
+      await api.deleteLeague(leagueId)
+      notify.success('League Deleted', `${league.name} has been permanently deleted`)
+      navigate('/leagues')
+    } catch (error) {
+      notify.error('Error', error.message || 'Failed to delete league')
+      setDeleting(false)
+    }
+  }
+
+  const resetDeleteConfirm = () => {
+    setShowDeleteConfirm(false)
+    setDeleteStep(1)
+    setDeleteConfirmText('')
+  }
+
   const tabs = [
     { id: 'general', label: 'General' },
     { id: 'format', label: format?.name || 'Format' },
@@ -150,6 +204,7 @@ const LeagueSettings = () => {
     { id: 'trades', label: 'Trades' },
     { id: 'waivers', label: 'Waivers' },
     { id: 'members', label: 'Members' },
+    ...(isCommissioner ? [{ id: 'danger', label: 'Danger Zone' }] : []),
   ]
 
   return (
@@ -679,6 +734,234 @@ const LeagueSettings = () => {
               </div>
             </Card>
           )}
+        </div>
+      )}
+
+      {/* Danger Zone - Commissioner Only */}
+      {activeTab === 'danger' && isCommissioner && (
+        <div className="space-y-6">
+          {/* Change League Format */}
+          <Card className="border-yellow-500/30">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Change League Format</h3>
+                <p className="text-text-muted text-sm">
+                  Switch between competition formats (Full League, Head-to-Head, Roto, etc.)
+                </p>
+              </div>
+            </div>
+
+            {!canChangeFormat && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    <p className="text-yellow-400 font-medium text-sm">Format changes may affect standings</p>
+                    <p className="text-text-muted text-xs mt-1">
+                      Your league has already started. Changing formats mid-season may reset standings,
+                      affect matchups, or cause other data inconsistencies. Proceed with caution.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Current Format: <span className="text-accent-green">{format?.name || 'Unknown'}</span>
+                </label>
+                <select
+                  value={newFormat || league?.format || ''}
+                  onChange={(e) => setNewFormat(e.target.value)}
+                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                >
+                  <option value="">Select new format...</option>
+                  <option value="full-league">Full League - Total points accumulation</option>
+                  <option value="head-to-head">Head-to-Head - Weekly matchups with W/L record</option>
+                  <option value="roto">Roto - Category-based rankings</option>
+                  <option value="survivor">Survivor - Lowest score eliminated weekly</option>
+                  <option value="one-and-done">One-and-Done - Pick one player per tournament</option>
+                </select>
+              </div>
+
+              {newFormat && newFormat !== league?.format && (
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setNewFormat('')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => setShowFormatConfirm(true)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                  >
+                    Change Format
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Format Change Confirmation Modal */}
+            {showFormatConfirm && (
+              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <Card className="max-w-md w-full border-yellow-500/50">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Confirm Format Change</h3>
+                    <p className="text-text-secondary">
+                      Change from <span className="text-white font-medium">{format?.name}</span> to{' '}
+                      <span className="text-accent-green font-medium">{LEAGUE_FORMATS[newFormat]?.name || newFormat}</span>?
+                    </p>
+                  </div>
+
+                  {!canChangeFormat && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+                      <p className="text-red-400 text-sm text-center">
+                        This may affect existing standings and data
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      onClick={() => setShowFormatConfirm(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      fullWidth
+                      loading={formatChanging}
+                      onClick={handleFormatChange}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                    >
+                      Yes, Change Format
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            )}
+          </Card>
+
+          {/* Delete League */}
+          <Card className="border-red-500/30">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-red-400">Delete League</h3>
+                <p className="text-text-muted text-sm">
+                  Permanently delete this league and all associated data
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+              <p className="text-red-400 text-sm font-medium mb-2">This action cannot be undone!</p>
+              <ul className="text-text-muted text-xs space-y-1">
+                <li>• All league settings will be deleted</li>
+                <li>• All team rosters will be deleted</li>
+                <li>• All draft history will be deleted</li>
+                <li>• All trade history will be deleted</li>
+                <li>• All chat messages will be deleted</li>
+                <li>• All members will be removed from the league</li>
+              </ul>
+            </div>
+
+            <Button
+              variant="outline"
+              className="text-red-400 border-red-500/50 hover:bg-red-500/10"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete League...
+            </Button>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <Card className="max-w-md w-full border-red-500/50">
+                  {deleteStep === 1 && (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Delete "{league.name}"?</h3>
+                        <p className="text-text-secondary">
+                          This will permanently delete the league with{' '}
+                          <span className="text-white font-medium">{league.members?.length || 0} members</span>.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button variant="outline" fullWidth onClick={resetDeleteConfirm}>
+                          Cancel
+                        </Button>
+                        <Button
+                          fullWidth
+                          onClick={() => setDeleteStep(2)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {deleteStep === 2 && (
+                    <>
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-bold text-white mb-2">Are you absolutely sure?</h3>
+                        <p className="text-text-secondary mb-4">
+                          Type <span className="text-red-400 font-mono font-bold">DELETE</span> to confirm
+                        </p>
+                        <Input
+                          value={deleteConfirmText}
+                          onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                          placeholder="Type DELETE"
+                          className="text-center"
+                        />
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button variant="outline" fullWidth onClick={resetDeleteConfirm}>
+                          Cancel
+                        </Button>
+                        <Button
+                          fullWidth
+                          disabled={deleteConfirmText !== 'DELETE'}
+                          loading={deleting}
+                          onClick={handleDeleteLeague}
+                          className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Delete Forever
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </Card>
+              </div>
+            )}
+          </Card>
         </div>
       )}
     </div>

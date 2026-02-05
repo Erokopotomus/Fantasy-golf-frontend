@@ -101,6 +101,19 @@ class ApiService {
     })
   }
 
+  async updateLeague(id, data) {
+    return this.request(`/leagues/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteLeague(id) {
+    return this.request(`/leagues/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   async joinLeague(id, inviteCode) {
     return this.request(`/leagues/${id}/join`, {
       method: 'POST',

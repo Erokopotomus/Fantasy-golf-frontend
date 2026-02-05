@@ -184,6 +184,92 @@ router.get('/:id', authenticate, async (req, res, next) => {
   }
 })
 
+// PATCH /api/leagues/:id - Update league settings (commissioner only)
+router.patch('/:id', authenticate, async (req, res, next) => {
+  try {
+    const { name, format, settings, isPublic } = req.body
+
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id }
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    // Only owner can update league
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can update league settings' } })
+    }
+
+    // Build update data
+    const updateData = {}
+    if (name !== undefined) updateData.name = name
+    if (isPublic !== undefined) updateData.isPublic = isPublic
+
+    // Handle format change
+    if (format !== undefined) {
+      const formatMap = {
+        'full-league': 'FULL_LEAGUE',
+        'head-to-head': 'HEAD_TO_HEAD',
+        'roto': 'ROTO',
+        'survivor': 'SURVIVOR',
+        'one-and-done': 'ONE_AND_DONE',
+      }
+      updateData.format = formatMap[format] || format
+    }
+
+    // Merge settings if provided
+    if (settings !== undefined) {
+      updateData.settings = { ...league.settings, ...settings }
+    }
+
+    const updatedLeague = await prisma.league.update({
+      where: { id: req.params.id },
+      data: updateData,
+      include: {
+        owner: {
+          select: { id: true, name: true, avatar: true }
+        },
+        _count: {
+          select: { members: true }
+        }
+      }
+    })
+
+    res.json({ league: updatedLeague })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// DELETE /api/leagues/:id - Delete league (commissioner only)
+router.delete('/:id', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id }
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    // Only owner can delete league
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can delete the league' } })
+    }
+
+    // Delete league and all related data (cascading deletes handled by schema)
+    await prisma.league.delete({
+      where: { id: req.params.id }
+    })
+
+    res.json({ message: 'League deleted successfully' })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // POST /api/leagues/:id/join - Join a league
 router.post('/:id/join', authenticate, async (req, res, next) => {
   try {
