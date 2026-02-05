@@ -20,13 +20,16 @@ class ApiService {
   async request(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`
 
+    // Always get fresh token from localStorage
+    const token = localStorage.getItem('clutch_token')
+
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
     }
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
     }
 
     const response = await fetch(url, {
