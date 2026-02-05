@@ -2,8 +2,10 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { mockApi } from '../services/mockApi'
 import api from '../services/api'
 
-// Toggle via environment variable - defaults to mock for local dev
-const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API !== 'false'
+// Toggle via environment variable - defaults to REAL API in production
+const envValue = import.meta.env.VITE_USE_MOCK_API
+const USE_MOCK_API = envValue === 'true' || envValue === true
+console.log('USE_MOCK_API:', USE_MOCK_API, 'env value:', envValue)
 
 const AuthContext = createContext(null)
 
