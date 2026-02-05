@@ -3,6 +3,6 @@ builder = "nixpacks"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "npx prisma db push && npm start"
 healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"
