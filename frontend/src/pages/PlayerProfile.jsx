@@ -13,6 +13,7 @@ const PlayerProfile = () => {
     player,
     projection,
     predictions,
+    liveScore,
     courseHistory,
     tournamentHistory,
     loading,
@@ -83,7 +84,7 @@ const PlayerProfile = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
-          <PlayerPredictions predictions={predictions} />
+          <PlayerPredictions predictions={predictions} liveScore={liveScore} />
           <PlayerProjection projection={projection} />
           <PlayerFormChart
             recentForm={player.recentForm}

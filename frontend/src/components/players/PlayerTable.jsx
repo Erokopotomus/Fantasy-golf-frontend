@@ -12,10 +12,10 @@ const PlayerTable = ({
   onViewPlayer,
 }) => {
   const SortHeader = ({ field, children, className = '' }) => (
-    <th className={`p-3 text-left ${className}`}>
+    <th className={`p-3 ${className}`}>
       <button
         onClick={() => onSort(field)}
-        className={`flex items-center gap-1 hover:text-white transition-colors ${
+        className={`flex items-center gap-1 hover:text-white transition-colors mx-auto ${
           sortBy === field ? 'text-accent-green' : 'text-text-muted'
         }`}
       >
@@ -38,11 +38,11 @@ const PlayerTable = ({
             {compareMode && <th className="p-3 w-12"></th>}
             <SortHeader field="rank" className="w-16">Rank</SortHeader>
             <SortHeader field="name">Player</SortHeader>
-            <SortHeader field="sgTotal" className="text-right">SG Total</SortHeader>
-            <SortHeader field="sgOffTee" className="text-right">SG OTT</SortHeader>
-            <SortHeader field="sgApproach" className="text-right">SG APP</SortHeader>
-            <SortHeader field="sgPutting" className="text-right">SG Putt</SortHeader>
-            <th className="p-3 text-text-muted text-right">Form</th>
+            <SortHeader field="sgTotal" className="text-center">SG Total</SortHeader>
+            <SortHeader field="sgOffTee" className="text-center">SG OTT</SortHeader>
+            <SortHeader field="sgApproach" className="text-center">SG APP</SortHeader>
+            <SortHeader field="sgPutting" className="text-center">SG Putt</SortHeader>
+            <th className="p-3 text-text-muted text-center">Form</th>
             <th className="p-3 w-20"></th>
           </tr>
         </thead>
@@ -92,7 +92,7 @@ const PlayerTable = ({
                     )}
                   </button>
                 </td>
-                <td className="p-3 text-right">
+                <td className="p-3 text-center">
                   <span className={`font-medium ${
                     player.stats?.sgTotal > 1 ? 'text-accent-green' :
                     player.stats?.sgTotal > 0 ? 'text-white' : 'text-red-400'
@@ -100,17 +100,17 @@ const PlayerTable = ({
                     {player.stats?.sgTotal?.toFixed(2) || '—'}
                   </span>
                 </td>
-                <td className="p-3 text-right text-text-secondary">
+                <td className="p-3 text-center text-text-secondary">
                   {player.stats?.sgOffTee?.toFixed(2) || '—'}
                 </td>
-                <td className="p-3 text-right text-text-secondary">
+                <td className="p-3 text-center text-text-secondary">
                   {player.stats?.sgApproach?.toFixed(2) || '—'}
                 </td>
-                <td className="p-3 text-right text-text-secondary">
+                <td className="p-3 text-center text-text-secondary">
                   {player.stats?.sgPutting?.toFixed(2) || '—'}
                 </td>
-                <td className="p-3 text-right">
-                  <div className="flex gap-1 justify-end">
+                <td className="p-3 text-center">
+                  <div className="flex gap-1 justify-center">
                     {player.recentForm?.slice(0, 5).map((result, i) => {
                       const pos = parseInt(result.replace('T', ''))
                       return (
