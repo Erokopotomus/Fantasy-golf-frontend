@@ -75,6 +75,135 @@ const getPickInfo = (pickNumber, teamCount) => {
   return { round, pickInRound, orderIndex }
 }
 
+// Player detail popup
+const PlayerPopup = ({ player, onClose, onDraft, onQueue, isUserTurn, inQueue, isDrafted }) => {
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [onClose])
+
+  if (!player) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative bg-dark-secondary border border-dark-border rounded-xl max-w-sm w-full shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-start justify-between p-4 border-b border-dark-border">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{player.flag}</span>
+            <div>
+              <h3 className="text-white font-bold text-lg leading-tight">{player.name}</h3>
+              <p className="text-text-muted text-sm">{player.country}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 bg-accent-green/20 text-accent-green text-xs font-bold rounded">#{player.rank}</span>
+            <button onClick={onClose} className="text-text-muted hover:text-white transition-colors p-1">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="p-4 space-y-4">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-dark-primary rounded-lg p-2.5 text-center">
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
+              <p className={`text-lg font-bold ${player.sg >= 1 ? 'text-accent-green' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
+                {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
+              </p>
+            </div>
+            <div className="bg-dark-primary rounded-lg p-2.5 text-center">
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Top 10</p>
+              <p className="text-white text-lg font-bold">{player.top10}%</p>
+            </div>
+            <div className="bg-dark-primary rounded-lg p-2.5 text-center">
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Avg Fin</p>
+              <p className="text-white text-lg font-bold">{player.avgFinish}</p>
+            </div>
+          </div>
+
+          {/* SG Breakdown */}
+          <div>
+            <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Strokes Gained</p>
+            <div className="space-y-1.5">
+              {[
+                { label: 'OTT', value: player.sgOTT },
+                { label: 'APP', value: player.sgAPP },
+                { label: 'ATG', value: player.sgATG },
+                { label: 'Putt', value: player.sgPutt },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <span className="text-text-muted text-xs w-8 text-right">{label}</span>
+                  <div className="flex-1 h-1.5 bg-dark-primary rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${value >= 0 ? 'bg-accent-green' : 'bg-red-400'}`}
+                      style={{ width: `${Math.min(100, Math.abs(value) / 1.0 * 100)}%` }}
+                    />
+                  </div>
+                  <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-accent-green' : value >= 0 ? 'text-white' : 'text-red-400'}`}>
+                    {value > 0 ? '+' : ''}{value.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Form */}
+          <div>
+            <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Recent Form</p>
+            <div className="flex gap-1.5">
+              {player.form.map((result, i) => {
+                const pos = parseInt(result.replace('T', ''))
+                return (
+                  <span key={i} className={`flex-1 text-center py-1.5 rounded text-xs font-medium ${
+                    result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
+                    result === 'CUT' ? 'bg-red-500/15 text-red-400' :
+                    pos <= 5 ? 'bg-accent-green/20 text-accent-green' :
+                    pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
+                    pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
+                    'bg-dark-tertiary text-text-muted'
+                  }`}>
+                    {result === '1' ? '1st' : result}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        {!isDrafted && (
+          <div className="flex gap-2 p-4 pt-0">
+            <button
+              onClick={() => { onQueue(player); onClose() }}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                inQueue
+                  ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30'
+                  : 'bg-dark-primary text-white hover:bg-dark-tertiary border border-dark-border'
+              }`}
+            >
+              {inQueue ? 'Queued' : 'Add to Queue'}
+            </button>
+            {isUserTurn && (
+              <button
+                onClick={() => { onDraft(player); onClose() }}
+                className="flex-1 py-2.5 bg-accent-green text-white rounded-lg text-sm font-bold hover:bg-accent-green/90 transition-colors"
+              >
+                Draft Now
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const MockDraftRoom = () => {
   const navigate = useNavigate()
   const [config, setConfig] = useState(null)
@@ -88,8 +217,9 @@ const MockDraftRoom = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('board') // board, players, queue, myteam
   const [bottomTab, setBottomTab] = useState('players') // players, queue, myteam, picks
-  const [sortBy, setSortBy] = useState('rank') // rank, name, sg
+  const [sortBy, setSortBy] = useState('rank') // rank, name, sg, top10
   const [sortDir, setSortDir] = useState('asc')
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
   const aiPickingRef = useRef(false)
   const timerRef = useRef(null)
   const boardRef = useRef(null)
@@ -106,9 +236,33 @@ const MockDraftRoom = () => {
     setConfig(JSON.parse(stored))
   }, [navigate])
 
+  // Enrich players with computed stats (deterministic based on rank)
+  const enrichedPlayers = useMemo(() => {
+    return MOCK_PLAYERS.map(p => {
+      const r = p.rank
+      const variance = Math.sin(r * 1.7) * 0.25
+      const sgOTT = +(p.sg * 0.28 + variance).toFixed(2)
+      const sgAPP = +(p.sg * 0.35 - variance * 0.5).toFixed(2)
+      const sgATG = +(p.sg * 0.18 + Math.cos(r * 2.3) * 0.12).toFixed(2)
+      const sgPutt = +(p.sg - sgOTT - sgAPP - sgATG).toFixed(2)
+      const top10 = Math.max(8, Math.round(65 - r * 0.95 + Math.sin(r * 0.7) * 6))
+      const avgFinish = +(6 + r * 0.48 + Math.cos(r * 1.3) * 2.5).toFixed(1)
+      const form = Array.from({ length: 5 }, (_, i) => {
+        const seed = Math.sin(r * 13 + i * 7) * 10000
+        const val = Math.abs(Math.round(seed % 100))
+        if (r > 35 && val > 70) return 'CUT'
+        if (r > 20 && val > 85) return 'CUT'
+        const base = Math.max(1, Math.round(r * 0.5 + (val % 20) - 5))
+        if (base <= 1 && r <= 5) return '1'
+        return base <= 1 ? 'T2' : `T${Math.min(base, 65)}`
+      })
+      return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, avgFinish, form }
+    })
+  }, [])
+
   const totalPicks = config ? config.teamCount * config.rosterSize : 0
   const draftedIds = picks.map(p => p.playerId)
-  const availablePlayers = MOCK_PLAYERS.filter(p => !draftedIds.includes(p.id))
+  const availablePlayers = enrichedPlayers.filter(p => !draftedIds.includes(p.id))
 
   // Current pick info
   const currentPickNumber = picks.length
@@ -127,6 +281,7 @@ const MockDraftRoom = () => {
       let aVal, bVal
       if (sortBy === 'name') { aVal = a.name; bVal = b.name }
       else if (sortBy === 'sg') { aVal = a.sg; bVal = b.sg }
+      else if (sortBy === 'top10') { aVal = a.top10; bVal = b.top10 }
       else { aVal = a.rank; bVal = b.rank }
       if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
       return sortDir === 'asc' ? aVal - bVal : bVal - aVal
@@ -253,7 +408,7 @@ const MockDraftRoom = () => {
       setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     } else {
       setSortBy(field)
-      setSortDir(field === 'sg' ? 'desc' : 'asc')
+      setSortDir(field === 'sg' || field === 'top10' ? 'desc' : 'asc')
     }
   }
 
@@ -520,16 +675,19 @@ const MockDraftRoom = () => {
                 {config.teams.map(team => (
                   <div
                     key={team.id}
-                    className={`px-1 py-2 text-[10px] font-semibold text-center truncate ${
+                    className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
                       team.isUser
-                        ? 'bg-accent-green/20 text-accent-green'
+                        ? 'bg-accent-green/25 text-accent-green border-b-2 border-b-accent-green'
                         : pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
                           ? 'bg-yellow-500/15 text-yellow-400'
                           : 'bg-dark-tertiary text-text-muted'
                     }`}
                   >
-                    {team.name.length > 10 ? team.name.slice(0, 9) + '…' : team.name}
-                    {team.isUser && <span className="ml-1 text-[8px] opacity-70">YOU</span>}
+                    {team.isUser ? (
+                      <span className="font-bold">YOU</span>
+                    ) : (
+                      team.name.length > 10 ? team.name.slice(0, 9) + '…' : team.name
+                    )}
                   </div>
                 ))}
               </div>
@@ -556,28 +714,49 @@ const MockDraftRoom = () => {
                     }`}>
                       {round}
                     </div>
-                    {config.teams.map((_, teamIdx) => {
-                      const orderIdx = isReverse ? config.teamCount - 1 - teamIdx : teamIdx
-                      const absolutePick = roundIdx * config.teamCount + teamIdx
-                      const pick = picks[absolutePick]
-                      const team = config.teams[orderIdx]
-                      const isCurrent = absolutePick === currentPickNumber && isStarted
-                      const isUserTeamCell = team?.isUser
+                    {config.teams.map((team, teamIdx) => {
+                      // Fix snake alignment: each column always represents the same team
+                      const actualPickIndex = isReverse
+                        ? roundIdx * config.teamCount + (config.teamCount - 1 - teamIdx)
+                        : roundIdx * config.teamCount + teamIdx
+                      const pick = picks[actualPickIndex]
+                      const isCurrent = actualPickIndex === currentPickNumber && isStarted
+                      const isUserTeamCell = team.isUser
 
                       return (
                         <div
                           key={teamIdx}
-                          className={`px-1 py-1 min-h-[40px] flex items-center justify-center transition-colors ${
+                          onClick={() => {
+                            if (pick) {
+                              const enriched = enrichedPlayers.find(p => p.id === pick.playerId)
+                              if (enriched) setSelectedPlayer({ ...enriched, _drafted: true })
+                            }
+                          }}
+                          className={`px-1 py-1 min-h-[44px] flex items-center justify-center transition-colors ${
+                            pick ? 'cursor-pointer hover:brightness-125' : ''
+                          } ${
                             isCurrent
                               ? 'bg-accent-green/20 ring-1 ring-inset ring-accent-green/60'
                               : pick
-                                ? isUserTeamCell ? 'bg-accent-green/5' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
+                                ? pick.playerRank <= 10
+                                  ? isUserTeamCell ? 'bg-yellow-500/10' : 'bg-yellow-500/5'
+                                  : pick.playerRank <= 25
+                                    ? isUserTeamCell ? 'bg-accent-green/10' : 'bg-accent-green/5'
+                                    : isUserTeamCell ? 'bg-accent-green/5' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/40'
                                 : roundIdx % 2 === 0 ? 'bg-dark-primary/40' : 'bg-dark-secondary/20'
                           }`}
                         >
                           {pick ? (
                             <div className="text-center w-full truncate px-0.5">
-                              <span className="text-xs">{pick.playerFlag}</span>
+                              <div className="flex items-center justify-center gap-0.5">
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                  pick.playerRank <= 10 ? 'bg-yellow-400' :
+                                  pick.playerRank <= 25 ? 'bg-accent-green' :
+                                  pick.playerRank <= 40 ? 'bg-blue-400' :
+                                  'bg-text-muted/40'
+                                }`} />
+                                <span className="text-xs">{pick.playerFlag}</span>
+                              </div>
                               <p className={`text-[10px] leading-tight truncate ${
                                 isUserTeamCell ? 'text-accent-green font-medium' : 'text-text-secondary'
                               }`}>
@@ -590,7 +769,11 @@ const MockDraftRoom = () => {
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
                               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
                             </span>
-                          ) : null}
+                          ) : (
+                            <span className="text-[9px] text-text-muted/30 tabular-nums">
+                              {actualPickIndex + 1}
+                            </span>
+                          )}
                         </div>
                       )
                     })}
@@ -656,7 +839,7 @@ const MockDraftRoom = () => {
                 <div className="flex-1 overflow-y-auto min-h-0">
                   {/* Table Header */}
                   <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
-                    <div className="grid grid-cols-[40px_1fr_70px_60px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                    <div className="grid grid-cols-[30px_1fr_44px_38px_48px_52px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
                       <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
                         Rk <SortIcon field="rank" />
                       </button>
@@ -666,6 +849,10 @@ const MockDraftRoom = () => {
                       <button onClick={() => handleSort('sg')} className="text-right hover:text-white transition-colors">
                         SG <SortIcon field="sg" />
                       </button>
+                      <button onClick={() => handleSort('top10')} className="text-right hover:text-white transition-colors">
+                        T10 <SortIcon field="top10" />
+                      </button>
+                      <span className="text-center">Form</span>
                       <div />
                     </div>
                   </div>
@@ -676,21 +863,38 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid grid-cols-[40px_1fr_70px_60px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors ${
-                          isUserTurn ? 'hover:bg-accent-green/10 cursor-pointer' : ''
-                        } ${inQueue ? 'bg-accent-blue/5' : ''}`}
-                        onClick={() => isUserTurn && handleMakePick(player)}
+                        className={`grid grid-cols-[30px_1fr_44px_38px_48px_52px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
+                          inQueue ? 'bg-accent-blue/5' : ''
+                        }`}
+                        onClick={() => setSelectedPlayer(player)}
                       >
                         <span className="text-text-muted text-xs">{player.rank}</span>
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="text-sm flex-shrink-0">{player.flag}</span>
                           <span className="text-white text-sm truncate">{player.name}</span>
                         </div>
-                        <span className={`text-xs text-right font-medium ${
+                        <span className={`text-xs text-right font-medium tabular-nums ${
                           player.sg >= 1 ? 'text-accent-green' : player.sg > 0 ? 'text-white' : 'text-red-400'
                         }`}>
                           {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
                         </span>
+                        <span className="text-xs text-right text-text-secondary tabular-nums">
+                          {player.top10}%
+                        </span>
+                        <div className="flex items-center justify-center gap-1">
+                          {player.form.slice(0, 4).map((f, i) => {
+                            const pos = parseInt(f.replace('T', ''))
+                            return (
+                              <span key={i} className={`w-2 h-2 rounded-full ${
+                                f === '1' ? 'bg-yellow-400' :
+                                f === 'CUT' ? 'bg-red-400' :
+                                pos <= 5 ? 'bg-accent-green' :
+                                pos <= 15 ? 'bg-emerald-400/60' :
+                                'bg-text-muted/30'
+                              }`} title={f} />
+                            )
+                          })}
+                        </div>
                         <div className="flex items-center justify-end gap-1">
                           {isUserTurn && (
                             <button
@@ -849,6 +1053,22 @@ const MockDraftRoom = () => {
           </div>
         </div>
       </div>
+
+      {/* Player Popup */}
+      {selectedPlayer && (
+        <PlayerPopup
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          onDraft={handleMakePick}
+          onQueue={(p) => {
+            const inQ = queue.find(q => q.id === p.id)
+            inQ ? handleRemoveFromQueue(p.id) : handleAddToQueue(p)
+          }}
+          isUserTurn={isUserTurn}
+          inQueue={!!queue.find(q => q.id === selectedPlayer.id)}
+          isDrafted={!!selectedPlayer._drafted}
+        />
+      )}
     </div>
   )
 }
