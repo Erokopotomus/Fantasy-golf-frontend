@@ -52,9 +52,32 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
   const [holeScores, setHoleScores] = useState({})
   const [loadingScorecard, setLoadingScorecard] = useState(false)
 
-  const fetchHoleScores = useCallback(async (playerId) => {
-    if (!tournamentId || holeScoresCache.current[playerId]) {
-      setHoleScores((prev) => ({ ...prev, [playerId]: holeScoresCache.current[playerId] || {} }))
+  /** Compute tournament-total eagles/birdies/bogeys from all rounds of hole data */
+  const computeStatsFromHoles = (allRounds) => {
+    let eagles = 0, birdies = 0, bogeys = 0
+    if (!allRounds) return { eagles, birdies, bogeys }
+    for (const roundNum of Object.keys(allRounds)) {
+      const holes = allRounds[roundNum]
+      if (!holes) continue
+      for (const h of holes) {
+        if (h.score == null || h.par == null) continue
+        const diff = h.score - h.par
+        if (diff <= -2) eagles++
+        else if (diff === -1) birdies++
+        else if (diff >= 1) bogeys++
+      }
+    }
+    return { eagles, birdies, bogeys }
+  }
+
+  const fetchHoleScores = useCallback(async (playerId, playerObj) => {
+    if (!tournamentId) return
+    if (holeScoresCache.current[playerId]) {
+      setHoleScores((prev) => ({ ...prev, [playerId]: holeScoresCache.current[playerId] }))
+      if (playerObj) {
+        const stats = computeStatsFromHoles(holeScoresCache.current[playerId])
+        onPlayerExpand?.({ ...playerObj, ...stats })
+      }
       return
     }
     setLoadingScorecard(true)
@@ -63,12 +86,16 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
       const scorecards = data?.scorecards || {}
       holeScoresCache.current[playerId] = scorecards
       setHoleScores((prev) => ({ ...prev, [playerId]: scorecards }))
+      if (playerObj) {
+        const stats = computeStatsFromHoles(scorecards)
+        onPlayerExpand?.({ ...playerObj, ...stats })
+      }
     } catch (e) {
       console.warn('Failed to fetch scorecard:', e.message)
     } finally {
       setLoadingScorecard(false)
     }
-  }, [tournamentId])
+  }, [tournamentId, onPlayerExpand])
 
   const formatTeeTime = (isoStr) => {
     if (!isoStr) return null
@@ -163,9 +190,9 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                 || player.rounds?.r2 != null && 2
                 || player.rounds?.r1 != null && 1
                 || 1)
-              // Fetch hole scores
-              fetchHoleScores(player.id)
+              // Fetch hole scores — will call onPlayerExpand with enriched stats once loaded
               onPlayerExpand?.(player)
+              fetchHoleScores(player.id, player)
             }
           }}
           className={`
