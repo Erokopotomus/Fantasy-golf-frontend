@@ -222,6 +222,29 @@ const PlayerPopup = ({ player, onClose, onDraft, onQueue, isUserTurn, inQueue, i
   )
 }
 
+// AI draft chat flavor messages
+const DRAFT_CHAT = {
+  pick: [
+    (n) => `${n} 🔥`,
+    (n) => `Surprised ${n} was still there`,
+    (n) => `Good pick, ${n} is underrated`,
+    (n) => `${n}? Bold.`,
+    (n) => `I wanted ${n}!`,
+    (n) => `Nice, ${n} was on my board`,
+    (n) => `${n} is going to ball out this year`,
+    (n) => `Steal of the draft right there`,
+  ],
+  general: [
+    'Let\'s go! 🏌️',
+    'This draft is moving quick ⚡',
+    'My team is looking solid 💪',
+    'Some steals being made here',
+    'GL everyone',
+    'This is fun',
+    'Who\'s everyone targeting?',
+  ],
+}
+
 const MockDraftRoom = () => {
   const navigate = useNavigate()
   const [config, setConfig] = useState(null)
@@ -233,16 +256,19 @@ const MockDraftRoom = () => {
   const [isComplete, setIsComplete] = useState(false)
   const [recentPick, setRecentPick] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('board') // board, players, queue, myteam
-  const [bottomTab, setBottomTab] = useState('queue') // queue, myteam, picks
+  const [activeTab, setActiveTab] = useState('board') // board, players, queue, myteam, chat
+  const [bottomTab, setBottomTab] = useState('queue') // queue, myteam, picks, chat
   const [sortBy, setSortBy] = useState('rank') // rank, name, sg, top10
   const [sortDir, setSortDir] = useState('asc')
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [apiPlayers, setApiPlayers] = useState(null)
   const [loadingPlayers, setLoadingPlayers] = useState(true)
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatInput, setChatInput] = useState('')
   const aiPickingRef = useRef(false)
   const timerRef = useRef(null)
   const boardRef = useRef(null)
+  const chatEndRef = useRef(null)
   const picksRef = useRef([])
   const queueRef = useRef([])
   const allPlayersRef = useRef([])
@@ -465,6 +491,60 @@ const MockDraftRoom = () => {
   const handleRemoveFromQueue = (playerId) => {
     setQueue(prev => prev.filter(q => q.id !== playerId))
   }
+
+  // Chat
+  const handleSendChat = useCallback(() => {
+    if (!chatInput.trim()) return
+    setChatMessages(prev => [...prev, {
+      id: `msg-${Date.now()}`,
+      sender: 'You',
+      text: chatInput.trim(),
+      isUser: true,
+    }])
+    setChatInput('')
+  }, [chatInput])
+
+  // AI chat messages on picks
+  useEffect(() => {
+    if (picks.length === 0 || !config) return
+    const lastPick = picks[picks.length - 1]
+    if (lastPick.teamId === config.teams.find(t => t.isUser)?.id) return
+    if (Math.random() > 0.35) return
+
+    const templates = Math.random() > 0.25 ? DRAFT_CHAT.pick : DRAFT_CHAT.general
+    const msg = typeof templates[0] === 'function'
+      ? templates[Math.floor(Math.random() * templates.length)](lastPick.playerName.split(' ').pop())
+      : templates[Math.floor(Math.random() * templates.length)]
+    const otherTeams = config.teams.filter(t => !t.isUser && t.id !== lastPick.teamId)
+    const sender = otherTeams[Math.floor(Math.random() * otherTeams.length)]
+
+    const delay = setTimeout(() => {
+      setChatMessages(prev => [...prev, {
+        id: `msg-ai-${Date.now()}`,
+        sender: sender?.name || 'Team',
+        text: msg,
+        isUser: false,
+      }])
+    }, 600 + Math.random() * 2000)
+    return () => clearTimeout(delay)
+  }, [picks.length, config])
+
+  // Welcome message on draft start
+  useEffect(() => {
+    if (isStarted) {
+      setChatMessages([{
+        id: 'msg-welcome',
+        sender: 'System',
+        text: 'Draft has started! Good luck everyone 🏌️',
+        isSystem: true,
+      }])
+    }
+  }, [isStarted])
+
+  // Auto-scroll chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -717,6 +797,7 @@ const MockDraftRoom = () => {
           { key: 'players', label: 'Players' },
           { key: 'queue', label: `Queue${queue.length ? ` (${queue.length})` : ''}` },
           { key: 'myteam', label: `Team (${userPicks.length})` },
+          { key: 'chat', label: 'Chat' },
         ].map(tab => (
           <button
             key={tab.key}
@@ -990,7 +1071,7 @@ const MockDraftRoom = () => {
 
           {/* RIGHT: Side Panel - Queue/Roster/Picks */}
           <div className={`flex-col min-h-0 ${
-            activeTab === 'queue' || activeTab === 'myteam' ? 'flex flex-1' : 'hidden'
+            activeTab === 'queue' || activeTab === 'myteam' || activeTab === 'chat' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:flex-none lg:w-[40%]`}>
             {/* Desktop Side Panel Tabs */}
             <div className="hidden lg:flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
@@ -998,6 +1079,7 @@ const MockDraftRoom = () => {
                 { key: 'queue', label: `Queue (${queue.length})` },
                 { key: 'myteam', label: `My Team (${userPicks.length}/${config.rosterSize})` },
                 { key: 'picks', label: 'Picks' },
+                { key: 'chat', label: 'Chat' },
               ].map(tab => (
                 <button
                   key={tab.key}
@@ -1131,6 +1213,67 @@ const MockDraftRoom = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* === CHAT TAB === */}
+            {(activeTab === 'chat' || (activeTab === 'board' && bottomTab === 'chat')) && (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-1.5">
+                  {chatMessages.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-text-muted text-sm">No messages yet</p>
+                      <p className="text-text-muted text-xs mt-1">Chat with your league during the draft</p>
+                    </div>
+                  ) : (
+                    chatMessages.map(msg => (
+                      <div key={msg.id} className={msg.isSystem ? 'text-center' : ''}>
+                        {msg.isSystem ? (
+                          <p className="text-text-muted text-xs py-1">{msg.text}</p>
+                        ) : (
+                          <div className={`flex gap-2 ${msg.isUser ? 'justify-end' : ''}`}>
+                            <div className={`max-w-[85%]`}>
+                              {!msg.isUser && (
+                                <p className="text-[10px] text-text-muted mb-0.5 font-medium">{msg.sender}</p>
+                              )}
+                              <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
+                                msg.isUser
+                                  ? 'bg-accent-green/20 text-white rounded-br-sm'
+                                  : 'bg-dark-primary text-text-secondary rounded-bl-sm'
+                              }`}>
+                                {msg.text}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+                <form
+                  onSubmit={(e) => { e.preventDefault(); handleSendChat() }}
+                  className="flex-shrink-0 p-2 border-t border-dark-border"
+                >
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Type a message..."
+                      className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!chatInput.trim()}
+                      className="px-3 py-1.5 bg-accent-green text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-accent-green/80 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
             </div>

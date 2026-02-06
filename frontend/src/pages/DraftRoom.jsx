@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { DraftProvider } from '../context/DraftContext'
 import { useAuth } from '../context/AuthContext'
@@ -47,7 +47,27 @@ const DraftRoomContent = () => {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [isNominating, setIsNominating] = useState(false)
   const [activeTab, setActiveTab] = useState('draft')
+  const [sideTab, setSideTab] = useState('queue')
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatInput, setChatInput] = useState('')
+  const chatEndRef = useRef(null)
   const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
+
+  const handleSendChat = useCallback(() => {
+    if (!chatInput.trim()) return
+    setChatMessages(prev => [...prev, {
+      id: `msg-${Date.now()}`,
+      sender: 'You',
+      text: chatInput.trim(),
+      isUser: true,
+    }])
+    setChatInput('')
+    // TODO: emit via socket for live draft
+  }, [chatInput])
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
 
   const handleSelectPlayer = useCallback(async (player) => {
     if (draft?.type === 'auction') {
@@ -220,15 +240,95 @@ const DraftRoomContent = () => {
                 onViewPlayer={openPlayerDetail}
               />
             </div>
-            {/* Right: Queue */}
-            <div className="lg:w-[40%] flex flex-col min-h-0 overflow-auto p-2">
-              <DraftQueue
-                queue={queue}
-                onRemove={removeFromQueue}
-                onReorder={reorderQueue}
-                onSelect={handleSelectPlayer}
-                isUserTurn={isUserTurn}
-              />
+            {/* Right: Queue / Chat */}
+            <div className="lg:w-[40%] flex flex-col min-h-0">
+              {/* Side Panel Tabs */}
+              <div className="flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
+                {[
+                  { key: 'queue', label: `Queue (${queue.length})` },
+                  { key: 'chat', label: 'Chat' },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setSideTab(tab.key)}
+                    className={`flex-1 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors ${
+                      sideTab === tab.key
+                        ? 'text-accent-green border-b-2 border-accent-green'
+                        : 'text-text-secondary hover:text-white'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex-1 overflow-hidden min-h-0">
+                {sideTab === 'queue' ? (
+                  <div className="h-full overflow-auto p-2">
+                    <DraftQueue
+                      queue={queue}
+                      onRemove={removeFromQueue}
+                      onReorder={reorderQueue}
+                      onSelect={handleSelectPlayer}
+                      isUserTurn={isUserTurn}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col">
+                    <div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-1.5">
+                      {chatMessages.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-text-muted text-sm">No messages yet</p>
+                          <p className="text-text-muted text-xs mt-1">Chat with your league during the draft</p>
+                        </div>
+                      ) : (
+                        chatMessages.map(msg => (
+                          <div key={msg.id}>
+                            <div className={`flex gap-2 ${msg.isUser ? 'justify-end' : ''}`}>
+                              <div className="max-w-[85%]">
+                                {!msg.isUser && (
+                                  <p className="text-[10px] text-text-muted mb-0.5 font-medium">{msg.sender}</p>
+                                )}
+                                <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
+                                  msg.isUser
+                                    ? 'bg-accent-green/20 text-white rounded-br-sm'
+                                    : 'bg-dark-primary text-text-secondary rounded-bl-sm'
+                                }`}>
+                                  {msg.text}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); handleSendChat() }}
+                      className="flex-shrink-0 p-2 border-t border-dark-border"
+                    >
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          placeholder="Type a message..."
+                          className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!chatInput.trim()}
+                          className="px-3 py-1.5 bg-accent-green text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-accent-green/80 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
