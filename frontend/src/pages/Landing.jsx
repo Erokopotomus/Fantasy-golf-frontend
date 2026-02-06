@@ -45,7 +45,7 @@ const Landing = () => {
 
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
-              Fantasy Golf,
+              Fantasy Sports,
               <span className="block bg-gradient-to-r from-accent-green to-emerald-300 bg-clip-text text-transparent">Redefined.</span>
             </h1>
             <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
