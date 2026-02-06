@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import useNotificationInbox from '../../hooks/useNotificationInbox'
+import useTournaments from '../../hooks/useTournaments'
 import NotificationDropdown from '../notifications/NotificationDropdown'
 import ClutchLogo from '../common/ClutchLogo'
 import Button from '../common/Button'
@@ -15,8 +16,13 @@ const Navbar = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const inbox = useNotificationInbox()
+  const { currentTournament } = useTournaments()
 
   const isActive = (path) => location.pathname === path
+  const isTournamentActive = location.pathname.startsWith('/tournaments/')
+
+  const tournamentLink = currentTournament ? `/tournaments/${currentTournament.id}` : null
+  const isLiveTournament = currentTournament?.status === 'IN_PROGRESS'
 
   const scrollToSection = (id) => {
     if (location.pathname === '/') {
@@ -68,6 +74,25 @@ const Navbar = () => {
                 <Link to="/draft" className={navLinkStyles('/draft')}>
                   Draft
                 </Link>
+                {tournamentLink && (
+                  <Link
+                    to={tournamentLink}
+                    className={`
+                      px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
+                      ${isTournamentActive
+                        ? 'bg-dark-tertiary text-white'
+                        : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'}
+                    `}
+                  >
+                    {isLiveTournament && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
+                    )}
+                    {isLiveTournament ? 'Live' : 'Tournament'}
+                  </Link>
+                )}
                 <Link to="/players" className={navLinkStyles('/players')}>
                   Players
                 </Link>
@@ -261,6 +286,24 @@ const Navbar = () => {
                 >
                   Draft
                 </Link>
+                {tournamentLink && (
+                  <Link
+                    to={tournamentLink}
+                    className={`
+                      flex items-center gap-2
+                      ${mobileNavLinkStyles(tournamentLink)}
+                    `}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {isLiveTournament && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
+                    )}
+                    {isLiveTournament ? 'Live Tournament' : 'Tournament'}
+                  </Link>
+                )}
                 <Link
                   to="/players"
                   className={mobileNavLinkStyles('/players')}
