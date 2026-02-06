@@ -15,10 +15,34 @@ function splitName(raw) {
   return { firstName: parts[0], lastName: parts.slice(1).join(' ') }
 }
 
-/** Map 2-letter country code to flag emoji */
+/** Map 3-letter country codes (DataGolf) to 2-letter ISO codes */
+const COUNTRY_CODE_MAP = {
+  USA: 'US', ENG: 'GB', SCO: 'GB', WAL: 'GB', NIR: 'GB', IRL: 'IE',
+  CAN: 'CA', AUS: 'AU', RSA: 'ZA', JPN: 'JP', KOR: 'KR', CHN: 'CN',
+  TWN: 'TW', THA: 'TH', IND: 'IN', MEX: 'MX', COL: 'CO', ARG: 'AR',
+  BRA: 'BR', CHI: 'CL', VEN: 'VE', PER: 'PE', GER: 'DE', FRA: 'FR',
+  ESP: 'ES', ITA: 'IT', SWE: 'SE', NOR: 'NO', DEN: 'DK', FIN: 'FI',
+  BEL: 'BE', NED: 'NL', AUT: 'AT', SUI: 'CH', POR: 'PT', GRE: 'GR',
+  CZE: 'CZ', POL: 'PL', HUN: 'HU', ROM: 'RO', BUL: 'BG', CRO: 'HR',
+  SRB: 'RS', SVK: 'SK', SVN: 'SI', TUR: 'TR', ISR: 'IL', PHI: 'PH',
+  MAS: 'MY', SIN: 'SG', IDN: 'ID', VIE: 'VN', NZL: 'NZ', FIJ: 'FJ',
+  PAR: 'PY', URU: 'UY', PAN: 'PA', CRC: 'CR', GUA: 'GT', JAM: 'JM',
+  TTO: 'TT', BAH: 'BS', BER: 'BM', PUR: 'PR', DOM: 'DO', ECU: 'EC',
+  BOL: 'BO', ZIM: 'ZW', KEN: 'KE', NGA: 'NG', GHA: 'GH', EGY: 'EG',
+  MAR: 'MA', TUN: 'TN', ALG: 'DZ', SAU: 'SA', UAE: 'AE', QAT: 'QA',
+  BRN: 'BH', KUW: 'KW', PAK: 'PK', BAN: 'BD', SRI: 'LK', NEP: 'NP',
+  HKG: 'HK', MAC: 'MO', RUS: 'RU', UKR: 'UA', BLR: 'BY', GEO: 'GE',
+  ARM: 'AM', LUX: 'LU', MLT: 'MT', CYP: 'CY', ISL: 'IS', EST: 'EE',
+  LVA: 'LV', LTU: 'LT',
+}
+
+/** Map country code to flag emoji (supports both 2-letter and 3-letter codes) */
 function countryToFlag(code) {
-  if (!code || code.length !== 2) return null
-  return String.fromCodePoint(...[...code.toUpperCase()].map((c) => c.charCodeAt(0) + 0x1F1A5))
+  if (!code) return null
+  // Convert 3-letter to 2-letter if needed
+  let iso2 = code.length === 2 ? code.toUpperCase() : COUNTRY_CODE_MAP[code.toUpperCase()] || null
+  if (!iso2) return null
+  return String.fromCodePoint(...[...iso2].map((c) => c.charCodeAt(0) + 0x1F1A5))
 }
 
 /** Convert DG tour string to our enum-compatible string */
@@ -404,18 +428,22 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     if (currentRound > maxRound) maxRound = currentRound
 
     const thru = entry.thru ?? entry.holes_completed ?? null
-    const position = entry.current_pos ?? entry.position ?? null
-    const totalToPar = entry.total != null ? entry.total : (entry.total_to_par ?? null)
-    const todayToPar = entry.today != null ? entry.today : (entry.today_to_par ?? null)
+    // current_pos is a string like "1", "T3" — parse to number
+    const posStr = entry.current_pos ?? entry.position ?? null
+    const position = posStr != null ? parseInt(String(posStr).replace(/\D/g, '')) || null : null
+    const positionTied = typeof posStr === 'string' && posStr.includes('T')
+    // DataGolf uses "current_score" for total to par
+    const totalToPar = entry.current_score ?? entry.total ?? entry.total_to_par ?? null
+    const todayToPar = entry.today ?? entry.today_to_par ?? null
 
     const liveData = {
-      position: typeof position === 'number' ? position : null,
-      positionTied: typeof entry.current_pos === 'string' && entry.current_pos.startsWith('T'),
+      position,
+      positionTied,
       totalToPar,
       todayToPar,
       thru: typeof thru === 'number' ? thru : null,
       currentRound,
-      currentHole: entry.current_hole ?? null,
+      currentHole: entry.current_hole ?? entry.end_hole ?? null,
       winProbability: entry.win_prob ?? entry.win ?? null,
       top5Probability: entry.top_5_prob ?? entry.top_5 ?? null,
       top10Probability: entry.top_10_prob ?? entry.top_10 ?? null,
@@ -437,9 +465,10 @@ async function syncLiveScoring(tournamentDgId, prisma) {
       totalToPar,
       status: entry.status === 'cut' ? 'CUT' : entry.status === 'wd' ? 'WD' : 'ACTIVE',
     }
-    if (typeof position === 'number') perfUpdate.position = position
+    if (position != null) perfUpdate.position = position
+    // DataGolf uses uppercase R1, R2, R3, R4 for round scores
     for (let r = 1; r <= 4; r++) {
-      const roundScore = entry[`r${r}`] ?? entry[`round_${r}`] ?? null
+      const roundScore = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
       if (roundScore != null) perfUpdate[`round${r}`] = roundScore
     }
 

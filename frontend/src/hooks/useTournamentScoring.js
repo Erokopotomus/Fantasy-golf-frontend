@@ -7,11 +7,9 @@ import api from '../services/api'
  */
 function flattenEntry(entry) {
   const player = entry.player || {}
-  // When live data is present, "today" is already todayToPar from LiveScore
-  // For completed tournaments, "today" is last round raw score → convert to toPar (par 72)
+  // "today" from the backend is already todayToPar (live) or last round raw score
   const todayRaw = entry.today
-  const hasLive = entry.probabilities != null
-  const todayToPar = todayRaw != null ? (hasLive ? todayRaw : todayRaw - 72) : null
+  const todayToPar = todayRaw
 
   return {
     id: player.id,

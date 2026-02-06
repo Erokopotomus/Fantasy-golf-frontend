@@ -151,8 +151,8 @@ const TournamentLeaderboard = ({ leaderboard, cut, onSelectPlayer, myPlayerIds =
           )}
 
           {/* Today */}
-          <div className={`text-center text-sm font-semibold ${getScoreColor(player.today)}`}>
-            {player.thru === 'F' || player.thru === 18 ? '–' : formatScore(player.today)}
+          <div className={`text-center text-sm font-semibold ${getScoreColor(player.thru > 0 ? player.today : null)}`}>
+            {player.thru === 'F' || player.thru === 18 ? '–' : player.thru > 0 ? formatScore(player.today) : '–'}
           </div>
 
           {/* Thru */}
@@ -160,7 +160,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, onSelectPlayer, myPlayerIds =
             <div className="text-center text-xs text-text-muted">
               {player.thru === 'F' || player.thru === 18 ? (
                 <span className="text-text-secondary font-medium">F</span>
-              ) : player.thru || '–'}
+              ) : player.thru > 0 ? player.thru : '–'}
             </div>
           )}
 

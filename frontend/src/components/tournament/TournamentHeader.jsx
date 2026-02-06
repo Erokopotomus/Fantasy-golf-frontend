@@ -87,7 +87,9 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
 
         {/* Tournament name + course */}
         <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">{tournament.name}</h1>
-        <p className="text-text-secondary text-sm mb-4">{tournament.course}</p>
+        {(tournament.course || tournament.location) && (
+          <p className="text-text-secondary text-sm mb-4">{tournament.course || tournament.location}</p>
+        )}
 
         {/* Stats row */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
