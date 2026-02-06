@@ -3,7 +3,6 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import TournamentHeader from '../components/tournament/TournamentHeader'
 import TournamentLeaderboard from '../components/tournament/TournamentLeaderboard'
 import MyPlayersPanel from '../components/tournament/MyPlayersPanel'
-import PlayerScoreCard from '../components/tournament/PlayerScoreCard'
 import LiveScoreIndicator from '../components/tournament/LiveScoreIndicator'
 import useTournamentScoring from '../hooks/useTournamentScoring'
 
@@ -14,7 +13,6 @@ const TournamentScoring = () => {
 
   const { tournament, leaderboard, isLive, myPlayers, loading, error, refetch } = useTournamentScoring(tournamentId, leagueId)
   const myPlayerIds = myPlayers?.map(p => p.id) || []
-  const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [activeTab, setActiveTab] = useState('leaderboard') // leaderboard | myTeam
 
   if (loading) {
@@ -101,7 +99,6 @@ const TournamentScoring = () => {
           <TournamentLeaderboard
             leaderboard={leaderboard}
             cut={tournament?.cut}
-            onSelectPlayer={setSelectedPlayer}
             myPlayerIds={myPlayerIds}
           />
         </div>
@@ -110,17 +107,7 @@ const TournamentScoring = () => {
         <div className={`space-y-4 ${activeTab !== 'myTeam' ? 'hidden lg:block' : ''}`}>
           <MyPlayersPanel
             players={myPlayers}
-            onSelectPlayer={setSelectedPlayer}
-            selectedPlayerId={selectedPlayer?.id}
           />
-
-          {/* Selected Player Scorecard */}
-          {selectedPlayer && (
-            <PlayerScoreCard
-              player={selectedPlayer}
-              onClose={() => setSelectedPlayer(null)}
-            />
-          )}
         </div>
       </div>
     </div>
