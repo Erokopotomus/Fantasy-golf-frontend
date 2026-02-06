@@ -204,4 +204,61 @@ router.patch('/:id/roster/:playerId', authenticate, async (req, res, next) => {
   }
 })
 
+// POST /api/teams/:id/lineup - Batch set active/bench positions
+router.post('/:id/lineup', authenticate, async (req, res, next) => {
+  try {
+    const { activePlayerIds } = req.body
+
+    if (!Array.isArray(activePlayerIds)) {
+      return res.status(400).json({ error: { message: 'activePlayerIds must be an array' } })
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { id: req.params.id },
+      include: { roster: true, league: true }
+    })
+
+    if (!team) {
+      return res.status(404).json({ error: { message: 'Team not found' } })
+    }
+
+    if (team.userId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Not authorized' } })
+    }
+
+    // Check max active from league settings
+    const maxActive = team.league.settings?.maxActiveLineup || 4
+    if (activePlayerIds.length > maxActive) {
+      return res.status(400).json({ error: { message: `Maximum ${maxActive} active players allowed` } })
+    }
+
+    // Verify all player IDs are on this team's roster
+    const rosterPlayerIds = team.roster.map(r => r.playerId)
+    const invalidIds = activePlayerIds.filter(id => !rosterPlayerIds.includes(id))
+    if (invalidIds.length > 0) {
+      return res.status(400).json({ error: { message: 'Some players are not on your roster' } })
+    }
+
+    // Batch update in transaction
+    await prisma.$transaction(
+      team.roster.map(entry =>
+        prisma.rosterEntry.update({
+          where: { id: entry.id },
+          data: { position: activePlayerIds.includes(entry.playerId) ? 'ACTIVE' : 'BENCH' }
+        })
+      )
+    )
+
+    // Return updated roster
+    const updatedTeam = await prisma.team.findUnique({
+      where: { id: req.params.id },
+      include: { roster: { include: { player: true } } }
+    })
+
+    res.json({ roster: updatedTeam.roster })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

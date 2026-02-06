@@ -180,6 +180,25 @@ class ApiService {
     })
   }
 
+  async updateRosterPosition(teamId, playerId, position) {
+    return this.request(`/teams/${teamId}/roster/${playerId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ position }),
+    })
+  }
+
+  async saveLineup(teamId, activePlayerIds) {
+    return this.request(`/teams/${teamId}/lineup`, {
+      method: 'POST',
+      body: JSON.stringify({ activePlayerIds }),
+    })
+  }
+
+  async getAvailablePlayers(leagueId, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/leagues/${leagueId}/available-players${params ? '?' + params : ''}`)
+  }
+
   // Drafts
   async getDraft(id) {
     return this.request(`/drafts/${id}`)

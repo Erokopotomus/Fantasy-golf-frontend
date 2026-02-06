@@ -556,4 +556,77 @@ router.get('/:id/scoring/:tournamentId', authenticate, async (req, res, next) =>
   }
 })
 
+// GET /api/leagues/:id/available-players - Free agents (players not rostered in this league)
+router.get('/:id/available-players', authenticate, async (req, res, next) => {
+  try {
+    const { search, tour, limit = 50, offset = 0 } = req.query
+
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true } } },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isMember = league.members.some((m) => m.userId === req.user.id)
+    if (!isMember) {
+      return res.status(403).json({ error: { message: 'Not authorized' } })
+    }
+
+    // Get all player IDs currently rostered in this league
+    const rosteredEntries = await prisma.rosterEntry.findMany({
+      where: { team: { leagueId: req.params.id } },
+      select: { playerId: true },
+    })
+    const rosteredIds = rosteredEntries.map((r) => r.playerId)
+
+    // Build player filter
+    const where = {
+      id: { notIn: rosteredIds },
+    }
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' }
+    }
+
+    if (tour && tour !== 'All') {
+      where.primaryTour = tour
+    }
+
+    const [players, total] = await Promise.all([
+      prisma.player.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          country: true,
+          countryFlag: true,
+          headshotUrl: true,
+          owgrRank: true,
+          primaryTour: true,
+          sgTotal: true,
+          sgPutting: true,
+          sgApproach: true,
+          sgOffTee: true,
+          sgAroundGreen: true,
+          wins: true,
+          top5s: true,
+          top10s: true,
+          earnings: true,
+        },
+        orderBy: [{ owgrRank: 'asc' }],
+        take: parseInt(limit),
+        skip: parseInt(offset),
+      }),
+      prisma.player.count({ where }),
+    ])
+
+    res.json({ players, total, limit: parseInt(limit), offset: parseInt(offset) })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

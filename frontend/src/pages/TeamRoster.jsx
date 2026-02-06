@@ -1,20 +1,40 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useRoster } from '../hooks/useRoster'
 import { useLineup } from '../hooks/useLineup'
-import { useTrades } from '../hooks/useTrades'
-import { useTournaments } from '../hooks/useTournaments'
 import { useLeague } from '../hooks/useLeague'
 import { useAuth } from '../context/AuthContext'
-import { usePlayerDetail } from '../hooks/usePlayerDetail'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
-import RosterList from '../components/roster/RosterList'
-import LineupEditor from '../components/roster/LineupEditor'
-import TradeProposal from '../components/roster/TradeProposal'
-import TradeReview from '../components/roster/TradeReview'
-import PlayerDetailModal from '../components/players/PlayerDetailModal'
-import ChatPanel from '../components/chat/ChatPanel'
+
+/**
+ * Normalize a roster entry from the API into a flat player object
+ * API shape: { id: rosterEntryId, position, playerId, acquiredVia, player: { id, name, ... } }
+ * Component shape: { id, name, countryFlag, owgrRank, sgTotal, position (ACTIVE/BENCH), ... }
+ */
+function flattenRosterEntry(entry) {
+  const p = entry.player || {}
+  return {
+    id: p.id || entry.playerId,
+    entryId: entry.id,
+    name: p.name || 'Unknown',
+    countryFlag: p.countryFlag || '',
+    headshotUrl: p.headshotUrl || null,
+    country: p.country || '',
+    owgrRank: p.owgrRank,
+    primaryTour: p.primaryTour,
+    sgTotal: p.sgTotal,
+    sgPutting: p.sgPutting,
+    sgApproach: p.sgApproach,
+    sgOffTee: p.sgOffTee,
+    wins: p.wins,
+    top5s: p.top5s,
+    top10s: p.top10s,
+    rosterPosition: entry.position, // ACTIVE or BENCH
+    acquiredVia: entry.acquiredVia,
+    acquiredAt: entry.acquiredAt,
+  }
+}
 
 const TeamRoster = () => {
   const { leagueId } = useParams()
@@ -26,271 +46,315 @@ const TeamRoster = () => {
   const userTeam = league?.teams?.find(t => t.userId === user?.id)
   const teamId = userTeam?.id
 
-  const { roster, loading: rosterLoading, error: rosterError, dropPlayer } = useRoster(teamId)
-  const { activeLineup, setActiveLineup, setLineup, loading: lineupLoading, saved } = useLineup(leagueId)
-  const { pendingTrades, proposeTrade, acceptTrade, rejectTrade, cancelTrade, actionLoading } = useTrades(leagueId)
-  const { currentTournament } = useTournaments()
-  const { selectedPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
+  const { roster: rawRoster, loading: rosterLoading, error: rosterError, dropPlayer, refetch } = useRoster(teamId)
+  const { saveLineup, loading: lineupLoading, saved } = useLineup(teamId)
+
+  // Normalize roster entries
+  const roster = rawRoster.map(flattenRosterEntry)
+  const activePlayers = roster.filter(p => p.rosterPosition === 'ACTIVE')
+  const benchPlayers = roster.filter(p => p.rosterPosition !== 'ACTIVE')
 
   const [isEditing, setIsEditing] = useState(false)
-  const [showTradeModal, setShowTradeModal] = useState(false)
-  const [selectedPlayerForTrade, setSelectedPlayerForTrade] = useState(null)
+  const [pendingActive, setPendingActive] = useState(null) // null = not editing
 
-  // Initialize active lineup from roster
-  useEffect(() => {
-    if (roster.length > 0 && activeLineup.length === 0) {
-      const activeIds = roster.filter(p => p.isActive !== false).slice(0, 4).map(p => p.id)
-      setActiveLineup(activeIds)
-    }
-  }, [roster, activeLineup.length, setActiveLineup])
+  const maxActive = league?.settings?.maxActiveLineup || 4
+  const rosterSize = league?.settings?.rosterSize || 6
 
-  const maxActiveLineup = 4 // Default max active players
-  const isLineupLocked = currentTournament?.status === 'in-progress'
+  const startEditing = () => {
+    setPendingActive(new Set(activePlayers.map(p => p.id)))
+    setIsEditing(true)
+  }
 
-  const handleTogglePlayer = (player) => {
-    setActiveLineup(prev => {
-      if (prev.includes(player.id)) {
-        return prev.filter(id => id !== player.id)
+  const cancelEditing = () => {
+    setPendingActive(null)
+    setIsEditing(false)
+  }
+
+  const togglePlayer = (playerId) => {
+    setPendingActive(prev => {
+      const next = new Set(prev)
+      if (next.has(playerId)) {
+        next.delete(playerId)
+      } else if (next.size < maxActive) {
+        next.add(playerId)
       }
-      if (prev.length >= maxActiveLineup) {
-        return prev
-      }
-      return [...prev, player.id]
+      return next
     })
   }
 
-  const handleDropPlayer = async (player) => {
-    if (window.confirm(`Are you sure you want to drop ${player.name}?`)) {
-      await dropPlayer(player.id)
+  const handleSaveLineup = async () => {
+    if (!pendingActive) return
+    try {
+      await saveLineup([...pendingActive])
+      await refetch()
+      setIsEditing(false)
+      setPendingActive(null)
+    } catch {
+      // error handled by hook
     }
   }
 
-  const handleTradePlayer = (player) => {
-    setSelectedPlayerForTrade(player)
-    setShowTradeModal(true)
+  const handleDrop = async (player) => {
+    if (!window.confirm(`Drop ${player.name}? They'll become a free agent.`)) return
+    try {
+      await dropPlayer(player.id)
+    } catch {
+      // error handled by hook
+    }
   }
 
-  const handleSaveLineup = async (playerIds) => {
-    await setLineup(currentTournament?.id, playerIds)
+  const getActiveSet = () => {
+    if (pendingActive) return pendingActive
+    return new Set(activePlayers.map(p => p.id))
   }
-
-  const handleProposeTrade = async (tradeData) => {
-    await proposeTrade(tradeData)
-    setShowTradeModal(false)
-  }
-
-  // Mock league members for trade
-  const mockLeagueMembers = [
-    { id: 'team-2', name: 'Mike S.', isUser: false, roster: [
-      { id: 'player-7', name: 'Collin Morikawa', countryFlag: '🇺🇸' },
-      { id: 'player-8', name: 'Ludvig Aberg', countryFlag: '🇸🇪' },
-    ]},
-    { id: 'team-3', name: 'Sarah K.', isUser: false, roster: [
-      { id: 'player-9', name: 'Tommy Fleetwood', countryFlag: '🇬🇧' },
-    ]},
-    { id: 'team-4', name: 'James T.', isUser: false, roster: [] },
-  ]
 
   if (leagueLoading || (teamId && rosterLoading)) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading roster...</p>
         </div>
       </div>
     )
   }
 
-  // Show empty roster state if no team or roster is empty (pre-draft)
+  // Empty roster state
   if (!userTeam || roster.length === 0) {
-    const isDraftPending = league?.status === 'draft-pending' || league?.status === 'DRAFT_PENDING'
-
     return (
-      <div className="min-h-screen bg-dark-primary">
-        <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl mx-auto">
-            {/* Header */}
-            <div className="mb-6">
-              <Link
-                to={`/leagues/${leagueId}`}
-                className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to League
-              </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">My Roster</h1>
-              <p className="text-text-secondary">{league?.name}</p>
-            </div>
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-6">
+          <Link
+            to={`/leagues/${leagueId}`}
+            className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to League
+          </Link>
+          <h1 className="text-2xl font-bold text-white">My Roster</h1>
+          <p className="text-text-secondary">{league?.name}</p>
+        </div>
 
-            <Card className="text-center py-12">
-              <div className="w-16 h-16 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">
-                {isDraftPending ? 'Draft Your Team' : 'Empty Roster'}
-              </h2>
-              <p className="text-text-secondary mb-6 max-w-sm mx-auto">
-                {isDraftPending
-                  ? "Your league's draft hasn't started yet. Once the draft begins, you'll build your roster by selecting players."
-                  : "Your roster is empty. Head to the waiver wire to add players to your team."}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                {isDraftPending ? (
-                  <Button onClick={() => navigate(`/leagues/${leagueId}/draft`)}>
-                    Go to Draft Room
-                  </Button>
-                ) : (
-                  <Button onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
-                    Browse Waiver Wire
-                  </Button>
-                )}
-                <Button variant="outline" onClick={() => navigate(`/leagues/${leagueId}/team-settings`)}>
-                  Team Settings
-                </Button>
-              </div>
-            </Card>
+        <Card className="text-center py-12">
+          <div className="w-16 h-16 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
           </div>
-        </main>
+          <h2 className="text-xl font-bold text-white mb-2">Empty Roster</h2>
+          <p className="text-text-secondary mb-6 max-w-sm mx-auto">
+            Your roster is empty. Draft players or browse free agents to build your team.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
+              Browse Free Agents
+            </Button>
+            <Button variant="secondary" onClick={() => navigate(`/leagues/${leagueId}`)}>
+              Back to League
+            </Button>
+          </div>
+        </Card>
       </div>
     )
   }
 
   if (rosterError) {
     return (
-      <div className="min-h-screen bg-dark-primary">
-        <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl mx-auto">
-            <Card className="text-center py-12">
-              <h2 className="text-xl font-bold text-white mb-2">Error Loading Roster</h2>
-              <p className="text-text-secondary mb-6">{rosterError}</p>
-              <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
-                Return to League
-              </Link>
-            </Card>
-          </div>
-        </main>
+      <div className="max-w-2xl mx-auto">
+        <Card className="text-center py-12">
+          <h2 className="text-xl font-bold text-white mb-2">Error Loading Roster</h2>
+          <p className="text-text-secondary mb-6">{rosterError}</p>
+          <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
+            Return to League
+          </Link>
+        </Card>
       </div>
     )
   }
 
+  const activeSet = getActiveSet()
+
   return (
-    <div className="min-h-screen bg-dark-primary">
-      <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Dashboard
-              </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">My Roster</h1>
-            </div>
-            <div className="flex gap-3">
-              <Link to={`/leagues/${leagueId}/team-settings`}>
-                <Button variant="secondary" size="sm">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Team
-                </Button>
-              </Link>
-              <Link to={`/leagues/${leagueId}/waivers`}>
-                <Button variant="secondary">Waiver Wire</Button>
-              </Link>
-              <Button
-                variant={isEditing ? 'primary' : 'secondary'}
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? 'Done Editing' : 'Edit Lineup'}
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <Link
+            to={`/leagues/${leagueId}`}
+            className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-1"
+          >
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {league?.name}
+          </Link>
+          <h1 className="text-2xl font-bold text-white">My Roster</h1>
+          <p className="text-text-muted text-sm">{roster.length} / {rosterSize} players</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
+            Free Agents
+          </Button>
+          {isEditing ? (
+            <>
+              <Button variant="secondary" size="sm" onClick={cancelEditing}>Cancel</Button>
+              <Button size="sm" onClick={handleSaveLineup} loading={lineupLoading}>
+                {saved ? 'Saved!' : 'Save Lineup'}
               </Button>
-            </div>
+            </>
+          ) : (
+            <Button size="sm" onClick={startEditing}>Edit Lineup</Button>
+          )}
+        </div>
+      </div>
+
+      {/* Lineup progress bar (editing mode) */}
+      {isEditing && (
+        <div className="mb-4 p-3 rounded-lg bg-dark-secondary border border-dark-border">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="text-text-muted">Active lineup</span>
+            <span className={`font-medium ${activeSet.size === maxActive ? 'text-emerald-400' : 'text-white'}`}>
+              {activeSet.size} / {maxActive}
+            </span>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Roster */}
-            <div className="lg:col-span-2">
-              <RosterList
-                roster={roster}
-                activeLineup={activeLineup}
-                isEditing={isEditing}
-                onTogglePlayer={handleTogglePlayer}
-                onDropPlayer={handleDropPlayer}
-                onTradePlayer={handleTradePlayer}
-                onViewPlayer={openPlayerDetail}
-              />
-            </div>
-
-            {/* Right Column - Lineup Editor & Trades */}
-            <div className="space-y-6">
-              <LineupEditor
-                roster={roster}
-                activeLineup={activeLineup}
-                maxActive={maxActiveLineup}
-                tournament={currentTournament}
-                isLocked={isLineupLocked}
-                onSave={handleSaveLineup}
-                loading={lineupLoading}
-                saved={saved}
-              />
-
-              <TradeReview
-                trades={pendingTrades}
-                onAccept={acceptTrade}
-                onReject={rejectTrade}
-                onCancel={cancelTrade}
-                loading={actionLoading}
-              />
-
-              <Button
-                variant="outline"
-                fullWidth
-                onClick={() => setShowTradeModal(true)}
-              >
-                Propose Trade
-              </Button>
-
-              {/* League Chat */}
-              <ChatPanel
-                leagueId={leagueId}
-                leagueName={league?.name}
-                memberCount={league?.memberCount}
-                collapsible
-                defaultCollapsed
-              />
-            </div>
+          <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 transition-all duration-300"
+              style={{ width: `${(activeSet.size / maxActive) * 100}%` }}
+            />
           </div>
         </div>
-      </main>
-
-      {/* Trade Modal */}
-      {showTradeModal && (
-        <TradeProposal
-          roster={roster}
-          leagueMembers={mockLeagueMembers}
-          onPropose={handleProposeTrade}
-          loading={actionLoading}
-          onClose={() => setShowTradeModal(false)}
-        />
       )}
 
-      {/* Player Detail Modal */}
-      <PlayerDetailModal
-        player={selectedPlayer}
-        isOpen={isModalOpen}
-        onClose={closePlayerDetail}
-      />
+      {/* Active Lineup */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Active Lineup</h2>
+          <span className="text-xs text-text-muted">({activePlayers.length})</span>
+        </div>
+        <div className="space-y-2">
+          {roster.filter(p => activeSet.has(p.id)).map(player => (
+            <PlayerRow
+              key={player.id}
+              player={player}
+              isActive={true}
+              isEditing={isEditing}
+              onToggle={() => togglePlayer(player.id)}
+              onDrop={() => handleDrop(player)}
+            />
+          ))}
+          {roster.filter(p => activeSet.has(p.id)).length === 0 && (
+            <div className="text-center py-6 text-text-muted bg-dark-secondary rounded-lg border border-dashed border-dark-border">
+              No active players — {isEditing ? 'tap players below to activate' : 'edit your lineup to set starters'}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bench */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider">Bench</h2>
+          <span className="text-xs text-text-muted">({roster.filter(p => !activeSet.has(p.id)).length})</span>
+        </div>
+        <div className="space-y-2">
+          {roster.filter(p => !activeSet.has(p.id)).map(player => (
+            <PlayerRow
+              key={player.id}
+              player={player}
+              isActive={false}
+              isEditing={isEditing}
+              canActivate={activeSet.size < maxActive}
+              onToggle={() => togglePlayer(player.id)}
+              onDrop={() => handleDrop(player)}
+            />
+          ))}
+          {roster.filter(p => !activeSet.has(p.id)).length === 0 && (
+            <div className="text-center py-4 text-text-muted text-sm">
+              All players are active
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Individual player row */
+const PlayerRow = ({ player, isActive, isEditing, canActivate = true, onToggle, onDrop }) => {
+  return (
+    <div className={`
+      flex items-center gap-3 p-3 rounded-lg transition-all
+      ${isActive
+        ? 'bg-dark-secondary border border-emerald-500/30'
+        : 'bg-dark-secondary/50 border border-dark-border/50'
+      }
+    `}>
+      {/* Edit toggle */}
+      {isEditing && (
+        <button
+          onClick={onToggle}
+          disabled={!isActive && !canActivate}
+          className={`
+            w-6 h-6 rounded flex items-center justify-center flex-shrink-0 transition-colors
+            ${isActive
+              ? 'bg-emerald-500 text-white'
+              : canActivate ? 'bg-dark-tertiary text-text-muted hover:bg-dark-border' : 'bg-dark-tertiary/50 text-text-muted/30 cursor-not-allowed'
+            }
+          `}
+        >
+          {isActive && (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </button>
+      )}
+
+      {/* Player info */}
+      {player.headshotUrl ? (
+        <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center text-lg flex-shrink-0">
+          {player.countryFlag || '?'}
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-white font-semibold text-sm truncate">{player.name}</span>
+          {isActive && !isEditing && (
+            <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 rounded">ACTIVE</span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-xs text-text-muted">
+          {player.owgrRank && <span>#{player.owgrRank}</span>}
+          {player.primaryTour && <span>{player.primaryTour}</span>}
+          {player.sgTotal != null && <span>SG: {player.sgTotal.toFixed(1)}</span>}
+          {player.acquiredVia && (
+            <span className="text-text-muted/60">{player.acquiredVia.toLowerCase()}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="hidden sm:flex items-center gap-4 text-xs text-text-secondary">
+        {player.wins > 0 && <span>{player.wins}W</span>}
+        {player.top5s > 0 && <span>{player.top5s} T5</span>}
+        {player.top10s > 0 && <span>{player.top10s} T10</span>}
+      </div>
+
+      {/* Actions */}
+      {!isEditing && (
+        <button
+          onClick={onDrop}
+          className="text-xs text-red-400/60 hover:text-red-400 transition-colors px-2 py-1"
+        >
+          Drop
+        </button>
+      )}
     </div>
   )
 }

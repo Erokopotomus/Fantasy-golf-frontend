@@ -1,23 +1,23 @@
 import { useState, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 import { useNotifications } from '../context/NotificationContext'
 
-export const useLineup = (leagueId) => {
+export const useLineup = (teamId) => {
   const { notify } = useNotifications()
-  const [activeLineup, setActiveLineup] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [saved, setSaved] = useState(false)
 
-  const setLineup = useCallback(async (tournamentId, playerIds) => {
+  const saveLineup = useCallback(async (activePlayerIds) => {
+    if (!teamId) return
+
     try {
       setLoading(true)
       setError(null)
       setSaved(false)
-      const result = await mockApi.roster.setLineup(leagueId, tournamentId, playerIds)
-      setActiveLineup(playerIds)
+      const result = await api.saveLineup(teamId, activePlayerIds)
       setSaved(true)
-      notify.lineup('Lineup Saved', `${playerIds.length} players set for the tournament`)
+      notify.success('Lineup Saved', `${activePlayerIds.length} active players set`)
       return result
     } catch (err) {
       setError(err.message)
@@ -26,13 +26,13 @@ export const useLineup = (leagueId) => {
     } finally {
       setLoading(false)
     }
-  }, [leagueId, notify])
+  }, [teamId, notify])
 
   const clearSaved = useCallback(() => {
     setSaved(false)
   }, [])
 
-  return { activeLineup, setActiveLineup, setLineup, loading, error, saved, clearSaved }
+  return { saveLineup, loading, error, saved, clearSaved }
 }
 
 export default useLineup
