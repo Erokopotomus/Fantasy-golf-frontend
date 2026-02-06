@@ -47,14 +47,31 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
   const name = tournament.name
   const venue = tournament.course || tournament.location || ''
   const purse = tournament.purse
-  const fieldSize = tournament.fieldSize
   const currentRound = tournament.currentRound
+  const cutLine = tournament.cutLine
 
   const formatPurse = (amount) => {
     if (!amount) return null
     if (amount >= 1000000) return `$${(amount / 1000000).toFixed(amount % 1000000 === 0 ? 0 : 1)}M`
     if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`
     return `$${amount}`
+  }
+
+  const formatCutLine = (cut) => {
+    if (cut == null) return null
+    if (cut > 0) return `+${cut}`
+    if (cut === 0) return 'E'
+    return `${cut}`
+  }
+
+  // Event type label: Major > Signature > Tour name
+  const getEventType = () => {
+    if (tournament.isMajor) return { label: 'Major', color: 'text-yellow-400' }
+    if (tournament.isSignature) return { label: 'Signature', color: 'text-purple-400' }
+    if (tournament.isPlayoff) return { label: 'Playoff', color: 'text-orange-400' }
+    const tour = tournament.tour
+    if (tour) return { label: tour === 'PGA' ? 'PGA Tour' : tour, color: 'text-white' }
+    return null
   }
 
   const formatDateRange = () => {
@@ -161,21 +178,54 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
 
         {/* Info chips */}
         <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-          {purse ? (
-            <div className="bg-dark-primary rounded-lg p-2">
-              <p className="text-accent-green font-semibold text-sm">{formatPurse(purse)}</p>
-              <p className="text-text-muted text-xs">Purse</p>
-            </div>
-          ) : (
-            <div className="bg-dark-primary rounded-lg p-2">
-              <p className="text-text-muted font-semibold text-sm">–</p>
-              <p className="text-text-muted text-xs">Purse</p>
-            </div>
-          )}
+          {/* Purse or event type fallback */}
           <div className="bg-dark-primary rounded-lg p-2">
-            <p className="text-white font-semibold text-sm">{fieldSize || '–'}</p>
-            <p className="text-text-muted text-xs">Field</p>
+            {purse ? (
+              <>
+                <p className="text-accent-green font-semibold text-sm">{formatPurse(purse)}</p>
+                <p className="text-text-muted text-xs">Purse</p>
+              </>
+            ) : (() => {
+              const evt = getEventType()
+              return evt ? (
+                <>
+                  <p className={`font-semibold text-sm ${evt.color}`}>{evt.label}</p>
+                  <p className="text-text-muted text-xs">Event</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-text-muted font-semibold text-sm">–</p>
+                  <p className="text-text-muted text-xs">Purse</p>
+                </>
+              )
+            })()}
           </div>
+
+          {/* Cut line (live) or event type (upcoming) */}
+          <div className="bg-dark-primary rounded-lg p-2">
+            {isLive && cutLine != null ? (
+              <>
+                <p className={`font-semibold text-sm ${cutLine > 0 ? 'text-red-400' : cutLine < 0 ? 'text-emerald-400' : 'text-white'}`}>
+                  {formatCutLine(cutLine)}
+                </p>
+                <p className="text-text-muted text-xs">Cut Line</p>
+              </>
+            ) : (() => {
+              const evt = getEventType()
+              return evt && purse ? (
+                <>
+                  <p className={`font-semibold text-sm ${evt.color}`}>{evt.label}</p>
+                  <p className="text-text-muted text-xs">Event</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-white font-semibold text-sm">R{currentRound || 1}</p>
+                  <p className="text-text-muted text-xs">Round</p>
+                </>
+              )
+            })()}
+          </div>
+
           <div className="bg-dark-primary rounded-lg p-2">
             <p className="text-white font-semibold text-sm">{formatDateRange()}</p>
             <p className="text-text-muted text-xs">Dates</p>

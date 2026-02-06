@@ -169,11 +169,13 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           className={`
             group grid items-center gap-2 px-3 py-2.5 cursor-pointer transition-all duration-200
             ${showRounds ? 'grid-cols-[40px_1fr_52px_52px_52px_52px_52px_56px_64px]' : 'grid-cols-[40px_1fr_56px_48px_56px_64px]'}
-            ${medal ? `${medal.bg} border-l-2 ${medal.border}` : 'border-l-2 border-transparent'}
-            ${isMyPlayer ? 'bg-emerald-500/8 border-l-emerald-400' : ''}
+            ${isExpanded
+              ? 'bg-emerald-500/10 border-l-2 border-l-emerald-500'
+              : medal ? `${medal.bg} border-l-2 ${medal.border}` : 'border-l-2 border-transparent'}
+            ${!isExpanded && isMyPlayer ? 'bg-emerald-500/8 border-l-emerald-400' : ''}
             ${isCut ? 'opacity-50' : ''}
             ${hasRecentChange ? `bg-dark-tertiary/40 ${changeGlow}` : ''}
-            ${!isCut ? 'hover:bg-dark-tertiary/60' : ''}
+            ${!isCut && !isExpanded ? 'hover:bg-dark-tertiary/60' : ''}
             ${index > 0 ? 'border-t border-dark-border/30' : ''}
           `}
         >
@@ -341,16 +343,25 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                   const isInProgress = isCurrent && !roundScore
                   const holeData = holeScores[player.id]?.[expandedRound]
 
-                  // Course par layout — use real data when available, default par-71
+                  // Course par layout — always build full 18-hole array, merging ESPN data with defaults
                   const defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]
-                  const holes = (holeData && holeData.length > 0) ? holeData : defaultPars.map((par, i) => ({ hole: i + 1, par, score: null }))
+                  const holeDataMap = {}
+                  if (holeData && holeData.length > 0) {
+                    for (const h of holeData) holeDataMap[h.hole] = h
+                  }
+                  const holes = defaultPars.map((defPar, i) => {
+                    const holeNum = i + 1
+                    return holeDataMap[holeNum] || { hole: holeNum, par: defPar, score: null }
+                  })
                   const front9 = holes.slice(0, 9)
                   const back9 = holes.slice(9, 18)
-                  const front9Par = front9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1]), 0)
-                  const back9Par = back9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1 + 9]), 0)
+                  const front9Par = front9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1] || 4), 0)
+                  const back9Par = back9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1] || 4), 0)
                   const hasScores = holeData && holeData.length > 0 && holeData.some(h => h.score != null)
-                  const front9Score = hasScores ? front9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0) : null
-                  const back9Score = hasScores ? back9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0) : null
+                  const front9Played = front9.filter(h => h.score != null)
+                  const back9Played = back9.filter(h => h.score != null)
+                  const front9Score = front9Played.length > 0 ? front9Played.reduce((s, h) => s + h.score, 0) : null
+                  const back9Score = back9Played.length > 0 ? back9Played.reduce((s, h) => s + h.score, 0) : null
 
                   return (
                     <>
