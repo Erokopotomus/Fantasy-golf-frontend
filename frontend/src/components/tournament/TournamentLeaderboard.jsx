@@ -284,129 +284,141 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               </div>
             </div>
 
-            {/* Selected round content */}
+            {/* Selected round scorecard */}
             {expandedRound && (
               <div className="px-4 pb-3">
-                {/* Hole-by-hole scorecard (when data available) */}
-                {player.holeScores?.[expandedRound] ? (
-                  <div className="overflow-x-auto">
-                    {/* Front 9 */}
-                    {(() => {
-                      const holes = player.holeScores[expandedRound]
-                      const front9 = holes.slice(0, 9)
-                      const back9 = holes.slice(9, 18)
-                      const front9Par = front9.reduce((s, h) => s + h.par, 0)
-                      const back9Par = back9.reduce((s, h) => s + h.par, 0)
-                      const front9Score = front9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0)
-                      const back9Score = back9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0)
-                      return (
-                        <>
-                          <table className="w-full mb-2 text-xs">
-                            <thead>
-                              <tr className="text-text-muted">
-                                <th className="p-1 text-left bg-dark-secondary/60 rounded-tl text-[10px]">Hole</th>
-                                {front9.map(h => <th key={h.hole} className="p-1 text-center bg-dark-secondary/60 w-7 text-[10px]">{h.hole}</th>)}
-                                <th className="p-1 text-center bg-dark-secondary/60 rounded-tr font-bold text-[10px]">Out</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="text-text-secondary">
-                                <td className="p-1 text-left bg-dark-secondary/40 text-[10px]">Par</td>
-                                {front9.map(h => <td key={h.hole} className="p-1 text-center bg-dark-secondary/40 text-[10px]">{h.par}</td>)}
-                                <td className="p-1 text-center bg-dark-secondary/40 font-bold text-[10px]">{front9Par}</td>
-                              </tr>
-                              <tr>
-                                <td className="p-1 text-left text-white font-medium text-[10px]">Score</td>
-                                {front9.map(h => <td key={h.hole} className="p-0.5 text-center"><ScoreCell score={h.score} par={h.par} /></td>)}
-                                <td className="p-1 text-center font-bold text-white text-[11px]">
-                                  {front9.some(h => h.score != null) ? front9Score : '-'}
+                {(() => {
+                  const roundScore = player.rounds?.[`r${expandedRound}`]
+                  const isCurrent = expandedRound === player.currentRound
+                  const isInProgress = isCurrent && !roundScore
+                  const holeData = player.holeScores?.[expandedRound]
+
+                  // Course par layout — use real data when available, default par-71
+                  const defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]
+                  const holes = holeData || defaultPars.map((par, i) => ({ hole: i + 1, par, score: null }))
+                  const front9 = holes.slice(0, 9)
+                  const back9 = holes.slice(9, 18)
+                  const front9Par = front9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1]), 0)
+                  const back9Par = back9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1 + 9]), 0)
+                  const hasScores = holeData && holeData.some(h => h.score != null)
+                  const front9Score = hasScores ? front9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0) : null
+                  const back9Score = hasScores ? back9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0) : null
+
+                  return (
+                    <>
+                      {/* Round label + status */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-white">Round {expandedRound}</span>
+                          {isInProgress && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 font-medium">
+                              {player.thru > 0 ? `Thru ${player.thru}` : 'Not started'}
+                            </span>
+                          )}
+                          {roundScore && !isCurrent && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/80 font-medium">
+                              Complete
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isInProgress && player.thru > 0 && (
+                            <span className={`text-sm font-bold ${getScoreColor(player.today)}`}>{formatScore(player.today)}</span>
+                          )}
+                          {roundScore && (
+                            <span className={`text-sm font-bold ${roundScore < front9Par + back9Par ? 'text-emerald-400' : roundScore > front9Par + back9Par ? 'text-red-400' : 'text-white'}`}>
+                              {roundScore} ({roundScore - (front9Par + back9Par) > 0 ? '+' : ''}{roundScore - (front9Par + back9Par)})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Front 9 scorecard */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full mb-1.5 text-xs border-collapse">
+                          <thead>
+                            <tr>
+                              <th className="p-1.5 text-left bg-dark-secondary/70 text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
+                              {front9.map((h, i) => (
+                                <th key={i} className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-medium min-w-[28px]">{i + 1}</th>
+                              ))}
+                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px] rounded-tr">Out</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="p-1.5 text-left bg-dark-secondary/40 text-text-secondary text-[10px]">Par</td>
+                              {front9.map((h, i) => (
+                                <td key={i} className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px]">{h.par || defaultPars[i]}</td>
+                              ))}
+                              <td className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px] font-bold">{front9Par}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-1.5 text-left text-white text-[10px] font-medium">Score</td>
+                              {front9.map((h, i) => (
+                                <td key={i} className="p-0.5 text-center">
+                                  <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
                                 </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr className="text-text-muted">
-                                <th className="p-1 text-left bg-dark-secondary/60 rounded-tl text-[10px]">Hole</th>
-                                {back9.map(h => <th key={h.hole} className="p-1 text-center bg-dark-secondary/60 w-7 text-[10px]">{h.hole}</th>)}
-                                <th className="p-1 text-center bg-dark-secondary/60 font-bold text-[10px]">In</th>
-                                <th className="p-1 text-center bg-dark-secondary/60 rounded-tr font-bold text-[10px]">Tot</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr className="text-text-secondary">
-                                <td className="p-1 text-left bg-dark-secondary/40 text-[10px]">Par</td>
-                                {back9.map(h => <td key={h.hole} className="p-1 text-center bg-dark-secondary/40 text-[10px]">{h.par}</td>)}
-                                <td className="p-1 text-center bg-dark-secondary/40 font-bold text-[10px]">{back9Par}</td>
-                                <td className="p-1 text-center bg-dark-secondary/40 font-bold text-[10px]">{front9Par + back9Par}</td>
-                              </tr>
-                              <tr>
-                                <td className="p-1 text-left text-white font-medium text-[10px]">Score</td>
-                                {back9.map(h => <td key={h.hole} className="p-0.5 text-center"><ScoreCell score={h.score} par={h.par} /></td>)}
-                                <td className="p-1 text-center font-bold text-white text-[11px]">
-                                  {back9.some(h => h.score != null) ? back9Score : '-'}
+                              ))}
+                              <td className="p-1.5 text-center font-bold text-white text-[11px]">
+                                {front9Score != null ? front9Score : '–'}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+
+                        {/* Back 9 scorecard */}
+                        <table className="w-full text-xs border-collapse">
+                          <thead>
+                            <tr>
+                              <th className="p-1.5 text-left bg-dark-secondary/70 text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
+                              {back9.map((h, i) => (
+                                <th key={i} className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-medium min-w-[28px]">{i + 10}</th>
+                              ))}
+                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px]">In</th>
+                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px] rounded-tr">Tot</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="p-1.5 text-left bg-dark-secondary/40 text-text-secondary text-[10px]">Par</td>
+                              {back9.map((h, i) => (
+                                <td key={i} className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px]">{h.par || defaultPars[i + 9]}</td>
+                              ))}
+                              <td className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px] font-bold">{back9Par}</td>
+                              <td className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px] font-bold">{front9Par + back9Par}</td>
+                            </tr>
+                            <tr>
+                              <td className="p-1.5 text-left text-white text-[10px] font-medium">Score</td>
+                              {back9.map((h, i) => (
+                                <td key={i} className="p-0.5 text-center">
+                                  <ScoreCell score={h.score} par={h.par || defaultPars[i + 9]} />
                                 </td>
-                                <td className="p-1 text-center font-bold text-white text-[11px]">
-                                  {(front9.some(h => h.score != null) || back9.some(h => h.score != null))
-                                    ? front9Score + back9Score : '-'}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </>
-                      )
-                    })()}
-                  </div>
-                ) : (
-                  /* Round summary when no hole-by-hole data */
-                  <div className="rounded-lg bg-dark-secondary/50 p-3">
-                    {(() => {
-                      const roundScore = player.rounds?.[`r${expandedRound}`]
-                      const isCurrent = expandedRound === player.currentRound
-                      const isInProgress = isCurrent && !roundScore
-                      return (
-                        <>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-white">Round {expandedRound}</span>
-                              {isInProgress && (
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 font-medium">
-                                  In Progress
-                                </span>
-                              )}
-                              {roundScore && !isCurrent && (
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/80 font-medium">
-                                  Complete
-                                </span>
-                              )}
-                            </div>
-                            {roundScore ? (
-                              <span className="text-lg font-bold text-white">{roundScore}</span>
-                            ) : isInProgress ? (
-                              <div className="text-right">
-                                <span className={`text-lg font-bold ${getScoreColor(player.today)}`}>
-                                  {player.thru > 0 ? formatScore(player.today) : '–'}
-                                </span>
-                                <span className="text-xs text-text-muted ml-2">
-                                  {player.thru > 0 ? `thru ${player.thru}` : 'Not started'}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-lg font-bold text-text-muted">–</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-text-muted mt-1.5">
-                            {isInProgress
-                              ? 'Hole-by-hole scoring updates coming soon'
-                              : roundScore
-                                ? 'Hole-by-hole detail available with premium data'
-                                : 'Round has not started yet'}
-                          </p>
-                        </>
-                      )
-                    })()}
-                  </div>
-                )}
+                              ))}
+                              <td className="p-1.5 text-center font-bold text-white text-[11px]">
+                                {back9Score != null ? back9Score : '–'}
+                              </td>
+                              <td className="p-1.5 text-center font-bold text-white text-[11px]">
+                                {roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : '–')}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Legend */}
+                      {hasScores && (
+                        <div className="flex items-center gap-3 mt-2 text-[9px] text-text-muted">
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-yellow-400" /> Eagle</div>
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-emerald-400" /> Birdie</div>
+                          <div className="flex items-center gap-1"><span className="text-text-secondary text-[10px]">—</span> Par</div>
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-red-400" /> Bogey</div>
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-red-500" /> Dbl+</div>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
               </div>
             )}
 
