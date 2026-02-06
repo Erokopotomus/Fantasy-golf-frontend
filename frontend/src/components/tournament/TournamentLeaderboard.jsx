@@ -402,7 +402,8 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                               {front9.map((h, i) => (
                                 <th key={i} className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-medium min-w-[28px]">{i + 1}</th>
                               ))}
-                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px] rounded-tr">Out</th>
+                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px]">Out</th>
+                              <th className="p-1.5 bg-dark-secondary/70 min-w-[32px] rounded-tr"></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -412,6 +413,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                                 <td key={i} className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px]">{h.par || defaultPars[i]}</td>
                               ))}
                               <td className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px] font-bold">{front9Par}</td>
+                              <td className="p-1.5 bg-dark-secondary/30"></td>
                             </tr>
                             <tr className="border-t-2 border-emerald-500/30">
                               <td className="p-1.5 text-left bg-dark-secondary/60 text-emerald-400 text-[10px] font-bold">Score</td>
@@ -423,6 +425,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                               <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-white text-[11px]">
                                 {front9Score != null ? front9Score : '–'}
                               </td>
+                              <td className="p-1.5 bg-dark-secondary/60"></td>
                             </tr>
                           </tbody>
                         </table>
