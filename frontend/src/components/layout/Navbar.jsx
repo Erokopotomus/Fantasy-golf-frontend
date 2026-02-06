@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import useNotificationInbox from '../../hooks/useNotificationInbox'
 import NotificationDropdown from '../notifications/NotificationDropdown'
+import ClutchLogo from '../common/ClutchLogo'
 import Button from '../common/Button'
 import SearchButton from '../search/SearchButton'
 
@@ -38,9 +39,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center shadow-button">
-              <span className="text-white font-black text-lg">C</span>
-            </div>
+            <ClutchLogo size={32} className="shadow-button rounded-lg" />
             <span className="text-xl font-bold text-white">Clutch</span>
           </Link>
 

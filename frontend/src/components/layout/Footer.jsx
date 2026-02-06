@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import ClutchLogo from '../common/ClutchLogo'
 
 const Footer = () => {
   return (
@@ -8,9 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-accent-green rounded-lg flex items-center justify-center">
-                <span className="text-white font-black text-lg">C</span>
-              </div>
+              <ClutchLogo size={32} className="rounded-lg" />
               <span className="text-xl font-bold text-white">Clutch</span>
             </Link>
             <p className="text-text-secondary text-sm">
