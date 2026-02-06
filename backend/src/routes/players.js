@@ -42,13 +42,34 @@ router.get('/', optionalAuth, async (req, res, next) => {
         where,
         orderBy: { [sortBy]: sortOrder },
         take: parseInt(limit),
-        skip: parseInt(offset)
+        skip: parseInt(offset),
+        include: {
+          performances: {
+            orderBy: { tournament: { startDate: 'desc' } },
+            take: 5,
+            select: { position: true, positionTied: true, status: true },
+          },
+        },
       }),
       prisma.player.count({ where })
     ])
 
+    // Add recentForm array to each player
+    const playersWithForm = players.map(p => {
+      const recentForm = (p.performances || [])
+        .map(perf => {
+          if (perf.status === 'CUT') return 'CUT'
+          if (perf.status === 'WD') return 'WD'
+          if (perf.position == null) return null
+          return perf.positionTied ? `T${perf.position}` : String(perf.position)
+        })
+        .filter(Boolean)
+      const { performances, ...rest } = p
+      return { ...rest, recentForm }
+    })
+
     res.json({
-      players,
+      players: playersWithForm,
       pagination: {
         total,
         limit: parseInt(limit),

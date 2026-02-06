@@ -53,7 +53,10 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         {/* Player Avatar/Flag */}
         <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-full bg-dark-primary flex items-center justify-center text-4xl border-2 border-dark-border">
+          {player.headshotUrl ? (
+            <img src={player.headshotUrl} alt="" className="w-20 h-20 rounded-full object-cover bg-dark-primary border-2 border-dark-border" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
+          ) : null}
+          <div className={`w-20 h-20 rounded-full bg-dark-primary flex items-center justify-center text-4xl border-2 border-dark-border ${player.headshotUrl ? 'hidden' : ''}`}>
             {player.countryFlag}
           </div>
           <div>

@@ -38,7 +38,8 @@ export const usePlayers = (initialParams = {}) => {
           sgPutting: p.sgPutting,
           sgTeeToGreen: p.sgTeeToGreen,
         },
-        countryFlag: getCountryFlag(p.country),
+        countryFlag: p.countryFlag || getCountryFlag(p.country),
+        headshotUrl: p.headshotUrl || null,
       }))
       setPlayers(transformedPlayers)
     } catch (err) {
@@ -49,16 +50,34 @@ export const usePlayers = (initialParams = {}) => {
     }
   }, [])
 
-  // Helper to get country flag emoji
+  // Helper to get country flag emoji (supports both full names and 3-letter codes)
   const getCountryFlag = (country) => {
+    if (!country) return '🏳️'
     const flags = {
-      'USA': '🇺🇸', 'NIR': '🇬🇧', 'ESP': '🇪🇸', 'JPN': '🇯🇵', 'NOR': '🇳🇴',
-      'KOR': '🇰🇷', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'IRL': '🇮🇪', 'AUS': '🇦🇺', 'RSA': '🇿🇦',
-      'SWE': '🇸🇪', 'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'CAN': '🇨🇦', 'FRA': '🇫🇷', 'GER': '🇩🇪',
-      'CHI': '🇨🇱', 'ARG': '🇦🇷', 'MEX': '🇲🇽', 'COL': '🇨🇴', 'BEL': '🇧🇪',
-      'ITA': '🇮🇹', 'AUT': '🇦🇹', 'DEN': '🇩🇰', 'FIN': '🇫🇮', 'NED': '🇳🇱',
-      'THA': '🇹🇭', 'CHN': '🇨🇳', 'TPE': '🇹🇼', 'IND': '🇮🇳', 'PHI': '🇵🇭',
-      'ZIM': '🇿🇼', 'VEN': '🇻🇪', 'PAR': '🇵🇾', 'PUR': '🇵🇷',
+      // Full country names (as stored by DataGolf sync)
+      'United States': '🇺🇸', 'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+      'Northern Ireland': '🇬🇧', 'Wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿', 'Ireland': '🇮🇪',
+      'Australia': '🇦🇺', 'Canada': '🇨🇦', 'South Africa': '🇿🇦',
+      'Japan': '🇯🇵', 'Korea': '🇰🇷', 'Korea - Republic of': '🇰🇷', 'South Korea': '🇰🇷',
+      'Spain': '🇪🇸', 'France': '🇫🇷', 'Germany': '🇩🇪', 'Italy': '🇮🇹',
+      'Sweden': '🇸🇪', 'Norway': '🇳🇴', 'Denmark': '🇩🇰', 'Finland': '🇫🇮',
+      'Belgium': '🇧🇪', 'Netherlands': '🇳🇱', 'Austria': '🇦🇹',
+      'Argentina': '🇦🇷', 'Mexico': '🇲🇽', 'Colombia': '🇨🇴', 'Chile': '🇨🇱',
+      'Venezuela': '🇻🇪', 'Paraguay': '🇵🇾', 'Puerto Rico': '🇵🇷',
+      'Thailand': '🇹🇭', 'China': '🇨🇳', 'Chinese Taipei': '🇹🇼', 'Taiwan': '🇹🇼',
+      'India': '🇮🇳', 'Philippines': '🇵🇭', 'Zimbabwe': '🇿🇼',
+      'New Zealand': '🇳🇿', 'Fiji': '🇫🇯', 'Singapore': '🇸🇬', 'Malaysia': '🇲🇾',
+      'Brazil': '🇧🇷', 'Portugal': '🇵🇹', 'Switzerland': '🇨🇭', 'Poland': '🇵🇱',
+      // 3-letter codes (fallback)
+      'USA': '🇺🇸', 'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'NIR': '🇬🇧',
+      'IRL': '🇮🇪', 'AUS': '🇦🇺', 'CAN': '🇨🇦', 'RSA': '🇿🇦',
+      'JPN': '🇯🇵', 'KOR': '🇰🇷', 'ESP': '🇪🇸', 'FRA': '🇫🇷',
+      'GER': '🇩🇪', 'ITA': '🇮🇹', 'SWE': '🇸🇪', 'NOR': '🇳🇴',
+      'DEN': '🇩🇰', 'FIN': '🇫🇮', 'BEL': '🇧🇪', 'NED': '🇳🇱',
+      'AUT': '🇦🇹', 'ARG': '🇦🇷', 'MEX': '🇲🇽', 'COL': '🇨🇴',
+      'CHI': '🇨🇱', 'VEN': '🇻🇪', 'PAR': '🇵🇾', 'PUR': '🇵🇷',
+      'THA': '🇹🇭', 'CHN': '🇨🇳', 'TPE': '🇹🇼', 'IND': '🇮🇳',
+      'PHI': '🇵🇭', 'ZIM': '🇿🇼',
     }
     return flags[country] || '🏳️'
   }

@@ -77,7 +77,10 @@ const PlayerTable = ({
                     className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity"
                     onClick={() => onViewPlayer?.(player)}
                   >
-                    <span className="text-xl">{player.countryFlag}</span>
+                    {player.headshotUrl ? (
+                      <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline' }} />
+                    ) : null}
+                    <span className={`text-xl ${player.headshotUrl ? 'hidden' : ''}`}>{player.countryFlag}</span>
                     <div>
                       <p className="text-white font-medium hover:text-accent-green transition-colors">{player.name}</p>
                       <p className="text-text-muted text-xs">{player.country}</p>
@@ -108,18 +111,25 @@ const PlayerTable = ({
                 </td>
                 <td className="p-3 text-right">
                   <div className="flex gap-1 justify-end">
-                    {player.recentForm?.slice(0, 3).map((result, i) => (
-                      <span
-                        key={i}
-                        className={`px-1.5 py-0.5 rounded text-xs ${
-                          result === '1st' ? 'bg-yellow-500/20 text-yellow-400' :
-                          result.startsWith('T') && parseInt(result.slice(1)) <= 10 ? 'bg-accent-green/20 text-accent-green' :
-                          'bg-dark-tertiary text-text-muted'
-                        }`}
-                      >
-                        {result}
-                      </span>
-                    ))}
+                    {player.recentForm?.slice(0, 5).map((result, i) => {
+                      const pos = parseInt(result.replace('T', ''))
+                      return (
+                        <span
+                          key={i}
+                          className={`px-1.5 py-0.5 rounded text-xs ${
+                            result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
+                            result === 'CUT' ? 'bg-red-500/15 text-red-400' :
+                            result === 'WD' ? 'bg-dark-tertiary text-text-muted' :
+                            pos <= 5 ? 'bg-accent-green/20 text-accent-green' :
+                            pos <= 10 ? 'bg-emerald-500/10 text-emerald-400/70' :
+                            pos <= 25 ? 'bg-dark-tertiary text-text-secondary' :
+                            'bg-dark-tertiary text-text-muted'
+                          }`}
+                        >
+                          {result === 'CUT' || result === 'WD' ? result : result === '1' ? '1st' : result}
+                        </span>
+                      )
+                    })}
                   </div>
                 </td>
                 <td className="p-3">

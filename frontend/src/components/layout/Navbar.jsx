@@ -93,9 +93,6 @@ const Navbar = () => {
                     {isLiveTournament ? 'Live' : 'Tournament'}
                   </Link>
                 )}
-                <Link to="/players" className={navLinkStyles('/players')}>
-                  Players
-                </Link>
                 <Link to="/news" className={navLinkStyles('/news')}>
                   News
                 </Link>
@@ -304,13 +301,6 @@ const Navbar = () => {
                     {isLiveTournament ? 'Live Tournament' : 'Tournament'}
                   </Link>
                 )}
-                <Link
-                  to="/players"
-                  className={mobileNavLinkStyles('/players')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Players
-                </Link>
                 <Link
                   to="/news"
                   className={mobileNavLinkStyles('/news')}
