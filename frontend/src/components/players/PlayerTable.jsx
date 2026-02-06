@@ -83,7 +83,18 @@ const PlayerTable = ({
                     ) : null}
                     <span className={`text-xl ${player.headshotUrl ? 'hidden' : ''}`}>{player.countryFlag}</span>
                     <div>
-                      <p className="text-white font-medium hover:text-accent-green transition-colors">{player.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-white font-medium hover:text-accent-green transition-colors">{player.name}</p>
+                        {player.primaryTour && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                            player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
+                            player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
+                            'bg-purple-500/20 text-purple-400'
+                          }`}>
+                            {player.primaryTour}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-text-muted text-xs">{player.country}</p>
                     </div>
                     {player.owned && (

@@ -6,13 +6,22 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
     { value: '1-10', label: 'Top 10' },
     { value: '1-25', label: 'Top 25' },
     { value: '1-50', label: 'Top 50' },
-    { value: '1-100', label: 'All Ranks' },
+    { value: '1-100', label: 'Top 100' },
+    { value: '1-250', label: 'Top 250' },
+    { value: '1-9999', label: 'All Ranks' },
   ]
 
   const availabilityOptions = [
     { value: 'all', label: 'All Players' },
     { value: 'available', label: 'Available Only' },
     { value: 'owned', label: 'My Players' },
+  ]
+
+  const tourOptions = [
+    { value: '', label: 'All Tours' },
+    { value: 'PGA', label: 'PGA Tour' },
+    { value: 'LIV', label: 'LIV Golf' },
+    { value: 'DP', label: 'DP World' },
   ]
 
   const sgOptions = [
@@ -25,14 +34,21 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
 
   const countryOptions = [
     { value: '', label: 'All Countries' },
-    { value: 'USA', label: 'USA' },
-    { value: 'ENG', label: 'England' },
-    { value: 'AUS', label: 'Australia' },
-    { value: 'CAN', label: 'Canada' },
-    { value: 'KOR', label: 'South Korea' },
-    { value: 'JPN', label: 'Japan' },
-    { value: 'ESP', label: 'Spain' },
-    { value: 'NIR', label: 'Northern Ireland' },
+    { value: 'United States', label: 'USA' },
+    { value: 'England', label: 'England' },
+    { value: 'South Africa', label: 'South Africa' },
+    { value: 'Japan', label: 'Japan' },
+    { value: 'Australia', label: 'Australia' },
+    { value: 'Korea - Republic of', label: 'South Korea' },
+    { value: 'Sweden', label: 'Sweden' },
+    { value: 'Scotland', label: 'Scotland' },
+    { value: 'Canada', label: 'Canada' },
+    { value: 'France', label: 'France' },
+    { value: 'Spain', label: 'Spain' },
+    { value: 'Germany', label: 'Germany' },
+    { value: 'Thailand', label: 'Thailand' },
+    { value: 'Denmark', label: 'Denmark' },
+    { value: 'Italy', label: 'Italy' },
   ]
 
   const handleRankChange = (e) => {
@@ -44,7 +60,9 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
     if (params.minRank === 1 && params.maxRank === 10) return '1-10'
     if (params.minRank === 1 && params.maxRank === 25) return '1-25'
     if (params.minRank === 1 && params.maxRank === 50) return '1-50'
-    return '1-100'
+    if (params.minRank === 1 && params.maxRank === 100) return '1-100'
+    if (params.minRank === 1 && params.maxRank === 250) return '1-250'
+    return '1-9999'
   }
 
   return (
@@ -64,6 +82,15 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
           value={params.availability}
           onChange={(e) => onUpdate({ availability: e.target.value })}
           options={availabilityOptions}
+        />
+      </div>
+
+      <div className="w-36">
+        <Select
+          label="Tour"
+          value={params.tour || ''}
+          onChange={(e) => onUpdate({ tour: e.target.value })}
+          options={tourOptions}
         />
       </div>
 

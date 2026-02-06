@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -86,7 +86,10 @@ const MockDraftRoom = () => {
   const [isComplete, setIsComplete] = useState(false)
   const [recentPick, setRecentPick] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('available') // available, board, myteam
+  const [activeTab, setActiveTab] = useState('board') // board, players, queue, myteam
+  const [bottomTab, setBottomTab] = useState('players') // players, queue, myteam, picks
+  const [sortBy, setSortBy] = useState('rank') // rank, name, sg
+  const [sortDir, setSortDir] = useState('asc')
   const aiPickingRef = useRef(false)
   const timerRef = useRef(null)
   const boardRef = useRef(null)
@@ -113,10 +116,23 @@ const MockDraftRoom = () => {
   const currentTeam = config?.teams?.[pickInfo?.orderIndex]
   const isUserTurn = currentTeam?.isUser && isStarted && !isComplete
 
-  // Filter players by search
-  const filteredPlayers = searchQuery
-    ? availablePlayers.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : availablePlayers
+  // Sort and filter players
+  const filteredPlayers = useMemo(() => {
+    let result = availablePlayers
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(p => p.name.toLowerCase().includes(q) || p.country.toLowerCase().includes(q))
+    }
+    result.sort((a, b) => {
+      let aVal, bVal
+      if (sortBy === 'name') { aVal = a.name; bVal = b.name }
+      else if (sortBy === 'sg') { aVal = a.sg; bVal = b.sg }
+      else { aVal = a.rank; bVal = b.rank }
+      if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
+      return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+    })
+    return result
+  }, [availablePlayers, searchQuery, sortBy, sortDir])
 
   // Stable ref for makePick to avoid stale closures in timers
   const makePickRef = useRef(null)
@@ -126,7 +142,6 @@ const MockDraftRoom = () => {
 
     clearInterval(timerRef.current)
 
-    // Compute pick info from current picks length at call time
     setPicks(prev => {
       const pickNumber = prev.length
       const info = getPickInfo(pickNumber, config.teamCount)
@@ -173,7 +188,6 @@ const MockDraftRoom = () => {
       setTimer(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current)
-          // Auto-pick: try queue first, then best available
           const draftedSet = new Set(picksRef.current.map(p => p.playerId))
           const queuePick = queueRef.current.find(q => !draftedSet.has(q.id))
           if (queuePick) {
@@ -207,7 +221,6 @@ const MockDraftRoom = () => {
         return
       }
 
-      // AI picks from top 4 with some randomness
       const topN = Math.min(4, available.length)
       const randomIndex = Math.floor(Math.random() * topN)
       const selectedPlayer = available[randomIndex]
@@ -235,16 +248,35 @@ const MockDraftRoom = () => {
     setQueue(prev => prev.filter(q => q.id !== playerId))
   }
 
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(field)
+      setSortDir(field === 'sg' ? 'desc' : 'asc')
+    }
+  }
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Get picks for a specific team
   const getTeamPicks = (teamId) => picks.filter(p => p.teamId === teamId)
   const userTeam = config?.teams?.find(t => t.isUser)
   const userPicks = userTeam ? getTeamPicks(userTeam.id) : []
+
+  // Auto-scroll board to current pick
+  useEffect(() => {
+    if (boardRef.current && isStarted && pickInfo) {
+      const rows = boardRef.current.querySelectorAll('[data-round]')
+      const currentRow = rows[pickInfo.round - 1]
+      if (currentRow) {
+        currentRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    }
+  }, [currentPickNumber, isStarted])
 
   if (!config) {
     return (
@@ -274,7 +306,7 @@ const MockDraftRoom = () => {
             <Card className="mb-6 border-accent-green/30">
               <h2 className="text-lg font-semibold text-white mb-4">Your Team</h2>
               <div className="space-y-2">
-                {userPicks.map((pick, i) => (
+                {userPicks.map((pick) => (
                   <div key={pick.id} className="flex items-center justify-between p-3 bg-dark-primary rounded-lg">
                     <div className="flex items-center gap-3">
                       <span className="text-text-muted text-sm w-6">R{pick.round}</span>
@@ -330,49 +362,76 @@ const MockDraftRoom = () => {
     )
   }
 
+  const SortIcon = ({ field }) => {
+    if (sortBy !== field) return null
+    return (
+      <svg className="w-3 h-3 inline ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d={sortDir === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'} />
+      </svg>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-dark-primary flex flex-col">
-      {/* Draft Header Bar */}
-      <div className="bg-dark-secondary border-b border-dark-border sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+    <div className="h-screen bg-dark-primary flex flex-col overflow-hidden">
+      {/* ===== HEADER BAR ===== */}
+      <div className="bg-dark-secondary border-b border-dark-border flex-shrink-0 z-30">
+        <div className="px-3 sm:px-4 py-2">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Back + Title */}
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => {
-                  if (confirm('Leave mock draft? Progress will be lost.')) {
-                    navigate('/mock-draft')
-                  }
+                  if (confirm('Leave mock draft? Progress will be lost.')) navigate('/mock-draft')
                 }}
-                className="text-text-secondary hover:text-white transition-colors"
+                className="text-text-secondary hover:text-white transition-colors flex-shrink-0"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div>
-                <h1 className="text-white font-bold text-lg">Mock Draft</h1>
-                <p className="text-text-muted text-xs">
-                  {config.teamCount} teams · {config.rosterSize} rounds · {config.draftType}
+              <div className="min-w-0">
+                <h1 className="text-white font-bold text-sm sm:text-base leading-tight">Mock Draft</h1>
+                <p className="text-text-muted text-xs hidden sm:block">
+                  {config.teamCount} teams · {config.rosterSize} rds · Snake
                 </p>
               </div>
             </div>
 
-            {/* Timer / Status */}
-            <div className="flex items-center gap-4">
+            {/* Center: Current Pick Status */}
+            {isStarted && currentTeam && (
+              <div className={`hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold ${
+                isUserTurn
+                  ? 'bg-accent-green/20 text-accent-green border border-accent-green/40'
+                  : 'bg-dark-tertiary text-text-secondary'
+              }`}>
+                {isUserTurn && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                  </span>
+                )}
+                {isUserTurn ? 'YOUR PICK' : `${currentTeam.name} picking...`}
+              </div>
+            )}
+
+            {/* Right: Pick counter + Timer + Start */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               {!isStarted ? (
                 <Button onClick={handleStartDraft} size="sm">
                   Start Draft
                 </Button>
               ) : (
                 <>
-                  <div className="text-center">
-                    <p className="text-text-muted text-xs">Round {pickInfo?.round || 1}</p>
-                    <p className="text-white text-sm font-medium">
-                      Pick {currentPickNumber + 1} of {totalPicks}
-                    </p>
+                  <div className="text-right hidden sm:block">
+                    <p className="text-text-muted text-[10px] leading-tight">ROUND {pickInfo?.round || 1}</p>
+                    <p className="text-white text-xs font-semibold">{currentPickNumber + 1}/{totalPicks}</p>
+                  </div>
+                  <div className="sm:hidden text-white text-xs font-semibold">
+                    R{pickInfo?.round} · {currentPickNumber + 1}/{totalPicks}
                   </div>
                   {isUserTurn && (
-                    <div className={`px-4 py-2 rounded-lg font-bold text-lg ${
+                    <div className={`px-3 py-1.5 rounded-lg font-bold text-base tabular-nums ${
                       timer <= 10 ? 'bg-red-500/20 text-red-400' :
                       timer <= 30 ? 'bg-yellow-500/20 text-yellow-400' :
                       'bg-accent-green/20 text-accent-green'
@@ -385,24 +444,22 @@ const MockDraftRoom = () => {
             </div>
           </div>
 
-          {/* Current Pick Banner */}
+          {/* Mobile: Current pick banner */}
           {isStarted && currentTeam && (
-            <div className={`mt-2 px-4 py-2 rounded-lg text-center text-sm font-medium ${
+            <div className={`sm:hidden mt-1.5 px-3 py-1.5 rounded-lg text-center text-xs font-semibold ${
               isUserTurn
-                ? 'bg-accent-green/20 text-accent-green border border-accent-green/30'
+                ? 'bg-accent-green/20 text-accent-green'
                 : 'bg-dark-tertiary text-text-secondary'
             }`}>
               {isUserTurn ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green"></span>
+                <span className="flex items-center justify-center gap-1.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent-green" />
                   </span>
-                  YOUR PICK — Select a player below
+                  YOUR PICK
                 </span>
-              ) : (
-                `${currentTeam.name} is picking...`
-              )}
+              ) : `${currentTeam.name} picking...`}
             </div>
           )}
         </div>
@@ -410,272 +467,385 @@ const MockDraftRoom = () => {
 
       {/* Pick Announcement Toast */}
       {recentPick && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
-          <div className={`px-6 py-3 rounded-lg shadow-lg ${
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+          <div className={`px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 ${
             recentPick.teamId === userTeam?.id
               ? 'bg-accent-green text-white'
               : 'bg-dark-secondary border border-dark-border text-white'
           }`}>
-            <p className="font-semibold">
-              {recentPick.playerFlag} {recentPick.playerName}
-            </p>
-            <p className="text-sm opacity-80">
-              Pick #{recentPick.pickNumber} · {recentPick.teamName}
-            </p>
+            <span className="text-base">{recentPick.playerFlag}</span>
+            <div>
+              <p className="font-semibold text-sm">{recentPick.playerName}</p>
+              <p className="text-xs opacity-80">#{recentPick.pickNumber} · {recentPick.teamName}</p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Mobile Tab Bar */}
-      <div className="lg:hidden flex border-b border-dark-border bg-dark-secondary">
-        {['available', 'board', 'myteam'].map(tab => (
+      {/* ===== MOBILE TAB BAR ===== */}
+      <div className="lg:hidden flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
+        {[
+          { key: 'board', label: 'Board' },
+          { key: 'players', label: 'Players' },
+          { key: 'queue', label: `Queue${queue.length ? ` (${queue.length})` : ''}` },
+          { key: 'myteam', label: `Team (${userPicks.length})` },
+        ].map(tab => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${
-              activeTab === tab
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 py-2.5 text-xs font-medium text-center transition-colors ${
+              activeTab === tab.key
                 ? 'text-accent-green border-b-2 border-accent-green'
                 : 'text-text-secondary'
             }`}
           >
-            {tab === 'available' ? 'Players' : tab === 'board' ? 'Board' : 'My Team'}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+      {/* ===== MAIN CONTENT ===== */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
 
-          {/* Player Pool */}
-          <div className={`lg:col-span-5 ${activeTab !== 'available' ? 'hidden lg:block' : ''}`}>
-            <Card className="h-full flex flex-col">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white font-semibold">Available Players</h2>
-                <span className="text-text-muted text-xs">{availablePlayers.length} left</span>
+        {/* ===== LEFT: DRAFT BOARD (desktop: left 55%, mobile: full when active) ===== */}
+        <div className={`lg:w-[55%] lg:border-r lg:border-dark-border flex flex-col min-h-0 ${
+          activeTab !== 'board' ? 'hidden lg:flex' : 'flex'
+        }`}>
+          {/* Board Column Headers */}
+          <div className="flex-shrink-0 bg-dark-secondary border-b border-dark-border" ref={boardRef}>
+            <div className="overflow-x-auto">
+              <div className="grid gap-px min-w-[500px]"
+                style={{ gridTemplateColumns: `44px repeat(${config.teamCount}, 1fr)` }}>
+                <div className="bg-dark-tertiary px-1 py-2 text-text-muted text-[10px] font-semibold text-center">RD</div>
+                {config.teams.map(team => (
+                  <div
+                    key={team.id}
+                    className={`px-1 py-2 text-[10px] font-semibold text-center truncate ${
+                      team.isUser
+                        ? 'bg-accent-green/20 text-accent-green'
+                        : pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
+                          ? 'bg-yellow-500/15 text-yellow-400'
+                          : 'bg-dark-tertiary text-text-muted'
+                    }`}
+                  >
+                    {team.name.length > 10 ? team.name.slice(0, 9) + '…' : team.name}
+                    {team.isUser && <span className="ml-1 text-[8px] opacity-70">YOU</span>}
+                  </div>
+                ))}
               </div>
+            </div>
+          </div>
 
-              {/* Search */}
-              <div className="relative mb-3">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search players..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
-                />
-              </div>
+          {/* Board Rows */}
+          <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
+            <div className="min-w-[500px]">
+              {Array.from({ length: config.rosterSize }, (_, roundIdx) => {
+                const round = roundIdx + 1
+                const isReverse = round % 2 === 0
+                const isCurrentRound = pickInfo?.round === round
 
-              {/* Player List */}
-              <div className="flex-1 overflow-y-auto space-y-1 max-h-[500px] lg:max-h-[calc(100vh-280px)]">
-                {filteredPlayers.map(player => {
-                  const inQueue = queue.find(q => q.id === player.id)
-                  return (
-                    <div
-                      key={player.id}
-                      className={`flex items-center justify-between p-2.5 rounded-lg transition-colors ${
-                        isUserTurn ? 'hover:bg-accent-green/10 cursor-pointer' : 'opacity-70'
-                      } ${inQueue ? 'bg-accent-blue/10 border border-accent-blue/30' : 'bg-dark-primary'}`}
-                      onClick={() => isUserTurn && handleMakePick(player)}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-text-muted text-xs w-6 text-right flex-shrink-0">{player.rank}</span>
-                        <span className="text-base flex-shrink-0">{player.flag}</span>
-                        <div className="min-w-0">
-                          <p className="text-white text-sm font-medium truncate">{player.name}</p>
-                          <p className="text-text-muted text-xs">SG: {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}</p>
+                return (
+                  <div
+                    key={round}
+                    data-round={round}
+                    className={`grid gap-px ${isCurrentRound ? 'bg-dark-border' : ''}`}
+                    style={{ gridTemplateColumns: `44px repeat(${config.teamCount}, 1fr)` }}
+                  >
+                    <div className={`px-1 py-1 text-[10px] text-center flex items-center justify-center font-semibold ${
+                      isCurrentRound ? 'text-accent-green bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
+                    }`}>
+                      {round}
+                    </div>
+                    {config.teams.map((_, teamIdx) => {
+                      const orderIdx = isReverse ? config.teamCount - 1 - teamIdx : teamIdx
+                      const absolutePick = roundIdx * config.teamCount + teamIdx
+                      const pick = picks[absolutePick]
+                      const team = config.teams[orderIdx]
+                      const isCurrent = absolutePick === currentPickNumber && isStarted
+                      const isUserTeamCell = team?.isUser
+
+                      return (
+                        <div
+                          key={teamIdx}
+                          className={`px-1 py-1 min-h-[40px] flex items-center justify-center transition-colors ${
+                            isCurrent
+                              ? 'bg-accent-green/20 ring-1 ring-inset ring-accent-green/60'
+                              : pick
+                                ? isUserTeamCell ? 'bg-accent-green/5' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
+                                : roundIdx % 2 === 0 ? 'bg-dark-primary/40' : 'bg-dark-secondary/20'
+                          }`}
+                        >
+                          {pick ? (
+                            <div className="text-center w-full truncate px-0.5">
+                              <span className="text-xs">{pick.playerFlag}</span>
+                              <p className={`text-[10px] leading-tight truncate ${
+                                isUserTeamCell ? 'text-accent-green font-medium' : 'text-text-secondary'
+                              }`}>
+                                {pick.playerName.split(' ').pop()}
+                              </p>
+                              <p className="text-[9px] text-text-muted">#{pick.playerRank}</p>
+                            </div>
+                          ) : isCurrent ? (
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                            </span>
+                          ) : null}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {isUserTurn && (
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ===== RIGHT: PLAYER POOL + QUEUE/TEAM (desktop: right 45%, mobile: tabs) ===== */}
+        <div className={`lg:w-[45%] flex flex-col min-h-0 ${
+          activeTab === 'board' ? 'hidden lg:flex' : 'flex'
+        }`}>
+
+          {/* Desktop Bottom Tabs */}
+          <div className="hidden lg:flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
+            {[
+              { key: 'players', label: `Players (${availablePlayers.length})` },
+              { key: 'queue', label: `Queue (${queue.length})` },
+              { key: 'myteam', label: `My Team (${userPicks.length}/${config.rosterSize})` },
+              { key: 'picks', label: 'Picks' },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setBottomTab(tab.key)}
+                className={`px-4 py-2 text-xs font-medium transition-colors ${
+                  bottomTab === tab.key
+                    ? 'text-accent-green border-b-2 border-accent-green'
+                    : 'text-text-secondary hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content
+              Mobile: activeTab drives content (board tab is handled by parent hiding this panel)
+              Desktop: activeTab stays 'board', so bottomTab drives content */}
+          <div className="flex-1 overflow-hidden">
+
+            {/* === PLAYERS TAB === */}
+            {(activeTab === 'players' || (activeTab === 'board' && bottomTab === 'players')) && (
+              <div className="h-full flex flex-col">
+                {/* Search Bar */}
+                <div className="flex-shrink-0 p-3 bg-dark-secondary/50">
+                  <div className="relative">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Search players..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Player Table */}
+                <div className="flex-1 overflow-y-auto min-h-0">
+                  {/* Table Header */}
+                  <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
+                    <div className="grid grid-cols-[40px_1fr_70px_60px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                      <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
+                        Rk <SortIcon field="rank" />
+                      </button>
+                      <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
+                        Player <SortIcon field="name" />
+                      </button>
+                      <button onClick={() => handleSort('sg')} className="text-right hover:text-white transition-colors">
+                        SG <SortIcon field="sg" />
+                      </button>
+                      <div />
+                    </div>
+                  </div>
+
+                  {/* Player Rows */}
+                  {filteredPlayers.map(player => {
+                    const inQueue = queue.find(q => q.id === player.id)
+                    return (
+                      <div
+                        key={player.id}
+                        className={`grid grid-cols-[40px_1fr_70px_60px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors ${
+                          isUserTurn ? 'hover:bg-accent-green/10 cursor-pointer' : ''
+                        } ${inQueue ? 'bg-accent-blue/5' : ''}`}
+                        onClick={() => isUserTurn && handleMakePick(player)}
+                      >
+                        <span className="text-text-muted text-xs">{player.rank}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm flex-shrink-0">{player.flag}</span>
+                          <span className="text-white text-sm truncate">{player.name}</span>
+                        </div>
+                        <span className={`text-xs text-right font-medium ${
+                          player.sg >= 1 ? 'text-accent-green' : player.sg > 0 ? 'text-white' : 'text-red-400'
+                        }`}>
+                          {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
+                        </span>
+                        <div className="flex items-center justify-end gap-1">
+                          {isUserTurn && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
+                              className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 transition-colors"
+                            >
+                              Draft
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleMakePick(player)
+                              inQueue ? handleRemoveFromQueue(player.id) : handleAddToQueue(player)
                             }}
-                            className="px-3 py-1.5 bg-accent-green text-white text-xs rounded-md font-medium hover:bg-accent-green/80 transition-colors"
-                          >
-                            Draft
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            inQueue ? handleRemoveFromQueue(player.id) : handleAddToQueue(player)
-                          }}
-                          className={`p-1.5 rounded transition-colors ${
-                            inQueue
-                              ? 'text-accent-blue hover:text-red-400'
-                              : 'text-text-muted hover:text-accent-blue'
-                          }`}
-                          title={inQueue ? 'Remove from queue' : 'Add to queue'}
-                        >
-                          <svg className="w-4 h-4" fill={inQueue ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </Card>
-          </div>
-
-          {/* Draft Board */}
-          <div className={`lg:col-span-4 ${activeTab !== 'board' ? 'hidden lg:block' : ''}`} ref={boardRef}>
-            <Card className="h-full flex flex-col">
-              <h2 className="text-white font-semibold mb-3">Draft Board</h2>
-              <div className="flex-1 overflow-y-auto max-h-[500px] lg:max-h-[calc(100vh-240px)]">
-                {/* Column Headers */}
-                <div className="sticky top-0 bg-dark-secondary z-10">
-                  <div className="grid gap-px" style={{ gridTemplateColumns: `60px repeat(${config.teamCount}, 1fr)` }}>
-                    <div className="bg-dark-tertiary p-1.5 text-text-muted text-xs font-medium text-center">Rd</div>
-                    {config.teams.map(team => (
-                      <div
-                        key={team.id}
-                        className={`p-1.5 text-xs font-medium text-center truncate ${
-                          team.isUser ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-tertiary text-text-muted'
-                        }`}
-                      >
-                        {team.name.length > 8 ? team.name.slice(0, 7) + '…' : team.name}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Rounds */}
-                {Array.from({ length: config.rosterSize }, (_, roundIdx) => {
-                  const round = roundIdx + 1
-                  const isReverse = round % 2 === 0
-
-                  return (
-                    <div key={round} className="grid gap-px" style={{ gridTemplateColumns: `60px repeat(${config.teamCount}, 1fr)` }}>
-                      <div className="bg-dark-primary p-1.5 text-text-muted text-xs text-center flex items-center justify-center">
-                        {round}
-                      </div>
-                      {config.teams.map((_, teamIdx) => {
-                        const orderIdx = isReverse ? config.teamCount - 1 - teamIdx : teamIdx
-                        const absolutePick = roundIdx * config.teamCount + teamIdx
-                        const pick = picks[absolutePick]
-                        const team = config.teams[orderIdx]
-                        const isCurrent = absolutePick === currentPickNumber && isStarted
-
-                        return (
-                          <div
-                            key={teamIdx}
-                            className={`p-1 text-center min-h-[36px] flex items-center justify-center ${
-                              isCurrent ? 'bg-accent-green/20 border border-accent-green/50 rounded' :
-                              pick ? (team?.isUser ? 'bg-accent-green/5' : 'bg-dark-primary') :
-                              'bg-dark-primary/50'
+                            className={`p-1 rounded transition-colors ${
+                              inQueue ? 'text-accent-blue' : 'text-text-muted hover:text-accent-blue'
                             }`}
                           >
-                            {pick ? (
-                              <div className="text-xs truncate px-0.5">
-                                <span>{pick.playerFlag}</span>
-                                <p className="text-text-secondary truncate leading-tight">{pick.playerName.split(' ').pop()}</p>
-                              </div>
-                            ) : isCurrent ? (
-                              <span className="text-accent-green text-xs animate-pulse">●</span>
-                            ) : null}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )
-                })}
-              </div>
-            </Card>
-          </div>
-
-          {/* Right Column - Queue + Pick History */}
-          <div className={`lg:col-span-3 space-y-4 ${activeTab !== 'myteam' ? 'hidden lg:block' : ''}`}>
-            {/* My Queue */}
-            <Card>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white font-semibold text-sm">My Queue</h2>
-                <span className="text-text-muted text-xs">{queue.length}</span>
-              </div>
-              {queue.length === 0 ? (
-                <p className="text-text-muted text-xs text-center py-4">
-                  Bookmark players to add to your queue
-                </p>
-              ) : (
-                <div className="space-y-1 max-h-[180px] overflow-y-auto">
-                  {queue.map((player, i) => (
-                    <div key={player.id} className="flex items-center justify-between p-2 bg-dark-primary rounded-lg">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-text-muted text-xs">{i + 1}</span>
-                        <span className="text-sm">{player.flag}</span>
-                        <span className="text-white text-sm truncate">{player.name}</span>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFromQueue(player.id)}
-                        className="text-text-muted hover:text-red-400 transition-colors flex-shrink-0"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* My Team */}
-            <Card>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-white font-semibold text-sm">My Team</h2>
-                <span className="text-text-muted text-xs">{userPicks.length}/{config.rosterSize}</span>
-              </div>
-              {userPicks.length === 0 ? (
-                <p className="text-text-muted text-xs text-center py-4">
-                  Your picks will appear here
-                </p>
-              ) : (
-                <div className="space-y-1 max-h-[200px] overflow-y-auto">
-                  {userPicks.map(pick => (
-                    <div key={pick.id} className="flex items-center justify-between p-2 bg-dark-primary rounded-lg">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm">{pick.playerFlag}</span>
-                        <div className="min-w-0">
-                          <p className="text-white text-sm font-medium truncate">{pick.playerName}</p>
-                          <p className="text-text-muted text-xs">Rd {pick.round} · #{pick.playerRank}</p>
+                            <svg className="w-3.5 h-3.5" fill={inQueue ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
+                    )
+                  })}
 
-            {/* Recent Picks */}
-            <Card>
-              <h2 className="text-white font-semibold text-sm mb-3">Recent Picks</h2>
-              <div className="space-y-1 max-h-[200px] overflow-y-auto">
-                {picks.slice(-8).reverse().map(pick => (
-                  <div key={pick.id} className={`flex items-center justify-between p-2 rounded-lg ${
-                    pick.teamId === userTeam?.id ? 'bg-accent-green/10' : 'bg-dark-primary'
-                  }`}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-text-muted text-xs w-5">#{pick.pickNumber}</span>
-                      <span className="text-sm">{pick.playerFlag}</span>
-                      <div className="min-w-0">
-                        <p className="text-white text-sm truncate">{pick.playerName}</p>
-                        <p className="text-text-muted text-xs">{pick.teamName}</p>
-                      </div>
+                  {filteredPlayers.length === 0 && (
+                    <div className="text-center py-8 text-text-muted text-sm">
+                      {searchQuery ? 'No players match your search' : 'All players have been drafted'}
                     </div>
-                  </div>
-                ))}
-                {picks.length === 0 && (
-                  <p className="text-text-muted text-xs text-center py-4">No picks yet</p>
-                )}
+                  )}
+                </div>
               </div>
-            </Card>
+            )}
+
+            {/* === QUEUE TAB === */}
+            {(activeTab === 'queue' || (activeTab === 'board' && bottomTab === 'queue')) && (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto min-h-0 p-3">
+                  {queue.length === 0 ? (
+                    <div className="text-center py-12">
+                      <svg className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                      <p className="text-text-muted text-sm font-medium mb-1">Your Queue is Empty</p>
+                      <p className="text-text-muted text-xs">Bookmark players from the Players tab to build your auto-pick queue</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {queue.map((player, i) => (
+                        <div key={player.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg group">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-accent-blue text-xs font-bold w-5 text-center">{i + 1}</span>
+                            <span className="text-sm">{player.flag}</span>
+                            <div className="min-w-0">
+                              <p className="text-white text-sm font-medium truncate">{player.name}</p>
+                              <p className="text-text-muted text-xs">#{player.rank} · SG {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {isUserTurn && (
+                              <button
+                                onClick={() => handleMakePick(player)}
+                                className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                Draft
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleRemoveFromQueue(player.id)}
+                              className="p-1.5 text-text-muted hover:text-red-400 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* === MY TEAM TAB === */}
+            {(activeTab === 'myteam' || (activeTab === 'board' && bottomTab === 'myteam')) && (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto min-h-0 p-3">
+                  {userPicks.length === 0 ? (
+                    <div className="text-center py-12">
+                      <svg className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <p className="text-text-muted text-sm font-medium mb-1">No Picks Yet</p>
+                      <p className="text-text-muted text-xs">Your drafted players will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {userPicks.map(pick => (
+                        <div key={pick.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-accent-green text-xs font-bold w-5 text-center">R{pick.round}</span>
+                            <span className="text-sm">{pick.playerFlag}</span>
+                            <div className="min-w-0">
+                              <p className="text-white text-sm font-medium truncate">{pick.playerName}</p>
+                              <p className="text-text-muted text-xs">Pick #{pick.pickNumber} · Rank #{pick.playerRank}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Empty slots */}
+                      {Array.from({ length: config.rosterSize - userPicks.length }, (_, i) => (
+                        <div key={`empty-${i}`} className="flex items-center p-2.5 rounded-lg border border-dashed border-dark-border/50">
+                          <span className="text-text-muted text-xs w-5 text-center">R{userPicks.length + i + 1}</span>
+                          <span className="text-text-muted text-xs ml-3">—</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* === PICKS TAB (desktop only) === */}
+            {(activeTab === 'board' && bottomTab === 'picks') && (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto min-h-0 p-3">
+                  {picks.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-text-muted text-sm">No picks yet — start the draft!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {[...picks].reverse().map(pick => (
+                        <div key={pick.id} className={`flex items-center justify-between p-2.5 rounded-lg ${
+                          pick.teamId === userTeam?.id ? 'bg-accent-green/10' : 'bg-dark-primary'
+                        }`}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-text-muted text-xs font-bold w-6 text-right">#{pick.pickNumber}</span>
+                            <span className="text-sm">{pick.playerFlag}</span>
+                            <div className="min-w-0">
+                              <p className="text-white text-sm truncate">{pick.playerName}</p>
+                              <p className="text-text-muted text-xs">R{pick.round} · {pick.teamName}</p>
+                            </div>
+                          </div>
+                          <span className="text-text-muted text-xs flex-shrink-0">#{pick.playerRank}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

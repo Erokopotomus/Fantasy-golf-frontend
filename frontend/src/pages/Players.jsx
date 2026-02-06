@@ -46,8 +46,9 @@ const Players = () => {
     updateParams({
       search: '',
       minRank: 1,
-      maxRank: 100,
+      maxRank: 250,
       country: '',
+      tour: '',
       minSgTotal: null,
       availability: 'all',
     })

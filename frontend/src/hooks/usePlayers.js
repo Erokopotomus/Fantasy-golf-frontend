@@ -10,8 +10,9 @@ export const usePlayers = (initialParams = {}) => {
     sortBy: 'owgrRank',
     sortDir: 'asc',
     minRank: 1,
-    maxRank: 100,
+    maxRank: 250,
     country: '',
+    tour: '',
     minSgTotal: null,
     availability: 'all', // 'all', 'available', 'owned'
     page: 1,
@@ -23,7 +24,7 @@ export const usePlayers = (initialParams = {}) => {
     try {
       setLoading(true)
       setError(null)
-      const data = await api.getPlayers()
+      const data = await api.getPlayers({ limit: 500 })
       // Handle both array response and object with players property
       const playerList = data.players || data || []
       // Transform players to match frontend expectations
@@ -116,6 +117,13 @@ export const usePlayers = (initialParams = {}) => {
     if (params.country) {
       result = result.filter(p =>
         p.country?.toLowerCase() === params.country.toLowerCase()
+      )
+    }
+
+    // Tour filter
+    if (params.tour) {
+      result = result.filter(p =>
+        p.primaryTour?.toUpperCase() === params.tour.toUpperCase()
       )
     }
 
