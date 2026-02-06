@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import useNotificationInbox from '../../hooks/useNotificationInbox'
 import NotificationDropdown from '../notifications/NotificationDropdown'
@@ -10,12 +10,24 @@ import SearchButton from '../search/SearchButton'
 const Navbar = () => {
   const { user, logout } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const inbox = useNotificationInbox()
 
   const isActive = (path) => location.pathname === path
+
+  const scrollToSection = (id) => {
+    if (location.pathname === '/') {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/')
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
+  }
 
   const navLinkStyles = (path) => `
     px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
@@ -68,12 +80,12 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/#features" className={navLinkStyles('/#features')}>
+                <button onClick={() => scrollToSection('features')} className={navLinkStyles('')}>
                   Features
-                </Link>
-                <Link to="/#how-it-works" className={navLinkStyles('/#how-it-works')}>
+                </button>
+                <button onClick={() => scrollToSection('how-it-works')} className={navLinkStyles('')}>
                   How It Works
-                </Link>
+                </button>
               </>
             )}
           </div>
@@ -266,20 +278,18 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link
-                  to="/#features"
-                  className={mobileNavLinkStyles('/#features')}
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  className={mobileNavLinkStyles('')}
+                  onClick={() => { setMobileMenuOpen(false); scrollToSection('features') }}
                 >
                   Features
-                </Link>
-                <Link
-                  to="/#how-it-works"
-                  className={mobileNavLinkStyles('/#how-it-works')}
-                  onClick={() => setMobileMenuOpen(false)}
+                </button>
+                <button
+                  className={mobileNavLinkStyles('')}
+                  onClick={() => { setMobileMenuOpen(false); scrollToSection('how-it-works') }}
                 >
                   How It Works
-                </Link>
+                </button>
                 <Link
                   to="/login"
                   className={mobileNavLinkStyles('/login')}

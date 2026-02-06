@@ -63,7 +63,7 @@ const Landing = () => {
                 size="lg"
                 fullWidth
                 className="sm:w-auto"
-                onClick={() => document.getElementById('formats')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 See How It Works
               </Button>

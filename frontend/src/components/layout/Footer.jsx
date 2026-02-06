@@ -1,11 +1,25 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import ClutchLogo from '../common/ClutchLogo'
 
 const Footer = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const scrollToSection = (id) => {
+    if (location.pathname === '/') {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/')
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
+  }
+
   return (
     <footer className="bg-dark-secondary border-t border-dark-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
@@ -22,57 +36,30 @@ const Footer = () => {
             <h4 className="text-white font-semibold mb-4">Product</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/#features" className="text-text-secondary hover:text-white text-sm transition-colors">
+                <button onClick={() => scrollToSection('features')} className="text-text-secondary hover:text-white text-sm transition-colors">
                   Features
-                </Link>
+                </button>
               </li>
               <li>
-                <Link to="/#how-it-works" className="text-text-secondary hover:text-white text-sm transition-colors">
+                <button onClick={() => scrollToSection('how-it-works')} className="text-text-secondary hover:text-white text-sm transition-colors">
                   How It Works
-                </Link>
-              </li>
-              <li>
-                <Link to="/pricing" className="text-text-secondary hover:text-white text-sm transition-colors">
-                  Pricing
-                </Link>
+                </button>
               </li>
             </ul>
           </div>
 
-          {/* Company */}
+          {/* Get Started */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Company</h4>
+            <h4 className="text-white font-semibold mb-4">Get Started</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-text-secondary hover:text-white text-sm transition-colors">
-                  About Us
+                <Link to="/signup" className="text-text-secondary hover:text-white text-sm transition-colors">
+                  Play Now
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-text-secondary hover:text-white text-sm transition-colors">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-text-secondary hover:text-white text-sm transition-colors">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/privacy" className="text-text-secondary hover:text-white text-sm transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="text-text-secondary hover:text-white text-sm transition-colors">
-                  Terms of Service
+                <Link to="/login" className="text-text-secondary hover:text-white text-sm transition-colors">
+                  Log In
                 </Link>
               </li>
             </ul>
