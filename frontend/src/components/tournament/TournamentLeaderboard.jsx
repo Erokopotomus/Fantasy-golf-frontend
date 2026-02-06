@@ -272,7 +272,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           </div>
 
           {/* Tee Time */}
-          <div className="text-right">
+          <div className="text-center">
             {(() => {
               const teeTime = getPlayerTeeTime(player)
               return teeTime ? (
@@ -343,12 +343,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
                   // Course par layout — use real data when available, default par-71
                   const defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]
-                  const holes = holeData || defaultPars.map((par, i) => ({ hole: i + 1, par, score: null }))
+                  const holes = (holeData && holeData.length > 0) ? holeData : defaultPars.map((par, i) => ({ hole: i + 1, par, score: null }))
                   const front9 = holes.slice(0, 9)
                   const back9 = holes.slice(9, 18)
                   const front9Par = front9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1]), 0)
                   const back9Par = back9.reduce((s, h) => s + (h.par || defaultPars[h.hole - 1 + 9]), 0)
-                  const hasScores = holeData && holeData.some(h => h.score != null)
+                  const hasScores = holeData && holeData.length > 0 && holeData.some(h => h.score != null)
                   const front9Score = hasScores ? front9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0) : null
                   const back9Score = hasScores ? back9.filter(h => h.score != null).reduce((s, h) => s + h.score, 0) : null
 
@@ -567,7 +567,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
         <div className="text-center">Today</div>
         {!showRounds && <div className="text-center">Thru</div>}
         <div className="text-center">Total</div>
-        <div className="text-right">Tee</div>
+        <div className="text-center">Tee</div>
       </div>
 
       {/* Active players */}
