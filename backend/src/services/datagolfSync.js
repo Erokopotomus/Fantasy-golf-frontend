@@ -27,91 +27,168 @@ function mapTour(dgTour) {
   return m[dgTour] || 'PGA'
 }
 
+/** Remove undefined keys from an object (Prisma doesn't like undefined) */
+function clean(obj) {
+  for (const k of Object.keys(obj)) {
+    if (obj[k] === undefined) delete obj[k]
+  }
+  return obj
+}
+
+/** Run an array of Prisma operations in batched transactions (chunks of 50) */
+async function batchTransaction(prisma, operations, chunkSize = 50) {
+  for (let i = 0; i < operations.length; i += chunkSize) {
+    const chunk = operations.slice(i, i + chunkSize)
+    await prisma.$transaction(chunk)
+  }
+}
+
+/**
+ * Build and execute a raw SQL bulk upsert.
+ * @param {string} table - SQL table name (e.g. "players")
+ * @param {string} conflictCol - Column for ON CONFLICT (e.g. '"datagolfId"')
+ * @param {string[]} cols - Column names to insert/update
+ * @param {Array<object>} rows - Array of row objects keyed by col names
+ * @param {object} [opts] - Options: { casts: { colName: 'TypeName' } } for enum casts
+ */
+async function bulkUpsert(prisma, table, conflictCol, cols, rows, opts = {}) {
+  if (rows.length === 0) return 0
+
+  const casts = opts.casts || {}
+
+  // Always include createdAt + updatedAt for new rows
+  const allCols = [...cols, 'createdAt', 'updatedAt']
+  const colList = allCols.map((c) => `"${c}"`).join(', ')
+
+  // Process in chunks (Postgres parameter limit is 65535)
+  const chunkSize = Math.min(500, Math.floor(65000 / allCols.length))
+  let total = 0
+
+  for (let i = 0; i < rows.length; i += chunkSize) {
+    const chunk = rows.slice(i, i + chunkSize)
+
+    const values = []
+    const params = []
+    let paramIdx = 1
+
+    for (const row of chunk) {
+      const placeholders = allCols.map((col) => {
+        const p = `$${paramIdx++}`
+        return casts[col] ? `${p}::"${casts[col]}"` : p
+      })
+      values.push(`(${placeholders.join(', ')})`)
+      for (const col of cols) {
+        params.push(row[col] ?? null)
+      }
+      // Add createdAt and updatedAt
+      params.push(new Date())
+      params.push(new Date())
+    }
+
+    // SET clause: update all cols except conflict col and id
+    const conflictName = conflictCol.replace(/"/g, '')
+    const updateCols = cols.filter((c) => c !== conflictName && c !== 'id')
+    const setClause = updateCols
+      .map((c) => {
+        const exc = `EXCLUDED."${c}"`
+        return casts[c] ? `"${c}" = ${exc}` : `"${c}" = ${exc}`
+      })
+      .join(', ')
+
+    const sql = `
+      INSERT INTO "${table}" (${colList})
+      VALUES ${values.join(', ')}
+      ON CONFLICT (${conflictCol}) DO UPDATE SET ${setClause}, "updatedAt" = NOW()
+    `
+
+    await prisma.$executeRawUnsafe(sql, ...params)
+    total += chunk.length
+  }
+  return total
+}
+
 // ─── 2a. Sync Players ──────────────────────────────────────────────────────
 
 async function syncPlayers(prisma) {
   console.log('[Sync] Starting player sync...')
 
+  // Fetch all data from DataGolf in parallel
   const [playerList, rankings, skills] = await Promise.all([
     dg.getPlayerList(),
     dg.getRankings(),
     dg.getSkillRatings('value'),
   ])
+  console.log('[Sync] API data fetched, processing...')
 
-  // Index rankings by dg_id
+  // Index rankings and skills by dg_id
   const rankMap = {}
   if (rankings?.rankings) {
-    for (const r of rankings.rankings) {
-      rankMap[r.dg_id] = r
-    }
+    for (const r of rankings.rankings) rankMap[r.dg_id] = r
   }
-
-  // Index skills by dg_id
   const skillMap = {}
   if (skills?.players) {
-    for (const s of skills.players) {
-      skillMap[s.dg_id] = s
-    }
+    for (const s of skills.players) skillMap[s.dg_id] = s
   }
 
-  let created = 0
-  let updated = 0
-
-  // playerList is an array of player objects
   const players = Array.isArray(playerList) ? playerList : playerList?.players || []
 
+  // Build rows for bulk upsert
+  const cols = [
+    'id', 'datagolfId', 'firstName', 'lastName', 'name', 'country', 'countryFlag',
+    'primaryTour', 'isAmateur', 'datagolfRank', 'datagolfSkill', 'owgrRank',
+    'sgTotal', 'sgPutting', 'sgApproach', 'sgOffTee', 'sgAroundGreen', 'sgTeeToGreen',
+    'draftKingsId', 'fanDuelId',
+  ]
+
+  // We need IDs for the upsert — load existing ones, generate new CUIDs for new players
+  const existingPlayers = await prisma.player.findMany({
+    where: { datagolfId: { not: null } },
+    select: { id: true, datagolfId: true },
+  })
+  const existingMap = new Map(existingPlayers.map((p) => [p.datagolfId, p.id]))
+
+  // Simple CUID-like ID generator for new players
+  const { randomBytes } = require('crypto')
+  const genId = () => 'c' + randomBytes(12).toString('hex').slice(0, 24)
+
+  const rows = []
   for (const p of players) {
     const dgId = String(p.dg_id)
     const { firstName, lastName } = splitName(p.player_name)
-    const name = `${firstName} ${lastName}`.trim()
-    const country = p.country || null
-    const countryFlag = countryToFlag(p.country_code || p.country)
-
     const rank = rankMap[p.dg_id] || {}
     const skill = skillMap[p.dg_id] || {}
 
-    const data = {
+    rows.push({
+      id: existingMap.get(dgId) || genId(),
+      datagolfId: dgId,
       firstName,
       lastName,
-      name,
-      country,
-      countryFlag,
+      name: `${firstName} ${lastName}`.trim(),
+      country: p.country || null,
+      countryFlag: countryToFlag(p.country_code || p.country),
       primaryTour: mapTour(p.primary_tour || 'pga'),
       isAmateur: p.amateur === true || p.amateur === 1,
-      // Rankings
       datagolfRank: rank.datagolf_rank ?? null,
       datagolfSkill: rank.dg_skill_estimate != null ? rank.dg_skill_estimate : null,
       owgrRank: rank.owgr_rank ?? null,
-      // Skill ratings (SG breakdowns)
       sgTotal: skill.sg_total ?? null,
       sgPutting: skill.sg_putt ?? null,
       sgApproach: skill.sg_app ?? null,
       sgOffTee: skill.sg_ott ?? null,
       sgAroundGreen: skill.sg_arg ?? null,
       sgTeeToGreen: skill.sg_t2g ?? null,
-      // DG IDs for cross-ref
-      draftKingsId: p.dk_id ? String(p.dk_id) : undefined,
-      fanDuelId: p.fd_id ? String(p.fd_id) : undefined,
-    }
-
-    // Remove undefined keys so Prisma doesn't try to set them
-    for (const k of Object.keys(data)) {
-      if (data[k] === undefined) delete data[k]
-    }
-
-    const existing = await prisma.player.findFirst({ where: { datagolfId: dgId } })
-
-    if (existing) {
-      await prisma.player.update({ where: { id: existing.id }, data })
-      updated++
-    } else {
-      await prisma.player.create({ data: { datagolfId: dgId, ...data } })
-      created++
-    }
+      draftKingsId: p.dk_id ? String(p.dk_id) : null,
+      fanDuelId: p.fd_id ? String(p.fd_id) : null,
+    })
   }
 
-  console.log(`[Sync] Players done: ${created} created, ${updated} updated, ${created + updated} total`)
-  return { created, updated, total: created + updated }
+  const count = await bulkUpsert(prisma, 'players', '"datagolfId"', cols, rows)
+
+  const newCount = rows.filter((r) => !existingMap.has(r.datagolfId)).length
+  const updatedCount = rows.length - newCount
+
+  console.log(`[Sync] Players done: ${newCount} created, ${updatedCount} updated, ${count} total`)
+  return { created: newCount, updated: updatedCount, total: count }
 }
 
 // ─── 2b. Sync Schedule ──────────────────────────────────────────────────────
@@ -122,14 +199,41 @@ async function syncSchedule(prisma) {
   const scheduleData = await dg.getSchedule('pga')
   const events = scheduleData?.schedule || scheduleData || []
 
-  let created = 0
-  let updated = 0
+  // Load existing tournaments
+  const existingTournaments = await prisma.tournament.findMany({
+    where: { datagolfId: { not: null } },
+    select: { id: true, datagolfId: true },
+  })
+  const existingMap = new Map(existingTournaments.map((t) => [t.datagolfId, t.id]))
+
+  const { randomBytes } = require('crypto')
+  const genId = () => 'c' + randomBytes(12).toString('hex').slice(0, 24)
+
+  const cols = ['id', 'datagolfId', 'name', 'shortName', 'location', 'tour', 'purse', 'isMajor', 'isSignature', 'isPlayoff', 'startDate', 'endDate', 'status']
+  const rows = []
 
   for (const evt of events) {
     const dgId = String(evt.event_id || evt.dg_id)
     if (!dgId || dgId === 'undefined') continue
 
-    const data = {
+    let startDate = null, endDate = null
+    if (evt.date || evt.start_date) {
+      startDate = new Date(evt.date || evt.start_date)
+    }
+    if (evt.end_date) {
+      endDate = new Date(evt.end_date)
+    } else if (startDate) {
+      endDate = new Date(startDate.getTime() + 3 * 24 * 60 * 60 * 1000)
+    }
+
+    const now = new Date()
+    let status = 'UPCOMING'
+    if (endDate && endDate < now) status = 'COMPLETED'
+    else if (startDate && startDate <= now && (!endDate || endDate >= now)) status = 'IN_PROGRESS'
+
+    rows.push({
+      id: existingMap.get(dgId) || genId(),
+      datagolfId: dgId,
       name: evt.event_name || evt.name,
       shortName: evt.event_name_short || null,
       location: evt.course || evt.location || null,
@@ -138,42 +242,19 @@ async function syncSchedule(prisma) {
       isMajor: evt.major === true || evt.major === 1,
       isSignature: evt.signature === true || evt.signature === 1,
       isPlayoff: evt.playoff === true || evt.playoff === 1,
-    }
-
-    // Parse dates
-    if (evt.date || evt.start_date) {
-      data.startDate = new Date(evt.date || evt.start_date)
-    }
-    if (evt.end_date) {
-      data.endDate = new Date(evt.end_date)
-    } else if (data.startDate) {
-      // Default to 4-day event
-      data.endDate = new Date(data.startDate.getTime() + 3 * 24 * 60 * 60 * 1000)
-    }
-
-    // Determine status based on dates
-    const now = new Date()
-    if (data.endDate && data.endDate < now) {
-      data.status = 'COMPLETED'
-    } else if (data.startDate && data.startDate <= now && (!data.endDate || data.endDate >= now)) {
-      data.status = 'IN_PROGRESS'
-    } else {
-      data.status = 'UPCOMING'
-    }
-
-    const existing = await prisma.tournament.findFirst({ where: { datagolfId: dgId } })
-
-    if (existing) {
-      await prisma.tournament.update({ where: { id: existing.id }, data })
-      updated++
-    } else {
-      await prisma.tournament.create({ data: { datagolfId: dgId, ...data } })
-      created++
-    }
+      startDate,
+      endDate,
+      status,
+    })
   }
 
-  console.log(`[Sync] Schedule done: ${created} created, ${updated} updated`)
-  return { created, updated, total: created + updated }
+  const count = await bulkUpsert(prisma, 'tournaments', '"datagolfId"', cols, rows, {
+    casts: { status: 'TournamentStatus' },
+  })
+  const newCount = rows.filter((r) => !existingMap.has(r.datagolfId)).length
+
+  console.log(`[Sync] Schedule done: ${newCount} created, ${rows.length - newCount} updated, ${count} total`)
+  return { created: newCount, updated: rows.length - newCount, total: count }
 }
 
 // ─── 2c. Sync Field & Tee Times ────────────────────────────────────────────
@@ -184,79 +265,82 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
   const fieldData = await dg.getFieldUpdates(tournamentDgId)
   const field = fieldData?.field || fieldData || []
 
-  // Find tournament by datagolfId
   const tournament = await prisma.tournament.findFirst({
     where: { datagolfId: String(tournamentDgId) },
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
 
+  // Load all players indexed by datagolfId (ONE query)
+  const allPlayers = await prisma.player.findMany({
+    where: { datagolfId: { not: null } },
+    select: { id: true, datagolfId: true },
+  })
+  const playerMap = new Map(allPlayers.map((p) => [p.datagolfId, p.id]))
+
+  const perfUpserts = []
+  const roundScoreUpserts = []
+  const dfsEntries = { dk: [], fd: [] }
   let playersInField = 0
   let teeTimes = 0
   let dfsSalaries = 0
 
   for (const entry of field) {
     const dgId = String(entry.dg_id)
-    const player = await prisma.player.findFirst({ where: { datagolfId: dgId } })
-    if (!player) continue
+    const playerId = playerMap.get(dgId)
+    if (!playerId) continue
 
-    // Upsert Performance
-    await prisma.performance.upsert({
-      where: {
-        tournamentId_playerId: { tournamentId: tournament.id, playerId: player.id },
-      },
-      update: { status: 'ACTIVE' },
-      create: {
-        tournamentId: tournament.id,
-        playerId: player.id,
-        status: 'ACTIVE',
-      },
-    })
+    // Performance upsert
+    perfUpserts.push(
+      prisma.performance.upsert({
+        where: { tournamentId_playerId: { tournamentId: tournament.id, playerId } },
+        update: { status: 'ACTIVE' },
+        create: { tournamentId: tournament.id, playerId, status: 'ACTIVE' },
+      })
+    )
     playersInField++
 
-    // Store tee time if available (R1 tee time)
+    // Tee time
     if (entry.r1_teetime || entry.tee_time) {
       const teeTimeStr = entry.r1_teetime || entry.tee_time
-      await prisma.roundScore.upsert({
-        where: {
-          tournamentId_playerId_roundNumber: {
-            tournamentId: tournament.id,
-            playerId: player.id,
-            roundNumber: 1,
+      roundScoreUpserts.push(
+        prisma.roundScore.upsert({
+          where: {
+            tournamentId_playerId_roundNumber: { tournamentId: tournament.id, playerId, roundNumber: 1 },
           },
-        },
-        update: { teeTime: new Date(teeTimeStr) },
-        create: {
-          tournamentId: tournament.id,
-          playerId: player.id,
-          roundNumber: 1,
-          teeTime: new Date(teeTimeStr),
-        },
-      })
+          update: { teeTime: new Date(teeTimeStr) },
+          create: { tournamentId: tournament.id, playerId, roundNumber: 1, teeTime: new Date(teeTimeStr) },
+        })
+      )
       teeTimes++
     }
 
-    // DFS salaries if available
-    if (entry.dk_salary || entry.fd_salary) {
-      // Upsert DraftKings slate/entry
-      if (entry.dk_salary) {
-        const dkSlate = await getOrCreateSlate(tournament.id, 'DRAFTKINGS', prisma)
-        await prisma.playerDFSEntry.upsert({
-          where: { slateId_playerId: { slateId: dkSlate.id, playerId: player.id } },
-          update: { salary: entry.dk_salary },
-          create: { slateId: dkSlate.id, playerId: player.id, salary: entry.dk_salary },
-        })
-        dfsSalaries++
-      }
-      if (entry.fd_salary) {
-        const fdSlate = await getOrCreateSlate(tournament.id, 'FANDUEL', prisma)
-        await prisma.playerDFSEntry.upsert({
-          where: { slateId_playerId: { slateId: fdSlate.id, playerId: player.id } },
-          update: { salary: entry.fd_salary },
-          create: { slateId: fdSlate.id, playerId: player.id, salary: entry.fd_salary },
-        })
-        dfsSalaries++
-      }
+    // DFS salaries
+    if (entry.dk_salary) {
+      dfsEntries.dk.push({ playerId, salary: entry.dk_salary })
+      dfsSalaries++
     }
+    if (entry.fd_salary) {
+      dfsEntries.fd.push({ playerId, salary: entry.fd_salary })
+      dfsSalaries++
+    }
+  }
+
+  // Execute performance upserts in batched transactions
+  await batchTransaction(prisma, perfUpserts)
+  await batchTransaction(prisma, roundScoreUpserts)
+
+  // DFS slates + entries
+  for (const [platform, entries] of [['DRAFTKINGS', dfsEntries.dk], ['FANDUEL', dfsEntries.fd]]) {
+    if (entries.length === 0) continue
+    const slate = await getOrCreateSlate(tournament.id, platform, prisma)
+    const dfsOps = entries.map((e) =>
+      prisma.playerDFSEntry.upsert({
+        where: { slateId_playerId: { slateId: slate.id, playerId: e.playerId } },
+        update: { salary: e.salary },
+        create: { slateId: slate.id, playerId: e.playerId, salary: e.salary },
+      })
+    )
+    await batchTransaction(prisma, dfsOps)
   }
 
   // Update tournament field size
@@ -298,17 +382,23 @@ async function syncLiveScoring(tournamentDgId, prisma) {
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
 
-  // The live data contains player-level probabilities and scoring
-  const players = liveData?.data || liveData?.players || liveData || []
-  let updatedCount = 0
+  // Load all players indexed by datagolfId (ONE query)
+  const allPlayers = await prisma.player.findMany({
+    where: { datagolfId: { not: null } },
+    select: { id: true, datagolfId: true },
+  })
+  const playerMap = new Map(allPlayers.map((p) => [p.datagolfId, p.id]))
 
-  // Derive current round from data
+  const players = liveData?.data || liveData?.players || liveData || []
   let maxRound = 1
+
+  const liveScoreOps = []
+  const perfOps = []
 
   for (const entry of players) {
     const dgId = String(entry.dg_id)
-    const player = await prisma.player.findFirst({ where: { datagolfId: dgId } })
-    if (!player) continue
+    const playerId = playerMap.get(dgId)
+    if (!playerId) continue
 
     const currentRound = entry.current_round || entry.round || 1
     if (currentRound > maxRound) maxRound = currentRound
@@ -318,72 +408,53 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     const totalToPar = entry.total != null ? entry.total : (entry.total_to_par ?? null)
     const todayToPar = entry.today != null ? entry.today : (entry.today_to_par ?? null)
 
-    // Upsert LiveScore
-    await prisma.liveScore.upsert({
-      where: {
-        tournamentId_playerId: { tournamentId: tournament.id, playerId: player.id },
-      },
-      update: {
-        position: typeof position === 'number' ? position : null,
-        positionTied: typeof entry.current_pos === 'string' && entry.current_pos.startsWith('T'),
-        totalToPar,
-        todayToPar,
-        thru: typeof thru === 'number' ? thru : null,
-        currentRound,
-        currentHole: entry.current_hole ?? null,
-        winProbability: entry.win_prob ?? entry.win ?? null,
-        top5Probability: entry.top_5_prob ?? entry.top_5 ?? null,
-        top10Probability: entry.top_10_prob ?? entry.top_10 ?? null,
-        top20Probability: entry.top_20_prob ?? entry.top_20 ?? null,
-        makeCutProbability: entry.make_cut_prob ?? entry.make_cut ?? null,
-        sgTotalLive: entry.sg_total ?? null,
-        lastUpdated: new Date(),
-      },
-      create: {
-        tournamentId: tournament.id,
-        playerId: player.id,
-        position: typeof position === 'number' ? position : null,
-        totalToPar,
-        todayToPar,
-        thru: typeof thru === 'number' ? thru : null,
-        currentRound,
-        winProbability: entry.win_prob ?? entry.win ?? null,
-        top5Probability: entry.top_5_prob ?? entry.top_5 ?? null,
-        top10Probability: entry.top_10_prob ?? entry.top_10 ?? null,
-        top20Probability: entry.top_20_prob ?? entry.top_20 ?? null,
-        makeCutProbability: entry.make_cut_prob ?? entry.make_cut ?? null,
-        sgTotalLive: entry.sg_total ?? null,
-        lastUpdated: new Date(),
-      },
-    })
+    const liveData = {
+      position: typeof position === 'number' ? position : null,
+      positionTied: typeof entry.current_pos === 'string' && entry.current_pos.startsWith('T'),
+      totalToPar,
+      todayToPar,
+      thru: typeof thru === 'number' ? thru : null,
+      currentRound,
+      currentHole: entry.current_hole ?? null,
+      winProbability: entry.win_prob ?? entry.win ?? null,
+      top5Probability: entry.top_5_prob ?? entry.top_5 ?? null,
+      top10Probability: entry.top_10_prob ?? entry.top_10 ?? null,
+      top20Probability: entry.top_20_prob ?? entry.top_20 ?? null,
+      makeCutProbability: entry.make_cut_prob ?? entry.make_cut ?? null,
+      sgTotalLive: entry.sg_total ?? null,
+      lastUpdated: new Date(),
+    }
 
-    // Also update Performance record with latest position/scores
+    liveScoreOps.push(
+      prisma.liveScore.upsert({
+        where: { tournamentId_playerId: { tournamentId: tournament.id, playerId } },
+        update: liveData,
+        create: { tournamentId: tournament.id, playerId, ...liveData },
+      })
+    )
+
     const perfUpdate = {
       totalToPar,
       status: entry.status === 'cut' ? 'CUT' : entry.status === 'wd' ? 'WD' : 'ACTIVE',
     }
     if (typeof position === 'number') perfUpdate.position = position
-
-    // Map round scores to performance round1-4
     for (let r = 1; r <= 4; r++) {
       const roundScore = entry[`r${r}`] ?? entry[`round_${r}`] ?? null
       if (roundScore != null) perfUpdate[`round${r}`] = roundScore
     }
 
-    await prisma.performance.upsert({
-      where: {
-        tournamentId_playerId: { tournamentId: tournament.id, playerId: player.id },
-      },
-      update: perfUpdate,
-      create: {
-        tournamentId: tournament.id,
-        playerId: player.id,
-        ...perfUpdate,
-      },
-    })
-
-    updatedCount++
+    perfOps.push(
+      prisma.performance.upsert({
+        where: { tournamentId_playerId: { tournamentId: tournament.id, playerId } },
+        update: perfUpdate,
+        create: { tournamentId: tournament.id, playerId, ...perfUpdate },
+      })
+    )
   }
+
+  // Execute in batched transactions
+  await batchTransaction(prisma, liveScoreOps)
+  await batchTransaction(prisma, perfOps)
 
   // Update tournament status
   await prisma.tournament.update({
@@ -391,8 +462,8 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     data: { status: 'IN_PROGRESS', currentRound: maxRound },
   })
 
-  console.log(`[Sync] Live scoring done: ${updatedCount} players updated, round ${maxRound}`)
-  return { updated: updatedCount, tournamentStatus: 'IN_PROGRESS' }
+  console.log(`[Sync] Live scoring done: ${liveScoreOps.length} players updated, round ${maxRound}`)
+  return { updated: liveScoreOps.length, tournamentStatus: 'IN_PROGRESS' }
 }
 
 // ─── 2e. Sync Pre-Tournament Predictions ────────────────────────────────────
@@ -407,42 +478,43 @@ async function syncPreTournamentPredictions(tournamentDgId, prisma) {
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
 
+  // Load all players indexed by datagolfId (ONE query)
+  const allPlayers = await prisma.player.findMany({
+    where: { datagolfId: { not: null } },
+    select: { id: true, datagolfId: true },
+  })
+  const playerMap = new Map(allPlayers.map((p) => [p.datagolfId, p.id]))
+
   const baseline = predData?.baseline || predData?.data || predData || []
-  let count = 0
+  const predOps = []
 
   for (const entry of baseline) {
     const dgId = String(entry.dg_id)
-    const player = await prisma.player.findFirst({ where: { datagolfId: dgId } })
-    if (!player) continue
+    const playerId = playerMap.get(dgId)
+    if (!playerId) continue
 
-    await prisma.playerPrediction.upsert({
-      where: {
-        tournamentId_playerId: { tournamentId: tournament.id, playerId: player.id },
-      },
-      update: {
-        winProbability: entry.win ?? null,
-        top5Probability: entry.top_5 ?? null,
-        top10Probability: entry.top_10 ?? null,
-        top20Probability: entry.top_20 ?? null,
-        makeCutProbability: entry.make_cut ?? null,
-        source: 'datagolf',
-      },
-      create: {
-        tournamentId: tournament.id,
-        playerId: player.id,
-        winProbability: entry.win ?? null,
-        top5Probability: entry.top_5 ?? null,
-        top10Probability: entry.top_10 ?? null,
-        top20Probability: entry.top_20 ?? null,
-        makeCutProbability: entry.make_cut ?? null,
-        source: 'datagolf',
-      },
-    })
-    count++
+    const predictionData = {
+      winProbability: entry.win ?? null,
+      top5Probability: entry.top_5 ?? null,
+      top10Probability: entry.top_10 ?? null,
+      top20Probability: entry.top_20 ?? null,
+      makeCutProbability: entry.make_cut ?? null,
+      source: 'datagolf',
+    }
+
+    predOps.push(
+      prisma.playerPrediction.upsert({
+        where: { tournamentId_playerId: { tournamentId: tournament.id, playerId } },
+        update: predictionData,
+        create: { tournamentId: tournament.id, playerId, ...predictionData },
+      })
+    )
   }
 
-  console.log(`[Sync] Predictions done: ${count} players`)
-  return { predictions: count }
+  await batchTransaction(prisma, predOps)
+
+  console.log(`[Sync] Predictions done: ${predOps.length} players`)
+  return { predictions: predOps.length }
 }
 
 // ─── 2f. Sync Fantasy Projections ───────────────────────────────────────────
@@ -455,6 +527,13 @@ async function syncFantasyProjections(tournamentDgId, prisma) {
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
 
+  // Load all players indexed by datagolfId (ONE query)
+  const allPlayers = await prisma.player.findMany({
+    where: { datagolfId: { not: null } },
+    select: { id: true, datagolfId: true },
+  })
+  const playerMap = new Map(allPlayers.map((p) => [p.datagolfId, p.id]))
+
   const [dkData, fdData] = await Promise.all([
     dg.getFantasyProjections(tournamentDgId, 'draftkings'),
     dg.getFantasyProjections(tournamentDgId, 'fanduel'),
@@ -466,54 +545,58 @@ async function syncFantasyProjections(tournamentDgId, prisma) {
   // DraftKings
   const dkProjections = dkData?.projections || dkData || []
   const dkSlate = await getOrCreateSlate(tournament.id, 'DRAFTKINGS', prisma)
+  const dkOps = []
   for (const entry of dkProjections) {
-    const dgId = String(entry.dg_id)
-    const player = await prisma.player.findFirst({ where: { datagolfId: dgId } })
-    if (!player) continue
-
-    await prisma.playerDFSEntry.upsert({
-      where: { slateId_playerId: { slateId: dkSlate.id, playerId: player.id } },
-      update: {
-        salary: entry.salary ?? null,
-        projectedPoints: entry.proj_points ?? entry.projection ?? null,
-        ownership: entry.proj_ownership ?? entry.ownership ?? null,
-      },
-      create: {
-        slateId: dkSlate.id,
-        playerId: player.id,
-        salary: entry.salary ?? null,
-        projectedPoints: entry.proj_points ?? entry.projection ?? null,
-        ownership: entry.proj_ownership ?? entry.ownership ?? null,
-      },
-    })
-    dkCount++
+    const playerId = playerMap.get(String(entry.dg_id))
+    if (!playerId) continue
+    dkOps.push(
+      prisma.playerDFSEntry.upsert({
+        where: { slateId_playerId: { slateId: dkSlate.id, playerId } },
+        update: {
+          salary: entry.salary ?? null,
+          projectedPoints: entry.proj_points ?? entry.projection ?? null,
+          ownership: entry.proj_ownership ?? entry.ownership ?? null,
+        },
+        create: {
+          slateId: dkSlate.id,
+          playerId,
+          salary: entry.salary ?? null,
+          projectedPoints: entry.proj_points ?? entry.projection ?? null,
+          ownership: entry.proj_ownership ?? entry.ownership ?? null,
+        },
+      })
+    )
   }
+  await batchTransaction(prisma, dkOps)
+  dkCount = dkOps.length
 
   // FanDuel
   const fdProjections = fdData?.projections || fdData || []
   const fdSlate = await getOrCreateSlate(tournament.id, 'FANDUEL', prisma)
+  const fdOps = []
   for (const entry of fdProjections) {
-    const dgId = String(entry.dg_id)
-    const player = await prisma.player.findFirst({ where: { datagolfId: dgId } })
-    if (!player) continue
-
-    await prisma.playerDFSEntry.upsert({
-      where: { slateId_playerId: { slateId: fdSlate.id, playerId: player.id } },
-      update: {
-        salary: entry.salary ?? null,
-        projectedPoints: entry.proj_points ?? entry.projection ?? null,
-        ownership: entry.proj_ownership ?? entry.ownership ?? null,
-      },
-      create: {
-        slateId: fdSlate.id,
-        playerId: player.id,
-        salary: entry.salary ?? null,
-        projectedPoints: entry.proj_points ?? entry.projection ?? null,
-        ownership: entry.proj_ownership ?? entry.ownership ?? null,
-      },
-    })
-    fdCount++
+    const playerId = playerMap.get(String(entry.dg_id))
+    if (!playerId) continue
+    fdOps.push(
+      prisma.playerDFSEntry.upsert({
+        where: { slateId_playerId: { slateId: fdSlate.id, playerId } },
+        update: {
+          salary: entry.salary ?? null,
+          projectedPoints: entry.proj_points ?? entry.projection ?? null,
+          ownership: entry.proj_ownership ?? entry.ownership ?? null,
+        },
+        create: {
+          slateId: fdSlate.id,
+          playerId,
+          salary: entry.salary ?? null,
+          projectedPoints: entry.proj_points ?? entry.projection ?? null,
+          ownership: entry.proj_ownership ?? entry.ownership ?? null,
+        },
+      })
+    )
   }
+  await batchTransaction(prisma, fdOps)
+  fdCount = fdOps.length
 
   console.log(`[Sync] Projections done: DK=${dkCount}, FD=${fdCount}`)
   return { draftkings: dkCount, fanduel: fdCount }
@@ -529,19 +612,28 @@ async function syncTournamentResults(tournamentDgId, prisma) {
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
 
+  // Load all players indexed by datagolfId (ONE query)
+  const allPlayers = await prisma.player.findMany({
+    where: { datagolfId: { not: null } },
+    select: { id: true, datagolfId: true },
+  })
+  const playerMap = new Map(allPlayers.map((p) => [p.datagolfId, p.id]))
+
   // Get final SG stats
   const statsData = await dg.getLiveTournamentStats(tournamentDgId)
   const players = statsData?.live_stats || statsData?.data || statsData || []
 
+  const perfOps = []
+  const playerUpdateOps = []
+
   for (const entry of players) {
     const dgId = String(entry.dg_id)
-    const player = await prisma.player.findFirst({ where: { datagolfId: dgId } })
-    if (!player) continue
+    const playerId = playerMap.get(dgId)
+    if (!playerId) continue
 
     const position = entry.fin_pos ?? entry.position ?? null
     const earnings = entry.earnings ?? null
 
-    // Update Performance with final data
     const perfUpdate = {
       status: entry.status === 'cut' ? 'CUT' : entry.status === 'wd' ? 'WD' : 'ACTIVE',
       sgTotal: entry.sg_total ?? null,
@@ -554,37 +646,31 @@ async function syncTournamentResults(tournamentDgId, prisma) {
     if (typeof position === 'number') perfUpdate.position = position
     if (earnings != null) perfUpdate.earnings = earnings
 
-    await prisma.performance.upsert({
-      where: {
-        tournamentId_playerId: { tournamentId: tournament.id, playerId: player.id },
-      },
-      update: perfUpdate,
-      create: {
-        tournamentId: tournament.id,
-        playerId: player.id,
-        ...perfUpdate,
-      },
-    })
+    perfOps.push(
+      prisma.performance.upsert({
+        where: { tournamentId_playerId: { tournamentId: tournament.id, playerId } },
+        update: perfUpdate,
+        create: { tournamentId: tournament.id, playerId, ...perfUpdate },
+      })
+    )
 
     // Update player season stats
     if (typeof position === 'number' && perfUpdate.status === 'ACTIVE') {
-      const updateData = {}
+      const updateData = { events: { increment: 1 }, cutsMade: { increment: 1 } }
       if (position === 1) updateData.wins = { increment: 1 }
       if (position <= 5) updateData.top5s = { increment: 1 }
       if (position <= 10) updateData.top10s = { increment: 1 }
       if (position <= 25) updateData.top25s = { increment: 1 }
-      updateData.events = { increment: 1 }
-      updateData.cutsMade = { increment: 1 }
       if (earnings != null) updateData.earnings = { increment: earnings }
-
-      await prisma.player.update({ where: { id: player.id }, data: updateData })
+      playerUpdateOps.push(prisma.player.update({ where: { id: playerId }, data: updateData }))
     } else if (perfUpdate.status === 'CUT') {
-      await prisma.player.update({
-        where: { id: player.id },
-        data: { events: { increment: 1 } },
-      })
+      playerUpdateOps.push(prisma.player.update({ where: { id: playerId }, data: { events: { increment: 1 } } }))
     }
   }
+
+  // Execute in batched transactions
+  await batchTransaction(prisma, perfOps)
+  await batchTransaction(prisma, playerUpdateOps)
 
   // Calculate fantasy points for all performances
   const performances = await prisma.performance.findMany({
@@ -593,13 +679,12 @@ async function syncTournamentResults(tournamentDgId, prisma) {
   })
 
   const scoringConfig = getDefaultScoringConfig('standard')
+  const fpOps = []
   for (const perf of performances) {
     const { total } = calculateFantasyPoints(perf, scoringConfig)
-    await prisma.performance.update({
-      where: { id: perf.id },
-      data: { fantasyPoints: total },
-    })
+    fpOps.push(prisma.performance.update({ where: { id: perf.id }, data: { fantasyPoints: total } }))
   }
+  await batchTransaction(prisma, fpOps)
 
   // Mark tournament completed
   await prisma.tournament.update({
