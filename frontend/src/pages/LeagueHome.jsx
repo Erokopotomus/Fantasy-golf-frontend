@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useLeagues } from '../hooks/useLeagues'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
@@ -14,11 +14,24 @@ const LeagueHome = () => {
   const { leagueId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { leagues, loading } = useLeagues()
+  const { leagues, loading: leaguesLoading } = useLeagues()
   const [creatingDraft, setCreatingDraft] = useState(false)
   const { activity, loading: activityLoading } = useActivity(leagueId, 10)
+  const [detailedLeague, setDetailedLeague] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(true)
 
-  const league = leagues?.find(l => l.id === leagueId)
+  // Fetch detailed league data (with full members, teams, rosters)
+  useEffect(() => {
+    if (!leagueId) return
+    setDetailLoading(true)
+    api.getLeague(leagueId)
+      .then(data => setDetailedLeague(data.league || data))
+      .catch(() => {})
+      .finally(() => setDetailLoading(false))
+  }, [leagueId])
+
+  const loading = leaguesLoading && detailLoading
+  const league = detailedLeague || leagues?.find(l => l.id === leagueId)
   const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
 
   const isCommissioner = league?.ownerId === user?.id || league?.owner?.id === user?.id
@@ -366,13 +379,109 @@ const LeagueHome = () => {
               </Card>
             </div>
 
-            {/* Right Column - Chat */}
-            <div className="lg:col-span-2">
+            {/* Right Column - Members & Chat */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* League Members / Teams */}
+              <Card>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Teams</h3>
+                  <span className="text-text-muted text-sm">
+                    {league.teams?.length || league._count?.teams || 0} / {league.maxTeams || '–'}
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-dark-border text-xs text-text-muted">
+                        <th className="pb-2 text-left w-10">#</th>
+                        <th className="pb-2 text-left">Team</th>
+                        <th className="pb-2 text-left">Owner</th>
+                        <th className="pb-2 text-center">Players</th>
+                        <th className="pb-2 text-center">W-L</th>
+                        <th className="pb-2 text-right">Points</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(league.standings || league.teams || []).map((team, i) => {
+                        const rank = team.rank || i + 1
+                        const isMe = team.userId === user?.id
+                        const ownerName = team.user?.name || team.name
+                        const rosterCount = team.roster?.length || 0
+                        return (
+                          <tr
+                            key={team.id || i}
+                            onClick={() => team.id && navigate(`/leagues/${leagueId}/roster/${team.id}`)}
+                            className={`
+                              border-b border-dark-border/30 transition-colors cursor-pointer
+                              ${isMe ? 'bg-emerald-500/8' : 'hover:bg-dark-tertiary/50'}
+                            `}
+                          >
+                            <td className={`py-3 font-bold ${
+                              rank === 1 ? 'text-yellow-400' :
+                              rank === 2 ? 'text-gray-300' :
+                              rank === 3 ? 'text-amber-500' : 'text-text-muted'
+                            }`}>
+                              {rank}
+                            </td>
+                            <td className="py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 bg-dark-tertiary rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
+                                  {(team.name || ownerName || '?').charAt(0).toUpperCase()}
+                                </div>
+                                <span className={`font-medium truncate ${isMe ? 'text-emerald-400' : 'text-white'}`}>
+                                  {team.name || 'Team ' + rank}
+                                  {isMe && <span className="text-xs text-emerald-400/60 ml-1">(You)</span>}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-3 text-text-secondary truncate max-w-[120px]">
+                              {ownerName}
+                            </td>
+                            <td className="py-3 text-center text-text-secondary">
+                              {rosterCount || '–'}
+                            </td>
+                            <td className="py-3 text-center text-text-secondary">
+                              {team.wins != null ? `${team.wins}-${team.losses || 0}` : '–'}
+                            </td>
+                            <td className="py-3 text-right font-semibold text-white">
+                              {team.totalPoints?.toLocaleString() || '0'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                  {(!league.standings?.length && !league.teams?.length) && (
+                    <div className="text-center py-8 text-text-muted text-sm">
+                      No teams yet. Invite members to join!
+                    </div>
+                  )}
+                </div>
+
+                {/* League members without teams */}
+                {league.members && league.members.length > (league.teams?.length || 0) && (
+                  <div className="mt-4 pt-4 border-t border-dark-border">
+                    <p className="text-xs text-text-muted mb-2">Members without teams</p>
+                    <div className="flex flex-wrap gap-2">
+                      {league.members
+                        .filter(m => !league.teams?.some(t => t.userId === m.userId))
+                        .map(m => (
+                          <span key={m.userId} className="px-2 py-1 bg-dark-tertiary rounded text-xs text-text-secondary">
+                            {m.user?.name || 'Member'}
+                          </span>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              {/* Chat - compact */}
               <ChatPanel
                 leagueId={leagueId}
                 leagueName={league.name}
-                memberCount={league.memberCount}
-                className="h-[700px]"
+                memberCount={league.memberCount || league._count?.members || league.members?.length}
+                className="h-[400px]"
               />
             </div>
           </div>

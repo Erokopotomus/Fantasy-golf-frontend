@@ -53,8 +53,9 @@ const PlayerTable = ({
             return (
               <tr
                 key={player.id}
+                onClick={() => onViewPlayer?.(player)}
                 className={`
-                  border-b border-dark-border/50 transition-colors
+                  border-b border-dark-border/50 transition-colors cursor-pointer
                   ${isSelected ? 'bg-accent-green/10' : 'hover:bg-dark-tertiary/50'}
                 `}
               >
