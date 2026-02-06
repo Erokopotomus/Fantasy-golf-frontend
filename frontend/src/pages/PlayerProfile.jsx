@@ -1,13 +1,23 @@
 import { useParams, Link } from 'react-router-dom'
 import PlayerHeader from '../components/player/PlayerHeader'
 import PlayerStats from '../components/player/PlayerStats'
+import PlayerPredictions from '../components/player/PlayerPredictions'
+import PlayerProjection from '../components/player/PlayerProjection'
 import PlayerFormChart from '../components/player/PlayerFormChart'
 import PlayerCourseHistory from '../components/player/PlayerCourseHistory'
 import usePlayerProfile from '../hooks/usePlayerProfile'
 
 const PlayerProfile = () => {
   const { playerId } = useParams()
-  const { player, courseHistory, tournamentHistory, loading, error } = usePlayerProfile(playerId)
+  const {
+    player,
+    projection,
+    predictions,
+    courseHistory,
+    tournamentHistory,
+    loading,
+    error
+  } = usePlayerProfile(playerId)
 
   if (loading) {
     return (
@@ -64,15 +74,17 @@ const PlayerProfile = () => {
         />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Stats */}
-        <div className="lg:col-span-1">
+      {/* Main Content — 2-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
           <PlayerStats player={player} />
         </div>
 
-        {/* Middle Column - Form & Course History */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Right Column */}
+        <div className="space-y-6">
+          <PlayerPredictions predictions={predictions} />
+          <PlayerProjection projection={projection} />
           <PlayerFormChart
             recentForm={player.recentForm}
             tournamentHistory={tournamentHistory}

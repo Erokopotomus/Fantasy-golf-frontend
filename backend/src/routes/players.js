@@ -64,7 +64,18 @@ router.get('/', optionalAuth, async (req, res, next) => {
 // GET /api/players/:id - Get player details with performances, upcoming, and projection
 router.get('/:id', optionalAuth, async (req, res, next) => {
   try {
-    const [player, upcomingTournaments] = await Promise.all([
+    // Find the current or next upcoming tournament for predictions
+    const activeTournament = await prisma.tournament.findFirst({
+      where: { status: 'IN_PROGRESS' },
+      select: { id: true, name: true }
+    })
+    const upcomingForPredictions = activeTournament || await prisma.tournament.findFirst({
+      where: { status: 'UPCOMING' },
+      orderBy: { startDate: 'asc' },
+      select: { id: true, name: true }
+    })
+
+    const [player, allPerformances, upcomingTournaments, predictions, liveScore] = await Promise.all([
       prisma.player.findUnique({
         where: { id: req.params.id },
         include: {
@@ -79,12 +90,40 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
           }
         }
       }),
+      // Get ALL performances for season stats computation
+      prisma.performance.findMany({
+        where: { playerId: req.params.id },
+        include: {
+          tournament: { select: { id: true, name: true, startDate: true, status: true } }
+        }
+      }),
       prisma.tournament.findMany({
         where: { status: 'UPCOMING' },
         orderBy: { startDate: 'asc' },
         take: 3,
         select: { id: true, name: true, startDate: true, endDate: true, tour: true, isMajor: true, purse: true, location: true }
-      })
+      }),
+      // Predictions for current/upcoming tournament
+      upcomingForPredictions ? prisma.playerPrediction.findUnique({
+        where: {
+          tournamentId_playerId: {
+            tournamentId: upcomingForPredictions.id,
+            playerId: req.params.id
+          }
+        },
+        include: {
+          tournament: { select: { id: true, name: true, startDate: true } }
+        }
+      }) : null,
+      // Live score if player is in an active tournament
+      activeTournament ? prisma.liveScore.findUnique({
+        where: {
+          tournamentId_playerId: {
+            tournamentId: activeTournament.id,
+            playerId: req.params.id
+          }
+        }
+      }) : null
     ])
 
     if (!player) {
@@ -140,7 +179,36 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       totalEvents: completedPerfs.length,
     }
 
-    res.json({ player, upcomingTournaments, projection })
+    // Compute season stats dynamically from all performances
+    // Use DB fields if populated, otherwise derive from performance records
+    const derivedStats = { events: 0, wins: 0, top5s: 0, top10s: 0, top25s: 0, cutsMade: 0, earnings: 0 }
+    for (const perf of allPerformances) {
+      derivedStats.events++
+      if (perf.status === 'CUT') continue
+      if (perf.status !== 'WD' && perf.status !== 'DQ') {
+        derivedStats.cutsMade++
+      }
+      const pos = perf.position
+      if (typeof pos === 'number') {
+        if (pos === 1) derivedStats.wins++
+        if (pos <= 5) derivedStats.top5s++
+        if (pos <= 10) derivedStats.top10s++
+        if (pos <= 25) derivedStats.top25s++
+      }
+      if (perf.earnings) derivedStats.earnings += perf.earnings
+    }
+    // Prefer DB values if they're non-zero (from syncTournamentResults), otherwise use derived
+    const seasonStats = {
+      events: player.events > 0 ? player.events : derivedStats.events,
+      wins: player.wins > 0 ? player.wins : derivedStats.wins,
+      top5s: player.top5s > 0 ? player.top5s : derivedStats.top5s,
+      top10s: player.top10s > 0 ? player.top10s : derivedStats.top10s,
+      top25s: player.top25s > 0 ? player.top25s : derivedStats.top25s,
+      cutsMade: player.cutsMade > 0 ? player.cutsMade : derivedStats.cutsMade,
+      earnings: player.earnings > 0 ? player.earnings : derivedStats.earnings,
+    }
+
+    res.json({ player, upcomingTournaments, projection, predictions, liveScore, seasonStats })
   } catch (error) {
     next(error)
   }

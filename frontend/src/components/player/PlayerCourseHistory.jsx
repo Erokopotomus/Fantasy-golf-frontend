@@ -1,14 +1,7 @@
 import Card from '../common/Card'
 
 const PlayerCourseHistory = ({ courseHistory }) => {
-  if (!courseHistory || courseHistory.length === 0) {
-    return (
-      <Card>
-        <h4 className="text-sm font-semibold text-text-muted mb-3">Course History</h4>
-        <p className="text-text-secondary text-sm">No course history available</p>
-      </Card>
-    )
-  }
+  if (!courseHistory || courseHistory.length === 0) return null
 
   const getScoreColor = (avgScore, par) => {
     const diff = avgScore - par

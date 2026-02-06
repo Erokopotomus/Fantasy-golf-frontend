@@ -11,6 +11,43 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
     return 'bg-dark-tertiary text-text-secondary border-dark-border'
   }
 
+  const getTourBadge = (tour) => {
+    if (!tour) return null
+    const t = tour.toUpperCase()
+    if (t === 'PGA') return { label: 'PGA TOUR', cls: 'bg-blue-500/20 text-blue-400 border-blue-500/50' }
+    if (t === 'LIV') return { label: 'LIV Golf', cls: 'bg-red-500/20 text-red-400 border-red-500/50' }
+    if (t === 'DP' || t === 'DP WORLD' || t === 'EURO') return { label: 'DP World', cls: 'bg-purple-500/20 text-purple-400 border-purple-500/50' }
+    if (t === 'KFT' || t === 'KORN FERRY') return { label: 'Korn Ferry', cls: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' }
+    return null
+  }
+
+  const tourBadge = getTourBadge(player.primaryTour)
+
+  const quickStats = [
+    {
+      label: 'SG Total',
+      value: player.stats?.sgTotal != null
+        ? `${player.stats.sgTotal > 0 ? '+' : ''}${player.stats.sgTotal.toFixed(2)}`
+        : null,
+      color: 'text-accent-green',
+    },
+    {
+      label: 'DG Rank',
+      value: player.datagolfRank != null ? `#${player.datagolfRank}` : null,
+      color: 'text-white',
+    },
+    {
+      label: 'Events',
+      value: player.events > 0 ? player.events : null,
+      color: 'text-white',
+    },
+    {
+      label: 'Wins',
+      value: player.wins > 0 ? player.wins : player.events > 0 ? '0' : null,
+      color: player.wins > 0 ? 'text-yellow-400' : 'text-white',
+    },
+  ]
+
   return (
     <Card className="bg-gradient-to-r from-dark-card to-dark-tertiary">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -28,10 +65,17 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3 text-sm">
-              <span className={`px-2 py-0.5 rounded border font-medium ${getRankBadge(player.rank)}`}>
-                #{player.rank} World Ranking
-              </span>
+            <div className="flex items-center gap-2 text-sm flex-wrap">
+              {player.rank && (
+                <span className={`px-2 py-0.5 rounded border font-medium ${getRankBadge(player.rank)}`}>
+                  #{player.rank} OWGR
+                </span>
+              )}
+              {tourBadge && (
+                <span className={`px-2 py-0.5 rounded border font-medium ${tourBadge.cls}`}>
+                  {tourBadge.label}
+                </span>
+              )}
               <span className="text-text-secondary">{player.country}</span>
             </div>
           </div>
@@ -59,30 +103,16 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
       </div>
 
       {/* Quick Stats Row */}
-      {player.stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-dark-border">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-accent-green">
-              {player.stats.sgTotal != null
-                ? `${player.stats.sgTotal > 0 ? '+' : ''}${player.stats.sgTotal.toFixed(2)}`
-                : '—'}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-dark-border">
+        {quickStats.map((stat) => (
+          <div key={stat.label} className="text-center">
+            <p className={`text-2xl font-bold ${stat.value != null ? stat.color : 'text-text-muted'}`}>
+              {stat.value ?? '—'}
             </p>
-            <p className="text-xs text-text-muted">SG Total</p>
+            <p className="text-xs text-text-muted">{stat.label}</p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">{player.stats.scoringAvg ?? '—'}</p>
-            <p className="text-xs text-text-muted">Scoring Avg</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">{player.stats.drivingDistance ?? '—'}</p>
-            <p className="text-xs text-text-muted">Driving (yds)</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">{player.stats.gir != null ? `${player.stats.gir}%` : '—'}</p>
-            <p className="text-xs text-text-muted">GIR</p>
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </Card>
   )
 }

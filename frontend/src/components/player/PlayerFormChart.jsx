@@ -19,6 +19,11 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
     return 'bg-text-muted'
   }
 
+  const hasFormData = (recentForm || []).filter(p => p !== 'CUT' && p !== 'WD' && p !== 'DQ').length >= 2
+  const hasTournaments = tournamentHistory && tournamentHistory.length > 1
+
+  if (!hasFormData && !hasTournaments) return null
+
   const maxPosition = Math.max(...(recentForm || []).map(getPositionValue), 30)
 
   return (
