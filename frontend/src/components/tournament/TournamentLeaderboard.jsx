@@ -394,6 +394,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
                       {/* Front 9 scorecard */}
                       <div className="overflow-x-auto">
+                        <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium mb-1">Front 9</p>
                         <table className="w-full mb-1.5 text-xs border-collapse">
                           <thead>
                             <tr>
@@ -427,6 +428,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                         </table>
 
                         {/* Back 9 scorecard */}
+                        <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium mb-1 mt-2">Back 9</p>
                         <table className="w-full text-xs border-collapse">
                           <thead>
                             <tr>
