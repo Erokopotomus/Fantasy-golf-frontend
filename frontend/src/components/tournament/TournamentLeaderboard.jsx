@@ -107,12 +107,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               setExpandedRound(null)
             } else {
               setExpandedPlayer(player.id)
-              // Default to latest round with data
-              const latestRound = player.rounds?.r4 != null ? 4
-                : player.rounds?.r3 != null ? 3
-                : player.rounds?.r2 != null ? 2
-                : player.rounds?.r1 != null ? 1 : null
-              setExpandedRound(latestRound)
+              // Default to current round (the one being played), fallback to latest with data
+              setExpandedRound(player.currentRound || player.rounds?.r4 != null && 4
+                || player.rounds?.r3 != null && 3
+                || player.rounds?.r2 != null && 2
+                || player.rounds?.r1 != null && 1
+                || 1)
             }
           }}
           className={`
@@ -240,24 +240,28 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             {/* Round tabs */}
             <div className="flex items-center gap-1 px-4 pt-3 pb-2">
               {[1, 2, 3, 4].map(r => {
-                const hasData = player.rounds?.[`r${r}`] != null
-                const isActive = expandedRound === r
                 const roundScore = player.rounds?.[`r${r}`]
+                const hasScore = roundScore != null
+                const isReachable = r <= (player.currentRound || 1) || hasScore
+                const isActive = expandedRound === r
+                const isCurrent = r === player.currentRound
                 return (
                   <button
                     key={r}
-                    onClick={(e) => { e.stopPropagation(); if (hasData) setExpandedRound(r) }}
-                    disabled={!hasData}
+                    onClick={(e) => { e.stopPropagation(); if (isReachable) setExpandedRound(r) }}
+                    disabled={!isReachable}
                     className={`
                       px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
                       ${isActive
                         ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30'
-                        : hasData
+                        : isReachable
                           ? 'bg-dark-secondary/60 text-text-secondary hover:text-white hover:bg-dark-secondary'
                           : 'bg-dark-secondary/30 text-text-muted/40 cursor-not-allowed'}
                     `}
                   >
-                    R{r}{hasData && <span className="ml-1 opacity-70">({roundScore})</span>}
+                    R{r}
+                    {hasScore && <span className="ml-1 opacity-70">({roundScore})</span>}
+                    {isCurrent && !hasScore && <span className="ml-1 text-yellow-400/70">*</span>}
                   </button>
                 )
               })}
@@ -351,11 +355,51 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                 ) : (
                   /* Round summary when no hole-by-hole data */
                   <div className="rounded-lg bg-dark-secondary/50 p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-white">Round {expandedRound}</span>
-                      <span className="text-lg font-bold text-white">{player.rounds?.[`r${expandedRound}`]}</span>
-                    </div>
-                    <p className="text-xs text-text-muted">Hole-by-hole scoring will appear here during live rounds</p>
+                    {(() => {
+                      const roundScore = player.rounds?.[`r${expandedRound}`]
+                      const isCurrent = expandedRound === player.currentRound
+                      const isInProgress = isCurrent && !roundScore
+                      return (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-white">Round {expandedRound}</span>
+                              {isInProgress && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 font-medium">
+                                  In Progress
+                                </span>
+                              )}
+                              {roundScore && !isCurrent && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/80 font-medium">
+                                  Complete
+                                </span>
+                              )}
+                            </div>
+                            {roundScore ? (
+                              <span className="text-lg font-bold text-white">{roundScore}</span>
+                            ) : isInProgress ? (
+                              <div className="text-right">
+                                <span className={`text-lg font-bold ${getScoreColor(player.today)}`}>
+                                  {player.thru > 0 ? formatScore(player.today) : '–'}
+                                </span>
+                                <span className="text-xs text-text-muted ml-2">
+                                  {player.thru > 0 ? `thru ${player.thru}` : 'Not started'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold text-text-muted">–</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-text-muted mt-1.5">
+                            {isInProgress
+                              ? 'Hole-by-hole scoring updates coming soon'
+                              : roundScore
+                                ? 'Hole-by-hole detail available with premium data'
+                                : 'Round has not started yet'}
+                          </p>
+                        </>
+                      )
+                    })()}
                   </div>
                 )}
               </div>
