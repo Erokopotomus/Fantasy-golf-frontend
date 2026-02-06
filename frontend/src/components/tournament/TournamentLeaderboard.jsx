@@ -70,6 +70,26 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     }
   }, [tournamentId])
 
+  const formatTeeTime = (isoStr) => {
+    if (!isoStr) return null
+    const d = new Date(isoStr)
+    const h = d.getHours()
+    const m = d.getMinutes()
+    const ampm = h >= 12 ? 'PM' : 'AM'
+    const h12 = h % 12 || 12
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`
+  }
+
+  /** Get the tee time to show for a player (current round only, only if not started) */
+  const getPlayerTeeTime = (player) => {
+    if (!player.teeTimes) return null
+    const currentRound = player.currentRound || 1
+    // Only show tee time if player hasn't started current round
+    if (player.thru > 0 || player.thru === 'F' || player.thru === 18) return null
+    const teeTime = player.teeTimes[currentRound]
+    return teeTime ? formatTeeTime(teeTime) : null
+  }
+
   const formatScore = (score) => {
     if (score == null || score === '' || isNaN(score)) return '–'
     const num = parseInt(score)
@@ -251,17 +271,16 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             {formatScore(player.score)}
           </div>
 
-          {/* Fantasy Points */}
+          {/* Tee Time */}
           <div className="text-right">
-            <span className={`
-              text-sm font-bold px-2 py-0.5 rounded
-              ${player.fantasyPoints > 50 ? 'text-emerald-400 bg-emerald-500/10' :
-                player.fantasyPoints > 20 ? 'text-emerald-300' :
-                player.fantasyPoints > 0 ? 'text-text-secondary' :
-                'text-red-400'}
-            `}>
-              {player.fantasyPoints != null ? player.fantasyPoints : '–'}
-            </span>
+            {(() => {
+              const teeTime = getPlayerTeeTime(player)
+              return teeTime ? (
+                <span className="text-xs text-text-muted font-medium">{teeTime}</span>
+              ) : (
+                <span className="text-xs text-text-muted">–</span>
+              )
+            })()}
           </div>
         </div>
 
@@ -303,9 +322,6 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                   <span className={`font-bold ${getScoreColor(player.score)}`}>
                     {formatScore(player.score)}
                   </span>
-                )}
-                {player.fantasyPoints != null && (
-                  <span className="text-emerald-400 font-semibold">{player.fantasyPoints} pts</span>
                 )}
               </div>
             </div>
@@ -379,20 +395,20 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="p-1.5 text-left bg-dark-secondary/40 text-text-secondary text-[10px]">Par</td>
+                              <td className="p-1.5 text-left bg-dark-secondary/30 text-text-muted text-[10px]">Par</td>
                               {front9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px]">{h.par || defaultPars[i]}</td>
+                                <td key={i} className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px]">{h.par || defaultPars[i]}</td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px] font-bold">{front9Par}</td>
+                              <td className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px] font-bold">{front9Par}</td>
                             </tr>
-                            <tr>
-                              <td className="p-1.5 text-left text-white text-[10px] font-medium">Score</td>
+                            <tr className="border-t-2 border-emerald-500/30">
+                              <td className="p-1.5 text-left bg-dark-secondary/60 text-emerald-400 text-[10px] font-bold">Score</td>
                               {front9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center">
+                                <td key={i} className="p-0.5 text-center bg-dark-secondary/60">
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
                                 </td>
                               ))}
-                              <td className="p-1.5 text-center font-bold text-white text-[11px]">
+                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-white text-[11px]">
                                 {front9Score != null ? front9Score : '–'}
                               </td>
                             </tr>
@@ -413,24 +429,24 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="p-1.5 text-left bg-dark-secondary/40 text-text-secondary text-[10px]">Par</td>
+                              <td className="p-1.5 text-left bg-dark-secondary/30 text-text-muted text-[10px]">Par</td>
                               {back9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px]">{h.par || defaultPars[i + 9]}</td>
+                                <td key={i} className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px]">{h.par || defaultPars[i + 9]}</td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px] font-bold">{back9Par}</td>
-                              <td className="p-1.5 text-center bg-dark-secondary/40 text-text-secondary text-[10px] font-bold">{front9Par + back9Par}</td>
+                              <td className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px] font-bold">{back9Par}</td>
+                              <td className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px] font-bold">{front9Par + back9Par}</td>
                             </tr>
-                            <tr>
-                              <td className="p-1.5 text-left text-white text-[10px] font-medium">Score</td>
+                            <tr className="border-t-2 border-emerald-500/30">
+                              <td className="p-1.5 text-left bg-dark-secondary/60 text-emerald-400 text-[10px] font-bold">Score</td>
                               {back9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center">
+                                <td key={i} className="p-0.5 text-center bg-dark-secondary/60">
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i + 9]} />
                                 </td>
                               ))}
-                              <td className="p-1.5 text-center font-bold text-white text-[11px]">
+                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-white text-[11px]">
                                 {back9Score != null ? back9Score : '–'}
                               </td>
-                              <td className="p-1.5 text-center font-bold text-white text-[11px]">
+                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-white text-[11px]">
                                 {roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : '–')}
                               </td>
                             </tr>
@@ -454,54 +470,31 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               </div>
             )}
 
-            {/* Stats row: probabilities + fantasy breakdown */}
-            <div className="px-4 pb-3 flex flex-wrap gap-2">
-              {/* Probabilities */}
-              {player.probabilities && (
-                <>
-                  {player.probabilities.win != null && (
-                    <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-400 font-medium">
-                      Win {(player.probabilities.win * 100).toFixed(1)}%
-                    </span>
-                  )}
-                  {player.probabilities.top5 != null && (
-                    <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
-                      Top 5 {(player.probabilities.top5 * 100).toFixed(1)}%
-                    </span>
-                  )}
-                  {player.probabilities.top10 != null && (
-                    <span className="text-[10px] px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 font-medium">
-                      Top 10 {(player.probabilities.top10 * 100).toFixed(1)}%
-                    </span>
-                  )}
-                  {player.probabilities.makeCut != null && (
-                    <span className="text-[10px] px-2 py-1 rounded-full bg-dark-secondary/80 text-text-secondary font-medium">
-                      Cut {(player.probabilities.makeCut * 100).toFixed(1)}%
-                    </span>
-                  )}
-                </>
-              )}
-              {/* Fantasy breakdown chips */}
-              {player.breakdown && (
-                <>
-                  {player.breakdown.position > 0 && (
-                    <span className="text-[10px] px-2 py-1 rounded-full bg-dark-secondary/60 text-text-secondary">
-                      Pos +{player.breakdown.position}
-                    </span>
-                  )}
-                  {player.breakdown.holeScoring !== 0 && player.breakdown.holeScoring != null && (
-                    <span className={`text-[10px] px-2 py-1 rounded-full bg-dark-secondary/60 ${player.breakdown.holeScoring > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      Holes {player.breakdown.holeScoring > 0 ? '+' : ''}{player.breakdown.holeScoring}
-                    </span>
-                  )}
-                  {player.breakdown.bonuses > 0 && (
-                    <span className="text-[10px] px-2 py-1 rounded-full bg-dark-secondary/60 text-yellow-400">
-                      Bonus +{player.breakdown.bonuses}
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
+            {/* Stats row: probabilities */}
+            {player.probabilities && (
+              <div className="px-4 pb-3 flex flex-wrap gap-2">
+                {player.probabilities.win != null && (
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-400 font-medium">
+                    Win {(player.probabilities.win * 100).toFixed(1)}%
+                  </span>
+                )}
+                {player.probabilities.top5 != null && (
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
+                    Top 5 {(player.probabilities.top5 * 100).toFixed(1)}%
+                  </span>
+                )}
+                {player.probabilities.top10 != null && (
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 font-medium">
+                    Top 10 {(player.probabilities.top10 * 100).toFixed(1)}%
+                  </span>
+                )}
+                {player.probabilities.makeCut != null && (
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-dark-secondary/80 text-text-secondary font-medium">
+                    Cut {(player.probabilities.makeCut * 100).toFixed(1)}%
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -574,7 +567,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
         <div className="text-center">Today</div>
         {!showRounds && <div className="text-center">Thru</div>}
         <div className="text-center">Total</div>
-        <div className="text-right">FPts</div>
+        <div className="text-right">Tee</div>
       </div>
 
       {/* Active players */}

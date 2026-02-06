@@ -115,7 +115,18 @@ async function syncHoleScores(tournamentId, prisma) {
 
       const roundStrokes = roundData.value ? Math.round(roundData.value) : null
       const holeEntries = roundData.linescores || []
-      if (!holeEntries.length && !roundStrokes) continue
+
+      // Extract tee time from statistics (index 6)
+      let teeTime = null
+      const stats = roundData.statistics?.categories?.[0]?.stats
+      if (stats && stats[6]?.displayValue) {
+        try {
+          teeTime = new Date(stats[6].displayValue)
+          if (isNaN(teeTime.getTime())) teeTime = null
+        } catch (e) { teeTime = null }
+      }
+
+      if (!holeEntries.length && !roundStrokes && !teeTime) continue
 
       // Ensure RoundScore exists
       const rsKey = `${playerId}_${roundNumber}`
@@ -127,15 +138,15 @@ async function syncHoleScores(tournamentId, prisma) {
           playerId,
           roundNumber,
           score: roundStrokes,
+          teeTime,
           tournamentId,
         })
-      } else if (roundStrokes != null) {
-        // Update score if we have it
-        roundScoreOps.push({
-          _update: true,
-          id: roundScoreId,
-          score: roundStrokes,
-        })
+      } else {
+        // Update score and tee time
+        const update = { _update: true, id: roundScoreId }
+        if (roundStrokes != null) update.score = roundStrokes
+        if (teeTime) update.teeTime = teeTime
+        roundScoreOps.push(update)
       }
 
       // Process hole-by-hole data

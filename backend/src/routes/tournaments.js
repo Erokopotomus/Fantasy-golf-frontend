@@ -137,9 +137,14 @@ router.get('/:id/leaderboard', async (req, res, next) => {
 
     // Index round scores by playerId
     const roundScoresByPlayer = {}
+    const teeTimesByPlayer = {} // { playerId: { 1: teeTime, 2: teeTime, ... } }
     for (const rs of allRoundScores) {
       if (!roundScoresByPlayer[rs.playerId]) roundScoresByPlayer[rs.playerId] = []
       roundScoresByPlayer[rs.playerId].push(rs)
+      if (rs.teeTime) {
+        if (!teeTimesByPlayer[rs.playerId]) teeTimesByPlayer[rs.playerId] = {}
+        teeTimesByPlayer[rs.playerId][rs.roundNumber] = rs.teeTime
+      }
     }
 
     // Index live scores by playerId
@@ -184,6 +189,7 @@ router.get('/:id/leaderboard', async (req, res, next) => {
         eagles: perf.eagles,
         birdies: perf.birdies,
         bogeys: perf.bogeys,
+        teeTimes: teeTimesByPlayer[perf.playerId] || null,
       }
 
       // Include live probabilities when tournament is in progress

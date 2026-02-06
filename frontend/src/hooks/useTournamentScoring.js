@@ -36,6 +36,7 @@ function flattenEntry(entry) {
     currentRound: entry.currentRound ?? null,
     probabilities: entry.probabilities ?? null,
     sgTotalLive: entry.sgTotalLive ?? null,
+    teeTimes: entry.teeTimes ?? null,
   }
 }
 
