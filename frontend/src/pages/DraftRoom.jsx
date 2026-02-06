@@ -179,9 +179,9 @@ const DraftRoomContent = () => {
           />
         </div>
       ) : (
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-          {/* Left: Draft Board */}
-          <div className="lg:w-[55%] lg:border-r lg:border-dark-border flex flex-col min-h-0 p-2">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Top: Draft Board (full width) */}
+          <div className="h-[45%] flex flex-col min-h-0 border-b-2 border-accent-green/30 p-2">
             {draft?.type === 'auction' ? (
               <BidPanel
                 currentBid={currentBid}
@@ -206,9 +206,10 @@ const DraftRoomContent = () => {
             )}
           </div>
 
-          {/* Right: Player Pool + Queue/History */}
-          <div className="lg:w-[45%] flex flex-col min-h-0">
-            <div className="flex-1 min-h-0">
+          {/* Bottom: Player Pool + Queue */}
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+            {/* Left: Player Pool */}
+            <div className="flex-1 lg:w-[60%] lg:border-r lg:border-dark-border min-h-0">
               <PlayerPool
                 players={availablePlayers}
                 onSelectPlayer={handleSelectPlayer}
@@ -219,7 +220,8 @@ const DraftRoomContent = () => {
                 onViewPlayer={openPlayerDetail}
               />
             </div>
-            <div className="flex-shrink-0 border-t border-dark-border max-h-[30%] overflow-auto p-2 space-y-2">
+            {/* Right: Queue */}
+            <div className="lg:w-[40%] flex flex-col min-h-0 overflow-auto p-2">
               <DraftQueue
                 queue={queue}
                 onRemove={removeFromQueue}

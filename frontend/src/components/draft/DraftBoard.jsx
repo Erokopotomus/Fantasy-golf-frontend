@@ -16,9 +16,9 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                 key={team.id}
                 className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
                   team.id === userTeamId
-                    ? 'bg-accent-green/25 text-accent-green border-b-2 border-b-accent-green'
+                    ? 'bg-accent-green/30 text-accent-green border-b-2 border-b-accent-green'
                     : currentPick?.teamId === team.id
-                      ? 'bg-yellow-500/15 text-yellow-400'
+                      ? 'bg-yellow-500/20 text-yellow-400'
                       : 'bg-dark-tertiary text-text-muted'
                 }`}
               >
@@ -38,6 +38,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
         <div className="min-w-[500px]">
           {rounds.map(round => {
             const isCurrentRound = currentPick?.round === round
+            const isReverse = round % 2 === 0
 
             return (
               <div
@@ -45,15 +46,17 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                 className={`grid gap-px ${isCurrentRound ? 'bg-dark-border' : ''}`}
                 style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
               >
-                <div className={`px-1 py-1 text-[10px] text-center flex items-center justify-center font-semibold ${
+                <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
                   isCurrentRound ? 'text-accent-green bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
                 }`}>
-                  {round}
+                  <span>{round}</span>
+                  <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>
                 </div>
-                {teams.map(team => {
+                {teams.map((team, teamIdx) => {
                   const pick = picks.find(p => p.teamId === team.id && p.round === round)
                   const isCurrent = currentPick?.teamId === team.id && currentPick?.round === round && !currentPick?.complete
                   const isUserTeamCell = team.id === userTeamId
+                  const pickInRound = teamIdx + 1
 
                   return (
                     <div
@@ -68,14 +71,14 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                         pick ? 'cursor-pointer hover:brightness-125' : ''
                       } ${
                         isCurrent
-                          ? 'bg-accent-green/20 ring-1 ring-inset ring-accent-green/60'
+                          ? 'bg-accent-green/25 ring-2 ring-inset ring-accent-green'
                           : pick
                             ? pick.playerRank <= 10
-                              ? isUserTeamCell ? 'bg-yellow-500/10' : 'bg-yellow-500/5'
+                              ? isUserTeamCell ? 'bg-yellow-500/20' : 'bg-yellow-500/12'
                               : pick.playerRank <= 25
-                                ? isUserTeamCell ? 'bg-accent-green/10' : 'bg-accent-green/5'
-                                : isUserTeamCell ? 'bg-accent-green/5' : round % 2 === 1 ? 'bg-dark-primary' : 'bg-dark-secondary/40'
-                            : round % 2 === 1 ? 'bg-dark-primary/40' : 'bg-dark-secondary/20'
+                                ? isUserTeamCell ? 'bg-accent-green/18' : 'bg-accent-green/10'
+                                : isUserTeamCell ? 'bg-accent-green/10' : round % 2 === 1 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
+                            : round % 2 === 1 ? 'bg-dark-primary/50' : 'bg-dark-secondary/25'
                       }`}
                     >
                       {pick ? (
@@ -101,7 +104,9 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
                         </span>
                       ) : (
-                        <span className="text-[9px] text-text-muted/25">—</span>
+                        <span className="text-[9px] text-text-muted/30 tabular-nums">
+                          {round}.{pickInRound}
+                        </span>
                       )}
                     </div>
                   )

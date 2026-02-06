@@ -234,7 +234,7 @@ const MockDraftRoom = () => {
   const [recentPick, setRecentPick] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('board') // board, players, queue, myteam
-  const [bottomTab, setBottomTab] = useState('players') // players, queue, myteam, picks
+  const [bottomTab, setBottomTab] = useState('queue') // queue, myteam, picks
   const [sortBy, setSortBy] = useState('rank') // rank, name, sg, top10
   const [sortDir, setSortDir] = useState('asc')
   const [selectedPlayer, setSelectedPlayer] = useState(null)
@@ -733,12 +733,12 @@ const MockDraftRoom = () => {
       </div>
 
       {/* ===== MAIN CONTENT ===== */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* ===== LEFT: DRAFT BOARD (desktop: left 55%, mobile: full when active) ===== */}
-        <div className={`lg:w-[55%] lg:border-r lg:border-dark-border flex flex-col min-h-0 ${
-          activeTab !== 'board' ? 'hidden lg:flex' : 'flex'
-        }`}>
+        {/* ===== TOP: DRAFT BOARD (full width, ~45% on desktop) ===== */}
+        <div className={`flex-col min-h-0 border-b-2 border-accent-green/30 ${
+          activeTab === 'board' ? 'flex flex-1' : 'hidden'
+        } lg:flex lg:flex-none lg:h-[45%]`}>
           {/* Board Column Headers */}
           <div className="flex-shrink-0 bg-dark-secondary border-b border-dark-border" ref={boardRef}>
             <div className="overflow-x-auto">
@@ -750,9 +750,9 @@ const MockDraftRoom = () => {
                     key={team.id}
                     className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
                       team.isUser
-                        ? 'bg-accent-green/25 text-accent-green border-b-2 border-b-accent-green'
+                        ? 'bg-accent-green/30 text-accent-green border-b-2 border-b-accent-green'
                         : pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
-                          ? 'bg-yellow-500/15 text-yellow-400'
+                          ? 'bg-yellow-500/20 text-yellow-400'
                           : 'bg-dark-tertiary text-text-muted'
                     }`}
                   >
@@ -782,10 +782,11 @@ const MockDraftRoom = () => {
                     className={`grid gap-px ${isCurrentRound ? 'bg-dark-border' : ''}`}
                     style={{ gridTemplateColumns: `44px repeat(${config.teamCount}, 1fr)` }}
                   >
-                    <div className={`px-1 py-1 text-[10px] text-center flex items-center justify-center font-semibold ${
+                    <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
                       isCurrentRound ? 'text-accent-green bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
                     }`}>
-                      {round}
+                      <span>{round}</span>
+                      <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>
                     </div>
                     {config.teams.map((team, teamIdx) => {
                       // Fix snake alignment: each column always represents the same team
@@ -809,14 +810,14 @@ const MockDraftRoom = () => {
                             pick ? 'cursor-pointer hover:brightness-125' : ''
                           } ${
                             isCurrent
-                              ? 'bg-accent-green/20 ring-1 ring-inset ring-accent-green/60'
+                              ? 'bg-accent-green/25 ring-2 ring-inset ring-accent-green'
                               : pick
                                 ? pick.playerRank <= 10
-                                  ? isUserTeamCell ? 'bg-yellow-500/10' : 'bg-yellow-500/5'
+                                  ? isUserTeamCell ? 'bg-yellow-500/20' : 'bg-yellow-500/12'
                                   : pick.playerRank <= 25
-                                    ? isUserTeamCell ? 'bg-accent-green/10' : 'bg-accent-green/5'
-                                    : isUserTeamCell ? 'bg-accent-green/5' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/40'
-                                : roundIdx % 2 === 0 ? 'bg-dark-primary/40' : 'bg-dark-secondary/20'
+                                    ? isUserTeamCell ? 'bg-accent-green/18' : 'bg-accent-green/10'
+                                    : isUserTeamCell ? 'bg-accent-green/10' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
+                                : roundIdx % 2 === 0 ? 'bg-dark-primary/50' : 'bg-dark-secondary/25'
                           }`}
                         >
                           {pick ? (
@@ -844,7 +845,7 @@ const MockDraftRoom = () => {
                             </span>
                           ) : (
                             <span className="text-[9px] text-text-muted/30 tabular-nums">
-                              {actualPickIndex + 1}
+                              {round}.{(actualPickIndex % config.teamCount) + 1}
                             </span>
                           )}
                         </div>
@@ -857,41 +858,16 @@ const MockDraftRoom = () => {
           </div>
         </div>
 
-        {/* ===== RIGHT: PLAYER POOL + QUEUE/TEAM (desktop: right 45%, mobile: tabs) ===== */}
-        <div className={`lg:w-[45%] flex flex-col min-h-0 ${
-          activeTab === 'board' ? 'hidden lg:flex' : 'flex'
-        }`}>
+        {/* ===== BOTTOM: PLAYER TABLE + SIDE PANEL ===== */}
+        <div className={`flex-col min-h-0 overflow-hidden ${
+          activeTab === 'board' ? 'hidden' : 'flex flex-1'
+        } lg:flex lg:flex-1 lg:flex-row`}>
 
-          {/* Desktop Bottom Tabs */}
-          <div className="hidden lg:flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
-            {[
-              { key: 'players', label: `Players (${availablePlayers.length})` },
-              { key: 'queue', label: `Queue (${queue.length})` },
-              { key: 'myteam', label: `My Team (${userPicks.length}/${config.rosterSize})` },
-              { key: 'picks', label: 'Picks' },
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setBottomTab(tab.key)}
-                className={`px-4 py-2 text-xs font-medium transition-colors ${
-                  bottomTab === tab.key
-                    ? 'text-accent-green border-b-2 border-accent-green'
-                    : 'text-text-secondary hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content
-              Mobile: activeTab drives content (board tab is handled by parent hiding this panel)
-              Desktop: activeTab stays 'board', so bottomTab drives content */}
-          <div className="flex-1 overflow-hidden">
-
-            {/* === PLAYERS TAB === */}
-            {(activeTab === 'players' || (activeTab === 'board' && bottomTab === 'players')) && (
-              <div className="h-full flex flex-col">
+          {/* LEFT: Player Table (always visible on desktop, 'players' tab on mobile) */}
+          <div className={`flex-col min-h-0 ${
+            activeTab === 'players' ? 'flex flex-1' : 'hidden'
+          } lg:flex lg:flex-none lg:w-[60%] lg:border-r lg:border-dark-border`}>
+            <div className="h-full flex flex-col">
                 {/* Search Bar */}
                 <div className="flex-shrink-0 p-3 bg-dark-secondary/50">
                   <div className="relative">
@@ -1010,8 +986,34 @@ const MockDraftRoom = () => {
                   )}
                 </div>
               </div>
-            )}
+          </div>
 
+          {/* RIGHT: Side Panel - Queue/Roster/Picks */}
+          <div className={`flex-col min-h-0 ${
+            activeTab === 'queue' || activeTab === 'myteam' ? 'flex flex-1' : 'hidden'
+          } lg:flex lg:flex-none lg:w-[40%]`}>
+            {/* Desktop Side Panel Tabs */}
+            <div className="hidden lg:flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
+              {[
+                { key: 'queue', label: `Queue (${queue.length})` },
+                { key: 'myteam', label: `My Team (${userPicks.length}/${config.rosterSize})` },
+                { key: 'picks', label: 'Picks' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setBottomTab(tab.key)}
+                  className={`flex-1 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors ${
+                    bottomTab === tab.key
+                      ? 'text-accent-green border-b-2 border-accent-green'
+                      : 'text-text-secondary hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex-1 overflow-hidden">
             {/* === QUEUE TAB === */}
             {(activeTab === 'queue' || (activeTab === 'board' && bottomTab === 'queue')) && (
               <div className="h-full flex flex-col">
@@ -1131,6 +1133,7 @@ const MockDraftRoom = () => {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
