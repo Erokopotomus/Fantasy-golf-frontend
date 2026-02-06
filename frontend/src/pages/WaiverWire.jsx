@@ -6,6 +6,7 @@ import { useLeague } from '../hooks/useLeague'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 
 const WaiverWire = () => {
   const { leagueId } = useParams()
@@ -23,15 +24,15 @@ const WaiverWire = () => {
 
   const { roster: rawRoster, refetch: refetchRoster } = useRoster(teamId)
 
-  // Flatten roster for the drop modal
   const roster = (rawRoster || []).map(e => ({
     id: e.player?.id || e.playerId,
     name: e.player?.name || 'Unknown',
     countryFlag: e.player?.countryFlag || '',
   }))
 
-  const [claimTarget, setClaimTarget] = useState(null) // player being claimed
-  const [dropTarget, setDropTarget] = useState(null) // player to drop (optional)
+  const [claimTarget, setClaimTarget] = useState(null)
+  const [dropTarget, setDropTarget] = useState(null)
+  const [drawerPlayerId, setDrawerPlayerId] = useState(null)
 
   const rosterSize = league?.settings?.rosterSize || 6
   const isRosterFull = roster.length >= rosterSize
@@ -46,6 +47,12 @@ const WaiverWire = () => {
     } catch {
       // handled by hook
     }
+  }
+
+  const handleAddFromDrawer = (player) => {
+    setDrawerPlayerId(null)
+    setClaimTarget(player)
+    setDropTarget(null)
   }
 
   const tours = ['All', 'PGA', 'LIV', 'DP World']
@@ -143,7 +150,11 @@ const WaiverWire = () => {
 
         <div className="max-h-[600px] overflow-y-auto divide-y divide-dark-border/30">
           {availablePlayers.map(player => (
-            <div key={player.id} className="grid grid-cols-[1fr_80px_80px_72px] gap-2 items-center px-4 py-3 hover:bg-dark-tertiary/40 transition-colors">
+            <div
+              key={player.id}
+              className="grid grid-cols-[1fr_80px_80px_72px] gap-2 items-center px-4 py-3 hover:bg-dark-tertiary/40 transition-colors cursor-pointer"
+              onClick={() => setDrawerPlayerId(player.id)}
+            >
               <div className="flex items-center gap-3 min-w-0">
                 {player.headshotUrl ? (
                   <img src={player.headshotUrl} alt="" className="w-9 h-9 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
@@ -161,16 +172,17 @@ const WaiverWire = () => {
                 </div>
               </div>
               <div className="text-center text-sm text-text-secondary">
-                {player.owgrRank ? `#${player.owgrRank}` : '—'}
+                {player.owgrRank ? `#${player.owgrRank}` : '\u2014'}
               </div>
               <div className="text-center text-sm text-text-secondary">
-                {player.sgTotal != null ? player.sgTotal.toFixed(1) : '—'}
+                {player.sgTotal != null ? player.sgTotal.toFixed(1) : '\u2014'}
               </div>
               <div className="text-right">
                 <Button
                   size="sm"
                   variant={isRosterFull ? 'secondary' : 'primary'}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setClaimTarget(player)
                     setDropTarget(null)
                   }}
@@ -197,7 +209,6 @@ const WaiverWire = () => {
               {isRosterFull ? 'Swap Player' : 'Add Player'}
             </h3>
 
-            {/* Player being added */}
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{claimTarget.countryFlag}</span>
@@ -211,7 +222,6 @@ const WaiverWire = () => {
               </div>
             </div>
 
-            {/* Drop selection (if roster full) */}
             {isRosterFull && (
               <div className="mb-4">
                 <label className="block text-sm text-text-secondary mb-2">
@@ -256,6 +266,17 @@ const WaiverWire = () => {
           </Card>
         </div>
       )}
+
+      {/* Player Drawer */}
+      <PlayerDrawer
+        playerId={drawerPlayerId}
+        isOpen={!!drawerPlayerId}
+        onClose={() => setDrawerPlayerId(null)}
+        rosterContext={{
+          isOnRoster: false,
+          onAdd: handleAddFromDrawer,
+        }}
+      />
     </div>
   )
 }

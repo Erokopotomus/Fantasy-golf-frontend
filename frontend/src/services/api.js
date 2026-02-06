@@ -154,6 +154,10 @@ class ApiService {
     return this.request(`/players/${id}/stats`)
   }
 
+  async getPlayerProfile(id) {
+    return this.request(`/players/${id}`)
+  }
+
   // Teams
   async getTeam(id) {
     return this.request(`/teams/${id}`)

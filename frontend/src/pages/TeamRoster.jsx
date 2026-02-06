@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useRoster } from '../hooks/useRoster'
 import { useLineup } from '../hooks/useLineup'
@@ -6,11 +6,11 @@ import { useLeague } from '../hooks/useLeague'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import PlayerDrawer from '../components/players/PlayerDrawer'
+import LineupOptimizer from '../components/roster/LineupOptimizer'
 
 /**
  * Normalize a roster entry from the API into a flat player object
- * API shape: { id: rosterEntryId, position, playerId, acquiredVia, player: { id, name, ... } }
- * Component shape: { id, name, countryFlag, owgrRank, sgTotal, position (ACTIVE/BENCH), ... }
  */
 function flattenRosterEntry(entry) {
   const p = entry.player || {}
@@ -42,20 +42,19 @@ const TeamRoster = () => {
   const { user } = useAuth()
   const { league, loading: leagueLoading } = useLeague(leagueId)
 
-  // Find user's team in this league
   const userTeam = league?.teams?.find(t => t.userId === user?.id)
   const teamId = userTeam?.id
 
   const { roster: rawRoster, loading: rosterLoading, error: rosterError, dropPlayer, refetch } = useRoster(teamId)
   const { saveLineup, loading: lineupLoading, saved } = useLineup(teamId)
 
-  // Normalize roster entries
   const roster = rawRoster.map(flattenRosterEntry)
   const activePlayers = roster.filter(p => p.rosterPosition === 'ACTIVE')
-  const benchPlayers = roster.filter(p => p.rosterPosition !== 'ACTIVE')
 
   const [isEditing, setIsEditing] = useState(false)
-  const [pendingActive, setPendingActive] = useState(null) // null = not editing
+  const [pendingActive, setPendingActive] = useState(null)
+  const [drawerPlayerId, setDrawerPlayerId] = useState(null)
+  const [showOptimizer, setShowOptimizer] = useState(false)
 
   const maxActive = league?.settings?.maxActiveLineup || 4
   const rosterSize = league?.settings?.rosterSize || 6
@@ -94,18 +93,38 @@ const TeamRoster = () => {
     }
   }
 
-  const handleDrop = async (player) => {
+  const handleDrop = useCallback(async (playerIdOrObj) => {
+    const pid = typeof playerIdOrObj === 'string' ? playerIdOrObj : playerIdOrObj?.id
+    const player = roster.find(p => p.id === pid)
+    if (!player) return
     if (!window.confirm(`Drop ${player.name}? They'll become a free agent.`)) return
     try {
       await dropPlayer(player.id)
+      await refetch()
     } catch {
       // error handled by hook
     }
-  }
+  }, [roster, dropPlayer, refetch])
 
   const getActiveSet = () => {
     if (pendingActive) return pendingActive
     return new Set(activePlayers.map(p => p.id))
+  }
+
+  // Build roster context for the drawer
+  const getDrawerRosterContext = () => {
+    const player = roster.find(p => p.id === drawerPlayerId)
+    if (!player) return null
+    return {
+      isOnRoster: true,
+      position: player.rosterPosition,
+      onDrop: (pid) => handleDrop(pid),
+    }
+  }
+
+  const handlePlayerClick = (player) => {
+    if (isEditing) return // Don't open drawer while editing lineup
+    setDrawerPlayerId(player.id)
   }
 
   if (leagueLoading || (teamId && rosterLoading)) {
@@ -119,7 +138,6 @@ const TeamRoster = () => {
     )
   }
 
-  // Empty roster state
   if (!userTeam || roster.length === 0) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -205,7 +223,16 @@ const TeamRoster = () => {
               </Button>
             </>
           ) : (
-            <Button size="sm" onClick={startEditing}>Edit Lineup</Button>
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowOptimizer(!showOptimizer)}
+              >
+                {showOptimizer ? 'Hide' : 'Optimize'}
+              </Button>
+              <Button size="sm" onClick={startEditing}>Edit Lineup</Button>
+            </>
           )}
         </div>
       </div>
@@ -228,6 +255,27 @@ const TeamRoster = () => {
         </div>
       )}
 
+      {/* Lineup Optimizer */}
+      {showOptimizer && roster.length > 0 && (
+        <div className="mb-6">
+          <LineupOptimizer
+            roster={roster}
+            maxActive={maxActive}
+            currentActiveIds={[...activeSet]}
+            onApply={async (optimalIds) => {
+              try {
+                await saveLineup(optimalIds)
+                await refetch()
+                setShowOptimizer(false)
+              } catch {
+                // error handled by hook
+              }
+            }}
+            onClose={() => setShowOptimizer(false)}
+          />
+        </div>
+      )}
+
       {/* Active Lineup */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
@@ -243,6 +291,7 @@ const TeamRoster = () => {
               isEditing={isEditing}
               onToggle={() => togglePlayer(player.id)}
               onDrop={() => handleDrop(player)}
+              onClick={() => handlePlayerClick(player)}
             />
           ))}
           {roster.filter(p => activeSet.has(p.id)).length === 0 && (
@@ -269,6 +318,7 @@ const TeamRoster = () => {
               canActivate={activeSet.size < maxActive}
               onToggle={() => togglePlayer(player.id)}
               onDrop={() => handleDrop(player)}
+              onClick={() => handlePlayerClick(player)}
             />
           ))}
           {roster.filter(p => !activeSet.has(p.id)).length === 0 && (
@@ -278,24 +328,36 @@ const TeamRoster = () => {
           )}
         </div>
       </div>
+
+      {/* Player Drawer */}
+      <PlayerDrawer
+        playerId={drawerPlayerId}
+        isOpen={!!drawerPlayerId}
+        onClose={() => setDrawerPlayerId(null)}
+        rosterContext={getDrawerRosterContext()}
+      />
     </div>
   )
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, canActivate = true, onToggle, onDrop }) => {
+const PlayerRow = ({ player, isActive, isEditing, canActivate = true, onToggle, onDrop, onClick }) => {
   return (
-    <div className={`
-      flex items-center gap-3 p-3 rounded-lg transition-all
-      ${isActive
-        ? 'bg-dark-secondary border border-emerald-500/30'
-        : 'bg-dark-secondary/50 border border-dark-border/50'
-      }
-    `}>
+    <div
+      onClick={onClick}
+      className={`
+        flex items-center gap-3 p-3 rounded-lg transition-all
+        ${!isEditing ? 'cursor-pointer hover:bg-dark-tertiary/60' : ''}
+        ${isActive
+          ? 'bg-dark-secondary border border-emerald-500/30'
+          : 'bg-dark-secondary/50 border border-dark-border/50'
+        }
+      `}
+    >
       {/* Edit toggle */}
       {isEditing && (
         <button
-          onClick={onToggle}
+          onClick={(e) => { e.stopPropagation(); onToggle() }}
           disabled={!isActive && !canActivate}
           className={`
             w-6 h-6 rounded flex items-center justify-center flex-shrink-0 transition-colors
@@ -346,10 +408,17 @@ const PlayerRow = ({ player, isActive, isEditing, canActivate = true, onToggle, 
         {player.top10s > 0 && <span>{player.top10s} T10</span>}
       </div>
 
-      {/* Actions */}
+      {/* Chevron indicator for drill-in */}
+      {!isEditing && (
+        <svg className="w-4 h-4 text-text-muted/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      )}
+
+      {/* Drop button (only in non-editing mode) */}
       {!isEditing && (
         <button
-          onClick={onDrop}
+          onClick={(e) => { e.stopPropagation(); onDrop() }}
           className="text-xs text-red-400/60 hover:text-red-400 transition-colors px-2 py-1"
         >
           Drop
