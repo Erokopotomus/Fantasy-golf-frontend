@@ -41,7 +41,7 @@ const ScoreCell = ({ score, par }) => {
   )
 }
 
-const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId }) => {
+const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand }) => {
   const [expandedPlayer, setExpandedPlayer] = useState(null)
   const [expandedRound, setExpandedRound] = useState(null) // which round tab is active
   const [showRounds, setShowRounds] = useState(false)
@@ -154,6 +154,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             if (isExpanded) {
               setExpandedPlayer(null)
               setExpandedRound(null)
+              onPlayerExpand?.(null)
             } else {
               setExpandedPlayer(player.id)
               // Default to current round (the one being played), fallback to latest with data
@@ -164,6 +165,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                 || 1)
               // Fetch hole scores
               fetchHoleScores(player.id)
+              onPlayerExpand?.(player)
             }
           }}
           className={`
