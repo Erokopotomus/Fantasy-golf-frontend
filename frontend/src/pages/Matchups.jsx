@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useLeagues } from '../hooks/useLeagues'
+import { useLeague } from '../hooks/useLeague'
 import useMatchups from '../hooks/useMatchups'
 import Card from '../components/common/Card'
 import MatchupCard from '../components/matchups/MatchupCard'
@@ -12,20 +12,18 @@ import H2HStandings from '../components/standings/H2HStandings'
 const Matchups = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
-  const { leagues, loading: leaguesLoading } = useLeagues()
-  const { schedule, currentWeek, playoffs, loading, error } = useMatchups(leagueId)
+  const { league, loading: leagueLoading } = useLeague(leagueId)
+  const { schedule, currentWeek, playoffs, standings, loading, error } = useMatchups(leagueId)
 
   const [activeTab, setActiveTab] = useState('current')
   const [selectedWeek, setSelectedWeek] = useState(null)
 
-  const league = leagues?.find(l => l.id === leagueId)
-
-  if (leaguesLoading || loading) {
+  if (leagueLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading matchups...</p>
           </div>
         </div>
@@ -38,7 +36,7 @@ const Matchups = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="text-center py-12">
           <p className="text-red-400 mb-4">{error}</p>
-          <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
             Back to League
           </Link>
         </div>
@@ -46,7 +44,10 @@ const Matchups = () => {
     )
   }
 
-  if (!league || league.format !== 'head-to-head') {
+  // Accept both frontend and backend format strings
+  const isH2H = league?.format === 'HEAD_TO_HEAD' || league?.format === 'head-to-head'
+
+  if (!league || !isH2H) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
@@ -54,7 +55,7 @@ const Matchups = () => {
           <p className="text-text-secondary mb-6">
             Matchups are only available for Head-to-Head format leagues.
           </p>
-          <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
             Back to League
           </Link>
         </Card>
@@ -62,9 +63,8 @@ const Matchups = () => {
     )
   }
 
-  // Create team lookup from standings
-  const teams = league.standings || []
-  const teamLookup = teams.reduce((acc, team) => {
+  // Team lookup from standings (keyed by userId)
+  const teamLookup = standings.reduce((acc, team) => {
     acc[team.userId] = team
     return acc
   }, {})
@@ -106,7 +106,7 @@ const Matchups = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-accent-green text-white'
+                ? 'bg-emerald-500 text-white'
                 : 'bg-dark-tertiary text-text-secondary hover:text-white'
             }`}
           >
@@ -138,7 +138,7 @@ const Matchups = () => {
           {currentWeek && (
             <MatchupList
               week={currentWeek}
-              teams={teams}
+              teams={standings}
               leagueId={leagueId}
               currentUserId={user?.id}
             />
@@ -146,7 +146,7 @@ const Matchups = () => {
 
           {!currentWeek && (
             <Card className="text-center py-8">
-              <p className="text-text-muted">No matchups scheduled for this week</p>
+              <p className="text-text-muted">No matchups scheduled yet</p>
             </Card>
           )}
         </div>
@@ -163,7 +163,7 @@ const Matchups = () => {
                 onClick={() => setSelectedWeek(week.week)}
                 className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                   selectedWeek === week.week || (!selectedWeek && week.week === currentWeek?.week)
-                    ? 'bg-accent-green text-white'
+                    ? 'bg-emerald-500 text-white'
                     : week.matchups?.every(m => m.completed)
                     ? 'bg-dark-tertiary text-text-secondary'
                     : 'bg-dark-tertiary text-white border border-yellow-500/50'
@@ -180,7 +180,7 @@ const Matchups = () => {
               <MatchupList
                 key={week.week}
                 week={week}
-                teams={teams}
+                teams={standings}
                 leagueId={leagueId}
                 currentUserId={user?.id}
               />
@@ -191,14 +191,14 @@ const Matchups = () => {
 
       {/* Standings Tab */}
       {activeTab === 'standings' && (
-        <H2HStandings standings={teams} currentUserId={user?.id} />
+        <H2HStandings standings={standings} currentUserId={user?.id} />
       )}
 
       {/* Playoffs Tab */}
       {activeTab === 'playoffs' && (
         <PlayoffBracket
           bracket={playoffs}
-          teams={teams}
+          teams={standings}
           currentUserId={user?.id}
         />
       )}

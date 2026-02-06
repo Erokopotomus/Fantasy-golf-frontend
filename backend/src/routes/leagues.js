@@ -629,4 +629,134 @@ router.get('/:id/available-players', authenticate, async (req, res, next) => {
   }
 })
 
+// GET /api/leagues/:id/matchups - Get H2H matchup schedule with scores
+router.get('/:id/matchups', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: {
+        members: { select: { userId: true } },
+        teams: {
+          include: {
+            user: { select: { id: true, name: true, avatar: true } },
+          },
+        },
+      },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember && !league.isPublic) {
+      return res.status(403).json({ error: { message: 'Not authorized' } })
+    }
+
+    // Fetch all matchups with tournament info
+    const matchups = await prisma.matchup.findMany({
+      where: { leagueId: req.params.id },
+      include: {
+        tournament: { select: { id: true, name: true, startDate: true } },
+        homeTeam: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+        awayTeam: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+      },
+      orderBy: [{ week: 'asc' }, { createdAt: 'asc' }],
+    })
+
+    // Build team lookup by userId
+    const teamByUserId = {}
+    league.teams.forEach(t => {
+      teamByUserId[t.userId] = t
+    })
+
+    // Group matchups by week
+    const weekMap = {}
+    for (const m of matchups) {
+      if (!weekMap[m.week]) {
+        weekMap[m.week] = {
+          week: m.week,
+          tournament: m.tournament?.name || `Week ${m.week}`,
+          tournamentId: m.tournamentId,
+          matchups: [],
+        }
+      }
+      weekMap[m.week].matchups.push({
+        id: m.id,
+        home: m.homeTeam.userId,
+        away: m.awayTeam.userId,
+        homeScore: m.homeScore,
+        awayScore: m.awayScore,
+        completed: m.isComplete,
+      })
+    }
+
+    const schedule = Object.values(weekMap).sort((a, b) => a.week - b.week)
+
+    // Current week = latest incomplete, or most recent completed
+    let currentWeek = schedule.find(w => w.matchups.some(m => !m.completed))
+    if (!currentWeek && schedule.length > 0) {
+      currentWeek = schedule[schedule.length - 1]
+    }
+
+    // Build standings from completed matchups
+    const standings = {}
+    league.teams.forEach(t => {
+      standings[t.userId] = {
+        userId: t.userId,
+        teamId: t.id,
+        name: t.user.name,
+        avatar: t.user.avatar,
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
+      }
+    })
+
+    for (const m of matchups) {
+      if (!m.isComplete) continue
+      const homeUid = m.homeTeam.userId
+      const awayUid = m.awayTeam.userId
+
+      if (standings[homeUid]) {
+        standings[homeUid].pointsFor += m.homeScore
+        standings[homeUid].pointsAgainst += m.awayScore
+      }
+      if (standings[awayUid]) {
+        standings[awayUid].pointsFor += m.awayScore
+        standings[awayUid].pointsAgainst += m.homeScore
+      }
+
+      if (m.homeScore > m.awayScore) {
+        if (standings[homeUid]) standings[homeUid].wins++
+        if (standings[awayUid]) standings[awayUid].losses++
+      } else if (m.awayScore > m.homeScore) {
+        if (standings[awayUid]) standings[awayUid].wins++
+        if (standings[homeUid]) standings[homeUid].losses++
+      } else {
+        if (standings[homeUid]) standings[homeUid].ties++
+        if (standings[awayUid]) standings[awayUid].ties++
+      }
+    }
+
+    // Sort standings by wins, then pointsFor
+    const sortedStandings = Object.values(standings).sort((a, b) => {
+      if (b.wins !== a.wins) return b.wins - a.wins
+      if (b.ties !== a.ties) return b.ties - a.ties
+      return b.pointsFor - a.pointsFor
+    })
+
+    res.json({
+      schedule,
+      currentWeek,
+      standings: sortedStandings,
+      playoffs: null, // TODO: implement playoff bracket
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router
