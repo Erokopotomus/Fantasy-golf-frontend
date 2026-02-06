@@ -44,6 +44,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
   const [expandedPlayer, setExpandedPlayer] = useState(null)
   const [expandedRound, setExpandedRound] = useState(null) // which round tab is active
   const [showRounds, setShowRounds] = useState(false)
+  const [search, setSearch] = useState('')
 
   const formatScore = (score) => {
     if (score == null || score === '' || isNaN(score)) return '–'
@@ -79,9 +80,13 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
   // Find cut line position
   const cutLineIndex = leaderboard.findIndex(p => p.status === 'CUT')
 
-  // Group into active and cut
-  const activePlayers = leaderboard.filter(p => p.status !== 'CUT')
-  const cutPlayers = leaderboard.filter(p => p.status === 'CUT')
+  // Filter by search, then group into active and cut
+  const searchLower = search.toLowerCase().trim()
+  const filtered = searchLower
+    ? leaderboard.filter(p => p.name?.toLowerCase().includes(searchLower))
+    : leaderboard
+  const activePlayers = filtered.filter(p => p.status !== 'CUT')
+  const cutPlayers = filtered.filter(p => p.status === 'CUT')
 
   const renderPlayer = (player, index, isCut = false) => {
     const isMyPlayer = myPlayerIds.includes(player.id)
@@ -472,15 +477,38 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <svg className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-32 sm:w-40 pl-7 pr-2 py-1 text-xs rounded-full bg-dark-tertiary border border-dark-border text-white placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-white"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
           <button
             onClick={() => setShowRounds(!showRounds)}
             className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
               showRounds ? 'bg-emerald-500/15 text-emerald-400' : 'bg-dark-tertiary text-text-muted hover:text-white'
             }`}
           >
-            {showRounds ? 'Rounds' : 'Rounds'}
+            Rounds
           </button>
-          <span className="text-xs text-text-muted">{leaderboard.length} players</span>
+          <span className="text-xs text-text-muted">{filtered.length}{search ? `/${leaderboard.length}` : ''} players</span>
         </div>
       </div>
 
