@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { mockApi } from '../services/mockApi'
 import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
+import socketService from '../services/socket'
 
 export const useChat = (leagueId) => {
   const { user } = useAuth()
@@ -8,20 +9,42 @@ export const useChat = (leagueId) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [sending, setSending] = useState(false)
-  const pollIntervalRef = useRef(null)
-  const lastTimestampRef = useRef(null)
+  const unsubRef = useRef(null)
 
-  // Fetch initial messages
+  // Fetch initial messages from API
   const fetchMessages = useCallback(async () => {
     if (!leagueId) return
 
     try {
       setLoading(true)
-      const data = await mockApi.chat.getMessages(leagueId, 100)
-      setMessages(data)
-      if (data.length > 0) {
-        lastTimestampRef.current = data[data.length - 1].timestamp
-      }
+      const data = await api.getLeagueMessages(leagueId, { limit: 100 })
+      // Backend returns { messages: [...] } or just array
+      const msgs = Array.isArray(data) ? data : (data.messages || [])
+      // Normalize shape for ChatMessage component
+      const normalized = msgs.map(m => {
+        let type = 'user'
+        let activityType = null
+        if (m.messageType === 'SYSTEM') {
+          type = 'system'
+        } else if (m.messageType === 'TRADE') {
+          type = 'activity'
+          activityType = 'trade'
+        } else if (m.messageType === 'DRAFT') {
+          type = 'activity'
+          activityType = 'lineup'
+        }
+        return {
+          id: m.id,
+          content: m.content,
+          type,
+          activityType,
+          userId: m.userId,
+          userName: m.user?.name || 'Unknown',
+          userAvatar: m.user?.name?.charAt(0).toUpperCase() || '?',
+          timestamp: m.createdAt,
+        }
+      })
+      setMessages(normalized)
       setError(null)
     } catch (err) {
       setError(err.message)
@@ -30,45 +53,25 @@ export const useChat = (leagueId) => {
     }
   }, [leagueId])
 
-  // Poll for new messages
-  const pollMessages = useCallback(async () => {
-    if (!leagueId || !lastTimestampRef.current) return
-
-    try {
-      const newMessages = await mockApi.chat.pollMessages(leagueId, lastTimestampRef.current)
-      if (newMessages.length > 0) {
-        setMessages(prev => {
-          // Avoid duplicates
-          const existingIds = new Set(prev.map(m => m.id))
-          const uniqueNew = newMessages.filter(m => !existingIds.has(m.id))
-          if (uniqueNew.length > 0) {
-            lastTimestampRef.current = uniqueNew[uniqueNew.length - 1].timestamp
-            return [...prev, ...uniqueNew]
-          }
-          return prev
-        })
-      }
-    } catch (err) {
-      console.error('Error polling messages:', err)
-    }
-  }, [leagueId])
-
-  // Send a message
+  // Send a message via API (Socket.IO will broadcast it back)
   const sendMessage = useCallback(async (content) => {
     if (!leagueId || !user || !content.trim()) return
 
     try {
       setSending(true)
-      const newMessage = await mockApi.chat.sendMessage(
-        leagueId,
-        user.id,
-        user.name,
-        user.name?.charAt(0).toUpperCase() || 'U',
-        content.trim()
-      )
-      setMessages(prev => [...prev, newMessage])
-      lastTimestampRef.current = newMessage.timestamp
-      return newMessage
+      const data = await api.sendMessage(leagueId, content.trim())
+      // Optimistically add to local state
+      const msg = {
+        id: data.id || data.message?.id || Date.now().toString(),
+        content: content.trim(),
+        type: 'user',
+        userId: user.id,
+        userName: user.name,
+        userAvatar: user.name?.charAt(0).toUpperCase() || 'U',
+        timestamp: new Date().toISOString(),
+      }
+      setMessages(prev => [...prev, msg])
+      return msg
     } catch (err) {
       setError(err.message)
       throw err
@@ -77,38 +80,59 @@ export const useChat = (leagueId) => {
     }
   }, [leagueId, user])
 
-  // Post system/activity message
-  const postActivity = useCallback(async (content, activityType = null) => {
-    if (!leagueId) return
-
-    try {
-      const newMessage = await mockApi.chat.postSystemMessage(leagueId, content, activityType)
-      setMessages(prev => [...prev, newMessage])
-      lastTimestampRef.current = newMessage.timestamp
-      return newMessage
-    } catch (err) {
-      console.error('Error posting activity:', err)
-    }
-  }, [leagueId])
-
   // Initial fetch
   useEffect(() => {
     fetchMessages()
   }, [fetchMessages])
 
-  // Set up polling for real-time updates
+  // Socket.IO: join league room and listen for new messages
   useEffect(() => {
     if (!leagueId) return
 
-    // Poll every 3 seconds for new messages
-    pollIntervalRef.current = setInterval(pollMessages, 3000)
+    socketService.connect()
+    socketService.joinLeague(leagueId)
+
+    // Listen for incoming messages from other users
+    const unsub = socketService.onNewMessage((data) => {
+      // Don't duplicate own messages (already added optimistically)
+      if (data.userId === user?.id) return
+
+      let msgType = 'user'
+      let actType = null
+      if (data.messageType === 'SYSTEM') {
+        msgType = 'system'
+      } else if (data.messageType === 'TRADE') {
+        msgType = 'activity'
+        actType = 'trade'
+      } else if (data.messageType === 'DRAFT') {
+        msgType = 'activity'
+        actType = 'lineup'
+      }
+      const msg = {
+        id: data.id || Date.now().toString(),
+        content: data.content,
+        type: msgType,
+        activityType: actType,
+        userId: data.userId,
+        userName: data.userName || data.user?.name || 'Unknown',
+        userAvatar: data.userAvatar || data.user?.name?.charAt(0).toUpperCase() || '?',
+        timestamp: data.createdAt || new Date().toISOString(),
+      }
+
+      setMessages(prev => {
+        // Avoid duplicates
+        if (prev.some(m => m.id === msg.id)) return prev
+        return [...prev, msg]
+      })
+    })
+
+    unsubRef.current = unsub
 
     return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current)
-      }
+      if (unsubRef.current) unsubRef.current()
+      socketService.leaveLeague(leagueId)
     }
-  }, [leagueId, pollMessages])
+  }, [leagueId, user?.id])
 
   return {
     messages,
@@ -116,7 +140,6 @@ export const useChat = (leagueId) => {
     error,
     sending,
     sendMessage,
-    postActivity,
     refetch: fetchMessages,
   }
 }

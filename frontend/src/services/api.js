@@ -332,6 +332,24 @@ class ApiService {
   async getLeagueScoring(leagueId, tournamentId) {
     return this.request(`/leagues/${leagueId}/scoring/${tournamentId}`)
   }
+
+  // Notifications
+  async getNotifications(options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/notifications${params ? '?' + params : ''}`)
+  }
+
+  async markNotificationRead(id) {
+    return this.request(`/notifications/${id}/read`, { method: 'PATCH' })
+  }
+
+  async markAllNotificationsRead() {
+    return this.request('/notifications/read-all', { method: 'PATCH' })
+  }
+
+  async deleteNotification(id) {
+    return this.request(`/notifications/${id}`, { method: 'DELETE' })
+  }
 }
 
 export const api = new ApiService()

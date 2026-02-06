@@ -89,6 +89,16 @@ export const socketService = {
   leaveLeague(leagueId) {
     socket?.emit('leave-league', leagueId)
   },
+
+  // Chat methods
+  sendChatMessage(leagueId, content) {
+    socket?.emit('chat-message', { leagueId, content })
+  },
+
+  onNewMessage(callback) {
+    socket?.on('new-message', callback)
+    return () => socket?.off('new-message', callback)
+  },
 }
 
 export default socketService
