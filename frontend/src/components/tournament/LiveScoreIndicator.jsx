@@ -1,12 +1,11 @@
-const LiveScoreIndicator = ({ isLive, onToggle }) => {
+const LiveScoreIndicator = ({ isLive }) => {
   return (
-    <button
-      onClick={onToggle}
+    <div
       className={`
-        flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all
+        flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium
         ${isLive
-          ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-          : 'bg-dark-tertiary text-text-muted hover:bg-dark-border'}
+          ? 'bg-red-500/20 text-red-400'
+          : 'bg-dark-tertiary text-text-muted'}
       `}
     >
       <span className={`relative flex h-2 w-2 ${isLive ? '' : 'opacity-50'}`}>
@@ -15,8 +14,8 @@ const LiveScoreIndicator = ({ isLive, onToggle }) => {
         )}
         <span className={`relative inline-flex rounded-full h-2 w-2 ${isLive ? 'bg-red-500' : 'bg-text-muted'}`}></span>
       </span>
-      {isLive ? 'LIVE' : 'Paused'}
-    </button>
+      {isLive ? 'LIVE' : 'Not Live'}
+    </div>
   )
 }
 

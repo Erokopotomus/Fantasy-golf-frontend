@@ -6,16 +6,14 @@ import MyPlayersPanel from '../components/tournament/MyPlayersPanel'
 import PlayerScoreCard from '../components/tournament/PlayerScoreCard'
 import LiveScoreIndicator from '../components/tournament/LiveScoreIndicator'
 import useTournamentScoring from '../hooks/useTournamentScoring'
-import useLiveScoring from '../hooks/useLiveScoring'
 
 const TournamentScoring = () => {
   const { tournamentId } = useParams()
   const [searchParams] = useSearchParams()
   const leagueId = searchParams.get('league')
 
-  const { tournament, leaderboard: initialLeaderboard, myPlayers, loading, error, refetch } = useTournamentScoring(tournamentId, leagueId)
+  const { tournament, leaderboard, isLive, myPlayers, loading, error, refetch } = useTournamentScoring(tournamentId, leagueId)
   const myPlayerIds = myPlayers?.map(p => p.id) || []
-  const { leaderboard, recentChanges, isLive, toggleLive } = useLiveScoring(initialLeaderboard, myPlayerIds, !loading)
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [activeTab, setActiveTab] = useState('leaderboard') // leaderboard | myTeam
 
@@ -51,16 +49,16 @@ const TournamentScoring = () => {
       {/* Tournament Header — full width */}
       <TournamentHeader tournament={tournament} leaderboard={leaderboard} />
 
-      {/* Ticker: live status + controls */}
+      {/* Ticker: live status + refresh */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
-          <LiveScoreIndicator isLive={isLive} onToggle={toggleLive} />
+          <LiveScoreIndicator isLive={isLive} />
           {isLive && (
             <span className="text-xs text-text-muted flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5 animate-spin text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Auto-updating
+              Auto-updating every 60s
             </span>
           )}
         </div>
@@ -105,7 +103,6 @@ const TournamentScoring = () => {
             cut={tournament?.cut}
             onSelectPlayer={setSelectedPlayer}
             myPlayerIds={myPlayerIds}
-            recentChanges={recentChanges}
           />
         </div>
 
