@@ -7,9 +7,11 @@ import api from '../services/api'
  */
 function flattenEntry(entry) {
   const player = entry.player || {}
-  // "today" from API is last round raw score; convert to toPar (par 72)
+  // When live data is present, "today" is already todayToPar from LiveScore
+  // For completed tournaments, "today" is last round raw score → convert to toPar (par 72)
   const todayRaw = entry.today
-  const todayToPar = todayRaw != null ? todayRaw - 72 : null
+  const hasLive = entry.probabilities != null
+  const todayToPar = todayRaw != null ? (hasLive ? todayRaw : todayRaw - 72) : null
 
   return {
     id: player.id,
@@ -31,12 +33,18 @@ function flattenEntry(entry) {
     eagles: entry.eagles,
     birdies: entry.birdies,
     bogeys: entry.bogeys,
+    // Live-only fields
+    currentHole: entry.currentHole ?? null,
+    currentRound: entry.currentRound ?? null,
+    probabilities: entry.probabilities ?? null,
+    sgTotalLive: entry.sgTotalLive ?? null,
   }
 }
 
 export const useTournamentScoring = (tournamentId, leagueId = null) => {
   const [tournament, setTournament] = useState(null)
   const [leaderboard, setLeaderboard] = useState([])
+  const [isLive, setIsLive] = useState(false)
   const [myPlayers, setMyPlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -61,7 +69,9 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
 
       const results = await Promise.all(promises)
 
-      setTournament(results[0]?.tournament || null)
+      const tournamentData = results[0]?.tournament || null
+      setTournament(tournamentData)
+      setIsLive(results[1]?.isLive === true)
 
       // Flatten leaderboard entries to match component expectations
       const rawLeaderboard = results[1]?.leaderboard || []
@@ -89,8 +99,9 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
       setLoading(true)
       fetchScoring()
 
-      // Poll for updates every 30 seconds
-      pollIntervalRef.current = setInterval(fetchScoring, 30000)
+      // Poll every 60s for live tournaments, 30s otherwise
+      const interval = isLive ? 60000 : 30000
+      pollIntervalRef.current = setInterval(fetchScoring, interval)
     }
 
     return () => {
@@ -98,11 +109,12 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
         clearInterval(pollIntervalRef.current)
       }
     }
-  }, [tournamentId, fetchScoring])
+  }, [tournamentId, fetchScoring, isLive])
 
   return {
     tournament,
     leaderboard,
+    isLive,
     myPlayers,
     loading,
     error,

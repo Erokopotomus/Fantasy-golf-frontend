@@ -97,7 +97,14 @@ router.get('/:id/leaderboard', async (req, res, next) => {
   try {
     const { scoringPreset } = req.query
 
-    const [performances, allRoundScores] = await Promise.all([
+    // Check if tournament is live to decide whether to use LiveScore data
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: req.params.id },
+      select: { status: true },
+    })
+    const isLive = tournament?.status === 'IN_PROGRESS'
+
+    const [performances, allRoundScores, liveScores] = await Promise.all([
       prisma.performance.findMany({
         where: { tournamentId: req.params.id },
         include: {
@@ -122,6 +129,10 @@ router.get('/:id/leaderboard', async (req, res, next) => {
         where: { tournamentId: req.params.id },
         orderBy: { roundNumber: 'asc' },
       }),
+      // Only fetch live scores when tournament is in progress
+      isLive
+        ? prisma.liveScore.findMany({ where: { tournamentId: req.params.id } })
+        : Promise.resolve([]),
     ])
 
     // Index round scores by playerId
@@ -129,6 +140,12 @@ router.get('/:id/leaderboard', async (req, res, next) => {
     for (const rs of allRoundScores) {
       if (!roundScoresByPlayer[rs.playerId]) roundScoresByPlayer[rs.playerId] = []
       roundScoresByPlayer[rs.playerId].push(rs)
+    }
+
+    // Index live scores by playerId
+    const liveByPlayer = {}
+    for (const ls of liveScores) {
+      liveByPlayer[ls.playerId] = ls
     }
 
     // Determine scoring config
@@ -141,18 +158,20 @@ router.get('/:id/leaderboard', async (req, res, next) => {
       const perfWithRounds = { ...perf, roundScores: roundScoresByPlayer[perf.playerId] || [] }
       const { total: fantasyPoints, breakdown } = calculateFantasyPoints(perfWithRounds, scoringConfig)
 
+      const live = liveByPlayer[perf.playerId]
+
       // Derive "today" score from last completed round
       const completedRounds = [perf.round1, perf.round2, perf.round3, perf.round4].filter((r) => r != null)
       const today = completedRounds.length > 0 ? completedRounds[completedRounds.length - 1] : null
 
-      return {
-        position: perf.position || index + 1,
-        positionTied: perf.positionTied,
+      const entry = {
+        position: (live?.position ?? perf.position) || index + 1,
+        positionTied: live?.positionTied ?? perf.positionTied,
         player: perf.player,
         totalScore: perf.totalScore,
-        totalToPar: perf.totalToPar,
-        today,
-        thru: perf.status === 'CUT' ? 'CUT' : 18,
+        totalToPar: live?.totalToPar ?? perf.totalToPar,
+        today: live?.todayToPar ?? today,
+        thru: live?.thru ?? (perf.status === 'CUT' ? 'CUT' : 18),
         status: perf.status,
         rounds: {
           r1: perf.round1,
@@ -166,9 +185,35 @@ router.get('/:id/leaderboard', async (req, res, next) => {
         birdies: perf.birdies,
         bogeys: perf.bogeys,
       }
+
+      // Include live probabilities when tournament is in progress
+      if (live) {
+        entry.currentHole = live.currentHole
+        entry.currentRound = live.currentRound
+        entry.probabilities = {
+          win: live.winProbability,
+          top5: live.top5Probability,
+          top10: live.top10Probability,
+          top20: live.top20Probability,
+          makeCut: live.makeCutProbability,
+        }
+        entry.sgTotalLive = live.sgTotalLive
+      }
+
+      return entry
     })
 
-    res.json({ leaderboard })
+    // Sort by live position when available, fallback to performance position
+    if (isLive) {
+      leaderboard.sort((a, b) => {
+        const posA = a.position ?? 999
+        const posB = b.position ?? 999
+        if (posA !== posB) return posA - posB
+        return (a.totalToPar ?? 999) - (b.totalToPar ?? 999)
+      })
+    }
+
+    res.json({ leaderboard, isLive })
   } catch (error) {
     next(error)
   }

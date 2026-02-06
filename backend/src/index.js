@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
+const cron = require('node-cron')
 const { createServer } = require('http')
 const { Server } = require('socket.io')
 require('dotenv').config()
@@ -16,6 +17,7 @@ const tradeRoutes = require('./routes/trades')
 const tournamentRoutes = require('./routes/tournaments')
 const notificationRoutes = require('./routes/notifications')
 const searchRoutes = require('./routes/search')
+const syncRoutes = require('./routes/sync')
 
 const app = express()
 const httpServer = createServer(app)
@@ -83,6 +85,7 @@ app.use('/api/trades', tradeRoutes)
 app.use('/api/tournaments', tournamentRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/search', searchRoutes)
+app.use('/api/sync', syncRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -163,6 +166,104 @@ const PORT = process.env.PORT || 3001
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
   console.log(`Environment: ${process.env.NODE_ENV}`)
+
+  // ─── Cron Jobs for DataGolf Sync ────────────────────────────────────────
+  if (process.env.DATAGOLF_API_KEY && process.env.DATAGOLF_API_KEY !== 'your_key_here') {
+    const { PrismaClient } = require('@prisma/client')
+    const cronPrisma = new PrismaClient()
+    const sync = require('./services/datagolfSync')
+
+    /** Find the active or next upcoming tournament datagolfId */
+    async function getActiveTournamentDgId() {
+      const t = await cronPrisma.tournament.findFirst({
+        where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+        orderBy: { startDate: 'asc' },
+        select: { datagolfId: true, status: true, startDate: true },
+      })
+      return t
+    }
+
+    function cronLog(job, msg) {
+      console.log(`[Cron:${job}] ${new Date().toISOString()} — ${msg}`)
+    }
+
+    // Daily 6:00 AM ET — Sync player rankings
+    cron.schedule('0 6 * * *', async () => {
+      cronLog('players', 'Starting player sync')
+      try {
+        const result = await sync.syncPlayers(cronPrisma)
+        cronLog('players', `Done: ${result.total} players`)
+      } catch (e) { cronLog('players', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Weekly Monday 5:00 AM ET — Sync tournament schedule
+    cron.schedule('0 5 * * 1', async () => {
+      cronLog('schedule', 'Starting schedule sync')
+      try {
+        const result = await sync.syncSchedule(cronPrisma)
+        cronLog('schedule', `Done: ${result.total} events`)
+      } catch (e) { cronLog('schedule', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Daily 7:00 AM ET — Sync field updates (Thu-Sun = event days)
+    cron.schedule('0 7 * * 4,5,6,0', async () => {
+      const t = await getActiveTournamentDgId()
+      if (!t?.datagolfId) return cronLog('field', 'No active tournament')
+      cronLog('field', `Syncing field for ${t.datagolfId}`)
+      try {
+        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
+        cronLog('field', `Done: ${result.playersInField} players`)
+      } catch (e) { cronLog('field', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Wed + Thu 6:00 AM ET — Pre-tournament predictions
+    cron.schedule('0 6 * * 3,4', async () => {
+      const t = await getActiveTournamentDgId()
+      if (!t?.datagolfId) return cronLog('predictions', 'No active tournament')
+      cronLog('predictions', `Syncing predictions for ${t.datagolfId}`)
+      try {
+        const result = await sync.syncPreTournamentPredictions(t.datagolfId, cronPrisma)
+        cronLog('predictions', `Done: ${result.predictions} players`)
+      } catch (e) { cronLog('predictions', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Every 5 min Thu-Sun — Live scoring (only when tournament in progress)
+    cron.schedule('*/5 * * * 4,5,6,0', async () => {
+      const t = await getActiveTournamentDgId()
+      if (!t || t.status !== 'IN_PROGRESS') return
+      cronLog('live', `Syncing live scoring for ${t.datagolfId}`)
+      try {
+        const result = await sync.syncLiveScoring(t.datagolfId, cronPrisma)
+        cronLog('live', `Done: ${result.updated} players`)
+      } catch (e) { cronLog('live', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Wed 6:00 AM ET — Fantasy projections
+    cron.schedule('0 6 * * 3', async () => {
+      const t = await getActiveTournamentDgId()
+      if (!t?.datagolfId) return cronLog('projections', 'No active tournament')
+      cronLog('projections', `Syncing projections for ${t.datagolfId}`)
+      try {
+        const result = await sync.syncFantasyProjections(t.datagolfId, cronPrisma)
+        cronLog('projections', `Done: DK=${result.draftkings}, FD=${result.fanduel}`)
+      } catch (e) { cronLog('projections', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Sunday 10:00 PM ET — Finalize tournament
+    cron.schedule('0 22 * * 0', async () => {
+      const t = await getActiveTournamentDgId()
+      if (!t || t.status !== 'IN_PROGRESS') return cronLog('finalize', 'No in-progress tournament')
+      cronLog('finalize', `Finalizing ${t.datagolfId}`)
+      try {
+        const result = await sync.syncTournamentResults(t.datagolfId, cronPrisma)
+        cronLog('finalize', `Done: ${result.finalized} players finalized`)
+      } catch (e) { cronLog('finalize', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] DataGolf sync jobs scheduled')
+  } else {
+    console.log('[Cron] DATAGOLF_API_KEY not set — sync jobs disabled')
+  }
 })
 
 module.exports = { app, io }

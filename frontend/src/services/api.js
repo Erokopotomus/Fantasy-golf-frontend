@@ -356,6 +356,29 @@ class ApiService {
     const params = new URLSearchParams({ q: query, ...options }).toString()
     return this.request(`/search?${params}`)
   }
+
+  // Sync (admin)
+  async getSyncStatus(adminSecret) {
+    return this.request('/sync/status', {
+      headers: { 'X-Sync-Secret': adminSecret },
+    })
+  }
+
+  async triggerSync(type, dgId, adminSecret) {
+    const paths = {
+      players: '/sync/players',
+      schedule: '/sync/schedule',
+      field: `/sync/tournament/${dgId}/field`,
+      live: `/sync/tournament/${dgId}/live`,
+      predictions: `/sync/tournament/${dgId}/predictions`,
+      projections: `/sync/tournament/${dgId}/projections`,
+      finalize: `/sync/tournament/${dgId}/finalize`,
+    }
+    return this.request(paths[type], {
+      method: 'POST',
+      headers: { 'X-Sync-Secret': adminSecret },
+    })
+  }
 }
 
 export const api = new ApiService()
