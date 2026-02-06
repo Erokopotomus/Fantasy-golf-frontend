@@ -1,85 +1,117 @@
-import Card from '../common/Card'
-
-const DraftBoard = ({ picks, teams, rosterSize, currentPick }) => {
+const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewPlayer, players }) => {
   const rounds = Array.from({ length: rosterSize }, (_, i) => i + 1)
 
-  const getPickByPosition = (teamId, round) => {
-    return picks.find(p => p.teamId === teamId && p.round === round)
-  }
-
-  const isCurrentPick = (teamId, round) => {
-    return currentPick?.teamId === teamId && currentPick?.round === round
-  }
-
   return (
-    <Card className="overflow-hidden">
-      <h3 className="text-lg font-semibold text-white mb-4">Draft Board</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px]">
-          <thead>
-            <tr className="border-b border-dark-border">
-              <th className="p-2 text-left text-text-muted text-xs font-medium sticky left-0 bg-dark-secondary">
-                Round
-              </th>
-              {teams.map((team) => (
-                <th
-                  key={team.id}
-                  className="p-2 text-center text-xs font-medium min-w-[100px]"
-                >
-                  <div className={`${team.isUser ? 'text-accent-green' : 'text-text-secondary'}`}>
-                    {team.name}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rounds.map((round) => (
-              <tr key={round} className="border-b border-dark-border/50">
-                <td className="p-2 text-text-muted text-sm font-medium sticky left-0 bg-dark-secondary">
+    <div className="flex flex-col h-full bg-dark-secondary rounded-lg border border-dark-border overflow-hidden">
+      {/* Team Column Headers */}
+      <div className="flex-shrink-0">
+        <div className="overflow-x-auto">
+          <div
+            className="grid gap-px min-w-[500px]"
+            style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
+          >
+            <div className="bg-dark-tertiary px-1 py-2.5 text-text-muted text-[10px] font-semibold text-center">RD</div>
+            {teams.map(team => (
+              <div
+                key={team.id}
+                className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
+                  team.id === userTeamId
+                    ? 'bg-accent-green/25 text-accent-green border-b-2 border-b-accent-green'
+                    : currentPick?.teamId === team.id
+                      ? 'bg-yellow-500/15 text-yellow-400'
+                      : 'bg-dark-tertiary text-text-muted'
+                }`}
+              >
+                {team.id === userTeamId ? (
+                  <span className="font-bold">YOU</span>
+                ) : (
+                  team.name.length > 10 ? team.name.slice(0, 9) + '…' : team.name
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Round Rows */}
+      <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
+        <div className="min-w-[500px]">
+          {rounds.map(round => {
+            const isCurrentRound = currentPick?.round === round
+
+            return (
+              <div
+                key={round}
+                className={`grid gap-px ${isCurrentRound ? 'bg-dark-border' : ''}`}
+                style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
+              >
+                <div className={`px-1 py-1 text-[10px] text-center flex items-center justify-center font-semibold ${
+                  isCurrentRound ? 'text-accent-green bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
+                }`}>
                   {round}
-                </td>
-                {teams.map((team) => {
-                  const pick = getPickByPosition(team.id, round)
-                  const isCurrent = isCurrentPick(team.id, round)
+                </div>
+                {teams.map(team => {
+                  const pick = picks.find(p => p.teamId === team.id && p.round === round)
+                  const isCurrent = currentPick?.teamId === team.id && currentPick?.round === round && !currentPick?.complete
+                  const isUserTeamCell = team.id === userTeamId
 
                   return (
-                    <td key={`${team.id}-${round}`} className="p-1">
-                      <div
-                        className={`
-                          rounded-lg p-1.5 min-h-[48px] text-center transition-all
-                          ${isCurrent
-                            ? 'bg-accent-green/20 border-2 border-accent-green animate-pulse'
-                            : pick
-                              ? 'bg-dark-tertiary'
-                              : 'bg-dark-primary/50'
-                          }
-                        `}
-                      >
-                        {pick ? (
-                          <div>
-                            <p className="text-white text-xs font-medium truncate">
-                              {pick.playerName}
-                            </p>
-                            <p className="text-text-muted text-xs">
-                              #{pick.playerRank}
-                            </p>
+                    <div
+                      key={team.id}
+                      onClick={() => {
+                        if (pick && onViewPlayer) {
+                          const player = players?.find(p => p.id === pick.playerId)
+                          if (player) onViewPlayer(player)
+                        }
+                      }}
+                      className={`px-1 py-1 min-h-[44px] flex items-center justify-center transition-colors ${
+                        pick ? 'cursor-pointer hover:brightness-125' : ''
+                      } ${
+                        isCurrent
+                          ? 'bg-accent-green/20 ring-1 ring-inset ring-accent-green/60'
+                          : pick
+                            ? pick.playerRank <= 10
+                              ? isUserTeamCell ? 'bg-yellow-500/10' : 'bg-yellow-500/5'
+                              : pick.playerRank <= 25
+                                ? isUserTeamCell ? 'bg-accent-green/10' : 'bg-accent-green/5'
+                                : isUserTeamCell ? 'bg-accent-green/5' : round % 2 === 1 ? 'bg-dark-primary' : 'bg-dark-secondary/40'
+                            : round % 2 === 1 ? 'bg-dark-primary/40' : 'bg-dark-secondary/20'
+                      }`}
+                    >
+                      {pick ? (
+                        <div className="text-center w-full truncate px-0.5">
+                          <div className="flex items-center justify-center gap-0.5">
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                              pick.playerRank <= 10 ? 'bg-yellow-400' :
+                              pick.playerRank <= 25 ? 'bg-accent-green' :
+                              pick.playerRank <= 40 ? 'bg-blue-400' :
+                              'bg-text-muted/40'
+                            }`} />
                           </div>
-                        ) : isCurrent ? (
-                          <div className="text-accent-green text-xs">
-                            Picking...
-                          </div>
-                        ) : null}
-                      </div>
-                    </td>
+                          <p className={`text-[10px] leading-tight truncate ${
+                            isUserTeamCell ? 'text-accent-green font-medium' : 'text-text-secondary'
+                          }`}>
+                            {pick.playerName?.split(' ').pop()}
+                          </p>
+                          <p className="text-[9px] text-text-muted">#{pick.playerRank}</p>
+                        </div>
+                      ) : isCurrent ? (
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-text-muted/25">—</span>
+                      )}
+                    </div>
                   )
                 })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              </div>
+            )
+          })}
+        </div>
       </div>
-    </Card>
+    </div>
   )
 }
 

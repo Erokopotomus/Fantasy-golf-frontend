@@ -10,10 +10,8 @@ import DraftQueue from '../components/draft/DraftQueue'
 import DraftBoard from '../components/draft/DraftBoard'
 import DraftDashboard from '../components/draft/DraftDashboard'
 import BidPanel from '../components/draft/BidPanel'
-import PickHistory from '../components/draft/PickHistory'
 import PickAnnouncement from '../components/draft/PickAnnouncement'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
-import ChatPanel from '../components/chat/ChatPanel'
 import Card from '../components/common/Card'
 
 const DraftRoomContent = () => {
@@ -132,7 +130,7 @@ const DraftRoomContent = () => {
   const rosterSize = league?.settings?.rosterSize || 6
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="h-screen bg-dark-primary flex flex-col overflow-hidden">
       <DraftHeader
         league={league}
         draft={draft}
@@ -147,8 +145,8 @@ const DraftRoomContent = () => {
       />
 
       {/* Tab Bar */}
-      <div className="bg-dark-secondary border-b border-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-dark-secondary border-b border-dark-border flex-shrink-0">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1">
             {['draft', 'dashboard'].map((tab) => (
               <button
@@ -170,96 +168,84 @@ const DraftRoomContent = () => {
         </div>
       </div>
 
-      <main className="pb-4 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {activeTab === 'dashboard' ? (
-            <div className="mt-3">
-              <DraftDashboard
+      {activeTab === 'dashboard' ? (
+        <div className="flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-3">
+          <DraftDashboard
+            picks={picks}
+            teams={teams}
+            players={players}
+            rosterSize={rosterSize}
+            draft={draft}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          {/* Left: Draft Board */}
+          <div className="lg:w-[55%] lg:border-r lg:border-dark-border flex flex-col min-h-0 p-2">
+            {draft?.type === 'auction' ? (
+              <BidPanel
+                currentBid={currentBid}
+                userBudget={userBudget}
+                isUserTurn={isUserTurn}
+                isNominating={isNominating}
+                onBid={handleBid}
+                onPass={handlePass}
+                onNominate={handleNominate}
+                selectedPlayer={selectedPlayer}
+              />
+            ) : (
+              <DraftBoard
                 picks={picks}
                 teams={teams}
-                players={players}
                 rosterSize={rosterSize}
-                draft={draft}
+                currentPick={currentPick}
+                userTeamId={draft?.userTeamId}
+                onViewPlayer={openPlayerDetail}
+                players={players}
+              />
+            )}
+          </div>
+
+          {/* Right: Player Pool + Queue/History */}
+          <div className="lg:w-[45%] flex flex-col min-h-0">
+            <div className="flex-1 min-h-0">
+              <PlayerPool
+                players={availablePlayers}
+                onSelectPlayer={handleSelectPlayer}
+                onAddToQueue={addToQueue}
+                isUserTurn={isUserTurn}
+                queue={queue}
+                draftType={draft?.type}
+                onViewPlayer={openPlayerDetail}
               />
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3" style={{ minHeight: 'calc(100vh - 200px)' }}>
-                {/* Left Column - Player Pool */}
-                <div className="lg:col-span-5 flex flex-col" style={{ maxHeight: 'calc(100vh - 210px)' }}>
-                  <div className="flex-1 min-h-0">
-                    <PlayerPool
-                      players={availablePlayers}
-                      onSelectPlayer={handleSelectPlayer}
-                      onAddToQueue={addToQueue}
-                      isUserTurn={isUserTurn}
-                      queue={queue}
-                      draftType={draft?.type}
-                      onViewPlayer={openPlayerDetail}
-                    />
-                  </div>
-                </div>
-
-                {/* Center Column - Draft Board or Bid Panel */}
-                <div className="lg:col-span-4">
-                  {draft?.type === 'auction' ? (
-                    <BidPanel
-                      currentBid={currentBid}
-                      userBudget={userBudget}
-                      isUserTurn={isUserTurn}
-                      isNominating={isNominating}
-                      onBid={handleBid}
-                      onPass={handlePass}
-                      onNominate={handleNominate}
-                      selectedPlayer={selectedPlayer}
-                    />
-                  ) : (
-                    <DraftBoard
-                      picks={picks}
-                      teams={teams}
-                      rosterSize={rosterSize}
-                      currentPick={currentPick}
-                    />
-                  )}
-                </div>
-
-                {/* Right Column - Queue and History */}
-                <div className="lg:col-span-3 flex flex-col gap-3" style={{ maxHeight: 'calc(100vh - 210px)' }}>
-                  <div className="flex-shrink-0" style={{ maxHeight: '40%' }}>
-                    <DraftQueue
-                      queue={queue}
-                      onRemove={removeFromQueue}
-                      onReorder={reorderQueue}
-                      onSelect={handleSelectPlayer}
-                      isUserTurn={isUserTurn}
-                    />
-                  </div>
-                  <PickHistory picks={picks} limit={4} />
-                  <ChatPanel
-                    leagueId={leagueId}
-                    leagueName={league?.name}
-                    memberCount={league?.memberCount}
-                    collapsible
-                    defaultCollapsed
-                  />
-                </div>
-              </div>
-
-              {/* Full Width Draft Board for Auction */}
-              {draft?.type === 'auction' && (
-                <div className="mt-4">
-                  <DraftBoard
-                    picks={picks}
-                    teams={teams}
-                    rosterSize={rosterSize}
-                    currentPick={currentPick}
-                  />
-                </div>
-              )}
-            </>
-          )}
+            <div className="flex-shrink-0 border-t border-dark-border max-h-[30%] overflow-auto p-2 space-y-2">
+              <DraftQueue
+                queue={queue}
+                onRemove={removeFromQueue}
+                onReorder={reorderQueue}
+                onSelect={handleSelectPlayer}
+                isUserTurn={isUserTurn}
+              />
+            </div>
+          </div>
         </div>
-      </main>
+      )}
+
+      {/* Full Width Draft Board for Auction */}
+      {draft?.type === 'auction' && activeTab === 'draft' && (
+        <div className="p-4">
+          <DraftBoard
+            picks={picks}
+            teams={teams}
+            rosterSize={rosterSize}
+            currentPick={currentPick}
+            userTeamId={draft?.userTeamId}
+            onViewPlayer={openPlayerDetail}
+            players={players}
+          />
+        </div>
+      )}
 
       {/* Player Detail Modal */}
       <PlayerDetailModal
