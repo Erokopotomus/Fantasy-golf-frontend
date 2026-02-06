@@ -11,7 +11,6 @@ import Card from '../components/common/Card'
 import LeagueCard from '../components/dashboard/LeagueCard'
 import TournamentCard from '../components/dashboard/TournamentCard'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
-import NewsAlertBanner from '../components/news/NewsAlertBanner'
 
 const StatCardSkeleton = () => (
   <Card className="text-center animate-pulse" hover>
@@ -99,11 +98,6 @@ const Dashboard = () => {
             <p className="text-text-secondary leading-relaxed">
               Here's what's happening with your fantasy golf teams.
             </p>
-          </div>
-
-          {/* News Alert Banner */}
-          <div className="mb-6">
-            <NewsAlertBanner />
           </div>
 
           {/* Quick Stats */}
