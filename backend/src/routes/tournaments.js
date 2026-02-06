@@ -219,4 +219,36 @@ router.get('/:id/leaderboard', async (req, res, next) => {
   }
 })
 
+// GET /api/tournaments/:id/scorecards/:playerId - Get hole-by-hole scores for a player
+router.get('/:id/scorecards/:playerId', async (req, res, next) => {
+  try {
+    const { id: tournamentId, playerId } = req.params
+
+    const roundScores = await prisma.roundScore.findMany({
+      where: { tournamentId, playerId },
+      include: {
+        holeScores: {
+          orderBy: { holeNumber: 'asc' },
+        },
+      },
+      orderBy: { roundNumber: 'asc' },
+    })
+
+    // Shape: { [roundNumber]: [{ hole, par, score, toPar }] }
+    const scorecards = {}
+    for (const rs of roundScores) {
+      scorecards[rs.roundNumber] = rs.holeScores.map((hs) => ({
+        hole: hs.holeNumber,
+        par: hs.par,
+        score: hs.score,
+        toPar: hs.toPar,
+      }))
+    }
+
+    res.json({ scorecards })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

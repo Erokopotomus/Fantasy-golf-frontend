@@ -100,6 +100,7 @@ const TournamentScoring = () => {
             leaderboard={leaderboard}
             cut={tournament?.cut}
             myPlayerIds={myPlayerIds}
+            tournamentId={tournamentId}
           />
         </div>
 

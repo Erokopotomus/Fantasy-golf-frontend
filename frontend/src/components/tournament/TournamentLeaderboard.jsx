@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import api from '../../services/api'
 
 /**
  * Traditional golf scorecard notation:
@@ -40,11 +41,34 @@ const ScoreCell = ({ score, par }) => {
   )
 }
 
-const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {} }) => {
+const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId }) => {
   const [expandedPlayer, setExpandedPlayer] = useState(null)
   const [expandedRound, setExpandedRound] = useState(null) // which round tab is active
   const [showRounds, setShowRounds] = useState(false)
   const [search, setSearch] = useState('')
+
+  // Cache of hole scores: { [playerId]: { [roundNumber]: [{ hole, par, score, toPar }] } }
+  const holeScoresCache = useRef({})
+  const [holeScores, setHoleScores] = useState({})
+  const [loadingScorecard, setLoadingScorecard] = useState(false)
+
+  const fetchHoleScores = useCallback(async (playerId) => {
+    if (!tournamentId || holeScoresCache.current[playerId]) {
+      setHoleScores((prev) => ({ ...prev, [playerId]: holeScoresCache.current[playerId] || {} }))
+      return
+    }
+    setLoadingScorecard(true)
+    try {
+      const data = await api.getPlayerScorecard(tournamentId, playerId)
+      const scorecards = data?.scorecards || {}
+      holeScoresCache.current[playerId] = scorecards
+      setHoleScores((prev) => ({ ...prev, [playerId]: scorecards }))
+    } catch (e) {
+      console.warn('Failed to fetch scorecard:', e.message)
+    } finally {
+      setLoadingScorecard(false)
+    }
+  }, [tournamentId])
 
   const formatScore = (score) => {
     if (score == null || score === '' || isNaN(score)) return '–'
@@ -118,6 +142,8 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                 || player.rounds?.r2 != null && 2
                 || player.rounds?.r1 != null && 1
                 || 1)
+              // Fetch hole scores
+              fetchHoleScores(player.id)
             }
           }}
           className={`
@@ -287,11 +313,17 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             {/* Selected round scorecard */}
             {expandedRound && (
               <div className="px-4 pb-3">
+                {loadingScorecard && !holeScores[player.id] && (
+                  <div className="flex items-center gap-2 py-2 text-xs text-text-muted">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-500" />
+                    Loading scorecard...
+                  </div>
+                )}
                 {(() => {
                   const roundScore = player.rounds?.[`r${expandedRound}`]
                   const isCurrent = expandedRound === player.currentRound
                   const isInProgress = isCurrent && !roundScore
-                  const holeData = player.holeScores?.[expandedRound]
+                  const holeData = holeScores[player.id]?.[expandedRound]
 
                   // Course par layout — use real data when available, default par-71
                   const defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]

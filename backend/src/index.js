@@ -238,6 +238,22 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('live', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Every 5 min Thu-Sun — ESPN hole-by-hole scores (only when tournament in progress)
+    const espnSync = require('./services/espnSync')
+    cron.schedule('*/5 * * * 4,5,6,0', async () => {
+      const t = await cronPrisma.tournament.findFirst({
+        where: { status: 'IN_PROGRESS' },
+        orderBy: { startDate: 'asc' },
+        select: { id: true },
+      })
+      if (!t) return
+      cronLog('espn', `Syncing ESPN hole scores for ${t.id}`)
+      try {
+        const result = await espnSync.syncHoleScores(t.id, cronPrisma)
+        cronLog('espn', `Done: ${result.matched} players, ${result.holes} holes`)
+      } catch (e) { cronLog('espn', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Wed 6:00 AM ET — Fantasy projections
     cron.schedule('0 6 * * 3', async () => {
       const t = await getActiveTournamentDgId()

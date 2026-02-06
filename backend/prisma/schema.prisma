@@ -309,6 +309,7 @@ model Tournament {
   id              String           @id @default(cuid())
   externalId      String?          @unique
   datagolfId      String?          @unique
+  espnEventId     String?          // ESPN Scoreboard event ID
 
   name            String
   shortName       String?          // Abbreviated name

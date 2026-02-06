@@ -10,6 +10,7 @@ const {
   syncFantasyProjections,
   syncTournamentResults,
 } = require('../services/datagolfSync')
+const { syncHoleScores } = require('../services/espnSync')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -92,6 +93,12 @@ router.post('/tournament/:dgId/projections', async (req, res) => {
 router.post('/tournament/:dgId/finalize', async (req, res) => {
   const { dgId } = req.params
   await runSync(`finalize-${dgId}`, () => syncTournamentResults(dgId, prisma), res)
+})
+
+// POST /api/sync/tournament/:tournamentId/espn — Sync ESPN hole-by-hole scores
+router.post('/tournament/:tournamentId/espn', async (req, res) => {
+  const { tournamentId } = req.params
+  await runSync(`espn-${tournamentId}`, () => syncHoleScores(tournamentId, prisma), res)
 })
 
 // GET /api/sync/status

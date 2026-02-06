@@ -319,6 +319,10 @@ class ApiService {
     return this.request(`/tournaments/${id}/leaderboard${params ? '?' + params : ''}`)
   }
 
+  async getPlayerScorecard(tournamentId, playerId) {
+    return this.request(`/tournaments/${tournamentId}/scorecards/${playerId}`)
+  }
+
   // Matchups
   async getLeagueMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`)
