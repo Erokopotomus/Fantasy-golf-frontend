@@ -48,13 +48,13 @@ const H2HStandings = ({ standings, currentUserId }) => {
                 <tr
                   key={team.userId}
                   className={`border-b border-dark-border/50 ${
-                    isUser ? 'bg-accent-green/10' : 'hover:bg-dark-tertiary/50'
+                    isUser ? 'bg-emerald-400/10' : 'hover:bg-dark-tertiary/50'
                   }`}
                 >
                   <td className="py-3 pl-2">
                     <span className={`font-semibold ${
                       index === 0 ? 'text-yellow-400' :
-                      index < 4 ? 'text-accent-green' : 'text-text-muted'
+                      index < 4 ? 'text-emerald-400' : 'text-text-muted'
                     }`}>
                       {index + 1}
                     </span>
@@ -62,11 +62,11 @@ const H2HStandings = ({ standings, currentUserId }) => {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-primary text-text-secondary'
+                        isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-dark-primary text-text-secondary'
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-accent-green' : 'text-white'}`}>
+                      <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-white'}`}>
                         {team.name}
                         {isUser && <span className="text-xs ml-1">(You)</span>}
                       </span>
@@ -81,7 +81,7 @@ const H2HStandings = ({ standings, currentUserId }) => {
                   <td className="py-3 text-right text-white">{(team.pointsFor || 0).toLocaleString()}</td>
                   <td className="py-3 text-right text-text-secondary">{(team.pointsAgainst || 0).toLocaleString()}</td>
                   <td className={`py-3 text-right pr-2 font-semibold ${
-                    diff > 0 ? 'text-accent-green' : diff < 0 ? 'text-red-400' : 'text-text-muted'
+                    diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-text-muted'
                   }`}>
                     {diff > 0 ? '+' : ''}{diff}
                   </td>
@@ -102,23 +102,23 @@ const H2HStandings = ({ standings, currentUserId }) => {
             <div
               key={team.userId}
               className={`p-3 rounded-lg ${
-                isUser ? 'bg-accent-green/10 border border-accent-green/30' : 'bg-dark-tertiary'
+                isUser ? 'bg-emerald-400/10 border border-emerald-400/30' : 'bg-dark-tertiary'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <span className={`text-lg font-bold w-6 ${
                     index === 0 ? 'text-yellow-400' :
-                    index < 4 ? 'text-accent-green' : 'text-text-muted'
+                    index < 4 ? 'text-emerald-400' : 'text-text-muted'
                   }`}>
                     {index + 1}
                   </span>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                    isUser ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-primary text-text-secondary'
+                    isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-dark-primary text-text-secondary'
                   }`}>
                     {team.avatar}
                   </div>
-                  <span className={`font-medium ${isUser ? 'text-accent-green' : 'text-white'}`}>
+                  <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-white'}`}>
                     {team.name}
                   </span>
                 </div>
@@ -131,7 +131,7 @@ const H2HStandings = ({ standings, currentUserId }) => {
               <div className="flex justify-between text-xs text-text-muted">
                 <span>PF: {(team.pointsFor || 0).toLocaleString()}</span>
                 <span>PA: {(team.pointsAgainst || 0).toLocaleString()}</span>
-                <span className={diff > 0 ? 'text-accent-green' : diff < 0 ? 'text-red-400' : ''}>
+                <span className={diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : ''}>
                   {diff > 0 ? '+' : ''}{diff}
                 </span>
               </div>
@@ -147,7 +147,7 @@ const H2HStandings = ({ standings, currentUserId }) => {
           <span>1st Place</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-accent-green"></div>
+          <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
           <span>Playoff Position (Top 4)</span>
         </div>
         <div className="flex items-center gap-2">

@@ -13,6 +13,7 @@ import RotoSettings from '../components/league/settings/RotoSettings'
 import SurvivorSettings from '../components/league/settings/SurvivorSettings'
 import OneAndDoneSettings from '../components/league/settings/OneAndDoneSettings'
 import ScoringSettings from '../components/league/settings/ScoringSettings'
+import ScheduleManager from '../components/league/settings/ScheduleManager'
 
 const LeagueSettings = () => {
   const { leagueId } = useParams()
@@ -236,6 +237,7 @@ const LeagueSettings = () => {
     { id: 'trades', label: 'Trades' },
     { id: 'waivers', label: 'Waivers' },
     { id: 'members', label: 'Members' },
+    ...(isCommissioner ? [{ id: 'schedule', label: 'Schedule' }] : []),
     ...(isCommissioner ? [{ id: 'danger', label: 'Danger Zone' }] : []),
   ]
 
@@ -730,6 +732,11 @@ const LeagueSettings = () => {
             </Card>
           )}
         </div>
+      )}
+
+      {/* Schedule Management - Commissioner Only */}
+      {activeTab === 'schedule' && isCommissioner && (
+        <ScheduleManager leagueId={leagueId} notify={notify} />
       )}
 
       {/* Danger Zone - Commissioner Only */}

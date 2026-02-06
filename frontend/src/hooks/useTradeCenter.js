@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { mockApi } from '../services/mockApi'
-import { useNotifications } from '../context/NotificationContext'
+import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 
 export const useTradeCenter = (leagueId) => {
-  const { notify } = useNotifications()
+  const { user } = useAuth()
   const [pendingTrades, setPendingTrades] = useState([])
   const [tradeHistory, setTradeHistory] = useState([])
   const [leagueMembers, setLeagueMembers] = useState([])
@@ -18,16 +18,87 @@ export const useTradeCenter = (leagueId) => {
 
     try {
       setError(null)
-      const data = await mockApi.trades.getAll(leagueId)
-      setPendingTrades(data.pending)
-      setTradeHistory(data.history)
-      setLeagueMembers(data.members)
+
+      // Fetch trades and league data in parallel
+      const [tradesData, leagueData] = await Promise.all([
+        api.getTrades({ leagueId }),
+        api.getLeague(leagueId),
+      ])
+
+      const trades = tradesData.trades || []
+      const league = leagueData.league || leagueData
+
+      // Separate pending vs completed/rejected/cancelled
+      const pending = []
+      const history = []
+
+      for (const trade of trades) {
+        const isIncoming = trade.receiverId === user?.id
+        const otherUser = isIncoming ? trade.initiator : trade.receiver
+        const otherTeam = isIncoming ? trade.senderTeam : trade.receiverTeam
+
+        const mapped = {
+          id: trade.id,
+          status: trade.status,
+          createdAt: trade.proposedAt || trade.createdAt,
+          message: trade.message,
+          isIncoming,
+          otherTeamName: otherTeam?.name || otherUser?.name || 'Unknown',
+          otherUser,
+          // For incoming: playersOffered = what THEY are sending (sender's players), playersRequested = what they want (receiver's / your players)
+          // For outgoing: playersOffered = what you're sending, playersRequested = what you want
+          playersOffered: isIncoming
+            ? (trade.senderPlayerDetails || [])
+            : (trade.senderPlayerDetails || []),
+          playersRequested: isIncoming
+            ? (trade.receiverPlayerDetails || [])
+            : (trade.receiverPlayerDetails || []),
+          initiator: trade.initiator,
+          receiver: trade.receiver,
+          senderTeam: trade.senderTeam,
+          receiverTeam: trade.receiverTeam,
+        }
+
+        if (trade.status === 'PENDING') {
+          pending.push(mapped)
+        } else {
+          history.push({
+            ...mapped,
+            description: `${trade.initiator?.name} traded with ${trade.receiver?.name}`,
+            date: new Date(trade.createdAt).toLocaleDateString('en-US', {
+              month: 'short', day: 'numeric', year: 'numeric'
+            }),
+          })
+        }
+      }
+
+      setPendingTrades(pending)
+      setTradeHistory(history)
+
+      // Build league members list (other teams with their rosters)
+      const teams = league.teams || league.standings || []
+      const members = teams
+        .filter(t => t.userId !== user?.id)
+        .map(t => ({
+          id: t.userId,
+          teamId: t.id,
+          name: t.name || t.user?.name || 'Unknown',
+          avatar: t.user?.avatar,
+          roster: (t.roster || []).map(entry => ({
+            id: entry.player?.id || entry.playerId,
+            name: entry.player?.name || 'Unknown',
+            country: entry.player?.country,
+            owgr: entry.player?.owgr,
+          })),
+        }))
+
+      setLeagueMembers(members)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [leagueId])
+  }, [leagueId, user?.id])
 
   useEffect(() => {
     setLoading(true)
@@ -36,49 +107,47 @@ export const useTradeCenter = (leagueId) => {
 
   const proposeTrade = useCallback(async (tradeData) => {
     try {
-      const result = await mockApi.trades.propose(leagueId, tradeData)
-      setPendingTrades(prev => [...prev, result])
-      notify.trade('Trade Proposed', `Trade sent to ${tradeData.toTeamName}`)
+      const result = await api.proposeTrade({
+        leagueId,
+        receiverId: tradeData.toUserId,
+        senderPlayers: tradeData.playersOffered,
+        receiverPlayers: tradeData.playersRequested,
+        message: tradeData.message,
+      })
+      // Refresh after proposing
+      fetchTrades()
       return result
     } catch (err) {
-      notify.error('Trade Failed', err.message)
       throw err
     }
-  }, [leagueId, notify])
+  }, [leagueId, fetchTrades])
 
   const acceptTrade = useCallback(async (tradeId) => {
     try {
-      await mockApi.trades.accept(tradeId)
-      setPendingTrades(prev => prev.filter(t => t.id !== tradeId))
-      notify.success('Trade Accepted', 'The trade has been completed')
+      await api.acceptTrade(tradeId)
       fetchTrades()
     } catch (err) {
-      notify.error('Error', err.message)
       throw err
     }
-  }, [notify, fetchTrades])
+  }, [fetchTrades])
 
   const rejectTrade = useCallback(async (tradeId) => {
     try {
-      await mockApi.trades.reject(tradeId)
-      setPendingTrades(prev => prev.filter(t => t.id !== tradeId))
-      notify.info('Trade Rejected', 'The trade has been declined')
+      await api.rejectTrade(tradeId)
+      fetchTrades()
     } catch (err) {
-      notify.error('Error', err.message)
       throw err
     }
-  }, [notify])
+  }, [fetchTrades])
 
   const cancelTrade = useCallback(async (tradeId) => {
     try {
-      await mockApi.trades.cancel(tradeId)
-      setPendingTrades(prev => prev.filter(t => t.id !== tradeId))
-      notify.info('Trade Cancelled', 'Your trade proposal has been withdrawn')
+      await api.cancelTrade(tradeId)
+      fetchTrades()
     } catch (err) {
-      notify.error('Error', err.message)
       throw err
     }
-  }, [notify])
+  }, [fetchTrades])
 
   return {
     pendingTrades,

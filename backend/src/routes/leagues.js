@@ -759,4 +759,266 @@ router.get('/:id/matchups', authenticate, async (req, res, next) => {
   }
 })
 
+// POST /api/leagues/:id/matchups/generate - Generate round-robin matchup schedule (commissioner only)
+router.post('/:id/matchups/generate', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: {
+        members: { select: { userId: true, role: true } },
+        teams: { select: { id: true, userId: true } },
+      },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isOwner = league.ownerId === req.user.id
+    const isAdmin = league.members.some(m => m.userId === req.user.id && m.role === 'OWNER')
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can generate matchups' } })
+    }
+
+    const teams = league.teams
+    if (teams.length < 2) {
+      return res.status(400).json({ error: { message: 'Need at least 2 teams to generate matchups' } })
+    }
+
+    // Get upcoming/completed tournaments for scheduling
+    const tournaments = await prisma.tournament.findMany({
+      where: { status: { in: ['UPCOMING', 'COMPLETED', 'IN_PROGRESS'] } },
+      orderBy: { startDate: 'asc' },
+    })
+
+    if (tournaments.length === 0) {
+      return res.status(400).json({ error: { message: 'No tournaments available for scheduling' } })
+    }
+
+    // Delete existing matchups
+    await prisma.matchup.deleteMany({ where: { leagueId: req.params.id } })
+
+    // Generate round-robin schedule
+    const teamIds = teams.map(t => t.id)
+    const n = teamIds.length
+    const matchupsToCreate = []
+
+    // Round-robin: each team plays every other team
+    // For n teams, we need n-1 rounds (if n is even) or n rounds (if n is odd)
+    const rounds = n % 2 === 0 ? n - 1 : n
+    const teamList = [...teamIds]
+
+    // Add a bye if odd number of teams
+    if (n % 2 !== 0) teamList.push(null)
+    const half = teamList.length / 2
+
+    for (let round = 0; round < rounds; round++) {
+      const tournament = tournaments[round % tournaments.length]
+
+      for (let i = 0; i < half; i++) {
+        const home = teamList[i]
+        const away = teamList[teamList.length - 1 - i]
+
+        if (home && away) {
+          matchupsToCreate.push({
+            week: round + 1,
+            leagueId: req.params.id,
+            tournamentId: tournament.id,
+            homeTeamId: home,
+            awayTeamId: away,
+            isComplete: false,
+          })
+        }
+      }
+
+      // Rotate teams (keep first team fixed)
+      const last = teamList.pop()
+      teamList.splice(1, 0, last)
+    }
+
+    // Bulk create
+    await prisma.matchup.createMany({ data: matchupsToCreate })
+
+    res.json({
+      message: `Generated ${matchupsToCreate.length} matchups across ${rounds} weeks`,
+      matchupCount: matchupsToCreate.length,
+      weekCount: rounds,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// PATCH /api/leagues/:id/matchups/:matchupId - Update a matchup (commissioner only)
+router.patch('/:id/matchups/:matchupId', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true, role: true } } },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isOwner = league.ownerId === req.user.id
+    const isAdmin = league.members.some(m => m.userId === req.user.id && m.role === 'OWNER')
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can update matchups' } })
+    }
+
+    const { homeScore, awayScore, isComplete } = req.body
+
+    const matchup = await prisma.matchup.update({
+      where: { id: req.params.matchupId },
+      data: {
+        ...(homeScore !== undefined && { homeScore: parseFloat(homeScore) }),
+        ...(awayScore !== undefined && { awayScore: parseFloat(awayScore) }),
+        ...(isComplete !== undefined && { isComplete }),
+      },
+      include: {
+        homeTeam: { select: { id: true, name: true } },
+        awayTeam: { select: { id: true, name: true } },
+        tournament: { select: { id: true, name: true } },
+      },
+    })
+
+    res.json({ matchup })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// DELETE /api/leagues/:id/matchups - Reset all matchups (commissioner only)
+router.delete('/:id/matchups', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true, role: true } } },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isOwner = league.ownerId === req.user.id
+    const isAdmin = league.members.some(m => m.userId === req.user.id && m.role === 'OWNER')
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can reset matchups' } })
+    }
+
+    const result = await prisma.matchup.deleteMany({ where: { leagueId: req.params.id } })
+
+    res.json({ message: `Deleted ${result.count} matchups` })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/leagues/:id/activity - Get league activity feed
+router.get('/:id/activity', authenticate, async (req, res, next) => {
+  try {
+    const { limit = 20 } = req.query
+
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: {
+        members: { select: { userId: true, joinedAt: true, user: { select: { id: true, name: true, avatar: true } } } },
+        teams: { select: { id: true, name: true, userId: true, user: { select: { name: true } } } },
+      },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const memberIds = league.members.map(m => m.userId)
+
+    // Fetch recent trades for this league
+    const trades = await prisma.trade.findMany({
+      where: { leagueId: req.params.id },
+      include: {
+        initiator: { select: { id: true, name: true } },
+        receiver: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: parseInt(limit),
+    })
+
+    // Resolve player names for trades
+    const allPlayerIds = new Set()
+    for (const trade of trades) {
+      const sIds = Array.isArray(trade.senderPlayers) ? trade.senderPlayers : []
+      const rIds = Array.isArray(trade.receiverPlayers) ? trade.receiverPlayers : []
+      sIds.forEach(id => allPlayerIds.add(id))
+      rIds.forEach(id => allPlayerIds.add(id))
+    }
+    const players = allPlayerIds.size > 0
+      ? await prisma.player.findMany({ where: { id: { in: Array.from(allPlayerIds) } }, select: { id: true, name: true } })
+      : []
+    const playerMap = Object.fromEntries(players.map(p => [p.id, p.name]))
+
+    // Build activity items
+    const activity = []
+
+    // Trade activity
+    for (const trade of trades) {
+      const senderNames = (Array.isArray(trade.senderPlayers) ? trade.senderPlayers : []).map(id => playerMap[id] || 'Unknown')
+      const receiverNames = (Array.isArray(trade.receiverPlayers) ? trade.receiverPlayers : []).map(id => playerMap[id] || 'Unknown')
+
+      if (trade.status === 'ACCEPTED') {
+        activity.push({
+          id: `trade-${trade.id}`,
+          type: 'trade',
+          user: { name: trade.initiator.name },
+          description: `traded ${senderNames.join(', ')} for ${receiverNames.join(', ')} with ${trade.receiver.name}`,
+          timestamp: trade.updatedAt || trade.createdAt,
+          league: league.name,
+          players: [...senderNames, ...receiverNames],
+        })
+      } else if (trade.status === 'PENDING') {
+        activity.push({
+          id: `trade-prop-${trade.id}`,
+          type: 'trade',
+          user: { name: trade.initiator.name },
+          description: `proposed a trade to ${trade.receiver.name}`,
+          timestamp: trade.createdAt,
+          league: league.name,
+          players: [...senderNames, ...receiverNames],
+        })
+      } else if (trade.status === 'REJECTED') {
+        activity.push({
+          id: `trade-rej-${trade.id}`,
+          type: 'trade',
+          user: { name: trade.receiver.name },
+          description: `rejected a trade from ${trade.initiator.name}`,
+          timestamp: trade.updatedAt || trade.createdAt,
+          league: league.name,
+          players: [],
+        })
+      }
+    }
+
+    // Member joins
+    for (const member of league.members) {
+      activity.push({
+        id: `join-${member.userId}`,
+        type: 'join',
+        user: { name: member.user.name },
+        description: `joined the league`,
+        timestamp: member.joinedAt,
+        league: league.name,
+        players: [],
+      })
+    }
+
+    // Sort by timestamp descending and limit
+    activity.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
+    res.json({ activity: activity.slice(0, parseInt(limit)) })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

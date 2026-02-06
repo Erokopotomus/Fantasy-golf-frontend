@@ -48,7 +48,8 @@ const Dashboard = () => {
   const { isCompleted: onboardingCompleted, startOnboarding } = useOnboarding()
   const { leagues, loading: leaguesLoading } = useLeagues()
   const { currentTournament, loading: tournamentsLoading } = useTournaments()
-  const { activity, loading: activityLoading } = useActivity(8)
+  const primaryLeagueId = leagues?.[0]?.id
+  const { activity, loading: activityLoading } = useActivity(primaryLeagueId, 8)
   const { stats, loading: statsLoading } = useStats()
 
   // Show onboarding for first-time users

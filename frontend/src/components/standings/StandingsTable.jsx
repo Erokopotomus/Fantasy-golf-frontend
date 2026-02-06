@@ -4,7 +4,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
   const getTrendIcon = (trend) => {
     if (trend > 0) {
       return (
-        <span className="flex items-center text-accent-green text-xs">
+        <span className="flex items-center text-emerald-400 text-xs">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
           </svg>
@@ -61,7 +61,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
                   key={team.id}
                   className={`
                     border-b border-dark-border/50 transition-colors
-                    ${isCurrentUser ? 'bg-accent-green/10' : 'hover:bg-dark-tertiary/50'}
+                    ${isCurrentUser ? 'bg-emerald-400/10' : 'hover:bg-dark-tertiary/50'}
                   `}
                 >
                   <td className="p-3 text-center">
@@ -78,14 +78,14 @@ const StandingsTable = ({ standings, currentUserId }) => {
                         {team.avatar || '⛳'}
                       </div>
                       <div>
-                        <p className={`font-medium ${isCurrentUser ? 'text-accent-green' : 'text-white'}`}>
+                        <p className={`font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-white'}`}>
                           {team.name}
                         </p>
                         <p className="text-xs text-text-muted">{team.ownerName}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-3 text-center font-medium text-accent-green">{team.wins}</td>
+                  <td className="p-3 text-center font-medium text-emerald-400">{team.wins}</td>
                   <td className="p-3 text-center font-medium text-red-400">{team.losses}</td>
                   <td className="p-3 text-center font-medium text-text-secondary">{team.ties}</td>
                   <td className="p-3 text-right font-bold text-white">{(team.totalPoints || 0).toLocaleString()}</td>

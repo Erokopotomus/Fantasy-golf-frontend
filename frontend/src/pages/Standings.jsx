@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useLeagues } from '../hooks/useLeagues'
+import { useLeague } from '../hooks/useLeague'
 import { useLeagueFormat } from '../hooks/useLeagueFormat'
 import StandingsTable from '../components/standings/StandingsTable'
 import WeeklyBreakdown from '../components/standings/WeeklyBreakdown'
@@ -17,21 +17,20 @@ import useSurvivor from '../hooks/useSurvivor'
 const Standings = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
-  const { leagues, loading: leaguesLoading } = useLeagues()
-  const league = leagues?.find(l => l.id === leagueId)
+  const { league, loading: leagueLoading } = useLeague(leagueId)
   const { format, isHeadToHead, isRoto, isSurvivor, isOneAndDone, isFullLeague } = useLeagueFormat(league)
 
   const { standings, weeklyResults, loading, error, refetch } = useStandings(leagueId)
-  const { schedule, calculateStandings } = useMatchups(leagueId)
+  const { standings: matchupStandings } = useMatchups(leagueId)
   const { standings: rotoStandings } = useRotoCategories(leagueId)
   const { survivorData } = useSurvivor(leagueId)
 
-  if (loading || leaguesLoading) {
+  if (loading || leagueLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading standings...</p>
           </div>
         </div>
@@ -47,7 +46,7 @@ const Standings = () => {
             <p className="text-red-400 mb-4">{error}</p>
             <button
               onClick={refetch}
-              className="px-4 py-2 bg-accent-green text-white rounded-lg hover:bg-accent-green/90 transition-colors"
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
             >
               Try Again
             </button>
@@ -57,13 +56,46 @@ const Standings = () => {
     )
   }
 
+  // Map standings data shape for StandingsTable
+  // Backend: { teamId, teamName, userId, userName, userAvatar, totalPoints, rank, tournamentResults }
+  // Component expects: { id, name, avatar, ownerName, userId, totalPoints, rank, wins, losses, ties, avgPoints, trend }
+  const mappedStandings = standings.map(s => ({
+    id: s.teamId,
+    name: s.teamName,
+    avatar: s.userAvatar || s.teamName?.[0] || '?',
+    ownerName: s.userName,
+    userId: s.userId,
+    totalPoints: s.totalPoints,
+    rank: s.rank,
+    wins: s.wins || 0,
+    losses: s.losses || 0,
+    ties: s.ties || 0,
+    avgPoints: weeklyResults.length > 0 ? Math.round((s.totalPoints / weeklyResults.length) * 10) / 10 : 0,
+    trend: s.trend || 0,
+  }))
+
+  // Map weeklyResults for WeeklyBreakdown
+  // Backend: { tournamentId, tournamentName, teams: [{ teamId, teamName, points }] }
+  // Component expects: { tournamentId, tournamentName, dates, status, results: [{ userId, teamId, teamName, points }] }
+  const mappedWeeklyResults = weeklyResults.map(w => ({
+    tournamentId: w.tournamentId,
+    tournamentName: w.tournamentName,
+    status: 'completed',
+    results: [...(w.teams || [])].sort((a, b) => b.points - a.points).map(t => {
+      const standing = standings.find(s => s.teamId === t.teamId)
+      return {
+        userId: standing?.userId,
+        teamId: t.teamId,
+        teamName: t.teamName,
+        points: t.points,
+      }
+    }),
+  }))
+
   // Calculate league stats
-  const leaderPoints = standings[0]?.totalPoints || 0
-  const userTeam = standings.find(t => t.userId === user?.id)
+  const leaderPoints = mappedStandings[0]?.totalPoints || 0
+  const userTeam = mappedStandings.find(t => t.userId === user?.id)
   const pointsBehind = userTeam ? leaderPoints - userTeam.totalPoints : 0
-  const avgPointsPerWeek = weeklyResults.length > 0
-    ? standings.reduce((sum, t) => sum + t.totalPoints, 0) / standings.length / weeklyResults.length
-    : 0
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -76,7 +108,7 @@ const Standings = () => {
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to League
+          Back to {league?.name || 'League'}
         </Link>
         <h1 className="text-2xl font-bold text-white">{format?.name || 'League'} Standings</h1>
         <p className="text-text-secondary">Season performance and rankings</p>
@@ -89,12 +121,12 @@ const Standings = () => {
           <p className="text-2xl font-bold text-white">
             {userTeam ? `#${userTeam.rank}` : '-'}
           </p>
-          <p className="text-xs text-text-secondary">of {standings.length} teams</p>
+          <p className="text-xs text-text-secondary">of {mappedStandings.length} teams</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Your Points</p>
-          <p className="text-2xl font-bold text-accent-green">
+          <p className="text-2xl font-bold text-emerald-400">
             {userTeam?.totalPoints?.toLocaleString() || 0}
           </p>
           <p className="text-xs text-text-secondary">total fantasy points</p>
@@ -102,8 +134,8 @@ const Standings = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Points Behind</p>
-          <p className={`text-2xl font-bold ${pointsBehind > 0 ? 'text-red-400' : 'text-accent-green'}`}>
-            {pointsBehind > 0 ? `-${pointsBehind}` : userTeam?.rank === 1 ? '👑 Leader' : '-'}
+          <p className={`text-2xl font-bold ${pointsBehind > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+            {pointsBehind > 0 ? `-${pointsBehind.toLocaleString()}` : userTeam?.rank === 1 ? 'Leader' : '-'}
           </p>
           <p className="text-xs text-text-secondary">from 1st place</p>
         </Card>
@@ -120,10 +152,10 @@ const Standings = () => {
       {/* Main Content Grid - Format-Aware */}
       {isHeadToHead && (
         <div className="space-y-6">
-          <H2HStandings standings={league?.standings || []} currentUserId={user?.id} />
+          <H2HStandings standings={matchupStandings} currentUserId={user?.id} />
           <Card>
             <h3 className="text-lg font-semibold text-white mb-4">Tournament Results</h3>
-            <WeeklyBreakdown results={weeklyResults} currentUserId={user?.id} />
+            <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />
           </Card>
         </div>
       )}
@@ -134,7 +166,7 @@ const Standings = () => {
           <div className="text-center">
             <Link
               to={`/leagues/${leagueId}/categories`}
-              className="text-accent-green hover:underline"
+              className="text-emerald-400 hover:underline"
             >
               View Full Category Breakdown
             </Link>
@@ -145,14 +177,14 @@ const Standings = () => {
       {isSurvivor && (
         <div className="space-y-6">
           <SurvivorStandings
-            standings={league?.standings || []}
+            standings={mappedStandings}
             survivorData={survivorData}
             currentUserId={user?.id}
           />
           <div className="text-center">
             <Link
               to={`/leagues/${leagueId}/survivor`}
-              className="text-accent-green hover:underline"
+              className="text-emerald-400 hover:underline"
             >
               View Survivor Board
             </Link>
@@ -162,11 +194,11 @@ const Standings = () => {
 
       {isOneAndDone && (
         <div className="space-y-6">
-          <OADStandings standings={league?.standings || []} currentUserId={user?.id} />
+          <OADStandings standings={mappedStandings} currentUserId={user?.id} />
           <div className="text-center">
             <Link
               to={`/leagues/${leagueId}/picks`}
-              className="text-accent-green hover:underline"
+              className="text-emerald-400 hover:underline"
             >
               Go to Pick Center
             </Link>
@@ -178,12 +210,12 @@ const Standings = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Standings Table - 2 columns */}
           <div className="lg:col-span-2">
-            <StandingsTable standings={standings} currentUserId={user?.id} />
+            <StandingsTable standings={mappedStandings} currentUserId={user?.id} />
           </div>
 
           {/* Weekly Results - 1 column */}
           <div>
-            <WeeklyBreakdown results={weeklyResults} currentUserId={user?.id} />
+            <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />
           </div>
         </div>
       )}
@@ -192,10 +224,10 @@ const Standings = () => {
       {!isHeadToHead && !isRoto && !isSurvivor && !isOneAndDone && !isFullLeague && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <StandingsTable standings={standings} currentUserId={user?.id} />
+            <StandingsTable standings={mappedStandings} currentUserId={user?.id} />
           </div>
           <div>
-            <WeeklyBreakdown results={weeklyResults} currentUserId={user?.id} />
+            <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />
           </div>
         </div>
       )}

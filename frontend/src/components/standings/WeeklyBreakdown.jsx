@@ -55,7 +55,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
                         key={result.teamId}
                         className={`
                           border-b border-dark-border/30
-                          ${isCurrentUser ? 'bg-accent-green/10' : ''}
+                          ${isCurrentUser ? 'bg-emerald-400/10' : ''}
                         `}
                       >
                         <td className="p-2 text-center">
@@ -64,10 +64,10 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
                           {idx === 2 && <span className="text-amber-600">🥉</span>}
                           {idx > 2 && <span className="text-text-muted">{idx + 1}</span>}
                         </td>
-                        <td className={`p-2 font-medium ${isCurrentUser ? 'text-accent-green' : 'text-white'}`}>
+                        <td className={`p-2 font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-white'}`}>
                           {result.teamName}
                         </td>
-                        <td className="p-2 text-right font-bold text-accent-green">
+                        <td className="p-2 text-right font-bold text-emerald-400">
                           {result.points}
                         </td>
                       </tr>

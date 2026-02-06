@@ -5,6 +5,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
   const [selectedTeam, setSelectedTeam] = useState('')
   const [myPlayersToSend, setMyPlayersToSend] = useState([])
   const [theirPlayersToReceive, setTheirPlayersToReceive] = useState([])
+  const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   if (!isOpen) return null
@@ -33,11 +34,17 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
     setSubmitting(true)
     try {
       await onPropose({
-        toTeamId: selectedTeam,
+        toUserId: selectedTeam,
         toTeamName: selectedMember?.name,
         playersOffered: myPlayersToSend,
         playersRequested: theirPlayersToReceive,
+        message: message || undefined,
       })
+      // Reset state
+      setSelectedTeam('')
+      setMyPlayersToSend([])
+      setTheirPlayersToReceive([])
+      setMessage('')
       onClose()
     } finally {
       setSubmitting(false)
@@ -45,6 +52,14 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
   }
 
   const canSubmit = selectedTeam && myPlayersToSend.length > 0 && theirPlayersToReceive.length > 0
+
+  // Map roster entries — handle both shapes: { player: { id, name } } or { id, name }
+  const myPlayers = (myRoster || []).map(entry => ({
+    id: entry.player?.id || entry.playerId || entry.id,
+    name: entry.player?.name || entry.name || 'Unknown',
+    country: entry.player?.country || entry.country,
+    owgr: entry.player?.owgr || entry.owgr,
+  }))
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -79,7 +94,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                 setSelectedTeam(e.target.value)
                 setTheirPlayersToReceive([])
               }}
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-emerald-400 focus:outline-none"
             >
               <option value="">Select a team...</option>
               {leagueMembers.map(member => (
@@ -88,13 +103,27 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
             </select>
           </div>
 
+          {/* Trade Message */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Message (optional)
+            </label>
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Add a message to your trade proposal..."
+              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-text-muted focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+
           {/* Trade Columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* My Players */}
             <div>
               <h3 className="text-sm font-semibold text-text-muted mb-3">Your Players (Select to Send)</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {myRoster.map(player => (
+                {myPlayers.map(player => (
                   <div
                     key={player.id}
                     onClick={() => toggleMyPlayer(player.id)}
@@ -105,16 +134,20 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                         : 'bg-dark-tertiary hover:bg-dark-border'}
                     `}
                   >
-                    <span className="text-xl">{player.countryFlag}</span>
                     <div className="flex-1">
                       <p className="text-white font-medium">{player.name}</p>
-                      <p className="text-text-muted text-xs">#{player.rank} World Ranking</p>
+                      {player.owgr && (
+                        <p className="text-text-muted text-xs">#{player.owgr} World Ranking</p>
+                      )}
                     </div>
                     {myPlayersToSend.includes(player.id) && (
                       <span className="text-red-400 text-xs font-medium">Sending</span>
                     )}
                   </div>
                 ))}
+                {myPlayers.length === 0 && (
+                  <p className="text-text-muted text-sm p-3">No players on your roster</p>
+                )}
               </div>
             </div>
 
@@ -132,20 +165,24 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                       className={`
                         flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all
                         ${theirPlayersToReceive.includes(player.id)
-                          ? 'bg-accent-green/20 border border-accent-green/50'
+                          ? 'bg-emerald-400/20 border border-emerald-400/50'
                           : 'bg-dark-tertiary hover:bg-dark-border'}
                       `}
                     >
-                      <span className="text-xl">{player.countryFlag}</span>
                       <div className="flex-1">
                         <p className="text-white font-medium">{player.name}</p>
-                        <p className="text-text-muted text-xs">#{player.rank} World Ranking</p>
+                        {player.owgr && (
+                          <p className="text-text-muted text-xs">#{player.owgr} World Ranking</p>
+                        )}
                       </div>
                       {theirPlayersToReceive.includes(player.id) && (
-                        <span className="text-accent-green text-xs font-medium">Receiving</span>
+                        <span className="text-emerald-400 text-xs font-medium">Receiving</span>
                       )}
                     </div>
                   ))}
+                  {(selectedMember?.roster || []).length === 0 && (
+                    <p className="text-text-muted text-sm p-3">This team has no players</p>
+                  )}
                 </div>
               ) : (
                 <div className="bg-dark-tertiary rounded-lg p-8 text-center">
@@ -163,18 +200,18 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                 <div>
                   <p className="text-xs text-red-400 mb-1">You Send:</p>
                   {myPlayersToSend.map(id => {
-                    const player = myRoster.find(p => p.id === id)
+                    const player = myPlayers.find(p => p.id === id)
                     return player ? (
-                      <p key={id} className="text-white text-sm">{player.countryFlag} {player.name}</p>
+                      <p key={id} className="text-white text-sm">{player.name}</p>
                     ) : null
                   })}
                 </div>
                 <div>
-                  <p className="text-xs text-accent-green mb-1">You Receive:</p>
+                  <p className="text-xs text-emerald-400 mb-1">You Receive:</p>
                   {theirPlayersToReceive.map(id => {
                     const player = selectedMember?.roster?.find(p => p.id === id)
                     return player ? (
-                      <p key={id} className="text-white text-sm">{player.countryFlag} {player.name}</p>
+                      <p key={id} className="text-white text-sm">{player.name}</p>
                     ) : null
                   })}
                 </div>
@@ -194,7 +231,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || submitting}
-            className="flex-1 py-3 bg-accent-green text-white rounded-lg font-medium hover:bg-accent-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Sending...' : 'Propose Trade'}
           </button>

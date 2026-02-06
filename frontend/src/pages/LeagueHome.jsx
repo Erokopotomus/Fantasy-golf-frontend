@@ -3,10 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useLeagues } from '../hooks/useLeagues'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
 import { useAuth } from '../context/AuthContext'
+import useActivity from '../hooks/useActivity'
 import api from '../services/api'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import ChatPanel from '../components/chat/ChatPanel'
+import ActivityFeed from '../components/dashboard/ActivityFeed'
 
 const LeagueHome = () => {
   const { leagueId } = useParams()
@@ -14,6 +16,7 @@ const LeagueHome = () => {
   const { user } = useAuth()
   const { leagues, loading } = useLeagues()
   const [creatingDraft, setCreatingDraft] = useState(false)
+  const { activity, loading: activityLoading } = useActivity(leagueId, 10)
 
   const league = leagues?.find(l => l.id === leagueId)
   const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
@@ -354,6 +357,12 @@ const LeagueHome = () => {
                     <span className="text-accent-green">{league.currentRound || 'TBD'}</span>
                   </div>
                 </div>
+              </Card>
+
+              {/* Activity Feed */}
+              <Card>
+                <h3 className="text-base font-semibold text-white mb-4">Recent Activity</h3>
+                <ActivityFeed activity={activity} loading={activityLoading} />
               </Card>
             </div>
 

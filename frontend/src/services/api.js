@@ -279,6 +279,27 @@ class ApiService {
     })
   }
 
+  // Activity
+  async getLeagueActivity(leagueId, limit = 20) {
+    return this.request(`/leagues/${leagueId}/activity?limit=${limit}`)
+  }
+
+  // Commissioner - Matchup Management
+  async generateMatchups(leagueId) {
+    return this.request(`/leagues/${leagueId}/matchups/generate`, { method: 'POST' })
+  }
+
+  async updateMatchup(leagueId, matchupId, data) {
+    return this.request(`/leagues/${leagueId}/matchups/${matchupId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async resetMatchups(leagueId) {
+    return this.request(`/leagues/${leagueId}/matchups`, { method: 'DELETE' })
+  }
+
   // Tournaments
   async getTournaments(options = {}) {
     const params = new URLSearchParams(options).toString()

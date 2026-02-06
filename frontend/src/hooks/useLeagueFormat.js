@@ -114,37 +114,63 @@ export const ROTO_CATEGORIES = [
   { id: 'sg_total', name: 'SG: Total', description: 'Strokes gained total' },
 ]
 
+// Map backend enum values to frontend format keys
+const FORMAT_ENUM_MAP = {
+  'FULL_LEAGUE': 'full-league',
+  'HEAD_TO_HEAD': 'head-to-head',
+  'ROTO': 'roto',
+  'SURVIVOR': 'survivor',
+  'ONE_AND_DONE': 'one-and-done',
+}
+
+const DRAFT_ENUM_MAP = {
+  'SNAKE': 'snake',
+  'AUCTION': 'auction',
+  'NONE': 'none',
+}
+
+function normalizeFormat(format) {
+  return FORMAT_ENUM_MAP[format] || format
+}
+
+function normalizeDraftType(draftType) {
+  return DRAFT_ENUM_MAP[draftType] || draftType
+}
+
 /**
  * Hook to get format information and utilities for a league
  */
 export const useLeagueFormat = (league) => {
+  const normalizedFormat = normalizeFormat(league?.format)
+  const normalizedDraftType = normalizeDraftType(league?.draftType)
+
   const format = useMemo(() => {
     if (!league) return null
-    return LEAGUE_FORMATS[league.format] || LEAGUE_FORMATS['full-league']
-  }, [league?.format])
+    return LEAGUE_FORMATS[normalizedFormat] || LEAGUE_FORMATS['full-league']
+  }, [league, normalizedFormat])
 
   const draftType = useMemo(() => {
     if (!league) return null
-    return DRAFT_TYPES[league.draftType] || DRAFT_TYPES['snake']
-  }, [league?.draftType])
+    return DRAFT_TYPES[normalizedDraftType] || DRAFT_TYPES['snake']
+  }, [league, normalizedDraftType])
 
   const formatSettings = useMemo(() => {
     if (!league) return null
     return {
-      ...DEFAULT_FORMAT_SETTINGS[league.format],
+      ...DEFAULT_FORMAT_SETTINGS[normalizedFormat],
       ...league.settings?.formatSettings,
     }
-  }, [league])
+  }, [league, normalizedFormat])
 
   const hasDraft = useMemo(() => {
-    return format?.hasDraft && league?.draftType !== 'none'
-  }, [format, league?.draftType])
+    return format?.hasDraft && normalizedDraftType !== 'none'
+  }, [format, normalizedDraftType])
 
-  const isHeadToHead = league?.format === 'head-to-head'
-  const isRoto = league?.format === 'roto'
-  const isSurvivor = league?.format === 'survivor'
-  const isOneAndDone = league?.format === 'one-and-done'
-  const isFullLeague = league?.format === 'full-league'
+  const isHeadToHead = normalizedFormat === 'head-to-head'
+  const isRoto = normalizedFormat === 'roto'
+  const isSurvivor = normalizedFormat === 'survivor'
+  const isOneAndDone = normalizedFormat === 'one-and-done'
+  const isFullLeague = normalizedFormat === 'full-league'
 
   // Get the appropriate nav items based on format
   const formatNavItems = useMemo(() => {

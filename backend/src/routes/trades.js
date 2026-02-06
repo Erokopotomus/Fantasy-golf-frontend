@@ -39,7 +39,31 @@ router.get('/', authenticate, async (req, res, next) => {
       orderBy: { createdAt: 'desc' }
     })
 
-    res.json({ trades })
+    // Resolve player IDs to player objects
+    const allPlayerIds = new Set()
+    for (const trade of trades) {
+      const sIds = Array.isArray(trade.senderPlayers) ? trade.senderPlayers : []
+      const rIds = Array.isArray(trade.receiverPlayers) ? trade.receiverPlayers : []
+      sIds.forEach(id => allPlayerIds.add(id))
+      rIds.forEach(id => allPlayerIds.add(id))
+    }
+
+    const players = allPlayerIds.size > 0
+      ? await prisma.player.findMany({
+          where: { id: { in: Array.from(allPlayerIds) } },
+          select: { id: true, name: true, country: true, owgr: true, headshotUrl: true }
+        })
+      : []
+
+    const playerMap = Object.fromEntries(players.map(p => [p.id, p]))
+
+    const enrichedTrades = trades.map(trade => ({
+      ...trade,
+      senderPlayerDetails: (Array.isArray(trade.senderPlayers) ? trade.senderPlayers : []).map(id => playerMap[id] || { id, name: 'Unknown' }),
+      receiverPlayerDetails: (Array.isArray(trade.receiverPlayers) ? trade.receiverPlayers : []).map(id => playerMap[id] || { id, name: 'Unknown' }),
+    }))
+
+    res.json({ trades: enrichedTrades })
   } catch (error) {
     next(error)
   }

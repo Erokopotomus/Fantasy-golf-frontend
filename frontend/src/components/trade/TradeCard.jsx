@@ -11,12 +11,17 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
     })
   }
 
+  // For incoming trades: playersOffered = what they send you, playersRequested = what they want from you
+  // For outgoing trades: playersOffered = what you send, playersRequested = what you want
+  const youReceive = isIncoming ? trade.playersOffered : trade.playersRequested
+  const youSend = isIncoming ? trade.playersRequested : trade.playersOffered
+
   return (
-    <Card className={isIncoming ? 'border-accent-blue/50' : ''}>
+    <Card className={isIncoming ? 'border-blue-500/50' : ''}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {isIncoming ? (
-            <span className="px-2 py-1 bg-accent-blue/20 text-accent-blue text-xs rounded font-medium">
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded font-medium">
               Incoming
             </span>
           ) : (
@@ -31,31 +36,48 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
         </span>
       </div>
 
+      {/* Trade Message */}
+      {trade.message && (
+        <div className="mb-4 p-2 bg-dark-tertiary rounded-lg">
+          <p className="text-text-secondary text-sm italic">"{trade.message}"</p>
+        </div>
+      )}
+
       {/* Trade Content */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         {/* You Receive */}
         <div className="bg-dark-tertiary rounded-lg p-3">
-          <p className="text-xs text-text-muted mb-2">You Receive</p>
+          <p className="text-xs text-emerald-400 mb-2">You Receive</p>
           <div className="space-y-2">
-            {trade.playersOffered.map(player => (
+            {youReceive.map(player => (
               <div key={player.id} className="flex items-center gap-2">
-                <span className="text-lg">{player.countryFlag}</span>
                 <span className="text-white font-medium text-sm">{player.name}</span>
+                {player.owgr && (
+                  <span className="text-text-muted text-xs">#{player.owgr}</span>
+                )}
               </div>
             ))}
+            {youReceive.length === 0 && (
+              <p className="text-text-muted text-sm">No players</p>
+            )}
           </div>
         </div>
 
         {/* You Send */}
         <div className="bg-dark-tertiary rounded-lg p-3">
-          <p className="text-xs text-text-muted mb-2">You Send</p>
+          <p className="text-xs text-red-400 mb-2">You Send</p>
           <div className="space-y-2">
-            {trade.playersRequested.map(player => (
+            {youSend.map(player => (
               <div key={player.id} className="flex items-center gap-2">
-                <span className="text-lg">{player.countryFlag}</span>
                 <span className="text-white font-medium text-sm">{player.name}</span>
+                {player.owgr && (
+                  <span className="text-text-muted text-xs">#{player.owgr}</span>
+                )}
               </div>
             ))}
+            {youSend.length === 0 && (
+              <p className="text-text-muted text-sm">No players</p>
+            )}
           </div>
         </div>
       </div>
@@ -66,7 +88,7 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
           <>
             <button
               onClick={() => onAccept(trade.id)}
-              className="flex-1 py-2 bg-accent-green text-white rounded-lg font-medium hover:bg-accent-green/90 transition-colors"
+              className="flex-1 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors"
             >
               Accept
             </button>

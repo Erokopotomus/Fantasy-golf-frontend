@@ -18,7 +18,7 @@ const TradeCenter = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading trades...</p>
           </div>
         </div>
@@ -34,7 +34,7 @@ const TradeCenter = () => {
             <p className="text-red-400 mb-4">{error}</p>
             <Link
               to={`/leagues/${leagueId}`}
-              className="text-accent-green hover:underline"
+              className="text-emerald-500 hover:underline"
             >
               Back to League
             </Link>
@@ -66,7 +66,7 @@ const TradeCenter = () => {
         </div>
         <button
           onClick={() => setShowPropose(true)}
-          className="px-4 py-2 bg-accent-green text-white rounded-lg font-medium hover:bg-accent-green/90 transition-colors"
+          className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-500/90 transition-colors"
         >
           Propose Trade
         </button>
@@ -94,7 +94,7 @@ const TradeCenter = () => {
           onClick={() => setActiveTab('pending')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'pending'
-              ? 'bg-accent-green text-white'
+              ? 'bg-emerald-500 text-white'
               : 'bg-dark-tertiary text-text-secondary hover:text-white'
           }`}
         >
@@ -104,7 +104,7 @@ const TradeCenter = () => {
           onClick={() => setActiveTab('history')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'history'
-              ? 'bg-accent-green text-white'
+              ? 'bg-emerald-500 text-white'
               : 'bg-dark-tertiary text-text-secondary hover:text-white'
           }`}
         >
@@ -126,7 +126,7 @@ const TradeCenter = () => {
               <p className="text-text-secondary mb-4">Start trading with other teams to improve your roster</p>
               <button
                 onClick={() => setShowPropose(true)}
-                className="px-4 py-2 bg-accent-green text-white rounded-lg font-medium hover:bg-accent-green/90 transition-colors"
+                className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-500/90 transition-colors"
               >
                 Propose a Trade
               </button>
@@ -183,7 +183,7 @@ const TradeCenter = () => {
                   </div>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     trade.status === 'completed'
-                      ? 'bg-accent-green/20 text-accent-green'
+                      ? 'bg-emerald-500/20 text-emerald-500'
                       : 'bg-red-500/20 text-red-400'
                   }`}>
                     {trade.status}
