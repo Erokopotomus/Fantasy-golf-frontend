@@ -192,6 +192,13 @@ const LeagueHome = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                onClick={() => navigate(`/players`)}
+              >
+                Players
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => navigate(`/leagues/${leagueId}/standings`)}
               >
                 Standings
