@@ -350,6 +350,12 @@ class ApiService {
   async deleteNotification(id) {
     return this.request(`/notifications/${id}`, { method: 'DELETE' })
   }
+
+  // Search
+  async search(query, options = {}) {
+    const params = new URLSearchParams({ q: query, ...options }).toString()
+    return this.request(`/search?${params}`)
+  }
 }
 
 export const api = new ApiService()

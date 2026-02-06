@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { mockApi } from '../services/mockApi'
+import api from '../services/api'
 
 export const useGlobalSearch = () => {
   const [query, setQuery] = useState('')
@@ -28,7 +28,7 @@ export const useGlobalSearch = () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await mockApi.search.query(searchQuery, options)
+      const data = await api.search(searchQuery, options)
       setResults(data)
     } catch (err) {
       setError(err.message || 'Search failed')
@@ -63,7 +63,6 @@ export const useGlobalSearch = () => {
 
   const addToRecentSearches = useCallback((item) => {
     setRecentSearches(prev => {
-      // Remove duplicates and add to front
       const filtered = prev.filter(r => r.id !== item.id || r.type !== item.type)
       const updated = [item, ...filtered].slice(0, 5)
       localStorage.setItem('fantasy_golf_recent_searches', JSON.stringify(updated))

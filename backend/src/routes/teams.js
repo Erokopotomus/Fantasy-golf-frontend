@@ -123,7 +123,8 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
       data: {
         teamId: req.params.id,
         playerId,
-        position: 'BENCH'
+        position: 'BENCH',
+        acquiredVia: 'FREE_AGENT'
       },
       include: {
         player: true

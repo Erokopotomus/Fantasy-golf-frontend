@@ -15,6 +15,7 @@ const teamRoutes = require('./routes/teams')
 const tradeRoutes = require('./routes/trades')
 const tournamentRoutes = require('./routes/tournaments')
 const notificationRoutes = require('./routes/notifications')
+const searchRoutes = require('./routes/search')
 
 const app = express()
 const httpServer = createServer(app)
@@ -81,6 +82,7 @@ app.use('/api/teams', teamRoutes)
 app.use('/api/trades', tradeRoutes)
 app.use('/api/tournaments', tournamentRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/search', searchRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

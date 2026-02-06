@@ -1,11 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { mockApi } from '../services/mockApi'
 import api from '../services/api'
-
-// Toggle via environment variable - defaults to REAL API in production
-const envValue = import.meta.env.VITE_USE_MOCK_API
-const USE_MOCK_API = envValue === 'true' || envValue === true
-console.log('USE_MOCK_API:', USE_MOCK_API, 'env value:', envValue)
 
 const AuthContext = createContext(null)
 
@@ -39,13 +33,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      let data
-
-      if (USE_MOCK_API) {
-        data = await mockApi.auth.login(email, password)
-      } else {
-        data = await api.login(email, password)
-      }
+      const data = await api.login(email, password)
 
       localStorage.setItem('clutch_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
@@ -59,13 +47,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (name, email, password) => {
     try {
-      let data
-
-      if (USE_MOCK_API) {
-        data = await mockApi.auth.register(name, email, password)
-      } else {
-        data = await api.signup(name, email, password)
-      }
+      const data = await api.signup(name, email, password)
 
       localStorage.setItem('clutch_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
