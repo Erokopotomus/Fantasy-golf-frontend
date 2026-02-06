@@ -41,7 +41,7 @@ const ScoreCell = ({ score, par }) => {
   )
 }
 
-const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand }) => {
+const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand, timezone }) => {
   const [expandedPlayer, setExpandedPlayer] = useState(null)
   const [expandedRound, setExpandedRound] = useState(null) // which round tab is active
   const [showRounds, setShowRounds] = useState(false)
@@ -97,9 +97,25 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     }
   }, [tournamentId, onPlayerExpand])
 
+  /** Get short timezone abbreviation (e.g. "MST", "ET") from IANA zone */
+  const getTimezoneAbbr = () => {
+    if (!timezone) return 'ET'
+    try {
+      const abbr = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'short' })
+        .formatToParts(new Date())
+        .find(p => p.type === 'timeZoneName')?.value
+      return abbr || 'ET'
+    } catch { return 'ET' }
+  }
+
   const formatTeeTime = (isoStr) => {
     if (!isoStr) return null
     const d = new Date(isoStr)
+    if (timezone) {
+      try {
+        return d.toLocaleTimeString('en-US', { timeZone: timezone, hour: 'numeric', minute: '2-digit' })
+      } catch {}
+    }
     const h = d.getHours()
     const m = d.getMinutes()
     const ampm = h >= 12 ? 'PM' : 'AM'
@@ -612,7 +628,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
         <div className="text-center">Today</div>
         {!showRounds && <div className="text-center">Thru</div>}
         <div className="text-center">Total</div>
-        <div className="text-center">Tee</div>
+        <div className="text-center">Tee <span className="normal-case text-text-muted/60">{getTimezoneAbbr()}</span></div>
       </div>
 
       {/* Active players */}

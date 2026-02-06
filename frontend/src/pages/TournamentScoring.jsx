@@ -214,6 +214,7 @@ const TournamentScoring = () => {
             myPlayerIds={myPlayerIds}
             tournamentId={tournamentId}
             onPlayerExpand={handlePlayerExpand}
+            timezone={tournament?.timezone}
           />
         </div>
 
