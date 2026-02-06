@@ -127,6 +127,12 @@ export const useDraft = (leagueId) => {
       const state = transformDraftState(draftData, playersList)
       setDraftState(state)
       pickDeadlineRef.current = draftData.pickDeadline
+
+      // Set initial budget for auction drafts
+      if (draftData.league?.draftType === 'AUCTION') {
+        const budget = draftData.league?.settings?.budget || 200
+        updateBudget(budget)
+      }
     } catch (err) {
       setError(err.message)
     }
@@ -185,15 +191,74 @@ export const useDraft = (leagueId) => {
       loadDraft()
     })
 
+    // Auction draft listeners
+    const unsubNomination = socketService.onAuctionNomination((data) => {
+      setCurrentBid({
+        playerId: data.playerId,
+        playerName: data.playerName,
+        player: data.playerData,
+        amount: data.currentBid,
+        highBidderTeamId: data.highBidderTeamId,
+        nominatedByTeamId: data.nominatedByTeamId,
+        deadline: data.deadline,
+      })
+      // Update all team budgets
+      if (data.budgets) {
+        const userTeamId = draft?.userTeamId
+        if (userTeamId && data.budgets[userTeamId] !== undefined) {
+          updateBudget(data.budgets[userTeamId])
+        }
+      }
+    })
+
+    const unsubAuctionBid = socketService.onAuctionBid((data) => {
+      setCurrentBid({
+        playerId: data.playerId,
+        amount: data.currentBid,
+        highBidderTeamId: data.highBidderTeamId,
+        deadline: data.deadline,
+      })
+      if (data.budgets) {
+        const userTeamId = draft?.userTeamId
+        if (userTeamId && data.budgets[userTeamId] !== undefined) {
+          updateBudget(data.budgets[userTeamId])
+        }
+      }
+    })
+
+    const unsubAuctionWon = socketService.onAuctionWon((data) => {
+      setCurrentBid(null)
+      if (data.budgets) {
+        const userTeamId = draft?.userTeamId
+        if (userTeamId && data.budgets[userTeamId] !== undefined) {
+          updateBudget(data.budgets[userTeamId])
+        }
+      }
+    })
+
+    const unsubNextNominator = socketService.onAuctionNextNominator((data) => {
+      // Update budgets and nominator info — the turn detection effect handles isUserTurn
+      if (data.budgets) {
+        const userTeamId = draft?.userTeamId
+        if (userTeamId && data.budgets[userTeamId] !== undefined) {
+          updateBudget(data.budgets[userTeamId])
+        }
+      }
+    })
+
     return () => {
       unsubPick()
       unsubStarted()
       unsubPaused()
       unsubResumed()
       unsubCompleted()
+      unsubNomination()
+      unsubAuctionBid()
+      unsubAuctionWon()
+      unsubNextNominator()
       socketService.leaveDraft(draftId)
     }
-  }, [draftId, dispatchPick, dispatchPause, dispatchResume, loadDraft])
+  }, [draftId, draft?.userTeamId, dispatchPick, dispatchPause, dispatchResume, loadDraft, setCurrentBid, updateBudget])
 
   // Timer countdown based on pickDeadline
   useEffect(() => {
@@ -317,14 +382,26 @@ export const useDraft = (leagueId) => {
   }, [isUserTurn, queue, makePick, removeFromQueue])
 
   const nominatePlayer = useCallback(async (playerId, startingBid) => {
-    // Auction draft nomination - future implementation
-    console.warn('Auction draft not yet implemented on backend')
-  }, [])
+    if (!draftId) return
+    try {
+      const result = await api.nominatePlayer(draftId, playerId, startingBid)
+      return result
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [draftId, setError])
 
   const placeBid = useCallback(async (amount) => {
-    // Auction draft bid - future implementation
-    console.warn('Auction draft not yet implemented on backend')
-  }, [])
+    if (!draftId) return
+    try {
+      const result = await api.placeBid(draftId, amount)
+      return result
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [draftId, setError])
 
   const handleAddToQueue = useCallback((player) => {
     addToQueue(player)

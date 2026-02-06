@@ -80,6 +80,27 @@ export const socketService = {
     return () => socket?.off('draft-completed', callback)
   },
 
+  // Auction draft events
+  onAuctionNomination(callback) {
+    socket?.on('auction-nomination', callback)
+    return () => socket?.off('auction-nomination', callback)
+  },
+
+  onAuctionBid(callback) {
+    socket?.on('auction-bid', callback)
+    return () => socket?.off('auction-bid', callback)
+  },
+
+  onAuctionWon(callback) {
+    socket?.on('auction-won', callback)
+    return () => socket?.off('auction-won', callback)
+  },
+
+  onAuctionNextNominator(callback) {
+    socket?.on('auction-next-nominator', callback)
+    return () => socket?.off('auction-next-nominator', callback)
+  },
+
   // League room methods
   joinLeague(leagueId) {
     if (!socket?.connected) this.connect()

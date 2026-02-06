@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Card from '../common/Card'
 import Button from '../common/Button'
 
@@ -11,17 +11,31 @@ const BidPanel = ({
   onPass,
   onNominate,
   selectedPlayer,
+  teams,
+  userTeamId,
 }) => {
-  const [bidAmount, setBidAmount] = useState(currentBid?.amount + 1 || 1)
+  const [bidAmount, setBidAmount] = useState(1)
   const [nominateBid, setNominateBid] = useState(1)
 
   const minBid = (currentBid?.amount || 0) + 1
-  const maxBid = userBudget
+  const maxBid = userBudget || 200
+
+  // Update bid amount when currentBid changes
+  useEffect(() => {
+    if (currentBid?.amount) {
+      setBidAmount(currentBid.amount + 1)
+    }
+  }, [currentBid?.amount])
+
+  const getTeamName = (teamId) => {
+    if (teamId === userTeamId) return 'You'
+    const team = teams?.find(t => t.id === teamId)
+    return team?.name || team?.userName || 'Unknown'
+  }
 
   const handleBid = () => {
     if (bidAmount >= minBid && bidAmount <= maxBid) {
       onBid(bidAmount)
-      setBidAmount(bidAmount + 1)
     }
   }
 
@@ -30,24 +44,30 @@ const BidPanel = ({
     setBidAmount(newBid)
   }
 
+  // Nomination mode
   if (isNominating && selectedPlayer) {
     return (
       <Card>
         <h3 className="text-lg font-semibold text-white mb-4">Nominate Player</h3>
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <span className="text-2xl">{selectedPlayer.countryFlag}</span>
+            {selectedPlayer.headshotUrl ? (
+              <img src={selectedPlayer.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center text-text-muted text-sm">
+                {selectedPlayer.name?.charAt(0)}
+              </div>
+            )}
             <span className="text-xl font-bold text-white">{selectedPlayer.name}</span>
           </div>
           <p className="text-text-muted text-sm">
-            Rank #{selectedPlayer.rank} • SG Total: {selectedPlayer.stats?.sgTotal?.toFixed(2)}
+            Rank #{selectedPlayer.owgrRank || selectedPlayer.rank}
+            {selectedPlayer.sgTotal != null && ` • SG: ${Number(selectedPlayer.sgTotal).toFixed(2)}`}
           </p>
         </div>
 
         <div className="mb-4">
-          <label className="block text-text-secondary text-sm mb-2">
-            Starting Bid
-          </label>
+          <label className="block text-text-secondary text-sm mb-2">Starting Bid</label>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setNominateBid(Math.max(1, nominateBid - 1))}
@@ -67,6 +87,18 @@ const BidPanel = ({
           </div>
         </div>
 
+        <div className="flex gap-2 mb-3">
+          {[1, 5, 10].map((inc) => (
+            <button
+              key={inc}
+              onClick={() => setNominateBid(Math.min(maxBid, nominateBid + inc))}
+              className="flex-1 py-1.5 bg-dark-tertiary rounded-lg text-text-secondary hover:text-white hover:bg-dark-border transition-colors text-sm"
+            >
+              +${inc}
+            </button>
+          ))}
+        </div>
+
         <Button fullWidth onClick={() => onNominate(selectedPlayer.id, nominateBid)}>
           Nominate for ${nominateBid}
         </Button>
@@ -74,6 +106,7 @@ const BidPanel = ({
     )
   }
 
+  // Waiting for nomination
   if (!currentBid) {
     return (
       <Card>
@@ -81,12 +114,23 @@ const BidPanel = ({
         <div className="text-center py-8 text-text-muted">
           <p>Waiting for nomination...</p>
           {isUserTurn && (
-            <p className="text-accent-green mt-2">Your turn to nominate!</p>
+            <p className="text-accent-green mt-2 font-medium">Your turn to nominate! Select a player.</p>
           )}
+        </div>
+        <div className="mt-4 pt-4 border-t border-dark-border">
+          <div className="flex items-center justify-between">
+            <span className="text-text-muted text-sm">Your Budget</span>
+            <span className="text-accent-green font-bold text-lg">${userBudget}</span>
+          </div>
         </div>
       </Card>
     )
   }
+
+  // Active bidding
+  const isHighBidder = currentBid.highBidderTeamId === userTeamId
+  const bidDeadline = currentBid.deadline ? new Date(currentBid.deadline) : null
+  const player = currentBid.player
 
   return (
     <Card>
@@ -101,11 +145,17 @@ const BidPanel = ({
       {/* Current Bid Info */}
       <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl">{currentBid.player?.countryFlag}</span>
+          {player?.headshotUrl ? (
+            <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-dark-primary flex items-center justify-center text-text-muted">
+              {(currentBid.playerName || player?.name)?.charAt(0)}
+            </div>
+          )}
           <div className="flex-1">
-            <p className="text-white font-bold">{currentBid.player?.name}</p>
+            <p className="text-white font-bold">{currentBid.playerName || player?.name}</p>
             <p className="text-text-muted text-sm">
-              Nominated by {currentBid.nominatedBy}
+              Nominated by {getTeamName(currentBid.nominatedByTeamId)}
             </p>
           </div>
         </div>
@@ -116,7 +166,10 @@ const BidPanel = ({
           </div>
           <div className="text-right">
             <p className="text-text-muted text-xs">High Bidder</p>
-            <p className="text-white font-medium">{currentBid.highBidder}</p>
+            <p className={`font-medium ${isHighBidder ? 'text-accent-green' : 'text-white'}`}>
+              {getTeamName(currentBid.highBidderTeamId)}
+              {isHighBidder && ' (You)'}
+            </p>
           </div>
         </div>
       </div>
@@ -163,18 +216,24 @@ const BidPanel = ({
           variant="secondary"
           className="flex-1"
           onClick={onPass}
-          disabled={currentBid.highBidder === 'You'}
+          disabled={isHighBidder}
         >
           Pass
         </Button>
         <Button
           className="flex-1"
           onClick={handleBid}
-          disabled={bidAmount > maxBid || bidAmount < minBid}
+          disabled={bidAmount > maxBid || bidAmount < minBid || isHighBidder}
         >
           Bid ${bidAmount}
         </Button>
       </div>
+
+      {isHighBidder && (
+        <p className="text-accent-green text-sm text-center mt-2">
+          You have the highest bid!
+        </p>
+      )}
 
       {bidAmount > maxBid && (
         <p className="text-red-500 text-sm text-center mt-2">

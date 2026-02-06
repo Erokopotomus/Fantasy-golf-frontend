@@ -212,6 +212,8 @@ const DraftRoomContent = () => {
                 onPass={handlePass}
                 onNominate={handleNominate}
                 selectedPlayer={selectedPlayer}
+                teams={teams}
+                userTeamId={draft?.userTeamId}
               />
             ) : (
               <DraftBoard

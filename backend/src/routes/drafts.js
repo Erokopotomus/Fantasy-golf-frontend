@@ -1,6 +1,15 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
+const {
+  scheduleAutoPick,
+  clearAutoPick,
+  initAuctionState,
+  getAuctionState,
+  clearAuctionState,
+  startNomination,
+  placeBid: placeAuctionBid
+} = require('../services/draftTimer')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -283,6 +292,25 @@ router.post('/:id/start', authenticate, async (req, res, next) => {
       draft: { ...updatedDraft, pickDeadline, userTeamId: null }
     })
 
+    // Schedule server-side auto-pick timer (snake draft)
+    if (updatedDraft.league.draftType !== 'AUCTION' && pickDeadline) {
+      scheduleAutoPick(draft.id, pickDeadline, io)
+    }
+
+    // Initialize auction state if auction draft
+    if (updatedDraft.league.draftType === 'AUCTION') {
+      const budget = updatedDraft.league.settings?.budget || 200
+      initAuctionState(draft.id, updatedDraft.draftOrder, budget)
+      // Emit first nominator
+      const aState = getAuctionState(draft.id)
+      if (aState) {
+        io.to(`draft-${draft.id}`).emit('auction-next-nominator', {
+          nominatorTeamId: aState.nominationOrder[0],
+          budgets: aState.budgets
+        })
+      }
+    }
+
     res.json({
       draft: {
         ...updatedDraft,
@@ -446,6 +474,10 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
 
     if (isComplete) {
       io.to(`draft-${draft.id}`).emit('draft-completed', { draftId: draft.id })
+      clearAutoPick(draft.id)
+    } else if (pickDeadline) {
+      // Schedule server-side auto-pick for next turn
+      scheduleAutoPick(draft.id, pickDeadline, io)
     }
 
     res.json({
@@ -486,11 +518,80 @@ router.post('/:id/pause', authenticate, async (req, res, next) => {
       data: { status: 'PAUSED' }
     })
 
+    // Clear auto-pick timer while paused
+    clearAutoPick(draft.id)
+
     const io = req.app.get('io')
     io.to(`draft-${draft.id}`).emit('draft-paused', { draftId: draft.id })
 
     res.json({ message: 'Draft paused' })
   } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/drafts/:id/nominate - Nominate a player (auction draft)
+router.post('/:id/nominate', authenticate, async (req, res, next) => {
+  try {
+    const { playerId, startingBid } = req.body
+
+    const draft = await prisma.draft.findUnique({
+      where: { id: req.params.id },
+      include: { league: true }
+    })
+
+    if (!draft) return res.status(404).json({ error: { message: 'Draft not found' } })
+    if (draft.status !== 'IN_PROGRESS') return res.status(400).json({ error: { message: 'Draft is not in progress' } })
+    if (draft.league.draftType !== 'AUCTION') return res.status(400).json({ error: { message: 'Not an auction draft' } })
+
+    const userTeam = await prisma.team.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId: draft.leagueId } }
+    })
+    if (!userTeam) return res.status(403).json({ error: { message: 'Not a member of this league' } })
+
+    const io = req.app.get('io')
+    const nomination = await startNomination(draft.id, playerId, startingBid, userTeam.id, io)
+
+    res.json({ nomination })
+  } catch (error) {
+    if (error.message.includes('Not your turn') || error.message.includes('Minimum bid') ||
+        error.message.includes('Insufficient') || error.message.includes('already drafted') ||
+        error.message.includes('No auction') || error.message.includes('Not in nomination')) {
+      return res.status(400).json({ error: { message: error.message } })
+    }
+    next(error)
+  }
+})
+
+// POST /api/drafts/:id/bid - Place a bid (auction draft)
+router.post('/:id/bid', authenticate, async (req, res, next) => {
+  try {
+    const { amount } = req.body
+
+    const draft = await prisma.draft.findUnique({
+      where: { id: req.params.id },
+      include: { league: true }
+    })
+
+    if (!draft) return res.status(404).json({ error: { message: 'Draft not found' } })
+    if (draft.status !== 'IN_PROGRESS') return res.status(400).json({ error: { message: 'Draft is not in progress' } })
+    if (draft.league.draftType !== 'AUCTION') return res.status(400).json({ error: { message: 'Not an auction draft' } })
+
+    const userTeam = await prisma.team.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId: draft.leagueId } }
+    })
+    if (!userTeam) return res.status(403).json({ error: { message: 'Not a member of this league' } })
+
+    const io = req.app.get('io')
+    const result = placeAuctionBid(draft.id, amount, userTeam.id, io)
+
+    res.json(result)
+  } catch (error) {
+    if (error.message.includes('Bid must be') || error.message.includes('Insufficient') ||
+        error.message.includes('already have') || error.message.includes('No auction') ||
+        error.message.includes('No active') || error.message.includes('No current')) {
+      return res.status(400).json({ error: { message: error.message } })
+    }
     next(error)
   }
 })
@@ -524,6 +625,11 @@ router.post('/:id/resume', authenticate, async (req, res, next) => {
 
     const io = req.app.get('io')
     io.to(`draft-${draft.id}`).emit('draft-resumed', { draftId: draft.id, pickDeadline })
+
+    // Restart auto-pick timer for the current pick
+    if (draft.league?.draftType !== 'AUCTION') {
+      scheduleAutoPick(draft.id, pickDeadline, io)
+    }
 
     res.json({ message: 'Draft resumed', pickDeadline })
   } catch (error) {

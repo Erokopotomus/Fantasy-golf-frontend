@@ -248,6 +248,20 @@ class ApiService {
     })
   }
 
+  async nominatePlayer(draftId, playerId, startingBid) {
+    return this.request(`/drafts/${draftId}/nominate`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId, startingBid }),
+    })
+  }
+
+  async placeBid(draftId, amount) {
+    return this.request(`/drafts/${draftId}/bid`, {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    })
+  }
+
   // Trades
   async getTrades(options = {}) {
     const params = new URLSearchParams(options).toString()
