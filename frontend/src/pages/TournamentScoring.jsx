@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import TournamentHeader from '../components/tournament/TournamentHeader'
 import TournamentLeaderboard from '../components/tournament/TournamentLeaderboard'
-import MyPlayersPanel from '../components/tournament/MyPlayersPanel'
 import LiveScoreIndicator from '../components/tournament/LiveScoreIndicator'
 import useTournamentScoring from '../hooks/useTournamentScoring'
 import { useLeagues } from '../hooks/useLeagues'
@@ -226,39 +225,86 @@ const TournamentScoring = () => {
             onClose={() => setSelectedPlayer(null)}
           />
 
-          <MyPlayersPanel
-            players={myPlayers}
-          />
-
-          {/* League switcher */}
-          {leagues && leagues.length > 0 && (
-            <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-              <div className="px-4 py-3 border-b border-dark-border">
-                <p className="text-xs text-text-muted uppercase tracking-wider font-medium">View as League</p>
-              </div>
-              <div className="p-3 space-y-1">
-                <button
-                  onClick={() => handleLeagueChange(null)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                    !leagueId ? 'bg-emerald-500/15 text-emerald-400 font-medium' : 'text-text-secondary hover:bg-dark-tertiary hover:text-white'
-                  }`}
-                >
-                  Public View
-                </button>
-                {leagues.map(league => (
-                  <button
-                    key={league.id}
-                    onClick={() => handleLeagueChange(league.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      leagueId === league.id ? 'bg-emerald-500/15 text-emerald-400 font-medium' : 'text-text-secondary hover:bg-dark-tertiary hover:text-white'
-                    }`}
+          {/* My Team — with league dropdown */}
+          <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+            {/* Header with league selector */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-dark-secondary border-b border-dark-border">
+              <div className="flex items-center gap-2 min-w-0">
+                <h3 className="text-base font-bold text-white whitespace-nowrap">My Team</h3>
+                {leagues && leagues.length > 0 && (
+                  <select
+                    value={leagueId || ''}
+                    onChange={(e) => handleLeagueChange(e.target.value || null)}
+                    className="bg-dark-tertiary border border-dark-border rounded-lg text-xs text-text-secondary px-2 py-1 focus:outline-none focus:border-emerald-500/50 cursor-pointer min-w-0 truncate"
                   >
-                    {league.name}
-                  </button>
-                ))}
+                    <option value="">No League</option>
+                    {leagues.map(league => (
+                      <option key={league.id} value={league.id}>{league.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
+              {leagueId && (
+                <div className="text-right flex-shrink-0">
+                  <span className="text-[10px] text-text-muted uppercase tracking-wide">Fantasy Pts</span>
+                  <p className="text-xl font-bold text-emerald-400 leading-tight">
+                    {myPlayers.reduce((sum, p) => sum + (p.fantasyPoints || 0), 0)}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Player list */}
+            {leagueId ? (
+              <div className="divide-y divide-dark-border/30">
+                {myPlayers.map((player) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between px-4 py-3 hover:bg-dark-tertiary/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {player.headshotUrl ? (
+                        <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-lg">
+                          {player.countryFlag || '?'}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-sm text-white">{player.name}</p>
+                        <div className="flex items-center gap-2 text-[11px] text-text-muted">
+                          <span>{player.position}</span>
+                          <span className="text-text-muted/50">|</span>
+                          <span>{player.thru === 'F' || player.thru === 18 ? 'Final' : player.thru > 0 ? `Thru ${player.thru}` : '–'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-bold text-sm ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-white'}`}>
+                        {player.score != null ? (parseInt(player.score) > 0 ? `+${player.score}` : parseInt(player.score) === 0 ? 'E' : player.score) : '–'}
+                      </p>
+                      <p className="text-[11px] text-emerald-400 font-medium">
+                        {player.fantasyPoints || 0} pts
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {myPlayers.length === 0 && (
+                  <div className="text-center py-10 text-text-muted">
+                    <svg className="w-10 h-10 mx-auto mb-3 text-text-muted/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <p className="font-medium">No players rostered</p>
+                    <p className="text-xs mt-1">Set your lineup before the tournament</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-text-muted">
+                <p className="text-sm">Select a league to view your roster</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
