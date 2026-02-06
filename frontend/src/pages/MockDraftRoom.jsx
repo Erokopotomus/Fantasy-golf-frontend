@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import api from '../services/api'
 
 // Inline player data for mock drafts (no API dependency)
 const MOCK_PLAYERS = [
@@ -92,10 +93,23 @@ const PlayerPopup = ({ player, onClose, onDraft, onQueue, isUserTurn, inQueue, i
         {/* Header */}
         <div className="flex items-start justify-between p-4 border-b border-dark-border">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{player.flag}</span>
+            {player.headshot ? (
+              <img src={player.headshot} alt="" className="w-11 h-11 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+            ) : (
+              <span className="text-2xl">{player.flag}</span>
+            )}
             <div>
               <h3 className="text-white font-bold text-lg leading-tight">{player.name}</h3>
-              <p className="text-text-muted text-sm">{player.country}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-text-muted text-sm">{player.country}</p>
+                {player.primaryTour && (
+                  <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
+                    player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
+                    player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
+                    'bg-purple-500/20 text-purple-400'
+                  }`}>{player.primaryTour}</span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -122,8 +136,8 @@ const PlayerPopup = ({ player, onClose, onDraft, onQueue, isUserTurn, inQueue, i
               <p className="text-white text-base font-bold">{player.top10}%</p>
             </div>
             <div className="bg-dark-primary rounded-lg p-2 text-center">
-              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Avg Fin</p>
-              <p className="text-white text-base font-bold">{player.avgFinish}</p>
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Cuts</p>
+              <p className="text-white text-base font-bold">{player.cutsPct || 0}%</p>
             </div>
             <div className="bg-dark-primary rounded-lg p-2 text-center">
               <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Events</p>
@@ -224,11 +238,14 @@ const MockDraftRoom = () => {
   const [sortBy, setSortBy] = useState('rank') // rank, name, sg, top10
   const [sortDir, setSortDir] = useState('asc')
   const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [apiPlayers, setApiPlayers] = useState(null)
+  const [loadingPlayers, setLoadingPlayers] = useState(true)
   const aiPickingRef = useRef(false)
   const timerRef = useRef(null)
   const boardRef = useRef(null)
   const picksRef = useRef([])
   const queueRef = useRef([])
+  const allPlayersRef = useRef([])
 
   // Load config
   useEffect(() => {
@@ -240,8 +257,46 @@ const MockDraftRoom = () => {
     setConfig(JSON.parse(stored))
   }, [navigate])
 
-  // Enrich players with computed stats (deterministic based on rank)
-  const enrichedPlayers = useMemo(() => {
+  // Fetch real player data from API (falls back to MOCK_PLAYERS if unavailable)
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      try {
+        const data = await api.getPlayers({ limit: 300, sortBy: 'owgrRank', sortOrder: 'asc' })
+        const players = data?.players
+        if (Array.isArray(players) && players.length > 0) {
+          setApiPlayers(players.map(p => ({
+            id: p.id,
+            name: p.name,
+            rank: p.owgrRank || 999,
+            country: p.country || 'Unknown',
+            flag: p.countryFlag || '🏳️',
+            primaryTour: p.primaryTour || null,
+            sg: p.sgTotal || 0,
+            sgOTT: p.sgOffTee || 0,
+            sgAPP: p.sgApproach || 0,
+            sgATG: p.sgAroundGreen || 0,
+            sgPutt: p.sgPutting || 0,
+            top10: p.events > 0 ? Math.round((p.top10s || 0) / p.events * 100) : 0,
+            cutsPct: p.events > 0 ? Math.round((p.cutsMade || 0) / p.events * 100) : 0,
+            tournaments: p.events || 0,
+            form: p.recentForm || [],
+            headshot: p.headshotUrl || null,
+            wins: p.wins || 0,
+          })))
+        }
+      } catch (err) {
+        console.warn('Mock draft: using offline player data', err)
+      } finally {
+        setLoadingPlayers(false)
+      }
+    }
+    fetchPlayers()
+  }, [])
+
+  // Use real API data if available, otherwise fall back to enriched mock data
+  const allPlayers = useMemo(() => {
+    if (apiPlayers) return apiPlayers
+    // Fallback: compute stats from MOCK_PLAYERS
     return MOCK_PLAYERS.map(p => {
       const r = p.rank
       const variance = Math.sin(r * 1.7) * 0.25
@@ -250,7 +305,7 @@ const MockDraftRoom = () => {
       const sgATG = +(p.sg * 0.18 + Math.cos(r * 2.3) * 0.12).toFixed(2)
       const sgPutt = +(p.sg - sgOTT - sgAPP - sgATG).toFixed(2)
       const top10 = Math.max(8, Math.round(65 - r * 0.95 + Math.sin(r * 0.7) * 6))
-      const avgFinish = +(6 + r * 0.48 + Math.cos(r * 1.3) * 2.5).toFixed(1)
+      const cutsPct = Math.max(50, Math.min(95, Math.round(90 - r * 0.6 + Math.sin(r * 2.1) * 8)))
       const form = Array.from({ length: 5 }, (_, i) => {
         const seed = Math.sin(r * 13 + i * 7) * 10000
         const val = Math.abs(Math.round(seed % 100))
@@ -260,15 +315,17 @@ const MockDraftRoom = () => {
         if (base <= 1 && r <= 5) return '1'
         return base <= 1 ? 'T2' : `T${Math.min(base, 65)}`
       })
-      // Tournaments played last season (top players selective 18-22, mid 22-26, lower 26-30)
       const tournaments = Math.max(15, Math.min(30, Math.round(20 + r * 0.12 + Math.sin(r * 3.1) * 3)))
-      return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, avgFinish, form, tournaments }
+      return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, cutsPct, form, tournaments, headshot: null, wins: 0 }
     })
-  }, [])
+  }, [apiPlayers])
+
+  // Keep allPlayers ref in sync for timer/AI callbacks
+  allPlayersRef.current = allPlayers
 
   const totalPicks = config ? config.teamCount * config.rosterSize : 0
   const draftedIds = picks.map(p => p.playerId)
-  const availablePlayers = enrichedPlayers.filter(p => !draftedIds.includes(p.id))
+  const availablePlayers = allPlayers.filter(p => !draftedIds.includes(p.id))
 
   // Current pick info
   const currentPickNumber = picks.length
@@ -354,7 +411,7 @@ const MockDraftRoom = () => {
           if (queuePick) {
             makePickRef.current?.(queuePick)
           } else {
-            const best = MOCK_PLAYERS.find(p => !draftedSet.has(p.id))
+            const best = allPlayersRef.current.find(p => !draftedSet.has(p.id))
             if (best) makePickRef.current?.(best)
           }
           return 0
@@ -375,7 +432,7 @@ const MockDraftRoom = () => {
 
     const aiDelay = 1200 + Math.random() * 2000
     const timeout = setTimeout(() => {
-      const available = MOCK_PLAYERS.filter(p => !draftedIds.includes(p.id))
+      const available = allPlayersRef.current.filter(p => !draftedIds.includes(p.id))
 
       if (available.length === 0) {
         aiPickingRef.current = false
@@ -439,10 +496,13 @@ const MockDraftRoom = () => {
     }
   }, [currentPickNumber, isStarted])
 
-  if (!config) {
+  if (!config || loadingPlayers) {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-3" />
+          {loadingPlayers && <p className="text-text-muted text-sm">Loading player data...</p>}
+        </div>
       </div>
     )
   }
@@ -552,9 +612,16 @@ const MockDraftRoom = () => {
                 </svg>
               </button>
               <div className="min-w-0">
-                <h1 className="text-white font-bold text-sm sm:text-base leading-tight">Mock Draft</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-white font-bold text-sm sm:text-base leading-tight">Mock Draft</h1>
+                  {apiPlayers && (
+                    <span className="px-1.5 py-0.5 bg-accent-green/15 text-accent-green text-[9px] font-semibold rounded">
+                      LIVE DATA
+                    </span>
+                  )}
+                </div>
                 <p className="text-text-muted text-xs hidden sm:block">
-                  {config.teamCount} teams · {config.rosterSize} rds · Snake
+                  {config.teamCount} teams · {config.rosterSize} rds · Snake · {allPlayers.length} players
                 </p>
               </div>
             </div>
@@ -734,7 +801,7 @@ const MockDraftRoom = () => {
                           key={teamIdx}
                           onClick={() => {
                             if (pick) {
-                              const enriched = enrichedPlayers.find(p => p.id === pick.playerId)
+                              const enriched = allPlayers.find(p => p.id === pick.playerId)
                               if (enriched) setSelectedPlayer({ ...enriched, _drafted: true })
                             }
                           }}
@@ -877,7 +944,11 @@ const MockDraftRoom = () => {
                       >
                         <span className="text-text-muted text-xs">{player.rank}</span>
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm flex-shrink-0">{player.flag}</span>
+                          {player.headshot ? (
+                            <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                          ) : (
+                            <span className="text-sm flex-shrink-0">{player.flag}</span>
+                          )}
                           <span className="text-white text-sm truncate">{player.name}</span>
                         </div>
                         <span className={`text-xs text-right font-medium tabular-nums ${
