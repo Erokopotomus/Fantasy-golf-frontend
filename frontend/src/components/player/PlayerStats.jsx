@@ -19,15 +19,15 @@ const PlayerStats = ({ player }) => {
     {
       title: 'Driving',
       stats: [
-        { label: 'Distance', value: `${stats.drivingDistance} yds`, isRaw: true },
-        { label: 'Accuracy', value: `${stats.drivingAccuracy}%`, isRaw: true },
+        { label: 'Distance', value: stats.drivingDistance != null ? `${stats.drivingDistance} yds` : '—', isRaw: true },
+        { label: 'Accuracy', value: stats.drivingAccuracy != null ? `${stats.drivingAccuracy}%` : '—', isRaw: true },
       ]
     },
     {
       title: 'Scoring',
       stats: [
-        { label: 'Scoring Avg', value: stats.scoringAvg, isRaw: true },
-        { label: 'GIR %', value: `${stats.gir}%`, isRaw: true },
+        { label: 'Scoring Avg', value: stats.scoringAvg ?? '—', isRaw: true },
+        { label: 'GIR %', value: stats.gir != null ? `${stats.gir}%` : '—', isRaw: true },
       ]
     }
   ]

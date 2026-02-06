@@ -4,7 +4,9 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
   // Convert form positions to chart data
   const getPositionValue = (pos) => {
     if (!pos) return 0
-    const num = parseInt(pos.replace('T', '').replace(/[a-z]/gi, ''))
+    if (typeof pos === 'number') return pos
+    if (pos === 'CUT' || pos === 'WD' || pos === 'DQ') return 50
+    const num = parseInt(String(pos).replace('T', '').replace(/[a-z]/gi, ''))
     return isNaN(num) ? 50 : num
   }
 

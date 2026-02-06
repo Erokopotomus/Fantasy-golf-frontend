@@ -63,20 +63,22 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-dark-border">
           <div className="text-center">
             <p className="text-2xl font-bold text-accent-green">
-              {player.stats.sgTotal > 0 ? '+' : ''}{player.stats.sgTotal.toFixed(2)}
+              {player.stats.sgTotal != null
+                ? `${player.stats.sgTotal > 0 ? '+' : ''}${player.stats.sgTotal.toFixed(2)}`
+                : '—'}
             </p>
             <p className="text-xs text-text-muted">SG Total</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-white">{player.stats.scoringAvg}</p>
+            <p className="text-2xl font-bold text-white">{player.stats.scoringAvg ?? '—'}</p>
             <p className="text-xs text-text-muted">Scoring Avg</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-white">{player.stats.drivingDistance}</p>
+            <p className="text-2xl font-bold text-white">{player.stats.drivingDistance ?? '—'}</p>
             <p className="text-xs text-text-muted">Driving (yds)</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-white">{player.stats.gir}%</p>
+            <p className="text-2xl font-bold text-white">{player.stats.gir != null ? `${player.stats.gir}%` : '—'}</p>
             <p className="text-xs text-text-muted">GIR</p>
           </div>
         </div>
