@@ -39,6 +39,7 @@ model User {
 model League {
   id            String       @id @default(cuid())
   name          String
+  sport         String       @default("GOLF")
   format        LeagueFormat @default(FULL_LEAGUE)
   draftType     DraftType    @default(SNAKE)
   status        LeagueStatus @default(DRAFT_PENDING)

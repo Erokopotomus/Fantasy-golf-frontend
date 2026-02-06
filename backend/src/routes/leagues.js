@@ -45,7 +45,7 @@ router.get('/', authenticate, async (req, res, next) => {
 // POST /api/leagues - Create a new league
 router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { name, format, draftType, maxTeams, maxMembers, isPublic, settings, formatSettings, rosterSize, scoringType, budget } = req.body
+    const { name, sport, format, draftType, maxTeams, maxMembers, isPublic, settings, formatSettings, rosterSize, scoringType, budget } = req.body
 
     // Map frontend format strings to enum values
     const formatMap = {
@@ -78,6 +78,7 @@ router.post('/', authenticate, async (req, res, next) => {
     const league = await prisma.league.create({
       data: {
         name,
+        sport: sport || 'GOLF',
         format: resolvedFormat,
         draftType: resolvedDraftType,
         maxTeams: resolvedMaxTeams,
