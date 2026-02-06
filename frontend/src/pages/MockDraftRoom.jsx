@@ -110,20 +110,24 @@ const PlayerPopup = ({ player, onClose, onDraft, onQueue, isUserTurn, inQueue, i
 
         {/* Stats */}
         <div className="p-4 space-y-4">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-dark-primary rounded-lg p-2.5 text-center">
+          <div className="grid grid-cols-4 gap-2">
+            <div className="bg-dark-primary rounded-lg p-2 text-center">
               <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
-              <p className={`text-lg font-bold ${player.sg >= 1 ? 'text-accent-green' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
+              <p className={`text-base font-bold ${player.sg >= 1 ? 'text-accent-green' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
                 {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
               </p>
             </div>
-            <div className="bg-dark-primary rounded-lg p-2.5 text-center">
+            <div className="bg-dark-primary rounded-lg p-2 text-center">
               <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Top 10</p>
-              <p className="text-white text-lg font-bold">{player.top10}%</p>
+              <p className="text-white text-base font-bold">{player.top10}%</p>
             </div>
-            <div className="bg-dark-primary rounded-lg p-2.5 text-center">
+            <div className="bg-dark-primary rounded-lg p-2 text-center">
               <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Avg Fin</p>
-              <p className="text-white text-lg font-bold">{player.avgFinish}</p>
+              <p className="text-white text-base font-bold">{player.avgFinish}</p>
+            </div>
+            <div className="bg-dark-primary rounded-lg p-2 text-center">
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Events</p>
+              <p className="text-white text-base font-bold">{player.tournaments}</p>
             </div>
           </div>
 
@@ -256,7 +260,9 @@ const MockDraftRoom = () => {
         if (base <= 1 && r <= 5) return '1'
         return base <= 1 ? 'T2' : `T${Math.min(base, 65)}`
       })
-      return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, avgFinish, form }
+      // Tournaments played last season (top players selective 18-22, mid 22-26, lower 26-30)
+      const tournaments = Math.max(15, Math.min(30, Math.round(20 + r * 0.12 + Math.sin(r * 3.1) * 3)))
+      return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, avgFinish, form, tournaments }
     })
   }, [])
 
@@ -839,7 +845,7 @@ const MockDraftRoom = () => {
                 <div className="flex-1 overflow-y-auto min-h-0">
                   {/* Table Header */}
                   <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
-                    <div className="grid grid-cols-[30px_1fr_44px_38px_48px_52px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                    <div className="grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
                       <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
                         Rk <SortIcon field="rank" />
                       </button>
@@ -852,6 +858,7 @@ const MockDraftRoom = () => {
                       <button onClick={() => handleSort('top10')} className="text-right hover:text-white transition-colors">
                         T10 <SortIcon field="top10" />
                       </button>
+                      <span className="text-center" title="Tournaments played">Evt</span>
                       <span className="text-center">Form</span>
                       <div />
                     </div>
@@ -863,7 +870,7 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid grid-cols-[30px_1fr_44px_38px_48px_52px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
+                        className={`grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
                           inQueue ? 'bg-accent-blue/5' : ''
                         }`}
                         onClick={() => setSelectedPlayer(player)}
@@ -880,6 +887,9 @@ const MockDraftRoom = () => {
                         </span>
                         <span className="text-xs text-right text-text-secondary tabular-nums">
                           {player.top10}%
+                        </span>
+                        <span className="text-xs text-center text-text-muted tabular-nums">
+                          {player.tournaments}
                         </span>
                         <div className="flex items-center justify-center gap-1">
                           {player.form.slice(0, 4).map((f, i) => {
