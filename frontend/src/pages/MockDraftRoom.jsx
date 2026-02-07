@@ -314,6 +314,8 @@ const MockDraftRoom = () => {
   // Auto-pick
   const [autoPick, setAutoPick] = useState(() => sessionStorage.getItem('mockDraftAutoPick') === 'true')
   const autoPickRef = useRef(autoPick)
+  const [autoPickCountdown, setAutoPickCountdown] = useState(0)
+  const autoPickCountdownRef = useRef(null)
 
   // Load config
   useEffect(() => {
@@ -605,7 +607,7 @@ const MockDraftRoom = () => {
       }
     }, 500)
     return () => clearTimeout(timeout)
-  }, [isUserTurn, isStarted, isPaused, isComplete])
+  }, [isUserTurn, isStarted, isPaused, isComplete, currentPickNumber])
 
   // Auto-pick: auction nomination — auto-nominate when it's user's turn to nominate
   useEffect(() => {
@@ -1784,24 +1786,63 @@ const MockDraftRoom = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Auto-Pick</span>
+                      {autoPickCountdown > 0 && (
+                        <span className="text-xs font-mono text-yellow-400 animate-pulse">
+                          {autoPickCountdown}s
+                        </span>
+                      )}
                     </div>
-                    <button
-                      onClick={() => {
-                        setAutoPick(prev => {
-                          const next = !prev
-                          autoPickRef.current = next
-                          sessionStorage.setItem('mockDraftAutoPick', String(next))
-                          return next
-                        })
-                      }}
-                      className={`relative w-10 h-5 rounded-full transition-colors ${
-                        autoPick ? 'bg-gold' : 'bg-dark-tertiary'
-                      }`}
-                    >
-                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                        autoPick ? 'translate-x-5' : 'translate-x-0.5'
-                      }`} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {autoPickCountdown > 0 && (
+                        <button
+                          onClick={() => {
+                            clearInterval(autoPickCountdownRef.current)
+                            setAutoPickCountdown(0)
+                          }}
+                          className="text-[10px] text-red-400 hover:text-red-300 font-medium uppercase tracking-wider"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (autoPick) {
+                            // Turning off — instant
+                            clearInterval(autoPickCountdownRef.current)
+                            setAutoPickCountdown(0)
+                            setAutoPick(false)
+                            autoPickRef.current = false
+                            sessionStorage.setItem('mockDraftAutoPick', 'false')
+                          } else if (autoPickCountdown > 0) {
+                            // Already counting down — cancel
+                            clearInterval(autoPickCountdownRef.current)
+                            setAutoPickCountdown(0)
+                          } else {
+                            // Turning on — 5 second countdown
+                            setAutoPickCountdown(5)
+                            autoPickCountdownRef.current = setInterval(() => {
+                              setAutoPickCountdown(prev => {
+                                if (prev <= 1) {
+                                  clearInterval(autoPickCountdownRef.current)
+                                  setAutoPick(true)
+                                  autoPickRef.current = true
+                                  sessionStorage.setItem('mockDraftAutoPick', 'true')
+                                  return 0
+                                }
+                                return prev - 1
+                              })
+                            }, 1000)
+                          }
+                        }}
+                        className={`relative w-10 h-5 rounded-full transition-colors ${
+                          autoPick ? 'bg-gold' : autoPickCountdown > 0 ? 'bg-yellow-500/50' : 'bg-dark-tertiary'
+                        }`}
+                      >
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                          autoPick || autoPickCountdown > 0 ? 'translate-x-5' : 'translate-x-0.5'
+                        }`} />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto min-h-0 p-3 pt-2">
