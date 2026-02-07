@@ -191,10 +191,10 @@ class ApiService {
     })
   }
 
-  async saveLineup(teamId, activePlayerIds) {
+  async saveLineup(teamId, activePlayerIds, irPlayerIds = []) {
     return this.request(`/teams/${teamId}/lineup`, {
       method: 'POST',
-      body: JSON.stringify({ activePlayerIds }),
+      body: JSON.stringify({ activePlayerIds, irPlayerIds }),
     })
   }
 
@@ -320,6 +320,10 @@ class ApiService {
 
   async resetMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`, { method: 'DELETE' })
+  }
+
+  async generatePlayoffs(leagueId) {
+    return this.request(`/leagues/${leagueId}/playoffs/generate`, { method: 'POST' })
   }
 
   // Tournaments

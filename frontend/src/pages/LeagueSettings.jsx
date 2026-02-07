@@ -40,6 +40,7 @@ const LeagueSettings = () => {
     name: league?.name || '',
     scoringType: league?.settings?.scoringType || 'standard',
     rosterSize: league?.settings?.rosterSize || 6,
+    irSlots: league?.settings?.irSlots || 0,
     rosterLockDeadline: league?.settings?.rosterLockDeadline || 'tournament-start',
     maxRosterMoves: league?.settings?.maxRosterMoves || 'unlimited',
     tradeReview: 'commissioner',
@@ -51,6 +52,8 @@ const LeagueSettings = () => {
     waiverClearTime: '12:00',
     faabBudget: 100,
     waiverPeriodHours: 24,
+    playoffTeams: league?.settings?.playoffTeams || 4,
+    playoffWeeks: league?.settings?.playoffWeeks || 3,
     formatSettings: league?.settings?.formatSettings || {},
   })
 
@@ -64,6 +67,7 @@ const LeagueSettings = () => {
         name: league.name,
         scoringType: league.settings?.scoringType || 'standard',
         rosterSize: league.settings?.rosterSize || 6,
+        irSlots: league.settings?.irSlots || 0,
         rosterLockDeadline: league.settings?.rosterLockDeadline || 'tournament-start',
         maxRosterMoves: league.settings?.maxRosterMoves || 'unlimited',
         tradeDeadline: league.settings?.tradeDeadline || false,
@@ -74,6 +78,8 @@ const LeagueSettings = () => {
         waiverClearTime: league.settings?.waiverClearTime || '12:00',
         faabBudget: league.settings?.faabBudget || 100,
         waiverPeriodHours: league.settings?.waiverPeriodHours || 24,
+        playoffTeams: league.settings?.playoffTeams || 4,
+        playoffWeeks: league.settings?.playoffWeeks || 3,
         formatSettings: league.settings?.formatSettings || {},
       }))
     }
@@ -118,6 +124,7 @@ const LeagueSettings = () => {
         settings: {
           scoringType: settings.scoringType,
           rosterSize: settings.rosterSize,
+          irSlots: settings.irSlots,
           rosterLockDeadline: settings.rosterLockDeadline,
           maxRosterMoves: settings.maxRosterMoves,
           tradeReview: settings.tradeReview,
@@ -129,6 +136,8 @@ const LeagueSettings = () => {
           waiverClearTime: settings.waiverClearTime,
           faabBudget: settings.faabBudget,
           waiverPeriodHours: settings.waiverPeriodHours,
+          playoffTeams: settings.playoffTeams,
+          playoffWeeks: settings.playoffWeeks,
           formatSettings: settings.formatSettings,
         }
       })
@@ -319,6 +328,24 @@ const LeagueSettings = () => {
 
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">
+                IR Slots
+              </label>
+              <select
+                value={settings.irSlots}
+                onChange={(e) => setSettings({ ...settings, irSlots: parseInt(e.target.value) })}
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+              >
+                {[0, 1, 2, 3, 4].map(n => (
+                  <option key={n} value={n}>{n === 0 ? 'None' : `${n} IR slot${n > 1 ? 's' : ''}`}</option>
+                ))}
+              </select>
+              <p className="text-xs text-text-muted mt-2">
+                Injured reserve slots let teams hold injured players without using bench spots
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Roster Lock Deadline
               </label>
               <select
@@ -355,6 +382,48 @@ const LeagueSettings = () => {
                 Limit how many add/drop transactions teams can make
               </p>
             </div>
+
+            {/* Playoff Settings (H2H leagues) */}
+            {(league?.format === 'HEAD_TO_HEAD' || league?.format === 'head-to-head') && (
+              <div className="pt-4 border-t border-dark-border">
+                <label className="block text-sm font-medium text-text-secondary mb-3">
+                  Playoff Settings
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1">
+                      Playoff Teams
+                    </label>
+                    <select
+                      value={settings.playoffTeams}
+                      onChange={(e) => setSettings({ ...settings, playoffTeams: parseInt(e.target.value) })}
+                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+                    >
+                      {[2, 4, 6, 8].map(n => (
+                        <option key={n} value={n}>{n} teams</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1">
+                      Playoff Weeks
+                    </label>
+                    <select
+                      value={settings.playoffWeeks}
+                      onChange={(e) => setSettings({ ...settings, playoffWeeks: parseInt(e.target.value) })}
+                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+                    >
+                      {[1, 2, 3, 4].map(n => (
+                        <option key={n} value={n}>{n} week{n > 1 ? 's' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-text-muted mt-2">
+                  Top teams qualify for playoffs after regular season. Bracket generated by commissioner.
+                </p>
+              </div>
+            )}
 
             {/* League Format Info */}
             {league?.format && (

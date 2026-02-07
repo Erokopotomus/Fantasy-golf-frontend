@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { calculateLeagueStandings, calculateTournamentScoring, calculateLiveTournamentScoring } = require('../services/scoringService')
 const { notifyLeague } = require('../services/notificationService')
+const { generatePlayoffBracket, getPlayoffBracket } = require('../services/playoffService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -830,13 +831,46 @@ router.get('/:id/matchups', authenticate, async (req, res, next) => {
       return b.pointsFor - a.pointsFor
     })
 
+    // Fetch playoff bracket if any playoff matchups exist
+    let playoffBracket = null
+    try {
+      playoffBracket = await getPlayoffBracket(req.params.id, prisma)
+    } catch (err) {
+      console.error('Playoff bracket fetch failed:', err.message)
+    }
+
     res.json({
       schedule,
       currentWeek,
       standings: sortedStandings,
-      playoffs: null, // TODO: implement playoff bracket
+      playoffs: playoffBracket,
     })
   } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/leagues/:id/playoffs/generate - Generate playoff bracket (commissioner only)
+router.post('/:id/playoffs/generate', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can generate playoffs' } })
+    }
+
+    const result = await generatePlayoffBracket(req.params.id, prisma)
+    res.json(result)
+  } catch (error) {
+    if (error.message.includes('already been generated') || error.message.includes('not found')) {
+      return res.status(400).json({ error: { message: error.message } })
+    }
     next(error)
   }
 })

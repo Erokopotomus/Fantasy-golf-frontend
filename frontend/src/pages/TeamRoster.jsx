@@ -32,7 +32,7 @@ function flattenRosterEntry(entry) {
     wins: p.wins,
     top5s: p.top5s,
     top10s: p.top10s,
-    rosterPosition: entry.position, // ACTIVE or BENCH
+    rosterPosition: entry.position, // ACTIVE, BENCH, or IR
     acquiredVia: entry.acquiredVia,
     acquiredAt: entry.acquiredAt,
   }
@@ -55,10 +55,11 @@ const TeamRoster = () => {
 
   const [isEditing, setIsEditing] = useState(false)
   const [pendingActive, setPendingActive] = useState(null)
+  const [pendingIR, setPendingIR] = useState(null)
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [showOptimizer, setShowOptimizer] = useState(false)
   const [draggedPlayerId, setDraggedPlayerId] = useState(null)
-  const [dragOverZone, setDragOverZone] = useState(null) // 'active' | 'bench' | null
+  const [dragOverZone, setDragOverZone] = useState(null) // 'active' | 'bench' | 'ir' | null
 
   // Lineup lock state
   const [lockInfo, setLockInfo] = useState(null)
@@ -98,14 +99,19 @@ const TeamRoster = () => {
 
   const maxActive = league?.settings?.maxActiveLineup || 4
   const rosterSize = league?.settings?.rosterSize || 6
+  const irSlots = league?.settings?.irSlots || 0
+
+  const irPlayers = roster.filter(p => p.rosterPosition === 'IR')
 
   const startEditing = () => {
     setPendingActive(new Set(activePlayers.map(p => p.id)))
+    setPendingIR(new Set(irPlayers.map(p => p.id)))
     setIsEditing(true)
   }
 
   const cancelEditing = () => {
     setPendingActive(null)
+    setPendingIR(null)
     setIsEditing(false)
   }
 
@@ -115,6 +121,30 @@ const TeamRoster = () => {
       if (next.has(playerId)) {
         next.delete(playerId)
       } else if (next.size < maxActive) {
+        // Remove from IR if moving to active
+        setPendingIR(irSet => {
+          const n = new Set(irSet)
+          n.delete(playerId)
+          return n
+        })
+        next.add(playerId)
+      }
+      return next
+    })
+  }
+
+  const toggleIR = (playerId) => {
+    setPendingIR(prev => {
+      const next = new Set(prev)
+      if (next.has(playerId)) {
+        next.delete(playerId)
+      } else if (next.size < irSlots) {
+        // Remove from active if moving to IR
+        setPendingActive(activeSet => {
+          const n = new Set(activeSet)
+          n.delete(playerId)
+          return n
+        })
         next.add(playerId)
       }
       return next
@@ -124,11 +154,12 @@ const TeamRoster = () => {
   const handleSaveLineup = async () => {
     if (!pendingActive) return
     try {
-      await saveLineup([...pendingActive])
+      await saveLineup([...pendingActive], [...(pendingIR || [])])
       track(Events.LINEUP_SAVED, { leagueId, activeCount: pendingActive.size, maxActive })
       await refetch()
       setIsEditing(false)
       setPendingActive(null)
+      setPendingIR(null)
     } catch {
       // error handled by hook
     }
@@ -151,6 +182,11 @@ const TeamRoster = () => {
   const getActiveSet = () => {
     if (pendingActive) return pendingActive
     return new Set(activePlayers.map(p => p.id))
+  }
+
+  const getIRSet = () => {
+    if (pendingIR) return pendingIR
+    return new Set(irPlayers.map(p => p.id))
   }
 
   // Build roster context for the drawer
@@ -198,13 +234,16 @@ const TeamRoster = () => {
     if (zone === 'active' && !pendingActive.has(playerId)) {
       if (pendingActive.size < maxActive) {
         setPendingActive(prev => new Set([...prev, playerId]))
+        setPendingIR(prev => { const n = new Set(prev); n.delete(playerId); return n })
       }
-    } else if (zone === 'bench' && pendingActive.has(playerId)) {
-      setPendingActive(prev => {
-        const next = new Set(prev)
-        next.delete(playerId)
-        return next
-      })
+    } else if (zone === 'ir' && pendingIR && !pendingIR.has(playerId)) {
+      if (pendingIR.size < irSlots) {
+        setPendingIR(prev => new Set([...prev, playerId]))
+        setPendingActive(prev => { const n = new Set(prev); n.delete(playerId); return n })
+      }
+    } else if (zone === 'bench') {
+      setPendingActive(prev => { const n = new Set(prev); n.delete(playerId); return n })
+      setPendingIR(prev => { const n = new Set(prev); n.delete(playerId); return n })
     }
   }
 
@@ -279,6 +318,7 @@ const TeamRoster = () => {
   }
 
   const activeSet = getActiveSet()
+  const irSet = getIRSet()
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -463,10 +503,10 @@ const TeamRoster = () => {
       >
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider">Bench</h2>
-          <span className="text-xs text-text-muted">({roster.filter(p => !activeSet.has(p.id)).length})</span>
+          <span className="text-xs text-text-muted">({roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length})</span>
         </div>
         <div className="space-y-2">
-          {roster.filter(p => !activeSet.has(p.id)).map(player => (
+          {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).map(player => (
             <PlayerRow
               key={player.id}
               player={player}
@@ -480,9 +520,13 @@ const TeamRoster = () => {
               onDragEnd={handleDragEnd}
               onDrop={() => handleDrop(player)}
               onClick={() => handlePlayerClick(player)}
+              irSlots={irSlots}
+              isIR={false}
+              onToggleIR={irSlots > 0 ? () => toggleIR(player.id) : undefined}
+              canIR={irSet.size < irSlots}
             />
           ))}
-          {roster.filter(p => !activeSet.has(p.id)).length === 0 && (
+          {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length === 0 && (
             <div className={`text-center py-4 text-sm ${
               dragOverZone === 'bench' ? 'text-neutral-400' : 'text-text-muted'
             }`}>
@@ -491,6 +535,63 @@ const TeamRoster = () => {
           )}
         </div>
       </div>
+
+      {/* Injured Reserve */}
+      {irSlots > 0 && (
+        <div
+          className={`mt-6 rounded-lg transition-all duration-200 ${
+            isEditing && draggedPlayerId
+              ? dragOverZone === 'ir'
+                ? 'ring-2 ring-red-400 bg-red-500/5 p-3'
+                : 'ring-1 ring-dashed ring-dark-border p-3'
+              : ''
+          }`}
+          onDragOver={isEditing ? (e) => handleDragOver(e, 'ir') : undefined}
+          onDragLeave={isEditing ? (e) => handleDragLeave(e, 'ir') : undefined}
+          onDrop={isEditing ? (e) => handleDropToZone(e, 'ir') : undefined}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-sm font-bold text-red-400 uppercase tracking-wider">Injured Reserve</h2>
+            <span className="text-xs text-text-muted">({roster.filter(p => irSet.has(p.id)).length} / {irSlots})</span>
+          </div>
+          <div className="space-y-2">
+            {roster.filter(p => irSet.has(p.id)).map(player => (
+              <PlayerRow
+                key={player.id}
+                player={player}
+                isActive={false}
+                isEditing={isEditing}
+                isDragging={draggedPlayerId === player.id}
+                isLocked={isLineupsLocked}
+                onToggle={() => toggleIR(player.id)}
+                onDragStart={(e) => handleDragStart(e, player.id)}
+                onDragEnd={handleDragEnd}
+                onDrop={() => handleDrop(player)}
+                onClick={() => handlePlayerClick(player)}
+                isIR={true}
+              />
+            ))}
+            {/* Empty IR slot placeholders */}
+            {Array.from({ length: irSlots - roster.filter(p => irSet.has(p.id)).length }, (_, i) => (
+              <div
+                key={`ir-empty-${i}`}
+                className={`flex items-center gap-3 p-3 rounded-lg border border-dashed transition-colors ${
+                  dragOverZone === 'ir' ? 'border-red-400/60 bg-red-500/5' : 'border-dark-border/60 bg-dark-secondary/30'
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full border-2 border-dashed border-red-500/30 flex items-center justify-center flex-shrink-0">
+                  <span className="text-red-400/30 text-sm font-bold">IR</span>
+                </div>
+                <span className="text-text-muted/40 text-sm">
+                  {isEditing
+                    ? (draggedPlayerId ? 'Drop here' : 'Drag or tap to place on IR')
+                    : 'Empty IR slot'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Player Drawer */}
       <PlayerDrawer
@@ -504,7 +605,7 @@ const TeamRoster = () => {
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0 }) => {
   return (
     <div
       draggable={isEditing}
@@ -517,6 +618,8 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
         ${isDragging ? 'opacity-40 scale-95' : ''}
         ${isActive
           ? 'bg-dark-secondary border border-emerald-500/30'
+          : isIR
+          ? 'bg-dark-secondary/50 border border-red-500/30'
           : 'bg-dark-secondary/50 border border-dark-border/50'
         }
       `}
@@ -550,6 +653,9 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           {isActive && !isEditing && (
             <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 rounded">ACTIVE</span>
           )}
+          {isIR && !isEditing && (
+            <span className="text-[10px] font-medium text-red-400 bg-red-500/10 px-1.5 rounded">IR</span>
+          )}
         </div>
         <div className="flex items-center gap-3 text-xs text-text-muted">
           {player.owgrRank && <span>#{player.owgrRank}</span>}
@@ -568,12 +674,25 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
         {player.top10s > 0 && <span>{player.top10s} T10</span>}
       </div>
 
-      {/* Active/Bench badge in edit mode */}
+      {/* IR toggle button in edit mode (for bench players) */}
+      {isEditing && onToggleIR && !isActive && !isIR && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleIR() }}
+          disabled={!canIR}
+          className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
+            canIR ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'text-text-muted/30 bg-dark-tertiary/30 cursor-not-allowed'
+          }`}
+        >
+          IR
+        </button>
+      )}
+
+      {/* Active/Bench/IR badge in edit mode */}
       {isEditing && (
         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
-          isActive ? 'text-emerald-400 bg-emerald-500/10' : 'text-text-muted bg-dark-tertiary/50'
+          isActive ? 'text-emerald-400 bg-emerald-500/10' : isIR ? 'text-red-400 bg-red-500/10' : 'text-text-muted bg-dark-tertiary/50'
         }`}>
-          {isActive ? 'ACTIVE' : 'BENCH'}
+          {isActive ? 'ACTIVE' : isIR ? 'IR' : 'BENCH'}
         </span>
       )}
 

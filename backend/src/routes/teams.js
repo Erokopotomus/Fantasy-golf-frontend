@@ -280,10 +280,10 @@ router.patch('/:id/roster/:playerId', authenticate, async (req, res, next) => {
   }
 })
 
-// POST /api/teams/:id/lineup - Batch set active/bench positions
+// POST /api/teams/:id/lineup - Batch set active/bench/IR positions
 router.post('/:id/lineup', authenticate, async (req, res, next) => {
   try {
-    const { activePlayerIds } = req.body
+    const { activePlayerIds, irPlayerIds = [] } = req.body
 
     if (!Array.isArray(activePlayerIds)) {
       return res.status(400).json({ error: { message: 'activePlayerIds must be an array' } })
@@ -323,9 +323,22 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: { message: `Maximum ${maxActive} active players allowed` } })
     }
 
+    // Check IR slots
+    const maxIrSlots = team.league.settings?.irSlots || 0
+    if (irPlayerIds.length > maxIrSlots) {
+      return res.status(400).json({ error: { message: `Maximum ${maxIrSlots} IR slots allowed` } })
+    }
+
+    // Verify no overlap between active and IR
+    const overlap = activePlayerIds.filter(id => irPlayerIds.includes(id))
+    if (overlap.length > 0) {
+      return res.status(400).json({ error: { message: 'A player cannot be both active and on IR' } })
+    }
+
     // Verify all player IDs are on this team's active roster
     const rosterPlayerIds = team.roster.map(r => r.playerId)
-    const invalidIds = activePlayerIds.filter(id => !rosterPlayerIds.includes(id))
+    const allIds = [...activePlayerIds, ...irPlayerIds]
+    const invalidIds = allIds.filter(id => !rosterPlayerIds.includes(id))
     if (invalidIds.length > 0) {
       return res.status(400).json({ error: { message: 'Some players are not on your roster' } })
     }
@@ -333,7 +346,9 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
     // Batch update in transaction (write both position + rosterStatus)
     await prisma.$transaction(
       team.roster.map(entry => {
-        const status = activePlayerIds.includes(entry.playerId) ? 'ACTIVE' : 'BENCH'
+        let status = 'BENCH'
+        if (activePlayerIds.includes(entry.playerId)) status = 'ACTIVE'
+        else if (irPlayerIds.includes(entry.playerId)) status = 'IR'
         return prisma.rosterEntry.update({
           where: { id: entry.id },
           data: { position: status, rosterStatus: status }

@@ -24,6 +24,7 @@ const LeagueHome = () => {
   const [editingDraftDate, setEditingDraftDate] = useState(false)
   const [draftDateInput, setDraftDateInput] = useState('')
   const [savingDate, setSavingDate] = useState(false)
+  const [generatingPlayoffs, setGeneratingPlayoffs] = useState(false)
 
   // Fetch detailed league data (with full members, teams, rosters)
   useEffect(() => {
@@ -93,6 +94,19 @@ const LeagueHome = () => {
       alert(err.message)
     } finally {
       setSavingDate(false)
+    }
+  }
+
+  const handleGeneratePlayoffs = async () => {
+    if (!window.confirm('Generate the playoff bracket? This will seed teams based on current standings.')) return
+    try {
+      setGeneratingPlayoffs(true)
+      await api.generatePlayoffs(leagueId)
+      navigate(`/leagues/${leagueId}/matchups`)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setGeneratingPlayoffs(false)
     }
   }
 
@@ -420,6 +434,36 @@ const LeagueHome = () => {
                       Starts {new Date(currentTournament.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Generate Playoffs Banner (commissioner, H2H, draft complete) */}
+          {isCommissioner && isHeadToHead && isDraftComplete && (
+            <div className="mb-6">
+              <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-dark-secondary">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">Playoffs</h3>
+                      <p className="text-text-muted text-sm">
+                        Generate the playoff bracket based on current standings ({league.settings?.playoffTeams || 4} teams)
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleGeneratePlayoffs}
+                    disabled={generatingPlayoffs}
+                  >
+                    {generatingPlayoffs ? 'Generating...' : 'Generate Playoffs'}
+                  </Button>
                 </div>
               </Card>
             </div>

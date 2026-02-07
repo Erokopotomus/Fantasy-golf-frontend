@@ -8,14 +8,14 @@ export const useLineup = (teamId) => {
   const [error, setError] = useState(null)
   const [saved, setSaved] = useState(false)
 
-  const saveLineup = useCallback(async (activePlayerIds) => {
+  const saveLineup = useCallback(async (activePlayerIds, irPlayerIds = []) => {
     if (!teamId) return
 
     try {
       setLoading(true)
       setError(null)
       setSaved(false)
-      const result = await api.saveLineup(teamId, activePlayerIds)
+      const result = await api.saveLineup(teamId, activePlayerIds, irPlayerIds)
       setSaved(true)
       notify.success('Lineup Saved', `${activePlayerIds.length} active players set`)
       return result

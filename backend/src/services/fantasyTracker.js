@@ -10,6 +10,7 @@
  */
 
 const { calculateFantasyPoints, getDefaultScoringConfig } = require('./scoringService')
+const { advancePlayoffWinner } = require('./playoffService')
 
 /**
  * Record FantasyScore rows for every player who played in a given fantasy week.
@@ -565,6 +566,17 @@ async function updateMatchupScores(leagueSeason, fantasyWeekId, weekNumber, team
         where: { id: awayWtr.teamSeasonId },
         data: { [field]: { increment: 1 } },
       })
+    }
+  }
+
+  // Auto-advance playoff winners
+  for (const matchup of matchups) {
+    if (matchup.isPlayoff) {
+      try {
+        await advancePlayoffWinner(matchup.id, prisma)
+      } catch (err) {
+        console.error(`[fantasyTracker] Playoff advance failed for matchup ${matchup.id}:`, err.message)
+      }
     }
   }
 
