@@ -90,18 +90,18 @@ const AchievementBadge = ({ achievement }) => {
       {/* Hover Tooltip */}
       {showTooltip && (
         <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 pointer-events-none">
-          <div className="rounded-lg p-3 shadow-2xl border" style={{ backgroundColor: '#FFF3CD', borderColor: '#D4A017' }}>
-            <p className="text-xs font-bold mb-1" style={{ color: '#5C4813' }}>{achievement.name}</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: '#6B5B2E' }}>{achievement.description}</p>
+          <div className="rounded-lg p-3 shadow-2xl border-2" style={{ background: 'linear-gradient(135deg, #FFD700, #F5A623)', borderColor: '#B8860B' }}>
+            <p className="text-xs font-bold mb-1" style={{ color: '#1a1a1a' }}>{achievement.name}</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: '#2d2000' }}>{achievement.description}</p>
             <div className="flex items-center gap-1 mt-1.5">
               <span
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: tierColor }}
+                className="w-2 h-2 rounded-full border"
+                style={{ backgroundColor: tierColor, borderColor: '#1a1a1a' }}
               />
-              <span className="text-[10px] font-medium capitalize" style={{ color: '#7A6832' }}>{achievement.tier?.toLowerCase()}</span>
+              <span className="text-[10px] font-bold capitalize" style={{ color: '#2d2000' }}>{achievement.tier?.toLowerCase()}</span>
             </div>
           </div>
-          <div className="w-2 h-2 border-r border-b rotate-45 mx-auto -mt-1" style={{ backgroundColor: '#FFF3CD', borderColor: '#D4A017' }} />
+          <div className="w-2 h-2 border-r-2 border-b-2 rotate-45 mx-auto -mt-1" style={{ backgroundColor: '#F5A623', borderColor: '#B8860B' }} />
         </div>
       )}
     </div>
