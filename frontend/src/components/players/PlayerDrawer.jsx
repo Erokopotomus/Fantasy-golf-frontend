@@ -417,7 +417,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
                           />
                         )}
                         {/* Center line */}
-                        <div className="absolute left-1/2 top-0 w-px h-full bg-text-muted/30" />
+                        <div className="absolute left-1/2 top-0 w-px h-full bg-dark-border/30" />
                       </div>
                     </div>
                   ))}
@@ -518,7 +518,7 @@ const SGBar = ({ label, value }) => {
             }}
           />
         )}
-        <div className="absolute left-1/2 top-0 w-px h-full bg-text-muted/20" />
+        <div className="absolute left-1/2 top-0 w-px h-full bg-dark-border/20" />
       </div>
       <span className={`text-xs font-medium w-12 text-right ${color}`}>
         {value != null ? (value > 0 ? '+' : '') + value.toFixed(2) : '\u2014'}

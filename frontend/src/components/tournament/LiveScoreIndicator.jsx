@@ -12,7 +12,7 @@ const LiveScoreIndicator = ({ isLive }) => {
         {isLive && (
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
         )}
-        <span className={`relative inline-flex rounded-full h-2 w-2 ${isLive ? 'bg-red-500' : 'bg-text-muted'}`}></span>
+        <span className={`relative inline-flex rounded-full h-2 w-2 ${isLive ? 'bg-red-500' : 'bg-dark-border'}`}></span>
       </span>
       {isLive ? 'LIVE' : 'Not Live'}
     </div>

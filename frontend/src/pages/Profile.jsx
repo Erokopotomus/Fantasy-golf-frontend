@@ -159,7 +159,7 @@ const Profile = () => {
                   <p className="text-text-muted text-sm">Notifications for trade proposals</p>
                 </div>
                 <button className="w-12 h-6 bg-dark-tertiary rounded-full relative">
-                  <div className="w-5 h-5 bg-text-muted rounded-full absolute left-0.5 top-0.5" />
+                  <div className="w-5 h-5 bg-dark-border rounded-full absolute left-0.5 top-0.5" />
                 </button>
               </div>
             </div>

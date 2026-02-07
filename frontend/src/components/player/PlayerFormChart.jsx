@@ -16,7 +16,7 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
     if (num <= 3) return 'bg-gold'
     if (num <= 10) return 'bg-green-500'
     if (num <= 25) return 'bg-blue-400'
-    return 'bg-text-muted'
+    return 'bg-dark-border'
   }
 
   const hasFormData = (recentForm || []).filter(p => p !== 'CUT' && p !== 'WD' && p !== 'DQ').length >= 2

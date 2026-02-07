@@ -88,7 +88,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                               pick.playerRank <= 10 ? 'bg-yellow-400' :
                               pick.playerRank <= 25 ? 'bg-gold' :
                               pick.playerRank <= 40 ? 'bg-blue-400' :
-                              'bg-text-muted/40'
+                              'bg-dark-border/40'
                             }`} />
                           </div>
                           <p className={`text-[10px] leading-tight truncate ${

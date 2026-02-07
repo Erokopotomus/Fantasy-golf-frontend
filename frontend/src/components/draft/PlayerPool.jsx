@@ -175,7 +175,7 @@ const PlayerPool = ({
                       f === 'CUT' ? 'bg-red-400' :
                       pos <= 5 ? 'bg-gold' :
                       pos <= 15 ? 'bg-emerald-400/60' :
-                      'bg-text-muted/30'
+                      'bg-dark-border/30'
                     }`} title={String(f)} />
                   )
                 })}

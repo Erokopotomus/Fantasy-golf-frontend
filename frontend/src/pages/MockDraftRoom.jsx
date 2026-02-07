@@ -927,20 +927,11 @@ const MockDraftRoom = () => {
     }
   }, [currentPickNumber, isStarted])
 
-  if (!config || loadingPlayers) {
-    return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-3" />
-          {loadingPlayers && <p className="text-text-muted text-sm">Loading player data...</p>}
-        </div>
-      </div>
-    )
-  }
-
   // Draft Complete — save to backend and redirect to recap
   useEffect(() => {
     if (!isComplete || !config) return
+
+    const userTeamLocal = config.teams?.find(t => t.isUser)
 
     // Build data for save
     const allPicksData = picks.map(p => ({
@@ -951,10 +942,11 @@ const MockDraftRoom = () => {
       playerId: p.playerId || p.id,
       playerName: p.playerName,
       playerRank: p.playerRank,
-      isUser: p.teamId === userTeam?.id,
+      isUser: p.teamId === userTeamLocal?.id,
     }))
 
-    const userPicksData = userPicks.map(p => ({
+    const userPicksLocal = userTeamLocal ? picks.filter(p => p.teamId === userTeamLocal.id) : []
+    const userPicksData = userPicksLocal.map(p => ({
       pickNumber: p.pickNumber,
       round: p.round,
       playerId: p.playerId || p.id,
@@ -981,6 +973,17 @@ const MockDraftRoom = () => {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete])
+
+  if (!config || loadingPlayers) {
+    return (
+      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-3" />
+          {loadingPlayers && <p className="text-text-muted text-sm">Loading player data...</p>}
+        </div>
+      </div>
+    )
+  }
 
   // Draft Complete Screen (fallback if save fails)
   if (isComplete) {
@@ -1569,7 +1572,7 @@ const MockDraftRoom = () => {
                                   pick.playerRank <= 10 ? 'bg-yellow-400' :
                                   pick.playerRank <= 25 ? 'bg-gold' :
                                   pick.playerRank <= 40 ? 'bg-blue-400' :
-                                  'bg-text-muted/40'
+                                  'bg-dark-border/40'
                                 }`} />
                                 <span className="text-xs">{pick.playerFlag}</span>
                               </div>
@@ -1691,7 +1694,7 @@ const MockDraftRoom = () => {
                                 f === 'CUT' ? 'bg-red-400' :
                                 pos <= 5 ? 'bg-gold' :
                                 pos <= 15 ? 'bg-emerald-400/60' :
-                                'bg-text-muted/30'
+                                'bg-dark-border/30'
                               }`} title={f} />
                             )
                           })}
