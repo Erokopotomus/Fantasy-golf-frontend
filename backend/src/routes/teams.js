@@ -97,6 +97,19 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Not authorized' } })
     }
 
+    // Block pickups until draft is complete
+    const latestDraft = await prisma.draft.findFirst({
+      where: { leagueId: team.leagueId },
+      orderBy: { createdAt: 'desc' },
+      select: { status: true }
+    })
+    if (latestDraft && latestDraft.status !== 'COMPLETED') {
+      return res.status(403).json({ error: { message: 'Free agent pickups are locked until the draft is complete' } })
+    }
+    if (!latestDraft && team.league.status === 'DRAFT_PENDING') {
+      return res.status(403).json({ error: { message: 'Free agent pickups are locked until the draft is complete' } })
+    }
+
     // Check if player is already on active roster
     const activeRoster = team.roster.filter(r => r.isActive)
     const existingEntry = activeRoster.find(r => r.playerId === playerId)

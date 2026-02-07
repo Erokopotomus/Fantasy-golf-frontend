@@ -57,6 +57,8 @@ const WaiverWire = () => {
 
   const tours = ['All', 'PGA', 'LIV', 'DP World']
 
+  const isDraftLocked = league && (league.status === 'DRAFT_PENDING' || league.status === 'DRAFTING')
+
   if (leagueLoading || (loading && availablePlayers.length === 0)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -97,8 +99,22 @@ const WaiverWire = () => {
         <p className="text-text-muted text-sm">{league?.name} — {availablePlayers.length} available players</p>
       </div>
 
+      {/* Pre-draft lock banner */}
+      {isDraftLocked && (
+        <div className="mb-4 p-4 bg-dark-secondary border border-dark-border rounded-lg text-center">
+          <svg className="w-8 h-8 text-text-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <h3 className="text-white font-semibold mb-1">Free Agency Locked</h3>
+          <p className="text-text-muted text-sm">
+            Player pickups are unavailable until the league draft is complete.
+            {league.status === 'DRAFT_PENDING' ? ' The draft hasn\'t started yet.' : ' The draft is in progress.'}
+          </p>
+        </div>
+      )}
+
       {/* Search + Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className={`flex flex-col sm:flex-row gap-3 mb-4 ${isDraftLocked ? 'opacity-50 pointer-events-none' : ''}`}>
         <div className="flex-1 relative">
           <svg className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -139,7 +155,7 @@ const WaiverWire = () => {
       )}
 
       {/* Player list */}
-      <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+      <div className={`rounded-xl border border-dark-border bg-dark-secondary overflow-hidden ${isDraftLocked ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Header row */}
         <div className="grid grid-cols-[1fr_80px_80px_72px] gap-2 px-4 py-2.5 bg-dark-tertiary/80 text-[11px] text-text-muted uppercase tracking-wider font-medium">
           <div>Player</div>
