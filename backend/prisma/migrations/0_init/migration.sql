@@ -829,6 +829,78 @@ CREATE TABLE "player_season_stats" (
     CONSTRAINT "player_season_stats_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "adp_entries" (
+    "id" TEXT NOT NULL,
+    "playerId" TEXT NOT NULL,
+    "seasonId" TEXT NOT NULL,
+    "adp" DOUBLE PRECISION NOT NULL,
+    "minPick" INTEGER,
+    "maxPick" INTEGER,
+    "timesDrafted" INTEGER NOT NULL DEFAULT 0,
+    "actualFantasyRank" INTEGER,
+    "valueOverAdp" DOUBLE PRECISION,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "adp_entries_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "player_consistency" (
+    "id" TEXT NOT NULL,
+    "playerId" TEXT NOT NULL,
+    "seasonId" TEXT NOT NULL,
+    "scoringSystemId" TEXT NOT NULL,
+    "avgPoints" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "medianPoints" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "stdDev" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "coeffOfVariation" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "floorPoints" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "ceilingPoints" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "boomRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "bustRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "weeklyScores" JSONB NOT NULL DEFAULT '[]',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "player_consistency_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ownership_rates" (
+    "id" TEXT NOT NULL,
+    "playerId" TEXT NOT NULL,
+    "seasonId" TEXT NOT NULL,
+    "fantasyWeekId" TEXT,
+    "ownershipPct" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "startPct" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "previousWeekPct" DOUBLE PRECISION,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ownership_rates_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "draft_value_trackers" (
+    "id" TEXT NOT NULL,
+    "draftPickId" TEXT NOT NULL,
+    "playerId" TEXT NOT NULL,
+    "leagueSeasonId" TEXT NOT NULL,
+    "pickNumber" INTEGER NOT NULL,
+    "round" INTEGER NOT NULL,
+    "auctionAmount" DOUBLE PRECISION,
+    "totalFantasyPoints" DOUBLE PRECISION,
+    "fantasyRank" INTEGER,
+    "valueOverReplacement" DOUBLE PRECISION,
+    "valueVsAdp" DOUBLE PRECISION,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "draft_value_trackers_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -975,6 +1047,33 @@ CREATE INDEX "player_season_stats_seasonId_idx" ON "player_season_stats"("season
 
 -- CreateIndex
 CREATE UNIQUE INDEX "player_season_stats_playerId_seasonId_key" ON "player_season_stats"("playerId", "seasonId");
+
+-- CreateIndex
+CREATE INDEX "adp_entries_seasonId_adp_idx" ON "adp_entries"("seasonId", "adp");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "adp_entries_playerId_seasonId_key" ON "adp_entries"("playerId", "seasonId");
+
+-- CreateIndex
+CREATE INDEX "player_consistency_seasonId_scoringSystemId_idx" ON "player_consistency"("seasonId", "scoringSystemId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "player_consistency_playerId_seasonId_scoringSystemId_key" ON "player_consistency"("playerId", "seasonId", "scoringSystemId");
+
+-- CreateIndex
+CREATE INDEX "ownership_rates_seasonId_fantasyWeekId_idx" ON "ownership_rates"("seasonId", "fantasyWeekId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ownership_rates_playerId_seasonId_fantasyWeekId_key" ON "ownership_rates"("playerId", "seasonId", "fantasyWeekId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "draft_value_trackers_draftPickId_key" ON "draft_value_trackers"("draftPickId");
+
+-- CreateIndex
+CREATE INDEX "draft_value_trackers_leagueSeasonId_idx" ON "draft_value_trackers"("leagueSeasonId");
+
+-- CreateIndex
+CREATE INDEX "draft_value_trackers_playerId_idx" ON "draft_value_trackers"("playerId");
 
 -- AddForeignKey
 ALTER TABLE "leagues" ADD CONSTRAINT "leagues_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1203,4 +1302,37 @@ ALTER TABLE "player_season_stats" ADD CONSTRAINT "player_season_stats_playerId_f
 
 -- AddForeignKey
 ALTER TABLE "player_season_stats" ADD CONSTRAINT "player_season_stats_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "seasons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "adp_entries" ADD CONSTRAINT "adp_entries_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "players"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "adp_entries" ADD CONSTRAINT "adp_entries_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "seasons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "player_consistency" ADD CONSTRAINT "player_consistency_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "players"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "player_consistency" ADD CONSTRAINT "player_consistency_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "seasons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "player_consistency" ADD CONSTRAINT "player_consistency_scoringSystemId_fkey" FOREIGN KEY ("scoringSystemId") REFERENCES "scoring_systems"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ownership_rates" ADD CONSTRAINT "ownership_rates_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "players"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ownership_rates" ADD CONSTRAINT "ownership_rates_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "seasons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ownership_rates" ADD CONSTRAINT "ownership_rates_fantasyWeekId_fkey" FOREIGN KEY ("fantasyWeekId") REFERENCES "fantasy_weeks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "draft_value_trackers" ADD CONSTRAINT "draft_value_trackers_draftPickId_fkey" FOREIGN KEY ("draftPickId") REFERENCES "draft_picks"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "draft_value_trackers" ADD CONSTRAINT "draft_value_trackers_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "players"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "draft_value_trackers" ADD CONSTRAINT "draft_value_trackers_leagueSeasonId_fkey" FOREIGN KEY ("leagueSeasonId") REFERENCES "league_seasons"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 

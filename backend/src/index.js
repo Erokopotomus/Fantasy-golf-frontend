@@ -18,6 +18,7 @@ const tournamentRoutes = require('./routes/tournaments')
 const notificationRoutes = require('./routes/notifications')
 const searchRoutes = require('./routes/search')
 const syncRoutes = require('./routes/sync')
+const analyticsRoutes = require('./routes/analytics')
 
 const app = express()
 const httpServer = createServer(app)
@@ -86,6 +87,7 @@ app.use('/api/tournaments', tournamentRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/sync', syncRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -290,6 +292,23 @@ httpServer.listen(PORT, () => {
           }
         }
       } catch (e) { cronLog('fantasy', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Monday 2:00 AM ET — Weekly analytics refresh + view refresh
+    const analytics = require('./services/analyticsAggregator')
+    const { refreshAllViews } = require('./services/viewRefresher')
+    cron.schedule('0 2 * * 1', async () => {
+      cronLog('analytics', 'Starting weekly analytics refresh')
+      try {
+        const currentSeason = await cronPrisma.season.findFirst({ where: { isCurrent: true } })
+        if (!currentSeason) return cronLog('analytics', 'No current season found')
+        const results = await analytics.refreshAll(currentSeason.id, cronPrisma)
+        cronLog('analytics', `Done: stats=${results.playerStats?.computed}, adp=${results.adp?.computed}, ownership=${results.ownership?.computed}, draftValue=${results.draftValue?.total}`)
+
+        // Refresh materialized views
+        const viewResults = await refreshAllViews(cronPrisma)
+        cronLog('analytics', `Views refreshed: ${viewResults.map(r => r.view + '=' + r.status).join(', ')}`)
+      } catch (e) { cronLog('analytics', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
     console.log('[Cron] DataGolf sync jobs scheduled')

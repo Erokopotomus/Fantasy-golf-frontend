@@ -254,6 +254,10 @@ model Player {
   fantasyScores      FantasyScore[]
   seasonStats        PlayerSeasonStats[]
   rosterTransactions RosterTransaction[]
+  adpEntries         ADPEntry[]
+  consistency        PlayerConsistency[]
+  ownershipRates     OwnershipRate[]
+  draftValueTrackers DraftValueTracker[]
 
   @@index([owgrRank])
   @@index([name])
@@ -790,6 +794,9 @@ model DraftPick {
   playerId String
   player   Player @relation(fields: [playerId], references: [id])
 
+  // Relations
+  draftValueTracker DraftValueTracker?
+
   @@unique([draftId, pickNumber])
   @@map("draft_picks")
 }
@@ -958,6 +965,9 @@ model Season {
   leagueSeasons  LeagueSeason[]
   playerStats    PlayerSeasonStats[]
   scoringRecords FantasyScore[]
+  adpEntries     ADPEntry[]
+  consistency    PlayerConsistency[]
+  ownershipRates OwnershipRate[]
 
   @@unique([sportId, slug])
   @@map("seasons")
@@ -986,6 +996,7 @@ model FantasyWeek {
   weeklyResults      WeeklyTeamResult[]
   lineupSnapshots    LineupSnapshot[]
   rosterTransactions RosterTransaction[]
+  ownershipRates     OwnershipRate[]
 
   @@unique([seasonId, weekNumber])
   @@map("fantasy_weeks")
@@ -1005,8 +1016,9 @@ model ScoringSystem {
   updatedAt DateTime @updatedAt
 
   // Relations
-  leagues       League[]       @relation("LeagueScoring")
-  fantasyScores FantasyScore[]
+  leagues           League[]            @relation("LeagueScoring")
+  fantasyScores     FantasyScore[]
+  playerConsistency PlayerConsistency[]
 
   @@unique([sportId, slug])
   @@map("scoring_systems")
@@ -1063,6 +1075,7 @@ model LeagueSeason {
   weeklyResults      WeeklyTeamResult[]
   lineupSnapshots    LineupSnapshot[]
   rosterTransactions RosterTransaction[]
+  draftValueTrackers DraftValueTracker[]
 
   @@unique([leagueId, seasonId])
   @@map("league_seasons")
@@ -1203,7 +1216,7 @@ model RosterTransaction {
   @@map("roster_transactions")
 }
 
-// ============ ANALYTICS (Phase 3 — schema only, services deferred) ============
+// ============ ANALYTICS (Phase 3) ============
 
 model PlayerSeasonStats {
   id       String @id @default(cuid())
@@ -1236,6 +1249,116 @@ model PlayerSeasonStats {
   @@unique([playerId, seasonId])
   @@index([seasonId])
   @@map("player_season_stats")
+}
+
+model ADPEntry {
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  adp          Float // Average draft position
+  minPick      Int? // Earliest pick
+  maxPick      Int? // Latest pick
+  timesDrafted Int   @default(0)
+
+  // Computed after season
+  actualFantasyRank Int?
+  valueOverAdp      Float? // positive = drafted later than actual rank (steal)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, seasonId])
+  @@index([seasonId, adp])
+  @@map("adp_entries")
+}
+
+model PlayerConsistency {
+  id              String        @id @default(cuid())
+  playerId        String
+  player          Player        @relation(fields: [playerId], references: [id])
+  seasonId        String
+  season          Season        @relation(fields: [seasonId], references: [id])
+  scoringSystemId String
+  scoringSystem   ScoringSystem @relation(fields: [scoringSystemId], references: [id])
+
+  // Central tendency
+  avgPoints    Float @default(0)
+  medianPoints Float @default(0)
+
+  // Volatility
+  stdDev           Float @default(0)
+  coeffOfVariation Float @default(0) // stdDev / avgPoints
+
+  // Percentiles
+  floorPoints   Float @default(0) // 10th percentile
+  ceilingPoints Float @default(0) // 90th percentile
+
+  // Boom/bust rates
+  boomRate Float @default(0) // % of weeks above 1.5x avg
+  bustRate Float @default(0) // % of weeks below 0.5x avg
+
+  // Raw data for re-computation
+  weeklyScores Json @default("[]") // [{ weekId, weekNumber, points }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, seasonId, scoringSystemId])
+  @@index([seasonId, scoringSystemId])
+  @@map("player_consistency")
+}
+
+model OwnershipRate {
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  // null fantasyWeekId = season-level aggregate
+  fantasyWeekId String?
+  fantasyWeek   FantasyWeek? @relation(fields: [fantasyWeekId], references: [id])
+
+  ownershipPct    Float  @default(0) // % of leagues that roster this player
+  startPct        Float  @default(0) // % of owners who start this player
+  previousWeekPct Float? // For week-over-week trending
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, seasonId, fantasyWeekId])
+  @@index([seasonId, fantasyWeekId])
+  @@map("ownership_rates")
+}
+
+model DraftValueTracker {
+  id             String       @id @default(cuid())
+  draftPickId    String       @unique
+  draftPick      DraftPick    @relation(fields: [draftPickId], references: [id])
+  playerId       String
+  player         Player       @relation(fields: [playerId], references: [id])
+  leagueSeasonId String
+  leagueSeason   LeagueSeason @relation(fields: [leagueSeasonId], references: [id])
+
+  pickNumber    Int
+  round         Int
+  auctionAmount Float?
+
+  // Computed after season (or rolling)
+  totalFantasyPoints   Float?
+  fantasyRank          Int? // Rank among all rostered players
+  valueOverReplacement Float? // Points above last-round replacement
+  valueVsAdp           Float? // Actual rank vs ADP rank
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leagueSeasonId])
+  @@index([playerId])
+  @@map("draft_value_trackers")
 }
 
 // ============ ENUMS ============
