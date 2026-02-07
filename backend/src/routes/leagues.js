@@ -35,7 +35,7 @@ router.get('/', authenticate, async (req, res, next) => {
         drafts: {
           orderBy: { createdAt: 'desc' },
           take: 1,
-          select: { id: true, status: true, scheduledFor: true, draftType: true }
+          select: { id: true, status: true, scheduledFor: true }
         }
       },
       orderBy: { createdAt: 'desc' }
