@@ -68,26 +68,30 @@ const AchievementBadge = ({ achievement }) => {
 
   return (
     <div
-      className={`relative rounded-xl p-3 text-center transition-all ${
-        unlocked
-          ? `${TIER_BG[achievement.tier]} border-2`
-          : 'bg-dark-primary border border-dark-border opacity-40 grayscale'
-      }`}
-      style={unlocked ? { borderColor: tierColor } : undefined}
+      className="relative"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      <div className="text-2xl mb-1">{achievement.icon || '?'}</div>
-      <p className="text-xs font-medium text-white truncate">{achievement.name}</p>
-      <p className="text-[10px] text-text-muted mt-0.5 capitalize">{achievement.tier?.toLowerCase()}</p>
-      {!unlocked && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <svg className="w-5 h-5 text-text-muted" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
-          </svg>
-        </div>
-      )}
-      {/* Hover Tooltip */}
+      <div
+        className={`rounded-xl p-3 text-center transition-all ${
+          unlocked
+            ? `${TIER_BG[achievement.tier]} border-2`
+            : 'bg-dark-primary border border-dark-border opacity-40 grayscale'
+        }`}
+        style={unlocked ? { borderColor: tierColor } : undefined}
+      >
+        <div className="text-2xl mb-1">{achievement.icon || '?'}</div>
+        <p className="text-xs font-medium text-white truncate">{achievement.name}</p>
+        <p className="text-[10px] text-text-muted mt-0.5 capitalize">{achievement.tier?.toLowerCase()}</p>
+        {!unlocked && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg className="w-5 h-5 text-text-muted" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+            </svg>
+          </div>
+        )}
+      </div>
+      {/* Hover Tooltip — outside the opacity/grayscale container */}
       {showTooltip && (
         <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 pointer-events-none">
           <div className="rounded-lg p-3 shadow-2xl border-2" style={{ background: 'linear-gradient(135deg, #FFD700, #F5A623)', borderColor: '#B8860B' }}>
