@@ -1310,21 +1310,23 @@ const MockDraftRoom = () => {
         const np = currentNom.player
         const enriched = np ? allPlayers.find(p => p.id === np.id) || np : null
         return (
-        <div className="bg-dark-secondary border-b border-yellow-500/30 flex-shrink-0 z-20">
+        <div className="bg-yellow-500/[0.06] border-b-2 border-yellow-500/50 flex-shrink-0 z-20 shadow-[0_2px_12px_rgba(234,179,8,0.08)]">
           {/* Main bar */}
-          <div className="px-3 sm:px-4 py-2 flex items-center gap-3">
+          <div className="px-3 sm:px-4 py-2.5 flex items-center gap-3">
             <button
               onClick={() => setNomExpanded(prev => !prev)}
-              className="flex items-center gap-2 min-w-0 flex-1 text-left group"
+              className="flex items-center gap-2.5 min-w-0 flex-1 text-left group px-2 py-1.5 -mx-2 -my-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
             >
               {enriched?.headshot ? (
-                <img src={enriched.headshot} alt="" className="w-9 h-9 rounded-full object-cover bg-dark-tertiary flex-shrink-0 ring-2 ring-yellow-500/40" />
+                <img src={enriched.headshot} alt="" className="w-10 h-10 rounded-full object-cover bg-dark-tertiary flex-shrink-0 ring-2 ring-yellow-500/50 shadow-lg" />
               ) : (
-                <span className="text-xl flex-shrink-0">{enriched?.flag}</span>
+                <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center ring-2 ring-yellow-500/50 flex-shrink-0">
+                  <span className="text-xl">{enriched?.flag}</span>
+                </div>
               )}
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-white font-semibold text-sm truncate group-hover:text-yellow-400 transition-colors">{enriched?.name}</p>
+                  <p className="text-white font-bold text-sm truncate group-hover:text-yellow-400 transition-colors">{enriched?.name}</p>
                   {enriched?.primaryTour && (
                     <span className={`text-[8px] px-1 py-0.5 rounded font-medium flex-shrink-0 ${
                       enriched.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
@@ -1341,13 +1343,16 @@ const MockDraftRoom = () => {
                   <span>Nom {config.teams.find(t => t.id === currentNom.nominatedByTeamId)?.name}</span>
                 </div>
               </div>
-              <svg className={`w-4 h-4 text-text-muted flex-shrink-0 transition-transform ${nomExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <div className="flex flex-col items-center flex-shrink-0">
+                <svg className={`w-4 h-4 text-yellow-500/60 group-hover:text-yellow-400 transition-all ${nomExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                {!nomExpanded && <span className="text-[8px] text-yellow-500/40 group-hover:text-yellow-400/70 transition-colors">Stats</span>}
+              </div>
             </button>
-            <div className="text-center px-3 flex-shrink-0">
-              <p className="text-text-muted text-[10px]">CURRENT BID</p>
-              <p className="text-yellow-400 font-bold text-lg">${currentNom.currentBid}</p>
+            <div className="text-center px-4 py-1.5 flex-shrink-0 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+              <p className="text-yellow-400/70 text-[10px] font-semibold tracking-wider">CURRENT BID</p>
+              <p className="text-yellow-400 font-bold text-xl">${currentNom.currentBid}</p>
               <p className="text-text-muted text-[10px] truncate">
                 {config.teams.find(t => t.id === currentNom.highBidderTeamId)?.name}
               </p>
