@@ -24,6 +24,7 @@ const playerTagRoutes = require('./routes/playerTags')
 const rosterSlotRoutes = require('./routes/rosterSlots')
 const managerAnalyticsRoutes = require('./routes/managerAnalytics')
 const waiverRoutes = require('./routes/waivers')
+const draftHistoryRoutes = require('./routes/draftHistory')
 
 const app = express()
 const httpServer = createServer(app)
@@ -98,6 +99,7 @@ app.use('/api', playerTagRoutes)
 app.use('/api', rosterSlotRoutes)
 app.use('/api/managers', managerAnalyticsRoutes)
 app.use('/api/leagues', waiverRoutes)
+app.use('/api/draft-history', draftHistoryRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

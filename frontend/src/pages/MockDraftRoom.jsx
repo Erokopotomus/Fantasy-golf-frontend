@@ -938,78 +938,58 @@ const MockDraftRoom = () => {
     )
   }
 
-  // Draft Complete Screen
+  // Draft Complete — save to backend and redirect to recap
+  useEffect(() => {
+    if (!isComplete || !config) return
+
+    // Build data for save
+    const allPicksData = picks.map(p => ({
+      pickNumber: p.pickNumber,
+      round: p.round,
+      teamIndex: config.teams.findIndex(t => t.id === p.teamId),
+      teamName: config.teams.find(t => t.id === p.teamId)?.name || '',
+      playerId: p.playerId || p.id,
+      playerName: p.playerName,
+      playerRank: p.playerRank,
+      isUser: p.teamId === userTeam?.id,
+    }))
+
+    const userPicksData = userPicks.map(p => ({
+      pickNumber: p.pickNumber,
+      round: p.round,
+      playerId: p.playerId || p.id,
+      playerName: p.playerName,
+      playerRank: p.playerRank,
+      playerFlag: p.playerFlag,
+    }))
+
+    const teamNamesList = config.teams.map(t => t.name)
+
+    api.saveMockDraft({
+      draftType: config.draftType || 'snake',
+      teamCount: config.teamCount || config.teams.length,
+      rosterSize: config.rosterSize || Math.max(...picks.map(p => p.round), 6),
+      userPosition: config.teams.findIndex(t => t.isUser) + 1,
+      dataSource: apiPlayers ? 'api' : 'mock',
+      picks: allPicksData,
+      userPicks: userPicksData,
+      teamNames: teamNamesList,
+    }).then(saved => {
+      navigate(`/draft/history/mock/${saved.id}`, { replace: true })
+    }).catch(() => {
+      // Fallback: stay on current completion screen
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete])
+
+  // Draft Complete Screen (fallback if save fails)
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-dark-primary">
-        <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Mock Draft Complete!</h1>
-              <p className="text-text-secondary">Here's how your team turned out.</p>
-            </div>
-
-            {/* Your Team */}
-            <Card className="mb-6 border-accent-green/30">
-              <h2 className="text-lg font-semibold text-white mb-4">Your Team</h2>
-              <div className="space-y-2">
-                {userPicks.map((pick) => (
-                  <div key={pick.id} className="flex items-center justify-between p-3 bg-dark-primary rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-text-muted text-sm w-6">R{pick.round}</span>
-                      <span className="text-lg">{pick.playerFlag}</span>
-                      <div>
-                        <p className="text-white font-medium">{pick.playerName}</p>
-                        <p className="text-text-muted text-xs">Pick #{pick.pickNumber} · Rank #{pick.playerRank}</p>
-                      </div>
-                    </div>
-                    <span className="text-text-secondary text-sm">#{pick.playerRank}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* All Teams */}
-            <Card className="mb-6">
-              <h2 className="text-lg font-semibold text-white mb-4">All Teams</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {config.teams.map(team => {
-                  const teamPicks = getTeamPicks(team.id)
-                  return (
-                    <div key={team.id} className={`p-4 rounded-lg ${team.isUser ? 'bg-accent-green/10 border border-accent-green/30' : 'bg-dark-primary'}`}>
-                      <h3 className={`font-semibold mb-2 ${team.isUser ? 'text-accent-green' : 'text-white'}`}>
-                        {team.name} {team.isUser && '(You)'}
-                      </h3>
-                      <div className="space-y-1">
-                        {teamPicks.map(pick => (
-                          <div key={pick.id} className="flex items-center gap-2 text-sm">
-                            <span>{pick.playerFlag}</span>
-                            <span className="text-text-secondary">{pick.playerName}</span>
-                            <span className="text-text-muted text-xs ml-auto">#{pick.playerRank}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </Card>
-
-            <div className="flex gap-4">
-              <Button variant="outline" fullWidth onClick={() => navigate('/mock-draft')}>
-                New Mock Draft
-              </Button>
-              <Button fullWidth onClick={() => navigate('/dashboard')}>
-                Back to Dashboard
-              </Button>
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-text-secondary">Grading your draft...</p>
+        </div>
       </div>
     )
   }

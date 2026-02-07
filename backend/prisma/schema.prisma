@@ -37,6 +37,7 @@ model User {
   h2hOpponentRecords     HeadToHeadRecord[]  @relation("H2HOpponent")
   achievementUnlocks     AchievementUnlock[]
   managerSeasonSummaries ManagerSeasonSummary[]
+  mockDraftResults       MockDraftResult[]
 
   @@map("users")
 }
@@ -130,6 +131,7 @@ model Team {
   rosterTransactions RosterTransaction[]
   budgets            TeamBudget[]
   waiverClaims       WaiverClaim[]
+  draftGrades        DraftGrade[]
 
   @@unique([userId, leagueId])
   @@map("teams")
@@ -779,8 +781,9 @@ model Draft {
   league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   // Relations
-  picks      DraftPick[]
-  draftOrder DraftOrder[]
+  picks       DraftPick[]
+  draftOrder  DraftOrder[]
+  draftGrades DraftGrade[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -977,6 +980,7 @@ model Sport {
   h2hRecords             HeadToHeadRecord[]      @relation("H2HSport")
   achievements           Achievement[]           @relation("AchievementSport")
   managerSeasonSummaries ManagerSeasonSummary[]  @relation("ManagerSeasonSummarySport")
+  mockDraftResults       MockDraftResult[]       @relation("MockDraftSport")
 
   @@map("sports")
 }
@@ -1873,4 +1877,65 @@ model WaiverClaim {
   @@index([teamId, status])
   @@index([playerId])
   @@map("waiver_claims")
+}
+
+// ============ DRAFT GRADING ============
+
+model DraftGrade {
+  id             String  @id @default(cuid())
+  draftId        String
+  draft          Draft   @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  teamId         String
+  team           Team    @relation(fields: [teamId], references: [id])
+
+  overallGrade   String            // "A+", "A", "A-", "B+", ... "F"
+  overallScore   Float             // 0-100
+  positionGrades Json @default("{}") // { "G": { grade, score, picks }, "QB": { ... } }
+  pickGrades     Json @default("[]") // [{ pickNumber, round, playerId, playerName, grade, score, adpDiff }]
+
+  totalValue     Float  @default(0)
+  bestPick       Json?             // { playerId, playerName, pickNumber, score }
+  worstPick      Json?
+  sleepers       Json @default("[]")
+  reaches        Json @default("[]")
+
+  sportId        String?
+  algorithm      String @default("v1")
+  gradedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([draftId, teamId])
+  @@map("draft_grades")
+}
+
+model MockDraftResult {
+  id           String  @id @default(cuid())
+  userId       String
+  user         User    @relation(fields: [userId], references: [id])
+
+  sportId      String?
+  sport        Sport?  @relation("MockDraftSport", fields: [sportId], references: [id])
+  draftType    String            // "snake" or "auction"
+  teamCount    Int
+  rosterSize   Int
+  userPosition Int?              // draft slot (snake)
+  dataSource   String @default("api") // "api" or "mock"
+
+  picks        Json @default("[]")    // ALL picks
+  userPicks    Json @default("[]")    // User's picks only
+  teamNames    Json @default("[]")    // ["Your Team", "Eagle Eyes", ...]
+
+  overallGrade   String?
+  overallScore   Float?
+  positionGrades Json @default("{}")
+  pickGrades     Json @default("[]")
+  bestPick       Json?
+  worstPick      Json?
+
+  completedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([userId, completedAt])
+  @@map("mock_draft_results")
 }

@@ -426,6 +426,40 @@ class ApiService {
     return this.request(`/leagues/${leagueId}/waivers/history?limit=${limit}`)
   }
 
+  // Draft History
+  async getLeagueDraftHistory() {
+    return this.request('/draft-history/leagues')
+  }
+
+  async getDraftRecap(draftId) {
+    return this.request(`/draft-history/drafts/${draftId}`)
+  }
+
+  async getDraftGrades(draftId) {
+    return this.request(`/draft-history/drafts/${draftId}/grades`)
+  }
+
+  async getMockDraftHistory(page = 1) {
+    return this.request(`/draft-history/mock-drafts?page=${page}`)
+  }
+
+  async getMockDraftRecap(id) {
+    return this.request(`/draft-history/mock-drafts/${id}`)
+  }
+
+  async saveMockDraft(data) {
+    return this.request('/draft-history/mock-drafts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteMockDraft(id) {
+    return this.request(`/draft-history/mock-drafts/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Sync (admin)
   async getSyncStatus(adminSecret) {
     return this.request('/sync/status', {

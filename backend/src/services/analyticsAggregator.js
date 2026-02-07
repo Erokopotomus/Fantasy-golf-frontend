@@ -10,6 +10,7 @@
  */
 
 const { calculateFantasyPoints, getDefaultScoringConfig } = require('./scoringService')
+const { gradeAllCompletedDrafts } = require('./draftGrader')
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -932,6 +933,9 @@ async function refreshAll(seasonId, prisma) {
 
   // 8. Achievement checks (all users)
   results.achievements = await checkAchievements(null, prisma)
+
+  // 9. Draft grading (grade any completed but ungraded drafts)
+  results.draftGrades = await gradeAllCompletedDrafts(prisma)
 
   return results
 }

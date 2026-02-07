@@ -34,6 +34,9 @@ import News from './pages/News'
 import ManagerProfile from './pages/ManagerProfile'
 import MockDraft from './pages/MockDraft'
 import MockDraftRoom from './pages/MockDraftRoom'
+import DraftHistory from './pages/DraftHistory'
+import DraftRecap from './pages/DraftRecap'
+import MockDraftRecap from './pages/MockDraftRecap'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -230,6 +233,31 @@ function App() {
             element={
               <ProtectedRoute>
                 <MockDraftRoom />
+              </ProtectedRoute>
+            }
+          />
+          {/* Draft History routes */}
+          <Route
+            path="/draft/history"
+            element={
+              <ProtectedRoute>
+                <DraftHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/draft/history/mock/:id"
+            element={
+              <ProtectedRoute>
+                <MockDraftRecap />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/draft/history/:draftId"
+            element={
+              <ProtectedRoute>
+                <DraftRecap />
               </ProtectedRoute>
             }
           />
