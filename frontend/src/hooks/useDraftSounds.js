@@ -66,9 +66,31 @@ export default function useDraftSounds() {
     } catch { /* ignore audio errors */ }
   }, [])
 
-  const playTimerWarning = useCallback(() => {
-    tone(400, 0.15, 0.1)
+  const playTimerWarning = useCallback((secondsLeft) => {
+    const freq = secondsLeft != null && secondsLeft <= 5 ? 520 : 400
+    const gain = secondsLeft != null && secondsLeft <= 5 ? 0.14 : 0.1
+    tone(freq, 0.12, gain)
   }, [tone])
+
+  const playDraftStart = useCallback(() => {
+    if (!soundEnabledRef.current) return
+    try {
+      const ctx = getCtx()
+      const freqs = [500, 600, 750, 900]
+      freqs.forEach((f, i) => {
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.connect(g)
+        g.connect(ctx.destination)
+        osc.frequency.value = f
+        const t = i * 0.12
+        g.gain.setValueAtTime(0.14, ctx.currentTime + t)
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.15)
+        osc.start(ctx.currentTime + t)
+        osc.stop(ctx.currentTime + t + 0.15)
+      })
+    } catch { /* ignore */ }
+  }, [])
 
   const playBid = useCallback(() => {
     tone(700, 0.08, 0.1)
@@ -98,5 +120,5 @@ export default function useDraftSounds() {
     try { getCtx() } catch { /* ignore */ }
   }, [])
 
-  return { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playBid, playDraftComplete }
+  return { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playDraftStart, playBid, playDraftComplete }
 }

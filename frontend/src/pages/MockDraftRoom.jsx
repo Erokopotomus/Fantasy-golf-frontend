@@ -307,7 +307,7 @@ const MockDraftRoom = () => {
   const awardPlayerRef = useRef(null)
 
   // Sound effects
-  const { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playBid, playDraftComplete } = useDraftSounds()
+  const { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playDraftStart, playBid, playDraftComplete } = useDraftSounds()
 
   // Auto-pick
   const [autoPick, setAutoPick] = useState(() => sessionStorage.getItem('mockDraftAutoPick') === 'true')
@@ -680,10 +680,10 @@ const MockDraftRoom = () => {
     return () => clearInterval(timerRef.current)
   }, [isUserTurn, isStarted, isPaused, isComplete, currentPickNumber, isAuction, auctionPhase])
 
-  // Sound: timer warning tick at 10s when it's user's action
+  // Sound: timer warning ticks every second from 10 down to 1 when it's user's action
   useEffect(() => {
-    if (timer === 10 && isStarted && !isPaused && (isUserTurn || isUserNominator || (isAuction && auctionPhase === 'bidding'))) {
-      playTimerWarning()
+    if (timer >= 1 && timer <= 10 && isStarted && !isPaused && (isUserTurn || isUserNominator || (isAuction && auctionPhase === 'bidding'))) {
+      playTimerWarning(timer)
     }
   }, [timer, isStarted, isPaused, isUserTurn, isUserNominator, isAuction, auctionPhase, playTimerWarning])
 
@@ -778,6 +778,7 @@ const MockDraftRoom = () => {
 
   const handleStartDraft = () => {
     initSounds()
+    playDraftStart()
     setIsStarted(true)
     setIsPaused(false)
     if (config?.draftType === 'auction') {
