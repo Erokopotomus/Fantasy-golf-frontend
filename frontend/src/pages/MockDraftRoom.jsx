@@ -77,7 +77,7 @@ const getPickInfo = (pickNumber, teamCount) => {
 }
 
 // Player detail popup
-const PlayerPopup = ({ player, onClose, onDraft, onQueue, isUserTurn, inQueue, isDrafted }) => {
+const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn, isUserNominator, isAuction, inQueue, isDrafted }) => {
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', h)
@@ -207,13 +207,24 @@ const PlayerPopup = ({ player, onClose, onDraft, onQueue, isUserTurn, inQueue, i
             >
               {inQueue ? 'Queued' : 'Add to Queue'}
             </button>
-            {isUserTurn && (
-              <button
-                onClick={() => { onDraft(player); onClose() }}
-                className="flex-1 py-2.5 bg-accent-green text-white rounded-lg text-sm font-bold hover:bg-accent-green/90 transition-colors"
-              >
-                Draft Now
-              </button>
+            {isAuction ? (
+              isUserNominator && (
+                <button
+                  onClick={() => { onNominate(player); onClose() }}
+                  className="flex-1 py-2.5 bg-yellow-500 text-dark-primary rounded-lg text-sm font-bold hover:bg-yellow-400 transition-colors"
+                >
+                  Nominate
+                </button>
+              )
+            ) : (
+              isUserTurn && (
+                <button
+                  onClick={() => { onDraft(player); onClose() }}
+                  className="flex-1 py-2.5 bg-accent-green text-white rounded-lg text-sm font-bold hover:bg-accent-green/90 transition-colors"
+                >
+                  Draft Now
+                </button>
+              )
             )}
           </div>
         )}
@@ -280,6 +291,20 @@ const MockDraftRoom = () => {
   const queueRef = useRef([])
   const allPlayersRef = useRef([])
   const draftSpeedRef = useRef('fast')
+
+  // Auction draft state
+  const [auctionPhase, setAuctionPhase] = useState('nominating') // 'nominating' | 'bidding'
+  const [budgets, setBudgets] = useState({})
+  const [nominatorIndex, setNominatorIndex] = useState(0)
+  const [currentNom, setCurrentNom] = useState(null) // { player, currentBid, highBidderTeamId }
+  const [nomBidInput, setNomBidInput] = useState(1)
+  const auctionPhaseRef = useRef('nominating')
+  const currentNomRef = useRef(null)
+  const budgetsRef = useRef({})
+  const nominatorIndexRef = useRef(0)
+  const nominateRef = useRef(null)
+  const placeBidRef = useRef(null)
+  const awardPlayerRef = useRef(null)
 
   // Load config
   useEffect(() => {
@@ -365,8 +390,15 @@ const MockDraftRoom = () => {
   // Current pick info
   const currentPickNumber = picks.length
   const pickInfo = config ? getPickInfo(currentPickNumber, config.teamCount) : null
-  const currentTeam = config?.teams?.[pickInfo?.orderIndex]
-  const isUserTurn = currentTeam?.isUser && isStarted && !isComplete
+  const isAuction = config?.draftType === 'auction'
+  const currentTeam = isAuction
+    ? (config?.teams ? config.teams[nominatorIndex % config.teamCount] : null)
+    : config?.teams?.[pickInfo?.orderIndex]
+  const isUserTurn = !isAuction && currentTeam?.isUser && isStarted && !isComplete
+  const nominatorTeam = isAuction && config?.teams ? config.teams[nominatorIndex % config.teamCount] : null
+  const isUserNominator = isAuction && nominatorTeam?.isUser && isStarted && !isComplete && auctionPhase === 'nominating'
+  const userTeamId = config?.teams?.find(t => t.isUser)?.id
+  const isUserBidding = isAuction && auctionPhase === 'bidding' && currentNom && currentNom.highBidderTeamId !== userTeamId
 
   // Sort and filter players
   const filteredPlayers = useMemo(() => {
@@ -426,40 +458,159 @@ const MockDraftRoom = () => {
     setQueue(prev => prev.filter(q => q.id !== player.id))
   }, [config])
 
+  // Auction: nominate a player with a starting bid
+  const handleNominate = useCallback((player, startBid) => {
+    if (auctionPhaseRef.current !== 'nominating') return
+    const bid = Math.max(1, startBid || 1)
+    const nomTeam = config.teams[nominatorIndexRef.current % config.teamCount]
+    const nom = { player, currentBid: bid, highBidderTeamId: nomTeam.id, nominatedByTeamId: nomTeam.id }
+    setCurrentNom(nom)
+    currentNomRef.current = nom
+    setAuctionPhase('bidding')
+    auctionPhaseRef.current = 'bidding'
+    setTimer(15)
+    setNomBidInput(bid + 1)
+  }, [config])
+
+  // Auction: place a bid
+  const handlePlaceBid = useCallback((amount, teamId) => {
+    if (auctionPhaseRef.current !== 'bidding' || !currentNomRef.current) return
+    const nom = currentNomRef.current
+    if (amount <= nom.currentBid) return
+    const bTeamId = teamId || userTeamId
+    if (!bTeamId || budgetsRef.current[bTeamId] < amount) return
+    if (nom.highBidderTeamId === bTeamId) return
+    const updated = { ...nom, currentBid: amount, highBidderTeamId: bTeamId }
+    setCurrentNom(updated)
+    currentNomRef.current = updated
+    setTimer(15)
+    setNomBidInput(amount + 1)
+  }, [userTeamId])
+
+  // Auction: award current nomination to highest bidder
+  const handleAwardPlayer = useCallback(() => {
+    const nom = currentNomRef.current
+    if (!nom || !config) return
+    clearInterval(timerRef.current)
+    setBudgets(prev => {
+      const updated = { ...prev, [nom.highBidderTeamId]: prev[nom.highBidderTeamId] - nom.currentBid }
+      budgetsRef.current = updated
+      return updated
+    })
+    setPicks(prev => {
+      const pickNumber = prev.length
+      const team = config.teams.find(t => t.id === nom.highBidderTeamId)
+      const pick = {
+        id: `pick-${pickNumber + 1}`,
+        pickNumber: pickNumber + 1,
+        round: Math.ceil((pickNumber + 1) / config.teamCount),
+        teamId: nom.highBidderTeamId,
+        teamName: team?.name || 'Unknown',
+        playerId: nom.player.id,
+        playerName: nom.player.name,
+        playerFlag: nom.player.flag,
+        playerRank: nom.player.rank,
+        amount: nom.currentBid,
+      }
+      setRecentPick(pick)
+      setTimeout(() => setRecentPick(null), SPEED_CONFIG[draftSpeedRef.current].toastDuration)
+      const newPicks = [...prev, pick]
+      if (newPicks.length >= config.teamCount * config.rosterSize) {
+        setIsComplete(true)
+      }
+      return newPicks
+    })
+    setQueue(prev => prev.filter(q => q.id !== nom.player.id))
+    setCurrentNom(null)
+    currentNomRef.current = null
+    setAuctionPhase('nominating')
+    auctionPhaseRef.current = 'nominating'
+    setNominatorIndex(prev => {
+      const next = (prev + 1) % config.teamCount
+      nominatorIndexRef.current = next
+      return next
+    })
+  }, [config])
+
   // Keep refs in sync
   makePickRef.current = handleMakePick
   picksRef.current = picks
   queueRef.current = queue
+  auctionPhaseRef.current = auctionPhase
+  currentNomRef.current = currentNom
+  budgetsRef.current = budgets
+  nominatorIndexRef.current = nominatorIndex
+  nominateRef.current = handleNominate
+  placeBidRef.current = handlePlaceBid
+  awardPlayerRef.current = handleAwardPlayer
 
-  // Timer for user's turn
+  // Universal pick timer — handles snake picks and auction nomination/bidding phases
   useEffect(() => {
     if (!isStarted || isPaused || isComplete) return
-    if (!isUserTurn) return
 
-    setTimer(config?.pickTimer || 90)
-    timerRef.current = setInterval(() => {
-      setTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current)
-          const draftedSet = new Set(picksRef.current.map(p => p.playerId))
-          const queuePick = queueRef.current.find(q => !draftedSet.has(q.id))
-          if (queuePick) {
-            makePickRef.current?.(queuePick)
-          } else {
-            const best = allPlayersRef.current.find(p => !draftedSet.has(p.id))
-            if (best) makePickRef.current?.(best)
+    if (isAuction) {
+      if (auctionPhase === 'bidding') {
+        // Bidding countdown — timer was set to 15 by handleNominate/handlePlaceBid
+        timerRef.current = setInterval(() => {
+          setTimer(prev => {
+            if (prev <= 1) {
+              clearInterval(timerRef.current)
+              awardPlayerRef.current?.()
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      } else {
+        // Nomination phase countdown
+        setTimer(config?.pickTimer || 30)
+        timerRef.current = setInterval(() => {
+          setTimer(prev => {
+            if (prev <= 1) {
+              clearInterval(timerRef.current)
+              // Auto-nominate for user if they time out
+              const nomTeam = config.teams[nominatorIndexRef.current % config.teamCount]
+              if (nomTeam?.isUser) {
+                const draftedSet = new Set(picksRef.current.map(p => p.playerId))
+                const best = allPlayersRef.current.find(p => !draftedSet.has(p.id))
+                if (best) nominateRef.current?.(best, 1)
+              }
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      }
+    } else {
+      // Snake draft timer
+      setTimer(config?.pickTimer || 90)
+      timerRef.current = setInterval(() => {
+        setTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current)
+            if (isUserTurn) {
+              const draftedSet = new Set(picksRef.current.map(p => p.playerId))
+              const queuePick = queueRef.current.find(q => !draftedSet.has(q.id))
+              if (queuePick) {
+                makePickRef.current?.(queuePick)
+              } else {
+                const best = allPlayersRef.current.find(p => !draftedSet.has(p.id))
+                if (best) makePickRef.current?.(best)
+              }
+            }
+            return 0
           }
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+          return prev - 1
+        })
+      }, 1000)
+    }
 
     return () => clearInterval(timerRef.current)
-  }, [isUserTurn, isStarted, isPaused, isComplete, currentPickNumber])
+  }, [isUserTurn, isStarted, isPaused, isComplete, currentPickNumber, isAuction, auctionPhase])
 
-  // AI picks
+  // Snake AI picks — use picksRef inside timeout to avoid stale closure issues
   useEffect(() => {
+    if (isAuction) return // auction has its own AI logic
     if (!isStarted || isPaused || isComplete || isUserTurn || aiPickingRef.current) return
     if (!config || currentPickNumber >= totalPicks) return
 
@@ -468,7 +619,8 @@ const MockDraftRoom = () => {
     const speedCfg = SPEED_CONFIG[draftSpeedRef.current]
     const aiDelay = speedCfg.aiDelay + Math.random() * speedCfg.aiJitter
     const timeout = setTimeout(() => {
-      const available = allPlayersRef.current.filter(p => !draftedIds.includes(p.id))
+      const draftedSet = new Set(picksRef.current.map(p => p.playerId))
+      const available = allPlayersRef.current.filter(p => !draftedSet.has(p.id))
 
       if (available.length === 0) {
         aiPickingRef.current = false
@@ -483,12 +635,89 @@ const MockDraftRoom = () => {
       aiPickingRef.current = false
     }, aiDelay)
 
+    return () => {
+      clearTimeout(timeout)
+      aiPickingRef.current = false
+    }
+  }, [currentPickNumber, isStarted, isPaused, isComplete, isUserTurn, config, totalPicks, isAuction])
+
+  // Auction AI: auto-nominate when it's an AI team's turn
+  useEffect(() => {
+    if (!isAuction || !isStarted || isPaused || isComplete) return
+    if (auctionPhase !== 'nominating') return
+    if (nominatorTeam?.isUser) return
+
+    const speedCfg = SPEED_CONFIG[draftSpeedRef.current]
+    const delay = speedCfg.aiDelay + Math.random() * speedCfg.aiJitter
+    const timeout = setTimeout(() => {
+      if (auctionPhaseRef.current !== 'nominating') return
+      const draftedSet = new Set(picksRef.current.map(p => p.playerId))
+      const available = allPlayersRef.current.filter(p => !draftedSet.has(p.id))
+      if (available.length === 0) return
+      const topN = Math.min(4, available.length)
+      const player = available[Math.floor(Math.random() * topN)]
+      nominateRef.current?.(player, 1)
+    }, delay)
+
     return () => clearTimeout(timeout)
-  }, [currentPickNumber, isStarted, isPaused, isComplete, isUserTurn, config, totalPicks, draftedIds])
+  }, [isAuction, isStarted, isPaused, isComplete, auctionPhase, nominatorTeam, nominatorIndex])
+
+  // Auction AI: evaluate bids from AI teams after each nomination/bid
+  useEffect(() => {
+    if (!isAuction || !isStarted || isPaused || isComplete) return
+    if (auctionPhase !== 'bidding' || !currentNom) return
+
+    const speedCfg = SPEED_CONFIG[draftSpeedRef.current]
+    const timeouts = []
+
+    config.teams.forEach(team => {
+      if (team.isUser) return
+      if (team.id === currentNom.highBidderTeamId) return
+
+      const budget = budgetsRef.current[team.id] || 0
+      const teamPicks = picksRef.current.filter(p => p.teamId === team.id)
+      const remainingSlots = config.rosterSize - teamPicks.length
+      if (remainingSlots <= 0 || budget <= currentNom.currentBid) return
+
+      const fairValue = Math.max(2, Math.round(budget / remainingSlots))
+      const rank = currentNom.player?.rank || 50
+      const playerValue = Math.max(2, Math.round(fairValue * (1 + Math.max(0, 50 - rank) / 80)))
+      if (currentNom.currentBid >= playerValue) return
+
+      const bidChance = Math.min(0.7, 0.5 * (1 - currentNom.currentBid / playerValue))
+      if (Math.random() > bidChance) return
+
+      const bidAmount = Math.min(
+        currentNom.currentBid + Math.ceil(Math.random() * 3),
+        playerValue,
+        budget
+      )
+      if (bidAmount <= currentNom.currentBid) return
+
+      const delay = speedCfg.aiDelay * 3 + Math.random() * 4000
+      const timeout = setTimeout(() => {
+        if (auctionPhaseRef.current !== 'bidding') return
+        const nom = currentNomRef.current
+        if (!nom || nom.highBidderTeamId === team.id) return
+        if (bidAmount <= nom.currentBid) return
+        if (budgetsRef.current[team.id] < bidAmount) return
+        placeBidRef.current?.(bidAmount, team.id)
+      }, delay)
+      timeouts.push(timeout)
+    })
+
+    return () => timeouts.forEach(t => clearTimeout(t))
+  }, [isAuction, isStarted, isPaused, isComplete, auctionPhase, currentNom, config])
 
   const handleStartDraft = () => {
     setIsStarted(true)
     setIsPaused(false)
+    if (config?.draftType === 'auction') {
+      const initialBudgets = {}
+      config.teams.forEach(t => { initialBudgets[t.id] = t.budget || 100 })
+      setBudgets(initialBudgets)
+      budgetsRef.current = initialBudgets
+    }
   }
 
   const handleTogglePause = useCallback(() => {
@@ -739,22 +968,42 @@ const MockDraftRoom = () => {
                   )}
                 </div>
                 <p className="text-text-muted text-xs hidden sm:block">
-                  {config.teamCount} teams · {config.rosterSize} rds · Snake · {allPlayers.length} players
+                  {config.teamCount} teams · {config.rosterSize} rds · {isAuction ? 'Auction' : 'Snake'} · {allPlayers.length} players
+                  {isAuction && budgets[userTeamId] !== undefined && (
+                    <span className="text-yellow-400 ml-1">${budgets[userTeamId]}</span>
+                  )}
                 </p>
               </div>
             </div>
 
             {/* Center: Current Pick Status */}
-            {isStarted && currentTeam && (
+            {isStarted && (isAuction || currentTeam) && (
               <div className={`hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold ${
                 isPaused
                   ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
-                  : isUserTurn
+                  : (isUserTurn || isUserNominator)
                     ? 'bg-accent-green/20 text-accent-green border border-accent-green/40'
-                    : 'bg-dark-tertiary text-text-secondary'
+                    : isAuction && auctionPhase === 'bidding'
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
+                      : 'bg-dark-tertiary text-text-secondary'
               }`}>
-                {isPaused ? (
-                  'PAUSED'
+                {isPaused ? 'PAUSED' : isAuction ? (
+                  auctionPhase === 'bidding' && currentNom ? (
+                    <>
+                      <span className="text-white">{currentNom.player?.name?.split(' ').pop()}</span>
+                      <span className="text-yellow-400 font-bold">${currentNom.currentBid}</span>
+                      <span className="text-text-muted">·</span>
+                      <span>{config.teams.find(t => t.id === currentNom.highBidderTeamId)?.name}</span>
+                    </>
+                  ) : isUserNominator ? (
+                    <>
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                      </span>
+                      YOUR NOMINATION
+                    </>
+                  ) : `${nominatorTeam?.name} nominating...`
                 ) : (
                   <>
                     {isUserTurn && (
@@ -763,7 +1012,7 @@ const MockDraftRoom = () => {
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
                       </span>
                     )}
-                    {isUserTurn ? 'YOUR PICK' : `${currentTeam.name} picking...`}
+                    {isUserTurn ? 'YOUR PICK' : `${currentTeam?.name} picking...`}
                   </>
                 )}
               </div>
@@ -820,17 +1069,31 @@ const MockDraftRoom = () => {
                   </button>
 
                   <div className="text-right hidden sm:block">
-                    <p className="text-text-muted text-[10px] leading-tight">ROUND {pickInfo?.round || 1}</p>
-                    <p className="text-white text-xs font-semibold">{currentPickNumber + 1}/{totalPicks}</p>
+                    {isAuction ? (
+                      <>
+                        <p className="text-text-muted text-[10px] leading-tight">BUDGET</p>
+                        <p className="text-yellow-400 text-xs font-semibold">${budgets[userTeamId] ?? 0}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-text-muted text-[10px] leading-tight">ROUND {pickInfo?.round || 1}</p>
+                        <p className="text-white text-xs font-semibold">{currentPickNumber + 1}/{totalPicks}</p>
+                      </>
+                    )}
                   </div>
                   <div className="sm:hidden text-white text-xs font-semibold">
-                    R{pickInfo?.round} · {currentPickNumber + 1}/{totalPicks}
+                    {isAuction
+                      ? <span className="text-yellow-400">${budgets[userTeamId] ?? 0}</span>
+                      : <>R{pickInfo?.round} · {currentPickNumber + 1}/{totalPicks}</>
+                    }
                   </div>
-                  {isUserTurn && !isPaused && (
+                  {isStarted && !isPaused && (
                     <div className={`px-3 py-1.5 rounded-lg font-bold text-base tabular-nums ${
-                      timer <= 10 ? 'bg-red-500/20 text-red-400' :
-                      timer <= 30 ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-accent-green/20 text-accent-green'
+                      (isUserTurn || isUserNominator || (isAuction && auctionPhase === 'bidding')) && timer <= 5 ? 'bg-red-500/20 text-red-400' :
+                      (isUserTurn || isUserNominator) && timer <= 15 ? 'bg-yellow-500/20 text-yellow-400' :
+                      (isUserTurn || isUserNominator) ? 'bg-accent-green/20 text-accent-green' :
+                      isAuction && auctionPhase === 'bidding' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-dark-primary text-text-secondary border border-dark-border'
                     }`}>
                       {formatTime(timer)}
                     </div>
@@ -841,19 +1104,33 @@ const MockDraftRoom = () => {
           </div>
 
           {/* Mobile: Current pick banner */}
-          {isStarted && currentTeam && (
+          {isStarted && (isAuction || currentTeam) && (
             <div className={`sm:hidden mt-1.5 px-3 py-1.5 rounded-lg text-center text-xs font-semibold ${
               isPaused
                 ? 'bg-yellow-500/20 text-yellow-400'
-                : isUserTurn
+                : (isUserTurn || isUserNominator)
                   ? 'bg-accent-green/20 text-accent-green'
-                  : 'bg-dark-tertiary text-text-secondary'
+                  : isAuction && auctionPhase === 'bidding'
+                    ? 'bg-yellow-500/20 text-yellow-400'
+                    : 'bg-dark-tertiary text-text-secondary'
             }`}>
               {isPaused ? (
                 <span className="flex items-center justify-center gap-1.5">
                   PAUSED
                   <span className="text-[10px] font-normal opacity-70">tap play to resume</span>
                 </span>
+              ) : isAuction ? (
+                auctionPhase === 'bidding' && currentNom
+                  ? <span>{currentNom.player?.name?.split(' ').pop()} · <span className="text-yellow-400">${currentNom.currentBid}</span></span>
+                  : isUserNominator
+                    ? <span className="flex items-center justify-center gap-1.5">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent-green" />
+                        </span>
+                        YOUR NOMINATION
+                      </span>
+                    : `${nominatorTeam?.name} nominating...`
               ) : isUserTurn ? (
                 <span className="flex items-center justify-center gap-1.5">
                   <span className="relative flex h-1.5 w-1.5">
@@ -862,7 +1139,7 @@ const MockDraftRoom = () => {
                   </span>
                   YOUR PICK
                 </span>
-              ) : `${currentTeam.name} picking...`}
+              ) : `${currentTeam?.name} picking...`}
             </div>
           )}
 
@@ -903,8 +1180,61 @@ const MockDraftRoom = () => {
             <span className="text-base">{recentPick.playerFlag}</span>
             <div>
               <p className="font-semibold text-sm">{recentPick.playerName}</p>
-              <p className="text-xs opacity-80">#{recentPick.pickNumber} · {recentPick.teamName}</p>
+              <p className="text-xs opacity-80">
+                {recentPick.amount ? `$${recentPick.amount} · ` : `#${recentPick.pickNumber} · `}{recentPick.teamName}
+              </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== AUCTION BIDDING BAR ===== */}
+      {isAuction && isStarted && auctionPhase === 'bidding' && currentNom && (
+        <div className="bg-dark-secondary border-b border-yellow-500/30 flex-shrink-0 z-20">
+          <div className="px-3 sm:px-4 py-2 flex items-center gap-3">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {currentNom.player?.headshot ? (
+                <img src={currentNom.player.headshot} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+              ) : (
+                <span className="text-lg flex-shrink-0">{currentNom.player?.flag}</span>
+              )}
+              <div className="min-w-0">
+                <p className="text-white font-semibold text-sm truncate">{currentNom.player?.name}</p>
+                <p className="text-text-muted text-[10px]">
+                  #{currentNom.player?.rank} · Nom by {config.teams.find(t => t.id === currentNom.nominatedByTeamId)?.name}
+                </p>
+              </div>
+            </div>
+            <div className="text-center px-3">
+              <p className="text-text-muted text-[10px]">CURRENT BID</p>
+              <p className="text-yellow-400 font-bold text-lg">${currentNom.currentBid}</p>
+              <p className="text-text-muted text-[10px] truncate">
+                {config.teams.find(t => t.id === currentNom.highBidderTeamId)?.name}
+              </p>
+            </div>
+            {isUserBidding && (
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={() => setNomBidInput(prev => Math.max(currentNom.currentBid + 1, prev - 1))}
+                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-white flex items-center justify-center text-sm font-bold"
+                >-</button>
+                <span className="text-white font-bold text-sm w-8 text-center tabular-nums">${nomBidInput}</span>
+                <button
+                  onClick={() => setNomBidInput(prev => Math.min(budgets[userTeamId] || 0, prev + 1))}
+                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-white flex items-center justify-center text-sm font-bold"
+                >+</button>
+                <button
+                  onClick={() => handlePlaceBid(nomBidInput)}
+                  disabled={nomBidInput <= currentNom.currentBid || nomBidInput > (budgets[userTeamId] || 0)}
+                  className="px-3 py-1.5 bg-yellow-500 text-dark-primary rounded-lg text-xs font-bold hover:bg-yellow-400 transition-colors disabled:opacity-30"
+                >
+                  BID
+                </button>
+              </div>
+            )}
+            {!isUserBidding && currentNom.highBidderTeamId === userTeamId && (
+              <span className="text-accent-green text-xs font-bold px-2 py-1 bg-accent-green/15 rounded-lg flex-shrink-0">WINNING</span>
+            )}
           </div>
         </div>
       )}
@@ -951,15 +1281,20 @@ const MockDraftRoom = () => {
                     className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
                       team.isUser
                         ? 'bg-accent-green/30 text-accent-green border-b-2 border-b-accent-green'
-                        : pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
+                        : isAuction && nominatorTeam?.id === team.id
                           ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-dark-tertiary text-text-muted'
+                          : !isAuction && pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-dark-tertiary text-text-muted'
                     }`}
                   >
                     {team.isUser ? (
                       <span className="font-bold">YOU</span>
                     ) : (
                       team.name.length > 10 ? team.name.slice(0, 9) + '…' : team.name
+                    )}
+                    {isAuction && isStarted && (
+                      <div className="text-[8px] text-yellow-400/70 font-normal">${budgets[team.id] ?? 0}</div>
                     )}
                   </div>
                 ))}
@@ -986,15 +1321,22 @@ const MockDraftRoom = () => {
                       isCurrentRound ? 'text-accent-green bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
                     }`}>
                       <span>{round}</span>
-                      <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>
+                      {!isAuction && <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>}
                     </div>
                     {config.teams.map((team, teamIdx) => {
-                      // Fix snake alignment: each column always represents the same team
-                      const actualPickIndex = isReverse
-                        ? roundIdx * config.teamCount + (config.teamCount - 1 - teamIdx)
-                        : roundIdx * config.teamCount + teamIdx
-                      const pick = picks[actualPickIndex]
-                      const isCurrent = actualPickIndex === currentPickNumber && isStarted
+                      // Auction: fill each team's column top-to-bottom; Snake: snake pattern
+                      let pick, isCurrent
+                      if (isAuction) {
+                        const teamPicks = picks.filter(p => p.teamId === team.id)
+                        pick = teamPicks[roundIdx] || null
+                        isCurrent = false // no single "current cell" in auction
+                      } else {
+                        const actualPickIndex = isReverse
+                          ? roundIdx * config.teamCount + (config.teamCount - 1 - teamIdx)
+                          : roundIdx * config.teamCount + teamIdx
+                        pick = picks[actualPickIndex]
+                        isCurrent = actualPickIndex === currentPickNumber && isStarted
+                      }
                       const isUserTeamCell = team.isUser
 
                       return (
@@ -1036,7 +1378,9 @@ const MockDraftRoom = () => {
                               }`}>
                                 {pick.playerName.split(' ').pop()}
                               </p>
-                              <p className="text-[9px] text-text-muted">#{pick.playerRank}</p>
+                              <p className="text-[9px] text-text-muted">
+                                {isAuction && pick.amount ? `$${pick.amount}` : `#${pick.playerRank}`}
+                              </p>
                             </div>
                           ) : isCurrent ? (
                             <span className="relative flex h-2 w-2">
@@ -1045,7 +1389,7 @@ const MockDraftRoom = () => {
                             </span>
                           ) : (
                             <span className="text-[9px] text-text-muted/30 tabular-nums">
-                              {round}.{(actualPickIndex % config.teamCount) + 1}
+                              {isAuction ? '—' : `${round}.${teamIdx + 1}`}
                             </span>
                           )}
                         </div>
@@ -1153,13 +1497,24 @@ const MockDraftRoom = () => {
                           })}
                         </div>
                         <div className="flex items-center justify-end gap-1">
-                          {isUserTurn && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
-                              className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 transition-colors"
-                            >
-                              Draft
-                            </button>
+                          {isAuction ? (
+                            isUserNominator && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleNominate(player, 1) }}
+                                className="px-2 py-1 bg-yellow-500 text-dark-primary text-[10px] rounded font-semibold hover:bg-yellow-400 transition-colors"
+                              >
+                                Nom
+                              </button>
+                            )
+                          ) : (
+                            isUserTurn && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
+                                className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 transition-colors"
+                              >
+                                Draft
+                              </button>
+                            )
                           )}
                           <button
                             onClick={(e) => {
@@ -1240,13 +1595,24 @@ const MockDraftRoom = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
-                            {isUserTurn && (
-                              <button
-                                onClick={() => handleMakePick(player)}
-                                className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                Draft
-                              </button>
+                            {isAuction ? (
+                              isUserNominator && (
+                                <button
+                                  onClick={() => handleNominate(player, 1)}
+                                  className="px-2 py-1 bg-yellow-500 text-dark-primary text-[10px] rounded font-semibold hover:bg-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  Nom
+                                </button>
+                              )
+                            ) : (
+                              isUserTurn && (
+                                <button
+                                  onClick={() => handleMakePick(player)}
+                                  className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  Draft
+                                </button>
+                              )
                             )}
                             <button
                               onClick={() => handleRemoveFromQueue(player.id)}
@@ -1406,11 +1772,14 @@ const MockDraftRoom = () => {
           player={selectedPlayer}
           onClose={() => setSelectedPlayer(null)}
           onDraft={handleMakePick}
+          onNominate={(p) => handleNominate(p, 1)}
           onQueue={(p) => {
             const inQ = queue.find(q => q.id === p.id)
             inQ ? handleRemoveFromQueue(p.id) : handleAddToQueue(p)
           }}
           isUserTurn={isUserTurn}
+          isUserNominator={isUserNominator}
+          isAuction={isAuction}
           inQueue={!!queue.find(q => q.id === selectedPlayer.id)}
           isDrafted={!!selectedPlayer._drafted}
         />
