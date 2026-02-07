@@ -34,7 +34,14 @@ function gradeColor(grade) {
 // ─── Per-Pick Grading ───────────────────────────────────────────────────────
 
 /**
- * Grade a single pick based on rank vs pick position.
+ * Grade a single pick based on rank vs pick position AND player quality.
+ *
+ * The grade blends two factors:
+ *   1. Value score — did you get a player later than expected? (steal vs reach)
+ *   2. Quality score — how good is the player relative to the round?
+ *
+ * A pick like Scottie Scheffler (#1 rank) at pick #1 is a perfect quality pick
+ * even though adpDiff=0. A rank #50 player at pick #1 is a terrible quality pick.
  *
  * @param {object} pick - { pickNumber, round, playerRank }
  * @param {object} context - { totalPicks, totalRounds, totalTeams }
@@ -42,28 +49,53 @@ function gradeColor(grade) {
  */
 function gradePick(pick, context) {
   const { pickNumber, round, playerRank } = pick
-  const { totalTeams } = context
-
-  // Expected pick = playerRank scaled to draft size
-  // If there are 10 teams and 6 rounds (60 picks), rank 1 player expected at pick 1,
-  // rank 30 expected around pick 30, etc.
-  const expectedPick = playerRank
+  const { totalTeams, totalRounds } = context
 
   // adpDiff: positive = steal (picked later than expected), negative = reach
-  const adpDiff = expectedPick - pickNumber
+  const adpDiff = playerRank - pickNumber
 
-  // Base score: 70 (C grade) + 3 points per pick of value
-  let score = 70 + (adpDiff * 3)
+  // ── Value score (40% weight): based on adpDiff ─────────────────────────
+  // +3 per pick of value from a baseline of 80 (B grade = expected value)
+  let valueScore = 80 + (adpDiff * 3)
 
-  // Round bonus: steals in later rounds get extra credit
+  // Late-round steal bonus
   if (adpDiff > 0 && round >= 3) {
-    score += Math.min(adpDiff * 0.5, 5) // Up to 5 bonus points
+    valueScore += Math.min(adpDiff * 0.5, 5)
   }
 
-  // Penalty reduction for early rounds: reaching for top talent is less bad
-  if (adpDiff < 0 && round <= 2 && Math.abs(adpDiff) <= 5) {
-    score += 3 // Mild correction
+  valueScore = Math.max(0, Math.min(100, valueScore))
+
+  // ── Quality score (60% weight): how good is this player for this round? ─
+  // What's the "expected" rank range for this round?
+  // Round 1 expects ranks 1–totalTeams, Round 2 expects totalTeams+1 to 2*totalTeams, etc.
+  const roundStart = (round - 1) * totalTeams + 1
+  const roundEnd = round * totalTeams
+  const roundMidpoint = (roundStart + roundEnd) / 2
+
+  // How much better (positive) or worse (negative) is this player vs round expectation?
+  const qualityDiff = roundMidpoint - playerRank
+
+  // Quality baseline: 80 (B) + bonuses/penalties
+  // Each position better than expected = +2 points, each worse = -3 points (reaching hurts more)
+  let qualityScore = 80 + (qualityDiff > 0 ? qualityDiff * 2 : qualityDiff * 3)
+
+  // Elite player bonus: top-3 in round 1 are always A+ picks
+  if (playerRank <= 3 && round === 1) {
+    qualityScore = Math.max(qualityScore, 98)
   }
+  // Top-5 in round 1 are always A picks
+  else if (playerRank <= 5 && round === 1) {
+    qualityScore = Math.max(qualityScore, 95)
+  }
+  // Top-15 in rounds 1-2 always grade well
+  if (playerRank <= 15 && round <= 2) {
+    qualityScore = Math.max(qualityScore, 87)
+  }
+
+  qualityScore = Math.max(0, Math.min(100, qualityScore))
+
+  // ── Blend: 60% quality + 40% value ─────────────────────────────────────
+  let score = qualityScore * 0.6 + valueScore * 0.4
 
   score = Math.max(0, Math.min(100, score))
 

@@ -279,6 +279,7 @@ const MockDraftRoom = () => {
   const [bottomTab, setBottomTab] = useState('queue') // queue, myteam, picks, chat
   const [sortBy, setSortBy] = useState('rank') // rank, name, sg, top10
   const [sortDir, setSortDir] = useState('asc')
+  const [showDrafted, setShowDrafted] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [apiPlayers, setApiPlayers] = useState(null)
   const [loadingPlayers, setLoadingPlayers] = useState(true)
@@ -423,12 +424,14 @@ const MockDraftRoom = () => {
 
   // Sort and filter players
   const filteredPlayers = useMemo(() => {
-    let result = availablePlayers
+    let result = showDrafted ? allPlayers.map(p => ({ ...p, isDrafted: draftedIds.includes(p.id) })) : availablePlayers.map(p => ({ ...p, isDrafted: false }))
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       result = result.filter(p => p.name.toLowerCase().includes(q) || p.country.toLowerCase().includes(q))
     }
     result.sort((a, b) => {
+      // When showing drafted, push drafted players to the bottom
+      if (showDrafted && a.isDrafted !== b.isDrafted) return a.isDrafted ? 1 : -1
       let aVal, bVal
       if (sortBy === 'name') { aVal = a.name; bVal = b.name }
       else if (sortBy === 'sg') { aVal = a.sg; bVal = b.sg }
@@ -438,7 +441,7 @@ const MockDraftRoom = () => {
       return sortDir === 'asc' ? aVal - bVal : bVal - aVal
     })
     return result
-  }, [availablePlayers, searchQuery, sortBy, sortDir])
+  }, [availablePlayers, allPlayers, draftedIds, showDrafted, searchQuery, sortBy, sortDir])
 
   // Stable ref for makePick to avoid stale closures in timers
   const makePickRef = useRef(null)
@@ -1617,19 +1620,31 @@ const MockDraftRoom = () => {
             activeTab === 'players' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:flex-none lg:w-[60%] lg:border-r lg:border-dark-border`}>
             <div className="h-full flex flex-col">
-                {/* Search Bar */}
+                {/* Search Bar + Show Drafted Toggle */}
                 <div className="flex-shrink-0 p-3 bg-dark-secondary/50">
-                  <div className="relative">
-                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="Search players..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Search players..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setShowDrafted(!showDrafted)}
+                      className={`flex-shrink-0 px-3 py-2 rounded-lg text-[11px] font-medium transition-colors border ${
+                        showDrafted
+                          ? 'bg-gold/15 border-gold/30 text-gold'
+                          : 'bg-dark-primary border-dark-border text-text-muted hover:text-white hover:border-dark-border'
+                      }`}
+                    >
+                      {showDrafted ? 'Hide Drafted' : 'Show Drafted'}
+                    </button>
                   </div>
                 </div>
 
@@ -1662,10 +1677,12 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
-                          inQueue ? 'bg-orange/5' : ''
+                        className={`grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors ${
+                          player.isDrafted
+                            ? 'opacity-40 bg-dark-primary/50'
+                            : `cursor-pointer hover:bg-dark-tertiary/50 ${inQueue ? 'bg-orange/5' : ''}`
                         }`}
-                        onClick={() => setSelectedPlayer(player)}
+                        onClick={() => !player.isDrafted && setSelectedPlayer(player)}
                       >
                         <span className="text-text-muted text-xs">{player.rank}</span>
                         <div className="flex items-center gap-2 min-w-0">
@@ -1702,38 +1719,46 @@ const MockDraftRoom = () => {
                           })}
                         </div>
                         <div className="flex items-center justify-end gap-1">
-                          {isAuction ? (
-                            isUserNominator && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleNominate(player, 1) }}
-                                className="px-2 py-1 bg-yellow-500 text-dark-primary text-[10px] rounded font-semibold hover:bg-yellow-400 transition-colors"
-                              >
-                                Nom
-                              </button>
-                            )
+                          {player.isDrafted ? (
+                            <span className="px-1.5 py-0.5 bg-dark-border/40 text-text-muted text-[9px] font-mono uppercase rounded">
+                              Drafted
+                            </span>
                           ) : (
-                            isUserTurn && (
+                            <>
+                              {isAuction ? (
+                                isUserNominator && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleNominate(player, 1) }}
+                                    className="px-2 py-1 bg-yellow-500 text-dark-primary text-[10px] rounded font-semibold hover:bg-yellow-400 transition-colors"
+                                  >
+                                    Nom
+                                  </button>
+                                )
+                              ) : (
+                                isUserTurn && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
+                                    className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
+                                  >
+                                    Draft
+                                  </button>
+                                )
+                              )}
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
-                                className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  inQueue ? handleRemoveFromQueue(player.id) : handleAddToQueue(player)
+                                }}
+                                className={`p-1 rounded transition-colors ${
+                                  inQueue ? 'text-orange' : 'text-text-muted hover:text-orange'
+                                }`}
                               >
-                                Draft
-                              </button>
-                            )
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              inQueue ? handleRemoveFromQueue(player.id) : handleAddToQueue(player)
-                            }}
-                            className={`p-1 rounded transition-colors ${
-                              inQueue ? 'text-orange' : 'text-text-muted hover:text-orange'
-                            }`}
-                          >
                             <svg className="w-3.5 h-3.5" fill={inQueue ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                             </svg>
                           </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     )
