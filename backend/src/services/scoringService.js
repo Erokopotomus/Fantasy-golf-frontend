@@ -387,11 +387,190 @@ async function calculateTournamentScoring(tournamentId, leagueId, prisma) {
   return { teams: teamResults, scoringConfig }
 }
 
+/**
+ * Calculate live tournament scoring for a league — includes LiveScore overlay,
+ * starter/bench separation, optimal lineup, and team rankings.
+ */
+async function calculateLiveTournamentScoring(tournamentId, leagueId, prisma) {
+  const [tournament, league] = await Promise.all([
+    prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      select: {
+        id: true, name: true, status: true, currentRound: true,
+        startDate: true, endDate: true, courseName: true, purse: true,
+      },
+    }),
+    prisma.league.findUnique({
+      where: { id: leagueId },
+      include: {
+        teams: {
+          include: {
+            user: { select: { id: true, name: true, avatar: true } },
+            roster: {
+              where: { isActive: true },
+              include: {
+                player: {
+                  select: {
+                    id: true, name: true, headshotUrl: true,
+                    countryFlag: true, primaryTour: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+  ])
+
+  if (!tournament || !league) return { tournament: null, isLive: false, teams: [] }
+
+  const isLive = tournament.status === 'IN_PROGRESS'
+
+  // Collect all player IDs from rosters
+  const playerIds = []
+  for (const team of league.teams) {
+    for (const entry of team.roster) {
+      playerIds.push(entry.player.id)
+    }
+  }
+
+  if (playerIds.length === 0) {
+    return {
+      tournament,
+      isLive,
+      teams: league.teams.map((team, i) => ({
+        teamId: team.id, teamName: team.name,
+        userId: team.userId, userName: team.user?.name, userAvatar: team.user?.avatar,
+        rank: i + 1, totalPoints: 0, benchPoints: 0, optimalPoints: 0,
+        starters: [], bench: [],
+      })),
+    }
+  }
+
+  // Parallel fetch: performances, round scores, live scores
+  const [performances, allRoundScores, liveScores] = await Promise.all([
+    prisma.performance.findMany({
+      where: { tournamentId, playerId: { in: playerIds } },
+    }),
+    prisma.roundScore.findMany({
+      where: { tournamentId, playerId: { in: playerIds } },
+    }),
+    isLive
+      ? prisma.liveScore.findMany({ where: { tournamentId, playerId: { in: playerIds } } })
+      : Promise.resolve([]),
+  ])
+
+  // Index by playerId
+  const perfByPlayer = {}
+  for (const p of performances) { perfByPlayer[p.playerId] = p }
+
+  const rsByPlayer = {}
+  for (const rs of allRoundScores) {
+    if (!rsByPlayer[rs.playerId]) rsByPlayer[rs.playerId] = []
+    rsByPlayer[rs.playerId].push(rs)
+  }
+
+  const liveByPlayer = {}
+  for (const ls of liveScores) { liveByPlayer[ls.playerId] = ls }
+
+  const scoringConfig = league.settings?.scoringConfig || getDefaultScoringConfig(league.settings?.scoringPreset || 'standard')
+  const rosterSize = league.settings?.rosterSize || 6
+  const starterCount = rosterSize <= 4 ? rosterSize : rosterSize - 2
+
+  const teamResults = league.teams.map((team) => {
+    const playerRows = team.roster.map((entry) => {
+      const perf = perfByPlayer[entry.player.id]
+      const live = liveByPlayer[entry.player.id]
+      const roundScores = rsByPlayer[entry.player.id] || []
+
+      let fantasyPoints = 0
+      let breakdown = { position: 0, holes: 0, bonuses: 0, strokesGained: 0 }
+
+      if (perf) {
+        const perfWithRounds = { ...perf, roundScores }
+        const result = calculateFantasyPoints(perfWithRounds, scoringConfig)
+        fantasyPoints = result.total
+        breakdown = result.breakdown
+      }
+
+      const position = live?.position ?? perf?.position ?? null
+      const totalToPar = live?.totalToPar ?? perf?.totalToPar ?? null
+      const todayToPar = live?.todayToPar ?? null
+      const thru = live?.thru ?? (perf?.status === 'CUT' ? 'CUT' : perf ? 18 : null)
+      const currentRound = live?.currentRound ?? tournament.currentRound ?? null
+      const status = perf?.status || 'DNS'
+
+      const row = {
+        playerId: entry.player.id,
+        playerName: entry.player.name,
+        headshotUrl: entry.player.headshotUrl,
+        countryFlag: entry.player.countryFlag,
+        primaryTour: entry.player.primaryTour,
+        position, totalToPar, todayToPar, thru, currentRound, status,
+        fantasyPoints, breakdown,
+        rosterStatus: entry.rosterStatus || entry.position,
+      }
+
+      if (live) {
+        row.probabilities = {
+          win: live.winProbability,
+          top5: live.top5Probability,
+          top10: live.top10Probability,
+          top20: live.top20Probability,
+          makeCut: live.makeCutProbability,
+        }
+      }
+
+      return row
+    })
+
+    // Separate starters vs bench
+    const starters = []
+    const bench = []
+    for (const row of playerRows) {
+      const rs = (row.rosterStatus || '').toUpperCase()
+      if (rs.startsWith('BN') || rs === 'BENCH') {
+        bench.push(row)
+      } else {
+        starters.push(row)
+      }
+    }
+
+    // Sort each by fantasy points desc
+    starters.sort((a, b) => b.fantasyPoints - a.fantasyPoints)
+    bench.sort((a, b) => b.fantasyPoints - a.fantasyPoints)
+
+    const totalPoints = Math.round(starters.reduce((s, p) => s + p.fantasyPoints, 0) * 100) / 100
+    const benchPoints = Math.round(bench.reduce((s, p) => s + p.fantasyPoints, 0) * 100) / 100
+
+    // Optimal: pick the best N from all players
+    const allSorted = [...playerRows].sort((a, b) => b.fantasyPoints - a.fantasyPoints)
+    const optimalPoints = Math.round(
+      allSorted.slice(0, starterCount).reduce((s, p) => s + p.fantasyPoints, 0) * 100
+    ) / 100
+
+    return {
+      teamId: team.id, teamName: team.name,
+      userId: team.userId, userName: team.user?.name, userAvatar: team.user?.avatar,
+      totalPoints, benchPoints, optimalPoints,
+      starters, bench,
+    }
+  })
+
+  // Rank by totalPoints desc
+  teamResults.sort((a, b) => b.totalPoints - a.totalPoints)
+  teamResults.forEach((t, i) => { t.rank = i + 1 })
+
+  return { tournament, isLive, teams: teamResults }
+}
+
 module.exports = {
   getDefaultScoringConfig,
   calculateFantasyPoints,
   calculateLeagueStandings,
   calculateTournamentScoring,
+  calculateLiveTournamentScoring,
   STANDARD_CONFIG,
   DRAFTKINGS_CONFIG,
 }

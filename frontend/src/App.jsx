@@ -23,6 +23,7 @@ import Draft from './pages/Draft'
 import Profile from './pages/Profile'
 import TournamentScoring from './pages/TournamentScoring'
 import Standings from './pages/Standings'
+import LeagueLiveScoring from './pages/LeagueLiveScoring'
 import PlayerProfile from './pages/PlayerProfile'
 import TradeCenter from './pages/TradeCenter'
 import LeagueSettings from './pages/LeagueSettings'
@@ -161,6 +162,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Standings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/scoring"
+            element={
+              <ProtectedRoute>
+                <LeagueLiveScoring />
               </ProtectedRoute>
             }
           />

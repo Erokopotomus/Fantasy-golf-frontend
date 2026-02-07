@@ -19,6 +19,7 @@ const LeagueHome = () => {
   const { activity, loading: activityLoading } = useActivity(leagueId, 10)
   const [detailedLeague, setDetailedLeague] = useState(null)
   const [detailLoading, setDetailLoading] = useState(true)
+  const [currentTournament, setCurrentTournament] = useState(null)
 
   // Fetch detailed league data (with full members, teams, rosters)
   useEffect(() => {
@@ -29,6 +30,13 @@ const LeagueHome = () => {
       .catch(() => {})
       .finally(() => setDetailLoading(false))
   }, [leagueId])
+
+  // Fetch current tournament for the widget
+  useEffect(() => {
+    api.getCurrentTournament()
+      .then(data => setCurrentTournament(data.tournament || data))
+      .catch(() => {})
+  }, [])
 
   const loading = leaguesLoading && detailLoading
   const league = detailedLeague || leagues?.find(l => l.id === leagueId)
@@ -203,6 +211,13 @@ const LeagueHome = () => {
               >
                 Standings
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(`/leagues/${leagueId}/scoring`)}
+              >
+                Scoring
+              </Button>
               {!isOneAndDone && (
                 <Button
                   variant="secondary"
@@ -275,6 +290,50 @@ const LeagueHome = () => {
                   </div>
                 </Card>
               )}
+            </div>
+          )}
+
+          {/* Active Tournament Widget */}
+          {currentTournament && currentTournament.status === 'IN_PROGRESS' && (
+            <div className="mb-6">
+              <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-dark-secondary">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">{currentTournament.name}</h3>
+                      <p className="text-text-muted text-xs">
+                        {currentTournament.courseName && <span>{currentTournament.courseName} &middot; </span>}
+                        Round {currentTournament.currentRound || '?'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button size="sm" onClick={() => navigate(`/leagues/${leagueId}/scoring`)}>
+                    View Scoring
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+          {currentTournament && currentTournament.status === 'UPCOMING' && (
+            <div className="mb-6">
+              <Card className="border-dark-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-dark-tertiary rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-medium text-sm">Next Event: {currentTournament.name}</h3>
+                    <p className="text-text-muted text-xs">
+                      Starts {new Date(currentTournament.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+              </Card>
             </div>
           )}
 

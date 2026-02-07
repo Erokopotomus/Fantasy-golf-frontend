@@ -351,6 +351,11 @@ class ApiService {
     return this.request(`/leagues/${leagueId}/scoring/${tournamentId}`)
   }
 
+  async getLeagueLiveScoring(leagueId, tournamentId = null) {
+    const params = tournamentId ? `?tournamentId=${tournamentId}` : ''
+    return this.request(`/leagues/${leagueId}/live-scoring${params}`)
+  }
+
   // Notifications
   async getNotifications(options = {}) {
     const params = new URLSearchParams(options).toString()

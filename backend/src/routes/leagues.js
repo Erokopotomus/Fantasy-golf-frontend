@@ -1,7 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
-const { calculateLeagueStandings, calculateTournamentScoring } = require('../services/scoringService')
+const { calculateLeagueStandings, calculateTournamentScoring, calculateLiveTournamentScoring } = require('../services/scoringService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -552,6 +552,56 @@ router.get('/:id/scoring/:tournamentId', authenticate, async (req, res, next) =>
     }
 
     const data = await calculateTournamentScoring(req.params.tournamentId, req.params.id, prisma)
+    res.json(data)
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/leagues/:id/live-scoring - Live tournament scoring for a league
+router.get('/:id/live-scoring', authenticate, async (req, res, next) => {
+  try {
+    const { tournamentId } = req.query
+
+    // Verify league membership
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true } } },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const isMember = league.members.some((m) => m.userId === req.user.id)
+    if (!isMember && !league.isPublic) {
+      return res.status(403).json({ error: { message: 'Not authorized to view this league' } })
+    }
+
+    // Resolve tournament: use provided ID, or find current IN_PROGRESS, or most recent COMPLETED
+    let resolvedTournamentId = tournamentId
+    if (!resolvedTournamentId) {
+      const current = await prisma.tournament.findFirst({
+        where: { status: 'IN_PROGRESS' },
+        select: { id: true },
+      })
+      if (current) {
+        resolvedTournamentId = current.id
+      } else {
+        const recent = await prisma.tournament.findFirst({
+          where: { status: 'COMPLETED' },
+          orderBy: { endDate: 'desc' },
+          select: { id: true },
+        })
+        if (recent) resolvedTournamentId = recent.id
+      }
+    }
+
+    if (!resolvedTournamentId) {
+      return res.json({ tournament: null, isLive: false, teams: [] })
+    }
+
+    const data = await calculateLiveTournamentScoring(resolvedTournamentId, req.params.id, prisma)
     res.json(data)
   } catch (error) {
     next(error)
