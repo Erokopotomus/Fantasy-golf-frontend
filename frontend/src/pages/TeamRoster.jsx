@@ -337,7 +337,7 @@ const TeamRoster = () => {
       >
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Active Lineup</h2>
-          <span className="text-xs text-text-muted">({roster.filter(p => activeSet.has(p.id)).length})</span>
+          <span className="text-xs text-text-muted">({roster.filter(p => activeSet.has(p.id)).length} / {maxActive})</span>
         </div>
         <div className="space-y-2">
           {roster.filter(p => activeSet.has(p.id)).map(player => (
@@ -354,13 +354,24 @@ const TeamRoster = () => {
               onClick={() => handlePlayerClick(player)}
             />
           ))}
-          {roster.filter(p => activeSet.has(p.id)).length === 0 && (
-            <div className={`text-center py-6 text-text-muted bg-dark-secondary rounded-lg border border-dashed ${
-              dragOverZone === 'active' ? 'border-emerald-400 text-emerald-400' : 'border-dark-border'
-            }`}>
-              {draggedPlayerId ? 'Drop here to start' : isEditing ? 'Drag or tap players below to activate' : 'Edit your lineup to set starters'}
+          {/* Empty slot placeholders */}
+          {Array.from({ length: maxActive - roster.filter(p => activeSet.has(p.id)).length }, (_, i) => (
+            <div
+              key={`empty-${i}`}
+              className={`flex items-center gap-3 p-3 rounded-lg border border-dashed transition-colors ${
+                dragOverZone === 'active' ? 'border-emerald-400/60 bg-emerald-500/5' : 'border-dark-border/60 bg-dark-secondary/30'
+              }`}
+            >
+              <div className="w-10 h-10 rounded-full border-2 border-dashed border-dark-border/40 flex items-center justify-center flex-shrink-0">
+                <span className="text-text-muted/30 text-sm font-bold">G{roster.filter(p => activeSet.has(p.id)).length + i + 1}</span>
+              </div>
+              <span className="text-text-muted/40 text-sm">
+                {isEditing
+                  ? (draggedPlayerId ? 'Drop here' : 'Drag or tap a player to fill')
+                  : 'Empty starter slot'}
+              </span>
             </div>
-          )}
+          ))}
         </div>
       </div>
 
