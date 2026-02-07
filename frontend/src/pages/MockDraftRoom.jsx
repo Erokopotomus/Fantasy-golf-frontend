@@ -245,6 +245,12 @@ const DRAFT_CHAT = {
   ],
 }
 
+const SPEED_CONFIG = {
+  normal:  { aiDelay: 800, aiJitter: 400, toastDuration: 2000 },
+  fast:    { aiDelay: 250, aiJitter: 150, toastDuration: 1200 },
+  instant: { aiDelay: 40,  aiJitter: 20,  toastDuration: 600  },
+}
+
 const MockDraftRoom = () => {
   const navigate = useNavigate()
   const [config, setConfig] = useState(null)
@@ -265,6 +271,7 @@ const MockDraftRoom = () => {
   const [loadingPlayers, setLoadingPlayers] = useState(true)
   const [chatMessages, setChatMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
+  const [draftSpeed, setDraftSpeed] = useState('fast')
   const aiPickingRef = useRef(false)
   const timerRef = useRef(null)
   const boardRef = useRef(null)
@@ -272,6 +279,7 @@ const MockDraftRoom = () => {
   const picksRef = useRef([])
   const queueRef = useRef([])
   const allPlayersRef = useRef([])
+  const draftSpeedRef = useRef('fast')
 
   // Load config
   useEffect(() => {
@@ -348,6 +356,7 @@ const MockDraftRoom = () => {
 
   // Keep allPlayers ref in sync for timer/AI callbacks
   allPlayersRef.current = allPlayers
+  draftSpeedRef.current = draftSpeed
 
   const totalPicks = config ? config.teamCount * config.rosterSize : 0
   const draftedIds = picks.map(p => p.playerId)
@@ -404,7 +413,7 @@ const MockDraftRoom = () => {
       }
 
       setRecentPick(pick)
-      setTimeout(() => setRecentPick(null), 2500)
+      setTimeout(() => setRecentPick(null), SPEED_CONFIG[draftSpeedRef.current].toastDuration)
 
       const newPicks = [...prev, pick]
       if (newPicks.length >= config.teamCount * config.rosterSize) {
@@ -456,7 +465,8 @@ const MockDraftRoom = () => {
 
     aiPickingRef.current = true
 
-    const aiDelay = 1200 + Math.random() * 2000
+    const speedCfg = SPEED_CONFIG[draftSpeedRef.current]
+    const aiDelay = speedCfg.aiDelay + Math.random() * speedCfg.aiJitter
     const timeout = setTimeout(() => {
       const available = allPlayersRef.current.filter(p => !draftedIds.includes(p.id))
 
@@ -480,6 +490,31 @@ const MockDraftRoom = () => {
     setIsStarted(true)
     setIsPaused(false)
   }
+
+  const handleTogglePause = useCallback(() => {
+    setIsPaused(prev => {
+      if (!prev) {
+        // Pausing — reset aiPickingRef so it doesn't get stuck
+        aiPickingRef.current = false
+        clearInterval(timerRef.current)
+      }
+      return !prev
+    })
+  }, [])
+
+  // Spacebar toggles pause/resume
+  useEffect(() => {
+    if (!isStarted || isComplete) return
+    const handler = (e) => {
+      if (e.code !== 'Space') return
+      const tag = document.activeElement?.tagName?.toLowerCase()
+      if (tag === 'input' || tag === 'textarea') return
+      e.preventDefault()
+      handleTogglePause()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [isStarted, isComplete, handleTogglePause])
 
   const handleAddToQueue = (player) => {
     setQueue(prev => {
@@ -509,7 +544,9 @@ const MockDraftRoom = () => {
     if (picks.length === 0 || !config) return
     const lastPick = picks[picks.length - 1]
     if (lastPick.teamId === config.teams.find(t => t.isUser)?.id) return
-    if (Math.random() > 0.35) return
+    // Reduce chat frequency at instant speed to avoid flooding
+    const chatChance = draftSpeedRef.current === 'instant' ? 0.10 : 0.35
+    if (Math.random() > chatChance) return
 
     const templates = Math.random() > 0.25 ? DRAFT_CHAT.pick : DRAFT_CHAT.general
     const msg = typeof templates[0] === 'function'
@@ -518,6 +555,7 @@ const MockDraftRoom = () => {
     const otherTeams = config.teams.filter(t => !t.isUser && t.id !== lastPick.teamId)
     const sender = otherTeams[Math.floor(Math.random() * otherTeams.length)]
 
+    const chatDelay = draftSpeedRef.current === 'instant' ? 50 : 600 + Math.random() * 2000
     const delay = setTimeout(() => {
       setChatMessages(prev => [...prev, {
         id: `msg-ai-${Date.now()}`,
@@ -525,7 +563,7 @@ const MockDraftRoom = () => {
         text: msg,
         isUser: false,
       }])
-    }, 600 + Math.random() * 2000)
+    }, chatDelay)
     return () => clearTimeout(delay)
   }, [picks.length, config])
 
@@ -709,21 +747,29 @@ const MockDraftRoom = () => {
             {/* Center: Current Pick Status */}
             {isStarted && currentTeam && (
               <div className={`hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold ${
-                isUserTurn
-                  ? 'bg-accent-green/20 text-accent-green border border-accent-green/40'
-                  : 'bg-dark-tertiary text-text-secondary'
+                isPaused
+                  ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
+                  : isUserTurn
+                    ? 'bg-accent-green/20 text-accent-green border border-accent-green/40'
+                    : 'bg-dark-tertiary text-text-secondary'
               }`}>
-                {isUserTurn && (
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
-                  </span>
+                {isPaused ? (
+                  'PAUSED'
+                ) : (
+                  <>
+                    {isUserTurn && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                      </span>
+                    )}
+                    {isUserTurn ? 'YOUR PICK' : `${currentTeam.name} picking...`}
+                  </>
                 )}
-                {isUserTurn ? 'YOUR PICK' : `${currentTeam.name} picking...`}
               </div>
             )}
 
-            {/* Right: Pick counter + Timer + Start */}
+            {/* Right: Speed + Pause + Pick counter + Timer + Start */}
             <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               {!isStarted ? (
                 <Button onClick={handleStartDraft} size="sm">
@@ -731,6 +777,48 @@ const MockDraftRoom = () => {
                 </Button>
               ) : (
                 <>
+                  {/* Speed selector */}
+                  <div className="hidden sm:flex items-center bg-dark-primary rounded-lg border border-dark-border overflow-hidden">
+                    {[
+                      { key: 'normal', label: '1x' },
+                      { key: 'fast', label: '2x' },
+                      { key: 'instant', label: '>>' },
+                    ].map(s => (
+                      <button
+                        key={s.key}
+                        onClick={() => setDraftSpeed(s.key)}
+                        className={`px-2 py-1 text-[10px] font-bold transition-colors ${
+                          draftSpeed === s.key
+                            ? 'bg-accent-green/20 text-accent-green'
+                            : 'text-text-muted hover:text-white'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Pause/Play button */}
+                  <button
+                    onClick={handleTogglePause}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      isPaused
+                        ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
+                        : 'bg-dark-primary text-text-secondary hover:text-white border border-dark-border'
+                    }`}
+                    title={isPaused ? 'Resume (Space)' : 'Pause (Space)'}
+                  >
+                    {isPaused ? (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                      </svg>
+                    )}
+                  </button>
+
                   <div className="text-right hidden sm:block">
                     <p className="text-text-muted text-[10px] leading-tight">ROUND {pickInfo?.round || 1}</p>
                     <p className="text-white text-xs font-semibold">{currentPickNumber + 1}/{totalPicks}</p>
@@ -738,7 +826,7 @@ const MockDraftRoom = () => {
                   <div className="sm:hidden text-white text-xs font-semibold">
                     R{pickInfo?.round} · {currentPickNumber + 1}/{totalPicks}
                   </div>
-                  {isUserTurn && (
+                  {isUserTurn && !isPaused && (
                     <div className={`px-3 py-1.5 rounded-lg font-bold text-base tabular-nums ${
                       timer <= 10 ? 'bg-red-500/20 text-red-400' :
                       timer <= 30 ? 'bg-yellow-500/20 text-yellow-400' :
@@ -755,11 +843,18 @@ const MockDraftRoom = () => {
           {/* Mobile: Current pick banner */}
           {isStarted && currentTeam && (
             <div className={`sm:hidden mt-1.5 px-3 py-1.5 rounded-lg text-center text-xs font-semibold ${
-              isUserTurn
-                ? 'bg-accent-green/20 text-accent-green'
-                : 'bg-dark-tertiary text-text-secondary'
+              isPaused
+                ? 'bg-yellow-500/20 text-yellow-400'
+                : isUserTurn
+                  ? 'bg-accent-green/20 text-accent-green'
+                  : 'bg-dark-tertiary text-text-secondary'
             }`}>
-              {isUserTurn ? (
+              {isPaused ? (
+                <span className="flex items-center justify-center gap-1.5">
+                  PAUSED
+                  <span className="text-[10px] font-normal opacity-70">tap play to resume</span>
+                </span>
+              ) : isUserTurn ? (
                 <span className="flex items-center justify-center gap-1.5">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
@@ -768,6 +863,30 @@ const MockDraftRoom = () => {
                   YOUR PICK
                 </span>
               ) : `${currentTeam.name} picking...`}
+            </div>
+          )}
+
+          {/* Mobile speed selector */}
+          {isStarted && (
+            <div className="sm:hidden flex items-center justify-center gap-1 mt-1.5">
+              <span className="text-text-muted text-[10px] mr-1">Speed:</span>
+              {[
+                { key: 'normal', label: '1x' },
+                { key: 'fast', label: '2x' },
+                { key: 'instant', label: '>>' },
+              ].map(s => (
+                <button
+                  key={s.key}
+                  onClick={() => setDraftSpeed(s.key)}
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+                    draftSpeed === s.key
+                      ? 'bg-accent-green/20 text-accent-green'
+                      : 'text-text-muted'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
           )}
         </div>

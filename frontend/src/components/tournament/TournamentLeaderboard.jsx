@@ -300,8 +300,8 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           )}
 
           {/* Today */}
-          <div className={`text-center text-sm font-semibold ${getScoreColor(player.thru > 0 ? player.today : null)}`}>
-            {player.thru === 'F' || player.thru === 18 ? '–' : player.thru > 0 ? formatScore(player.today) : '–'}
+          <div className={`text-center text-sm font-semibold ${getScoreColor(player.thru === 'F' || player.thru === 18 || player.thru > 0 ? player.today : null)}`}>
+            {player.thru === 'F' || player.thru === 18 || player.thru > 0 ? formatScore(player.today) : '–'}
           </div>
 
           {/* Thru */}
