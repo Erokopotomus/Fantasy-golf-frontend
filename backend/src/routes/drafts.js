@@ -10,6 +10,7 @@ const {
   startNomination,
   placeBid: placeAuctionBid
 } = require('../services/draftTimer')
+const { recordTransaction } = require('../services/fantasyTracker')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -417,6 +418,18 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
         position: 'ACTIVE'
       }
     })
+
+    // Log draft pick transaction
+    recordTransaction({
+      type: 'DRAFT_PICK',
+      teamId: userTeam.id,
+      playerId,
+      playerName: pick.player.name,
+      leagueId: draft.leagueId,
+      draftRound: draft.currentRound,
+      draftPickNumber: draft.currentPick,
+      auctionAmount: amount || null,
+    }, prisma).catch(err => console.error('Draft transaction log failed:', err.message))
 
     // Update draft state
     const newPickNumber = draft.currentPick + 1

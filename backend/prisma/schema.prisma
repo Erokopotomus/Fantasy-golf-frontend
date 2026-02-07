@@ -13,23 +13,23 @@ datasource db {
 // ============ USER & AUTH ============
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String
-  name          String
-  avatar        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  teams         Team[]
-  leagues       LeagueMember[]
-  ownedLeagues  League[]       @relation("LeagueOwner")
-  trades        Trade[]        @relation("TradeInitiator")
-  receivedTrades Trade[]       @relation("TradeReceiver")
-  messages      Message[]
-  notifications Notification[]
-  picks         Pick[]
+  teams          Team[]
+  leagues        LeagueMember[]
+  ownedLeagues   League[]       @relation("LeagueOwner")
+  trades         Trade[]        @relation("TradeInitiator")
+  receivedTrades Trade[]        @relation("TradeReceiver")
+  messages       Message[]
+  notifications  Notification[]
+  picks          Pick[]
 
   @@map("users")
 }
@@ -37,24 +37,30 @@ model User {
 // ============ LEAGUES ============
 
 model League {
-  id            String       @id @default(cuid())
-  name          String
-  sport         String       @default("GOLF")
-  format        LeagueFormat @default(FULL_LEAGUE)
-  draftType     DraftType    @default(SNAKE)
-  status        LeagueStatus @default(DRAFT_PENDING)
-  inviteCode    String       @unique @default(cuid())
-  maxTeams      Int          @default(10)
-  isPublic      Boolean      @default(false)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id         String       @id @default(cuid())
+  name       String
+  sport      String       @default("GOLF")
+  format     LeagueFormat @default(FULL_LEAGUE)
+  draftType  DraftType    @default(SNAKE)
+  status     LeagueStatus @default(DRAFT_PENDING)
+  inviteCode String       @unique @default(cuid())
+  maxTeams   Int          @default(10)
+  isPublic   Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   // Owner
-  ownerId       String
-  owner         User         @relation("LeagueOwner", fields: [ownerId], references: [id])
+  ownerId String
+  owner   User   @relation("LeagueOwner", fields: [ownerId], references: [id])
+
+  // Sport & Scoring links
+  sportId         String?
+  sportRef        Sport?         @relation("LeagueSport", fields: [sportId], references: [id])
+  scoringSystemId String?
+  scoringSystem   ScoringSystem? @relation("LeagueScoring", fields: [scoringSystemId], references: [id])
 
   // Settings stored as JSON (scoring rules, roster settings, etc.)
-  settings      Json         @default("{}")
+  settings Json @default("{}")
 
   // Relations
   members       LeagueMember[]
@@ -64,19 +70,20 @@ model League {
   messages      Message[]
   matchups      Matchup[]
   picks         Pick[]
+  leagueSeasons LeagueSeason[]
 
   @@map("leagues")
 }
 
 model LeagueMember {
-  id        String     @id @default(cuid())
-  role      MemberRole @default(MEMBER)
-  joinedAt  DateTime   @default(now())
+  id       String     @id @default(cuid())
+  role     MemberRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
 
-  userId    String
-  user      User       @relation(fields: [userId], references: [id])
-  leagueId  String
-  league    League     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   @@unique([userId, leagueId])
   @@map("league_members")
@@ -85,156 +92,168 @@ model LeagueMember {
 // ============ TEAMS & ROSTERS ============
 
 model Team {
-  id            String    @id @default(cuid())
-  name          String
-  avatar        String?
-  avatarUrl     String?
-  totalPoints   Float     @default(0)
-  wins          Int       @default(0)
-  losses        Int       @default(0)
-  ties          Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  avatar      String?
+  avatarUrl   String?
+  totalPoints Float    @default(0)
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  ties        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  leagueId      String
-  league        League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   // Relations
-  roster        RosterEntry[]
-  homeMatchups  Matchup[]    @relation("HomeTeam")
-  awayMatchups  Matchup[]    @relation("AwayTeam")
-  draftPicks    DraftPick[]
-  sentTrades    Trade[]      @relation("TradeSender")
-  receivedTrades Trade[]     @relation("TradeReceiver")
+  roster             RosterEntry[]
+  homeMatchups       Matchup[]           @relation("HomeTeam")
+  awayMatchups       Matchup[]           @relation("AwayTeam")
+  draftPicks         DraftPick[]
+  sentTrades         Trade[]             @relation("TradeSender")
+  receivedTrades     Trade[]             @relation("TradeReceiver")
+  teamSeasons        TeamSeason[]
+  weeklyResults      WeeklyTeamResult[]
+  lineupSnapshots    LineupSnapshot[]
+  rosterTransactions RosterTransaction[]
 
   @@unique([userId, leagueId])
   @@map("teams")
 }
 
 model RosterEntry {
-  id          String      @id @default(cuid())
-  position    String      @default("BENCH") // ACTIVE, BENCH, IR
-  acquiredAt  DateTime    @default(now())
-  acquiredVia String      @default("DRAFT") // DRAFT, WAIVER, TRADE, FREE_AGENT
+  id          String   @id @default(cuid())
+  position    String   @default("BENCH") // ACTIVE, BENCH, IR
+  acquiredAt  DateTime @default(now())
+  acquiredVia String   @default("DRAFT") // DRAFT, WAIVER, TRADE, FREE_AGENT
 
-  teamId      String
-  team        Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  playerId    String
-  player      Player      @relation(fields: [playerId], references: [id])
+  // Soft-delete support
+  isActive  Boolean   @default(true)
+  droppedAt DateTime?
+
+  teamId   String
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
 
   @@unique([teamId, playerId])
+  @@index([teamId, isActive])
   @@map("roster_entries")
 }
 
 // ============ PLAYERS (Expanded for API data) ============
 
 model Player {
-  id              String    @id @default(cuid())
+  id String @id @default(cuid())
 
   // External IDs for cross-platform matching
-  externalId      String?   @unique // Primary API ID (SportsDataIO)
-  datagolfId      String?   @unique // DataGolf ID
-  pgaTourId       String?   // PGA Tour ID
-  sportRadarId    String?   // SportRadar ID
-  draftKingsId    String?   // DraftKings ID
-  fanDuelId       String?   // FanDuel ID
-  yahooId         String?   // Yahoo ID
-  espnId          String?   // ESPN ID
+  externalId   String? @unique // Primary API ID (SportsDataIO)
+  datagolfId   String? @unique // DataGolf ID
+  pgaTourId    String? // PGA Tour ID
+  sportRadarId String? // SportRadar ID
+  draftKingsId String? // DraftKings ID
+  fanDuelId    String? // FanDuel ID
+  yahooId      String? // Yahoo ID
+  espnId       String? // ESPN ID
 
   // Basic Info
-  firstName       String?
-  lastName        String?
-  name            String    // Full name for display
+  firstName String?
+  lastName  String?
+  name      String // Full name for display
 
   // Bio
-  country         String?
-  countryFlag     String?
-  birthCity       String?
-  birthState      String?
-  birthDate       DateTime?
-  college         String?
-  turnedPro       Int?      // Year turned pro
-  pgaDebut        Int?      // Year of PGA debut
-  weight          Int?      // In pounds
-  height          String?   // e.g., "6'1"
-  swings          String?   // R or L
+  country     String?
+  countryFlag String?
+  birthCity   String?
+  birthState  String?
+  birthDate   DateTime?
+  college     String?
+  turnedPro   Int? // Year turned pro
+  pgaDebut    Int? // Year of PGA debut
+  weight      Int? // In pounds
+  height      String? // e.g., "6'1"
+  swings      String? // R or L
 
   // Images
-  headshotUrl     String?   // Primary headshot
-  headshotBgUrl   String?   // Headshot with background
-  headshotNoBgUrl String?   // Headshot transparent background
+  headshotUrl     String? // Primary headshot
+  headshotBgUrl   String? // Headshot with background
+  headshotNoBgUrl String? // Headshot transparent background
 
   // Rankings
-  owgr            Float?    // Official World Golf Ranking points
-  owgrRank        Int?      // OWGR position
-  fedexRank       Int?      // FedEx Cup ranking
-  fedexPoints     Float?    // FedEx Cup points
-  datagolfRank    Int?      // DataGolf skill ranking
-  datagolfSkill   Float?    // DataGolf skill estimate
+  owgr          Float? // Official World Golf Ranking points
+  owgrRank      Int? // OWGR position
+  fedexRank     Int? // FedEx Cup ranking
+  fedexPoints   Float? // FedEx Cup points
+  datagolfRank  Int? // DataGolf skill ranking
+  datagolfSkill Float? // DataGolf skill estimate
 
   // Season Stats
-  events          Int       @default(0)
-  wins            Int       @default(0)
-  top5s           Int       @default(0)
-  top10s          Int       @default(0)
-  top25s          Int       @default(0)
-  cutsMade        Int       @default(0)
-  earnings        Float     @default(0)
+  events   Int   @default(0)
+  wins     Int   @default(0)
+  top5s    Int   @default(0)
+  top10s   Int   @default(0)
+  top25s   Int   @default(0)
+  cutsMade Int   @default(0)
+  earnings Float @default(0)
 
   // Scoring Stats
-  avgScore        Float?
-  scoringAvg      Float?    // Official scoring average
+  avgScore           Float?
+  scoringAvg         Float? // Official scoring average
   adjustedScoringAvg Float? // Adjusted for field strength
-  birdieAvg       Float?    // Birdies per round
-  eaglesTotal     Int       @default(0)
-  holesInOne      Int       @default(0)
-  bogeyFreeRounds Int       @default(0)
+  birdieAvg          Float? // Birdies per round
+  eaglesTotal        Int    @default(0)
+  holesInOne         Int    @default(0)
+  bogeyFreeRounds    Int    @default(0)
 
   // Strokes Gained (Comprehensive)
-  sgTotal         Float?    // Total strokes gained
-  sgPutting       Float?    // SG: Putting
-  sgAroundGreen   Float?    // SG: Around the Green
-  sgApproach      Float?    // SG: Approach the Green
-  sgOffTee        Float?    // SG: Off the Tee
-  sgTeeToGreen    Float?    // SG: Tee to Green (OTT + APP + ARG)
-  sgBallStriking  Float?    // SG: Ball Striking (OTT + APP)
+  sgTotal        Float? // Total strokes gained
+  sgPutting      Float? // SG: Putting
+  sgAroundGreen  Float? // SG: Around the Green
+  sgApproach     Float? // SG: Approach the Green
+  sgOffTee       Float? // SG: Off the Tee
+  sgTeeToGreen   Float? // SG: Tee to Green (OTT + APP + ARG)
+  sgBallStriking Float? // SG: Ball Striking (OTT + APP)
 
   // Traditional Stats
-  drivingDistance Float?    // Average driving distance
-  drivingAccuracy Float?    // Fairways hit %
-  gir             Float?    // Greens in Regulation %
-  scrambling      Float?    // Scrambling % (up-and-down)
-  sandSaves       Float?    // Sand save %
-  puttsPerRound   Float?    // Average putts per round
-  onePointPercentage Float? // 1-putt %
+  drivingDistance      Float? // Average driving distance
+  drivingAccuracy      Float? // Fairways hit %
+  gir                  Float? // Greens in Regulation %
+  scrambling           Float? // Scrambling % (up-and-down)
+  sandSaves            Float? // Sand save %
+  puttsPerRound        Float? // Average putts per round
+  onePointPercentage   Float? // 1-putt %
   threePointPercentage Float? // 3-putt %
 
   // Proximity Stats (from DataGolf)
-  proximityOverall Float?   // Average proximity to hole
-  proximityFairway Float?   // Proximity from fairway
-  proximityRough  Float?    // Proximity from rough
-  goodShotPct     Float?    // % of "good" shots
-  poorShotPct     Float?    // % of "poor" shots
+  proximityOverall Float? // Average proximity to hole
+  proximityFairway Float? // Proximity from fairway
+  proximityRough   Float? // Proximity from rough
+  goodShotPct      Float? // % of "good" shots
+  poorShotPct      Float? // % of "poor" shots
 
   // Status
-  isActive        Boolean   @default(true)
-  isAmateur       Boolean   @default(false)
-  primaryTour     String?   // PGA, DP World, LIV, Korn Ferry, etc.
+  isActive    Boolean @default(true)
+  isAmateur   Boolean @default(false)
+  primaryTour String? // PGA, DP World, LIV, Korn Ferry, etc.
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  rosters         RosterEntry[]
-  draftPicks      DraftPick[]
-  picks           Pick[]
-  performances    Performance[]
-  roundScores     RoundScore[]
-  predictions     PlayerPrediction[]
-  courseHistory   PlayerCourseHistory[]
-  dfsEntries      PlayerDFSEntry[]
+  rosters            RosterEntry[]
+  draftPicks         DraftPick[]
+  picks              Pick[]
+  performances       Performance[]
+  roundScores        RoundScore[]
+  predictions        PlayerPrediction[]
+  courseHistory      PlayerCourseHistory[]
+  dfsEntries         PlayerDFSEntry[]
+  fantasyScores      FantasyScore[]
+  seasonStats        PlayerSeasonStats[]
+  rosterTransactions RosterTransaction[]
 
   @@index([owgrRank])
   @@index([name])
@@ -244,61 +263,61 @@ model Player {
 // ============ COURSES ============
 
 model Course {
-  id              String    @id @default(cuid())
-  externalId      String?   @unique
+  id         String  @id @default(cuid())
+  externalId String? @unique
 
-  name            String
-  nickname        String?   // e.g., "The Stadium Course"
-  city            String?
-  state           String?
-  country         String?
-  zipCode         String?
-  timezone        String?
+  name     String
+  nickname String? // e.g., "The Stadium Course"
+  city     String?
+  state    String?
+  country  String?
+  zipCode  String?
+  timezone String?
 
   // Course specs
-  par             Int?
-  yardage         Int?
-  grassType       String?   // e.g., "Bermuda", "Bentgrass"
-  greenSpeed      Float?    // Stimpmeter reading
-  elevation       Int?      // Feet above sea level
+  par        Int?
+  yardage    Int?
+  grassType  String? // e.g., "Bermuda", "Bentgrass"
+  greenSpeed Float? // Stimpmeter reading
+  elevation  Int? // Feet above sea level
 
   // Design
-  architect       String?
-  yearBuilt       Int?
+  architect String?
+  yearBuilt Int?
 
   // Course characteristics (for course fit analysis)
-  drivingImportance   Float?  // How much driving matters (0-1)
-  approachImportance  Float?  // How much approach matters (0-1)
+  drivingImportance     Float? // How much driving matters (0-1)
+  approachImportance    Float? // How much approach matters (0-1)
   aroundGreenImportance Float? // How much short game matters (0-1)
-  puttingImportance   Float?  // How much putting matters (0-1)
+  puttingImportance     Float? // How much putting matters (0-1)
 
-  imageUrl        String?
+  imageUrl String?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  holes           Hole[]
-  tournaments     Tournament[]
-  playerHistory   PlayerCourseHistory[]
-  weather         Weather[]
+  holes         Hole[]
+  tournaments   Tournament[]
+  playerHistory PlayerCourseHistory[]
+  weather       Weather[]
 
   @@map("courses")
 }
 
 model Hole {
-  id              String    @id @default(cuid())
-  courseId        String
-  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  number          Int       // 1-18
-  par             Int
-  yardage         Int?
-  handicap        Int?      // Difficulty ranking 1-18
-  description     String?   // Notable features
+  number      Int // 1-18
+  par         Int
+  yardage     Int?
+  handicap    Int? // Difficulty ranking 1-18
+  description String? // Notable features
 
   // Relations
-  holeScores      HoleScore[]
+  holeScores HoleScore[]
 
   @@unique([courseId, number])
   @@map("holes")
@@ -307,59 +326,60 @@ model Hole {
 // ============ TOURNAMENTS (Expanded) ============
 
 model Tournament {
-  id              String           @id @default(cuid())
-  externalId      String?          @unique
-  datagolfId      String?          @unique
-  espnEventId     String?          // ESPN Scoreboard event ID
+  id          String  @id @default(cuid())
+  externalId  String? @unique
+  datagolfId  String? @unique
+  espnEventId String? // ESPN Scoreboard event ID
 
-  name            String
-  shortName       String?          // Abbreviated name
+  name      String
+  shortName String? // Abbreviated name
 
   // Venue
-  courseId        String?
-  course          Course?          @relation(fields: [courseId], references: [id])
-  location        String?          // Fallback location text
+  courseId String?
+  course   Course? @relation(fields: [courseId], references: [id])
+  location String? // Fallback location text
 
   // Schedule
-  startDate       DateTime
-  endDate         DateTime
-  timezone        String?
+  startDate DateTime
+  endDate   DateTime
+  timezone  String?
 
   // Tournament info
-  purse           Float?
-  winnerShare     Float?           // Winner's prize amount
-  fedexPoints     Float?           // FedEx points available
-  owgrPoints      Float?           // OWGR points available
+  purse       Float?
+  winnerShare Float? // Winner's prize amount
+  fedexPoints Float? // FedEx points available
+  owgrPoints  Float? // OWGR points available
 
-  format          TournamentFormat @default(STROKE)
-  tour            String?          // PGA, DP World, LIV, etc.
-  isMajor         Boolean          @default(false)
-  isPlayoff       Boolean          @default(false) // FedEx playoff event
-  isSignature     Boolean          @default(false) // Signature event (elevated)
+  format      TournamentFormat @default(STROKE)
+  tour        String? // PGA, DP World, LIV, etc.
+  isMajor     Boolean          @default(false)
+  isPlayoff   Boolean          @default(false) // FedEx playoff event
+  isSignature Boolean          @default(false) // Signature event (elevated)
 
   // Live state
-  status          TournamentStatus @default(UPCOMING)
-  currentRound    Int              @default(0)
-  cutLine         Int?             // Score to make cut
-  isWeatherDelay  Boolean          @default(false)
+  status         TournamentStatus @default(UPCOMING)
+  currentRound   Int              @default(0)
+  cutLine        Int? // Score to make cut
+  isWeatherDelay Boolean          @default(false)
 
   // Field
-  fieldSize       Int?
+  fieldSize Int?
 
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  performances    Performance[]
-  roundScores     RoundScore[]
-  holeScores      HoleScore[]
-  matchups        Matchup[]
-  picks           Pick[]
-  predictions     PlayerPrediction[]
-  bettingOdds     BettingOdds[]
-  dfsSlates       DFSSlate[]
-  weather         Weather[]
-  liveScores      LiveScore[]
+  performances Performance[]
+  roundScores  RoundScore[]
+  holeScores   HoleScore[]
+  matchups     Matchup[]
+  picks        Pick[]
+  predictions  PlayerPrediction[]
+  bettingOdds  BettingOdds[]
+  dfsSlates    DFSSlate[]
+  weather      Weather[]
+  liveScores   LiveScore[]
+  fantasyWeeks FantasyWeek[]
 
   @@map("tournaments")
 }
@@ -367,54 +387,54 @@ model Tournament {
 // ============ PERFORMANCE & SCORING ============
 
 model Performance {
-  id              String    @id @default(cuid())
-  tournamentId    String
-  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player     @relation(fields: [playerId], references: [id])
 
   // Result
-  position        Int?      // Final position (T5 = 5)
-  positionTied    Boolean   @default(false)
-  status          String?   // ACTIVE, CUT, WD, DQ
+  position     Int? // Final position (T5 = 5)
+  positionTied Boolean @default(false)
+  status       String? // ACTIVE, CUT, WD, DQ
 
   // Scores
-  totalScore      Int?      // Total strokes
-  totalToPar      Int?      // Score relative to par
-  round1          Int?
-  round2          Int?
-  round3          Int?
-  round4          Int?
+  totalScore Int? // Total strokes
+  totalToPar Int? // Score relative to par
+  round1     Int?
+  round2     Int?
+  round3     Int?
+  round4     Int?
 
   // Money & Points
-  earnings        Float     @default(0)
-  fedexPoints     Float     @default(0)
-  owgrPoints      Float     @default(0)
+  earnings    Float @default(0)
+  fedexPoints Float @default(0)
+  owgrPoints  Float @default(0)
 
   // Fantasy Points (multiple scoring systems)
-  fantasyPoints   Float     @default(0) // Your default scoring
-  dkPoints        Float?    // DraftKings points
-  fdPoints        Float?    // FanDuel points
-  yahooPoints     Float?    // Yahoo points
+  fantasyPoints Float  @default(0) // Your default scoring
+  dkPoints      Float? // DraftKings points
+  fdPoints      Float? // FanDuel points
+  yahooPoints   Float? // Yahoo points
 
   // Tournament-level stats
-  eagles          Int       @default(0)
-  birdies         Int       @default(0)
-  pars            Int       @default(0)
-  bogeys          Int       @default(0)
-  doubleBogeys    Int       @default(0)
-  worseThanDouble Int       @default(0)
+  eagles          Int @default(0)
+  birdies         Int @default(0)
+  pars            Int @default(0)
+  bogeys          Int @default(0)
+  doubleBogeys    Int @default(0)
+  worseThanDouble Int @default(0)
 
   // Strokes Gained for this tournament
-  sgTotal         Float?
-  sgPutting       Float?
-  sgAroundGreen   Float?
-  sgApproach      Float?
-  sgOffTee        Float?
-  sgTeeToGreen    Float?
+  sgTotal       Float?
+  sgPutting     Float?
+  sgAroundGreen Float?
+  sgApproach    Float?
+  sgOffTee      Float?
+  sgTeeToGreen  Float?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tournamentId, playerId])
   @@index([position])
@@ -422,85 +442,85 @@ model Performance {
 }
 
 model RoundScore {
-  id              String    @id @default(cuid())
-  tournamentId    String
-  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player     @relation(fields: [playerId], references: [id])
 
-  roundNumber     Int       // 1-4
-  score           Int?      // Total strokes this round
-  toPar           Int?      // Round score to par
+  roundNumber Int // 1-4
+  score       Int? // Total strokes this round
+  toPar       Int? // Round score to par
 
-  teeTime         DateTime? // Tee time for this round
-  startingHole    Int       @default(1) // For shotgun starts
+  teeTime      DateTime? // Tee time for this round
+  startingHole Int       @default(1) // For shotgun starts
 
   // Round stats
-  eagles          Int       @default(0)
-  birdies         Int       @default(0)
-  pars            Int       @default(0)
-  bogeys          Int       @default(0)
-  doubleBogeys    Int       @default(0)
-  worseThanDouble Int       @default(0)
+  eagles          Int @default(0)
+  birdies         Int @default(0)
+  pars            Int @default(0)
+  bogeys          Int @default(0)
+  doubleBogeys    Int @default(0)
+  worseThanDouble Int @default(0)
 
-  fairwaysHit     Int?
+  fairwaysHit      Int?
   fairwaysPossible Int?
-  greensHit       Int?
-  greensPossible  Int?
-  putts           Int?
+  greensHit        Int?
+  greensPossible   Int?
+  putts            Int?
 
   // Round-level strokes gained
-  sgTotal         Float?
-  sgPutting       Float?
-  sgAroundGreen   Float?
-  sgApproach      Float?
-  sgOffTee        Float?
+  sgTotal       Float?
+  sgPutting     Float?
+  sgAroundGreen Float?
+  sgApproach    Float?
+  sgOffTee      Float?
 
   // Driving
-  longestDrive    Int?
-  avgDrivingDist  Float?
+  longestDrive   Int?
+  avgDrivingDist Float?
 
   // Streak tracking
   consecutiveBirdies Int     @default(0)
-  bogeyFree       Boolean   @default(false)
+  bogeyFree          Boolean @default(false)
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  holeScores      HoleScore[]
+  holeScores HoleScore[]
 
   @@unique([tournamentId, playerId, roundNumber])
   @@map("round_scores")
 }
 
 model HoleScore {
-  id              String      @id @default(cuid())
-  roundScoreId    String
-  roundScore      RoundScore  @relation(fields: [roundScoreId], references: [id], onDelete: Cascade)
-  tournamentId    String
-  tournament      Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  holeId          String?
-  hole            Hole?       @relation(fields: [holeId], references: [id])
+  id           String     @id @default(cuid())
+  roundScoreId String
+  roundScore   RoundScore @relation(fields: [roundScoreId], references: [id], onDelete: Cascade)
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  holeId       String?
+  hole         Hole?      @relation(fields: [holeId], references: [id])
 
-  holeNumber      Int         // 1-18
-  par             Int
-  score           Int?
-  toPar           Int?        // -2 for eagle, -1 birdie, 0 par, etc.
+  holeNumber Int // 1-18
+  par        Int
+  score      Int?
+  toPar      Int? // -2 for eagle, -1 birdie, 0 par, etc.
 
   // Shot details (if available)
-  putts           Int?
-  penalties       Int         @default(0)
-  fairwayHit      Boolean?
-  greenHit        Boolean?
-  sandShot        Boolean     @default(false)
+  putts      Int?
+  penalties  Int      @default(0)
+  fairwayHit Boolean?
+  greenHit   Boolean?
+  sandShot   Boolean  @default(false)
 
   // Proximity (if available)
-  teeDistance     Int?        // Drive distance
-  approachDistance Int?       // Distance for approach shot
-  proximityToPin  Float?      // Feet from pin after approach
+  teeDistance      Int? // Drive distance
+  approachDistance Int? // Distance for approach shot
+  proximityToPin   Float? // Feet from pin after approach
 
-  createdAt       DateTime    @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([roundScoreId, holeNumber])
   @@map("hole_scores")
@@ -509,33 +529,33 @@ model HoleScore {
 // ============ LIVE SCORING ============
 
 model LiveScore {
-  id              String    @id @default(cuid())
-  tournamentId    String
-  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  playerId        String
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  playerId     String
 
   // Current state
-  position        Int?
-  positionTied    Boolean   @default(false)
-  totalToPar      Int?
-  todayToPar      Int?
-  thru            Int?      // Holes completed today (null = not started, 18 = finished)
-  currentRound    Int?
+  position     Int?
+  positionTied Boolean @default(false)
+  totalToPar   Int?
+  todayToPar   Int?
+  thru         Int? // Holes completed today (null = not started, 18 = finished)
+  currentRound Int?
 
   // Live scoring
-  currentHole     Int?
+  currentHole Int?
 
   // Live probabilities (from DataGolf)
-  winProbability      Float?
-  top5Probability     Float?
-  top10Probability    Float?
-  top20Probability    Float?
-  makeCutProbability  Float?
+  winProbability     Float?
+  top5Probability    Float?
+  top10Probability   Float?
+  top20Probability   Float?
+  makeCutProbability Float?
 
   // Live strokes gained
-  sgTotalLive     Float?
+  sgTotalLive Float?
 
-  lastUpdated     DateTime  @default(now())
+  lastUpdated DateTime @default(now())
 
   @@unique([tournamentId, playerId])
   @@index([position])
@@ -545,34 +565,34 @@ model LiveScore {
 // ============ PREDICTIONS ============
 
 model PlayerPrediction {
-  id              String    @id @default(cuid())
-  tournamentId    String
-  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player     @relation(fields: [playerId], references: [id])
 
   // Pre-tournament predictions
-  winProbability      Float?
-  top5Probability     Float?
-  top10Probability    Float?
-  top20Probability    Float?
-  makeCutProbability  Float?
+  winProbability     Float?
+  top5Probability    Float?
+  top10Probability   Float?
+  top20Probability   Float?
+  makeCutProbability Float?
 
   // Skill decomposition for this tournament
-  expectedSgTotal     Float?
-  expectedSgPutting   Float?
+  expectedSgTotal       Float?
+  expectedSgPutting     Float?
   expectedSgAroundGreen Float?
-  expectedSgApproach  Float?
-  expectedSgOffTee    Float?
+  expectedSgApproach    Float?
+  expectedSgOffTee      Float?
 
   // Course fit score
-  courseFitScore      Float?  // How well player's game fits the course
+  courseFitScore Float? // How well player's game fits the course
 
   // Sample size (rounds of data)
-  sampleSize          Int?
+  sampleSize Int?
 
-  source              String? // "datagolf", "sportsdata", "internal"
-  createdAt           DateTime @default(now())
+  source    String? // "datagolf", "sportsdata", "internal"
+  createdAt DateTime @default(now())
 
   @@unique([tournamentId, playerId])
   @@map("player_predictions")
@@ -581,25 +601,25 @@ model PlayerPrediction {
 // ============ BETTING ============
 
 model BettingOdds {
-  id              String    @id @default(cuid())
-  tournamentId    String
-  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  playerId        String
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  playerId     String
 
-  sportsbook      String    // e.g., "DraftKings", "FanDuel", "BetMGM"
-  marketType      String    // WIN, TOP_5, TOP_10, TOP_20, MAKE_CUT, FIRST_ROUND_LEADER
+  sportsbook String // e.g., "DraftKings", "FanDuel", "BetMGM"
+  marketType String // WIN, TOP_5, TOP_10, TOP_20, MAKE_CUT, FIRST_ROUND_LEADER
 
   // Odds in different formats
-  americanOdds    Int?      // e.g., +1500
-  decimalOdds     Float?    // e.g., 16.0
+  americanOdds       Int? // e.g., +1500
+  decimalOdds        Float? // e.g., 16.0
   impliedProbability Float? // e.g., 0.0625
 
   // Model comparison
-  fairOdds        Float?    // What the odds "should" be
-  edge            Float?    // (impliedProb - fairProb) = betting edge
+  fairOdds Float? // What the odds "should" be
+  edge     Float? // (impliedProb - fairProb) = betting edge
 
-  isAvailable     Boolean   @default(true)
-  lastUpdated     DateTime  @default(now())
+  isAvailable Boolean  @default(true)
+  lastUpdated DateTime @default(now())
 
   @@index([tournamentId, marketType])
   @@map("betting_odds")
@@ -608,42 +628,42 @@ model BettingOdds {
 // ============ DFS (Daily Fantasy Sports) ============
 
 model DFSSlate {
-  id              String    @id @default(cuid())
-  externalId      String?   @unique
-  tournamentId    String
-  tournament      Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  externalId   String?    @unique
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
-  platform        String    // DRAFTKINGS, FANDUEL, YAHOO
-  slateName       String?   // "Main Slate", "Showdown", etc.
-  slateType       String?   // CLASSIC, SHOWDOWN, SINGLE_GAME
+  platform  String // DRAFTKINGS, FANDUEL, YAHOO
+  slateName String? // "Main Slate", "Showdown", etc.
+  slateType String? // CLASSIC, SHOWDOWN, SINGLE_GAME
 
-  startTime       DateTime?
-  rosterSize      Int?
-  salaryCap       Int?      // e.g., 50000
+  startTime  DateTime?
+  rosterSize Int?
+  salaryCap  Int? // e.g., 50000
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   // Relations
-  entries         PlayerDFSEntry[]
+  entries PlayerDFSEntry[]
 
   @@map("dfs_slates")
 }
 
 model PlayerDFSEntry {
-  id              String    @id @default(cuid())
-  slateId         String
-  slate           DFSSlate  @relation(fields: [slateId], references: [id], onDelete: Cascade)
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
+  id       String   @id @default(cuid())
+  slateId  String
+  slate    DFSSlate @relation(fields: [slateId], references: [id], onDelete: Cascade)
+  playerId String
+  player   Player   @relation(fields: [playerId], references: [id])
 
-  salary          Int?      // Player's salary
-  ownership       Float?    // Projected or actual ownership %
-  value           Float?    // Points per $1000
+  salary    Int? // Player's salary
+  ownership Float? // Projected or actual ownership %
+  value     Float? // Points per $1000
 
   // Projections
-  projectedPoints Float?
-  projectedCeiling Float?   // Upside projection
-  projectedFloor  Float?    // Floor projection
+  projectedPoints  Float?
+  projectedCeiling Float? // Upside projection
+  projectedFloor   Float? // Floor projection
 
   // Actual results (filled after tournament)
   actualPoints    Float?
@@ -656,30 +676,30 @@ model PlayerDFSEntry {
 // ============ PLAYER COURSE HISTORY ============
 
 model PlayerCourseHistory {
-  id              String    @id @default(cuid())
-  playerId        String
-  player          Player    @relation(fields: [playerId], references: [id])
-  courseId        String
-  course          Course    @relation(fields: [courseId], references: [id])
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
 
   // Aggregated history
-  rounds          Int       @default(0)
-  avgScore        Float?
-  avgToPar        Float?
-  bestFinish      Int?      // Best position
-  cuts            Int       @default(0)
-  cutsMade        Int       @default(0)
-  wins            Int       @default(0)
-  top10s          Int       @default(0)
+  rounds     Int    @default(0)
+  avgScore   Float?
+  avgToPar   Float?
+  bestFinish Int? // Best position
+  cuts       Int    @default(0)
+  cutsMade   Int    @default(0)
+  wins       Int    @default(0)
+  top10s     Int    @default(0)
 
   // Course-specific strokes gained
-  sgTotal         Float?
-  sgPutting       Float?
-  sgApproach      Float?
-  sgOffTee        Float?
+  sgTotal    Float?
+  sgPutting  Float?
+  sgApproach Float?
+  sgOffTee   Float?
 
-  lastPlayed      DateTime?
-  updatedAt       DateTime  @updatedAt
+  lastPlayed DateTime?
+  updatedAt  DateTime  @updatedAt
 
   @@unique([playerId, courseId])
   @@map("player_course_history")
@@ -688,27 +708,27 @@ model PlayerCourseHistory {
 // ============ WEATHER ============
 
 model Weather {
-  id              String    @id @default(cuid())
-  tournamentId    String?
-  tournament      Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  courseId        String?
-  course          Course?   @relation(fields: [courseId], references: [id])
+  id           String      @id @default(cuid())
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  courseId     String?
+  course       Course?     @relation(fields: [courseId], references: [id])
 
-  timestamp       DateTime
-  round           Int?      // Which round, if applicable
+  timestamp DateTime
+  round     Int? // Which round, if applicable
 
   // Conditions
-  temperature     Float?    // Fahrenheit
-  feelsLike       Float?
-  humidity        Float?    // Percentage
-  windSpeed       Float?    // MPH
-  windGust        Float?    // MPH
-  windDirection   String?   // e.g., "NW"
-  precipitation   Float?    // Inches
-  conditions      String?   // "Sunny", "Cloudy", "Rain", etc.
+  temperature   Float? // Fahrenheit
+  feelsLike     Float?
+  humidity      Float? // Percentage
+  windSpeed     Float? // MPH
+  windGust      Float? // MPH
+  windDirection String? // e.g., "NW"
+  precipitation Float? // Inches
+  conditions    String? // "Sunny", "Cloudy", "Rain", etc.
 
   // Impact scoring
-  difficultyImpact Float?   // How much harder conditions make the course
+  difficultyImpact Float? // How much harder conditions make the course
 
   @@map("weather")
 }
@@ -716,59 +736,59 @@ model Weather {
 // ============ DRAFTS ============
 
 model Draft {
-  id            String      @id @default(cuid())
-  status        DraftStatus @default(SCHEDULED)
-  currentPick   Int         @default(1)
-  currentRound  Int         @default(1)
-  startTime     DateTime?
-  endTime       DateTime?
+  id           String      @id @default(cuid())
+  status       DraftStatus @default(SCHEDULED)
+  currentPick  Int         @default(1)
+  currentRound Int         @default(1)
+  startTime    DateTime?
+  endTime      DateTime?
 
   // Draft settings
-  timePerPick   Int         @default(90) // Seconds
-  totalRounds   Int         @default(6)
+  timePerPick Int @default(90) // Seconds
+  totalRounds Int @default(6)
 
-  leagueId      String
-  league        League      @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   // Relations
-  picks         DraftPick[]
-  draftOrder    DraftOrder[]
+  picks      DraftPick[]
+  draftOrder DraftOrder[]
 
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("drafts")
 }
 
 model DraftOrder {
-  id          String    @id @default(cuid())
-  position    Int
+  id       String @id @default(cuid())
+  position Int
 
-  draftId     String
-  draft       Draft     @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  teamId      String
+  draftId String
+  draft   Draft  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  teamId  String
 
   @@unique([draftId, position])
   @@map("draft_orders")
 }
 
 model DraftPick {
-  id          String    @id @default(cuid())
-  pickNumber  Int
-  round       Int
-  amount      Float?    // For auction drafts
-  pickedAt    DateTime  @default(now())
+  id         String   @id @default(cuid())
+  pickNumber Int
+  round      Int
+  amount     Float? // For auction drafts
+  pickedAt   DateTime @default(now())
 
   // Auction specific
-  nominatedBy String?   // Team that nominated (auction)
-  isAutoPick  Boolean   @default(false)
+  nominatedBy String? // Team that nominated (auction)
+  isAutoPick  Boolean @default(false)
 
-  draftId     String
-  draft       Draft     @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  teamId      String
-  team        Team      @relation(fields: [teamId], references: [id])
-  playerId    String
-  player      Player    @relation(fields: [playerId], references: [id])
+  draftId  String
+  draft    Draft  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  teamId   String
+  team     Team   @relation(fields: [teamId], references: [id])
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
 
   @@unique([draftId, pickNumber])
   @@map("draft_picks")
@@ -777,25 +797,27 @@ model DraftPick {
 // ============ MATCHUPS (H2H) ============
 
 model Matchup {
-  id            String    @id @default(cuid())
-  week          Int
-  homeScore     Float     @default(0)
-  awayScore     Float     @default(0)
-  isPlayoff     Boolean   @default(false)
-  playoffRound  Int?      // 1 = semifinals, 2 = finals, etc.
-  isComplete    Boolean   @default(false)
+  id           String  @id @default(cuid())
+  week         Int
+  homeScore    Float   @default(0)
+  awayScore    Float   @default(0)
+  isPlayoff    Boolean @default(false)
+  playoffRound Int? // 1 = semifinals, 2 = finals, etc.
+  isComplete   Boolean @default(false)
 
   leagueId      String
-  league        League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  league        League       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   tournamentId  String?
-  tournament    Tournament? @relation(fields: [tournamentId], references: [id])
+  tournament    Tournament?  @relation(fields: [tournamentId], references: [id])
+  fantasyWeekId String?
+  fantasyWeek   FantasyWeek? @relation(fields: [fantasyWeekId], references: [id])
   homeTeamId    String
-  homeTeam      Team      @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  homeTeam      Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
   awayTeamId    String
-  awayTeam      Team      @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  awayTeam      Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("matchups")
 }
@@ -803,22 +825,22 @@ model Matchup {
 // ============ PICKS (One-and-Done) ============
 
 model Pick {
-  id            String    @id @default(cuid())
-  tier          Int       @default(1)
-  multiplier    Float     @default(1.0)
-  points        Float     @default(0)
-  locked        Boolean   @default(false) // Locked once tournament starts
+  id         String  @id @default(cuid())
+  tier       Int     @default(1)
+  multiplier Float   @default(1.0)
+  points     Float   @default(0)
+  locked     Boolean @default(false) // Locked once tournament starts
 
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  leagueId      String
-  league        League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  playerId      String
-  player        Player    @relation(fields: [playerId], references: [id])
-  tournamentId  String
-  tournament    Tournament @relation(fields: [tournamentId], references: [id])
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  leagueId     String
+  league       League     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player     @relation(fields: [playerId], references: [id])
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
 
-  createdAt     DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([userId, leagueId, tournamentId])
   @@map("picks")
@@ -827,36 +849,36 @@ model Pick {
 // ============ TRADES ============
 
 model Trade {
-  id              String      @id @default(cuid())
-  status          TradeStatus @default(PENDING)
-  message         String?
+  id      String      @id @default(cuid())
+  status  TradeStatus @default(PENDING)
+  message String?
 
   // Review period
-  proposedAt      DateTime    @default(now())
-  expiresAt       DateTime?   // Auto-reject after this time
-  reviewUntil     DateTime?   // League review period ends
+  proposedAt  DateTime  @default(now())
+  expiresAt   DateTime? // Auto-reject after this time
+  reviewUntil DateTime? // League review period ends
 
-  initiatorId     String
-  initiator       User        @relation("TradeInitiator", fields: [initiatorId], references: [id])
-  receiverId      String
-  receiver        User        @relation("TradeReceiver", fields: [receiverId], references: [id])
-  senderTeamId    String
-  senderTeam      Team        @relation("TradeSender", fields: [senderTeamId], references: [id])
-  receiverTeamId  String
-  receiverTeam    Team        @relation("TradeReceiver", fields: [receiverTeamId], references: [id])
-  leagueId        String
-  league          League      @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  initiatorId    String
+  initiator      User   @relation("TradeInitiator", fields: [initiatorId], references: [id])
+  receiverId     String
+  receiver       User   @relation("TradeReceiver", fields: [receiverId], references: [id])
+  senderTeamId   String
+  senderTeam     Team   @relation("TradeSender", fields: [senderTeamId], references: [id])
+  receiverTeamId String
+  receiverTeam   Team   @relation("TradeReceiver", fields: [receiverTeamId], references: [id])
+  leagueId       String
+  league         League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   // Store player IDs as JSON arrays
-  senderPlayers   Json        @default("[]")
-  receiverPlayers Json        @default("[]")
+  senderPlayers   Json @default("[]")
+  receiverPlayers Json @default("[]")
 
   // Optional: draft pick trades
-  senderPicks     Json        @default("[]")
-  receiverPicks   Json        @default("[]")
+  senderPicks   Json @default("[]")
+  receiverPicks Json @default("[]")
 
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("trades")
 }
@@ -864,15 +886,15 @@ model Trade {
 // ============ MESSAGES ============
 
 model Message {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   content     String
-  messageType String    @default("CHAT") // CHAT, SYSTEM, TRADE, DRAFT
-  createdAt   DateTime  @default(now())
+  messageType String   @default("CHAT") // CHAT, SYSTEM, TRADE, DRAFT
+  createdAt   DateTime @default(now())
 
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  leagueId    String
-  league      League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   @@index([leagueId, createdAt])
   @@map("messages")
@@ -881,20 +903,339 @@ model Message {
 // ============ NOTIFICATIONS ============
 
 model Notification {
-  id          String    @id @default(cuid())
-  type        String    // TRADE_OFFER, DRAFT_PICK, LEAGUE_INVITE, SCORE_UPDATE, etc.
-  title       String
-  message     String
-  read        Boolean   @default(false)
-  actionUrl   String?   // Deep link to relevant page
-  data        Json?
-  createdAt   DateTime  @default(now())
+  id        String   @id @default(cuid())
+  type      String // TRADE_OFFER, DRAFT_PICK, LEAGUE_INVITE, SCORE_UPDATE, etc.
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  actionUrl String? // Deep link to relevant page
+  data      Json?
+  createdAt DateTime @default(now())
 
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   @@index([userId, read])
   @@map("notifications")
+}
+
+// ============ SPORT & SEASON ABSTRACTION (Phase 1) ============
+
+model Sport {
+  id       String  @id @default(cuid())
+  slug     String  @unique // "golf", "nfl", "nba"
+  name     String
+  isActive Boolean @default(true)
+  config   Json    @default("{}") // seasonType, weekDefinition, statCategories, rosterPositions, defaultScoringPresets
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  seasons        Season[]
+  scoringSystems ScoringSystem[]
+  leagues        League[]        @relation("LeagueSport")
+
+  @@map("sports")
+}
+
+model Season {
+  id        String   @id @default(cuid())
+  sportId   String
+  sport     Sport    @relation(fields: [sportId], references: [id])
+  name      String // "2025-26 PGA Tour Season"
+  year      Int // Primary year (e.g. 2025 for 2025-26 season)
+  slug      String // "2025-26"
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  weeks          FantasyWeek[]
+  leagueSeasons  LeagueSeason[]
+  playerStats    PlayerSeasonStats[]
+  scoringRecords FantasyScore[]
+
+  @@unique([sportId, slug])
+  @@map("seasons")
+}
+
+model FantasyWeek {
+  id         String            @id @default(cuid())
+  seasonId   String
+  season     Season            @relation(fields: [seasonId], references: [id])
+  weekNumber Int
+  name       String // "The Players Championship" or "Week 12"
+  startDate  DateTime
+  endDate    DateTime
+  status     FantasyWeekStatus @default(UPCOMING)
+
+  // Sport-specific link (nullable — golf links to tournament, NFL links to game week)
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  matchups           Matchup[]
+  fantasyScores      FantasyScore[]
+  weeklyResults      WeeklyTeamResult[]
+  lineupSnapshots    LineupSnapshot[]
+  rosterTransactions RosterTransaction[]
+
+  @@unique([seasonId, weekNumber])
+  @@map("fantasy_weeks")
+}
+
+model ScoringSystem {
+  id        String  @id @default(cuid())
+  sportId   String
+  sport     Sport   @relation(fields: [sportId], references: [id])
+  name      String // "Standard", "DraftKings", "Custom League X"
+  slug      String // "standard", "draftkings"
+  isDefault Boolean @default(false)
+  isSystem  Boolean @default(true) // System presets vs user-created
+  rules     Json // Full scoring config (positionPoints, holeScoring, bonuses, strokesGained, etc.)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  leagues       League[]       @relation("LeagueScoring")
+  fantasyScores FantasyScore[]
+
+  @@unique([sportId, slug])
+  @@map("scoring_systems")
+}
+
+// ============ FANTASY PERFORMANCE TRACKING (Phase 2) ============
+
+model FantasyScore {
+  id              String        @id @default(cuid())
+  fantasyWeekId   String
+  fantasyWeek     FantasyWeek   @relation(fields: [fantasyWeekId], references: [id])
+  scoringSystemId String
+  scoringSystem   ScoringSystem @relation(fields: [scoringSystemId], references: [id])
+  seasonId        String
+  season          Season        @relation(fields: [seasonId], references: [id])
+
+  // Player reference — links to Player model
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  totalPoints Float
+  breakdown   Json  @default("{}") // { position, holes, bonuses, strokesGained }
+  rank        Int? // Rank among all players that week for this scoring system
+
+  // Link to sport-specific performance (golf: Performance, future NFL: GamePerformance)
+  performanceId String? // FK to Performance (golf) — nullable for sport flexibility
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([fantasyWeekId, scoringSystemId, playerId])
+  @@index([playerId, fantasyWeekId])
+  @@index([fantasyWeekId, totalPoints])
+  @@index([seasonId, playerId])
+  @@map("fantasy_scores")
+}
+
+model LeagueSeason {
+  id       String             @id @default(cuid())
+  leagueId String
+  league   League             @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonId String
+  season   Season             @relation(fields: [seasonId], references: [id])
+  status   LeagueSeasonStatus @default(ACTIVE)
+
+  championTeamId String?
+  finalStandings Json? // [{ teamId, rank, totalPoints }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  teamSeasons        TeamSeason[]
+  weeklyResults      WeeklyTeamResult[]
+  lineupSnapshots    LineupSnapshot[]
+  rosterTransactions RosterTransaction[]
+
+  @@unique([leagueId, seasonId])
+  @@map("league_seasons")
+}
+
+model TeamSeason {
+  id             String       @id @default(cuid())
+  leagueSeasonId String
+  leagueSeason   LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
+  teamId         String
+  team           Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // Aggregated season stats
+  totalPoints Float   @default(0)
+  wins        Int     @default(0)
+  losses      Int     @default(0)
+  ties        Int     @default(0)
+  finalRank   Int?
+  isChampion  Boolean @default(false)
+
+  // Extremes
+  bestWeekPoints  Float?
+  worstWeekPoints Float?
+  maxWinStreak    Int    @default(0)
+
+  // Flexible stats (avgPointsPerWeek, consistency, etc.)
+  stats Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  weeklyResults WeeklyTeamResult[]
+
+  @@unique([leagueSeasonId, teamId])
+  @@map("team_seasons")
+}
+
+model WeeklyTeamResult {
+  id             String       @id @default(cuid())
+  leagueSeasonId String
+  leagueSeason   LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
+  teamSeasonId   String
+  teamSeason     TeamSeason   @relation(fields: [teamSeasonId], references: [id], onDelete: Cascade)
+  fantasyWeekId  String
+  fantasyWeek    FantasyWeek  @relation(fields: [fantasyWeekId], references: [id])
+  teamId         String
+  team           Team         @relation(fields: [teamId], references: [id])
+  weekNumber     Int
+
+  // Scoring
+  totalPoints  Float @default(0)
+  playerScores Json  @default("[]") // [{ playerId, playerName, points, breakdown }]
+
+  // H2H results (nullable for non-H2H formats)
+  opponentTeamId String?
+  opponentPoints Float?
+  result         MatchResult?
+
+  // Analytics
+  optimalPoints     Float? // Best possible lineup
+  pointsLeftOnBench Float? // optimalPoints - totalPoints
+  weekRank          Int? // Rank among all teams in league that week
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([leagueSeasonId, teamId, fantasyWeekId])
+  @@index([fantasyWeekId])
+  @@map("weekly_team_results")
+}
+
+model LineupSnapshot {
+  id             String       @id @default(cuid())
+  leagueSeasonId String
+  leagueSeason   LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
+  fantasyWeekId  String
+  fantasyWeek    FantasyWeek  @relation(fields: [fantasyWeekId], references: [id])
+  teamId         String
+  team           Team         @relation(fields: [teamId], references: [id])
+
+  // Lineup at lock time
+  lineup        Json   @default("[]") // [{ playerId, playerName, position: "ACTIVE"|"BENCH", slot }]
+  activePoints  Float? // Points from active players
+  benchPoints   Float? // Points from bench players
+  optimalPoints Float? // Best possible arrangement
+
+  lockedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([leagueSeasonId, fantasyWeekId, teamId])
+  @@map("lineup_snapshots")
+}
+
+model RosterTransaction {
+  id             String        @id @default(cuid())
+  leagueSeasonId String?
+  leagueSeason   LeagueSeason? @relation(fields: [leagueSeasonId], references: [id])
+  fantasyWeekId  String?
+  fantasyWeek    FantasyWeek?  @relation(fields: [fantasyWeekId], references: [id])
+  teamId         String
+  team           Team          @relation(fields: [teamId], references: [id])
+
+  type TransactionType
+
+  // Player involved
+  playerId   String
+  player     Player @relation(fields: [playerId], references: [id])
+  playerName String // Denormalized for easy display
+
+  // For trades — the other side
+  otherTeamId     String?
+  otherPlayerId   String?
+  otherPlayerName String?
+
+  // Draft-specific
+  draftRound      Int?
+  draftPickNumber Int?
+  auctionAmount   Float?
+
+  // Waiver-specific
+  waiverBid      Float?
+  waiverPriority Int?
+
+  // Trade-specific
+  tradeId String?
+
+  // Computed after the fact
+  fantasyPointsGenerated Float? // Total fantasy points this player scored after acquisition
+
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([playerId])
+  @@index([leagueSeasonId, type])
+  @@index([teamId])
+  @@index([timestamp])
+  @@map("roster_transactions")
+}
+
+// ============ ANALYTICS (Phase 3 — schema only, services deferred) ============
+
+model PlayerSeasonStats {
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  // Universal counting stats
+  events   Int   @default(0)
+  wins     Int   @default(0)
+  top5s    Int   @default(0)
+  top10s   Int   @default(0)
+  cutsMade Int   @default(0)
+  earnings Float @default(0)
+
+  // Fantasy points by scoring system: { "standard": 245.5, "draftkings": 312.0 }
+  fantasyPoints    Json @default("{}")
+  avgFantasyPoints Json @default("{}")
+
+  // Sport-specific stats (golf: SG breakdown; NFL: passing/rushing/receiving)
+  stats Json @default("{}")
+
+  // Rankings: { owgr, fedex, fantasyRank: { standard: 15, draftkings: 22 } }
+  rankings Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, seasonId])
+  @@index([seasonId])
+  @@map("player_season_stats")
 }
 
 // ============ ENUMS ============
@@ -954,4 +1295,34 @@ enum MemberRole {
   OWNER
   ADMIN
   MEMBER
+}
+
+enum FantasyWeekStatus {
+  UPCOMING
+  LOCKED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum LeagueSeasonStatus {
+  ACTIVE
+  PLAYOFFS
+  COMPLETED
+}
+
+enum MatchResult {
+  WIN
+  LOSS
+  TIE
+}
+
+enum TransactionType {
+  DRAFT_PICK
+  WAIVER_CLAIM
+  FREE_AGENT_ADD
+  FREE_AGENT_DROP
+  TRADE_ACQUIRED
+  TRADE_SENT
+  COMMISSIONER_ADD
+  COMMISSIONER_DROP
 }

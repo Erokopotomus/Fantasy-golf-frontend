@@ -276,6 +276,22 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('finalize', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Sunday 10:30 PM ET — Fantasy scoring + weekly results (after finalize)
+    const fantasyTracker = require('./services/fantasyTracker')
+    cron.schedule('30 22 * * 0', async () => {
+      cronLog('fantasy', 'Processing completed fantasy weeks')
+      try {
+        const results = await fantasyTracker.processCompletedWeeks(cronPrisma)
+        if (results.length === 0) {
+          cronLog('fantasy', 'No unscored weeks to process')
+        } else {
+          for (const r of results) {
+            cronLog('fantasy', `${r.weekName}: ${r.scored} scores, ${r.snapped} snapshots, ${r.computed} results`)
+          }
+        }
+      } catch (e) { cronLog('fantasy', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     console.log('[Cron] DataGolf sync jobs scheduled')
   } else {
     console.log('[Cron] DATAGOLF_API_KEY not set — sync jobs disabled')

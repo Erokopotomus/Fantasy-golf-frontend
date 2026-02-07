@@ -157,6 +157,7 @@ async function calculateLeagueStandings(leagueId, prisma) {
         include: {
           user: { select: { id: true, name: true, avatar: true } },
           roster: {
+            where: { isActive: true },
             include: {
               player: {
                 include: {
@@ -299,6 +300,7 @@ async function calculateTournamentScoring(tournamentId, leagueId, prisma) {
         include: {
           user: { select: { id: true, name: true, avatar: true } },
           roster: {
+            where: { isActive: true },
             include: {
               player: {
                 include: {

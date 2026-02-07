@@ -1,6 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
+const { recordTransaction } = require('../services/fantasyTracker')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -18,6 +19,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
           select: { id: true, name: true, format: true, status: true }
         },
         roster: {
+          where: { isActive: true },
           include: {
             player: true
           }
@@ -95,22 +97,24 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Not authorized' } })
     }
 
-    // Check if player is already on roster
-    const existingEntry = team.roster.find(r => r.playerId === playerId)
+    // Check if player is already on active roster
+    const activeRoster = team.roster.filter(r => r.isActive)
+    const existingEntry = activeRoster.find(r => r.playerId === playerId)
     if (existingEntry) {
       return res.status(400).json({ error: { message: 'Player already on roster' } })
     }
 
-    // Check roster size limit
+    // Check roster size limit (only count active entries)
     const maxRosterSize = team.league.settings?.rosterSize || 6
-    if (team.roster.length >= maxRosterSize) {
+    if (activeRoster.length >= maxRosterSize) {
       return res.status(400).json({ error: { message: 'Roster is full' } })
     }
 
-    // Check if player is available (not on another team in this league)
+    // Check if player is available (not on another active roster in this league)
     const playerOnOtherTeam = await prisma.rosterEntry.findFirst({
       where: {
         playerId,
+        isActive: true,
         team: { leagueId: team.leagueId }
       }
     })
@@ -131,13 +135,22 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
       }
     })
 
+    // Log transaction
+    await recordTransaction({
+      type: 'FREE_AGENT_ADD',
+      teamId: req.params.id,
+      playerId,
+      playerName: rosterEntry.player.name,
+      leagueId: team.leagueId,
+    }, prisma).catch(err => console.error('Transaction log failed:', err.message))
+
     res.status(201).json({ rosterEntry })
   } catch (error) {
     next(error)
   }
 })
 
-// POST /api/teams/:id/roster/drop - Drop player from roster
+// POST /api/teams/:id/roster/drop - Drop player from roster (soft-delete)
 router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
   try {
     const { playerId } = req.body
@@ -154,14 +167,29 @@ router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Not authorized' } })
     }
 
-    await prisma.rosterEntry.delete({
+    // Soft-delete: mark as inactive with timestamp
+    const entry = await prisma.rosterEntry.update({
       where: {
         teamId_playerId: {
           teamId: req.params.id,
           playerId
         }
-      }
+      },
+      data: {
+        isActive: false,
+        droppedAt: new Date(),
+      },
+      include: { player: { select: { name: true } } }
     })
+
+    // Log transaction
+    await recordTransaction({
+      type: 'FREE_AGENT_DROP',
+      teamId: req.params.id,
+      playerId,
+      playerName: entry.player.name,
+      leagueId: team.leagueId,
+    }, prisma).catch(err => console.error('Transaction log failed:', err.message))
 
     res.json({ message: 'Player dropped' })
   } catch (error) {
@@ -216,7 +244,7 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
 
     const team = await prisma.team.findUnique({
       where: { id: req.params.id },
-      include: { roster: true, league: true }
+      include: { roster: { where: { isActive: true } }, league: true }
     })
 
     if (!team) {
@@ -233,7 +261,7 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: { message: `Maximum ${maxActive} active players allowed` } })
     }
 
-    // Verify all player IDs are on this team's roster
+    // Verify all player IDs are on this team's active roster
     const rosterPlayerIds = team.roster.map(r => r.playerId)
     const invalidIds = activePlayerIds.filter(id => !rosterPlayerIds.includes(id))
     if (invalidIds.length > 0) {
@@ -253,7 +281,7 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
     // Return updated roster
     const updatedTeam = await prisma.team.findUnique({
       where: { id: req.params.id },
-      include: { roster: { include: { player: true } } }
+      include: { roster: { where: { isActive: true }, include: { player: true } } }
     })
 
     res.json({ roster: updatedTeam.roster })

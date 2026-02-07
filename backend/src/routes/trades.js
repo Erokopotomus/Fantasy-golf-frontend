@@ -1,6 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
+const { recordTransaction } = require('../services/fantasyTracker')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -198,6 +199,58 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
         data: { status: 'ACCEPTED' }
       })
     ])
+
+    // Log roster transactions for both sides
+    const logTransactions = async () => {
+      // Resolve player names for logging
+      const allIds = [...senderPlayerIds, ...receiverPlayerIds]
+      const players = allIds.length > 0
+        ? await prisma.player.findMany({ where: { id: { in: allIds } }, select: { id: true, name: true } })
+        : []
+      const nameMap = Object.fromEntries(players.map(p => [p.id, p.name]))
+
+      for (const playerId of senderPlayerIds) {
+        await recordTransaction({
+          type: 'TRADE_SENT',
+          teamId: trade.senderTeamId,
+          playerId,
+          playerName: nameMap[playerId] || 'Unknown',
+          leagueId: trade.leagueId,
+          otherTeamId: trade.receiverTeamId,
+          tradeId: trade.id,
+        }, prisma)
+        await recordTransaction({
+          type: 'TRADE_ACQUIRED',
+          teamId: trade.receiverTeamId,
+          playerId,
+          playerName: nameMap[playerId] || 'Unknown',
+          leagueId: trade.leagueId,
+          otherTeamId: trade.senderTeamId,
+          tradeId: trade.id,
+        }, prisma)
+      }
+      for (const playerId of receiverPlayerIds) {
+        await recordTransaction({
+          type: 'TRADE_SENT',
+          teamId: trade.receiverTeamId,
+          playerId,
+          playerName: nameMap[playerId] || 'Unknown',
+          leagueId: trade.leagueId,
+          otherTeamId: trade.senderTeamId,
+          tradeId: trade.id,
+        }, prisma)
+        await recordTransaction({
+          type: 'TRADE_ACQUIRED',
+          teamId: trade.senderTeamId,
+          playerId,
+          playerName: nameMap[playerId] || 'Unknown',
+          leagueId: trade.leagueId,
+          otherTeamId: trade.receiverTeamId,
+          tradeId: trade.id,
+        }, prisma)
+      }
+    }
+    logTransactions().catch(err => console.error('Trade transaction log failed:', err.message))
 
     // Notify initiator
     await prisma.notification.create({

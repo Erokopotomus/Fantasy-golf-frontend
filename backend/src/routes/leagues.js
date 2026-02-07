@@ -145,6 +145,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
               select: { id: true, name: true, avatar: true }
             },
             roster: {
+              where: { isActive: true },
               include: {
                 player: true
               }
