@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
+const { recordTransaction } = require('./fantasyTracker')
 
 // In-memory timers for auto-pick on timeout
 const activeTimers = new Map() // draftId -> timeoutId
@@ -104,9 +105,21 @@ async function executeAutoPick(draftId, io) {
       data: {
         teamId: currentDrafter.teamId,
         playerId: bestPlayer.id,
-        position: 'ACTIVE'
+        position: 'ACTIVE',
+        rosterStatus: 'ACTIVE'
       }
     })
+
+    // Log draft pick transaction
+    recordTransaction({
+      type: 'DRAFT_PICK',
+      teamId: currentDrafter.teamId,
+      playerId: bestPlayer.id,
+      playerName: bestPlayer.name,
+      leagueId: draft.leagueId,
+      draftRound: draft.currentRound,
+      draftPickNumber: draft.currentPick,
+    }, prisma).catch(err => console.error('[AutoPick] Transaction log failed:', err.message))
 
     // Update draft state
     const newPickNumber = draft.currentPick + 1
@@ -351,9 +364,22 @@ async function awardPlayer(draftId, io) {
       data: {
         teamId: highBidderTeamId,
         playerId,
-        position: 'ACTIVE'
+        position: 'ACTIVE',
+        rosterStatus: 'ACTIVE'
       }
     })
+
+    // Log draft pick transaction
+    recordTransaction({
+      type: 'DRAFT_PICK',
+      teamId: highBidderTeamId,
+      playerId,
+      playerName,
+      leagueId: draft.leagueId,
+      draftRound: draft.currentRound,
+      draftPickNumber: draft.currentPick,
+      auctionAmount: currentBid,
+    }, prisma).catch(err => console.error('[Auction] Transaction log failed:', err.message))
 
     // Update draft pick counter
     const newPickNumber = draft.currentPick + 1
@@ -408,15 +434,55 @@ async function awardPlayer(draftId, io) {
     state.phase = 'nominating'
     state.currentNominatorIndex = (state.currentNominatorIndex + 1) % totalTeams
 
+    const nextNominatorTeamId = state.nominationOrder[state.currentNominatorIndex]
+
     io.to(`draft-${draftId}`).emit('auction-next-nominator', {
-      nominatorTeamId: state.nominationOrder[state.currentNominatorIndex],
+      nominatorTeamId: nextNominatorTeamId,
       budgets: state.budgets
     })
+
+    // Start 30s auto-nomination timer in case nominator goes AFK
+    state.timer = setTimeout(async () => {
+      try {
+        await autoNominate(draftId, nextNominatorTeamId, io)
+      } catch (err) {
+        console.error(`[Auction] Auto-nomination error for draft ${draftId}:`, err.message)
+      }
+    }, 32000) // 30s + 2s grace
 
     console.log(`[Auction] Draft ${draftId}: ${playerName} won by team ${highBidderTeamId} for $${currentBid}`)
   } catch (err) {
     console.error(`[Auction] Award error for draft ${draftId}:`, err.message)
   }
+}
+
+/**
+ * Auto-nominate the best available player at $1 when the nominator goes AFK.
+ */
+async function autoNominate(draftId, nominatorTeamId, io) {
+  const state = getAuctionState(draftId)
+  if (!state || state.phase !== 'nominating') return
+
+  const draft = await prisma.draft.findUnique({
+    where: { id: draftId },
+    select: { picks: { select: { playerId: true } } }
+  })
+  if (!draft) return
+
+  const draftedIds = draft.picks.map(p => p.playerId)
+  const bestPlayer = await prisma.player.findFirst({
+    where: {
+      isActive: true,
+      ...(draftedIds.length > 0 && { id: { notIn: draftedIds } })
+    },
+    orderBy: [{ owgrRank: { sort: 'asc', nulls: 'last' } }],
+    select: { id: true, name: true }
+  })
+
+  if (!bestPlayer) return
+
+  console.log(`[Auction] Draft ${draftId}: Auto-nominating ${bestPlayer.name} at $1 for AFK team ${nominatorTeamId}`)
+  await startNomination(draftId, bestPlayer.id, 1, nominatorTeamId, io)
 }
 
 module.exports = {
