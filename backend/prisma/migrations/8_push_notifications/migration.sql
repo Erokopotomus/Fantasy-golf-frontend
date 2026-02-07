@@ -1,8 +1,11 @@
 -- CreateEnum
-CREATE TYPE "PushTokenType" AS ENUM ('WEB_PUSH', 'APNS', 'FCM');
+DO $$ BEGIN
+    CREATE TYPE "PushTokenType" AS ENUM ('WEB_PUSH', 'APNS', 'FCM');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable
-CREATE TABLE "push_tokens" (
+CREATE TABLE IF NOT EXISTS "push_tokens" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" "PushTokenType" NOT NULL,
@@ -21,13 +24,16 @@ CREATE TABLE "push_tokens" (
 );
 
 -- Add notificationPreferences to users
-ALTER TABLE "users" ADD COLUMN "notificationPreferences" JSONB NOT NULL DEFAULT '{}';
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "notificationPreferences" JSONB NOT NULL DEFAULT '{}';
 
 -- CreateIndex
-CREATE UNIQUE INDEX "push_tokens_userId_token_key" ON "push_tokens"("userId", "token");
+CREATE UNIQUE INDEX IF NOT EXISTS "push_tokens_userId_token_key" ON "push_tokens"("userId", "token");
 
 -- CreateIndex
-CREATE INDEX "push_tokens_userId_isActive_idx" ON "push_tokens"("userId", "isActive");
+CREATE INDEX IF NOT EXISTS "push_tokens_userId_isActive_idx" ON "push_tokens"("userId", "isActive");
 
 -- AddForeignKey
-ALTER TABLE "push_tokens" ADD CONSTRAINT "push_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "push_tokens" ADD CONSTRAINT "push_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
