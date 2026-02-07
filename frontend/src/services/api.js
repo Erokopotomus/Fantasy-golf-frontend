@@ -501,12 +501,14 @@ class ApiService {
   }
 
   async getAdminUsers(params = {}) {
-    const qs = new URLSearchParams(params).toString()
+    const filtered = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const qs = new URLSearchParams(filtered).toString()
     return this.request(`/admin/users${qs ? '?' + qs : ''}`)
   }
 
   async getAdminLeagues(params = {}) {
-    const qs = new URLSearchParams(params).toString()
+    const filtered = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const qs = new URLSearchParams(filtered).toString()
     return this.request(`/admin/leagues${qs ? '?' + qs : ''}`)
   }
 
