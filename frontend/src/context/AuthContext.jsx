@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for existing token on mount
     const token = localStorage.getItem('clutch_token')
     const userData = localStorage.getItem('user')
 
@@ -28,8 +27,16 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('clutch_token')
         localStorage.removeItem('user')
       }
+      // Refresh user from server to pick up any new fields (e.g. role)
+      api.getMe().then(data => {
+        if (data?.user) {
+          localStorage.setItem('user', JSON.stringify(data.user))
+          setUser(data.user)
+        }
+      }).catch(() => {}).finally(() => setLoading(false))
+    } else {
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   const login = async (email, password) => {
