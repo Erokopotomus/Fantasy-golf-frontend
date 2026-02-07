@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useLeagues } from '../hooks/useLeagues'
+import { useLeague } from '../hooks/useLeague'
+import { useLeagueFormat } from '../hooks/useLeagueFormat'
 import { usePlayers } from '../hooks/usePlayers'
 import useOneAndDone from '../hooks/useOneAndDone'
 import { useNotifications } from '../context/NotificationContext'
@@ -16,7 +17,8 @@ import OADStandings from '../components/standings/OADStandings'
 const PickCenter = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
-  const { leagues, loading: leaguesLoading } = useLeagues()
+  const { league, loading: leagueLoading } = useLeague(leagueId)
+  const { isOneAndDone } = useLeagueFormat(league)
   const { players } = usePlayers()
   const {
     userPicks,
@@ -37,15 +39,13 @@ const PickCenter = () => {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [confirmPick, setConfirmPick] = useState(false)
 
-  const league = leagues?.find(l => l.id === leagueId)
-
   // Reset selected player when tab changes
   useEffect(() => {
     setSelectedPlayer(null)
     setConfirmPick(false)
   }, [activeTab])
 
-  if (leaguesLoading || loading) {
+  if (leagueLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -71,7 +71,7 @@ const PickCenter = () => {
     )
   }
 
-  if (!league || league.format !== 'one-and-done') {
+  if (!league || !isOneAndDone) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">

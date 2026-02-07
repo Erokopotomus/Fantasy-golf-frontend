@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useLeagues } from '../hooks/useLeagues'
+import { useLeague } from '../hooks/useLeague'
+import { useLeagueFormat } from '../hooks/useLeagueFormat'
 import useRotoCategories from '../hooks/useRotoCategories'
 import Card from '../components/common/Card'
 import CategoryTable from '../components/roto/CategoryTable'
@@ -11,15 +12,14 @@ import RotoStandings from '../components/standings/RotoStandings'
 const CategoryStandings = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
-  const { leagues, loading: leaguesLoading } = useLeagues()
+  const { league, loading: leagueLoading } = useLeague(leagueId)
+  const { isRoto } = useLeagueFormat(league)
   const { categories, categoryLabels, standings, loading, error } = useRotoCategories(leagueId)
 
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedTeam, setSelectedTeam] = useState(null)
 
-  const league = leagues?.find(l => l.id === leagueId)
-
-  if (leaguesLoading || loading) {
+  if (leagueLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -45,7 +45,7 @@ const CategoryStandings = () => {
     )
   }
 
-  if (!league || league.format !== 'roto') {
+  if (!league || !isRoto) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useLeagues } from '../hooks/useLeagues'
+import { useLeague } from '../hooks/useLeague'
+import { useLeagueFormat } from '../hooks/useLeagueFormat'
 import useSurvivor from '../hooks/useSurvivor'
 import { useNotifications } from '../context/NotificationContext'
 import Card from '../components/common/Card'
@@ -13,16 +14,15 @@ import BuyBackModal from '../components/survivor/BuyBackModal'
 const SurvivorBoardPage = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
-  const { leagues, loading: leaguesLoading } = useLeagues()
+  const { league, loading: leagueLoading } = useLeague(leagueId)
+  const { isSurvivor } = useLeagueFormat(league)
   const { survivorData, loading, error, useBuyBack, buyBackLoading, canUseBuyBack } = useSurvivor(leagueId)
   const { notify } = useNotifications()
 
   const [activeTab, setActiveTab] = useState('board')
   const [showBuyBackModal, setShowBuyBackModal] = useState(false)
 
-  const league = leagues?.find(l => l.id === leagueId)
-
-  if (leaguesLoading || loading) {
+  if (leagueLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -48,7 +48,7 @@ const SurvivorBoardPage = () => {
     )
   }
 
-  if (!league || league.format !== 'survivor') {
+  if (!league || !isSurvivor) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
