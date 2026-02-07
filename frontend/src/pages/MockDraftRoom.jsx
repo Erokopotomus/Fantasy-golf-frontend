@@ -298,6 +298,7 @@ const MockDraftRoom = () => {
   const [nominatorIndex, setNominatorIndex] = useState(0)
   const [currentNom, setCurrentNom] = useState(null) // { player, currentBid, highBidderTeamId }
   const [nomBidInput, setNomBidInput] = useState(1)
+  const [nomExpanded, setNomExpanded] = useState(false)
   const auctionPhaseRef = useRef('nominating')
   const currentNomRef = useRef(null)
   const budgetsRef = useRef({})
@@ -348,6 +349,11 @@ const MockDraftRoom = () => {
             form: p.recentForm || [],
             headshot: p.headshotUrl || null,
             wins: p.wins || 0,
+            top5s: p.top5s || 0,
+            top10s: p.top10s || 0,
+            top25s: p.top25s || 0,
+            cutsMade: p.cutsMade || 0,
+            earnings: p.earnings || 0,
           })))
         }
       } catch (err) {
@@ -382,7 +388,12 @@ const MockDraftRoom = () => {
         return base <= 1 ? 'T2' : `T${Math.min(base, 65)}`
       })
       const tournaments = Math.max(15, Math.min(30, Math.round(20 + r * 0.12 + Math.sin(r * 3.1) * 3)))
-      return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, cutsPct, form, tournaments, headshot: null, wins: 0 }
+      const winsEst = r <= 3 ? 2 : r <= 10 ? 1 : 0
+      const top5sEst = Math.max(0, Math.round(tournaments * Math.max(0, (40 - r) / 100)))
+      const top10sEst = Math.round(tournaments * top10 / 100)
+      const top25sEst = Math.round(tournaments * Math.min(80, top10 + 25) / 100)
+      const cutsMadeEst = Math.round(tournaments * cutsPct / 100)
+      return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, cutsPct, form, tournaments, headshot: null, wins: winsEst, top5s: top5sEst, top10s: top10sEst, top25s: top25sEst, cutsMade: cutsMadeEst, earnings: 0 }
     })
   }, [apiPlayers])
 
@@ -533,6 +544,7 @@ const MockDraftRoom = () => {
     setQueue(prev => prev.filter(q => q.id !== nom.player.id))
     setCurrentNom(null)
     currentNomRef.current = null
+    setNomExpanded(false)
     setAuctionPhase('nominating')
     auctionPhaseRef.current = 'nominating'
     setNominatorIndex(prev => {
@@ -1294,23 +1306,46 @@ const MockDraftRoom = () => {
       )}
 
       {/* ===== AUCTION BIDDING BAR ===== */}
-      {isAuction && isStarted && auctionPhase === 'bidding' && currentNom && (
+      {isAuction && isStarted && auctionPhase === 'bidding' && currentNom && (() => {
+        const np = currentNom.player
+        const enriched = np ? allPlayers.find(p => p.id === np.id) || np : null
+        return (
         <div className="bg-dark-secondary border-b border-yellow-500/30 flex-shrink-0 z-20">
+          {/* Main bar */}
           <div className="px-3 sm:px-4 py-2 flex items-center gap-3">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              {currentNom.player?.headshot ? (
-                <img src={currentNom.player.headshot} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+            <button
+              onClick={() => setNomExpanded(prev => !prev)}
+              className="flex items-center gap-2 min-w-0 flex-1 text-left group"
+            >
+              {enriched?.headshot ? (
+                <img src={enriched.headshot} alt="" className="w-9 h-9 rounded-full object-cover bg-dark-tertiary flex-shrink-0 ring-2 ring-yellow-500/40" />
               ) : (
-                <span className="text-lg flex-shrink-0">{currentNom.player?.flag}</span>
+                <span className="text-xl flex-shrink-0">{enriched?.flag}</span>
               )}
               <div className="min-w-0">
-                <p className="text-white font-semibold text-sm truncate">{currentNom.player?.name}</p>
-                <p className="text-text-muted text-[10px]">
-                  #{currentNom.player?.rank} · Nom by {config.teams.find(t => t.id === currentNom.nominatedByTeamId)?.name}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-white font-semibold text-sm truncate group-hover:text-yellow-400 transition-colors">{enriched?.name}</p>
+                  {enriched?.primaryTour && (
+                    <span className={`text-[8px] px-1 py-0.5 rounded font-medium flex-shrink-0 ${
+                      enriched.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
+                      enriched.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
+                      'bg-purple-500/20 text-purple-400'
+                    }`}>{enriched.primaryTour}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-text-muted">
+                  <span>#{enriched?.rank}</span>
+                  <span>·</span>
+                  <span>SG {enriched?.sg > 0 ? '+' : ''}{enriched?.sg?.toFixed(2)}</span>
+                  <span>·</span>
+                  <span>Nom {config.teams.find(t => t.id === currentNom.nominatedByTeamId)?.name}</span>
+                </div>
               </div>
-            </div>
-            <div className="text-center px-3">
+              <svg className={`w-4 h-4 text-text-muted flex-shrink-0 transition-transform ${nomExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div className="text-center px-3 flex-shrink-0">
               <p className="text-text-muted text-[10px]">CURRENT BID</p>
               <p className="text-yellow-400 font-bold text-lg">${currentNom.currentBid}</p>
               <p className="text-text-muted text-[10px] truncate">
@@ -1341,8 +1376,78 @@ const MockDraftRoom = () => {
               <span className="text-accent-green text-xs font-bold px-2 py-1 bg-accent-green/15 rounded-lg flex-shrink-0">WINNING</span>
             )}
           </div>
+
+          {/* Expanded player profile card */}
+          {nomExpanded && enriched && (
+            <div className="px-3 sm:px-4 pb-3 animate-fade-in">
+              <div className="bg-dark-primary rounded-lg border border-dark-border/50 p-3">
+                {/* Stats grid */}
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                  {[
+                    { label: 'Events', value: enriched.tournaments },
+                    { label: 'Wins', value: enriched.wins, highlight: enriched.wins > 0 },
+                    { label: 'Top 5s', value: enriched.top5s },
+                    { label: 'Top 10s', value: enriched.top10s },
+                    { label: 'Top 25s', value: enriched.top25s },
+                    { label: 'Cuts', value: `${enriched.cutsMade}/${enriched.tournaments}` },
+                    { label: 'Cut %', value: `${enriched.cutsPct}%` },
+                  ].map(stat => (
+                    <div key={stat.label} className="text-center py-1.5">
+                      <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{stat.label}</p>
+                      <p className={`text-sm font-bold tabular-nums ${stat.highlight ? 'text-yellow-400' : 'text-white'}`}>{stat.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* SG breakdown */}
+                <div className="mt-2.5 pt-2.5 border-t border-dark-border/40">
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { label: 'SG Total', value: enriched.sg },
+                      { label: 'OTT', value: enriched.sgOTT },
+                      { label: 'APP', value: enriched.sgAPP },
+                      { label: 'ATG', value: enriched.sgATG },
+                      { label: 'Putt', value: enriched.sgPutt },
+                    ].map(stat => (
+                      <div key={stat.label} className="text-center py-1">
+                        <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{stat.label}</p>
+                        <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-accent-green' : stat.value >= 0 ? 'text-white' : 'text-red-400'}`}>
+                          {stat.value > 0 ? '+' : ''}{stat.value?.toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent form */}
+                {enriched.form?.length > 0 && (
+                  <div className="mt-2.5 pt-2.5 border-t border-dark-border/40">
+                    <p className="text-text-muted text-[9px] uppercase tracking-wider mb-1.5">Recent Form</p>
+                    <div className="flex gap-1.5">
+                      {enriched.form.map((result, i) => {
+                        const pos = parseInt(result.replace('T', ''))
+                        return (
+                          <span key={i} className={`flex-1 text-center py-1 rounded text-xs font-medium ${
+                            result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
+                            result === 'CUT' ? 'bg-red-500/15 text-red-400' :
+                            pos <= 5 ? 'bg-accent-green/20 text-accent-green' :
+                            pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
+                            pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
+                            'bg-dark-tertiary text-text-muted'
+                          }`}>
+                            {result === '1' ? '1st' : result}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+        )
+      })()}
 
       {/* ===== MOBILE TAB BAR ===== */}
       <div className="lg:hidden flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
