@@ -146,6 +146,7 @@ export const useTradeCenter = (leagueId) => {
   const cancelTrade = useCallback(async (tradeId) => {
     try {
       await api.cancelTrade(tradeId)
+      track(Events.TRADE_CANCELLED, { leagueId, tradeId })
       fetchTrades()
     } catch (err) {
       throw err

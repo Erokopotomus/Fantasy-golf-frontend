@@ -74,6 +74,9 @@ const Navbar = () => {
                 <Link to="/draft" className={navLinkStyles('/draft')}>
                   Draft
                 </Link>
+                <Link to="/prove-it" className={navLinkStyles('/prove-it')}>
+                  Prove It
+                </Link>
                 {tournamentLink && (
                   <Link
                     to={tournamentLink}
@@ -294,6 +297,13 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Draft
+                </Link>
+                <Link
+                  to="/prove-it"
+                  className={mobileNavLinkStyles('/prove-it')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Prove It
                 </Link>
                 {tournamentLink && (
                   <Link

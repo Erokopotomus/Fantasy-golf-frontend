@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import socketService from '../services/socket'
+import { track, Events } from '../services/analytics'
 
 export const useChat = (leagueId) => {
   const { user } = useAuth()
@@ -60,6 +61,7 @@ export const useChat = (leagueId) => {
     try {
       setSending(true)
       const data = await api.sendMessage(leagueId, content.trim())
+      track(Events.MESSAGE_SENT, { leagueId, type: 'text' })
       // Optimistically add to local state
       const msg = {
         id: data.id || data.message?.id || Date.now().toString(),

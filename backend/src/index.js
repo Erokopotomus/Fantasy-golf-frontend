@@ -26,6 +26,7 @@ const managerAnalyticsRoutes = require('./routes/managerAnalytics')
 const waiverRoutes = require('./routes/waivers')
 const draftHistoryRoutes = require('./routes/draftHistory')
 const adminRoutes = require('./routes/admin')
+const predictionRoutes = require('./routes/predictions')
 
 const app = express()
 const httpServer = createServer(app)
@@ -103,6 +104,7 @@ app.use('/api/managers', managerAnalyticsRoutes)
 app.use('/api/leagues', waiverRoutes)
 app.use('/api/draft-history', draftHistoryRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/predictions', predictionRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -308,6 +310,41 @@ httpServer.listen(PORT, () => {
         const result = await sync.syncTournamentResults(t.datagolfId, cronPrisma)
         cronLog('finalize', `Done: ${result.finalized} players finalized`)
       } catch (e) { cronLog('finalize', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Sunday 10:15 PM ET — Auto-resolve predictions (after finalize, before fantasy scoring)
+    const predictionService = require('./services/predictionService')
+    cron.schedule('15 22 * * 0', async () => {
+      cronLog('predictions-resolve', 'Auto-resolving tournament predictions')
+      try {
+        // Find the tournament that just finalized
+        const t = await cronPrisma.tournament.findFirst({
+          where: { status: 'COMPLETED' },
+          orderBy: { endDate: 'desc' },
+          select: { id: true, name: true },
+        })
+        if (!t) return cronLog('predictions-resolve', 'No recently completed tournament')
+
+        const performances = await cronPrisma.performance.findMany({
+          where: { tournamentId: t.id },
+        })
+        const perfMap = {}
+        for (const p of performances) { perfMap[p.playerId] = p }
+
+        const results = await predictionService.resolveEventPredictions(
+          t.id,
+          (prediction) => {
+            const perf = perfMap[prediction.subjectPlayerId]
+            if (!perf) return { outcome: 'VOIDED', accuracyScore: null }
+            if (prediction.predictionType === 'player_benchmark') {
+              return predictionService.resolveGolfBenchmark(prediction, perf)
+            }
+            return { outcome: 'VOIDED', accuracyScore: null }
+          },
+          cronPrisma
+        )
+        cronLog('predictions-resolve', `Done: ${results.resolved} resolved for ${t.name}`)
+      } catch (e) { cronLog('predictions-resolve', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
     // Sunday 10:30 PM ET — Fantasy scoring + weekly results (after finalize)

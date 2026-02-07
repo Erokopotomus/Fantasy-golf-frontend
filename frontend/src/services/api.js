@@ -492,6 +492,58 @@ class ApiService {
     })
   }
 
+  // Predictions
+  async submitPrediction(data) {
+    return this.request('/predictions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updatePrediction(id, data) {
+    return this.request(`/predictions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deletePrediction(id) {
+    return this.request(`/predictions/${id}`, { method: 'DELETE' })
+  }
+
+  async getMyPredictions(options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/predictions/me${params ? '?' + params : ''}`)
+  }
+
+  async getMyReputation() {
+    return this.request('/predictions/reputation')
+  }
+
+  async getUserReputation(userId) {
+    return this.request(`/predictions/reputation/${userId}`)
+  }
+
+  async getPredictionLeaderboard(options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/predictions/leaderboard${params ? '?' + params : ''}`)
+  }
+
+  async getPredictionConsensus(eventId, playerId, type = 'player_benchmark') {
+    const params = new URLSearchParams({ eventId, playerId, type }).toString()
+    return this.request(`/predictions/consensus?${params}`)
+  }
+
+  async getEventSlate(eventId, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/predictions/slate/${eventId}${params ? '?' + params : ''}`)
+  }
+
+  async getEventPredictions(eventId, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/predictions/event/${eventId}${params ? '?' + params : ''}`)
+  }
+
   // Sync (admin)
   async getSyncStatus(adminSecret) {
     return this.request('/sync/status', {

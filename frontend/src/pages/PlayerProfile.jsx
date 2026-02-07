@@ -1,14 +1,19 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { track, Events } from '../services/analytics'
 import PlayerHeader from '../components/player/PlayerHeader'
 import PlayerStats from '../components/player/PlayerStats'
 import PlayerPredictions from '../components/player/PlayerPredictions'
 import PlayerProjection from '../components/player/PlayerProjection'
 import PlayerFormChart from '../components/player/PlayerFormChart'
 import PlayerCourseHistory from '../components/player/PlayerCourseHistory'
+import PlayerBenchmarkCard from '../components/predictions/PlayerBenchmarkCard'
 import usePlayerProfile from '../hooks/usePlayerProfile'
+import api from '../services/api'
 
 const PlayerProfile = () => {
   const { playerId } = useParams()
+  const [currentEventId, setCurrentEventId] = useState(null)
   const {
     player,
     projection,
@@ -19,6 +24,18 @@ const PlayerProfile = () => {
     loading,
     error
   } = usePlayerProfile(playerId)
+
+  useEffect(() => {
+    api.getCurrentTournament()
+      .then(res => setCurrentEventId(res?.tournament?.id || res?.id))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (player) {
+      track(Events.PLAYER_PROFILE_VIEWED, { playerId, playerName: player.name })
+    }
+  }, [playerId, player])
 
   if (loading) {
     return (
@@ -84,6 +101,7 @@ const PlayerProfile = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
+          <PlayerBenchmarkCard player={player} eventId={currentEventId} />
           <PlayerPredictions predictions={predictions} liveScore={liveScore} />
           <PlayerProjection projection={projection} />
           <PlayerFormChart

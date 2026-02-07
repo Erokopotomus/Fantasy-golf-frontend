@@ -6,6 +6,7 @@ import Input from '../components/common/Input'
 import { useLeague } from '../hooks/useLeague'
 import { useNotifications } from '../context/NotificationContext'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
+import { track, Events } from '../services/analytics'
 import api from '../services/api'
 import FullLeagueSettings from '../components/league/settings/FullLeagueSettings'
 import HeadToHeadSettings from '../components/league/settings/HeadToHeadSettings'
@@ -141,6 +142,7 @@ const LeagueSettings = () => {
           formatSettings: settings.formatSettings,
         }
       })
+      track(Events.LEAGUE_SETTINGS_UPDATED, { leagueId })
       notify.success('Settings Saved', 'League settings have been updated')
       refetch() // Refresh league data
     } catch (error) {
@@ -156,6 +158,7 @@ const LeagueSettings = () => {
   const copyInviteCode = () => {
     if (inviteCode) {
       navigator.clipboard.writeText(inviteCode)
+      track(Events.INVITE_LINK_COPIED, { leagueId, method: 'code' })
       setCopied(true)
       notify.success('Copied!', 'Invite code copied to clipboard')
       setTimeout(() => setCopied(false), 2000)
@@ -165,6 +168,7 @@ const LeagueSettings = () => {
   const copyInviteLink = () => {
     if (inviteLink) {
       navigator.clipboard.writeText(inviteLink)
+      track(Events.INVITE_LINK_COPIED, { leagueId, method: 'link' })
       setCopied(true)
       notify.success('Copied!', 'Invite link copied to clipboard')
       setTimeout(() => setCopied(false), 2000)
@@ -235,6 +239,7 @@ const LeagueSettings = () => {
     setDeleting(true)
     try {
       await api.deleteLeague(leagueId)
+      track(Events.LEAGUE_DELETED, { leagueId, leagueName: league.name })
       notify.success('League Deleted', `${league.name} has been permanently deleted`)
       navigate('/leagues')
     } catch (error) {

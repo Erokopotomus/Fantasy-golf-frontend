@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { track, Events } from '../services/analytics'
 import { useAuth } from '../context/AuthContext'
 import { useOnboarding } from '../context/OnboardingContext'
 import { useLeagues } from '../hooks/useLeagues'
@@ -11,6 +12,7 @@ import Card from '../components/common/Card'
 import LeagueCard from '../components/dashboard/LeagueCard'
 import TournamentCard from '../components/dashboard/TournamentCard'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
+import PredictionWidget from '../components/predictions/PredictionWidget'
 
 const StatCardSkeleton = () => (
   <Card className="text-center animate-pulse" hover>
@@ -50,6 +52,10 @@ const Dashboard = () => {
   const primaryLeagueId = leagues?.[0]?.id
   const { activity, loading: activityLoading } = useActivity(primaryLeagueId, 8)
   const { stats, loading: statsLoading } = useStats()
+
+  useEffect(() => {
+    track(Events.DASHBOARD_VIEWED, { leagueCount: leagues?.length || 0 })
+  }, [])
 
   // Show onboarding for first-time users
   useEffect(() => {
@@ -245,6 +251,9 @@ const Dashboard = () => {
                   onViewDetails={handleViewTournament}
                 />
               )}
+
+              {/* Prove It Widget */}
+              <PredictionWidget />
 
               {/* Quick Actions */}
               <Card>

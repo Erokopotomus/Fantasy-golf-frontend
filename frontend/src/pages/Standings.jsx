@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { track, Events } from '../services/analytics'
 import { useAuth } from '../context/AuthContext'
 import { useLeague } from '../hooks/useLeague'
 import { useLeagueFormat } from '../hooks/useLeagueFormat'
@@ -24,6 +26,12 @@ const Standings = () => {
   const { standings: matchupStandings } = useMatchups(leagueId)
   const { standings: rotoStandings } = useRotoCategories(leagueId)
   const { survivorData } = useSurvivor(leagueId)
+
+  useEffect(() => {
+    if (leagueId && !loading) {
+      track(Events.STANDINGS_VIEWED, { leagueId, format })
+    }
+  }, [leagueId, loading])
 
   if (loading || leagueLoading) {
     return (

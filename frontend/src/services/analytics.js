@@ -109,6 +109,9 @@ export const Events = {
   TRADE_REJECTED:       'trade_rejected',
   TRADE_CANCELLED:      'trade_cancelled',
 
+  // ── Chat ───────────────────────────────────────────────────
+  MESSAGE_SENT:         'message_sent',
+
   // ── Waivers ────────────────────────────────────────────────
   WAIVER_CLAIM:         'waiver_claim',
   FREE_AGENT_PICKUP:    'free_agent_pickup',

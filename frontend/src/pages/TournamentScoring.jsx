@@ -5,6 +5,7 @@ import TournamentLeaderboard from '../components/tournament/TournamentLeaderboar
 import LiveScoreIndicator from '../components/tournament/LiveScoreIndicator'
 import useTournamentScoring from '../hooks/useTournamentScoring'
 import { useLeagues } from '../hooks/useLeagues'
+import EventPredictionSlate from '../components/predictions/EventPredictionSlate'
 import api from '../services/api'
 
 /** Floating player odds card shown in sidebar when a player is expanded */
@@ -225,6 +226,9 @@ const TournamentScoring = () => {
             player={selectedPlayer}
             onClose={() => setSelectedPlayer(null)}
           />
+
+          {/* This Week's Calls */}
+          <EventPredictionSlate eventId={tournamentId} leaderboard={leaderboard || []} />
 
           {/* My Team — with league dropdown */}
           <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">

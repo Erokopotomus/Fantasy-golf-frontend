@@ -44,6 +44,14 @@ model User {
   pushTokens              PushToken[]
   notificationPreferences Json    @default("{}")
 
+  // Predictions
+  predictions     Prediction[]
+  reputations     UserReputation[]
+
+  // League History / Migration
+  leagueImports       LeagueImport[]
+  historicalSeasons    HistoricalSeason[]    @relation("HistoricalOwner")
+
   @@map("users")
 }
 
@@ -85,7 +93,10 @@ model League {
   picks         Pick[]
   leagueSeasons LeagueSeason[]
   rosterSlots   RosterSlotDefinition[] @relation("LeagueRosterSlots")
-  waiverClaims  WaiverClaim[]
+  waiverClaims     WaiverClaim[]
+  predictions      Prediction[]
+  leagueImports    LeagueImport[]    @relation("LeagueImports")
+  historicalSeasons HistoricalSeason[] @relation("LeagueHistory")
 
   @@map("leagues")
 }
@@ -180,6 +191,9 @@ model Player {
   fanDuelId    String? // FanDuel ID
   yahooId      String? // Yahoo ID
   espnId       String? // ESPN ID
+  sleeperId    String? // Sleeper ID
+  mflId        String? // MyFantasyLeague ID
+  fantraxId    String? // Fantrax ID
 
   // Basic Info
   firstName String?
@@ -1972,4 +1986,161 @@ enum PushTokenType {
   WEB_PUSH
   APNS
   FCM
+}
+
+// ============ USER PREDICTIONS (Phase 2) ============
+
+model Prediction {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  sport          String // 'golf', 'nfl', 'nba', 'mlb'
+  predictionType String // 'performance_call', 'player_benchmark', 'weekly_winner', 'bold_call'
+  category       String // 'weekly', 'season_long', 'tournament', 'draft'
+
+  // Context
+  eventId         String? // tournament ID, NFL week, matchup ID
+  subjectPlayerId String? // player this prediction is about
+  leagueId        String? // optional league context
+  league          League? @relation(fields: [leagueId], references: [id])
+
+  // Prediction content
+  predictionData Json // {action, benchmark_value, direction, confidence, reasoning}
+
+  // Outcome
+  outcome       PredictionOutcome @default(PENDING)
+  accuracyScore Float? // 0.0 to 1.0, allows partial credit
+
+  isPublic Boolean @default(true)
+
+  // Deadline enforcement
+  locksAt    DateTime? // When this prediction locks (tee time, kickoff, etc.)
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, sport, outcome])
+  @@index([eventId, predictionType])
+  @@index([outcome])
+  @@index([subjectPlayerId])
+  @@map("predictions")
+}
+
+model UserReputation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  sport  String // 'golf', 'nfl', 'nba', 'mlb', 'all'
+
+  totalPredictions   Int   @default(0)
+  correctPredictions Int   @default(0)
+  accuracyRate       Float @default(0)
+  streakCurrent      Int   @default(0)
+  streakBest         Int   @default(0)
+  confidenceScore    Float @default(0) // Weighted accuracy factoring confidence
+  percentileRank     Int? // 1-100
+  tier               String @default("rookie") // 'rookie', 'contender', 'sharp', 'expert', 'elite'
+
+  badges     Json @default("[]")
+  weeklyRank Int?
+  seasonRank Int?
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([userId, sport])
+  @@index([sport, tier])
+  @@index([sport, accuracyRate])
+  @@map("user_reputation")
+}
+
+enum PredictionOutcome {
+  PENDING
+  CORRECT
+  INCORRECT
+  PUSH
+  VOIDED
+}
+
+// ============ LEAGUE HISTORY & MIGRATION (Phase 3) ============
+
+enum ImportStatus {
+  PENDING
+  SCANNING
+  MAPPING
+  IMPORTING
+  REVIEW
+  COMPLETE
+  FAILED
+}
+
+model LeagueImport {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  sourcePlatform  String       // 'sleeper', 'yahoo', 'espn', 'fantrax', 'mfl', 'manual_csv'
+  sourceLeagueId  String?      // External league ID on source platform
+  sourceLeagueName String?     // Name from source platform
+  status          ImportStatus @default(PENDING)
+  progressPct     Int          @default(0)
+  seasonsFound    Int?
+  seasonsImported Json         @default("[]") // Array of imported year numbers
+  mappingData     Json         @default("{}") // Player/owner mapping state
+  errorLog        Json         @default("[]") // Array of error entries
+  rawData         Json?        // Cached raw API response
+
+  // Link to Clutch league (created or matched during import)
+  clutchLeagueId  String?
+  clutchLeague    League?      @relation("LeagueImports", fields: [clutchLeagueId], references: [id])
+
+  createdAt       DateTime     @default(now())
+  completedAt     DateTime?
+
+  // Relations
+  historicalSeasons HistoricalSeason[]
+
+  @@index([userId])
+  @@index([sourcePlatform, status])
+  @@map("league_imports")
+}
+
+model HistoricalSeason {
+  id         String       @id @default(cuid())
+  leagueId   String
+  league     League       @relation("LeagueHistory", fields: [leagueId], references: [id], onDelete: Cascade)
+  importId   String?
+  import     LeagueImport? @relation(fields: [importId], references: [id])
+  seasonYear Int
+
+  // Team info
+  teamName     String?
+  ownerName    String?
+  ownerUserId  String?      // Nullable until claimed by a Clutch user
+  ownerUser    User?        @relation("HistoricalOwner", fields: [ownerUserId], references: [id])
+
+  // Results
+  finalStanding  Int?
+  wins           Int      @default(0)
+  losses         Int      @default(0)
+  ties           Int      @default(0)
+  pointsFor      Float    @default(0)
+  pointsAgainst  Float    @default(0)
+  playoffResult  String?  // 'champion', 'runner_up', 'semifinal', 'eliminated', 'missed'
+
+  // Historical data (JSONB for flexibility across platforms)
+  draftData      Json?    // Pick-by-pick draft history
+  rosterData     Json?    // End-of-season roster
+  weeklyScores   Json?    // Week-by-week scoring
+  transactions   Json?    // Trades, adds, drops
+  awards         Json?    // MVP, most points week, etc.
+  settings       Json?    // League settings snapshot for that season
+
+  createdAt      DateTime @default(now())
+
+  @@unique([leagueId, seasonYear, ownerName])
+  @@index([leagueId, seasonYear])
+  @@index([ownerUserId])
+  @@map("historical_seasons")
 }

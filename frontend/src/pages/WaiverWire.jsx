@@ -51,7 +51,7 @@ const WaiverWire = () => {
     try {
       if (isWaiverMode) {
         await submitClaim(claimTarget.id, bidAmount, dropTarget?.id || null)
-        track(Events.FREE_AGENT_PICKUP, { leagueId, playerId: claimTarget.id, playerName: claimTarget.name, bidAmount, waiverType })
+        track(Events.WAIVER_CLAIM, { leagueId, playerId: claimTarget.id, playerName: claimTarget.name, bidAmount, waiverType })
       } else {
         await claimPlayer(claimTarget.id, dropTarget?.id || null)
         track(Events.FREE_AGENT_PICKUP, { leagueId, playerId: claimTarget.id, playerName: claimTarget.name, droppedPlayerId: dropTarget?.id })

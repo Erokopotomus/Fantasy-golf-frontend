@@ -176,19 +176,23 @@ export const useDraft = (leagueId) => {
     })
 
     const unsubStarted = socketService.onDraftStarted(() => {
+      track(Events.DRAFT_STARTED, { draftId, leagueId })
       loadDraft()
     })
 
     const unsubPaused = socketService.onDraftPaused(() => {
+      track(Events.DRAFT_PAUSED, { draftId })
       dispatchPause()
     })
 
     const unsubResumed = socketService.onDraftResumed((data) => {
+      track(Events.DRAFT_RESUMED, { draftId })
       dispatchResume()
       pickDeadlineRef.current = data.pickDeadline
     })
 
     const unsubCompleted = socketService.onDraftCompleted(() => {
+      track(Events.DRAFT_COMPLETED, { draftId, leagueId, totalPicks: picks.length })
       loadDraft()
     })
 
@@ -372,6 +376,7 @@ export const useDraft = (leagueId) => {
   // Auto-pick on timeout
   const handleTimeout = useCallback(async () => {
     if (!isUserTurn) return
+    track(Events.DRAFT_AUTO_PICK, { draftId, hasQueue: queue.length > 0 })
     if (queue.length > 0) {
       const topPick = queue[0]
       try {

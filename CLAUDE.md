@@ -54,8 +54,8 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ## DEVELOPMENT PHASES
 
-### Current Status: PHASE 1 — COMPLETE ✓
-> Phase 1 core platform is built and deployed. Moving to Phase 2.
+### Current Status: PHASE 2 — COMPLETE ✓
+> Phases 1 & 2 built and deployed. Moving to Phase 3: League Vault & Migration.
 
 ### Phase 1: Core Platform — COMPLETE ✓
 
@@ -138,21 +138,24 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ---
 
-### Phase 2: Engagement & Stickiness (NEXT)
+### Phase 2: Engagement & Stickiness — COMPLETE ✓
 
-- [ ] **Event Tracking System**
-  - Analytics abstraction layer (platform-agnostic)
-  - Track all key user actions (see Event Tracking Schema below)
+- [x] **Event Tracking System**
+  - Analytics abstraction layer (platform-agnostic) — analytics.js with 42+ events
+  - 28 track() calls across 12 files (drafts, chat, trades, waivers, roster, settings, navigation)
   - Console/local logging now, PostHog integration later
   - One-line swap when analytics provider is connected
 
-- [ ] **Prediction Engine MVP**
-  - Database tables: `predictions`, `user_reputation` (see Schema below)
-  - Prediction types for launch: performance_calls (start/sit), player_benchmarks (over/under), weekly_winner, bold_calls
-  - Submission API with deadline enforcement (lock at game/tee time)
-  - Automated resolution via scoring pipeline
-  - Basic accuracy tracking per user per sport
-  - Community consensus display ("74% say OVER")
+- [x] **Prediction Engine MVP — Backend Complete**
+  - Database tables: `predictions`, `user_reputation` (migration 10_predictions)
+  - Prediction types: performance_call, player_benchmark, weekly_winner, bold_call
+  - Submission API with deadline enforcement (locksAt field)
+  - Automated resolution via Sunday 10:15 PM cron (after tournament finalize)
+  - Accuracy tracking per user per sport with tier system (rookie→elite)
+  - Community consensus endpoint
+  - Reputation system with streaks, badges, confidence scoring
+  - Frontend API methods wired (10 methods in api.js)
+  - Migration `10_predictions` applied on Railway
 
   **LANGUAGE RULES FOR PREDICTIONS:**
   - Call them "Performance Calls" NOT "picks" or "bets"
@@ -177,7 +180,13 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - These users are Clutch's organic marketing engine — they link profiles on podcasts, Twitter, YouTube
   - If their UX is painful, they won't use it, and the entire analyst/creator ecosystem dies
 
-- [ ] **"Prove It" Hub — Main Nav Item**
+- [x] **Contextual Prediction Components — Complete**
+  - PlayerBenchmarkCard — OVER/UNDER on player SG benchmark, consensus bar, integrated into PlayerProfile
+  - EventPredictionSlate — sidebar card on TournamentScoring with rapid OVER/UNDER per player
+  - PredictionWidget — dashboard widget with accuracy/streak/calls stats, CTA to Prove It
+  - usePredictions hook — prediction state management, consensus, leaderboard hooks
+
+- [x] **"Prove It" Hub — Main Nav Item**
   - Add "Prove It" to main navigation: Dashboard — Leagues — Draft — Live — **Prove It**
   - This is the reputation builder's home base AND the community discovery page
 
@@ -270,21 +279,20 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Open Graph tags for rich social previews when shared on Twitter/Discord/etc.
   - Embeddable widget (future): creators can embed their Clutch accuracy badge on their website
 
-- [ ] **Prediction Leaderboard Backend**
-  - Redis sorted sets for real-time leaderboard
-  - Dimensions: global, per-sport, weekly, league-level, category-specific
-  - Tier system: Rookie → Contender → Sharp → Expert → Elite
-  - Minimum 20 predictions to earn a tier (prevents 1-pick-100% gaming)
-  - Recency-weighted accuracy (rolling 52-week window with decay)
+- [x] **Prediction Leaderboard Backend**
+  - SQL-based leaderboards: global, per-sport, weekly, league-level
+  - Tier system: Rookie → Contender → Sharp → Expert → Elite (min 20 predictions)
+  - League-level leaderboard via leagueId query param
+  - Redis sorted sets deferred to Phase 6 (scale optimization)
 
-- [ ] **Badge System**
+- [x] **Badge System**
   - Hot Streak (5/10/20 consecutive correct)
-  - Upset Caller (correct when <20% of users agreed)
-  - Sharpshooter (80%+ accuracy in single week, 10+ predictions)
-  - Bold & Right (unlikely prediction that hit)
-  - Iron Predictor (never missed a week all season)
-  - League Legend (highest accuracy in your league, checked annually)
-  - Clutch Call (correct call that won you your fantasy matchup that week)
+  - Upset Caller (correct when <20% of users agreed — checks consensus data)
+  - Sharpshooter (80%+ accuracy with 10+ predictions)
+  - Bold & Right (correct bold_call prediction, +Fearless at 5)
+  - Iron Predictor (10/20 consecutive weeks with predictions)
+  - Volume badges (50/100/500 predictions)
+  - League Legend + Clutch Call deferred (require end-of-season + matchup context)
 
   **CONTEXTUAL PREDICTION PLACEMENT (for casual users):**
   Predictions also appear in these locations for organic discovery:
