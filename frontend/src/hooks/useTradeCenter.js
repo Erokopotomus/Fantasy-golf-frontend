@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
+import { track, Events } from '../services/analytics'
 
 export const useTradeCenter = (leagueId) => {
   const { user } = useAuth()
@@ -114,7 +115,7 @@ export const useTradeCenter = (leagueId) => {
         receiverPlayers: tradeData.playersRequested,
         message: tradeData.message,
       })
-      // Refresh after proposing
+      track(Events.TRADE_PROPOSED, { leagueId, playersOffered: tradeData.playersOffered.length, playersRequested: tradeData.playersRequested.length })
       fetchTrades()
       return result
     } catch (err) {
@@ -125,6 +126,7 @@ export const useTradeCenter = (leagueId) => {
   const acceptTrade = useCallback(async (tradeId) => {
     try {
       await api.acceptTrade(tradeId)
+      track(Events.TRADE_ACCEPTED, { leagueId, tradeId })
       fetchTrades()
     } catch (err) {
       throw err
@@ -134,6 +136,7 @@ export const useTradeCenter = (leagueId) => {
   const rejectTrade = useCallback(async (tradeId) => {
     try {
       await api.rejectTrade(tradeId)
+      track(Events.TRADE_REJECTED, { leagueId, tradeId })
       fetchTrades()
     } catch (err) {
       throw err

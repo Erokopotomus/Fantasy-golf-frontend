@@ -8,6 +8,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 import LineupOptimizer from '../components/roster/LineupOptimizer'
+import { track, Events } from '../services/analytics'
 
 /**
  * Normalize a roster entry from the API into a flat player object
@@ -87,6 +88,7 @@ const TeamRoster = () => {
     if (!pendingActive) return
     try {
       await saveLineup([...pendingActive])
+      track(Events.LINEUP_SAVED, { leagueId, activeCount: pendingActive.size, maxActive })
       await refetch()
       setIsEditing(false)
       setPendingActive(null)
@@ -102,6 +104,7 @@ const TeamRoster = () => {
     if (!window.confirm(`Drop ${player.name}? They'll become a free agent.`)) return
     try {
       await dropPlayer(player.id)
+      track(Events.PLAYER_DROPPED, { leagueId, playerId: player.id, playerName: player.name })
       await refetch()
     } catch {
       // error handled by hook

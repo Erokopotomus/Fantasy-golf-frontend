@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import api from '../services/api'
+import { track, identify, reset, Events } from '../services/analytics'
 
 const AuthContext = createContext(null)
 
@@ -38,6 +39,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('clutch_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
       setUser(data.user)
+      identify(data.user.id, { name: data.user.name, email: data.user.email })
+      track(Events.LOGGED_IN)
 
       return { success: true }
     } catch (error) {
@@ -52,6 +55,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('clutch_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
       setUser(data.user)
+      identify(data.user.id, { name: data.user.name, email: data.user.email })
+      track(Events.SIGNED_UP)
 
       return { success: true }
     } catch (error) {
@@ -63,6 +68,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('clutch_token')
     localStorage.removeItem('user')
     setUser(null)
+    track(Events.LOGGED_OUT)
+    reset()
   }
 
   const updateUser = (updates) => {

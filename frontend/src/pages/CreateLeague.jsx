@@ -2,6 +2,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import Card from '../components/common/Card'
 import LeagueForm from '../components/league/LeagueForm'
 import { useCreateLeague } from '../hooks/useCreateLeague'
+import { track, Events } from '../services/analytics'
 
 const CreateLeague = () => {
   const navigate = useNavigate()
@@ -10,7 +11,7 @@ const CreateLeague = () => {
   const handleSubmit = async (leagueData) => {
     try {
       const result = await createLeague(leagueData)
-      // Navigate to dashboard with success state
+      track(Events.LEAGUE_CREATED, { format: leagueData.format, draftType: leagueData.draftType, maxTeams: leagueData.maxTeams })
       navigate('/dashboard', {
         state: {
           notification: {

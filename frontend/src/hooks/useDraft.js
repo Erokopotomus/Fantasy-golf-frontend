@@ -4,6 +4,7 @@ import { useNotifications } from '../context/NotificationContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import socketService from '../services/socket'
+import { track, Events } from '../services/analytics'
 
 export const useDraft = (leagueId) => {
   const [recentPick, setRecentPick] = useState(null)
@@ -346,6 +347,7 @@ export const useDraft = (leagueId) => {
     try {
       setLoading(true)
       const result = await api.makeDraftPick(draftId, playerId)
+      track(Events.DRAFT_PICK_MADE, { draftId, playerId, round: draft?.currentRound })
       // Socket will broadcast the pick to all clients including us
       // But update deadline immediately for responsiveness
       pickDeadlineRef.current = result.pickDeadline

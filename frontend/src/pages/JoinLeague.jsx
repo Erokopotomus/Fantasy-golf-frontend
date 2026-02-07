@@ -4,6 +4,7 @@ import Card from '../components/common/Card'
 import Input from '../components/common/Input'
 import Button from '../components/common/Button'
 import { useJoinLeague } from '../hooks/useJoinLeague'
+import { track, Events } from '../services/analytics'
 
 const JoinLeague = () => {
   const navigate = useNavigate()
@@ -50,6 +51,7 @@ const JoinLeague = () => {
   const handleJoin = async () => {
     try {
       await joinLeague(code)
+      track(Events.LEAGUE_JOINED, { leagueName: previewLeague?.name })
       navigate('/dashboard', {
         state: {
           notification: {

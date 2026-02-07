@@ -4,6 +4,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import api from '../services/api'
 import useDraftSounds from '../hooks/useDraftSounds'
+import { track, Events } from '../services/analytics'
 
 // Inline player data for mock drafts (no API dependency)
 const MOCK_PLAYERS = [
@@ -579,12 +580,15 @@ const MockDraftRoom = () => {
     prevIsUserNominatorRef.current = isUserNominator
   }, [isUserNominator, playYourTurn])
 
-  // Sound: draft complete
+  // Sound + tracking: draft complete
   const prevIsCompleteRef = useRef(false)
   useEffect(() => {
-    if (isComplete && !prevIsCompleteRef.current) playDraftComplete()
+    if (isComplete && !prevIsCompleteRef.current) {
+      playDraftComplete()
+      track(Events.MOCK_DRAFT_COMPLETED, { draftType: config?.draftType, teams: config?.teams?.length })
+    }
     prevIsCompleteRef.current = isComplete
-  }, [isComplete, playDraftComplete])
+  }, [isComplete, playDraftComplete, config])
 
   // Auto-pick: snake — immediately pick after short delay when it's user's turn
   useEffect(() => {
@@ -791,6 +795,7 @@ const MockDraftRoom = () => {
   const handleStartDraft = () => {
     initSounds()
     playDraftStart()
+    track(Events.MOCK_DRAFT_STARTED, { draftType: config?.draftType, teams: config?.teams?.length, rosterSize: config?.rosterSize })
     setIsStarted(true)
     setIsPaused(false)
     if (config?.draftType === 'auction') {

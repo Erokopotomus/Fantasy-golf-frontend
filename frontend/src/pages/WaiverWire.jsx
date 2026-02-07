@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import PlayerDrawer from '../components/players/PlayerDrawer'
+import { track, Events } from '../services/analytics'
 
 const WaiverWire = () => {
   const { leagueId } = useParams()
@@ -41,6 +42,7 @@ const WaiverWire = () => {
     if (!claimTarget) return
     try {
       await claimPlayer(claimTarget.id, dropTarget?.id || null)
+      track(Events.FREE_AGENT_PICKUP, { leagueId, playerId: claimTarget.id, playerName: claimTarget.name, droppedPlayerId: dropTarget?.id })
       await refetchRoster()
       setClaimTarget(null)
       setDropTarget(null)
