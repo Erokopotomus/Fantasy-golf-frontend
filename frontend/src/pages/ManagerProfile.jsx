@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import useManagerProfile from '../hooks/useManagerProfile'
@@ -61,6 +62,7 @@ const StatBox = ({ label, value, color = 'text-white' }) => (
 )
 
 const AchievementBadge = ({ achievement }) => {
+  const [showTooltip, setShowTooltip] = useState(false)
   const tierColor = TIER_COLORS[achievement.tier] || '#666'
   const unlocked = achievement.unlocked
 
@@ -72,7 +74,8 @@ const AchievementBadge = ({ achievement }) => {
           : 'bg-dark-primary border border-dark-border opacity-40 grayscale'
       }`}
       style={unlocked ? { borderColor: tierColor } : undefined}
-      title={achievement.description}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
       <div className="text-2xl mb-1">{achievement.icon || '?'}</div>
       <p className="text-xs font-medium text-white truncate">{achievement.name}</p>
@@ -82,6 +85,23 @@ const AchievementBadge = ({ achievement }) => {
           <svg className="w-5 h-5 text-text-muted" fill="currentColor" viewBox="0 0 24 24">
             <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
           </svg>
+        </div>
+      )}
+      {/* Hover Tooltip */}
+      {showTooltip && (
+        <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 pointer-events-none">
+          <div className="bg-dark-tertiary border border-dark-border rounded-lg p-3 shadow-xl">
+            <p className="text-white text-xs font-semibold mb-1">{achievement.name}</p>
+            <p className="text-text-secondary text-[11px] leading-relaxed">{achievement.description}</p>
+            <div className="flex items-center gap-1 mt-1.5">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: tierColor }}
+              />
+              <span className="text-[10px] text-text-muted capitalize">{achievement.tier?.toLowerCase()}</span>
+            </div>
+          </div>
+          <div className="w-2 h-2 bg-dark-tertiary border-r border-b border-dark-border rotate-45 mx-auto -mt-1" />
         </div>
       )}
     </div>
