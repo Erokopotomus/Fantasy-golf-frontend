@@ -128,6 +128,7 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
         teamId: req.params.id,
         playerId,
         position: 'BENCH',
+        rosterStatus: 'BENCH',
         acquiredVia: 'FREE_AGENT'
       },
       include: {
@@ -221,7 +222,7 @@ router.patch('/:id/roster/:playerId', authenticate, async (req, res, next) => {
           playerId: req.params.playerId
         }
       },
-      data: { position },
+      data: { position, rosterStatus: position },
       include: {
         player: true
       }
@@ -268,14 +269,15 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: { message: 'Some players are not on your roster' } })
     }
 
-    // Batch update in transaction
+    // Batch update in transaction (write both position + rosterStatus)
     await prisma.$transaction(
-      team.roster.map(entry =>
-        prisma.rosterEntry.update({
+      team.roster.map(entry => {
+        const status = activePlayerIds.includes(entry.playerId) ? 'ACTIVE' : 'BENCH'
+        return prisma.rosterEntry.update({
           where: { id: entry.id },
-          data: { position: activePlayerIds.includes(entry.playerId) ? 'ACTIVE' : 'BENCH' }
+          data: { position: status, rosterStatus: status }
         })
-      )
+      })
     )
 
     // Return updated roster

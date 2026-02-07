@@ -9,6 +9,9 @@ const VIEWS = [
   'mv_player_fantasy_rankings',
   'mv_draft_strategy_outcomes',
   'mv_weekly_scoring_leaders',
+  'mv_manager_league_type_performance',
+  'mv_manager_draft_tendency',
+  'mv_head_to_head_raw',
 ]
 
 /**

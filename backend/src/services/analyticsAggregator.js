@@ -445,7 +445,448 @@ async function computeDraftValue(leagueSeasonId, prisma) {
   return { computed }
 }
 
-// ─── 6. Refresh All ─────────────────────────────────────────────────────────
+// ─── 6. Manager Profiles ────────────────────────────────────────────────────
+
+/**
+ * Compute/update ManagerProfile + ManagerSeasonSummary for all users.
+ * Aggregates from TeamSeason data.
+ */
+async function computeManagerProfiles(seasonId, prisma) {
+  const season = await prisma.season.findUnique({ where: { id: seasonId } })
+  if (!season) return { profiles: 0, summaries: 0 }
+
+  // Get all team seasons for this season with user + league info
+  const teamSeasons = await prisma.teamSeason.findMany({
+    where: { leagueSeason: { seasonId } },
+    include: {
+      team: { select: { userId: true } },
+      leagueSeason: {
+        include: {
+          league: { select: { sportId: true, format: true, draftType: true } },
+        },
+      },
+    },
+  })
+
+  // Group by userId
+  const byUser = new Map()
+  for (const ts of teamSeasons) {
+    const uid = ts.team.userId
+    if (!byUser.has(uid)) byUser.set(uid, [])
+    byUser.get(uid).push(ts)
+  }
+
+  // Get draft value data for draft efficiency
+  const draftValues = await prisma.draftValueTracker.findMany({
+    where: { leagueSeason: { seasonId } },
+    include: { draftPick: { include: { team: { select: { userId: true } } } } },
+  })
+
+  const draftByUser = new Map()
+  for (const dv of draftValues) {
+    const uid = dv.draftPick.team.userId
+    if (!draftByUser.has(uid)) draftByUser.set(uid, [])
+    draftByUser.get(uid).push(dv)
+  }
+
+  let profiles = 0
+  let summaries = 0
+
+  for (const [userId, userTS] of byUser) {
+    const sportId = season.sportId
+
+    // ── ManagerSeasonSummary ──
+    const wins = userTS.reduce((s, ts) => s + ts.wins, 0)
+    const losses = userTS.reduce((s, ts) => s + ts.losses, 0)
+    const ties = userTS.reduce((s, ts) => s + ts.ties, 0)
+    const totalPoints = round2(userTS.reduce((s, ts) => s + ts.totalPoints, 0))
+    const championships = userTS.filter(ts => ts.isChampion).length
+    const rankedTS = userTS.filter(ts => ts.finalRank != null)
+    const avgFinish = rankedTS.length > 0
+      ? round2(rankedTS.reduce((s, ts) => s + ts.finalRank, 0) / rankedTS.length)
+      : 0
+    const bestFinish = rankedTS.length > 0
+      ? Math.min(...rankedTS.map(ts => ts.finalRank))
+      : null
+
+    // Per-format breakdown
+    const byFormat = {}
+    const formatGroups = new Map()
+    for (const ts of userTS) {
+      const fmt = ts.leagueSeason.league.format
+      if (!formatGroups.has(fmt)) formatGroups.set(fmt, [])
+      formatGroups.get(fmt).push(ts)
+    }
+    for (const [fmt, fts] of formatGroups) {
+      const fRanked = fts.filter(ts => ts.finalRank != null)
+      byFormat[fmt] = {
+        leagues: fts.length,
+        wins: fts.reduce((s, ts) => s + ts.wins, 0),
+        losses: fts.reduce((s, ts) => s + ts.losses, 0),
+        ties: fts.reduce((s, ts) => s + ts.ties, 0),
+        avgFinish: fRanked.length > 0
+          ? round2(fRanked.reduce((s, ts) => s + ts.finalRank, 0) / fRanked.length)
+          : 0,
+        championships: fts.filter(ts => ts.isChampion).length,
+      }
+    }
+
+    // Draft stats
+    const userDrafts = draftByUser.get(userId) || []
+    const draftStats = {}
+    if (userDrafts.length > 0) {
+      const withValue = userDrafts.filter(d => d.valueVsAdp != null)
+      draftStats.snakeAvgValue = withValue.length > 0
+        ? round2(withValue.reduce((s, d) => s + d.valueVsAdp, 0) / withValue.length)
+        : null
+
+      const auctionDrafts = userDrafts.filter(d => d.auctionAmount != null && d.auctionAmount > 0)
+      draftStats.auctionROI = auctionDrafts.length > 0
+        ? round2(auctionDrafts.reduce((s, d) => s + ((d.totalFantasyPoints || 0) / d.auctionAmount), 0) / auctionDrafts.length)
+        : null
+
+      const sorted = [...userDrafts].filter(d => d.totalFantasyPoints != null).sort((a, b) => b.totalFantasyPoints - a.totalFantasyPoints)
+      if (sorted.length > 0) {
+        draftStats.bestPick = { playerId: sorted[0].playerId, points: sorted[0].totalFantasyPoints, pick: sorted[0].pickNumber }
+        draftStats.worstPick = { playerId: sorted[sorted.length - 1].playerId, points: sorted[sorted.length - 1].totalFantasyPoints, pick: sorted[sorted.length - 1].pickNumber }
+      }
+    }
+
+    await prisma.managerSeasonSummary.upsert({
+      where: { userId_sportId_seasonId: { userId, sportId, seasonId } },
+      update: { leaguesPlayed: userTS.length, championships, totalPoints, wins, losses, ties, avgFinish, bestFinish, byFormat, draftStats },
+      create: { userId, sportId, seasonId, leaguesPlayed: userTS.length, championships, totalPoints, wins, losses, ties, avgFinish, bestFinish, byFormat, draftStats },
+    })
+    summaries++
+
+    // ── ManagerProfile (per-sport) ──
+    // Aggregate across ALL seasons for this user+sport
+    const allSeasonSummaries = await prisma.managerSeasonSummary.findMany({
+      where: { userId, sportId },
+    })
+
+    const totalW = allSeasonSummaries.reduce((s, ss) => s + ss.wins, 0)
+    const totalL = allSeasonSummaries.reduce((s, ss) => s + ss.losses, 0)
+    const totalT = allSeasonSummaries.reduce((s, ss) => s + ss.ties, 0)
+    const totalGames = totalW + totalL + totalT
+    const totalChamps = allSeasonSummaries.reduce((s, ss) => s + ss.championships, 0)
+    const totalPts = round2(allSeasonSummaries.reduce((s, ss) => s + ss.totalPoints, 0))
+    const totalLeagues = allSeasonSummaries.reduce((s, ss) => s + ss.leaguesPlayed, 0)
+
+    const allRanked = allSeasonSummaries.filter(ss => ss.bestFinish != null)
+    const profileAvgFinish = allSeasonSummaries.filter(ss => ss.avgFinish > 0).length > 0
+      ? round2(allSeasonSummaries.filter(ss => ss.avgFinish > 0).reduce((s, ss) => s + ss.avgFinish, 0) / allSeasonSummaries.filter(ss => ss.avgFinish > 0).length)
+      : 0
+    const profileBestFinish = allRanked.length > 0
+      ? Math.min(...allRanked.map(ss => ss.bestFinish))
+      : null
+
+    // Draft efficiency from all drafts
+    const allUserDrafts = await prisma.draftValueTracker.findMany({
+      where: { draftPick: { team: { userId } } },
+      select: { valueVsAdp: true, auctionAmount: true, totalFantasyPoints: true },
+    })
+    const dvWithValue = allUserDrafts.filter(d => d.valueVsAdp != null)
+    const draftEfficiency = dvWithValue.length > 0
+      ? round2(dvWithValue.reduce((s, d) => s + d.valueVsAdp, 0) / dvWithValue.length)
+      : null
+
+    const auctionPicks = allUserDrafts.filter(d => d.auctionAmount != null && d.auctionAmount > 0)
+    const auctionROI = auctionPicks.length > 0
+      ? round2(auctionPicks.reduce((s, d) => s + ((d.totalFantasyPoints || 0) / d.auctionAmount), 0) / auctionPicks.length)
+      : null
+
+    await prisma.managerProfile.upsert({
+      where: { userId_sportId: { userId, sportId } },
+      update: {
+        totalLeagues, totalSeasons: allSeasonSummaries.length, championships: totalChamps,
+        wins: totalW, losses: totalL, ties: totalT,
+        winPct: totalGames > 0 ? round2(totalW / totalGames) : 0,
+        avgFinish: profileAvgFinish, bestFinish: profileBestFinish,
+        totalPoints: totalPts, auctionROI, draftEfficiency,
+      },
+      create: {
+        userId, sportId,
+        totalLeagues, totalSeasons: allSeasonSummaries.length, championships: totalChamps,
+        wins: totalW, losses: totalL, ties: totalT,
+        winPct: totalGames > 0 ? round2(totalW / totalGames) : 0,
+        avgFinish: profileAvgFinish, bestFinish: profileBestFinish,
+        totalPoints: totalPts, auctionROI, draftEfficiency,
+      },
+    })
+    profiles++
+  }
+
+  return { profiles, summaries }
+}
+
+// ─── 7. Head-to-Head Records ────────────────────────────────────────────────
+
+/**
+ * Compute/update HeadToHeadRecord from WeeklyTeamResult matchup data.
+ */
+async function computeHeadToHead(seasonId, prisma) {
+  // Get all H2H results for this season
+  const results = await prisma.weeklyTeamResult.findMany({
+    where: {
+      leagueSeason: { seasonId },
+      opponentTeamId: { not: null },
+      result: { not: null },
+    },
+    include: {
+      team: { select: { userId: true } },
+      leagueSeason: {
+        include: { league: { select: { sportId: true, format: true } } },
+      },
+    },
+  })
+
+  if (results.length === 0) return { computed: 0 }
+
+  // Need opponent userId
+  const opponentTeamIds = [...new Set(results.map(r => r.opponentTeamId).filter(Boolean))]
+  const opponentTeams = await prisma.team.findMany({
+    where: { id: { in: opponentTeamIds } },
+    select: { id: true, userId: true },
+  })
+  const teamUserMap = new Map(opponentTeams.map(t => [t.id, t.userId]))
+
+  // Group: (userId, opponentUserId, sportId, format) → results[]
+  const groups = new Map()
+  for (const r of results) {
+    const uid = r.team.userId
+    const oppUid = teamUserMap.get(r.opponentTeamId)
+    if (!oppUid || uid === oppUid) continue
+
+    const sportId = r.leagueSeason.league.sportId
+    const format = r.leagueSeason.league.format
+
+    // Normalize: always store with lower cuid first
+    const [u1, u2] = uid < oppUid ? [uid, oppUid] : [oppUid, uid]
+    const isForward = uid === u1 // true if "userId" in the record is the current result's user
+
+    // Per-format key
+    const fmtKey = `${u1}|${u2}|${sportId}|${format}`
+    if (!groups.has(fmtKey)) groups.set(fmtKey, { u1, u2, sportId, format, results: [] })
+    groups.get(fmtKey).results.push({ ...r, isForward })
+
+    // All-format key (format = null)
+    const allKey = `${u1}|${u2}|${sportId}|null`
+    if (!groups.has(allKey)) groups.set(allKey, { u1, u2, sportId, format: null, results: [] })
+    groups.get(allKey).results.push({ ...r, isForward })
+  }
+
+  let computed = 0
+
+  for (const [, group] of groups) {
+    let wins = 0, losses = 0, ties = 0, pointsFor = 0, pointsAgainst = 0
+    let lastAt = null
+
+    for (const r of group.results) {
+      const isWin = r.result === 'WIN'
+      const isLoss = r.result === 'LOSS'
+      const isTie = r.result === 'TIE'
+
+      if (r.isForward) {
+        if (isWin) wins++
+        else if (isLoss) losses++
+        else if (isTie) ties++
+        pointsFor += r.totalPoints || 0
+        pointsAgainst += r.opponentPoints || 0
+      } else {
+        // Flip perspective: their win is our loss
+        if (isWin) losses++
+        else if (isLoss) wins++
+        else if (isTie) ties++
+        pointsFor += r.opponentPoints || 0
+        pointsAgainst += r.totalPoints || 0
+      }
+
+      const ts = r.createdAt
+      if (!lastAt || ts > lastAt) lastAt = ts
+    }
+
+    const matchupsPlayed = wins + losses + ties
+    const avgMargin = matchupsPlayed > 0 ? round2((pointsFor - pointsAgainst) / matchupsPlayed) : 0
+
+    // Compute streaks from forward perspective
+    let currentStreak = 0, longestStreak = 0, currentType = null
+    const sorted = [...group.results].sort((a, b) => a.createdAt - b.createdAt)
+    for (const r of sorted) {
+      const rType = r.isForward ? r.result : (r.result === 'WIN' ? 'LOSS' : r.result === 'LOSS' ? 'WIN' : 'TIE')
+      if (rType === currentType) {
+        currentStreak++
+      } else {
+        currentType = rType
+        currentStreak = 1
+      }
+      if (currentStreak > longestStreak) longestStreak = currentStreak
+    }
+
+    const stats = { currentStreak, longestStreak, avgMargin: round2(avgMargin) }
+
+    await prisma.headToHeadRecord.upsert({
+      where: {
+        userId_opponentUserId_sportId_leagueFormat: {
+          userId: group.u1,
+          opponentUserId: group.u2,
+          sportId: group.sportId,
+          leagueFormat: group.format,
+        },
+      },
+      update: { wins, losses, ties, pointsFor: round2(pointsFor), pointsAgainst: round2(pointsAgainst), matchupsPlayed, lastMatchupAt: lastAt, stats },
+      create: {
+        userId: group.u1, opponentUserId: group.u2,
+        sportId: group.sportId, leagueFormat: group.format,
+        wins, losses, ties, pointsFor: round2(pointsFor), pointsAgainst: round2(pointsAgainst),
+        matchupsPlayed, lastMatchupAt: lastAt, stats,
+      },
+    })
+    computed++
+  }
+
+  return { computed }
+}
+
+// ─── 8. Achievements ────────────────────────────────────────────────────────
+
+/**
+ * Check and unlock achievements for a user (or all users).
+ * Compares current stats against achievement criteria.
+ */
+async function checkAchievements(userId, prisma) {
+  const achievements = await prisma.achievement.findMany()
+  if (achievements.length === 0) return { checked: 0, unlocked: 0 }
+
+  // If userId provided, check just that user; else check all
+  const users = userId
+    ? [{ id: userId }]
+    : await prisma.user.findMany({ select: { id: true } })
+
+  let totalUnlocked = 0
+
+  for (const user of users) {
+    const uid = user.id
+
+    // Get existing unlocks to skip
+    const existingUnlocks = await prisma.achievementUnlock.findMany({
+      where: { userId: uid },
+      select: { achievementId: true },
+    })
+    const unlockedSet = new Set(existingUnlocks.map(u => u.achievementId))
+
+    // Load user stats
+    const profile = await prisma.managerProfile.findFirst({ where: { userId: uid } })
+    const seasonSummaries = await prisma.managerSeasonSummary.findMany({ where: { userId: uid } })
+    const ownedLeagues = await prisma.league.count({ where: { ownerId: uid } })
+
+    for (const ach of achievements) {
+      if (unlockedSet.has(ach.id)) continue
+
+      const c = ach.criteria || {}
+      let earned = false
+      let context = {}
+
+      switch (c.type) {
+        case 'championships':
+          if (profile && profile.championships >= (c.threshold || 1)) {
+            earned = true
+          }
+          break
+
+        case 'career_wins':
+          if (profile && profile.wins >= (c.threshold || 1)) {
+            earned = true
+          }
+          break
+
+        case 'total_leagues':
+          if (profile && profile.totalLeagues >= (c.threshold || 1)) {
+            earned = true
+          }
+          break
+
+        case 'total_seasons':
+          if (profile && profile.totalSeasons >= (c.threshold || 1)) {
+            earned = true
+          }
+          break
+
+        case 'best_finish':
+          if (profile && profile.bestFinish != null && profile.bestFinish <= (c.threshold || 3)) {
+            earned = true
+          }
+          break
+
+        case 'season_points':
+          for (const ss of seasonSummaries) {
+            if (ss.totalPoints >= (c.threshold || 1000)) {
+              earned = true
+              context = { seasonId: ss.seasonId }
+              break
+            }
+          }
+          break
+
+        case 'win_streak':
+          if (profile) {
+            const stats = profile.stats || {}
+            if ((stats.longestWinStreak || 0) >= (c.threshold || 5)) {
+              earned = true
+            }
+          }
+          break
+
+        case 'leagues_as_commissioner':
+          if (ownedLeagues >= (c.threshold || 3)) {
+            earned = true
+          }
+          break
+
+        case 'sports_played': {
+          const sportCount = await prisma.managerProfile.count({
+            where: { userId: uid, sportId: { not: null } },
+          })
+          if (sportCount >= (c.threshold || 2)) {
+            earned = true
+          }
+          break
+        }
+
+        case 'draft_value_vs_adp': {
+          const steals = await prisma.draftValueTracker.findMany({
+            where: { draftPick: { team: { userId: uid } }, valueVsAdp: { gte: c.threshold || 50 } },
+            take: 1,
+          })
+          if (steals.length > 0) {
+            earned = true
+            context = { draftPickId: steals[0].draftPickId }
+          }
+          break
+        }
+
+        // More complex criteria can be checked here as data accumulates
+        default:
+          break
+      }
+
+      if (earned) {
+        await prisma.achievementUnlock.create({
+          data: {
+            userId: uid,
+            achievementId: ach.id,
+            context: Object.keys(context).length > 0 ? context : undefined,
+          },
+        })
+        totalUnlocked++
+      }
+    }
+  }
+
+  return { checked: users.length, unlocked: totalUnlocked }
+}
+
+// ─── 9. Refresh All ─────────────────────────────────────────────────────────
 
 /**
  * Master function to refresh all analytics for a season.
@@ -483,6 +924,15 @@ async function refreshAll(seasonId, prisma) {
     results.draftValue.total += dv.computed
   }
 
+  // 6. Manager profiles + season summaries
+  results.managerProfiles = await computeManagerProfiles(seasonId, prisma)
+
+  // 7. Head-to-head records
+  results.headToHead = await computeHeadToHead(seasonId, prisma)
+
+  // 8. Achievement checks (all users)
+  results.achievements = await checkAchievements(null, prisma)
+
   return results
 }
 
@@ -492,5 +942,8 @@ module.exports = {
   computeConsistency,
   computeOwnership,
   computeDraftValue,
+  computeManagerProfiles,
+  computeHeadToHead,
+  checkAchievements,
   refreshAll,
 }

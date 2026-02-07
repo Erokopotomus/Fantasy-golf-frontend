@@ -31,6 +31,13 @@ model User {
   notifications  Notification[]
   picks          Pick[]
 
+  // Manager Analytics relations
+  managerProfiles        ManagerProfile[]
+  h2hRecords             HeadToHeadRecord[]  @relation("H2HUser")
+  h2hOpponentRecords     HeadToHeadRecord[]  @relation("H2HOpponent")
+  achievementUnlocks     AchievementUnlock[]
+  managerSeasonSummaries ManagerSeasonSummary[]
+
   @@map("users")
 }
 
@@ -71,6 +78,7 @@ model League {
   matchups      Matchup[]
   picks         Pick[]
   leagueSeasons LeagueSeason[]
+  rosterSlots   RosterSlotDefinition[] @relation("LeagueRosterSlots")
 
   @@map("leagues")
 }
@@ -119,16 +127,18 @@ model Team {
   weeklyResults      WeeklyTeamResult[]
   lineupSnapshots    LineupSnapshot[]
   rosterTransactions RosterTransaction[]
+  budgets            TeamBudget[]
 
   @@unique([userId, leagueId])
   @@map("teams")
 }
 
 model RosterEntry {
-  id          String   @id @default(cuid())
-  position    String   @default("BENCH") // ACTIVE, BENCH, IR
-  acquiredAt  DateTime @default(now())
-  acquiredVia String   @default("DRAFT") // DRAFT, WAIVER, TRADE, FREE_AGENT
+  id           String   @id @default(cuid())
+  position     String   @default("BENCH") // ACTIVE, BENCH, IR (legacy)
+  rosterStatus String   @default("BENCH") // ACTIVE, BENCH, IR (canonical)
+  acquiredAt   DateTime @default(now())
+  acquiredVia  String   @default("DRAFT") // DRAFT, WAIVER, TRADE, FREE_AGENT
 
   // Soft-delete support
   isActive  Boolean   @default(true)
@@ -138,6 +148,9 @@ model RosterEntry {
   team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
   playerId String
   player   Player @relation(fields: [playerId], references: [id])
+
+  // Relations
+  slotAssignments RosterSlotAssignment[]
 
   @@unique([teamId, playerId])
   @@index([teamId, isActive])
@@ -242,6 +255,10 @@ model Player {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Sport link (nullable for backward compat)
+  sportId String?
+  sportRef Sport? @relation("PlayerSport", fields: [sportId], references: [id])
+
   // Relations
   rosters            RosterEntry[]
   draftPicks         DraftPick[]
@@ -258,6 +275,9 @@ model Player {
   consistency        PlayerConsistency[]
   ownershipRates     OwnershipRate[]
   draftValueTrackers DraftValueTracker[]
+  positions          PlayerPosition[]
+  tagAssignments     PlayerTagAssignment[]
+  sportProfiles      SportPlayerProfile[]
 
   @@index([owgrRank])
   @@index([name])
@@ -942,6 +962,16 @@ model Sport {
   seasons        Season[]
   scoringSystems ScoringSystem[]
   leagues        League[]        @relation("LeagueSport")
+  positions      Position[]
+  playerTags     PlayerTag[]
+  sportProfiles  SportPlayerProfile[]
+  players        Player[]        @relation("PlayerSport")
+
+  // Manager Analytics relations
+  managerProfiles        ManagerProfile[]        @relation("ManagerProfileSport")
+  h2hRecords             HeadToHeadRecord[]      @relation("H2HSport")
+  achievements           Achievement[]           @relation("AchievementSport")
+  managerSeasonSummaries ManagerSeasonSummary[]  @relation("ManagerSeasonSummarySport")
 
   @@map("sports")
 }
@@ -968,6 +998,9 @@ model Season {
   adpEntries     ADPEntry[]
   consistency    PlayerConsistency[]
   ownershipRates OwnershipRate[]
+  tagAssignments PlayerTagAssignment[]
+  sportProfiles  SportPlayerProfile[]
+  managerSeasonSummaries ManagerSeasonSummary[]
 
   @@unique([sportId, slug])
   @@map("seasons")
@@ -997,6 +1030,7 @@ model FantasyWeek {
   lineupSnapshots    LineupSnapshot[]
   rosterTransactions RosterTransaction[]
   ownershipRates     OwnershipRate[]
+  slotAssignments    RosterSlotAssignment[]
 
   @@unique([seasonId, weekNumber])
   @@map("fantasy_weeks")
@@ -1019,6 +1053,7 @@ model ScoringSystem {
   leagues           League[]            @relation("LeagueScoring")
   fantasyScores     FantasyScore[]
   playerConsistency PlayerConsistency[]
+  rosterSlots       RosterSlotDefinition[]
 
   @@unique([sportId, slug])
   @@map("scoring_systems")
@@ -1076,6 +1111,7 @@ model LeagueSeason {
   lineupSnapshots    LineupSnapshot[]
   rosterTransactions RosterTransaction[]
   draftValueTrackers DraftValueTracker[]
+  teamBudgets        TeamBudget[]
 
   @@unique([leagueId, seasonId])
   @@map("league_seasons")
@@ -1448,4 +1484,339 @@ enum TransactionType {
   TRADE_SENT
   COMMISSIONER_ADD
   COMMISSIONER_DROP
+}
+
+enum TagCategory {
+  STATUS
+  SKILL
+  HEALTH
+  CONTRACT
+  CUSTOM
+}
+
+// ============ UNIVERSAL PLAYER PROFILE LAYER ============
+
+model Position {
+  id        String @id @default(cuid())
+  sportId   String
+  sport     Sport  @relation(fields: [sportId], references: [id])
+  abbr      String // "QB", "RB", "G" (golfer)
+  name      String // "Quarterback", "Running Back", "Golfer"
+  sortOrder Int    @default(0)
+  config    Json   @default("{}") // Sport-specific position config
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  playerPositions      PlayerPosition[]
+  rosterSlotEligibility RosterSlotEligibility[]
+
+  @@unique([sportId, abbr])
+  @@map("positions")
+}
+
+model PlayerPosition {
+  id         String  @id @default(cuid())
+  playerId   String
+  player     Player  @relation(fields: [playerId], references: [id])
+  positionId String
+  position   Position @relation(fields: [positionId], references: [id])
+  isPrimary  Boolean @default(true)
+  source     String? // "datagolf", "espn", "manual"
+
+  createdAt DateTime @default(now())
+
+  @@unique([playerId, positionId])
+  @@index([positionId])
+  @@map("player_positions")
+}
+
+model RosterSlotDefinition {
+  id              String  @id @default(cuid())
+  // Either league-level or scoring-system-level (one must be set)
+  scoringSystemId String?
+  scoringSystem   ScoringSystem? @relation(fields: [scoringSystemId], references: [id])
+  leagueId        String?
+  league          League? @relation("LeagueRosterSlots", fields: [leagueId], references: [id], onDelete: Cascade)
+
+  slotKey     String // "QB1", "RB1", "RB2", "FLEX1", "BN1", "BN2"
+  displayName String // "Quarterback", "Running Back", "Flex", "Bench"
+  slotType    String // "STARTER", "BENCH", "IR"
+  sortOrder   Int    @default(0)
+  maxPlayers  Int    @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  eligibility     RosterSlotEligibility[]
+  slotAssignments RosterSlotAssignment[]
+
+  @@unique([scoringSystemId, slotKey])
+  @@unique([leagueId, slotKey])
+  @@map("roster_slot_definitions")
+}
+
+model RosterSlotEligibility {
+  id                     String               @id @default(cuid())
+  rosterSlotDefinitionId String
+  rosterSlotDefinition   RosterSlotDefinition @relation(fields: [rosterSlotDefinitionId], references: [id], onDelete: Cascade)
+  positionId             String
+  position               Position             @relation(fields: [positionId], references: [id])
+
+  @@unique([rosterSlotDefinitionId, positionId])
+  @@map("roster_slot_eligibility")
+}
+
+model RosterSlotAssignment {
+  id                     String               @id @default(cuid())
+  rosterSlotDefinitionId String
+  rosterSlotDefinition   RosterSlotDefinition @relation(fields: [rosterSlotDefinitionId], references: [id])
+  rosterEntryId          String
+  rosterEntry            RosterEntry          @relation(fields: [rosterEntryId], references: [id])
+  fantasyWeekId          String
+  fantasyWeek            FantasyWeek          @relation(fields: [fantasyWeekId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([rosterSlotDefinitionId, fantasyWeekId, rosterEntryId])
+  @@index([rosterEntryId, fantasyWeekId])
+  @@map("roster_slot_assignments")
+}
+
+model PlayerTag {
+  id       String      @id @default(cuid())
+  sportId  String
+  sport    Sport       @relation(fields: [sportId], references: [id])
+  slug     String
+  name     String
+  category TagCategory
+  color    String?     // Hex color for UI
+  icon     String?     // Icon name or emoji
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  assignments PlayerTagAssignment[]
+
+  @@unique([sportId, slug])
+  @@map("player_tags")
+}
+
+model PlayerTagAssignment {
+  id        String    @id @default(cuid())
+  playerId  String
+  player    Player    @relation(fields: [playerId], references: [id])
+  tagId     String
+  tag       PlayerTag @relation(fields: [tagId], references: [id])
+  seasonId  String?
+  season    Season?   @relation(fields: [seasonId], references: [id])
+  value     String?   // Optional value (e.g., contract amount, injury type)
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([playerId, tagId, seasonId])
+  @@index([tagId])
+  @@index([seasonId])
+  @@map("player_tag_assignments")
+}
+
+model TeamBudget {
+  id              String       @id @default(cuid())
+  teamId          String
+  team            Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  leagueSeasonId  String
+  leagueSeason    LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
+
+  totalBudget     Float   @default(200)
+  spent           Float   @default(0)
+  remaining       Float   @default(200)
+  spentByPosition Json    @default("{}") // { "QB": 45, "RB": 80, "WR": 60, ... }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, leagueSeasonId])
+  @@map("team_budgets")
+}
+
+model SportPlayerProfile {
+  id       String  @id @default(cuid())
+  playerId String
+  player   Player  @relation(fields: [playerId], references: [id])
+  sportId  String
+  sport    Sport   @relation(fields: [sportId], references: [id])
+  seasonId String
+  season   Season  @relation(fields: [seasonId], references: [id])
+
+  stats    Json @default("{}") // Sport-specific stats JSONB
+  rankings Json @default("{}") // Sport-specific rankings JSONB
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, sportId, seasonId])
+  @@index([sportId, seasonId])
+  @@map("sport_player_profiles")
+}
+
+// ============ MANAGER ANALYTICS & ACHIEVEMENTS ============
+
+model ManagerProfile {
+  id     String  @id @default(cuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id])
+
+  // Nullable = cross-sport aggregate
+  sportId String?
+  sport   Sport?  @relation("ManagerProfileSport", fields: [sportId], references: [id])
+
+  totalLeagues    Int   @default(0)
+  totalSeasons    Int   @default(0)
+  championships   Int   @default(0)
+  wins            Int   @default(0)
+  losses          Int   @default(0)
+  ties            Int   @default(0)
+  winPct          Float @default(0)
+  avgFinish       Float @default(0)
+  bestFinish      Int?
+  totalPoints     Float @default(0)
+  auctionROI      Float? // avg points/dollar across auction drafts
+  draftEfficiency Float? // avg valueVsAdp
+
+  // Flexible stats: { streaks, perfectLineups, etc. }
+  stats Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, sportId])
+  @@index([userId])
+  @@map("manager_profiles")
+}
+
+model HeadToHeadRecord {
+  id             String  @id @default(cuid())
+  userId         String
+  user           User    @relation("H2HUser", fields: [userId], references: [id])
+  opponentUserId String
+  opponent       User    @relation("H2HOpponent", fields: [opponentUserId], references: [id])
+
+  // Nullable = all sports / all formats
+  sportId      String?
+  sport        Sport?        @relation("H2HSport", fields: [sportId], references: [id])
+  leagueFormat LeagueFormat?
+
+  wins           Int   @default(0)
+  losses         Int   @default(0)
+  ties           Int   @default(0)
+  pointsFor      Float @default(0)
+  pointsAgainst  Float @default(0)
+  matchupsPlayed Int   @default(0)
+  lastMatchupAt  DateTime?
+
+  // { currentStreak, longestStreak, avgMargin }
+  stats Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, opponentUserId, sportId, leagueFormat])
+  @@index([userId])
+  @@index([opponentUserId])
+  @@map("head_to_head_records")
+}
+
+model Achievement {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  sportId     String?
+  sport       Sport?  @relation("AchievementSport", fields: [sportId], references: [id])
+
+  tier     AchievementTier
+  icon     String? // emoji or icon name
+  category AchievementCategory
+  isHidden Boolean @default(false)
+
+  // { type: "championships", threshold: 1 } — for automated checking
+  criteria Json @default("{}")
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  unlocks AchievementUnlock[]
+
+  @@map("achievements")
+}
+
+model AchievementUnlock {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  unlockedAt    DateTime    @default(now())
+
+  // { leagueId, seasonId, details }
+  context Json?
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@map("achievement_unlocks")
+}
+
+model ManagerSeasonSummary {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  sportId  String
+  sport    Sport  @relation("ManagerSeasonSummarySport", fields: [sportId], references: [id])
+  seasonId String
+  season   Season @relation(fields: [seasonId], references: [id])
+
+  leaguesPlayed Int   @default(0)
+  championships Int   @default(0)
+  totalPoints   Float @default(0)
+  wins          Int   @default(0)
+  losses        Int   @default(0)
+  ties          Int   @default(0)
+  avgFinish     Float @default(0)
+  bestFinish    Int?
+
+  // { "HEAD_TO_HEAD": { wins, losses, avgFinish }, "FULL_LEAGUE": { ... } }
+  byFormat Json @default("{}")
+
+  // { snakeAvgValue, auctionROI, bestPick, worstPick }
+  draftStats Json @default("{}")
+
+  // Flexible overflow
+  stats Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, sportId, seasonId])
+  @@index([userId])
+  @@index([seasonId])
+  @@map("manager_season_summaries")
+}
+
+enum AchievementTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum AchievementCategory {
+  SEASON
+  DRAFT
+  LINEUP
+  SOCIAL
+  MILESTONE
 }

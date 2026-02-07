@@ -124,7 +124,7 @@ async function snapshotLineups(fantasyWeekId, prisma) {
       const lineup = team.roster.map((entry) => ({
         playerId: entry.playerId,
         playerName: entry.player.name,
-        position: entry.position,
+        position: entry.rosterStatus || entry.position,
       }))
 
       await prisma.lineupSnapshot.upsert({
@@ -219,14 +219,16 @@ async function computeWeeklyResults(fantasyWeekId, prisma) {
         const fs = scoreMap.get(entry.playerId)
         const pts = fs ? fs.totalPoints : 0
 
+        const entryStatus = entry.rosterStatus || entry.position
+
         playerScores.push({
           playerId: entry.playerId,
           playerName: entry.player.name,
           points: pts,
-          position: entry.position,
+          position: entryStatus,
         })
 
-        if (entry.position === 'ACTIVE') {
+        if (entryStatus === 'ACTIVE') {
           totalPoints += pts
         } else {
           benchPoints += pts
@@ -359,7 +361,7 @@ async function recordTransaction(data, prisma) {
     }
   }
 
-  return prisma.rosterTransaction.create({
+  const transaction = await prisma.rosterTransaction.create({
     data: {
       leagueSeasonId,
       fantasyWeekId,
@@ -377,6 +379,8 @@ async function recordTransaction(data, prisma) {
       tradeId: data.tradeId || null,
     },
   })
+
+  return transaction
 }
 
 /**

@@ -415,9 +415,61 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       data: {
         teamId: userTeam.id,
         playerId,
-        position: 'ACTIVE'
+        position: 'ACTIVE',
+        rosterStatus: 'ACTIVE'
       }
     })
+
+    // Update TeamBudget for auction drafts
+    if (amount && draft.league.draftType === 'AUCTION') {
+      try {
+        const currentSeason = await prisma.season.findFirst({ where: { isCurrent: true } })
+        if (currentSeason) {
+          const leagueSeason = await prisma.leagueSeason.findFirst({
+            where: { leagueId: draft.leagueId, seasonId: currentSeason.id },
+          })
+          if (leagueSeason) {
+            const playerPos = await prisma.playerPosition.findFirst({
+              where: { playerId, isPrimary: true },
+              include: { position: { select: { abbr: true } } },
+            })
+            const posAbbr = playerPos?.position?.abbr || 'G'
+            const totalBudget = draft.league.settings?.budget || 200
+
+            // Read-modify-write for spentByPosition
+            const existing = await prisma.teamBudget.findUnique({
+              where: { teamId_leagueSeasonId: { teamId: userTeam.id, leagueSeasonId: leagueSeason.id } },
+            })
+
+            if (existing) {
+              const sbp = existing.spentByPosition || {}
+              sbp[posAbbr] = (sbp[posAbbr] || 0) + amount
+              await prisma.teamBudget.update({
+                where: { id: existing.id },
+                data: {
+                  spent: existing.spent + amount,
+                  remaining: existing.remaining - amount,
+                  spentByPosition: sbp,
+                },
+              })
+            } else {
+              await prisma.teamBudget.create({
+                data: {
+                  teamId: userTeam.id,
+                  leagueSeasonId: leagueSeason.id,
+                  totalBudget,
+                  spent: amount,
+                  remaining: totalBudget - amount,
+                  spentByPosition: { [posAbbr]: amount },
+                },
+              })
+            }
+          }
+        }
+      } catch (budgetErr) {
+        console.error('TeamBudget update failed:', budgetErr.message)
+      }
+    }
 
     // Log draft pick transaction
     recordTransaction({

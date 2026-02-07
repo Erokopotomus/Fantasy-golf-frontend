@@ -19,6 +19,10 @@ const notificationRoutes = require('./routes/notifications')
 const searchRoutes = require('./routes/search')
 const syncRoutes = require('./routes/sync')
 const analyticsRoutes = require('./routes/analytics')
+const positionRoutes = require('./routes/positions')
+const playerTagRoutes = require('./routes/playerTags')
+const rosterSlotRoutes = require('./routes/rosterSlots')
+const managerAnalyticsRoutes = require('./routes/managerAnalytics')
 
 const app = express()
 const httpServer = createServer(app)
@@ -88,6 +92,10 @@ app.use('/api/notifications', notificationRoutes)
 app.use('/api/search', searchRoutes)
 app.use('/api/sync', syncRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api', positionRoutes)
+app.use('/api', playerTagRoutes)
+app.use('/api', rosterSlotRoutes)
+app.use('/api/managers', managerAnalyticsRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -303,7 +311,7 @@ httpServer.listen(PORT, () => {
         const currentSeason = await cronPrisma.season.findFirst({ where: { isCurrent: true } })
         if (!currentSeason) return cronLog('analytics', 'No current season found')
         const results = await analytics.refreshAll(currentSeason.id, cronPrisma)
-        cronLog('analytics', `Done: stats=${results.playerStats?.computed}, adp=${results.adp?.computed}, ownership=${results.ownership?.computed}, draftValue=${results.draftValue?.total}`)
+        cronLog('analytics', `Done: stats=${results.playerStats?.computed}, adp=${results.adp?.computed}, ownership=${results.ownership?.computed}, draftValue=${results.draftValue?.total}, profiles=${results.managerProfiles?.profiles}, h2h=${results.headToHead?.computed}, achievements=${results.achievements?.unlocked}`)
 
         // Refresh materialized views
         const viewResults = await refreshAllViews(cronPrisma)
