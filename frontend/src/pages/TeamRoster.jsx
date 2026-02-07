@@ -55,6 +55,8 @@ const TeamRoster = () => {
   const [pendingActive, setPendingActive] = useState(null)
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [showOptimizer, setShowOptimizer] = useState(false)
+  const [draggedPlayerId, setDraggedPlayerId] = useState(null)
+  const [dragOverZone, setDragOverZone] = useState(null) // 'active' | 'bench' | null
 
   const maxActive = league?.settings?.maxActiveLineup || 4
   const rosterSize = league?.settings?.rosterSize || 6
@@ -119,6 +121,50 @@ const TeamRoster = () => {
       isOnRoster: true,
       position: player.rosterPosition,
       onDrop: (pid) => handleDrop(pid),
+    }
+  }
+
+  const handleDragStart = (e, playerId) => {
+    setDraggedPlayerId(playerId)
+    e.dataTransfer.setData('text/plain', playerId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragEnd = () => {
+    setDraggedPlayerId(null)
+    setDragOverZone(null)
+  }
+
+  const handleDragOver = (e, zone) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverZone(zone)
+  }
+
+  const handleDragLeave = (e, zone) => {
+    // Only clear if we're actually leaving the zone (not entering a child)
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverZone(prev => prev === zone ? null : prev)
+    }
+  }
+
+  const handleDropToZone = (e, zone) => {
+    e.preventDefault()
+    const playerId = e.dataTransfer.getData('text/plain')
+    setDragOverZone(null)
+    setDraggedPlayerId(null)
+    if (!playerId || !pendingActive) return
+
+    if (zone === 'active' && !pendingActive.has(playerId)) {
+      if (pendingActive.size < maxActive) {
+        setPendingActive(prev => new Set([...prev, playerId]))
+      }
+    } else if (zone === 'bench' && pendingActive.has(playerId)) {
+      setPendingActive(prev => {
+        const next = new Set(prev)
+        next.delete(playerId)
+        return next
+      })
     }
   }
 
@@ -241,7 +287,7 @@ const TeamRoster = () => {
       {isEditing && (
         <div className="mb-4 p-3 rounded-lg bg-dark-secondary border border-dark-border">
           <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-text-muted">Active lineup</span>
+            <span className="text-text-muted">Active lineup — drag or tap players to move</span>
             <span className={`font-medium ${activeSet.size === maxActive ? 'text-emerald-400' : 'text-white'}`}>
               {activeSet.size} / {maxActive}
             </span>
@@ -277,10 +323,21 @@ const TeamRoster = () => {
       )}
 
       {/* Active Lineup */}
-      <div className="mb-6">
+      <div
+        className={`mb-6 rounded-lg transition-all duration-200 ${
+          isEditing && draggedPlayerId
+            ? dragOverZone === 'active'
+              ? 'ring-2 ring-emerald-400 bg-emerald-500/5 p-3'
+              : 'ring-1 ring-dashed ring-dark-border p-3'
+            : ''
+        }`}
+        onDragOver={isEditing ? (e) => handleDragOver(e, 'active') : undefined}
+        onDragLeave={isEditing ? (e) => handleDragLeave(e, 'active') : undefined}
+        onDrop={isEditing ? (e) => handleDropToZone(e, 'active') : undefined}
+      >
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Active Lineup</h2>
-          <span className="text-xs text-text-muted">({activePlayers.length})</span>
+          <span className="text-xs text-text-muted">({roster.filter(p => activeSet.has(p.id)).length})</span>
         </div>
         <div className="space-y-2">
           {roster.filter(p => activeSet.has(p.id)).map(player => (
@@ -289,21 +346,37 @@ const TeamRoster = () => {
               player={player}
               isActive={true}
               isEditing={isEditing}
+              isDragging={draggedPlayerId === player.id}
               onToggle={() => togglePlayer(player.id)}
+              onDragStart={(e) => handleDragStart(e, player.id)}
+              onDragEnd={handleDragEnd}
               onDrop={() => handleDrop(player)}
               onClick={() => handlePlayerClick(player)}
             />
           ))}
           {roster.filter(p => activeSet.has(p.id)).length === 0 && (
-            <div className="text-center py-6 text-text-muted bg-dark-secondary rounded-lg border border-dashed border-dark-border">
-              No active players — {isEditing ? 'tap players below to activate' : 'edit your lineup to set starters'}
+            <div className={`text-center py-6 text-text-muted bg-dark-secondary rounded-lg border border-dashed ${
+              dragOverZone === 'active' ? 'border-emerald-400 text-emerald-400' : 'border-dark-border'
+            }`}>
+              {draggedPlayerId ? 'Drop here to start' : isEditing ? 'Drag or tap players below to activate' : 'Edit your lineup to set starters'}
             </div>
           )}
         </div>
       </div>
 
       {/* Bench */}
-      <div>
+      <div
+        className={`rounded-lg transition-all duration-200 ${
+          isEditing && draggedPlayerId
+            ? dragOverZone === 'bench'
+              ? 'ring-2 ring-neutral-400 bg-neutral-500/5 p-3'
+              : 'ring-1 ring-dashed ring-dark-border p-3'
+            : ''
+        }`}
+        onDragOver={isEditing ? (e) => handleDragOver(e, 'bench') : undefined}
+        onDragLeave={isEditing ? (e) => handleDragLeave(e, 'bench') : undefined}
+        onDrop={isEditing ? (e) => handleDropToZone(e, 'bench') : undefined}
+      >
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider">Bench</h2>
           <span className="text-xs text-text-muted">({roster.filter(p => !activeSet.has(p.id)).length})</span>
@@ -315,15 +388,20 @@ const TeamRoster = () => {
               player={player}
               isActive={false}
               isEditing={isEditing}
+              isDragging={draggedPlayerId === player.id}
               canActivate={activeSet.size < maxActive}
               onToggle={() => togglePlayer(player.id)}
+              onDragStart={(e) => handleDragStart(e, player.id)}
+              onDragEnd={handleDragEnd}
               onDrop={() => handleDrop(player)}
               onClick={() => handlePlayerClick(player)}
             />
           ))}
           {roster.filter(p => !activeSet.has(p.id)).length === 0 && (
-            <div className="text-center py-4 text-text-muted text-sm">
-              All players are active
+            <div className={`text-center py-4 text-sm ${
+              dragOverZone === 'bench' ? 'text-neutral-400' : 'text-text-muted'
+            }`}>
+              {draggedPlayerId ? 'Drop here to bench' : 'All players are active'}
             </div>
           )}
         </div>
@@ -341,38 +419,35 @@ const TeamRoster = () => {
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, canActivate = true, onToggle, onDrop, onClick }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick }) => {
   return (
     <div
-      onClick={onClick}
+      draggable={isEditing}
+      onDragStart={isEditing ? (e) => onDragStart(e) : undefined}
+      onDragEnd={isEditing ? onDragEnd : undefined}
+      onClick={isEditing ? (e) => { e.stopPropagation(); onToggle() } : onClick}
       className={`
-        flex items-center gap-3 p-3 rounded-lg transition-all
-        ${!isEditing ? 'cursor-pointer hover:bg-dark-tertiary/60' : ''}
+        flex items-center gap-3 p-3 rounded-lg transition-all select-none
+        ${isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:bg-dark-tertiary/60'}
+        ${isDragging ? 'opacity-40 scale-95' : ''}
         ${isActive
           ? 'bg-dark-secondary border border-emerald-500/30'
           : 'bg-dark-secondary/50 border border-dark-border/50'
         }
       `}
     >
-      {/* Edit toggle */}
+      {/* Drag handle (edit mode) */}
       {isEditing && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggle() }}
-          disabled={!isActive && !canActivate}
-          className={`
-            w-6 h-6 rounded flex items-center justify-center flex-shrink-0 transition-colors
-            ${isActive
-              ? 'bg-emerald-500 text-white'
-              : canActivate ? 'bg-dark-tertiary text-text-muted hover:bg-dark-border' : 'bg-dark-tertiary/50 text-text-muted/30 cursor-not-allowed'
-            }
-          `}
-        >
-          {isActive && (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </button>
+        <div className="flex flex-col items-center justify-center w-5 flex-shrink-0 text-text-muted/60">
+          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+            <circle cx="7" cy="4" r="1.5" />
+            <circle cx="13" cy="4" r="1.5" />
+            <circle cx="7" cy="10" r="1.5" />
+            <circle cx="13" cy="10" r="1.5" />
+            <circle cx="7" cy="16" r="1.5" />
+            <circle cx="13" cy="16" r="1.5" />
+          </svg>
+        </div>
       )}
 
       {/* Player info */}
@@ -407,6 +482,15 @@ const PlayerRow = ({ player, isActive, isEditing, canActivate = true, onToggle, 
         {player.top5s > 0 && <span>{player.top5s} T5</span>}
         {player.top10s > 0 && <span>{player.top10s} T10</span>}
       </div>
+
+      {/* Active/Bench badge in edit mode */}
+      {isEditing && (
+        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
+          isActive ? 'text-emerald-400 bg-emerald-500/10' : 'text-text-muted bg-dark-tertiary/50'
+        }`}>
+          {isActive ? 'ACTIVE' : 'BENCH'}
+        </span>
+      )}
 
       {/* Chevron indicator for drill-in */}
       {!isEditing && (
