@@ -109,7 +109,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
                 </div>
               )}
               <div className="min-w-0">
-                <h2 className="text-xl font-bold text-white truncate">{player?.name || 'Loading...'}</h2>
+                <h2 className="text-xl font-bold font-display text-white truncate">{player?.name || 'Loading...'}</h2>
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
                   {player?.owgrRank && <span>#{player.owgrRank} OWGR</span>}
                   {player?.primaryTour && (
@@ -147,11 +147,11 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
           {projection && (
             <div className="grid grid-cols-4 gap-px bg-dark-border/30 mx-4 mb-3 rounded-lg overflow-hidden">
               <div className="bg-dark-secondary p-2 text-center">
-                <p className="text-emerald-400 text-lg font-bold">{projection.projected}</p>
+                <p className="text-emerald-400 text-lg font-bold font-display">{projection.projected}</p>
                 <p className="text-[10px] text-text-muted uppercase">Proj</p>
               </div>
               <div className="bg-dark-secondary p-2 text-center">
-                <p className="text-white text-lg font-bold">{projection.avgFantasyPoints}</p>
+                <p className="text-white text-lg font-bold font-display">{projection.avgFantasyPoints}</p>
                 <p className="text-[10px] text-text-muted uppercase">Avg FPts</p>
               </div>
               <div className="bg-dark-secondary p-2 text-center">
@@ -161,7 +161,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
                 <p className="text-[10px] text-text-muted uppercase">Trend</p>
               </div>
               <div className="bg-dark-secondary p-2 text-center">
-                <p className="text-white text-lg font-bold">{projection.consistency}</p>
+                <p className="text-white text-lg font-bold font-display">{projection.consistency}</p>
                 <p className="text-[10px] text-text-muted uppercase">Consist</p>
               </div>
             </div>

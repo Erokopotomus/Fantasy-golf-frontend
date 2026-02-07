@@ -31,7 +31,7 @@ const PlayerSlot = ({
     <div className={`
       flex items-center gap-4 p-4 rounded-lg transition-all
       ${slotType === 'active'
-        ? 'bg-dark-secondary border border-accent-green/30'
+        ? 'bg-dark-secondary border border-gold/30'
         : 'bg-dark-tertiary border border-dark-border'
       }
     `}>
@@ -44,7 +44,7 @@ const PlayerSlot = ({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-white font-medium truncate hover:text-accent-green transition-colors">{player.name}</span>
+            <span className="text-white font-medium truncate hover:text-gold transition-colors">{player.name}</span>
             <PlayerStatusBadge status={player.status || 'active'} />
           </div>
           <div className="flex items-center gap-3 text-sm text-text-muted">
@@ -59,7 +59,7 @@ const PlayerSlot = ({
         <div className="text-right hidden sm:block">
           <p className={`font-bold ${
             player.tournamentStatus.position === '1st' ? 'text-yellow-400' :
-            player.tournamentStatus.score < 0 ? 'text-accent-green' : 'text-white'
+            player.tournamentStatus.score < 0 ? 'text-gold' : 'text-white'
           }`}>
             {player.tournamentStatus.position}
           </p>

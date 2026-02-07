@@ -50,7 +50,7 @@ const PickCenter = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading...</p>
           </div>
         </div>
@@ -63,7 +63,7 @@ const PickCenter = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="text-center py-12">
           <p className="text-red-400 mb-4">{error}</p>
-          <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
             Back to League
           </Link>
         </div>
@@ -75,11 +75,11 @@ const PickCenter = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold text-white mb-2">Not a One & Done League</h2>
+          <h2 className="text-xl font-bold font-display text-white mb-2">Not a One & Done League</h2>
           <p className="text-text-secondary mb-6">
             The Pick Center is only available for One & Done format leagues.
           </p>
-          <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
             Back to League
           </Link>
         </Card>
@@ -136,7 +136,7 @@ const PickCenter = () => {
           </svg>
           Back to {league.name}
         </Link>
-        <h1 className="text-2xl font-bold text-white">Pick Center</h1>
+        <h1 className="text-2xl font-bold font-display text-white">Pick Center</h1>
         <p className="text-text-secondary">Pick one player per tournament - use them wisely!</p>
       </div>
 
@@ -144,22 +144,22 @@ const PickCenter = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <p className="text-xs text-text-muted mb-1">Total Points</p>
-          <p className="text-2xl font-bold text-accent-green">{totalPoints}</p>
+          <p className="text-2xl font-bold font-display text-gold">{totalPoints}</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Picks Made</p>
-          <p className="text-2xl font-bold text-white">{userPicks.picks?.length || 0}</p>
+          <p className="text-2xl font-bold font-display text-white">{userPicks.picks?.length || 0}</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Players Used</p>
-          <p className="text-2xl font-bold text-white">{userPicks.usedPlayers?.length || 0}</p>
+          <p className="text-2xl font-bold font-display text-white">{userPicks.usedPlayers?.length || 0}</p>
         </Card>
 
-        <Card className={hasCurrentPick ? 'border border-accent-green/50' : 'border border-yellow-500/50'}>
+        <Card className={hasCurrentPick ? 'border border-gold/50' : 'border border-yellow-500/50'}>
           <p className="text-xs text-text-muted mb-1">This Week</p>
-          <p className={`text-lg font-bold ${hasCurrentPick ? 'text-accent-green' : 'text-yellow-400'}`}>
+          <p className={`text-lg font-bold ${hasCurrentPick ? 'text-gold' : 'text-yellow-400'}`}>
             {hasCurrentPick ? 'Pick Locked' : 'Pick Needed'}
           </p>
         </Card>
@@ -179,7 +179,7 @@ const PickCenter = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-accent-green text-white'
+                ? 'bg-gold text-white'
                 : 'bg-dark-tertiary text-text-secondary hover:text-white'
             }`}
           >
@@ -205,13 +205,13 @@ const PickCenter = () => {
           <div>
             {selectedPlayer ? (
               <Card>
-                <h3 className="text-lg font-semibold text-white mb-4">Confirm Pick</h3>
+                <h3 className="text-lg font-semibold font-display text-white mb-4">Confirm Pick</h3>
 
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 rounded-full bg-dark-tertiary flex items-center justify-center mx-auto mb-4 text-4xl">
                     {selectedPlayer.countryFlag || '🏌️'}
                   </div>
-                  <h4 className="text-xl font-bold text-white">{selectedPlayer.name}</h4>
+                  <h4 className="text-xl font-bold font-display text-white">{selectedPlayer.name}</h4>
                   <p className="text-text-muted">World Rank #{selectedPlayer.rank}</p>
                 </div>
 
@@ -222,7 +222,7 @@ const PickCenter = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-text-muted">Multiplier</span>
-                    <span className="font-bold text-accent-green">{selectedPlayer.tier?.multiplier}x</span>
+                    <span className="font-bold text-gold">{selectedPlayer.tier?.multiplier}x</span>
                   </div>
                 </div>
 
@@ -238,7 +238,7 @@ const PickCenter = () => {
                   onClick={handleConfirmPick}
                   loading={pickLoading}
                   fullWidth
-                  className={confirmPick ? 'bg-accent-green hover:bg-accent-green/90' : ''}
+                  className={confirmPick ? 'bg-gold hover:bg-gold/90' : ''}
                 >
                   {confirmPick ? 'Confirm Pick' : 'Lock In Pick'}
                 </Button>

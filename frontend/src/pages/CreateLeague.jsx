@@ -40,7 +40,7 @@ const CreateLeague = () => {
               </svg>
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">
               Create a League
             </h1>
             <p className="text-text-secondary">
@@ -69,7 +69,7 @@ const CreateLeague = () => {
           <div className="mt-6 text-center">
             <p className="text-text-secondary">
               Have a league code?{' '}
-              <Link to="/leagues/join" className="text-accent-green hover:underline">
+              <Link to="/leagues/join" className="text-gold hover:underline">
                 Join an existing league
               </Link>
             </p>

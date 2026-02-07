@@ -25,7 +25,7 @@ const PlayerProfile = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading player profile...</p>
           </div>
         </div>
@@ -41,7 +41,7 @@ const PlayerProfile = () => {
             <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
             <Link
               to="/players"
-              className="px-4 py-2 bg-accent-green text-white rounded-lg hover:bg-accent-green/90 transition-colors"
+              className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold/90 transition-colors"
             >
               Back to Players
             </Link>

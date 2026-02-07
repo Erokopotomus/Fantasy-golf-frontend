@@ -11,7 +11,7 @@ const TradeReview = ({
   if (trades.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Pending Trades</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Pending Trades</h3>
         <div className="text-center py-8 text-text-muted">
           <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -25,7 +25,7 @@ const TradeReview = ({
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-4">
+      <h3 className="text-lg font-semibold font-display text-white mb-4">
         Pending Trades ({trades.length})
       </h3>
       <div className="space-y-4">
@@ -34,14 +34,14 @@ const TradeReview = ({
             key={trade.id}
             className={`p-4 rounded-lg border ${
               trade.isIncoming
-                ? 'bg-accent-green/5 border-accent-green/30'
+                ? 'bg-gold/5 border-gold/30'
                 : 'bg-dark-tertiary border-dark-border'
             }`}
           >
             <div className="flex items-center justify-between mb-3">
               <div>
                 <span className={`text-sm ${
-                  trade.isIncoming ? 'text-accent-green' : 'text-text-muted'
+                  trade.isIncoming ? 'text-gold' : 'text-text-muted'
                 }`}>
                   {trade.isIncoming ? 'Incoming from' : 'Sent to'}
                 </span>
@@ -55,7 +55,7 @@ const TradeReview = ({
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <p className={`text-sm mb-2 ${
-                  trade.isIncoming ? 'text-accent-green' : 'text-red-400'
+                  trade.isIncoming ? 'text-gold' : 'text-red-400'
                 }`}>
                   {trade.isIncoming ? 'You receive' : 'You send'}
                 </p>
@@ -70,7 +70,7 @@ const TradeReview = ({
               </div>
               <div>
                 <p className={`text-sm mb-2 ${
-                  trade.isIncoming ? 'text-red-400' : 'text-accent-green'
+                  trade.isIncoming ? 'text-red-400' : 'text-gold'
                 }`}>
                   {trade.isIncoming ? 'You send' : 'You receive'}
                 </p>

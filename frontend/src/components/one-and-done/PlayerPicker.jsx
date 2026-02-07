@@ -57,7 +57,7 @@ const PlayerPicker = ({
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-4">Select Your Pick</h3>
+      <h3 className="text-lg font-semibold font-display text-white mb-4">Select Your Pick</h3>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -67,14 +67,14 @@ const PlayerPicker = ({
             placeholder="Search players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-text-muted focus:border-accent-green focus:outline-none"
+            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-text-muted focus:border-gold focus:outline-none"
           />
         </div>
 
         <select
           value={tierFilter}
           onChange={(e) => setTierFilter(e.target.value)}
-          className="p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+          className="p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
         >
           <option value="all">All Tiers</option>
           {tiers.map(tier => (
@@ -89,7 +89,7 @@ const PlayerPicker = ({
             type="checkbox"
             checked={showOnlyAvailable}
             onChange={(e) => setShowOnlyAvailable(e.target.checked)}
-            className="rounded text-accent-green"
+            className="rounded text-gold"
           />
           <span className="text-sm text-text-secondary whitespace-nowrap">Available only</span>
         </label>
@@ -122,7 +122,7 @@ const PlayerPicker = ({
                 }`}
               >
                 {/* Rank */}
-                <div className="text-lg font-bold text-text-muted w-8 text-center">
+                <div className="text-lg font-bold font-display text-text-muted w-8 text-center">
                   {player.rank}
                 </div>
 
@@ -150,7 +150,7 @@ const PlayerPicker = ({
                     USED
                   </span>
                 ) : isSelected ? (
-                  <span className="text-xs text-accent-green font-medium px-2 py-0.5 bg-accent-green/10 rounded">
+                  <span className="text-xs text-gold font-medium px-2 py-0.5 bg-gold/10 rounded">
                     SELECTED
                   </span>
                 ) : (

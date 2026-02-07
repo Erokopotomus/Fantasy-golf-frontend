@@ -4,7 +4,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
   if (!results || results.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Weekly Results</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Weekly Results</h3>
         <p className="text-text-muted text-center py-8">No tournament results yet</p>
       </Card>
     )
@@ -12,7 +12,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-4">Tournament Results</h3>
+      <h3 className="text-lg font-semibold font-display text-white mb-4">Tournament Results</h3>
 
       <div className="space-y-4">
         {results.map((week) => (

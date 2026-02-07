@@ -60,18 +60,18 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
               onClick={() => handleFormatSelect(format.id)}
               className={`relative p-4 rounded-lg border-2 text-left transition-all ${
                 selectedFormat === format.id
-                  ? 'border-accent-green bg-accent-green/10'
+                  ? 'border-gold bg-gold/10'
                   : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
               }`}
             >
               {selectedFormat === format.id && (
                 <div className="absolute top-2 right-2">
-                  <svg className="w-5 h-5 text-accent-green" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
               )}
-              <div className={`mb-2 ${selectedFormat === format.id ? 'text-accent-green' : 'text-text-secondary'}`}>
+              <div className={`mb-2 ${selectedFormat === format.id ? 'text-gold' : 'text-text-secondary'}`}>
                 <FormatIcon format={format.icon} />
               </div>
               <h4 className={`font-semibold mb-1 ${selectedFormat === format.id ? 'text-white' : 'text-text-secondary'}`}>
@@ -106,7 +106,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
                 onClick={() => onSelectDraftType(draftType.id)}
                 className={`p-4 rounded-lg border-2 text-left transition-all ${
                   selectedDraftType === draftType.id
-                    ? 'border-accent-green bg-accent-green/10'
+                    ? 'border-gold bg-gold/10'
                     : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
                 }`}
               >
@@ -118,7 +118,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
                     <p className="text-xs text-text-muted mt-1">{draftType.description}</p>
                   </div>
                   {selectedDraftType === draftType.id && (
-                    <svg className="w-5 h-5 text-accent-green flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-gold flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   )}
@@ -133,7 +133,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
       {selectedFormat === 'one-and-done' && (
         <div className="bg-dark-tertiary rounded-lg p-4 border border-dark-border">
           <div className="flex items-start gap-3">
-            <div className="text-accent-green mt-0.5">
+            <div className="text-gold mt-0.5">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

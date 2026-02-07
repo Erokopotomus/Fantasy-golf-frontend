@@ -18,10 +18,10 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
   return (
     <Card>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-white">Survivor Standings</h3>
+        <h3 className="text-lg font-semibold font-display text-white">Survivor Standings</h3>
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-accent-green"></div>
+            <div className="w-2 h-2 rounded-full bg-gold"></div>
             <span className="text-text-muted">{alive.length} Alive</span>
           </div>
           <div className="flex items-center gap-2">
@@ -39,7 +39,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
         </div>
         <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-accent-green to-red-400 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-gold to-red-400 transition-all duration-500"
             style={{ width: `${((standings.length - alive.length) / standings.length) * 100}%` }}
           />
         </div>
@@ -64,7 +64,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                 <tr
                   key={team.userId}
                   className={`border-b border-dark-border/50 ${
-                    isUser ? 'bg-accent-green/10' : 'hover:bg-dark-tertiary/50'
+                    isUser ? 'bg-gold/10' : 'hover:bg-dark-tertiary/50'
                   }`}
                 >
                   <td className="py-3 pl-2">
@@ -79,11 +79,11 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-primary text-text-secondary'
+                        isUser ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-accent-green' : 'text-white'}`}>
+                      <span className={`font-medium ${isUser ? 'text-gold' : 'text-white'}`}>
                         {team.name}
                         {isUser && <span className="text-xs ml-1">(You)</span>}
                       </span>
@@ -93,7 +93,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       team.status === 'buyback'
                         ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-accent-green/20 text-accent-green'
+                        : 'bg-gold/20 text-gold'
                     }`}>
                       {team.status === 'buyback' ? 'Buyback' : 'Alive'}
                     </span>

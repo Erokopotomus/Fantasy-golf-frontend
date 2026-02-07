@@ -49,8 +49,8 @@ const ChatPanel = ({
         `}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-accent-green/20 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 bg-gold/20 rounded-lg flex items-center justify-center">
+            <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -72,8 +72,8 @@ const ChatPanel = ({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-dark-border bg-dark-tertiary/30 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-accent-green/20 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-gold/20 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
@@ -92,7 +92,7 @@ const ChatPanel = ({
                 setAutoScroll(true)
                 messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
               }}
-              className="px-2 py-1 bg-accent-green/20 text-accent-green text-xs rounded-lg hover:bg-accent-green/30 transition-colors"
+              className="px-2 py-1 bg-gold/20 text-gold text-xs rounded-lg hover:bg-gold/30 transition-colors"
             >
               New messages
             </button>
@@ -119,7 +119,7 @@ const ChatPanel = ({
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-8 h-8 border-2 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-2" />
+              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-2" />
               <p className="text-text-muted text-sm">Loading messages...</p>
             </div>
           </div>

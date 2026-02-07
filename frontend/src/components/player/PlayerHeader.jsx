@@ -5,7 +5,7 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
 
   const getRankBadge = (rank) => {
     if (rank === 1) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
-    if (rank <= 5) return 'bg-accent-green/20 text-accent-green border-accent-green/50'
+    if (rank <= 5) return 'bg-gold/20 text-gold border-gold/50'
     if (rank <= 10) return 'bg-blue-500/20 text-blue-400 border-blue-500/50'
     if (rank <= 25) return 'bg-purple-500/20 text-purple-400 border-purple-500/50'
     return 'bg-dark-tertiary text-text-secondary border-dark-border'
@@ -29,7 +29,7 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
       value: player.stats?.sgTotal != null
         ? `${player.stats.sgTotal > 0 ? '+' : ''}${player.stats.sgTotal.toFixed(2)}`
         : null,
-      color: 'text-accent-green',
+      color: 'text-gold',
     },
     {
       label: 'DG Rank',
@@ -61,9 +61,9 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold text-white">{player.name}</h1>
+              <h1 className="text-2xl font-bold font-display text-white">{player.name}</h1>
               {isOnMyTeam && (
-                <span className="px-2 py-0.5 bg-accent-green/20 text-accent-green text-xs rounded font-medium">
+                <span className="px-2 py-0.5 bg-gold/20 text-gold text-xs rounded font-medium">
                   My Player
                 </span>
               )}
@@ -89,7 +89,7 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
           {!isOwned && (
             <button
               onClick={onAddToRoster}
-              className="px-4 py-2 bg-accent-green text-white rounded-lg font-medium hover:bg-accent-green/90 transition-colors"
+              className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors"
             >
               Add to Roster
             </button>
@@ -97,7 +97,7 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
           {isOwned && !isOnMyTeam && (
             <button
               onClick={onProposeTrade}
-              className="px-4 py-2 bg-accent-blue text-white rounded-lg font-medium hover:bg-accent-blue/90 transition-colors"
+              className="px-4 py-2 bg-orange text-white rounded-lg font-medium hover:bg-orange/90 transition-colors"
             >
               Propose Trade
             </button>

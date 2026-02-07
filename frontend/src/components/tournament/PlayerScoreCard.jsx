@@ -118,7 +118,7 @@ const PlayerScoreCard = ({ player, onClose }) => {
           </div>
         )}
         <div className="flex-1">
-          <h3 className="text-lg font-bold text-white">{player.name}</h3>
+          <h3 className="text-lg font-bold font-display text-white">{player.name}</h3>
           <div className="flex items-center gap-3 text-sm text-text-secondary">
             <span>
               Pos: <span className="text-white font-semibold">{player.position}</span>
@@ -142,7 +142,7 @@ const PlayerScoreCard = ({ player, onClose }) => {
         <div className="mb-4 p-3 rounded-lg bg-dark-tertiary/60 border border-dark-border/50">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-text-muted uppercase tracking-wide">Fantasy Points</span>
-            <span className="text-lg font-bold text-emerald-400">{player.fantasyPoints || 0}</span>
+            <span className="text-lg font-bold font-display text-emerald-400">{player.fantasyPoints || 0}</span>
           </div>
           {breakdown && (
             <div className="grid grid-cols-2 gap-1.5 text-xs">

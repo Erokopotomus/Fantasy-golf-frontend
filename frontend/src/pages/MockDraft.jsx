@@ -58,7 +58,7 @@ const MockDraft = () => {
               </svg>
               Back to Dashboard
             </button>
-            <h1 className="text-3xl font-bold text-white mb-2">Mock Draft</h1>
+            <h1 className="text-3xl font-bold font-display text-white mb-2">Mock Draft</h1>
             <p className="text-text-secondary">
               Practice your draft strategy against AI opponents. Experiment with different picks and positions.
             </p>
@@ -66,7 +66,7 @@ const MockDraft = () => {
 
           {/* Settings */}
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold text-white mb-6">Draft Settings</h2>
+            <h2 className="text-lg font-semibold font-display text-white mb-6">Draft Settings</h2>
 
             <div className="space-y-6">
               {/* Draft Type */}
@@ -77,17 +77,17 @@ const MockDraft = () => {
                     onClick={() => setSettings(s => ({ ...s, draftType: 'snake' }))}
                     className={`p-4 rounded-lg border-2 text-left transition-all ${
                       settings.draftType === 'snake'
-                        ? 'border-accent-green bg-accent-green/10'
+                        ? 'border-gold bg-gold/10'
                         : 'border-dark-border bg-dark-tertiary hover:border-dark-border/80'
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg ${
-                        settings.draftType === 'snake' ? 'bg-accent-green/20' : 'bg-dark-primary'
+                        settings.draftType === 'snake' ? 'bg-gold/20' : 'bg-dark-primary'
                       }`}>
                         🐍
                       </div>
-                      <span className={`font-semibold ${settings.draftType === 'snake' ? 'text-accent-green' : 'text-white'}`}>
+                      <span className={`font-semibold ${settings.draftType === 'snake' ? 'text-gold' : 'text-white'}`}>
                         Snake
                       </span>
                     </div>
@@ -97,17 +97,17 @@ const MockDraft = () => {
                     onClick={() => setSettings(s => ({ ...s, draftType: 'auction' }))}
                     className={`p-4 rounded-lg border-2 text-left transition-all ${
                       settings.draftType === 'auction'
-                        ? 'border-accent-green bg-accent-green/10'
+                        ? 'border-gold bg-gold/10'
                         : 'border-dark-border bg-dark-tertiary hover:border-dark-border/80'
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg ${
-                        settings.draftType === 'auction' ? 'bg-accent-green/20' : 'bg-dark-primary'
+                        settings.draftType === 'auction' ? 'bg-gold/20' : 'bg-dark-primary'
                       }`}>
                         💰
                       </div>
-                      <span className={`font-semibold ${settings.draftType === 'auction' ? 'text-accent-green' : 'text-white'}`}>
+                      <span className={`font-semibold ${settings.draftType === 'auction' ? 'text-gold' : 'text-white'}`}>
                         Auction
                       </span>
                     </div>
@@ -130,7 +130,7 @@ const MockDraft = () => {
                       }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.teamCount === count
-                          ? 'bg-accent-green text-white'
+                          ? 'bg-gold text-white'
                           : 'bg-dark-tertiary text-text-secondary hover:text-white'
                       }`}
                     >
@@ -150,7 +150,7 @@ const MockDraft = () => {
                       onClick={() => setSettings(s => ({ ...s, rosterSize: size }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.rosterSize === size
-                          ? 'bg-accent-green text-white'
+                          ? 'bg-gold text-white'
                           : 'bg-dark-tertiary text-text-secondary hover:text-white'
                       }`}
                     >
@@ -170,7 +170,7 @@ const MockDraft = () => {
                     <select
                       value={settings.userPosition}
                       onChange={(e) => setSettings(s => ({ ...s, userPosition: parseInt(e.target.value) }))}
-                      className="flex-1 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                      className="flex-1 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                     >
                       {Array.from({ length: settings.teamCount }, (_, i) => (
                         <option key={i + 1} value={i + 1}>
@@ -205,7 +205,7 @@ const MockDraft = () => {
                       onClick={() => setSettings(s => ({ ...s, pickTimer: time }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.pickTimer === time
-                          ? 'bg-accent-green text-white'
+                          ? 'bg-gold text-white'
                           : 'bg-dark-tertiary text-text-secondary hover:text-white'
                       }`}
                     >
@@ -218,7 +218,7 @@ const MockDraft = () => {
           </Card>
 
           {/* Summary */}
-          <Card className="mb-6 border-accent-green/30">
+          <Card className="mb-6 border-gold/30">
             <h3 className="text-sm font-medium text-text-muted mb-3">DRAFT SUMMARY</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -240,7 +240,7 @@ const MockDraft = () => {
               {settings.draftType === 'snake' && (
                 <div>
                   <p className="text-text-muted text-xs">Your Position</p>
-                  <p className="text-accent-green font-medium">
+                  <p className="text-gold font-medium">
                     Pick #{settings.userPosition || 'Random'}
                   </p>
                 </div>
@@ -257,7 +257,7 @@ const MockDraft = () => {
             fullWidth
             onClick={handleStart}
             loading={starting}
-            className="py-4 text-lg font-bold"
+            className="py-4 text-lg font-bold font-display"
           >
             Start Mock Draft
           </Button>
@@ -267,21 +267,21 @@ const MockDraft = () => {
             <h3 className="text-sm font-medium text-text-muted mb-3">DRAFT TIPS</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-3 p-3 bg-dark-secondary rounded-lg">
-                <span className="text-accent-green text-lg flex-shrink-0">1</span>
+                <span className="text-gold text-lg flex-shrink-0">1</span>
                 <div>
                   <p className="text-white text-sm font-medium">Pre-rank your players</p>
                   <p className="text-text-muted text-xs">Add players to your queue before the draft starts to plan ahead.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-dark-secondary rounded-lg">
-                <span className="text-accent-green text-lg flex-shrink-0">2</span>
+                <span className="text-gold text-lg flex-shrink-0">2</span>
                 <div>
                   <p className="text-white text-sm font-medium">Watch the board</p>
                   <p className="text-text-muted text-xs">Track which positions and tiers are being drafted to find value.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-dark-secondary rounded-lg">
-                <span className="text-accent-green text-lg flex-shrink-0">3</span>
+                <span className="text-gold text-lg flex-shrink-0">3</span>
                 <div>
                   <p className="text-white text-sm font-medium">Balance your roster</p>
                   <p className="text-text-muted text-xs">Mix elite players with high-upside sleepers for the best results.</p>

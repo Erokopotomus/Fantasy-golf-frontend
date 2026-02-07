@@ -111,7 +111,7 @@ const OnboardingModal = () => {
               key={idx}
               className={`
                 h-1 flex-1 rounded-full transition-colors
-                ${idx <= currentStep ? 'bg-accent-green' : 'bg-dark-border'}
+                ${idx <= currentStep ? 'bg-gold' : 'bg-dark-border'}
               `}
             />
           ))}
@@ -135,7 +135,7 @@ const OnboardingModal = () => {
           </div>
 
           {/* Title & Description */}
-          <h2 className="text-2xl font-bold text-white text-center mb-3">
+          <h2 className="text-2xl font-bold font-display text-white text-center mb-3">
             {currentStepData.title}
           </h2>
           <p className="text-text-secondary text-center mb-6">
@@ -150,8 +150,8 @@ const OnboardingModal = () => {
                   key={idx}
                   className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg"
                 >
-                  <div className="w-6 h-6 bg-accent-green/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-6 h-6 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -210,7 +210,7 @@ const OnboardingModal = () => {
                     onClick={() => setCurrentStep(idx)}
                     className={`
                       w-2 h-2 rounded-full transition-colors
-                      ${idx === currentStep ? 'bg-accent-green' : 'bg-dark-border hover:bg-dark-tertiary'}
+                      ${idx === currentStep ? 'bg-gold' : 'bg-dark-border hover:bg-dark-tertiary'}
                     `}
                   />
                 ))}
@@ -218,7 +218,7 @@ const OnboardingModal = () => {
 
               <button
                 onClick={handleNext}
-                className="flex items-center gap-1 text-sm font-medium text-accent-green hover:text-accent-green/80 transition-colors"
+                className="flex items-center gap-1 text-sm font-medium text-gold hover:text-gold/80 transition-colors"
               >
                 {isLastStep ? 'Finish' : 'Next'}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

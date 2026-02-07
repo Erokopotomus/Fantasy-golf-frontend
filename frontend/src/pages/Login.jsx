@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import Checkbox from '../components/common/Checkbox'
+import ClutchLogo from '../components/common/ClutchLogo'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -39,14 +40,12 @@ const Login = () => {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-md w-full">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 bg-accent-green rounded-lg flex items-center justify-center shadow-button">
-              <span className="text-white font-black text-xl">C</span>
-            </div>
-            <span className="text-2xl font-bold text-white">Clutch</span>
+          <Link to="/" className="flex items-center gap-2.5 mb-8">
+            <ClutchLogo size={40} className="rounded-lg" />
+            <span className="text-2xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
           </Link>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">Welcome back</h1>
           <p className="text-text-secondary mb-8 leading-relaxed">
             Sign in to your account to continue
           </p>
@@ -92,7 +91,7 @@ const Login = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 label="Remember me"
               />
-              <Link to="/forgot-password" className="text-sm text-accent-green hover:text-accent-green/80 transition-colors duration-300">
+              <Link to="/forgot-password" className="text-sm text-gold hover:text-gold/80 transition-colors duration-300">
                 Forgot password?
               </Link>
             </div>
@@ -133,7 +132,7 @@ const Login = () => {
 
           <p className="mt-8 text-center text-text-secondary">
             Don't have an account?{' '}
-            <Link to="/signup" className="text-accent-green hover:text-accent-green/80 font-medium transition-colors duration-300">
+            <Link to="/signup" className="text-gold hover:text-gold/80 font-medium transition-colors duration-300">
               Sign up free
             </Link>
           </p>
@@ -143,12 +142,12 @@ const Login = () => {
       {/* Right side - Image/Graphic */}
       <div className="hidden lg:flex flex-1 bg-dark-secondary items-center justify-center p-12">
         <div className="max-w-lg text-center">
-          <div className="w-64 h-64 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-8 shadow-glow-green">
-            <svg className="w-32 h-32 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-64 h-64 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-8 shadow-glow-gold">
+            <svg className="w-32 h-32 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-2xl font-bold font-display text-white mb-4">
             Track Your Season Performance
           </h2>
           <p className="text-text-secondary leading-relaxed">

@@ -52,18 +52,18 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
     <Card className="group cursor-pointer" hover onClick={handleCardClick}>
       <div className="flex items-start justify-between mb-4">
         <div className="min-w-0 flex-1">
-          <h3 className="text-white font-semibold text-base sm:text-lg truncate group-hover:text-accent-green transition-colors">
+          <h3 className="text-white font-semibold text-base sm:text-lg truncate group-hover:text-gold transition-colors">
             {name}
           </h3>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`text-xs px-2 py-0.5 rounded-full ${
+            <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${
               isSnakeType
-                ? 'bg-accent-green/20 text-accent-green'
-                : 'bg-accent-blue/20 text-accent-blue'
+                ? 'bg-gold/20 text-gold'
+                : 'bg-orange/20 text-orange'
             }`}>
               {draftLabel}
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-dark-tertiary text-text-muted">
+            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-dark-tertiary text-text-muted">
               {formatLabel}
             </span>
             <span className="text-text-muted text-xs">
@@ -73,7 +73,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
         </div>
         {userRank ? (
           <div className="text-right flex-shrink-0 ml-3">
-            <p className={`text-2xl font-bold ${
+            <p className={`text-2xl font-mono font-bold ${
               userRank === 1 ? 'text-yellow-400' :
               userRank === 2 ? 'text-gray-300' :
               userRank === 3 ? 'text-amber-600' : 'text-text-secondary'
@@ -87,7 +87,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
             <div className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
               isPreDraft
                 ? 'bg-yellow-500/20 text-yellow-400'
-                : 'bg-accent-green/20 text-accent-green'
+                : 'bg-gold/20 text-gold'
             }`}>
               {isPreDraft ? 'Pre-Draft' : 'Active'}
             </div>
@@ -101,12 +101,12 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-text-muted text-xs">Your Points</p>
-              <p className="text-white font-semibold text-lg">{userPoints.toLocaleString()}</p>
+              <p className="text-white font-mono font-semibold text-lg">{userPoints.toLocaleString()}</p>
             </div>
             {userTeam && (
               <div className="text-right">
                 <p className="text-text-muted text-xs">Record</p>
-                <p className="text-text-secondary font-medium">
+                <p className="text-text-secondary font-mono font-medium">
                   {userTeam.wins || 0}W - {userTeam.losses || 0}L
                 </p>
               </div>
@@ -154,7 +154,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
               <div
                 key={entry.id || entry.userId || idx}
                 className={`flex items-center justify-between text-sm py-1 px-2 rounded ${
-                  entry.userId === league.teams?.[0]?.userId ? 'bg-accent-green/10' : ''
+                  entry.userId === league.teams?.[0]?.userId ? 'bg-gold/10' : ''
                 }`}
               >
                 <div className="flex items-center gap-2">

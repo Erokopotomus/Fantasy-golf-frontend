@@ -21,7 +21,7 @@ const H2HStandings = ({ standings, currentUserId }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-4">Head-to-Head Standings</h3>
+      <h3 className="text-lg font-semibold font-display text-white mb-4">Head-to-Head Standings</h3>
 
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto">
@@ -72,15 +72,15 @@ const H2HStandings = ({ standings, currentUserId }) => {
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 text-center text-white font-semibold">{team.wins || 0}</td>
-                  <td className="py-3 text-center text-text-secondary">{team.losses || 0}</td>
-                  <td className="py-3 text-center text-text-muted">{team.ties || 0}</td>
-                  <td className="py-3 text-center text-text-secondary">
+                  <td className="py-3 text-center font-mono text-white font-semibold">{team.wins || 0}</td>
+                  <td className="py-3 text-center font-mono text-text-secondary">{team.losses || 0}</td>
+                  <td className="py-3 text-center font-mono text-text-muted">{team.ties || 0}</td>
+                  <td className="py-3 text-center font-mono text-text-secondary">
                     {calculateWinPct(team.wins || 0, team.losses || 0, team.ties || 0)}
                   </td>
-                  <td className="py-3 text-right text-white">{(team.pointsFor || 0).toLocaleString()}</td>
-                  <td className="py-3 text-right text-text-secondary">{(team.pointsAgainst || 0).toLocaleString()}</td>
-                  <td className={`py-3 text-right pr-2 font-semibold ${
+                  <td className="py-3 text-right font-mono text-white">{(team.pointsFor || 0).toLocaleString()}</td>
+                  <td className="py-3 text-right font-mono text-text-secondary">{(team.pointsAgainst || 0).toLocaleString()}</td>
+                  <td className={`py-3 text-right pr-2 font-mono font-semibold ${
                     diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-text-muted'
                   }`}>
                     {diff > 0 ? '+' : ''}{diff}
@@ -123,7 +123,7 @@ const H2HStandings = ({ standings, currentUserId }) => {
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-white font-semibold">
+                  <span className="text-white font-mono font-semibold">
                     {team.wins || 0}-{team.losses || 0}{team.ties ? `-${team.ties}` : ''}
                   </span>
                 </div>

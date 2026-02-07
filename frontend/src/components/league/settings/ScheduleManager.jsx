@@ -84,7 +84,7 @@ const ScheduleManager = ({ leagueId, notify }) => {
     <div className="space-y-6">
       {/* Actions */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Matchup Schedule</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Matchup Schedule</h3>
         <p className="text-text-secondary text-sm mb-4">
           Generate a round-robin schedule for head-to-head matchups, or adjust individual matchup scores.
         </p>

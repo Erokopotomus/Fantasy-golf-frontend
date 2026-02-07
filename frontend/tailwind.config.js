@@ -7,35 +7,57 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Sleeper-inspired dark theme
+        // Aurora Ember dark theme
         dark: {
-          primary: '#1a1d26',    // Main background
-          secondary: '#252a34',  // Cards, sections
-          tertiary: '#2d323e',   // Hover states
-          border: '#3d4354',     // Borders
+          primary: '#0A0908',
+          secondary: '#0E0C0A',
+          tertiary: '#161310',
+          border: '#2A2520',
         },
         text: {
-          primary: '#ffffff',
-          secondary: '#8b8d97',
-          muted: '#5c5f6a',
+          primary: '#F2EDE8',
+          secondary: '#958E84',
+          muted: '#5E5850',
         },
         accent: {
-          green: '#17b978',
-          'green-hover': '#14a36a',
-          blue: '#3b82f6',
-          'blue-hover': '#2563eb',
-        }
+          green: '#6ABF8A',
+          'green-hover': '#5AAF7A',
+          blue: '#E07838',
+          'blue-hover': '#D06828',
+        },
+        gold: {
+          DEFAULT: '#E8B84D',
+          bright: '#F5CC65',
+          muted: '#C49A3A',
+        },
+        orange: '#E07838',
+        rose: '#D4607A',
+        surface: {
+          DEFAULT: 'rgba(255,245,230,0.04)',
+          hover: 'rgba(255,245,230,0.07)',
+          bright: 'rgba(255,245,230,0.10)',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Syne', 'system-ui', 'sans-serif'],
+        body: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+      },
+      borderRadius: {
+        'card': '16px',
+        'card-lg': '20px',
+        'button': '12px',
+        'badge': '6px',
       },
       boxShadow: {
         'card': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
         'card-hover': '0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
-        'glow-green': '0 0 20px rgba(23, 185, 120, 0.3)',
-        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'glow-gold': '0 0 20px rgba(232, 184, 77, 0.3)',
+        'glow-green': '0 0 20px rgba(106, 191, 138, 0.3)',
+        'glow-blue': '0 0 20px rgba(224, 120, 56, 0.3)',
         'button': '0 2px 4px rgba(0, 0, 0, 0.2)',
-        'button-hover': '0 4px 12px rgba(23, 185, 120, 0.3)',
+        'button-hover': '0 4px 12px rgba(232, 184, 77, 0.3)',
       },
       animation: {
         'spin-slow': 'spin 2s linear infinite',

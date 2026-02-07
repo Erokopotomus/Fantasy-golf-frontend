@@ -20,7 +20,7 @@ const Input = ({
     if (success) {
       return 'border-accent-green focus:ring-accent-green focus:border-accent-green'
     }
-    return 'border-dark-border hover:border-text-muted focus:border-accent-green'
+    return 'border-dark-border hover:border-text-muted focus:border-gold'
   }
 
   return (
@@ -45,9 +45,9 @@ const Input = ({
           disabled={disabled}
           required={required}
           className={`
-            w-full bg-dark-tertiary border rounded-lg px-4 py-3 text-white placeholder-text-muted
+            w-full bg-dark-tertiary border rounded-lg px-4 py-3 text-text-primary placeholder-text-muted
             transition-all duration-300
-            focus:outline-none focus:ring-2 focus:shadow-glow-green
+            focus:outline-none focus:ring-2 focus:shadow-glow-gold
             disabled:opacity-50 disabled:cursor-not-allowed
             ${icon ? 'pl-10' : ''}
             ${getInputStyles()}

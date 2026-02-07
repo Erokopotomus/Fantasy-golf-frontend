@@ -44,11 +44,11 @@ const Profile = () => {
     <div className="min-h-screen bg-dark-primary">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6">My Profile</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-6">My Profile</h1>
 
           {saved && (
-            <Card className="mb-6 border-accent-green bg-accent-green/10">
-              <div className="flex items-center gap-3 text-accent-green">
+            <Card className="mb-6 border-gold bg-gold/10">
+              <div className="flex items-center gap-3 text-gold">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -60,11 +60,11 @@ const Profile = () => {
           {/* Profile Card */}
           <Card className="mb-6">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-20 h-20 bg-accent-green rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-button">
+              <div className="w-20 h-20 bg-gold rounded-full flex items-center justify-center text-white text-3xl font-bold font-display shadow-button">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-white">{user?.name || 'User'}</h2>
+                <h2 className="text-xl font-bold font-display text-white">{user?.name || 'User'}</h2>
                 <p className="text-text-secondary">{user?.email}</p>
                 <p className="text-text-muted text-sm mt-1">Member since {stats.memberSince}</p>
               </div>
@@ -97,19 +97,19 @@ const Profile = () => {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-dark-primary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-white">{stats.leaguesJoined}</p>
+                  <p className="text-2xl font-bold font-display text-white">{stats.leaguesJoined}</p>
                   <p className="text-text-muted text-sm">Leagues</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-yellow-400">{stats.totalWins}</p>
+                  <p className="text-2xl font-bold font-display text-yellow-400">{stats.totalWins}</p>
                   <p className="text-text-muted text-sm">Wins</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-accent-green">{stats.totalPoints.toLocaleString()}</p>
+                  <p className="text-2xl font-bold font-display text-gold">{stats.totalPoints.toLocaleString()}</p>
                   <p className="text-text-muted text-sm">Total Points</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-white">33%</p>
+                  <p className="text-2xl font-bold font-display text-white">33%</p>
                   <p className="text-text-muted text-sm">Win Rate</p>
                 </div>
               </div>
@@ -120,7 +120,7 @@ const Profile = () => {
               <div className="mt-4 text-center">
                 <Link
                   to={`/manager/${user.id}`}
-                  className="inline-flex items-center gap-2 text-accent-green hover:text-accent-green/80 text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 text-gold hover:text-gold/80 text-sm font-medium transition-colors"
                 >
                   View Full Stats & Achievements
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,14 +133,14 @@ const Profile = () => {
 
           {/* Preferences */}
           <Card className="mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Preferences</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Preferences</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-2">
                 <div>
                   <p className="text-white font-medium">Email Notifications</p>
                   <p className="text-text-muted text-sm">Receive updates about your leagues</p>
                 </div>
-                <button className="w-12 h-6 bg-accent-green rounded-full relative">
+                <button className="w-12 h-6 bg-gold rounded-full relative">
                   <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5" />
                 </button>
               </div>
@@ -149,7 +149,7 @@ const Profile = () => {
                   <p className="text-white font-medium">Draft Reminders</p>
                   <p className="text-text-muted text-sm">Get notified before drafts start</p>
                 </div>
-                <button className="w-12 h-6 bg-accent-green rounded-full relative">
+                <button className="w-12 h-6 bg-gold rounded-full relative">
                   <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5" />
                 </button>
               </div>
@@ -167,7 +167,7 @@ const Profile = () => {
 
           {/* Danger Zone */}
           <Card className="border-red-500/30">
-            <h3 className="text-lg font-semibold text-white mb-4">Danger Zone</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Danger Zone</h3>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white font-medium">Delete Account</p>

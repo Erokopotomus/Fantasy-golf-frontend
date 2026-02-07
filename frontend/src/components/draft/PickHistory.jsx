@@ -5,7 +5,7 @@ const PickHistory = ({ picks, limit = 10 }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-4">Recent Picks</h3>
+      <h3 className="text-lg font-semibold font-display text-white mb-4">Recent Picks</h3>
 
       {recentPicks.length === 0 ? (
         <div className="text-center py-6 text-text-muted">
@@ -18,7 +18,7 @@ const PickHistory = ({ picks, limit = 10 }) => {
               key={pick.id || index}
               className={`
                 flex items-center gap-3 p-3 rounded-lg
-                ${index === 0 ? 'bg-accent-green/10 border border-accent-green/30' : 'bg-dark-tertiary'}
+                ${index === 0 ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary'}
               `}
             >
               <div className="w-8 h-8 bg-dark-primary rounded-full flex items-center justify-center text-text-muted text-xs font-medium">
@@ -47,7 +47,7 @@ const PickHistory = ({ picks, limit = 10 }) => {
       )}
 
       {picks.length > limit && (
-        <button className="w-full text-center text-accent-green text-sm mt-3 hover:underline">
+        <button className="w-full text-center text-gold text-sm mt-3 hover:underline">
           View all {picks.length} picks
         </button>
       )}

@@ -16,12 +16,12 @@ const MatchupDetail = ({ matchup, homeTeam, awayTeam, homeRoster = [], awayRoste
   }
 
   return (
-    <Card className={isUserMatch ? 'ring-2 ring-accent-green/30' : ''}>
+    <Card className={isUserMatch ? 'ring-2 ring-gold/30' : ''}>
       {/* Header */}
       <div className="text-center mb-6">
         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 ${
           matchup.completed
-            ? 'bg-accent-green/20 text-accent-green'
+            ? 'bg-gold/20 text-gold'
             : 'bg-yellow-500/20 text-yellow-400'
         }`}>
           {matchup.completed ? 'Final' : 'In Progress'}
@@ -32,7 +32,7 @@ const MatchupDetail = ({ matchup, homeTeam, awayTeam, homeRoster = [], awayRoste
           {/* Home Team */}
           <div className={`flex-1 text-right ${homeWon ? 'text-white' : 'text-text-secondary'}`}>
             <div className={`w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center text-xl font-bold ${
-              matchup.home === currentUserId ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-tertiary'
+              matchup.home === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary'
             }`}>
               {homeTeam?.avatar}
             </div>
@@ -40,17 +40,17 @@ const MatchupDetail = ({ matchup, homeTeam, awayTeam, homeRoster = [], awayRoste
               {homeTeam?.name}
             </p>
             {matchup.home === currentUserId && (
-              <p className="text-xs text-accent-green">You</p>
+              <p className="text-xs text-gold">You</p>
             )}
           </div>
 
           {/* Scores */}
           <div className="flex items-center gap-4">
-            <span className={`text-4xl font-bold ${homeWon ? 'text-accent-green' : 'text-white'}`}>
+            <span className={`text-4xl font-bold ${homeWon ? 'text-gold' : 'text-white'}`}>
               {matchup.homeScore ?? '-'}
             </span>
             <span className="text-2xl text-text-muted">-</span>
-            <span className={`text-4xl font-bold ${awayWon ? 'text-accent-green' : 'text-white'}`}>
+            <span className={`text-4xl font-bold ${awayWon ? 'text-gold' : 'text-white'}`}>
               {matchup.awayScore ?? '-'}
             </span>
           </div>
@@ -58,7 +58,7 @@ const MatchupDetail = ({ matchup, homeTeam, awayTeam, homeRoster = [], awayRoste
           {/* Away Team */}
           <div className={`flex-1 text-left ${awayWon ? 'text-white' : 'text-text-secondary'}`}>
             <div className={`w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center text-xl font-bold ${
-              matchup.away === currentUserId ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-tertiary'
+              matchup.away === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary'
             }`}>
               {awayTeam?.avatar}
             </div>
@@ -66,7 +66,7 @@ const MatchupDetail = ({ matchup, homeTeam, awayTeam, homeRoster = [], awayRoste
               {awayTeam?.name}
             </p>
             {matchup.away === currentUserId && (
-              <p className="text-xs text-accent-green">You</p>
+              <p className="text-xs text-gold">You</p>
             )}
           </div>
         </div>
@@ -85,7 +85,7 @@ const MatchupDetail = ({ matchup, homeTeam, awayTeam, homeRoster = [], awayRoste
               {homeRoster.map((player, i) => (
                 <div key={i} className="flex items-center justify-between p-2 bg-dark-tertiary rounded">
                   <span className="text-sm text-white truncate">{player.name}</span>
-                  <span className="text-sm font-semibold text-accent-green">+{player.points}</span>
+                  <span className="text-sm font-semibold text-gold">+{player.points}</span>
                 </div>
               ))}
             </div>
@@ -95,7 +95,7 @@ const MatchupDetail = ({ matchup, homeTeam, awayTeam, homeRoster = [], awayRoste
               {awayRoster.map((player, i) => (
                 <div key={i} className="flex items-center justify-between p-2 bg-dark-tertiary rounded">
                   <span className="text-sm text-white truncate">{player.name}</span>
-                  <span className="text-sm font-semibold text-accent-green">+{player.points}</span>
+                  <span className="text-sm font-semibold text-gold">+{player.points}</span>
                 </div>
               ))}
             </div>

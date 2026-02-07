@@ -11,7 +11,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
   if (picks.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Pick History</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Pick History</h3>
         <div className="text-center py-8 text-text-muted">
           No picks made yet
         </div>
@@ -28,9 +28,9 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Pick History</h3>
+        <h3 className="text-lg font-semibold font-display text-white">Pick History</h3>
         <div className="text-right">
-          <span className="text-2xl font-bold text-accent-green">{totalPoints}</span>
+          <span className="text-2xl font-bold font-display text-gold">{totalPoints}</span>
           <p className="text-xs text-text-muted">Total Points</p>
         </div>
       </div>
@@ -46,7 +46,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
               className="flex items-center gap-4 p-4 bg-dark-tertiary rounded-lg"
             >
               {/* Tournament Number */}
-              <div className="text-2xl font-bold text-text-muted w-8 text-center">
+              <div className="text-2xl font-bold font-display text-text-muted w-8 text-center">
                 {sortedPicks.length - index}
               </div>
 
@@ -67,7 +67,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
 
               {/* Result */}
               <div className="text-right">
-                <p className="text-lg font-bold text-accent-green">+{pick.points}</p>
+                <p className="text-lg font-bold font-display text-gold">+{pick.points}</p>
                 <p className="text-xs text-text-muted">{pick.position}</p>
               </div>
             </div>
@@ -79,17 +79,17 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
       <div className="mt-4 pt-4 border-t border-dark-border">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-2xl font-bold text-white">{picks.length}</p>
+            <p className="text-2xl font-bold font-display text-white">{picks.length}</p>
             <p className="text-xs text-text-muted">Tournaments</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-accent-green">
+            <p className="text-2xl font-bold font-display text-gold">
               {Math.round(totalPoints / (picks.length || 1))}
             </p>
             <p className="text-xs text-text-muted">Avg Points</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-yellow-400">
+            <p className="text-2xl font-bold font-display text-yellow-400">
               {picks.filter(p => p.tier === 1).length}
             </p>
             <p className="text-xs text-text-muted">Tier 1 Used</p>

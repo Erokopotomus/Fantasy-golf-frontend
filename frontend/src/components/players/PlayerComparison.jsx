@@ -49,7 +49,7 @@ const PlayerComparison = ({
   return (
     <Card>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-white">Player Comparison</h3>
+        <h3 className="text-lg font-semibold font-display text-white">Player Comparison</h3>
         <Button variant="ghost" size="sm" onClick={onClear}>
           Clear All
         </Button>
@@ -92,7 +92,7 @@ const PlayerComparison = ({
                         {player?.name.split(' ').pop()}
                       </span>
                       <span className={`text-sm font-medium ${
-                        item.isBest ? 'text-accent-green' : 'text-white'
+                        item.isBest ? 'text-gold' : 'text-white'
                       }`}>
                         {formatStatValue(stat, item.value)}
                       </span>
@@ -121,7 +121,7 @@ const PlayerComparison = ({
             ).length
             return (
               <div key={player.id} className="text-center">
-                <p className="text-2xl font-bold text-accent-green">{wins}</p>
+                <p className="text-2xl font-bold font-display text-gold">{wins}</p>
                 <p className="text-text-muted text-xs">Categories Won</p>
               </div>
             )

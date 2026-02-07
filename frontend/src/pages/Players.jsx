@@ -60,7 +60,7 @@ const Players = () => {
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
-              <h2 className="text-xl font-bold text-white mb-2">Error Loading Players</h2>
+              <h2 className="text-xl font-bold font-display text-white mb-2">Error Loading Players</h2>
               <p className="text-text-secondary mb-6">{error}</p>
             </Card>
           </div>
@@ -76,7 +76,7 @@ const Players = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Players</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Players</h1>
               <p className="text-text-secondary mt-1">
                 Browse and compare {totalPlayers} golfers
               </p>
@@ -109,11 +109,11 @@ const Players = () => {
 
           {/* Compare Mode Banner */}
           {compareMode && (
-            <Card className="mb-6 bg-accent-blue/10 border-accent-blue/30">
+            <Card className="mb-6 bg-orange/10 border-orange/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-accent-blue/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 bg-orange/20 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
@@ -165,7 +165,7 @@ const Players = () => {
               <Card padding="none">
                 {loading ? (
                   <div className="p-8 text-center">
-                    <div className="w-8 h-8 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-8 h-8 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-text-muted">Loading players...</p>
                   </div>
                 ) : (

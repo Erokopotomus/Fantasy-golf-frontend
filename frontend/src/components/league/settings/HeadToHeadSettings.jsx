@@ -46,7 +46,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Regular Season</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Regular Season</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -55,7 +55,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
             <select
               value={localSettings.regularSeasonWeeks}
               onChange={(e) => handleChange('regularSeasonWeeks', parseInt(e.target.value))}
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
             >
               {[8, 10, 12, 14, 16, 18].map(weeks => (
                 <option key={weeks} value={weeks}>{weeks} Weeks</option>
@@ -69,7 +69,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Playoff Settings</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Playoff Settings</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -83,7 +83,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   onClick={() => handleChange('playoffTeams', num)}
                   className={`p-3 rounded-lg border-2 font-semibold transition-all ${
                     localSettings.playoffTeams === num
-                      ? 'border-accent-green bg-accent-green/10 text-white'
+                      ? 'border-gold bg-gold/10 text-white'
                       : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
                   }`}
                 >
@@ -105,7 +105,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="single-elimination"
                   checked={localSettings.playoffFormat === 'single-elimination'}
                   onChange={(e) => handleChange('playoffFormat', e.target.value)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Single Elimination</p>
@@ -119,7 +119,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="two-week"
                   checked={localSettings.playoffFormat === 'two-week'}
                   onChange={(e) => handleChange('playoffFormat', e.target.value)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Two-Week Matchups</p>
@@ -141,7 +141,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="1"
                   checked={localSettings.playoffWeeksPerRound === 1}
                   onChange={() => handleChange('playoffWeeksPerRound', 1)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">One Week Per Round</p>
@@ -155,7 +155,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="2-championship"
                   checked={localSettings.playoffWeeksPerRound === '2-championship'}
                   onChange={() => handleChange('playoffWeeksPerRound', '2-championship')}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Two-Week Championship Only</p>
@@ -169,7 +169,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="2"
                   checked={localSettings.playoffWeeksPerRound === 2}
                   onChange={() => handleChange('playoffWeeksPerRound', 2)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Two Weeks Per Round</p>
@@ -191,7 +191,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="default"
                   checked={localSettings.playoffSeeding === 'default'}
                   onChange={(e) => handleChange('playoffSeeding', e.target.value)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Fixed Bracket</p>
@@ -205,7 +205,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="reseed"
                   checked={localSettings.playoffSeeding === 'reseed'}
                   onChange={(e) => handleChange('playoffSeeding', e.target.value)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Re-seed Each Round</p>
@@ -227,7 +227,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="none"
                   checked={localSettings.consolationBracket === 'none'}
                   onChange={(e) => handleChange('consolationBracket', e.target.value)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">None</p>
@@ -241,7 +241,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="consolation"
                   checked={localSettings.consolationBracket === 'consolation'}
                   onChange={(e) => handleChange('consolationBracket', e.target.value)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Consolation Bracket</p>
@@ -255,7 +255,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   value="toilet-bowl"
                   checked={localSettings.consolationBracket === 'toilet-bowl'}
                   onChange={(e) => handleChange('consolationBracket', e.target.value)}
-                  className="text-accent-green"
+                  className="text-gold"
                 />
                 <div>
                   <p className="text-white font-medium">Toilet Bowl</p>
@@ -268,7 +268,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Tiebreakers</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Tiebreakers</h3>
         <p className="text-sm text-text-muted mb-4">
           Select and order tiebreakers for determining playoff seeding
         </p>
@@ -277,7 +277,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
             const option = tiebreakerOptions.find(o => o.id === tb)
             return (
               <div key={tb} className="flex items-center gap-2 p-3 bg-dark-tertiary rounded-lg">
-                <span className="text-accent-green font-semibold w-6">{index + 1}.</span>
+                <span className="text-gold font-semibold w-6">{index + 1}.</span>
                 <span className="text-white flex-1">{option?.label}</span>
                 <button
                   type="button"
@@ -320,7 +320,7 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                 key={opt.id}
                 type="button"
                 onClick={() => toggleTiebreaker(opt.id)}
-                className="px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-white hover:border-accent-green transition-colors"
+                className="px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-white hover:border-gold transition-colors"
               >
                 + {opt.label}
               </button>

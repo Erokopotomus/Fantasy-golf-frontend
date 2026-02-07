@@ -5,8 +5,8 @@ import Button from '../components/common/Button'
 
 // Mock data for dashboard preview
 const mockLeagues = [
-  { id: 1, name: 'Weekend Warriors', rank: 2, members: 10, format: 'Full League', color: 'bg-accent-green' },
-  { id: 2, name: 'Masters Mania', rank: 1, members: 8, format: 'Head-to-Head', color: 'bg-accent-blue' },
+  { id: 1, name: 'Weekend Warriors', rank: 2, members: 10, format: 'Full League', color: 'bg-gold' },
+  { id: 2, name: 'Masters Mania', rank: 1, members: 8, format: 'Head-to-Head', color: 'bg-orange' },
 ]
 
 const mockStandings = [
@@ -30,23 +30,23 @@ const Landing = () => {
       <section className="relative pt-20 sm:pt-28 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Subtle background pattern */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-accent-green/5 rounded-full blur-3xl" />
-          <div className="absolute top-20 -left-20 w-72 h-72 bg-accent-green/3 rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gold/5 rounded-full blur-3xl" />
+          <div className="absolute top-20 -left-20 w-72 h-72 bg-gold/3 rounded-full blur-3xl" />
         </div>
 
         <div className="max-w-7xl mx-auto relative">
           {/* Sport badge */}
           <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-green/10 border border-accent-green/20 rounded-full">
-              <span className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
-              <span className="text-accent-green text-sm font-medium">2026 PGA Tour Season is Live</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full">
+              <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
+              <span className="text-gold text-sm font-medium">2026 PGA Tour Season is Live</span>
             </div>
           </div>
 
           <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold font-display text-text-primary mb-6 leading-tight tracking-tight">
               Fantasy Sports,
-              <span className="block bg-gradient-to-r from-accent-green to-emerald-300 bg-clip-text text-transparent">Redefined.</span>
+              <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Redefined.</span>
             </h1>
             <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
               Draft your roster, compete in head-to-head matchups, and dominate your league
@@ -73,11 +73,11 @@ const Landing = () => {
 
           {/* Dashboard Preview */}
           <Link to="/signup" className="block max-w-5xl mx-auto mt-12 sm:mt-16 group">
-            <div className="bg-dark-secondary rounded-2xl border border-dark-border overflow-hidden shadow-card hover:shadow-card-hover hover:border-accent-green/50 transition-all duration-300 relative">
+            <div className="backdrop-blur-xl bg-white/[0.04] rounded-2xl border border-white/[0.08] overflow-hidden shadow-card hover:shadow-card-hover hover:border-gold/50 transition-all duration-300 relative">
               {/* Click overlay hint */}
-              <div className="absolute inset-0 bg-accent-green/0 group-hover:bg-accent-green/5 transition-colors duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <div className="bg-dark-primary/90 px-4 py-2 rounded-lg border border-accent-green/50">
-                  <span className="text-accent-green font-medium">Click to Get Started</span>
+              <div className="absolute inset-0 bg-gold/0 group-hover:bg-gold/5 transition-colors duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <div className="bg-dark-primary/90 px-4 py-2 rounded-lg border border-gold/50">
+                  <span className="text-gold font-medium">Click to Get Started</span>
                 </div>
               </div>
 
@@ -85,10 +85,10 @@ const Landing = () => {
               <div className="bg-dark-primary/50 px-4 py-3 border-b border-dark-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ClutchLogo size={24} className="rounded" />
-                  <span className="text-white font-semibold text-sm">Clutch</span>
+                  <span className="text-gold font-display font-extrabold text-sm tracking-tight">CLUTCH</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-accent-green rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-gold rounded-full animate-pulse" />
                   <span className="text-xs text-text-muted">Live</span>
                 </div>
               </div>
@@ -110,16 +110,16 @@ const Landing = () => {
                             <p className="text-text-muted text-xs">{league.format} · {league.members} teams</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-accent-green font-bold">#{league.rank}</p>
+                            <p className="text-gold font-bold">#{league.rank}</p>
                           </div>
                         </div>
                       </div>
                     ))}
 
                     {/* Tournament Card */}
-                    <div className="bg-gradient-to-br from-accent-green/20 to-dark-tertiary rounded-lg p-3 border border-accent-green/30">
+                    <div className="bg-gradient-to-br from-gold/20 to-dark-tertiary rounded-lg p-3 border border-gold/30">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-accent-green font-medium">LIVE NOW</span>
+                        <span className="text-xs text-gold font-medium">LIVE NOW</span>
                         <span className="text-xs text-text-muted">Round 2</span>
                       </div>
                       <p className="text-white font-semibold text-sm">The Players Championship</p>
@@ -134,15 +134,15 @@ const Landing = () => {
                       {mockStandings.map(team => (
                         <div
                           key={team.rank}
-                          className={`flex items-center gap-3 p-3 border-b border-dark-border last:border-0 ${team.isUser ? 'bg-accent-green/10' : ''}`}
+                          className={`flex items-center gap-3 p-3 border-b border-dark-border last:border-0 ${team.isUser ? 'bg-gold/10' : ''}`}
                         >
                           <span className={`font-bold w-5 text-center ${team.rank === 1 ? 'text-yellow-400' : team.rank === 2 ? 'text-gray-300' : team.rank === 3 ? 'text-amber-600' : 'text-text-muted'}`}>
                             {team.rank}
                           </span>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${team.isUser ? 'bg-accent-green text-white' : 'bg-dark-primary text-text-secondary'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${team.isUser ? 'bg-gold text-white' : 'bg-dark-primary text-text-secondary'}`}>
                             {team.avatar}
                           </div>
-                          <span className={`flex-1 text-sm ${team.isUser ? 'text-accent-green font-semibold' : 'text-white'}`}>
+                          <span className={`flex-1 text-sm ${team.isUser ? 'text-gold font-semibold' : 'text-white'}`}>
                             {team.name}
                           </span>
                           <span className="text-text-secondary text-sm font-medium">{team.points.toLocaleString()}</span>
@@ -159,9 +159,9 @@ const Landing = () => {
                         <div key={idx} className="bg-dark-tertiary rounded-lg p-3">
                           <div className="flex items-start gap-2">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              item.type === 'trade' ? 'bg-accent-blue/20 text-accent-blue' :
+                              item.type === 'trade' ? 'bg-orange/20 text-orange' :
                               item.type === 'pick' ? 'bg-purple-500/20 text-purple-400' :
-                              'bg-accent-green/20 text-accent-green'
+                              'bg-gold/20 text-gold'
                             }`}>
                               {item.type === 'trade' && (
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,29 +199,29 @@ const Landing = () => {
       <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">One Platform, Every Sport</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold font-display text-white mb-3">One Platform, Every Sport</h2>
             <p className="text-text-secondary">Golf is live now. Football and basketball are coming this fall.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             {/* Golf - Active */}
-            <div className="relative bg-dark-primary rounded-xl p-6 border-2 border-accent-green shadow-glow-green group">
+            <div className="relative bg-dark-primary rounded-xl p-6 border-2 border-gold shadow-glow-gold group">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="px-3 py-1 bg-accent-green text-white text-xs font-bold rounded-full uppercase tracking-wide">Live Now</span>
+                <span className="px-3 py-1 bg-gold text-white text-xs font-bold rounded-full uppercase tracking-wide">Live Now</span>
               </div>
               <div className="text-center pt-2">
-                <div className="w-16 h-16 mx-auto mb-4 bg-accent-green/20 rounded-2xl flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gold/20 rounded-2xl flex items-center justify-center">
                   {/* Golf flag icon */}
-                  <svg className="w-8 h-8 text-accent-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <svg className="w-8 h-8 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <line x1="12" y1="3" x2="12" y2="20" />
                     <path d="M12 3 L12 3 Q10 5, 7 4.5 Q5 4, 4 5.5 L4 10 Q5 8.5, 7 9 Q10 9.5, 12 7.5" fill="currentColor" stroke="none" />
                     <circle cx="12" cy="21" r="1.5" fill="currentColor" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">Golf</h3>
-                <p className="text-accent-green text-sm font-medium mb-3">2026 PGA Tour Season</p>
+                <h3 className="text-xl font-bold font-display text-white mb-1">Golf</h3>
+                <p className="text-gold text-sm font-medium mb-3">2026 PGA Tour Season</p>
                 <p className="text-text-secondary text-sm">Snake drafts, auction drafts, head-to-head matchups, survivor, and more.</p>
-                <Link to="/signup" className="inline-block mt-4 px-5 py-2 bg-accent-green text-white text-sm font-semibold rounded-lg hover:bg-accent-green-hover transition-colors">
+                <Link to="/signup" className="inline-block mt-4 px-5 py-2 bg-gold text-white text-sm font-semibold rounded-lg hover:bg-gold-bright transition-colors">
                   Play Now
                 </Link>
               </div>
@@ -243,7 +243,7 @@ const Landing = () => {
                     <path d="M9 12 L15 12" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">Football</h3>
+                <h3 className="text-xl font-bold font-display text-white mb-1">Football</h3>
                 <p className="text-orange-400 text-sm font-medium mb-3">NFL Season</p>
                 <p className="text-text-muted text-sm">Same great platform. Snake, auction, dynasty, and best ball leagues.</p>
                 <div className="mt-4 px-5 py-2 bg-dark-tertiary text-text-muted text-sm font-medium rounded-lg inline-block">
@@ -267,7 +267,7 @@ const Landing = () => {
                     <path d="M12 2 C16 6, 16 18, 12 22" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">Basketball</h3>
+                <h3 className="text-xl font-bold font-display text-white mb-1">Basketball</h3>
                 <p className="text-amber-400 text-sm font-medium mb-3">NBA Season</p>
                 <p className="text-text-muted text-sm">Head-to-head categories, points leagues, and dynasty formats.</p>
                 <div className="mt-4 px-5 py-2 bg-dark-tertiary text-text-muted text-sm font-medium rounded-lg inline-block">
@@ -295,12 +295,12 @@ const Landing = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Feature 1 */}
             <div className="feature-card group">
-              <div className="w-12 h-12 bg-accent-green/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Snake & Auction Drafts</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Snake & Auction Drafts</h3>
               <p className="text-text-secondary leading-relaxed">
                 Choose your draft style. Classic snake drafts or exciting auction formats
                 where every dollar counts.
@@ -309,12 +309,12 @@ const Landing = () => {
 
             {/* Feature 2 */}
             <div className="feature-card group">
-              <div className="w-12 h-12 bg-accent-blue/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-orange/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Live Tournament Scoring</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Live Tournament Scoring</h3>
               <p className="text-text-secondary leading-relaxed">
                 Watch your team perform in real-time with shot-by-shot updates
                 during every PGA Tour event.
@@ -323,12 +323,12 @@ const Landing = () => {
 
             {/* Feature 3 */}
             <div className="feature-card group">
-              <div className="w-12 h-12 bg-accent-green/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Strokes Gained Analytics</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Strokes Gained Analytics</h3>
               <p className="text-text-secondary leading-relaxed">
                 Advanced stats including SG: Off-the-Tee, Approach, Around-the-Green, and Putting
                 for smarter decisions.
@@ -337,12 +337,12 @@ const Landing = () => {
 
             {/* Feature 4 */}
             <div className="feature-card group">
-              <div className="w-12 h-12 bg-accent-blue/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-orange/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Trades & Waivers</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Trades & Waivers</h3>
               <p className="text-text-secondary leading-relaxed">
                 Active roster management with a waiver wire and trade system
                 that keeps you engaged all season.
@@ -351,12 +351,12 @@ const Landing = () => {
 
             {/* Feature 5 */}
             <div className="feature-card group">
-              <div className="w-12 h-12 bg-accent-green/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">League Chat & Activity</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">League Chat & Activity</h3>
               <p className="text-text-secondary leading-relaxed">
                 Real-time messaging, trade announcements, and a live activity feed
                 to keep your league buzzing.
@@ -365,12 +365,12 @@ const Landing = () => {
 
             {/* Feature 6 */}
             <div className="feature-card group">
-              <div className="w-12 h-12 bg-accent-blue/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-orange/20 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Weekly Matchups</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Weekly Matchups</h3>
               <p className="text-text-secondary leading-relaxed">
                 Head-to-head battles every tournament week. Build your W-L record
                 and fight for a playoff spot.
@@ -395,16 +395,16 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Full League */}
-            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border hover:border-accent-green/50 transition-all duration-300 group">
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border hover:border-gold/50 transition-all duration-300 group">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-accent-green/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-gold/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Full League</h3>
-                  <span className="text-xs text-accent-green font-medium">CLASSIC</span>
+                  <h3 className="text-lg font-bold font-display text-white">Full League</h3>
+                  <span className="text-xs text-gold font-medium">CLASSIC</span>
                 </div>
               </div>
               <p className="text-text-secondary text-sm mb-4">
@@ -419,16 +419,16 @@ const Landing = () => {
             </div>
 
             {/* Head-to-Head */}
-            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border hover:border-accent-blue/50 transition-all duration-300 group">
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border hover:border-orange/50 transition-all duration-300 group">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-accent-blue/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-orange/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <svg className="w-6 h-6 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Head-to-Head</h3>
-                  <span className="text-xs text-accent-blue font-medium">COMPETITIVE</span>
+                  <h3 className="text-lg font-bold font-display text-white">Head-to-Head</h3>
+                  <span className="text-xs text-orange font-medium">COMPETITIVE</span>
                 </div>
               </div>
               <p className="text-text-secondary text-sm mb-4">
@@ -451,7 +451,7 @@ const Landing = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Roto</h3>
+                  <h3 className="text-lg font-bold font-display text-white">Roto</h3>
                   <span className="text-xs text-purple-400 font-medium">STRATEGIC</span>
                 </div>
               </div>
@@ -476,7 +476,7 @@ const Landing = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Survivor</h3>
+                  <h3 className="text-lg font-bold font-display text-white">Survivor</h3>
                   <span className="text-xs text-red-400 font-medium">INTENSE</span>
                 </div>
               </div>
@@ -500,7 +500,7 @@ const Landing = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">One-and-Done</h3>
+                  <h3 className="text-lg font-bold font-display text-white">One-and-Done</h3>
                   <span className="text-xs text-yellow-400 font-medium">UNIQUE</span>
                 </div>
               </div>
@@ -541,10 +541,10 @@ const Landing = () => {
           <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 lg:gap-8">
             {/* Step 1 */}
             <div className="text-center group">
-              <div className="w-16 h-16 bg-accent-green rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white shadow-glow-green group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-white shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 1
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Create or Join a League</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Create or Join a League</h3>
               <p className="text-text-secondary leading-relaxed">
                 Start your own league with custom scoring and settings, or join one
                 your friends already created.
@@ -553,10 +553,10 @@ const Landing = () => {
 
             {/* Step 2 */}
             <div className="text-center group">
-              <div className="w-16 h-16 bg-accent-green rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white shadow-glow-green group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-white shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 2
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Draft Your Roster</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Draft Your Roster</h3>
               <p className="text-text-secondary leading-relaxed">
                 Build your team through a real-time snake or auction draft. Every pick
                 matters from round one.
@@ -565,10 +565,10 @@ const Landing = () => {
 
             {/* Step 3 */}
             <div className="text-center group">
-              <div className="w-16 h-16 bg-accent-green rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-white shadow-glow-green group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-white shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 3
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Compete Every Week</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-2">Compete Every Week</h3>
               <p className="text-text-secondary leading-relaxed">
                 Set lineups, make trades, trash talk in the chat, and climb the standings
                 throughout the PGA Tour season.

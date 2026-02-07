@@ -145,9 +145,9 @@ const LeagueForm = ({ onSubmit, loading }) => {
               onClick={() => s < step && setStep(s)}
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                 s === step
-                  ? 'bg-accent-green text-white'
+                  ? 'bg-gold text-white'
                   : s < step
-                  ? 'bg-accent-green/20 text-accent-green cursor-pointer hover:bg-accent-green/30'
+                  ? 'bg-gold/20 text-gold cursor-pointer hover:bg-gold/30'
                   : 'bg-dark-tertiary text-text-muted'
               }`}
             >
@@ -160,7 +160,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
               )}
             </button>
             {s < 3 && (
-              <div className={`w-12 h-1 mx-1 ${s < step ? 'bg-accent-green/50' : 'bg-dark-tertiary'}`} />
+              <div className={`w-12 h-1 mx-1 ${s < step ? 'bg-gold/50' : 'bg-dark-tertiary'}`} />
             )}
           </div>
         ))}
@@ -218,16 +218,16 @@ const LeagueForm = ({ onSubmit, loading }) => {
                 className={`
                   p-4 rounded-lg border-2 transition-all duration-300 text-left
                   ${formData.scoringType === 'standard'
-                    ? 'border-accent-green bg-accent-green/10'
+                    ? 'border-gold bg-gold/10'
                     : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
                   }
                 `}
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
-                    ${formData.scoringType === 'standard' ? 'border-accent-green' : 'border-text-muted'}`}>
+                    ${formData.scoringType === 'standard' ? 'border-gold' : 'border-text-muted'}`}>
                     {formData.scoringType === 'standard' && (
-                      <div className="w-2 h-2 rounded-full bg-accent-green" />
+                      <div className="w-2 h-2 rounded-full bg-gold" />
                     )}
                   </div>
                   <span className="text-white font-medium">Standard</span>
@@ -243,16 +243,16 @@ const LeagueForm = ({ onSubmit, loading }) => {
                 className={`
                   p-4 rounded-lg border-2 transition-all duration-300 text-left
                   ${formData.scoringType === 'strokes-gained'
-                    ? 'border-accent-green bg-accent-green/10'
+                    ? 'border-gold bg-gold/10'
                     : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
                   }
                 `}
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
-                    ${formData.scoringType === 'strokes-gained' ? 'border-accent-green' : 'border-text-muted'}`}>
+                    ${formData.scoringType === 'strokes-gained' ? 'border-gold' : 'border-text-muted'}`}>
                     {formData.scoringType === 'strokes-gained' && (
-                      <div className="w-2 h-2 rounded-full bg-accent-green" />
+                      <div className="w-2 h-2 rounded-full bg-gold" />
                     )}
                   </div>
                   <span className="text-white font-medium">Strokes Gained</span>
@@ -309,7 +309,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
       {step === 3 && (
         <div className="space-y-6">
           <div className="flex items-center gap-3 p-4 bg-dark-tertiary rounded-lg border border-dark-border mb-6">
-            <div className="w-10 h-10 rounded-full bg-accent-green/20 flex items-center justify-center text-accent-green">
+            <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

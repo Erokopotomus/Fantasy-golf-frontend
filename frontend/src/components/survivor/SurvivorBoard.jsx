@@ -18,7 +18,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
   const getStatusBadge = (status) => {
     switch (status) {
       case 'alive':
-        return <span className="px-2 py-0.5 bg-accent-green/20 text-accent-green text-xs rounded-full">Alive</span>
+        return <span className="px-2 py-0.5 bg-gold/20 text-gold text-xs rounded-full">Alive</span>
       case 'buyback':
         return <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Buyback</span>
       case 'eliminated':
@@ -33,8 +33,8 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
       {/* Alive Teams */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-accent-green animate-pulse"></div>
+          <h3 className="text-lg font-semibold font-display text-white flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-gold animate-pulse"></div>
             Still Alive
           </h3>
           <span className="text-text-muted text-sm">{aliveTeams.length + buybackTeams.length} teams remaining</span>
@@ -51,7 +51,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
                   key={team.userId}
                   className={`flex items-center gap-4 p-4 rounded-lg ${
                     isUser
-                      ? 'bg-accent-green/10 border border-accent-green/30'
+                      ? 'bg-gold/10 border border-gold/30'
                       : 'bg-dark-tertiary'
                   }`}
                 >
@@ -64,14 +64,14 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
                   </div>
 
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    isUser ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-primary text-text-secondary'
+                    isUser ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
                   }`}>
                     {team.avatar}
                   </div>
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className={`font-medium ${isUser ? 'text-accent-green' : 'text-white'}`}>
+                      <p className={`font-medium ${isUser ? 'text-gold' : 'text-white'}`}>
                         {team.name}
                       </p>
                       {getStatusBadge(team.status)}
@@ -98,7 +98,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
       {eliminatedTeams.length > 0 && (
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold font-display text-white flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-400"></div>
               Eliminated
             </h3>
@@ -156,7 +156,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
       {/* Elimination History */}
       {survivorData?.eliminations?.length > 0 && (
         <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">Elimination History</h3>
+          <h3 className="text-lg font-semibold font-display text-white mb-4">Elimination History</h3>
           <div className="space-y-2">
             {survivorData.eliminations
               .sort((a, b) => b.week - a.week)

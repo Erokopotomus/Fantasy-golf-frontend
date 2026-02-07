@@ -2,7 +2,7 @@ const PlayerStatusBadge = ({ status }) => {
   const statusConfig = {
     active: {
       label: 'Active',
-      className: 'bg-accent-green/20 text-accent-green',
+      className: 'bg-gold/20 text-gold',
     },
     benched: {
       label: 'Benched',

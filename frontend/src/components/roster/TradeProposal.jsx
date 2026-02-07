@@ -46,7 +46,7 @@ const TradeProposal = ({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Propose Trade</h2>
+          <h2 className="text-xl font-bold font-display text-white">Propose Trade</h2>
           <button onClick={onClose} className="text-text-muted hover:text-white">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -69,7 +69,7 @@ const TradeProposal = ({
                 }}
                 className={`p-3 rounded-lg text-left transition-colors ${
                   selectedTeam?.id === member.id
-                    ? 'bg-accent-green/20 border border-accent-green'
+                    ? 'bg-gold/20 border border-gold'
                     : 'bg-dark-tertiary hover:bg-dark-border border border-transparent'
                 }`}
               >
@@ -117,7 +117,7 @@ const TradeProposal = ({
                     onClick={() => togglePlayerToReceive(player)}
                     className={`w-full p-3 rounded-lg text-left transition-colors ${
                       playersToReceive.find(p => p.id === player.id)
-                        ? 'bg-accent-green/20 border border-accent-green'
+                        ? 'bg-gold/20 border border-gold'
                         : 'bg-dark-tertiary hover:bg-dark-border border border-transparent'
                     }`}
                   >
@@ -144,7 +144,7 @@ const TradeProposal = ({
                 ))}
               </div>
               <div>
-                <p className="text-accent-green mb-1">You receive:</p>
+                <p className="text-gold mb-1">You receive:</p>
                 {playersToReceive.map(p => (
                   <p key={p.id} className="text-text-secondary">{p.name}</p>
                 ))}

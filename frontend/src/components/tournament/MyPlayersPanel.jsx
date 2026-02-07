@@ -18,7 +18,7 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
         <h3 className="text-base font-bold text-white">My Team</h3>
         <div className="text-right">
           <span className="text-[10px] text-text-muted uppercase tracking-wide">Fantasy Pts</span>
-          <p className="text-xl font-bold text-emerald-400 leading-tight">{totalPoints}</p>
+          <p className="text-xl font-bold font-display text-emerald-400 leading-tight">{totalPoints}</p>
         </div>
       </div>
 

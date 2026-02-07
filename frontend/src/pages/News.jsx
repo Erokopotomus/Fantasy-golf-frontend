@@ -35,7 +35,7 @@ const News = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Player News</h1>
+        <h1 className="text-2xl font-bold font-display text-white">Player News</h1>
         <p className="text-text-secondary">
           Injuries, withdrawals, trending players, and fantasy insights
         </p>
@@ -46,7 +46,7 @@ const News = () => {
         <Card className="bg-gradient-to-r from-red-600/10 to-orange-600/10 border-red-500/30">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl">🚨</span>
-            <h2 className="text-lg font-semibold text-white">Important Alerts</h2>
+            <h2 className="text-lg font-semibold font-display text-white">Important Alerts</h2>
           </div>
           <div className="space-y-3">
             {highPriorityNews.slice(0, 3).map(item => (
@@ -72,7 +72,7 @@ const News = () => {
                       flex-1 px-4 py-3 text-sm font-medium transition-colors
                       border-b-2 -mb-px
                       ${activeTab === tab.id
-                        ? 'text-accent-green border-accent-green'
+                        ? 'text-gold border-gold'
                         : 'text-text-muted border-transparent hover:text-white'
                       }
                     `}
@@ -115,7 +115,7 @@ const News = () => {
         <div className="space-y-6">
           {/* Quick Stats */}
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">News Summary</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">News Summary</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -158,7 +158,7 @@ const News = () => {
 
           {/* Trending Players Compact */}
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Trending Up</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Trending Up</h3>
             <div className="space-y-3">
               {trending
                 .filter(t => t.impact === 'positive')
@@ -177,7 +177,7 @@ const News = () => {
                         {item.headline}
                       </p>
                     </div>
-                    <span className="text-accent-green text-sm">📈</span>
+                    <span className="text-gold text-sm">📈</span>
                   </div>
                 ))}
             </div>

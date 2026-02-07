@@ -51,7 +51,7 @@ const LineupEditor = ({
     <Card>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-white">Set Lineup</h3>
+          <h3 className="text-lg font-semibold font-display text-white">Set Lineup</h3>
           <p className="text-text-muted text-sm">
             {tournament?.name || 'Upcoming Tournament'}
           </p>
@@ -79,14 +79,14 @@ const LineupEditor = ({
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-text-muted">Selected</span>
               <span className={`font-medium ${
-                selectedIds.length === maxActive ? 'text-accent-green' : 'text-white'
+                selectedIds.length === maxActive ? 'text-gold' : 'text-white'
               }`}>
                 {selectedIds.length} / {maxActive}
               </span>
             </div>
             <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden">
               <div
-                className="h-full bg-accent-green transition-all duration-300"
+                className="h-full bg-gold transition-all duration-300"
                 style={{ width: `${(selectedIds.length / maxActive) * 100}%` }}
               />
             </div>
@@ -105,7 +105,7 @@ const LineupEditor = ({
                   className={`
                     p-3 rounded-lg text-left transition-all
                     ${isSelected
-                      ? 'bg-accent-green/20 border-2 border-accent-green'
+                      ? 'bg-gold/20 border-2 border-gold'
                       : isDisabled
                         ? 'bg-dark-tertiary opacity-50 cursor-not-allowed'
                         : 'bg-dark-tertiary border-2 border-transparent hover:border-text-muted'
@@ -115,7 +115,7 @@ const LineupEditor = ({
                   <div className="flex items-center gap-2 mb-1">
                     <span>{player.countryFlag}</span>
                     <span className={`text-sm font-medium truncate ${
-                      isSelected ? 'text-accent-green' : 'text-white'
+                      isSelected ? 'text-gold' : 'text-white'
                     }`}>
                       {player.name.split(' ').pop()}
                     </span>

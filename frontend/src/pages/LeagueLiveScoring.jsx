@@ -115,7 +115,7 @@ const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
         <p className="text-xs text-text-muted">{team.userName}</p>
       </div>
       <div className="text-right">
-        <p className="text-lg font-bold text-white">{team.totalPoints.toFixed(1)}</p>
+        <p className="text-lg font-bold font-display text-white">{team.totalPoints.toFixed(1)}</p>
         <p className="text-[10px] text-text-muted">pts</p>
       </div>
       <svg className={`w-4 h-4 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +167,7 @@ const LeagueLiveScoring = () => {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading scoring...</p>
         </div>
       </div>
@@ -179,9 +179,9 @@ const LeagueLiveScoring = () => {
       <div className="min-h-screen bg-dark-primary pt-8 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="text-center py-12">
-            <h2 className="text-xl font-bold text-white mb-2">Error</h2>
+            <h2 className="text-xl font-bold font-display text-white mb-2">Error</h2>
             <p className="text-text-secondary mb-4">{error}</p>
-            <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">Back to League</Link>
+            <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">Back to League</Link>
           </Card>
         </div>
       </div>
@@ -202,7 +202,7 @@ const LeagueLiveScoring = () => {
             <svg className="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h2 className="text-xl font-bold text-white mb-2">No Tournament in Progress</h2>
+            <h2 className="text-xl font-bold font-display text-white mb-2">No Tournament in Progress</h2>
             <p className="text-text-secondary">Check back when the next tournament begins.</p>
           </Card>
         </div>
@@ -222,12 +222,12 @@ const LeagueLiveScoring = () => {
             #{userTeam.rank}
           </span>
           <div>
-            <h3 className="text-lg font-semibold text-white">{userTeam.teamName}</h3>
+            <h3 className="text-lg font-semibold font-display text-white">{userTeam.teamName}</h3>
             <p className="text-xs text-text-muted">{userTeam.starters.length} starters, {userTeam.bench.length} bench</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-emerald-400">{userTeam.totalPoints.toFixed(1)}</p>
+          <p className="text-2xl font-bold font-display text-emerald-400">{userTeam.totalPoints.toFixed(1)}</p>
           <p className="text-xs text-text-muted">fantasy pts</p>
         </div>
       </div>
@@ -308,7 +308,7 @@ const LeagueLiveScoring = () => {
               </svg>
               Back to League
             </Link>
-            <h1 className="text-xl font-bold text-white">Live Scoring</h1>
+            <h1 className="text-xl font-bold font-display text-white">Live Scoring</h1>
           </div>
 
           {/* Tournament Banner */}
@@ -316,7 +316,7 @@ const LeagueLiveScoring = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-white">{tournament.name}</h2>
+                  <h2 className="text-lg font-bold font-display text-white">{tournament.name}</h2>
                   {isLive && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
                       <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />

@@ -22,13 +22,13 @@ const Checkbox = ({
         <div className={`
           w-5 h-5 rounded border-2 transition-all duration-300
           ${checked
-            ? 'bg-accent-green border-accent-green'
+            ? 'bg-gold border-gold'
             : 'bg-dark-tertiary border-dark-border group-hover:border-text-muted'
           }
-          peer-focus:ring-2 peer-focus:ring-accent-green peer-focus:ring-offset-2 peer-focus:ring-offset-dark-primary
+          peer-focus:ring-2 peer-focus:ring-gold peer-focus:ring-offset-2 peer-focus:ring-offset-dark-primary
         `}>
           {checked && (
-            <svg className="w-full h-full text-white p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-full h-full text-dark-primary p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           )}

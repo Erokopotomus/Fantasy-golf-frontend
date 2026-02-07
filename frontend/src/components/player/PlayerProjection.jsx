@@ -17,19 +17,19 @@ const PlayerProjection = ({ projection }) => {
   const projectedPct = range > 0 ? ((projected - floor) / range) * 100 : 50
 
   const trendUp = trend > 0
-  const trendColor = trendUp ? 'text-accent-green' : trend < 0 ? 'text-red-400' : 'text-text-secondary'
+  const trendColor = trendUp ? 'text-gold' : trend < 0 ? 'text-red-400' : 'text-text-secondary'
   const trendArrow = trendUp ? '\u2191' : trend < 0 ? '\u2193' : '\u2192'
 
   // Consistency color
   const getConsistencyColor = (val) => {
-    if (val >= 75) return 'text-accent-green'
+    if (val >= 75) return 'text-gold'
     if (val >= 50) return 'text-yellow-400'
     if (val >= 25) return 'text-orange-400'
     return 'text-red-400'
   }
 
   const getConsistencyBarColor = (val) => {
-    if (val >= 75) return 'bg-accent-green'
+    if (val >= 75) return 'bg-gold'
     if (val >= 50) return 'bg-yellow-500'
     if (val >= 25) return 'bg-orange-500'
     return 'bg-red-500'
@@ -41,7 +41,7 @@ const PlayerProjection = ({ projection }) => {
 
       {/* Projected Points */}
       <div className="text-center mb-4">
-        <p className="text-3xl font-bold text-accent-green">{projected.toFixed(1)}</p>
+        <p className="text-3xl font-bold font-display text-gold">{projected.toFixed(1)}</p>
         <p className="text-xs text-text-muted">Projected Fantasy Points</p>
       </div>
 
@@ -82,7 +82,7 @@ const PlayerProjection = ({ projection }) => {
 
         {/* Recent Avg */}
         <div className="bg-dark-primary rounded-lg p-3 text-center">
-          <p className="text-lg font-bold text-white">{recentAvg.toFixed(1)}</p>
+          <p className="text-lg font-bold font-display text-white">{recentAvg.toFixed(1)}</p>
           <p className="text-xs text-text-muted">Recent Avg</p>
         </div>
       </div>

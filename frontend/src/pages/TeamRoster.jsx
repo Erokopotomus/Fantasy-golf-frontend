@@ -200,7 +200,7 @@ const TeamRoster = () => {
             </svg>
             Back to League
           </Link>
-          <h1 className="text-2xl font-bold text-white">My Roster</h1>
+          <h1 className="text-2xl font-bold font-display text-white">My Roster</h1>
           <p className="text-text-secondary">{league?.name}</p>
         </div>
 
@@ -210,7 +210,7 @@ const TeamRoster = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Empty Roster</h2>
+          <h2 className="text-xl font-bold font-display text-white mb-2">Empty Roster</h2>
           <p className="text-text-secondary mb-6 max-w-sm mx-auto">
             Your roster is empty. Draft players or browse free agents to build your team.
           </p>
@@ -231,7 +231,7 @@ const TeamRoster = () => {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold text-white mb-2">Error Loading Roster</h2>
+          <h2 className="text-xl font-bold font-display text-white mb-2">Error Loading Roster</h2>
           <p className="text-text-secondary mb-6">{rosterError}</p>
           <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
             Return to League
@@ -257,7 +257,7 @@ const TeamRoster = () => {
             </svg>
             {league?.name}
           </Link>
-          <h1 className="text-2xl font-bold text-white">My Roster</h1>
+          <h1 className="text-2xl font-bold font-display text-white">My Roster</h1>
           <p className="text-text-muted text-sm">{roster.length} / {rosterSize} players</p>
         </div>
         <div className="flex gap-2">

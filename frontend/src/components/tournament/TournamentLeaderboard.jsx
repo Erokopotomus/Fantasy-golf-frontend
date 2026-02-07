@@ -10,30 +10,30 @@ import api from '../../services/api'
  *   Double bogey+   → double square
  */
 const ScoreCell = ({ score, par }) => {
-  if (score == null) return <span className="text-text-muted">-</span>
+  if (score == null) return <span className="text-text-muted font-mono">-</span>
   const diff = score - par
   if (diff <= -2) return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative">
+    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
       <span className="absolute inset-0 rounded-full border-2 border-yellow-400" />
       <span className="absolute inset-[3px] rounded-full border-2 border-yellow-400" />
       <span className="text-yellow-400 font-bold text-[11px] relative z-10">{score}</span>
     </span>
   )
   if (diff === -1) return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative">
+    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
       <span className="absolute inset-0 rounded-full border-2 border-emerald-400" />
       <span className="text-emerald-400 font-semibold text-[11px] relative z-10">{score}</span>
     </span>
   )
-  if (diff === 0) return <span className="inline-flex items-center justify-center w-7 h-7 text-white text-[11px]">{score}</span>
+  if (diff === 0) return <span className="inline-flex items-center justify-center w-7 h-7 text-white text-[11px] font-mono">{score}</span>
   if (diff === 1) return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative">
+    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
       <span className="absolute inset-0 rounded-sm border-2 border-red-400" />
       <span className="text-red-400 font-semibold text-[11px] relative z-10">{score}</span>
     </span>
   )
   return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative">
+    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
       <span className="absolute inset-0 rounded-sm border-2 border-red-500" />
       <span className="absolute inset-[3px] rounded-sm border-2 border-red-500" />
       <span className="text-red-500 font-bold text-[11px] relative z-10">{score}</span>

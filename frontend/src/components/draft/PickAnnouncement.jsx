@@ -33,17 +33,17 @@ const PickAnnouncement = ({ pick, isUserPick }) => {
           bg-dark-secondary border-2 rounded-2xl p-6 shadow-2xl
           transform transition-all duration-500
           ${isExiting ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
-          ${isUserPick ? 'border-accent-green' : 'border-accent-blue'}
+          ${isUserPick ? 'border-gold' : 'border-orange'}
         `}
       >
         <div className="text-center">
-          <p className={`text-sm font-medium mb-2 ${isUserPick ? 'text-accent-green' : 'text-accent-blue'}`}>
+          <p className={`text-sm font-medium mb-2 ${isUserPick ? 'text-gold' : 'text-orange'}`}>
             {isUserPick ? 'YOUR PICK!' : `PICK #${pick.pickNumber}`}
           </p>
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="text-4xl">{pick.playerFlag}</span>
             <div>
-              <p className="text-2xl font-bold text-white">{pick.playerName}</p>
+              <p className="text-2xl font-bold font-display text-white">{pick.playerName}</p>
               <p className="text-text-muted">Rank #{pick.playerRank}</p>
             </div>
           </div>

@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   AURORA EMBER DESIGN SYSTEM — CSS Foundation
+   ============================================ */
+
+:root {
+  --bg: #0A0908;
+  --surface: rgba(255,245,230,0.04);
+  --surface-hover: rgba(255,245,230,0.07);
+  --surface-bright: rgba(255,245,230,0.10);
+  --border: #2A2520;
+  --border-subtle: rgba(255,255,255,0.08);
+  --text: #F2EDE8;
+  --text-secondary: #958E84;
+  --text-muted: #5E5850;
+  --gold: #E8B84D;
+  --gold-bright: #F5CC65;
+  --gold-muted: #C49A3A;
+  --orange: #E07838;
+  --rose: #D4607A;
+  --green: #6ABF8A;
+}
+
 /* Base styles */
 * {
   margin: 0;
@@ -14,55 +36,74 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #1a1d26;
-  color: #ffffff;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background-color: #0A0908;
+  color: #F2EDE8;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — warm charcoal */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1d26;
+  background: #0A0908;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3d4354;
+  background: #2A2520;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4d5364;
+  background: #3A3530;
 }
 
-/* Focus styles */
+/* Focus styles — gold */
 :focus-visible {
-  outline: 2px solid #17b978;
+  outline: 2px solid #E8B84D;
   outline-offset: 2px;
 }
 
-/* Custom utility classes */
+/* ============================================
+   FONT UTILITY CLASSES
+   ============================================ */
 @layer utilities {
+  .text-display {
+    font-family: 'Syne', system-ui, sans-serif;
+  }
+
+  .text-body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  .text-data {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
   .text-gradient {
-    @apply bg-gradient-to-r from-accent-green to-accent-blue bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent;
   }
 
   .card {
-    @apply bg-dark-secondary rounded-xl border border-dark-border;
+    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
+    background: rgba(255,245,230,0.04);
+    border-color: rgba(255,255,255,0.08);
   }
 
   .card-hover {
-    @apply hover:bg-dark-tertiary hover:border-text-muted hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300;
+    @apply hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300;
+    &:hover {
+      background: rgba(255,245,230,0.07);
+    }
   }
 
   .card-interactive {
-    @apply shadow-card hover:shadow-card-hover hover:scale-[1.02] hover:border-accent-green/50 transition-all duration-300 cursor-pointer;
+    @apply shadow-card hover:shadow-card-hover hover:scale-[1.02] hover:border-gold/30 transition-all duration-300 cursor-pointer;
   }
 
   .btn-press {
@@ -70,16 +111,93 @@ body {
   }
 }
 
-/* Component styles */
+/* ============================================
+   GLASS CARD CLASSES
+   ============================================ */
+@layer components {
+  .glass-card {
+    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
+    background: rgba(255,245,230,0.04);
+    border-color: rgba(255,255,255,0.08);
+  }
+
+  .glass-card--highlighted {
+    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
+    background: rgba(255,245,230,0.06);
+    border-color: rgba(232,184,77,0.2);
+  }
+}
+
+/* ============================================
+   BUTTON CLASSES
+   ============================================ */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center font-semibold font-display rounded-button
+           bg-gradient-to-r from-gold to-orange text-dark-primary
+           shadow-button hover:shadow-glow-gold
+           active:scale-[0.98] transition-all duration-300
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center font-semibold rounded-button
+           bg-transparent border border-gold/20 text-gold backdrop-blur-sm
+           hover:bg-surface-hover hover:border-gold/40
+           active:scale-[0.98] transition-all duration-300;
+  }
+
+  .btn-tertiary {
+    @apply inline-flex items-center justify-center font-medium rounded-button
+           bg-transparent text-text-secondary hover:text-text-primary
+           active:scale-[0.98] transition-all duration-300;
+  }
+}
+
+/* ============================================
+   BADGE & TAG CLASSES
+   ============================================ */
+@layer components {
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-badge text-xs font-mono font-semibold uppercase tracking-wider;
+  }
+
+  .badge-active {
+    @apply badge bg-accent-green/20 text-accent-green;
+  }
+
+  .badge-predraft {
+    @apply badge bg-gold/20 text-gold;
+  }
+
+  .badge-live {
+    @apply badge bg-rose/20 text-rose;
+  }
+
+  .badge-pro {
+    @apply badge bg-gold/20 text-gold border border-gold/30;
+  }
+
+  .tag {
+    @apply inline-flex items-center px-2.5 py-1 rounded-badge text-xs font-mono font-medium
+           bg-surface border border-white/[0.08] text-text-secondary;
+  }
+}
+
+/* ============================================
+   COMPONENT STYLES
+   ============================================ */
 @layer components {
   .input-focus-glow {
-    @apply focus:shadow-glow-green;
+    @apply focus:shadow-glow-gold;
   }
 
   .feature-card {
-    @apply bg-dark-primary p-6 rounded-xl border border-dark-border
-           hover:border-accent-green/50 hover:shadow-card-hover hover:scale-[1.02]
+    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border p-6
+           hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02]
            transition-all duration-300 cursor-pointer;
+    background: rgba(255,245,230,0.04);
+    border-color: rgba(255,255,255,0.08);
   }
 
   .quick-action-btn {
@@ -113,29 +231,29 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
 
-  /* Thin scrollbar for activity feeds */
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: #3d4354 transparent;
-  }
+/* Thin scrollbar for activity feeds */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #2A2520 transparent;
+}
 
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-  }
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
 
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #3d4354;
-    border-radius: 2px;
-  }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #2A2520;
+  border-radius: 2px;
+}
 
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: #4d5364;
-  }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #3A3530;
 }
 
 /* Typography improvements */
@@ -199,20 +317,22 @@ body {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Bottom navigation bar styles */
+  /* Bottom navigation bar styles — glass */
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 bg-dark-secondary border-t border-dark-border;
+    @apply fixed bottom-0 left-0 right-0 border-t backdrop-blur-xl backdrop-saturate-150;
+    background: rgba(14,12,10,0.85);
+    border-color: rgba(255,255,255,0.08);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .bottom-nav-item {
-    @apply flex flex-col items-center justify-center py-2 px-3 text-text-secondary
-           transition-colors duration-200 active:text-accent-green;
+    @apply flex flex-col items-center justify-center py-2 px-3 text-text-muted
+           transition-colors duration-200 active:text-gold;
     -webkit-tap-highlight-color: transparent;
   }
 
   .bottom-nav-item.active {
-    @apply text-accent-green;
+    @apply text-gold;
   }
 
   .bottom-nav-item svg {
@@ -347,10 +467,10 @@ body {
   @apply h-12 flex items-center justify-center text-text-muted;
 }
 
-/* Floating action button */
+/* Floating action button — gold */
 .fab {
-  @apply fixed bottom-20 right-4 w-14 h-14 rounded-full bg-accent-green
-         flex items-center justify-center shadow-lg shadow-accent-green/30
+  @apply fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gold
+         flex items-center justify-center shadow-lg shadow-gold/30
          active:scale-95 transition-transform z-40;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px);
 }

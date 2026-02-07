@@ -5,7 +5,7 @@ const PlayerCourseHistory = ({ courseHistory }) => {
 
   const getScoreColor = (avgScore, par) => {
     const diff = avgScore - par
-    if (diff <= -2) return 'text-accent-green'
+    if (diff <= -2) return 'text-gold'
     if (diff <= 0) return 'text-green-400'
     if (diff <= 2) return 'text-yellow-400'
     return 'text-red-400'
@@ -39,7 +39,7 @@ const PlayerCourseHistory = ({ courseHistory }) => {
                 <td className={`p-3 text-center font-medium ${getScoreColor(course.avgScore, course.par)}`}>
                   {course.avgScore.toFixed(1)}
                 </td>
-                <td className="p-3 text-center text-accent-green font-medium">{course.bestFinish}</td>
+                <td className="p-3 text-center text-gold font-medium">{course.bestFinish}</td>
                 <td className="p-3 text-right">
                   {course.wins > 0 ? (
                     <span className="text-yellow-400 font-medium">{course.wins}</span>

@@ -9,7 +9,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
   return (
     <div
       className={`bg-dark-tertiary rounded-lg overflow-hidden ${
-        isUserMatch ? 'ring-2 ring-accent-green/50' : ''
+        isUserMatch ? 'ring-2 ring-gold/50' : ''
       }`}
     >
       {/* Matchup Header */}
@@ -18,7 +18,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
           {matchup.completed ? 'Final' : 'In Progress'}
         </span>
         {isUserMatch && (
-          <span className="text-xs text-accent-green font-medium">Your Matchup</span>
+          <span className="text-xs text-gold font-medium">Your Matchup</span>
         )}
       </div>
 
@@ -28,14 +28,14 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
         <div className={`flex items-center justify-between ${homeWon ? 'text-white' : 'text-text-secondary'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-              matchup.home === currentUserId ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-primary text-text-secondary'
+              matchup.home === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
             }`}>
               {homeTeam?.avatar || '?'}
             </div>
             <div>
               <p className={`font-medium ${homeWon ? 'text-white' : ''}`}>
                 {homeTeam?.name || 'Unknown'}
-                {matchup.home === currentUserId && <span className="text-xs text-accent-green ml-1">(You)</span>}
+                {matchup.home === currentUserId && <span className="text-xs text-gold ml-1">(You)</span>}
               </p>
               {detailed && homeTeam && (
                 <p className="text-xs text-text-muted">
@@ -45,11 +45,11 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-xl font-bold ${homeWon ? 'text-accent-green' : ''}`}>
+            <span className={`text-xl font-bold ${homeWon ? 'text-gold' : ''}`}>
               {matchup.homeScore ?? '-'}
             </span>
             {homeWon && (
-              <svg className="w-4 h-4 text-accent-green" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
             )}
@@ -67,14 +67,14 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
         <div className={`flex items-center justify-between ${awayWon ? 'text-white' : 'text-text-secondary'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-              matchup.away === currentUserId ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-primary text-text-secondary'
+              matchup.away === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
             }`}>
               {awayTeam?.avatar || '?'}
             </div>
             <div>
               <p className={`font-medium ${awayWon ? 'text-white' : ''}`}>
                 {awayTeam?.name || 'Unknown'}
-                {matchup.away === currentUserId && <span className="text-xs text-accent-green ml-1">(You)</span>}
+                {matchup.away === currentUserId && <span className="text-xs text-gold ml-1">(You)</span>}
               </p>
               {detailed && awayTeam && (
                 <p className="text-xs text-text-muted">
@@ -84,11 +84,11 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-xl font-bold ${awayWon ? 'text-accent-green' : ''}`}>
+            <span className={`text-xl font-bold ${awayWon ? 'text-gold' : ''}`}>
               {matchup.awayScore ?? '-'}
             </span>
             {awayWon && (
-              <svg className="w-4 h-4 text-accent-green" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
             )}
@@ -109,7 +109,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
       {detailed && leagueId && (
         <Link
           to={`/leagues/${leagueId}/matchups`}
-          className="block px-4 py-2 text-center text-sm text-accent-green hover:bg-accent-green/10 transition-colors border-t border-dark-border"
+          className="block px-4 py-2 text-center text-sm text-gold hover:bg-gold/10 transition-colors border-t border-dark-border"
         >
           View Details
         </Link>

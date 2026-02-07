@@ -38,7 +38,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
   return (
     <Card className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">My Queue</h3>
+        <h3 className="text-lg font-semibold font-display text-white">My Queue</h3>
         <span className="text-text-muted text-sm">
           {queue.length} {queue.length === 1 ? 'player' : 'players'}
         </span>

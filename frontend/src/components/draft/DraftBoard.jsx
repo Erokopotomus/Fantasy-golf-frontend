@@ -16,7 +16,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                 key={team.id}
                 className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
                   team.id === userTeamId
-                    ? 'bg-accent-green/30 text-accent-green border-b-2 border-b-accent-green'
+                    ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
                     : currentPick?.teamId === team.id
                       ? 'bg-yellow-500/20 text-yellow-400'
                       : 'bg-dark-tertiary text-text-muted'
@@ -47,7 +47,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                 style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
               >
                 <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
-                  isCurrentRound ? 'text-accent-green bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
+                  isCurrentRound ? 'text-gold bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
                 }`}>
                   <span>{round}</span>
                   <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>
@@ -71,13 +71,13 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                         pick ? 'cursor-pointer hover:brightness-125' : ''
                       } ${
                         isCurrent
-                          ? 'bg-accent-green/25 ring-2 ring-inset ring-accent-green'
+                          ? 'bg-gold/25 ring-2 ring-inset ring-gold'
                           : pick
                             ? pick.playerRank <= 10
                               ? isUserTeamCell ? 'bg-yellow-500/20' : 'bg-yellow-500/12'
                               : pick.playerRank <= 25
-                                ? isUserTeamCell ? 'bg-accent-green/18' : 'bg-accent-green/10'
-                                : isUserTeamCell ? 'bg-accent-green/10' : round % 2 === 1 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
+                                ? isUserTeamCell ? 'bg-gold/18' : 'bg-gold/10'
+                                : isUserTeamCell ? 'bg-gold/10' : round % 2 === 1 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
                             : round % 2 === 1 ? 'bg-dark-primary/50' : 'bg-dark-secondary/25'
                       }`}
                     >
@@ -86,13 +86,13 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                           <div className="flex items-center justify-center gap-0.5">
                             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                               pick.playerRank <= 10 ? 'bg-yellow-400' :
-                              pick.playerRank <= 25 ? 'bg-accent-green' :
+                              pick.playerRank <= 25 ? 'bg-gold' :
                               pick.playerRank <= 40 ? 'bg-blue-400' :
                               'bg-text-muted/40'
                             }`} />
                           </div>
                           <p className={`text-[10px] leading-tight truncate ${
-                            isUserTeamCell ? 'text-accent-green font-medium' : 'text-text-secondary'
+                            isUserTeamCell ? 'text-gold font-medium' : 'text-text-secondary'
                           }`}>
                             {pick.playerName?.split(' ').pop()}
                           </p>
@@ -100,8 +100,8 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                         </div>
                       ) : isCurrent ? (
                         <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
                         </span>
                       ) : (
                         <span className="text-[9px] text-text-muted/30 tabular-nums">

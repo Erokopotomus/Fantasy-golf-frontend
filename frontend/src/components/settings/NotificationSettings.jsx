@@ -95,7 +95,7 @@ export default function NotificationSettings() {
   return (
     <div className="min-h-screen bg-dark-primary pt-20 px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-6">Notification Settings</h1>
+        <h1 className="text-2xl font-bold font-display text-white mb-6">Notification Settings</h1>
 
         {error && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4 text-red-400 text-sm">
@@ -105,7 +105,7 @@ export default function NotificationSettings() {
 
         {/* Push Notifications */}
         <div className="bg-dark-card border border-dark-border rounded-lg p-4 mb-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Push Notifications</h2>
+          <h2 className="text-lg font-semibold font-display text-white mb-4">Push Notifications</h2>
 
           <div className="flex items-center justify-between py-3">
             <div>
@@ -151,7 +151,7 @@ export default function NotificationSettings() {
 
         {/* Category Toggles */}
         <div className="bg-dark-card border border-dark-border rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-white mb-4">Notification Categories</h2>
+          <h2 className="text-lg font-semibold font-display text-white mb-4">Notification Categories</h2>
           <p className="text-gray-400 text-sm mb-4">
             Choose which types of notifications you want to receive.
           </p>

@@ -44,7 +44,7 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
           <p className="text-red-400 mb-4">{error}</p>
           <button
             onClick={refetch}
-            className="text-accent-green hover:underline"
+            className="text-gold hover:underline"
           >
             Try again
           </button>
@@ -58,7 +58,7 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
       {/* Header */}
       <div className="p-4 border-b border-dark-border">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <h3 className="text-lg font-semibold font-display text-white">{title}</h3>
           <button
             onClick={refetch}
             className="text-text-muted hover:text-white transition-colors"
@@ -81,7 +81,7 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
                   flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                   whitespace-nowrap transition-colors
                   ${activeFilter === filter.id
-                    ? 'bg-accent-green text-white'
+                    ? 'bg-gold text-white'
                     : 'bg-dark-tertiary text-text-muted hover:bg-dark-border hover:text-white'
                   }
                 `}

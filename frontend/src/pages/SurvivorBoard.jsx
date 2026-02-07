@@ -27,7 +27,7 @@ const SurvivorBoardPage = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading survivor data...</p>
           </div>
         </div>
@@ -40,7 +40,7 @@ const SurvivorBoardPage = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="text-center py-12">
           <p className="text-red-400 mb-4">{error}</p>
-          <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
             Back to League
           </Link>
         </div>
@@ -52,11 +52,11 @@ const SurvivorBoardPage = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold text-white mb-2">Not a Survivor League</h2>
+          <h2 className="text-xl font-bold font-display text-white mb-2">Not a Survivor League</h2>
           <p className="text-text-secondary mb-6">
             The Survivor Board is only available for Survivor format leagues.
           </p>
-          <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
             Back to League
           </Link>
         </Card>
@@ -104,16 +104,16 @@ const SurvivorBoardPage = () => {
           </svg>
           Back to {league.name}
         </Link>
-        <h1 className="text-2xl font-bold text-white">Survivor Board</h1>
+        <h1 className="text-2xl font-bold font-display text-white">Survivor Board</h1>
         <p className="text-text-secondary">Last team standing wins!</p>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className={userTeam?.status === 'alive' ? 'border border-accent-green/50' : userTeam?.status === 'eliminated' ? 'border border-red-400/50' : ''}>
+        <Card className={userTeam?.status === 'alive' ? 'border border-gold/50' : userTeam?.status === 'eliminated' ? 'border border-red-400/50' : ''}>
           <p className="text-xs text-text-muted mb-1">Your Status</p>
           <p className={`text-2xl font-bold ${
-            userTeam?.status === 'alive' ? 'text-accent-green' :
+            userTeam?.status === 'alive' ? 'text-gold' :
             userTeam?.status === 'buyback' ? 'text-yellow-400' : 'text-red-400'
           }`}>
             {userTeam?.status === 'alive' ? 'Alive' :
@@ -123,18 +123,18 @@ const SurvivorBoardPage = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Current Week</p>
-          <p className="text-2xl font-bold text-white">{survivorData?.currentWeek || 1}</p>
+          <p className="text-2xl font-bold font-display text-white">{survivorData?.currentWeek || 1}</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Teams Remaining</p>
-          <p className="text-2xl font-bold text-accent-green">{teamsAlive}</p>
+          <p className="text-2xl font-bold font-display text-gold">{teamsAlive}</p>
           <p className="text-xs text-text-secondary">of {standings.length}</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Eliminated</p>
-          <p className="text-2xl font-bold text-red-400">{teamsEliminated}</p>
+          <p className="text-2xl font-bold font-display text-red-400">{teamsEliminated}</p>
           <p className="text-xs text-text-secondary">teams out</p>
         </Card>
       </div>
@@ -176,7 +176,7 @@ const SurvivorBoardPage = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-accent-green text-white'
+                ? 'bg-gold text-white'
                 : 'bg-dark-tertiary text-text-secondary hover:text-white'
             }`}
           >
@@ -207,7 +207,7 @@ const SurvivorBoardPage = () => {
       {/* History Tab */}
       {activeTab === 'history' && (
         <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">Elimination Timeline</h3>
+          <h3 className="text-lg font-semibold font-display text-white mb-4">Elimination Timeline</h3>
           {survivorData?.eliminations?.length > 0 ? (
             <div className="relative">
               <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-dark-border"></div>

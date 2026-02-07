@@ -74,7 +74,7 @@ const ChatMessage = ({ message }) => {
         case 'trade':
           return 'bg-purple-500/20 border-purple-500/30 text-purple-400'
         case 'waiver':
-          return 'bg-accent-blue/20 border-accent-blue/30 text-accent-blue'
+          return 'bg-orange/20 border-orange/30 text-orange'
         case 'lineup':
           return 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400'
         default:
@@ -99,7 +99,7 @@ const ChatMessage = ({ message }) => {
       {/* Avatar */}
       <div className={`
         w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold
-        ${isOwnMessage ? 'bg-accent-green text-white' : 'bg-dark-tertiary text-text-secondary'}
+        ${isOwnMessage ? 'bg-gold text-white' : 'bg-dark-tertiary text-text-secondary'}
       `}>
         {message.userAvatar || message.userName?.charAt(0).toUpperCase() || '?'}
       </div>
@@ -115,7 +115,7 @@ const ChatMessage = ({ message }) => {
         <div className={`
           px-4 py-2 rounded-2xl
           ${isOwnMessage
-            ? 'bg-accent-green text-white rounded-br-md'
+            ? 'bg-gold text-white rounded-br-md'
             : 'bg-dark-tertiary text-text-primary rounded-bl-md'
           }
         `}>

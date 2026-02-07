@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import Checkbox from '../components/common/Checkbox'
+import ClutchLogo from '../components/common/ClutchLogo'
 
 const Signup = () => {
   const [name, setName] = useState('')
@@ -53,12 +54,12 @@ const Signup = () => {
       {/* Left side - Image/Graphic */}
       <div className="hidden lg:flex flex-1 bg-dark-secondary items-center justify-center p-12">
         <div className="max-w-lg text-center">
-          <div className="w-64 h-64 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-8 shadow-glow-green">
-            <svg className="w-32 h-32 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-64 h-64 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-8 shadow-glow-gold">
+            <svg className="w-32 h-32 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-2xl font-bold font-display text-white mb-4">
             Join the Competition
           </h2>
           <p className="text-text-secondary leading-relaxed">
@@ -72,14 +73,12 @@ const Signup = () => {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-md w-full">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 bg-accent-green rounded-lg flex items-center justify-center shadow-button">
-              <span className="text-white font-black text-xl">C</span>
-            </div>
-            <span className="text-2xl font-bold text-white">Clutch</span>
+          <Link to="/" className="flex items-center gap-2.5 mb-8">
+            <ClutchLogo size={40} className="rounded-lg" />
+            <span className="text-2xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
           </Link>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Create your account</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">Create your account</h1>
           <p className="text-text-secondary mb-8 leading-relaxed">
             Start your fantasy golf journey today
           </p>
@@ -154,11 +153,11 @@ const Signup = () => {
               label={
                 <span>
                   I agree to the{' '}
-                  <Link to="/terms" className="text-accent-green hover:text-accent-green/80 transition-colors duration-300">
+                  <Link to="/terms" className="text-gold hover:text-gold/80 transition-colors duration-300">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link to="/privacy" className="text-accent-green hover:text-accent-green/80 transition-colors duration-300">
+                  <Link to="/privacy" className="text-gold hover:text-gold/80 transition-colors duration-300">
                     Privacy Policy
                   </Link>
                 </span>
@@ -201,7 +200,7 @@ const Signup = () => {
 
           <p className="mt-8 text-center text-text-secondary">
             Already have an account?{' '}
-            <Link to="/login" className="text-accent-green hover:text-accent-green/80 font-medium transition-colors duration-300">
+            <Link to="/login" className="text-gold hover:text-gold/80 font-medium transition-colors duration-300">
               Sign in
             </Link>
           </p>

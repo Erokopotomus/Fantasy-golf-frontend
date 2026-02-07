@@ -68,11 +68,11 @@ const ActivityFeed = ({ activity, loading }) => {
   const getActivityColor = (type) => {
     switch (type) {
       case 'trade': return 'bg-purple-500/20 text-purple-400'
-      case 'pickup': return 'bg-accent-green/20 text-accent-green'
+      case 'pickup': return 'bg-gold/20 text-gold'
       case 'drop': return 'bg-red-500/20 text-red-400'
       case 'score': return 'bg-yellow-500/20 text-yellow-400'
-      case 'lineup': return 'bg-accent-blue/20 text-accent-blue'
-      case 'join': return 'bg-cyan-500/20 text-cyan-400'
+      case 'lineup': return 'bg-orange/20 text-orange'
+      case 'join': return 'bg-gold/20 text-gold'
       default: return 'bg-dark-tertiary text-text-secondary'
     }
   }
@@ -136,7 +136,7 @@ const ActivityFeed = ({ activity, loading }) => {
                 {item.players && item.players.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {item.players.map((player, idx) => (
-                      <span key={idx} className="text-xs bg-dark-primary px-2 py-0.5 rounded text-accent-green">
+                      <span key={idx} className="text-xs bg-dark-primary px-2 py-0.5 rounded text-gold">
                         {player}
                       </span>
                     ))}

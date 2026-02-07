@@ -72,9 +72,9 @@ const Toast = ({ notification, onDismiss }) => {
     switch (notification.type) {
       case 'success':
         return {
-          bg: 'bg-accent-green/10 border-accent-green/50',
-          icon: 'bg-accent-green/20 text-accent-green',
-          title: 'text-accent-green',
+          bg: 'bg-gold/10 border-gold/50',
+          icon: 'bg-gold/20 text-gold',
+          title: 'text-gold',
         }
       case 'error':
         return {
@@ -96,9 +96,9 @@ const Toast = ({ notification, onDismiss }) => {
         }
       case 'draft':
         return {
-          bg: 'bg-accent-blue/10 border-accent-blue/50',
-          icon: 'bg-accent-blue/20 text-accent-blue',
-          title: 'text-accent-blue',
+          bg: 'bg-orange/10 border-orange/50',
+          icon: 'bg-orange/20 text-orange',
+          title: 'text-orange',
         }
       case 'lineup':
         return {
@@ -108,9 +108,9 @@ const Toast = ({ notification, onDismiss }) => {
         }
       case 'news':
         return {
-          bg: 'bg-cyan-500/10 border-cyan-500/50',
-          icon: 'bg-cyan-500/20 text-cyan-500',
-          title: 'text-cyan-400',
+          bg: 'bg-gold/10 border-gold/50',
+          icon: 'bg-gold/20 text-gold',
+          title: 'text-gold',
         }
       default:
         return {
@@ -148,7 +148,7 @@ const Toast = ({ notification, onDismiss }) => {
               notification.action.onClick?.()
               handleDismiss()
             }}
-            className="mt-2 text-sm font-medium text-accent-green hover:underline"
+            className="mt-2 text-sm font-medium text-gold hover:underline"
           >
             {notification.action.label}
           </button>

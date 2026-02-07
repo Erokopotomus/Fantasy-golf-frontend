@@ -61,7 +61,7 @@ const TradeCenter = () => {
             </svg>
             Back to League
           </Link>
-          <h1 className="text-2xl font-bold text-white">Trade Center</h1>
+          <h1 className="text-2xl font-bold font-display text-white">Trade Center</h1>
           <p className="text-text-secondary">Manage trades with other teams</p>
         </div>
         <button
@@ -75,15 +75,15 @@ const TradeCenter = () => {
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <Card className="text-center">
-          <p className="text-2xl font-bold text-accent-blue">{incomingTrades.length}</p>
+          <p className="text-2xl font-bold font-display text-orange">{incomingTrades.length}</p>
           <p className="text-xs text-text-muted">Incoming</p>
         </Card>
         <Card className="text-center">
-          <p className="text-2xl font-bold text-yellow-400">{outgoingTrades.length}</p>
+          <p className="text-2xl font-bold font-display text-yellow-400">{outgoingTrades.length}</p>
           <p className="text-xs text-text-muted">Pending</p>
         </Card>
         <Card className="text-center">
-          <p className="text-2xl font-bold text-white">{tradeHistory.length}</p>
+          <p className="text-2xl font-bold font-display text-white">{tradeHistory.length}</p>
           <p className="text-xs text-text-muted">Completed</p>
         </Card>
       </div>

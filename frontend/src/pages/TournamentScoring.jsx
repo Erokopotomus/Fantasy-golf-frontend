@@ -72,10 +72,10 @@ const PlayerOddsCard = ({ player, onClose }) => {
         <div className="px-4 py-3 space-y-2.5">
           <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium">Live Odds</p>
           <ProbBar label="Win" value={probs.win} color="bg-yellow-500" />
-          <ProbBar label="Top 5" value={probs.top5} color="bg-accent-green" />
+          <ProbBar label="Top 5" value={probs.top5} color="bg-gold" />
           <ProbBar label="Top 10" value={probs.top10} color="bg-blue-500" />
           <ProbBar label="Top 20" value={probs.top20} color="bg-purple-500" />
-          <ProbBar label="Make Cut" value={probs.makeCut} color="bg-teal-500" />
+          <ProbBar label="Make Cut" value={probs.makeCut} color="bg-gold-muted" />
         </div>
       ) : (
         <div className="px-4 py-4 text-center text-text-muted text-xs">
@@ -248,7 +248,7 @@ const TournamentScoring = () => {
               {leagueId && (
                 <div className="text-right flex-shrink-0">
                   <span className="text-[10px] text-text-muted uppercase tracking-wide">Fantasy Pts</span>
-                  <p className="text-xl font-bold text-emerald-400 leading-tight">
+                  <p className="text-xl font-bold font-display text-emerald-400 leading-tight">
                     {myPlayers.reduce((sum, p) => sum + (p.fantasyPoints || 0), 0)}
                   </p>
                 </div>

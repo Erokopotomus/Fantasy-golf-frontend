@@ -13,14 +13,14 @@ const PlayerStats = ({ player }) => {
 
   const getSGColor = (value) => {
     if (typeof value !== 'number') return 'text-text-muted'
-    if (value > 0.5) return 'text-accent-green'
+    if (value > 0.5) return 'text-gold'
     if (value > 0) return 'text-green-400'
     if (value > -0.5) return 'text-yellow-400'
     return 'text-red-400'
   }
 
   const sgStats = stats ? [
-    { label: 'Total', value: stats.sgTotal, color: 'text-accent-green' },
+    { label: 'Total', value: stats.sgTotal, color: 'text-gold' },
     { label: 'Off the Tee', value: stats.sgOffTee },
     { label: 'Approach', value: stats.sgApproach },
     { label: 'Around Green', value: stats.sgAroundGreen },
@@ -66,7 +66,7 @@ const PlayerStats = ({ player }) => {
           <div className="grid grid-cols-2 gap-3">
             {seasonStats.map((stat) => (
               <div key={stat.label} className="bg-dark-primary rounded-lg p-3 text-center">
-                <p className="text-lg font-bold text-white">{stat.value}</p>
+                <p className="text-lg font-bold font-display text-white">{stat.value}</p>
                 <p className="text-xs text-text-muted">{stat.label}</p>
               </div>
             ))}
@@ -90,7 +90,7 @@ const PlayerStats = ({ player }) => {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-text-secondary text-sm">DataGolf Skill</span>
-            <span className="font-semibold text-accent-green">
+            <span className="font-semibold text-gold">
               {player.datagolfSkill != null ? player.datagolfSkill.toFixed(2) : '—'}
             </span>
           </div>

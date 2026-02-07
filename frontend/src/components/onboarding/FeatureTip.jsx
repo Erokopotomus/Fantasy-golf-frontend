@@ -42,10 +42,10 @@ const FeatureTip = ({
   }
 
   const arrowStyles = {
-    top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-accent-green',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-accent-green',
-    left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-accent-green',
-    right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-accent-green',
+    top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gold',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gold',
+    left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gold',
+    right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gold',
   }
 
   return (
@@ -55,7 +55,7 @@ const FeatureTip = ({
       {isVisible && (
         <div
           className={`
-            absolute z-50 w-64 p-3 bg-accent-green rounded-lg shadow-lg
+            absolute z-50 w-64 p-3 bg-gold rounded-lg shadow-lg
             animate-fadeIn ${positionStyles[position]}
           `}
         >

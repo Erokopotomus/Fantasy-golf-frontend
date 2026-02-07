@@ -17,7 +17,7 @@ function getUrgencyColor(totalMs) {
   const hours = totalMs / (1000 * 60 * 60)
   if (hours < 2) return 'text-red-400'
   if (hours < 24) return 'text-yellow-400'
-  return 'text-accent-green'
+  return 'text-gold'
 }
 
 function formatDate(iso) {

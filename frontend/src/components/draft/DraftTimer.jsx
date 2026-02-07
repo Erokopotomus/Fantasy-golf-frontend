@@ -9,7 +9,7 @@ const DraftTimer = ({ onTimeout }) => {
     if (isPaused) return 'text-yellow-400'
     if (timerSeconds <= 10) return 'text-red-500'
     if (timerSeconds <= 30) return 'text-yellow-400'
-    return 'text-accent-green'
+    return 'text-gold'
   }
 
   const getProgressWidth = () => {
@@ -31,7 +31,7 @@ const DraftTimer = ({ onTimeout }) => {
         <div
           className={`h-full transition-all duration-1000 ${
             timerSeconds <= 10 ? 'bg-red-500' :
-            timerSeconds <= 30 ? 'bg-yellow-400' : 'bg-accent-green'
+            timerSeconds <= 30 ? 'bg-yellow-400' : 'bg-gold'
           }`}
           style={{ width: `${getProgressWidth()}%` }}
         />

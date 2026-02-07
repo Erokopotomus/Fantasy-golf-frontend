@@ -7,6 +7,7 @@ import { OnboardingProvider } from './context/OnboardingContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import MobileNav from './components/layout/MobileNav'
+import AuroraBackground from './components/layout/AuroraBackground'
 import NotificationContainer from './components/notifications/NotificationContainer'
 import OnboardingModal from './components/onboarding/OnboardingModal'
 import Landing from './pages/Landing'
@@ -50,6 +51,8 @@ function App() {
       <NotificationProvider>
         <OnboardingProvider>
         <div className="min-h-screen bg-dark-primary">
+          <AuroraBackground />
+          <div className="relative z-10">
           <Navbar />
           <MobileNav />
           <NotificationContainer />
@@ -308,6 +311,7 @@ function App() {
           </main>
           <Analytics />
           <SpeedInsights />
+          </div>
         </div>
         </OnboardingProvider>
       </NotificationProvider>

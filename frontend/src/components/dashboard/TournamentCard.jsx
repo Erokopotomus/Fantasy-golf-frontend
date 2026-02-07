@@ -36,7 +36,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
   if (!tournament) {
     return (
       <Card>
-        <h3 className="text-base sm:text-lg font-semibold text-white mb-4">Next Tournament</h3>
+        <h3 className="text-base sm:text-lg font-semibold font-display text-white mb-4">Next Tournament</h3>
         <div className="text-center py-6">
           <p className="text-text-muted text-sm">No upcoming tournaments</p>
         </div>
@@ -86,11 +86,11 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
       <Card hover>
         {/* Header row */}
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-base sm:text-lg font-semibold text-white">
+          <h3 className="text-base sm:text-lg font-semibold font-display text-white">
             {isLive ? 'Live Tournament' : isCompleted ? 'Recent Tournament' : 'Next Tournament'}
           </h3>
           {isLive && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-mono font-bold uppercase tracking-wider">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -99,7 +99,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
             </span>
           )}
           {isUpcoming && (
-            <span className="px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-400 text-xs font-bold uppercase tracking-wider">
+            <span className="px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-400 text-xs font-mono font-bold uppercase tracking-wider">
               Upcoming
             </span>
           )}
@@ -108,7 +108,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
         {/* Tournament name + venue */}
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-            isLive ? 'bg-red-500/20' : 'bg-accent-green/20'
+            isLive ? 'bg-red-500/20' : 'bg-gold/20'
           }`}>
             {isLive ? (
               <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ) : (
-              <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             )}
@@ -159,17 +159,17 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
             <p className="text-text-muted text-xs mb-2 text-center">Starts In</p>
             <div className="flex justify-center gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-white">{countdown.days}</p>
+                <p className="text-2xl font-bold font-display text-white">{countdown.days}</p>
                 <p className="text-text-muted text-xs">days</p>
               </div>
               <div className="text-text-muted text-2xl font-light">:</div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-white">{countdown.hours}</p>
+                <p className="text-2xl font-bold font-display text-white">{countdown.hours}</p>
                 <p className="text-text-muted text-xs">hrs</p>
               </div>
               <div className="text-text-muted text-2xl font-light">:</div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-white">{countdown.mins}</p>
+                <p className="text-2xl font-bold font-display text-white">{countdown.mins}</p>
                 <p className="text-text-muted text-xs">min</p>
               </div>
             </div>
@@ -182,7 +182,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
           <div className="bg-dark-primary rounded-lg p-2">
             {purse ? (
               <>
-                <p className="text-accent-green font-semibold text-sm">{formatPurse(purse)}</p>
+                <p className="text-gold font-semibold text-sm">{formatPurse(purse)}</p>
                 <p className="text-text-muted text-xs">Purse</p>
               </>
             ) : (() => {

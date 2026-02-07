@@ -84,7 +84,7 @@ const LeagueSettings = () => {
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-green mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading settings...</p>
           </div>
         </div>
@@ -97,7 +97,7 @@ const LeagueSettings = () => {
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="text-center py-12">
           <p className="text-red-400 mb-4">League not found</p>
-          <Link to="/leagues" className="text-accent-green hover:underline">
+          <Link to="/leagues" className="text-gold hover:underline">
             Back to Leagues
           </Link>
         </div>
@@ -264,7 +264,7 @@ const LeagueSettings = () => {
           </svg>
           Back to League
         </Link>
-        <h1 className="text-2xl font-bold text-white">League Settings</h1>
+        <h1 className="text-2xl font-bold font-display text-white">League Settings</h1>
         <p className="text-text-secondary">Manage {league.name} settings</p>
       </div>
 
@@ -276,7 +276,7 @@ const LeagueSettings = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-accent-green text-white'
+                ? 'bg-gold text-white'
                 : 'bg-dark-tertiary text-text-secondary hover:text-white'
             }`}
           >
@@ -288,7 +288,7 @@ const LeagueSettings = () => {
       {/* General Settings */}
       {activeTab === 'general' && (
         <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">General Settings</h3>
+          <h3 className="text-lg font-semibold font-display text-white mb-4">General Settings</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -298,7 +298,7 @@ const LeagueSettings = () => {
                 type="text"
                 value={settings.name}
                 onChange={(e) => setSettings({ ...settings, name: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
               />
             </div>
 
@@ -309,7 +309,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.rosterSize}
                 onChange={(e) => setSettings({ ...settings, rosterSize: parseInt(e.target.value) })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
               >
                 {[4, 5, 6, 7, 8, 10, 12].map(size => (
                   <option key={size} value={size}>{size} players</option>
@@ -324,7 +324,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.rosterLockDeadline}
                 onChange={(e) => setSettings({ ...settings, rosterLockDeadline: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
               >
                 <option value="tournament-start">Tournament Start (Thursday)</option>
                 <option value="first-tee">First Tee Time</option>
@@ -342,7 +342,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.maxRosterMoves}
                 onChange={(e) => setSettings({ ...settings, maxRosterMoves: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
               >
                 <option value="unlimited">Unlimited</option>
                 <option value="3-week">3 per week</option>
@@ -364,7 +364,7 @@ const LeagueSettings = () => {
                 </label>
                 <div className="p-3 bg-dark-tertiary rounded-lg border border-dark-border">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent-green/20 flex items-center justify-center text-accent-green">
+                    <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -410,7 +410,7 @@ const LeagueSettings = () => {
       {/* Trade Settings */}
       {activeTab === 'trades' && (
         <Card>
-          <h3 className="text-lg font-semibold text-white mb-4">Trade Settings</h3>
+          <h3 className="text-lg font-semibold font-display text-white mb-4">Trade Settings</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -419,7 +419,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.tradeReview}
                 onChange={(e) => setSettings({ ...settings, tradeReview: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
               >
                 <option value="commissioner">Commissioner Review</option>
                 <option value="league-vote">League Vote</option>
@@ -437,7 +437,7 @@ const LeagueSettings = () => {
                   type="button"
                   onClick={() => setSettings({ ...settings, tradeDeadline: !settings.tradeDeadline })}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.tradeDeadline ? 'bg-accent-green' : 'bg-dark-border'
+                    settings.tradeDeadline ? 'bg-gold' : 'bg-dark-border'
                   }`}
                 >
                   <span
@@ -458,7 +458,7 @@ const LeagueSettings = () => {
                     value={settings.tradeDeadlineDate}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setSettings({ ...settings, tradeDeadlineDate: e.target.value })}
-                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                   />
                   <p className="text-xs text-text-muted mt-2">
                     No trades will be allowed after this date
@@ -478,7 +478,7 @@ const LeagueSettings = () => {
       {activeTab === 'waivers' && (
         <div className="space-y-6">
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Waiver System</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Waiver System</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -486,7 +486,7 @@ const LeagueSettings = () => {
                 </label>
                 <div className="space-y-2">
                   <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
-                    settings.waiverType === 'rolling' ? 'bg-accent-green/10 border-accent-green/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                    settings.waiverType === 'rolling' ? 'bg-gold/10 border-gold/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
                   }`}>
                     <input
                       type="radio"
@@ -494,7 +494,7 @@ const LeagueSettings = () => {
                       value="rolling"
                       checked={settings.waiverType === 'rolling'}
                       onChange={(e) => setSettings({ ...settings, waiverType: e.target.value })}
-                      className="mt-1 text-accent-green"
+                      className="mt-1 text-gold"
                     />
                     <div>
                       <p className="text-white font-medium">Rolling Waivers</p>
@@ -502,7 +502,7 @@ const LeagueSettings = () => {
                     </div>
                   </label>
                   <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
-                    settings.waiverType === 'faab' ? 'bg-accent-green/10 border-accent-green/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                    settings.waiverType === 'faab' ? 'bg-gold/10 border-gold/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
                   }`}>
                     <input
                       type="radio"
@@ -510,7 +510,7 @@ const LeagueSettings = () => {
                       value="faab"
                       checked={settings.waiverType === 'faab'}
                       onChange={(e) => setSettings({ ...settings, waiverType: e.target.value })}
-                      className="mt-1 text-accent-green"
+                      className="mt-1 text-gold"
                     />
                     <div>
                       <p className="text-white font-medium">FAAB (Free Agent Auction Budget)</p>
@@ -518,7 +518,7 @@ const LeagueSettings = () => {
                     </div>
                   </label>
                   <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
-                    settings.waiverType === 'none' ? 'bg-accent-green/10 border-accent-green/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                    settings.waiverType === 'none' ? 'bg-gold/10 border-gold/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
                   }`}>
                     <input
                       type="radio"
@@ -526,7 +526,7 @@ const LeagueSettings = () => {
                       value="none"
                       checked={settings.waiverType === 'none'}
                       onChange={(e) => setSettings({ ...settings, waiverType: e.target.value })}
-                      className="mt-1 text-accent-green"
+                      className="mt-1 text-gold"
                     />
                     <div>
                       <p className="text-white font-medium">Free Agency (No Waivers)</p>
@@ -545,7 +545,7 @@ const LeagueSettings = () => {
                   <select
                     value={settings.waiverPriority}
                     onChange={(e) => setSettings({ ...settings, waiverPriority: e.target.value })}
-                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                   >
                     <option value="reverse-standings">Reverse Standings (worst team picks first)</option>
                     <option value="rolling">Rolling (resets to last after successful claim)</option>
@@ -559,7 +559,7 @@ const LeagueSettings = () => {
           {/* FAAB Budget - only show for FAAB */}
           {settings.waiverType === 'faab' && (
             <Card>
-              <h3 className="text-lg font-semibold text-white mb-4">FAAB Settings</h3>
+              <h3 className="text-lg font-semibold font-display text-white mb-4">FAAB Settings</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -573,7 +573,7 @@ const LeagueSettings = () => {
                       max="1000"
                       value={settings.faabBudget}
                       onChange={(e) => setSettings({ ...settings, faabBudget: parseInt(e.target.value) || 100 })}
-                      className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                      className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                     />
                   </div>
                   <p className="text-text-muted text-xs mt-2">
@@ -583,7 +583,7 @@ const LeagueSettings = () => {
 
                 <div className="bg-dark-tertiary rounded-lg p-4">
                   <p className="text-text-secondary text-sm">
-                    <span className="text-accent-green font-medium">How FAAB works:</span> Teams submit blind bids on players.
+                    <span className="text-gold font-medium">How FAAB works:</span> Teams submit blind bids on players.
                     When waivers process, highest bid wins. Tied bids go to the team with worse standings.
                     $0 bids are allowed. Budget doesn't reset.
                   </p>
@@ -595,7 +595,7 @@ const LeagueSettings = () => {
           {/* Waiver Clear Schedule */}
           {settings.waiverType !== 'none' && (
             <Card>
-              <h3 className="text-lg font-semibold text-white mb-4">Waiver Processing Schedule</h3>
+              <h3 className="text-lg font-semibold font-display text-white mb-4">Waiver Processing Schedule</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -605,7 +605,7 @@ const LeagueSettings = () => {
                     <select
                       value={settings.waiverClearDay}
                       onChange={(e) => setSettings({ ...settings, waiverClearDay: e.target.value })}
-                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                     >
                       <option value="sunday">Sunday</option>
                       <option value="monday">Monday</option>
@@ -624,7 +624,7 @@ const LeagueSettings = () => {
                     <select
                       value={settings.waiverClearTime}
                       onChange={(e) => setSettings({ ...settings, waiverClearTime: e.target.value })}
-                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                     >
                       <option value="00:00">12:00 AM (Midnight)</option>
                       <option value="03:00">3:00 AM</option>
@@ -646,7 +646,7 @@ const LeagueSettings = () => {
 
           {/* Dropped Player Waiver Period */}
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Dropped Player Rules</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Dropped Player Rules</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -655,7 +655,7 @@ const LeagueSettings = () => {
                 <select
                   value={settings.waiverPeriodHours}
                   onChange={(e) => setSettings({ ...settings, waiverPeriodHours: parseInt(e.target.value) })}
-                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                 >
                   <option value="0">No waiver period (immediate free agent)</option>
                   <option value="24">24 hours</option>
@@ -688,14 +688,14 @@ const LeagueSettings = () => {
       {activeTab === 'members' && (
         <div className="space-y-6">
           {/* Invite Code Section */}
-          <Card className="border-accent-green/30">
-            <h3 className="text-lg font-semibold text-white mb-4">Invite Members</h3>
+          <Card className="border-gold/30">
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Invite Members</h3>
 
             {/* Invite Code Display */}
             <div className="bg-dark-primary rounded-lg p-4 mb-4">
               <p className="text-text-muted text-xs mb-2">LEAGUE INVITE CODE</p>
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-mono tracking-[0.3em] text-accent-green font-bold">
+                <span className="text-3xl font-mono tracking-[0.3em] text-gold font-bold">
                   {inviteCode || '------'}
                 </span>
                 <button
@@ -704,7 +704,7 @@ const LeagueSettings = () => {
                   title="Copy code"
                 >
                   {copied ? (
-                    <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
@@ -740,7 +740,7 @@ const LeagueSettings = () => {
           {/* Members List */}
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">League Members</h3>
+              <h3 className="text-lg font-semibold font-display text-white">League Members</h3>
               <span className="text-text-muted text-sm">
                 {league?.members?.length || 0} / {league?.maxTeams || 10}
               </span>
@@ -752,7 +752,7 @@ const LeagueSettings = () => {
                   <div
                     key={member.userId || member.user?.id}
                     className={`flex items-center justify-between p-3 rounded-lg ${
-                      isOwner ? 'bg-accent-green/10 border border-accent-green/30' : 'bg-dark-tertiary'
+                      isOwner ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -760,7 +760,7 @@ const LeagueSettings = () => {
                         {member.user?.avatar || member.user?.name?.charAt(0)?.toUpperCase() || '?'}
                       </div>
                       <div>
-                        <p className={`font-medium ${isOwner ? 'text-accent-green' : 'text-white'}`}>
+                        <p className={`font-medium ${isOwner ? 'text-gold' : 'text-white'}`}>
                           {member.user?.name || 'Unknown'}
                         </p>
                         <p className="text-text-muted text-xs flex items-center gap-1">
@@ -828,7 +828,7 @@ const LeagueSettings = () => {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Change League Format</h3>
+                <h3 className="text-lg font-semibold font-display text-white">Change League Format</h3>
                 <p className="text-text-muted text-sm">
                   Switch between competition formats (Full League, Head-to-Head, Roto, etc.)
                 </p>
@@ -855,12 +855,12 @@ const LeagueSettings = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Current Format: <span className="text-accent-green">{format?.name || 'Unknown'}</span>
+                  Current Format: <span className="text-gold">{format?.name || 'Unknown'}</span>
                 </label>
                 <select
                   value={newFormat || league?.format || ''}
                   onChange={(e) => setNewFormat(e.target.value)}
-                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                 >
                   <option value="">Select new format...</option>
                   <option value="full-league">Full League - Total points accumulation</option>
@@ -899,10 +899,10 @@ const LeagueSettings = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Confirm Format Change</h3>
+                    <h3 className="text-xl font-bold font-display text-white mb-2">Confirm Format Change</h3>
                     <p className="text-text-secondary">
                       Change from <span className="text-white font-medium">{format?.name}</span> to{' '}
-                      <span className="text-accent-green font-medium">{LEAGUE_FORMATS[newFormat]?.name || newFormat}</span>?
+                      <span className="text-gold font-medium">{LEAGUE_FORMATS[newFormat]?.name || newFormat}</span>?
                     </p>
                   </div>
 
@@ -945,7 +945,7 @@ const LeagueSettings = () => {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-red-400">Delete League</h3>
+                <h3 className="text-lg font-semibold font-display text-red-400">Delete League</h3>
                 <p className="text-text-muted text-sm">
                   Permanently delete this league and all associated data
                 </p>
@@ -984,7 +984,7 @@ const LeagueSettings = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                           </svg>
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">Delete "{league.name}"?</h3>
+                        <h3 className="text-xl font-bold font-display text-white mb-2">Delete "{league.name}"?</h3>
                         <p className="text-text-secondary">
                           This will permanently delete the league with{' '}
                           <span className="text-white font-medium">{league.members?.length || 0} members</span>.
@@ -1009,7 +1009,7 @@ const LeagueSettings = () => {
                   {deleteStep === 2 && (
                     <>
                       <div className="text-center mb-6">
-                        <h3 className="text-xl font-bold text-white mb-2">Are you absolutely sure?</h3>
+                        <h3 className="text-xl font-bold font-display text-white mb-2">Are you absolutely sure?</h3>
                         <p className="text-text-secondary mb-4">
                           Type <span className="text-red-400 font-mono font-bold">DELETE</span> to confirm
                         </p>

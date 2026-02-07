@@ -120,7 +120,7 @@ const ManagerProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-accent-green border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -176,18 +176,18 @@ const ManagerProfile = () => {
         {/* Header */}
         <Card className="mb-6">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-accent-green rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-button shrink-0">
+            <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-white text-2xl font-bold font-display shadow-button shrink-0">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-white truncate">{user?.name || 'Manager'}</h1>
+              <h1 className="text-2xl font-bold font-display text-white truncate">{user?.name || 'Manager'}</h1>
               {memberSince && <p className="text-text-muted text-sm">Member since {memberSince}</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
             <StatBox label="Wins" value={formatNum(p.wins)} color="text-yellow-400" />
-            <StatBox label="Championships" value={formatNum(p.championships)} color="text-accent-green" />
+            <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
             <StatBox label="Win %" value={formatPct(p.winPct)} />
           </div>
         </Card>
@@ -196,7 +196,7 @@ const ManagerProfile = () => {
           /* Empty State */
           <Card className="text-center py-12">
             <div className="text-4xl mb-4">&#127942;</div>
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className="text-xl font-bold font-display text-white mb-2">
               {isOwnProfile ? 'Your Manager Journey Starts Here' : 'No Stats Yet'}
             </h2>
             <p className="text-text-secondary mb-6 max-w-md mx-auto">
@@ -207,7 +207,7 @@ const ManagerProfile = () => {
             {isOwnProfile && (
               <Link
                 to="/leagues"
-                className="inline-flex items-center px-6 py-3 bg-accent-green text-white rounded-lg font-medium hover:bg-accent-green/90 transition-colors"
+                className="inline-flex items-center px-6 py-3 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors"
               >
                 Browse Leagues
               </Link>
@@ -220,16 +220,16 @@ const ManagerProfile = () => {
             <div className="space-y-6">
               {/* Lifetime Stats */}
               <Card>
-                <h2 className="text-lg font-semibold text-white mb-4">Lifetime Stats</h2>
+                <h2 className="text-lg font-semibold font-display text-white mb-4">Lifetime Stats</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
                   <StatBox label="Seasons" value={formatNum(p.totalSeasons)} />
-                  <StatBox label="Championships" value={formatNum(p.championships)} color="text-accent-green" />
+                  <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
                   <StatBox label="Wins" value={formatNum(p.wins)} color="text-yellow-400" />
                   <StatBox label="Losses" value={formatNum(p.losses)} color="text-red-400" />
                   <StatBox label="Win %" value={formatPct(p.winPct)} />
                   <StatBox label="Avg Finish" value={formatDecimal(p.avgFinish)} />
-                  <StatBox label="Best Finish" value={p.bestFinish != null ? `#${p.bestFinish}` : '-'} color="text-accent-green" />
+                  <StatBox label="Best Finish" value={p.bestFinish != null ? `#${p.bestFinish}` : '-'} color="text-gold" />
                   <StatBox label="Total Points" value={formatNum(p.totalPoints)} />
                   <StatBox label="Draft Efficiency" value={p.draftEfficiency != null ? formatDecimal(p.draftEfficiency) : '-'} />
                 </div>
@@ -238,7 +238,7 @@ const ManagerProfile = () => {
               {/* Per-Sport Breakdown */}
               {bySport.length > 0 && (
                 <Card>
-                  <h2 className="text-lg font-semibold text-white mb-4">By Sport</h2>
+                  <h2 className="text-lg font-semibold font-display text-white mb-4">By Sport</h2>
                   <div className="space-y-4">
                     {bySport.map((sp) => (
                       <div key={sp.id} className="bg-dark-primary rounded-lg p-4">
@@ -268,7 +268,7 @@ const ManagerProfile = () => {
             <div>
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white">Achievements</h2>
+                  <h2 className="text-lg font-semibold font-display text-white">Achievements</h2>
                   {achievementStats && (
                     <span className="text-sm text-text-secondary">
                       {achievementStats.unlocked}/{achievementStats.total}
@@ -281,7 +281,7 @@ const ManagerProfile = () => {
                   <div className="mb-6">
                     <div className="h-2 bg-dark-primary rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-accent-green rounded-full transition-all"
+                        className="h-full bg-gold rounded-full transition-all"
                         style={{ width: `${(achievementStats.unlocked / achievementStats.total) * 100}%` }}
                       />
                     </div>

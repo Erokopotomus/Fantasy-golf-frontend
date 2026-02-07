@@ -21,7 +21,7 @@ const EliminationAlert = ({ isEliminated, eliminatedWeek, canBuyBack, onBuyBack,
           </svg>
         </div>
 
-        <h2 className="text-2xl font-bold text-white text-center mb-2">You've Been Eliminated!</h2>
+        <h2 className="text-2xl font-bold font-display text-white text-center mb-2">You've Been Eliminated!</h2>
         <p className="text-text-secondary text-center mb-6">
           Your team had the lowest score in Week {eliminatedWeek} and has been eliminated from the survivor pool.
         </p>

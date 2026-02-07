@@ -7,7 +7,7 @@ const StatBar = ({ value, maxValue, label, isBest = false, showValue = true }) =
         <div className="flex justify-between text-xs mb-1">
           <span className="text-text-muted">{label}</span>
           {showValue && (
-            <span className={isBest ? 'text-accent-green font-medium' : 'text-white'}>
+            <span className={isBest ? 'text-gold font-medium' : 'text-white'}>
               {typeof value === 'number' ? value.toFixed(2) : value}
             </span>
           )}
@@ -16,7 +16,7 @@ const StatBar = ({ value, maxValue, label, isBest = false, showValue = true }) =
       <div className="h-2 bg-dark-primary rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-500 ${
-            isBest ? 'bg-accent-green' : 'bg-accent-blue'
+            isBest ? 'bg-gold' : 'bg-orange'
           }`}
           style={{ width: `${percentage}%` }}
         />

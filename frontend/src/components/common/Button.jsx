@@ -11,7 +11,7 @@ const Button = ({
   ...props
 }) => {
   const baseStyles = `
-    inline-flex items-center justify-center font-semibold rounded-lg
+    inline-flex items-center justify-center font-semibold rounded-button
     transition-all duration-300
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-primary
     disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
@@ -19,10 +19,10 @@ const Button = ({
   `
 
   const variants = {
-    primary: 'bg-accent-green hover:bg-accent-green-hover hover:shadow-button-hover text-white focus:ring-accent-green shadow-button',
-    secondary: 'bg-dark-tertiary hover:bg-dark-border text-white border border-dark-border focus:ring-dark-border hover:shadow-card',
-    outline: 'bg-transparent hover:bg-dark-tertiary text-white border border-dark-border focus:ring-dark-border hover:shadow-card',
-    ghost: 'bg-transparent hover:bg-dark-tertiary text-text-secondary hover:text-white',
+    primary: 'bg-gradient-to-r from-gold to-orange text-dark-primary font-display hover:shadow-glow-gold focus:ring-gold shadow-button',
+    secondary: 'bg-transparent border border-gold/20 text-gold backdrop-blur-sm hover:bg-surface-hover hover:border-gold/40 focus:ring-gold',
+    outline: 'bg-transparent hover:bg-dark-tertiary text-text-primary border border-dark-border hover:border-gold/30 focus:ring-dark-border hover:shadow-card',
+    ghost: 'bg-transparent hover:bg-dark-tertiary text-text-secondary hover:text-text-primary',
   }
 
   const sizes = {
@@ -48,7 +48,7 @@ const Button = ({
       {...props}
     >
       {loading && (
-        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+        <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin mr-2" />
       )}
       {children}
     </button>

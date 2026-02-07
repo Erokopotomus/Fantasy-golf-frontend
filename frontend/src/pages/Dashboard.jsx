@@ -92,7 +92,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto">
           {/* Welcome Header */}
           <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-2 leading-tight">
               Welcome back, {user?.name || 'Player'}!
             </h1>
             <p className="text-text-secondary leading-relaxed">
@@ -114,7 +114,7 @@ const Dashboard = () => {
                 <Link to="/leagues">
                   <Card className="text-center" hover>
                     <p className="text-text-muted text-xs sm:text-sm mb-1">Active Leagues</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                    <p className="text-2xl sm:text-3xl font-mono font-bold text-white">
                       {stats?.activeLeagues ?? 0}
                     </p>
                   </Card>
@@ -122,7 +122,7 @@ const Dashboard = () => {
                 <Link to="/profile">
                   <Card className="text-center" hover>
                     <p className="text-text-muted text-xs sm:text-sm mb-1">Total Points</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-accent-green">
+                    <p className="text-2xl sm:text-3xl font-mono font-bold text-gold">
                       {stats?.totalPoints?.toLocaleString() ?? '—'}
                     </p>
                   </Card>
@@ -130,7 +130,7 @@ const Dashboard = () => {
                 <Link to="/leagues">
                   <Card className="text-center" hover>
                     <p className="text-text-muted text-xs sm:text-sm mb-1">Best Finish</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-yellow-400">
+                    <p className="text-2xl sm:text-3xl font-mono font-bold text-yellow-400">
                       {stats?.bestFinish ? `${stats.bestFinish}${stats.bestFinish === 1 ? 'st' : stats.bestFinish === 2 ? 'nd' : stats.bestFinish === 3 ? 'rd' : 'th'}` : '—'}
                     </p>
                   </Card>
@@ -138,7 +138,7 @@ const Dashboard = () => {
                 <Link to="/profile">
                   <Card className="text-center" hover>
                     <p className="text-text-muted text-xs sm:text-sm mb-1">Win Rate</p>
-                    <p className="text-2xl sm:text-3xl font-bold text-white">
+                    <p className="text-2xl sm:text-3xl font-mono font-bold text-white">
                       {stats?.winRate !== undefined ? `${stats.winRate}%` : '—'}
                     </p>
                   </Card>
@@ -149,11 +149,11 @@ const Dashboard = () => {
 
           {/* Mock Draft Banner */}
           <Link to="/mock-draft" className="block mb-6 sm:mb-8 group">
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-accent-green/20 via-dark-secondary to-yellow-500/20 border border-accent-green/30 p-5 sm:p-6 hover:border-accent-green/50 transition-all">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gold/20 via-dark-secondary to-yellow-500/20 border border-gold/30 p-5 sm:p-6 hover:border-gold/50 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-accent-green/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 bg-gold/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
@@ -162,7 +162,7 @@ const Dashboard = () => {
                     <p className="text-text-secondary text-sm">Practice your draft strategy against AI opponents</p>
                   </div>
                 </div>
-                <svg className="w-5 h-5 text-text-muted group-hover:text-accent-green group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-text-muted group-hover:text-gold group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -174,7 +174,7 @@ const Dashboard = () => {
             {/* Left Column - My Leagues */}
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg sm:text-xl font-semibold text-white">My Leagues</h2>
+                <h2 className="text-lg sm:text-xl font-semibold font-display text-white">My Leagues</h2>
                 <Link to="/leagues/create">
                   <Button size="sm">Create League</Button>
                 </Link>
@@ -248,11 +248,11 @@ const Dashboard = () => {
 
               {/* Quick Actions */}
               <Card>
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-4">Quick Actions</h3>
+                <h3 className="text-base sm:text-lg font-semibold font-display text-white mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <Link to="/leagues/create" className="quick-action-btn group">
-                    <div className="w-10 h-10 bg-accent-green/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-gold/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                     </div>
@@ -263,8 +263,8 @@ const Dashboard = () => {
                   </Link>
 
                   <Link to="/leagues/join" className="quick-action-btn group">
-                    <div className="w-10 h-10 bg-accent-blue/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <svg className="w-5 h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-orange/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <svg className="w-5 h-5 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                       </svg>
                     </div>
@@ -287,8 +287,8 @@ const Dashboard = () => {
                   </Link>
 
                   <Link to="/players" className="quick-action-btn group">
-                    <div className="w-10 h-10 bg-accent-green/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                      <svg className="w-5 h-5 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-gold/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
@@ -304,9 +304,9 @@ const Dashboard = () => {
               {/* Recent Activity */}
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-white">Recent Activity</h3>
+                  <h3 className="text-base sm:text-lg font-semibold font-display text-white">Recent Activity</h3>
                   {activity && activity.length > 0 && (
-                    <button className="text-accent-green text-xs hover:underline">
+                    <button className="text-gold text-xs hover:underline">
                       View All
                     </button>
                   )}

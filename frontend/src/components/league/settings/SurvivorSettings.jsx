@@ -25,7 +25,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Elimination Rules</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Elimination Rules</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -39,7 +39,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
                   onClick={() => handleChange('eliminationsPerWeek', num)}
                   className={`p-3 rounded-lg border-2 font-semibold transition-all ${
                     localSettings.eliminationsPerWeek === num
-                      ? 'border-accent-green bg-accent-green/10 text-white'
+                      ? 'border-gold bg-gold/10 text-white'
                       : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
                   }`}
                 >
@@ -55,7 +55,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Buy-Back Options</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Buy-Back Options</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-dark-tertiary rounded-lg">
             <div>
@@ -66,7 +66,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
               type="button"
               onClick={() => handleBuyBackChange('allowed', !localSettings.buyBacks.allowed)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                localSettings.buyBacks.allowed ? 'bg-accent-green' : 'bg-dark-border'
+                localSettings.buyBacks.allowed ? 'bg-gold' : 'bg-dark-border'
               }`}
             >
               <span
@@ -91,7 +91,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
                       onClick={() => handleBuyBackChange('max', num)}
                       className={`p-3 rounded-lg border-2 font-semibold transition-all ${
                         localSettings.buyBacks.max === num
-                          ? 'border-accent-green bg-accent-green/10 text-white'
+                          ? 'border-gold bg-gold/10 text-white'
                           : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
                       }`}
                     >
@@ -109,7 +109,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
                   <select
                     value={localSettings.buyBacks.faabCost || 0}
                     onChange={(e) => handleBuyBackChange('faabCost', parseInt(e.target.value))}
-                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
                   >
                     {[0, 5, 10, 15, 20, 25].map(cost => (
                       <option key={cost} value={cost}>
@@ -134,18 +134,18 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
           <li>- Eliminations continue weekly until one team remains</li>
           <li>- The last team standing wins the league</li>
           {localSettings.buyBacks.allowed && (
-            <li className="text-accent-green">- Eliminated teams can use a buy-back to rejoin (max {localSettings.buyBacks.max})</li>
+            <li className="text-gold">- Eliminated teams can use a buy-back to rejoin (max {localSettings.buyBacks.max})</li>
           )}
         </ul>
       </div>
 
       {/* Visual representation of survivor progression */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Season Preview</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Season Preview</h3>
         <div className="flex items-center justify-between text-xs">
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full bg-accent-green/20 border border-accent-green flex items-center justify-center mb-1">
-              <span className="text-accent-green font-bold">10</span>
+            <div className="w-10 h-10 rounded-full bg-gold/20 border border-gold flex items-center justify-center mb-1">
+              <span className="text-gold font-bold">10</span>
             </div>
             <span className="text-text-muted">Start</span>
           </div>

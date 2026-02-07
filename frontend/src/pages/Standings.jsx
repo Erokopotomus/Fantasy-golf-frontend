@@ -110,7 +110,7 @@ const Standings = () => {
           </svg>
           Back to {league?.name || 'League'}
         </Link>
-        <h1 className="text-2xl font-bold text-white">{format?.name || 'League'} Standings</h1>
+        <h1 className="text-2xl font-bold font-display text-white">{format?.name || 'League'} Standings</h1>
         <p className="text-text-secondary">Season performance and rankings</p>
       </div>
 
@@ -118,7 +118,7 @@ const Standings = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <p className="text-xs text-text-muted mb-1">Your Rank</p>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold font-display text-white">
             {userTeam ? `#${userTeam.rank}` : '-'}
           </p>
           <p className="text-xs text-text-secondary">of {mappedStandings.length} teams</p>
@@ -126,7 +126,7 @@ const Standings = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Your Points</p>
-          <p className="text-2xl font-bold text-emerald-400">
+          <p className="text-2xl font-bold font-display text-emerald-400">
             {userTeam?.totalPoints?.toLocaleString() || 0}
           </p>
           <p className="text-xs text-text-secondary">total fantasy points</p>
@@ -142,7 +142,7 @@ const Standings = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Tournaments</p>
-          <p className="text-2xl font-bold text-white">
+          <p className="text-2xl font-bold font-display text-white">
             {weeklyResults.length}
           </p>
           <p className="text-xs text-text-secondary">completed</p>
@@ -154,7 +154,7 @@ const Standings = () => {
         <div className="space-y-6">
           <H2HStandings standings={matchupStandings} currentUserId={user?.id} />
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Tournament Results</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Tournament Results</h3>
             <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />
           </Card>
         </div>

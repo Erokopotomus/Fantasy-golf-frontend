@@ -95,7 +95,7 @@ const PlayerPool = ({
             placeholder="Search players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
+            className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
           />
         </div>
       </div>
@@ -133,7 +133,7 @@ const PlayerPool = ({
             <div
               key={player.id}
               className={`grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
-                inQueue ? 'bg-accent-blue/5' : ''
+                inQueue ? 'bg-orange/5' : ''
               }`}
               onClick={() => onViewPlayer?.(player)}
             >
@@ -156,7 +156,7 @@ const PlayerPool = ({
                 </div>
               </div>
               <span className={`text-xs text-right font-medium tabular-nums ${
-                sgTotal >= 1 ? 'text-accent-green' : sgTotal > 0 ? 'text-white' : 'text-red-400'
+                sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-white' : 'text-red-400'
               }`}>
                 {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '—'}
               </span>
@@ -173,7 +173,7 @@ const PlayerPool = ({
                     <span key={i} className={`w-2 h-2 rounded-full ${
                       f === '1' ? 'bg-yellow-400' :
                       f === 'CUT' ? 'bg-red-400' :
-                      pos <= 5 ? 'bg-accent-green' :
+                      pos <= 5 ? 'bg-gold' :
                       pos <= 15 ? 'bg-emerald-400/60' :
                       'bg-text-muted/30'
                     }`} title={String(f)} />
@@ -184,7 +184,7 @@ const PlayerPool = ({
                 {isUserTurn && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onSelectPlayer(player) }}
-                    className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 transition-colors"
+                    className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
                   >
                     {draftType === 'auction' ? 'Nom' : 'Draft'}
                   </button>
@@ -192,7 +192,7 @@ const PlayerPool = ({
                 {!inQueue && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onAddToQueue(player) }}
-                    className="p-1 rounded text-text-muted hover:text-accent-blue transition-colors"
+                    className="p-1 rounded text-text-muted hover:text-orange transition-colors"
                     title="Add to queue"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

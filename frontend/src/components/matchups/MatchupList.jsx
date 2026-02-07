@@ -20,14 +20,14 @@ const MatchupList = ({ week, teams, leagueId, currentUserId }) => {
       {/* Week Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">Week {week.week}</h3>
+          <h3 className="text-lg font-semibold font-display text-white">Week {week.week}</h3>
           {week.tournament && (
             <p className="text-sm text-text-muted">{week.tournament}</p>
           )}
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
           week.matchups.every(m => m.completed)
-            ? 'bg-accent-green/20 text-accent-green'
+            ? 'bg-gold/20 text-gold'
             : 'bg-yellow-500/20 text-yellow-400'
         }`}>
           {week.matchups.every(m => m.completed) ? 'Complete' : 'In Progress'}

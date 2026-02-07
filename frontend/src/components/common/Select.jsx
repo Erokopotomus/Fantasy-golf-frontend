@@ -15,7 +15,7 @@ const Select = ({
     if (error) {
       return 'border-red-500 focus:ring-red-500 focus:border-red-500'
     }
-    return 'border-dark-border hover:border-text-muted focus:border-accent-green'
+    return 'border-dark-border hover:border-text-muted focus:border-gold'
   }
 
   return (
@@ -33,10 +33,10 @@ const Select = ({
           disabled={disabled}
           required={required}
           className={`
-            w-full bg-dark-tertiary border rounded-lg px-4 py-3 text-white
+            w-full bg-dark-tertiary border rounded-lg px-4 py-3 text-text-primary
             appearance-none cursor-pointer
             transition-all duration-300
-            focus:outline-none focus:ring-2 focus:shadow-glow-green
+            focus:outline-none focus:ring-2 focus:shadow-glow-gold
             disabled:opacity-50 disabled:cursor-not-allowed
             ${getSelectStyles()}
           `}
@@ -51,7 +51,7 @@ const Select = ({
             <option
               key={option.value}
               value={option.value}
-              className="bg-dark-tertiary text-white"
+              className="bg-dark-tertiary text-text-primary"
             >
               {option.label}
             </option>

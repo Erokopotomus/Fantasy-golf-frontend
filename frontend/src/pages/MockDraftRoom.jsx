@@ -115,7 +115,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-accent-green/20 text-accent-green text-xs font-bold rounded">#{player.rank}</span>
+            <span className="px-2 py-0.5 bg-gold/20 text-gold text-xs font-bold rounded">#{player.rank}</span>
             <button onClick={onClose} className="text-text-muted hover:text-white transition-colors p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -129,7 +129,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
           <div className="grid grid-cols-4 gap-2">
             <div className="bg-dark-primary rounded-lg p-2 text-center">
               <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
-              <p className={`text-base font-bold ${player.sg >= 1 ? 'text-accent-green' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
+              <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
                 {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
               </p>
             </div>
@@ -161,11 +161,11 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                   <span className="text-text-muted text-xs w-8 text-right">{label}</span>
                   <div className="flex-1 h-1.5 bg-dark-primary rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${value >= 0 ? 'bg-accent-green' : 'bg-red-400'}`}
+                      className={`h-full rounded-full ${value >= 0 ? 'bg-gold' : 'bg-red-400'}`}
                       style={{ width: `${Math.min(100, Math.abs(value) / 1.0 * 100)}%` }}
                     />
                   </div>
-                  <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-accent-green' : value >= 0 ? 'text-white' : 'text-red-400'}`}>
+                  <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-gold' : value >= 0 ? 'text-white' : 'text-red-400'}`}>
                     {value > 0 ? '+' : ''}{value.toFixed(2)}
                   </span>
                 </div>
@@ -183,7 +183,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                   <span key={i} className={`flex-1 text-center py-1.5 rounded text-xs font-medium ${
                     result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
                     result === 'CUT' ? 'bg-red-500/15 text-red-400' :
-                    pos <= 5 ? 'bg-accent-green/20 text-accent-green' :
+                    pos <= 5 ? 'bg-gold/20 text-gold' :
                     pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
                     pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
                     'bg-dark-tertiary text-text-muted'
@@ -203,7 +203,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               onClick={() => { onQueue(player); onClose() }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                 inQueue
-                  ? 'bg-accent-blue/20 text-accent-blue border border-accent-blue/30'
+                  ? 'bg-orange/20 text-orange border border-orange/30'
                   : 'bg-dark-primary text-white hover:bg-dark-tertiary border border-dark-border'
               }`}
             >
@@ -222,7 +222,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               isUserTurn && (
                 <button
                   onClick={() => { onDraft(player); onClose() }}
-                  className="flex-1 py-2.5 bg-accent-green text-white rounded-lg text-sm font-bold hover:bg-accent-green/90 transition-colors"
+                  className="flex-1 py-2.5 bg-gold text-white rounded-lg text-sm font-bold hover:bg-gold/90 transition-colors"
                 >
                   Draft Now
                 </button>
@@ -931,7 +931,7 @@ const MockDraftRoom = () => {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-3" />
           {loadingPlayers && <p className="text-text-muted text-sm">Loading player data...</p>}
         </div>
       </div>
@@ -987,7 +987,7 @@ const MockDraftRoom = () => {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Grading your draft...</p>
         </div>
       </div>
@@ -1026,7 +1026,7 @@ const MockDraftRoom = () => {
                 <div className="flex items-center gap-2">
                   <h1 className="text-white font-bold text-sm sm:text-base leading-tight">Mock Draft</h1>
                   {apiPlayers && (
-                    <span className="px-1.5 py-0.5 bg-accent-green/15 text-accent-green text-[9px] font-semibold rounded">
+                    <span className="px-1.5 py-0.5 bg-gold/15 text-gold text-[9px] font-semibold rounded">
                       LIVE DATA
                     </span>
                   )}
@@ -1046,7 +1046,7 @@ const MockDraftRoom = () => {
                 isPaused
                   ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
                   : (isUserTurn || isUserNominator)
-                    ? 'bg-accent-green/20 text-accent-green border border-accent-green/40'
+                    ? 'bg-gold/20 text-gold border border-gold/40'
                     : isAuction && auctionPhase === 'bidding'
                       ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
                       : 'bg-dark-tertiary text-text-secondary'
@@ -1062,8 +1062,8 @@ const MockDraftRoom = () => {
                   ) : isUserNominator ? (
                     <>
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
                       </span>
                       YOUR NOMINATION
                     </>
@@ -1072,8 +1072,8 @@ const MockDraftRoom = () => {
                   <>
                     {isUserTurn && (
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
                       </span>
                     )}
                     {isUserTurn ? 'YOUR PICK' : `${currentTeam?.name} picking...`}
@@ -1102,7 +1102,7 @@ const MockDraftRoom = () => {
                         onClick={() => setDraftSpeed(s.key)}
                         className={`px-2 py-1 text-[10px] font-bold transition-colors ${
                           draftSpeed === s.key
-                            ? 'bg-accent-green/20 text-accent-green'
+                            ? 'bg-gold/20 text-gold'
                             : 'text-text-muted hover:text-white'
                         }`}
                       >
@@ -1177,7 +1177,7 @@ const MockDraftRoom = () => {
                     <div className={`px-3 py-1.5 rounded-lg font-bold text-base tabular-nums ${
                       (isUserTurn || isUserNominator || (isAuction && auctionPhase === 'bidding')) && timer <= 5 ? 'bg-red-500/20 text-red-400' :
                       (isUserTurn || isUserNominator) && timer <= 15 ? 'bg-yellow-500/20 text-yellow-400' :
-                      (isUserTurn || isUserNominator) ? 'bg-accent-green/20 text-accent-green' :
+                      (isUserTurn || isUserNominator) ? 'bg-gold/20 text-gold' :
                       isAuction && auctionPhase === 'bidding' ? 'bg-yellow-500/20 text-yellow-400' :
                       'bg-dark-primary text-text-secondary border border-dark-border'
                     }`}>
@@ -1195,7 +1195,7 @@ const MockDraftRoom = () => {
               isPaused
                 ? 'bg-yellow-500/20 text-yellow-400'
                 : (isUserTurn || isUserNominator)
-                  ? 'bg-accent-green/20 text-accent-green'
+                  ? 'bg-gold/20 text-gold'
                   : isAuction && auctionPhase === 'bidding'
                     ? 'bg-yellow-500/20 text-yellow-400'
                     : 'bg-dark-tertiary text-text-secondary'
@@ -1211,8 +1211,8 @@ const MockDraftRoom = () => {
                   : isUserNominator
                     ? <span className="flex items-center justify-center gap-1.5">
                         <span className="relative flex h-1.5 w-1.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent-green" />
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gold" />
                         </span>
                         YOUR NOMINATION
                       </span>
@@ -1220,8 +1220,8 @@ const MockDraftRoom = () => {
               ) : isUserTurn ? (
                 <span className="flex items-center justify-center gap-1.5">
                   <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-accent-green" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gold" />
                   </span>
                   YOUR PICK
                 </span>
@@ -1243,7 +1243,7 @@ const MockDraftRoom = () => {
                   onClick={() => setDraftSpeed(s.key)}
                   className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
                     draftSpeed === s.key
-                      ? 'bg-accent-green/20 text-accent-green'
+                      ? 'bg-gold/20 text-gold'
                       : 'text-text-muted'
                   }`}
                 >
@@ -1276,7 +1276,7 @@ const MockDraftRoom = () => {
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className={`px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 ${
             recentPick.teamId === userTeam?.id
-              ? 'bg-accent-green text-white'
+              ? 'bg-gold text-white'
               : 'bg-dark-secondary border border-dark-border text-white'
           }`}>
             <span className="text-base">{recentPick.playerFlag}</span>
@@ -1363,7 +1363,7 @@ const MockDraftRoom = () => {
               </div>
             )}
             {!isUserBidding && currentNom.highBidderTeamId === userTeamId && (
-              <span className="text-accent-green text-xs font-bold px-2 py-1 bg-accent-green/15 rounded-lg flex-shrink-0">WINNING</span>
+              <span className="text-gold text-xs font-bold px-2 py-1 bg-gold/15 rounded-lg flex-shrink-0">WINNING</span>
             )}
           </div>
 
@@ -1401,7 +1401,7 @@ const MockDraftRoom = () => {
                     ].map(stat => (
                       <div key={stat.label} className="text-center py-1">
                         <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{stat.label}</p>
-                        <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-accent-green' : stat.value >= 0 ? 'text-white' : 'text-red-400'}`}>
+                        <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-gold' : stat.value >= 0 ? 'text-white' : 'text-red-400'}`}>
                           {stat.value > 0 ? '+' : ''}{stat.value?.toFixed(2)}
                         </p>
                       </div>
@@ -1420,7 +1420,7 @@ const MockDraftRoom = () => {
                           <span key={i} className={`flex-1 text-center py-1 rounded text-xs font-medium ${
                             result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
                             result === 'CUT' ? 'bg-red-500/15 text-red-400' :
-                            pos <= 5 ? 'bg-accent-green/20 text-accent-green' :
+                            pos <= 5 ? 'bg-gold/20 text-gold' :
                             pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
                             pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
                             'bg-dark-tertiary text-text-muted'
@@ -1453,7 +1453,7 @@ const MockDraftRoom = () => {
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 py-2.5 text-xs font-medium text-center transition-colors ${
               activeTab === tab.key
-                ? 'text-accent-green border-b-2 border-accent-green'
+                ? 'text-gold border-b-2 border-gold'
                 : 'text-text-secondary'
             }`}
           >
@@ -1466,7 +1466,7 @@ const MockDraftRoom = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* ===== TOP: DRAFT BOARD (full width, ~45% on desktop) ===== */}
-        <div className={`flex-col min-h-0 border-b-2 border-accent-green/30 ${
+        <div className={`flex-col min-h-0 border-b-2 border-gold/30 ${
           activeTab === 'board' ? 'flex flex-1' : 'hidden'
         } lg:flex lg:flex-none lg:h-[45%]`}>
           {/* Board Column Headers */}
@@ -1480,7 +1480,7 @@ const MockDraftRoom = () => {
                     key={team.id}
                     className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
                       team.isUser
-                        ? 'bg-accent-green/30 text-accent-green border-b-2 border-b-accent-green'
+                        ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
                         : isAuction && nominatorTeam?.id === team.id
                           ? 'bg-yellow-500/20 text-yellow-400'
                           : !isAuction && pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
@@ -1518,7 +1518,7 @@ const MockDraftRoom = () => {
                     style={{ gridTemplateColumns: `44px repeat(${config.teamCount}, 1fr)` }}
                   >
                     <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
-                      isCurrentRound ? 'text-accent-green bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
+                      isCurrentRound ? 'text-gold bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
                     }`}>
                       <span>{round}</span>
                       {!isAuction && <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>}
@@ -1552,13 +1552,13 @@ const MockDraftRoom = () => {
                             pick ? 'cursor-pointer hover:brightness-125' : ''
                           } ${
                             isCurrent
-                              ? 'bg-accent-green/25 ring-2 ring-inset ring-accent-green'
+                              ? 'bg-gold/25 ring-2 ring-inset ring-gold'
                               : pick
                                 ? pick.playerRank <= 10
                                   ? isUserTeamCell ? 'bg-yellow-500/20' : 'bg-yellow-500/12'
                                   : pick.playerRank <= 25
-                                    ? isUserTeamCell ? 'bg-accent-green/18' : 'bg-accent-green/10'
-                                    : isUserTeamCell ? 'bg-accent-green/10' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
+                                    ? isUserTeamCell ? 'bg-gold/18' : 'bg-gold/10'
+                                    : isUserTeamCell ? 'bg-gold/10' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
                                 : roundIdx % 2 === 0 ? 'bg-dark-primary/50' : 'bg-dark-secondary/25'
                           }`}
                         >
@@ -1567,14 +1567,14 @@ const MockDraftRoom = () => {
                               <div className="flex items-center justify-center gap-0.5">
                                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                                   pick.playerRank <= 10 ? 'bg-yellow-400' :
-                                  pick.playerRank <= 25 ? 'bg-accent-green' :
+                                  pick.playerRank <= 25 ? 'bg-gold' :
                                   pick.playerRank <= 40 ? 'bg-blue-400' :
                                   'bg-text-muted/40'
                                 }`} />
                                 <span className="text-xs">{pick.playerFlag}</span>
                               </div>
                               <p className={`text-[10px] leading-tight truncate ${
-                                isUserTeamCell ? 'text-accent-green font-medium' : 'text-text-secondary'
+                                isUserTeamCell ? 'text-gold font-medium' : 'text-text-secondary'
                               }`}>
                                 {pick.playerName.split(' ').pop()}
                               </p>
@@ -1584,8 +1584,8 @@ const MockDraftRoom = () => {
                             </div>
                           ) : isCurrent ? (
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
                             </span>
                           ) : (
                             <span className="text-[9px] text-text-muted/30 tabular-nums">
@@ -1623,7 +1623,7 @@ const MockDraftRoom = () => {
                       placeholder="Search players..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
+                      className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1658,7 +1658,7 @@ const MockDraftRoom = () => {
                       <div
                         key={player.id}
                         className={`grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
-                          inQueue ? 'bg-accent-blue/5' : ''
+                          inQueue ? 'bg-orange/5' : ''
                         }`}
                         onClick={() => setSelectedPlayer(player)}
                       >
@@ -1672,7 +1672,7 @@ const MockDraftRoom = () => {
                           <span className="text-white text-sm truncate">{player.name}</span>
                         </div>
                         <span className={`text-xs text-right font-medium tabular-nums ${
-                          player.sg >= 1 ? 'text-accent-green' : player.sg > 0 ? 'text-white' : 'text-red-400'
+                          player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'
                         }`}>
                           {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
                         </span>
@@ -1689,7 +1689,7 @@ const MockDraftRoom = () => {
                               <span key={i} className={`w-2 h-2 rounded-full ${
                                 f === '1' ? 'bg-yellow-400' :
                                 f === 'CUT' ? 'bg-red-400' :
-                                pos <= 5 ? 'bg-accent-green' :
+                                pos <= 5 ? 'bg-gold' :
                                 pos <= 15 ? 'bg-emerald-400/60' :
                                 'bg-text-muted/30'
                               }`} title={f} />
@@ -1710,7 +1710,7 @@ const MockDraftRoom = () => {
                             isUserTurn && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
-                                className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 transition-colors"
+                                className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
                               >
                                 Draft
                               </button>
@@ -1722,7 +1722,7 @@ const MockDraftRoom = () => {
                               inQueue ? handleRemoveFromQueue(player.id) : handleAddToQueue(player)
                             }}
                             className={`p-1 rounded transition-colors ${
-                              inQueue ? 'text-accent-blue' : 'text-text-muted hover:text-accent-blue'
+                              inQueue ? 'text-orange' : 'text-text-muted hover:text-orange'
                             }`}
                           >
                             <svg className="w-3.5 h-3.5" fill={inQueue ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -1758,9 +1758,9 @@ const MockDraftRoom = () => {
                 <button
                   key={tab.key}
                   onClick={() => setBottomTab(tab.key)}
-                  className={`flex-1 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors ${
+                  className={`flex-1 px-3 py-2 text-xs font-mono font-medium uppercase tracking-wider transition-colors ${
                     bottomTab === tab.key
-                      ? 'text-accent-green border-b-2 border-accent-green'
+                      ? 'text-gold border-b-2 border-gold'
                       : 'text-text-secondary hover:text-white'
                   }`}
                 >
@@ -1792,7 +1792,7 @@ const MockDraftRoom = () => {
                         })
                       }}
                       className={`relative w-10 h-5 rounded-full transition-colors ${
-                        autoPick ? 'bg-accent-green' : 'bg-dark-tertiary'
+                        autoPick ? 'bg-gold' : 'bg-dark-tertiary'
                       }`}
                     >
                       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
@@ -1815,7 +1815,7 @@ const MockDraftRoom = () => {
                       {queue.map((player, i) => (
                         <div key={player.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg group">
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-accent-blue text-xs font-bold w-5 text-center">{i + 1}</span>
+                            <span className="text-orange text-xs font-bold w-5 text-center">{i + 1}</span>
                             <span className="text-sm">{player.flag}</span>
                             <div className="min-w-0">
                               <p className="text-white text-sm font-medium truncate">{player.name}</p>
@@ -1836,7 +1836,7 @@ const MockDraftRoom = () => {
                               isUserTurn && (
                                 <button
                                   onClick={() => handleMakePick(player)}
-                                  className="px-2 py-1 bg-accent-green text-white text-[10px] rounded font-semibold hover:bg-accent-green/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   Draft
                                 </button>
@@ -1876,7 +1876,7 @@ const MockDraftRoom = () => {
                       {userPicks.map(pick => (
                         <div key={pick.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg">
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-accent-green text-xs font-bold w-5 text-center">R{pick.round}</span>
+                            <span className="text-gold text-xs font-bold w-5 text-center">R{pick.round}</span>
                             <span className="text-sm">{pick.playerFlag}</span>
                             <div className="min-w-0">
                               <p className="text-white text-sm font-medium truncate">{pick.playerName}</p>
@@ -1910,7 +1910,7 @@ const MockDraftRoom = () => {
                     <div className="space-y-1">
                       {[...picks].reverse().map(pick => (
                         <div key={pick.id} className={`flex items-center justify-between p-2.5 rounded-lg ${
-                          pick.teamId === userTeam?.id ? 'bg-accent-green/10' : 'bg-dark-primary'
+                          pick.teamId === userTeam?.id ? 'bg-gold/10' : 'bg-dark-primary'
                         }`}>
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-text-muted text-xs font-bold w-6 text-right">#{pick.pickNumber}</span>
@@ -1951,7 +1951,7 @@ const MockDraftRoom = () => {
                               )}
                               <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
                                 msg.isUser
-                                  ? 'bg-accent-green/20 text-white rounded-br-sm'
+                                  ? 'bg-gold/20 text-white rounded-br-sm'
                                   : 'bg-dark-primary text-text-secondary rounded-bl-sm'
                               }`}>
                                 {msg.text}
@@ -1974,12 +1974,12 @@ const MockDraftRoom = () => {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
+                      className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
                     />
                     <button
                       type="submit"
                       disabled={!chatInput.trim()}
-                      className="px-3 py-1.5 bg-accent-green text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-accent-green/80 transition-colors"
+                      className="px-3 py-1.5 bg-gold text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-gold/80 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

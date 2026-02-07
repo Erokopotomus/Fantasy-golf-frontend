@@ -26,7 +26,7 @@ const DraftRecap = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
       </div>
     )
   }
@@ -63,7 +63,7 @@ const DraftRecap = () => {
               </svg>
             </Link>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white">{draft.leagueName}</h1>
+              <h1 className="text-2xl font-bold font-display text-white">{draft.leagueName}</h1>
               <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
                 <span className="px-2 py-0.5 bg-dark-tertiary rounded text-xs">{draft.draftType} Draft</span>
                 <span>{draft.teamCount} teams</span>
@@ -75,7 +75,7 @@ const DraftRecap = () => {
 
           {/* Your Grade Card */}
           {userGrade && (
-            <Card className="mb-6 border-accent-green/30">
+            <Card className="mb-6 border-gold/30">
               <div className="flex items-center gap-6">
                 <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${gradeBgColors[userGrade.overallGrade] || 'bg-dark-tertiary'}`}>
                   <span className={`text-4xl font-bold ${gradeColors[userGrade.overallGrade] || 'text-text-muted'}`}>
@@ -83,7 +83,7 @@ const DraftRecap = () => {
                   </span>
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-white mb-1">Your Draft Grade</h2>
+                  <h2 className="text-lg font-semibold font-display text-white mb-1">Your Draft Grade</h2>
                   <p className="text-text-secondary text-sm mb-3">Score: {userGrade.overallScore}/100</p>
                   <div className="flex flex-wrap gap-4 text-sm">
                     {userGrade.bestPick && (
@@ -112,7 +112,7 @@ const DraftRecap = () => {
 
           {/* Your Picks */}
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Your Picks</h2>
+            <h2 className="text-lg font-semibold font-display text-white mb-4">Your Picks</h2>
             <div className="space-y-2">
               {userPicks.map((pick, i) => {
                 const pg = userPickGrades.find(g => g.pickNumber === pick.pickNumber) || {}
@@ -157,7 +157,7 @@ const DraftRecap = () => {
 
           {/* Draft Board */}
           <Card className="mb-6 overflow-x-auto">
-            <h2 className="text-lg font-semibold text-white mb-4">Draft Board</h2>
+            <h2 className="text-lg font-semibold font-display text-white mb-4">Draft Board</h2>
             <div className="min-w-[600px]">
               {/* Team headers */}
               <div className="grid gap-px bg-dark-border" style={{ gridTemplateColumns: `60px repeat(${teams.length}, 1fr)` }}>
@@ -165,7 +165,7 @@ const DraftRecap = () => {
                 {teams.map(team => (
                   <div
                     key={team.id}
-                    className={`bg-dark-secondary p-2 text-xs font-medium truncate ${team.id === draft.userTeamId ? 'text-accent-green border-b-2 border-accent-green' : 'text-text-secondary'}`}
+                    className={`bg-dark-secondary p-2 text-xs font-medium truncate ${team.id === draft.userTeamId ? 'text-gold border-b-2 border-gold' : 'text-text-secondary'}`}
                   >
                     {team.name}
                   </div>
@@ -181,7 +181,7 @@ const DraftRecap = () => {
                       return (
                         <div
                           key={`${round}-${team.id}`}
-                          className={`bg-dark-primary p-1.5 text-xs ${team.id === draft.userTeamId ? 'bg-accent-green/5' : ''}`}
+                          className={`bg-dark-primary p-1.5 text-xs ${team.id === draft.userTeamId ? 'bg-gold/5' : ''}`}
                         >
                           {pick ? (
                             <div className="truncate">
@@ -205,19 +205,19 @@ const DraftRecap = () => {
           {/* Team Grades Leaderboard */}
           {sortedTeamGrades.length > 0 && (
             <Card className="mb-6">
-              <h2 className="text-lg font-semibold text-white mb-4">All Teams Grades</h2>
+              <h2 className="text-lg font-semibold font-display text-white mb-4">All Teams Grades</h2>
               <div className="space-y-2">
                 {sortedTeamGrades.map((grade, i) => (
                   <div
                     key={grade.teamId}
-                    className={`flex items-center gap-4 p-3 rounded-lg ${grade.teamId === draft.userTeamId ? 'bg-accent-green/10 border border-accent-green/30' : 'bg-dark-primary'}`}
+                    className={`flex items-center gap-4 p-3 rounded-lg ${grade.teamId === draft.userTeamId ? 'bg-gold/10 border border-gold/30' : 'bg-dark-primary'}`}
                   >
                     <span className="text-text-muted text-sm w-6">{i + 1}</span>
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${gradeBgColors[grade.overallGrade] || 'bg-dark-tertiary'}`}>
                       <span className={`text-lg font-bold ${gradeColors[grade.overallGrade] || 'text-text-muted'}`}>{grade.overallGrade}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${grade.teamId === draft.userTeamId ? 'text-accent-green' : 'text-white'}`}>
+                      <p className={`font-medium truncate ${grade.teamId === draft.userTeamId ? 'text-gold' : 'text-white'}`}>
                         {grade.teamName} {grade.teamId === draft.userTeamId && '(You)'}
                       </p>
                       <p className="text-text-muted text-xs">Score: {grade.overallScore}</p>

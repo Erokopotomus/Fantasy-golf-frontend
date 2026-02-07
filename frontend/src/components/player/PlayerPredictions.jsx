@@ -1,6 +1,6 @@
 import Card from '../common/Card'
 
-const ProbRow = ({ label, preRound, live, color = 'bg-accent-green' }) => {
+const ProbRow = ({ label, preRound, live, color = 'bg-gold' }) => {
   const prePct = preRound != null ? (preRound * 100) : null
   const livePct = live != null ? (live * 100) : null
   if (prePct == null && livePct == null) return null
@@ -77,11 +77,11 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
       {hasPredictions && hasLive && (
         <div className="flex items-center gap-4 mb-3 text-[10px] text-text-muted">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-1.5 rounded-full bg-accent-green/25 inline-block" />
+            <span className="w-3 h-1.5 rounded-full bg-gold/25 inline-block" />
             Pre-Round
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-1.5 rounded-full bg-accent-green inline-block" />
+            <span className="w-3 h-1.5 rounded-full bg-gold inline-block" />
             Live
           </div>
         </div>
@@ -106,7 +106,7 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
           label="Top 5"
           preRound={predictions?.top5Probability}
           live={liveScore?.top5Probability}
-          color="bg-accent-green"
+          color="bg-gold"
         />
         <ProbRow
           label="Top 10"
@@ -124,7 +124,7 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
           label="Make Cut"
           preRound={predictions?.makeCutProbability}
           live={liveScore?.makeCutProbability}
-          color="bg-teal-500"
+          color="bg-gold-muted"
         />
       </div>
 
@@ -135,7 +135,7 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
             <div className="flex items-center gap-2">
               <div className="w-20 h-2 bg-dark-primary rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-accent-green transition-all duration-500"
+                  className="h-full rounded-full bg-gold transition-all duration-500"
                   style={{ width: `${Math.min(predictions.courseFitScore * 100, 100)}%` }}
                 />
               </div>

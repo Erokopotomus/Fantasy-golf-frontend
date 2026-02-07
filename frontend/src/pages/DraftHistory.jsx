@@ -38,7 +38,7 @@ const DraftHistory = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
       </div>
     )
   }
@@ -50,7 +50,7 @@ const DraftHistory = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Draft History</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Draft History</h1>
               <p className="text-text-secondary mt-1">Review past drafts and grades</p>
             </div>
             <Link to="/draft">
@@ -63,7 +63,7 @@ const DraftHistory = () => {
             <button
               onClick={() => setTab('league')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                tab === 'league' ? 'bg-accent-green text-dark-primary' : 'text-text-secondary hover:text-white'
+                tab === 'league' ? 'bg-gold text-dark-primary' : 'text-text-secondary hover:text-white'
               }`}
             >
               League Drafts ({leagueDrafts.length})
@@ -71,7 +71,7 @@ const DraftHistory = () => {
             <button
               onClick={() => setTab('mock')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                tab === 'mock' ? 'bg-accent-green text-dark-primary' : 'text-text-secondary hover:text-white'
+                tab === 'mock' ? 'bg-gold text-dark-primary' : 'text-text-secondary hover:text-white'
               }`}
             >
               Mock Drafts ({mockDraftTotal})

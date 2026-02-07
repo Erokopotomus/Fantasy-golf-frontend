@@ -111,7 +111,7 @@ const DraftRoomContent = () => {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading draft room...</p>
         </div>
       </div>
@@ -130,11 +130,11 @@ const DraftRoomContent = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Error Loading Draft</h2>
+              <h2 className="text-xl font-bold font-display text-white mb-2">Error Loading Draft</h2>
               <p className="text-text-secondary mb-6">{error}</p>
               <Link
                 to="/dashboard"
-                className="text-accent-green hover:underline"
+                className="text-gold hover:underline"
               >
                 Return to Dashboard
               </Link>
@@ -174,13 +174,13 @@ const DraftRoomContent = () => {
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 text-sm font-medium capitalize transition-colors relative ${
                   activeTab === tab
-                    ? 'text-accent-green'
+                    ? 'text-gold'
                     : 'text-text-muted hover:text-white'
                 }`}
               >
                 {tab === 'draft' ? 'Draft' : 'Dashboard'}
                 {activeTab === tab && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-green" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold" />
                 )}
               </button>
             ))}
@@ -201,7 +201,7 @@ const DraftRoomContent = () => {
       ) : (
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top: Draft Board (full width) */}
-          <div className="h-[45%] flex flex-col min-h-0 border-b-2 border-accent-green/30 p-2">
+          <div className="h-[45%] flex flex-col min-h-0 border-b-2 border-gold/30 p-2">
             {draft?.type === 'auction' ? (
               <BidPanel
                 currentBid={currentBid}
@@ -253,9 +253,9 @@ const DraftRoomContent = () => {
                   <button
                     key={tab.key}
                     onClick={() => setSideTab(tab.key)}
-                    className={`flex-1 px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors ${
+                    className={`flex-1 px-3 py-2 text-xs font-mono font-medium uppercase tracking-wider transition-colors ${
                       sideTab === tab.key
-                        ? 'text-accent-green border-b-2 border-accent-green'
+                        ? 'text-gold border-b-2 border-gold'
                         : 'text-text-secondary hover:text-white'
                     }`}
                   >
@@ -293,7 +293,7 @@ const DraftRoomContent = () => {
                                 )}
                                 <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
                                   msg.isUser
-                                    ? 'bg-accent-green/20 text-white rounded-br-sm'
+                                    ? 'bg-gold/20 text-white rounded-br-sm'
                                     : 'bg-dark-primary text-text-secondary rounded-bl-sm'
                                 }`}>
                                   {msg.text}
@@ -315,12 +315,12 @@ const DraftRoomContent = () => {
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
                           placeholder="Type a message..."
-                          className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-accent-green focus:outline-none"
+                          className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
                         />
                         <button
                           type="submit"
                           disabled={!chatInput.trim()}
-                          className="px-3 py-1.5 bg-accent-green text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-accent-green/80 transition-colors"
+                          className="px-3 py-1.5 bg-gold text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-gold/80 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

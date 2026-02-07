@@ -24,7 +24,7 @@ const Footer = () => {
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <ClutchLogo size={32} className="rounded-lg" />
-              <span className="text-xl font-bold text-white">Clutch</span>
+              <span className="text-xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
             </Link>
             <p className="text-text-secondary text-sm">
               Season-long fantasy sports. Draft players, compete with friends, and make clutch moves to win.

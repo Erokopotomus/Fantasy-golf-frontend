@@ -49,7 +49,7 @@ const FullLeagueSettings = ({ settings, onChange }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Season Structure</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Season Structure</h3>
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
             Number of Segments
@@ -57,7 +57,7 @@ const FullLeagueSettings = ({ settings, onChange }) => {
           <select
             value={localSettings.segments}
             onChange={(e) => handleChange('segments', parseInt(e.target.value))}
-            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
           >
             <option value={1}>1 Segment (Full Season)</option>
             <option value={2}>2 Segments</option>
@@ -79,7 +79,7 @@ const FullLeagueSettings = ({ settings, onChange }) => {
               max="100"
               value={localSettings.segmentBonus}
               onChange={(e) => handleChange('segmentBonus', parseInt(e.target.value) || 0)}
-              className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+              className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
             />
             <p className="text-xs text-text-muted mt-2">
               Bonus points awarded to the winner of each segment (0-100)
@@ -89,7 +89,7 @@ const FullLeagueSettings = ({ settings, onChange }) => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Points Per Position</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Points Per Position</h3>
         <p className="text-sm text-text-muted mb-4">
           Set the fantasy points awarded for each finishing position
         </p>
@@ -104,7 +104,7 @@ const FullLeagueSettings = ({ settings, onChange }) => {
                 min="0"
                 value={localSettings.pointsPerPosition[key] || 0}
                 onChange={(e) => handlePointsChange(key, e.target.value)}
-                className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center focus:border-accent-green focus:outline-none"
+                className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center focus:border-gold focus:outline-none"
               />
             </div>
           ))}

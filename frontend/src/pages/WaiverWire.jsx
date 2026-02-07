@@ -91,7 +91,7 @@ const WaiverWire = () => {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold text-white mb-2">Error</h2>
+          <h2 className="text-xl font-bold font-display text-white mb-2">Error</h2>
           <p className="text-text-secondary mb-6">{error}</p>
           <Button onClick={refetch}>Try Again</Button>
         </Card>
@@ -113,7 +113,7 @@ const WaiverWire = () => {
           Back to Roster
         </Link>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold font-display text-white">
             {isWaiverMode ? 'Waiver Wire' : 'Free Agents'}
           </h1>
           {isWaiverMode && budget && (
@@ -373,7 +373,7 @@ const WaiverWire = () => {
       {claimTarget && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h3 className="text-lg font-bold text-white mb-4">
+            <h3 className="text-lg font-bold font-display text-white mb-4">
               {isWaiverMode
                 ? (waiverType === 'faab' ? 'Place Bid' : 'Submit Claim')
                 : (isRosterFull ? 'Swap Player' : 'Add Player')}

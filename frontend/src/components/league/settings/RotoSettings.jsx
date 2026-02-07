@@ -31,14 +31,14 @@ const RotoSettings = ({ settings, onChange }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-2">Scoring Categories</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-2">Scoring Categories</h3>
         <p className="text-sm text-text-muted mb-4">
           Select 4-10 categories. Teams are ranked in each category, and those ranks are summed for final standings.
         </p>
 
         <div className="flex items-center justify-between mb-4 p-3 bg-dark-tertiary rounded-lg">
           <span className="text-sm text-text-secondary">Selected Categories</span>
-          <span className={`font-semibold ${localSettings.categories.length >= 4 && localSettings.categories.length <= 10 ? 'text-accent-green' : 'text-red-400'}`}>
+          <span className={`font-semibold ${localSettings.categories.length >= 4 && localSettings.categories.length <= 10 ? 'text-gold' : 'text-red-400'}`}>
             {localSettings.categories.length} / 10
           </span>
         </div>
@@ -51,12 +51,12 @@ const RotoSettings = ({ settings, onChange }) => {
               onClick={() => handleToggleCategory(category.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
                 isSelected(category.id)
-                  ? 'border-accent-green bg-accent-green/10'
+                  ? 'border-gold bg-gold/10'
                   : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
               }`}
             >
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                isSelected(category.id) ? 'border-accent-green bg-accent-green' : 'border-dark-border'
+                isSelected(category.id) ? 'border-gold bg-gold' : 'border-dark-border'
               }`}>
                 {isSelected(category.id) && (
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@ const RotoSettings = ({ settings, onChange }) => {
                 <p className="text-xs text-text-muted">{category.description}</p>
               </div>
               {isSelected(category.id) && (
-                <span className="text-xs text-accent-green font-medium">
+                <span className="text-xs text-gold font-medium">
                   #{localSettings.categories.indexOf(category.id) + 1}
                 </span>
               )}
@@ -91,7 +91,7 @@ const RotoSettings = ({ settings, onChange }) => {
 
         <div className="mt-3 pt-3 border-t border-dark-border">
           <p className="text-xs text-text-muted">
-            <span className="text-accent-green font-medium">Example:</span> In a 6-team league, 1st place in a category gets 6 points, 2nd gets 5 points, etc.
+            <span className="text-gold font-medium">Example:</span> In a 6-team league, 1st place in a category gets 6 points, 2nd gets 5 points, etc.
           </p>
         </div>
       </div>

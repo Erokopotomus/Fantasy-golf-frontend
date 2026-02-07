@@ -22,7 +22,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
   // Get color class based on rank
   const getRankColor = (rank, total) => {
     const pct = rank / total
-    if (pct <= 0.2) return 'text-accent-green'
+    if (pct <= 0.2) return 'text-gold'
     if (pct <= 0.4) return 'text-green-400'
     if (pct <= 0.6) return 'text-yellow-400'
     if (pct <= 0.8) return 'text-orange-400'
@@ -31,7 +31,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-4">Roto Category Standings</h3>
+      <h3 className="text-lg font-semibold font-display text-white mb-4">Roto Category Standings</h3>
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[800px]">
@@ -49,7 +49,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
                   </div>
                 </th>
               ))}
-              <th className="pb-3 text-center pr-2 font-semibold text-accent-green">Total</th>
+              <th className="pb-3 text-center pr-2 font-semibold text-gold">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -60,7 +60,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
                 <tr
                   key={team.userId}
                   className={`border-b border-dark-border/50 ${
-                    isUser ? 'bg-accent-green/10' : 'hover:bg-dark-tertiary/50'
+                    isUser ? 'bg-gold/10' : 'hover:bg-dark-tertiary/50'
                   }`}
                 >
                   <td className="py-3 pl-2 sticky left-0 bg-dark-secondary z-10">
@@ -73,11 +73,11 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
                   <td className="py-3 sticky left-8 bg-dark-secondary z-10">
                     <div className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-accent-green/20 text-accent-green' : 'bg-dark-primary text-text-secondary'
+                        isUser ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-accent-green' : 'text-white'}`}>
+                      <span className={`font-medium ${isUser ? 'text-gold' : 'text-white'}`}>
                         {team.name}
                       </span>
                     </div>
@@ -106,7 +106,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
                     )
                   })}
                   <td className="py-3 text-center pr-2">
-                    <span className="text-lg font-bold text-accent-green">
+                    <span className="text-lg font-bold font-display text-gold">
                       {team.totalRotoPoints}
                     </span>
                   </td>
@@ -122,7 +122,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
         <p className="text-xs text-text-muted mb-2">How Roto Scoring Works:</p>
         <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-accent-green font-medium">+{sortedStandings.length}</span>
+            <span className="text-gold font-medium">+{sortedStandings.length}</span>
             <span className="text-text-muted">= 1st place in category</span>
           </div>
           <div className="flex items-center gap-2">

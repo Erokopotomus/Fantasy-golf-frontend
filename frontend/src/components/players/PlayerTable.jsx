@@ -16,7 +16,7 @@ const PlayerTable = ({
       <button
         onClick={() => onSort(field)}
         className={`flex items-center gap-1 hover:text-white transition-colors mx-auto ${
-          sortBy === field ? 'text-accent-green' : 'text-text-muted'
+          sortBy === field ? 'text-gold' : 'text-text-muted'
         }`}
       >
         {children}
@@ -56,7 +56,7 @@ const PlayerTable = ({
                 onClick={() => onViewPlayer?.(player)}
                 className={`
                   border-b border-dark-border/50 transition-colors cursor-pointer
-                  ${isSelected ? 'bg-accent-green/10' : 'hover:bg-dark-tertiary/50'}
+                  ${isSelected ? 'bg-gold/10' : 'hover:bg-dark-tertiary/50'}
                 `}
               >
                 {compareMode && (
@@ -66,7 +66,7 @@ const PlayerTable = ({
                       checked={isSelected}
                       onChange={() => onSelectPlayer(player)}
                       disabled={!isSelected && !canSelect}
-                      className="w-4 h-4 rounded border-dark-border bg-dark-tertiary text-accent-green focus:ring-accent-green"
+                      className="w-4 h-4 rounded border-dark-border bg-dark-tertiary text-gold focus:ring-gold"
                     />
                   </td>
                 )}
@@ -84,7 +84,7 @@ const PlayerTable = ({
                     <span className={`text-xl ${player.headshotUrl ? 'hidden' : ''}`}>{player.countryFlag}</span>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <p className="text-white font-medium hover:text-accent-green transition-colors">{player.name}</p>
+                        <p className="text-white font-medium hover:text-gold transition-colors">{player.name}</p>
                         {player.primaryTour && (
                           <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
                             player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
@@ -98,7 +98,7 @@ const PlayerTable = ({
                       <p className="text-text-muted text-xs">{player.country}</p>
                     </div>
                     {player.owned && (
-                      <span className="px-2 py-0.5 bg-accent-green/20 text-accent-green text-xs rounded">
+                      <span className="px-2 py-0.5 bg-gold/20 text-gold text-xs rounded">
                         Owned
                       </span>
                     )}
@@ -106,7 +106,7 @@ const PlayerTable = ({
                 </td>
                 <td className="p-3 text-center">
                   <span className={`font-medium ${
-                    player.stats?.sgTotal > 1 ? 'text-accent-green' :
+                    player.stats?.sgTotal > 1 ? 'text-gold' :
                     player.stats?.sgTotal > 0 ? 'text-white' : 'text-red-400'
                   }`}>
                     {player.stats?.sgTotal?.toFixed(2) || '—'}
@@ -132,7 +132,7 @@ const PlayerTable = ({
                             result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
                             result === 'CUT' ? 'bg-red-500/15 text-red-400' :
                             result === 'WD' ? 'bg-dark-tertiary text-text-muted' :
-                            pos <= 5 ? 'bg-accent-green/20 text-accent-green' :
+                            pos <= 5 ? 'bg-gold/20 text-gold' :
                             pos <= 10 ? 'bg-emerald-500/10 text-emerald-400/70' :
                             pos <= 25 ? 'bg-dark-tertiary text-text-secondary' :
                             'bg-dark-tertiary text-text-muted'

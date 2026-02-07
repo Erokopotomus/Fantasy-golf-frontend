@@ -27,7 +27,7 @@ const MockDraftRecap = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
       </div>
     )
   }
@@ -70,21 +70,21 @@ const MockDraftRecap = () => {
               </svg>
             </Link>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white">Mock Draft Recap</h1>
+              <h1 className="text-2xl font-bold font-display text-white">Mock Draft Recap</h1>
               <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
                 <span className="px-2 py-0.5 bg-dark-tertiary rounded text-xs capitalize">{result.draftType}</span>
                 <span>{result.teamCount} teams</span>
                 <span>{result.rosterSize} rounds</span>
                 <span>{new Date(result.completedAt).toLocaleDateString()}</span>
                 {result.dataSource === 'api' && (
-                  <span className="px-1.5 py-0.5 bg-accent-green/15 text-accent-green text-[10px] font-semibold rounded">LIVE DATA</span>
+                  <span className="px-1.5 py-0.5 bg-gold/15 text-gold text-[10px] font-semibold rounded">LIVE DATA</span>
                 )}
               </div>
             </div>
           </div>
 
           {/* Grade Card */}
-          <Card className="mb-6 border-accent-green/30">
+          <Card className="mb-6 border-gold/30">
             <div className="flex items-center gap-6">
               <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${gradeBgColors[result.overallGrade] || 'bg-dark-tertiary'}`}>
                 <span className={`text-4xl font-bold ${gradeColors[result.overallGrade] || 'text-text-muted'}`}>
@@ -92,7 +92,7 @@ const MockDraftRecap = () => {
                 </span>
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-semibold text-white mb-1">Your Draft Grade</h2>
+                <h2 className="text-lg font-semibold font-display text-white mb-1">Your Draft Grade</h2>
                 <p className="text-text-secondary text-sm mb-3">Score: {result.overallScore}/100</p>
                 <div className="flex flex-wrap gap-4 text-sm">
                   {result.bestPick && (
@@ -114,7 +114,7 @@ const MockDraftRecap = () => {
 
           {/* Pick-by-Pick Grades */}
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Your Picks</h2>
+            <h2 className="text-lg font-semibold font-display text-white mb-4">Your Picks</h2>
             <div className="space-y-2">
               {userPicks.map((pick, i) => {
                 const pg = pickGrades.find(g => g.pickNumber === pick.pickNumber) || pickGrades[i] || {}
@@ -157,7 +157,7 @@ const MockDraftRecap = () => {
           {/* Draft Board */}
           {allPicks.length > 0 && teamNames.length > 0 && (
             <Card className="mb-6 overflow-x-auto">
-              <h2 className="text-lg font-semibold text-white mb-4">Draft Board</h2>
+              <h2 className="text-lg font-semibold font-display text-white mb-4">Draft Board</h2>
               <div className="min-w-[500px]">
                 <div className="grid gap-px bg-dark-border" style={{ gridTemplateColumns: `50px repeat(${result.teamCount}, 1fr)` }}>
                   {/* Headers */}
@@ -166,7 +166,7 @@ const MockDraftRecap = () => {
                     <div
                       key={i}
                       className={`bg-dark-secondary p-2 text-xs font-medium truncate ${
-                        allPicks.some(p => p.teamIndex === i && p.isUser) ? 'text-accent-green border-b-2 border-accent-green' : 'text-text-secondary'
+                        allPicks.some(p => p.teamIndex === i && p.isUser) ? 'text-gold border-b-2 border-gold' : 'text-text-secondary'
                       }`}
                     >
                       {name}
@@ -184,7 +184,7 @@ const MockDraftRecap = () => {
                         return (
                           <div
                             key={`${round}-${teamIdx}`}
-                            className={`bg-dark-primary p-1.5 text-xs ${isUserTeam ? 'bg-accent-green/5' : ''}`}
+                            className={`bg-dark-primary p-1.5 text-xs ${isUserTeam ? 'bg-gold/5' : ''}`}
                           >
                             {pick ? (
                               <div className="truncate">

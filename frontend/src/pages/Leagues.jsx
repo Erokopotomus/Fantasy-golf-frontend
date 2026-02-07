@@ -11,7 +11,7 @@ const Leagues = () => {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading leagues...</p>
         </div>
       </div>
@@ -25,7 +25,7 @@ const Leagues = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">My Leagues</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">My Leagues</h1>
               <p className="text-text-secondary mt-1">
                 Manage your fantasy golf leagues
               </p>
@@ -80,10 +80,10 @@ const Leagues = () => {
                     {/* League Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white">{league.name}</h3>
+                        <h3 className="text-lg font-semibold font-display text-white">{league.name}</h3>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           league.status === 'active'
-                            ? 'bg-accent-green/20 text-accent-green'
+                            ? 'bg-gold/20 text-gold'
                             : 'bg-yellow-500/20 text-yellow-400'
                         }`}>
                           {league.status === 'active' ? 'Active' : 'Draft Pending'}
@@ -96,7 +96,7 @@ const Leagues = () => {
                         <span>{league.memberCount} / {league.maxMembers} members</span>
                         <span>Roster: {league.settings?.rosterSize || 6} players</span>
                         {league.userRank && (
-                          <span className="text-accent-green">
+                          <span className="text-gold">
                             Rank #{league.userRank} • {league.userPoints?.toLocaleString()} pts
                           </span>
                         )}
@@ -132,7 +132,7 @@ const Leagues = () => {
                               #{standing.rank}
                             </span>
                             <span className={`text-sm ${
-                              standing.userId === '1' ? 'text-accent-green font-medium' : 'text-text-secondary'
+                              standing.userId === '1' ? 'text-gold font-medium' : 'text-text-secondary'
                             }`}>
                               {standing.name}
                             </span>

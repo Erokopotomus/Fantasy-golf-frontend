@@ -76,7 +76,7 @@ const ScoringSettings = ({ settings, onChange }) => {
   }
 
   const colorMap = {
-    green: { border: 'border-accent-green', bg: 'bg-accent-green/10', text: 'text-accent-green', ring: 'ring-accent-green' },
+    green: { border: 'border-gold', bg: 'bg-gold/10', text: 'text-gold', ring: 'ring-gold' },
     blue: { border: 'border-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-400', ring: 'ring-blue-500' },
     purple: { border: 'border-purple-500', bg: 'bg-purple-500/10', text: 'text-purple-400', ring: 'ring-purple-500' },
   }
@@ -85,7 +85,7 @@ const ScoringSettings = ({ settings, onChange }) => {
     <div className="space-y-6">
       {/* Preset Selector */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-4">Scoring Preset</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-4">Scoring Preset</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {PRESETS.map((p) => {
             const active = config.preset === p.key
@@ -110,7 +110,7 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Position Points */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-1">Position Points</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-1">Position Points</h3>
         <p className="text-text-muted text-xs mb-4">Points awarded based on final tournament placement</p>
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
           {Object.entries(POSITION_LABELS).map(([key, label]) => (
@@ -122,7 +122,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.positionPoints[key] ?? 0}
                 onChange={(e) => updateConfig(`positionPoints.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-accent-green focus:outline-none ${
+                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -133,7 +133,7 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Hole Scoring */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-1">Hole Scoring</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-1">Hole Scoring</h3>
         <p className="text-text-muted text-xs mb-4">Points per individual hole result (accumulated across all rounds)</p>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           {Object.entries(HOLE_SCORING_LABELS).map(([key, label]) => (
@@ -145,7 +145,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.holeScoring[key] ?? 0}
                 onChange={(e) => updateConfig(`holeScoring.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-accent-green focus:outline-none ${
+                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -156,7 +156,7 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Bonuses */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-1">Bonuses</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-1">Bonuses</h3>
         <p className="text-text-muted text-xs mb-4">Extra points for exceptional round performance</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Object.entries(BONUS_LABELS).map(([key, label]) => (
@@ -168,7 +168,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.bonuses[key] ?? 0}
                 onChange={(e) => updateConfig(`bonuses.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-accent-green focus:outline-none ${
+                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -179,7 +179,7 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Strokes Gained */}
       <Card>
-        <h3 className="text-lg font-semibold text-white mb-1">Strokes Gained</h3>
+        <h3 className="text-lg font-semibold font-display text-white mb-1">Strokes Gained</h3>
         <p className="text-text-muted text-xs mb-4">Award points based on strokes gained metrics</p>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -188,7 +188,7 @@ const ScoringSettings = ({ settings, onChange }) => {
               checked={config.strokesGained?.enabled || false}
               onChange={(e) => updateConfig('strokesGained.enabled', e.target.checked)}
               disabled={!isCustom}
-              className="rounded border-dark-border text-accent-green focus:ring-accent-green"
+              className="rounded border-dark-border text-gold focus:ring-gold"
             />
             <span className="text-sm text-white">Enable SG scoring</span>
           </label>
@@ -202,7 +202,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.strokesGained.multiplier || 5}
                 onChange={(e) => updateConfig('strokesGained.multiplier', parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-20 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-accent-green focus:outline-none ${
+                className={`w-20 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -212,31 +212,31 @@ const ScoringSettings = ({ settings, onChange }) => {
       </Card>
 
       {/* Live Preview */}
-      <Card className="border-accent-green/30">
-        <h3 className="text-lg font-semibold text-white mb-1">Live Preview</h3>
+      <Card className="border-gold/30">
+        <h3 className="text-lg font-semibold font-display text-white mb-1">Live Preview</h3>
         <p className="text-text-muted text-xs mb-4">
           Example: 5th place finish, 22 birdies, 2 eagles, 38 pars, 8 bogeys, 1 double, 1 bogey-free round, 1 birdie streak
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="bg-dark-primary rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Position</p>
-            <p className="text-xl font-bold text-accent-green">{preview.position}</p>
+            <p className="text-xl font-bold font-display text-gold">{preview.position}</p>
           </div>
           <div className="bg-dark-primary rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Holes</p>
-            <p className="text-xl font-bold text-blue-400">{preview.holes}</p>
+            <p className="text-xl font-bold font-display text-blue-400">{preview.holes}</p>
           </div>
           <div className="bg-dark-primary rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Bonuses</p>
-            <p className="text-xl font-bold text-purple-400">{preview.bonuses}</p>
+            <p className="text-xl font-bold font-display text-purple-400">{preview.bonuses}</p>
           </div>
           <div className="bg-dark-primary rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">SG</p>
-            <p className="text-xl font-bold text-yellow-400">{preview.strokesGained}</p>
+            <p className="text-xl font-bold font-display text-yellow-400">{preview.strokesGained}</p>
           </div>
-          <div className="bg-accent-green/10 border border-accent-green/30 rounded-lg p-3 text-center">
+          <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Total</p>
-            <p className="text-2xl font-bold text-accent-green">{preview.total}</p>
+            <p className="text-2xl font-bold font-display text-gold">{preview.total}</p>
           </div>
         </div>
       </Card>

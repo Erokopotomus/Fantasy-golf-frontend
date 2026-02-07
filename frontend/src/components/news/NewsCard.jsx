@@ -29,16 +29,16 @@ const NewsCard = ({ item, compact = false }) => {
       hot: {
         icon: '🔥',
         label: 'Hot',
-        bg: 'bg-accent-green/20',
-        border: 'border-accent-green/30',
-        text: 'text-accent-green',
+        bg: 'bg-gold/20',
+        border: 'border-gold/30',
+        text: 'text-gold',
       },
       cold: {
         icon: '❄️',
         label: 'Cold',
-        bg: 'bg-cyan-500/20',
-        border: 'border-cyan-500/30',
-        text: 'text-cyan-400',
+        bg: 'bg-gold/20',
+        border: 'border-gold/30',
+        text: 'text-gold',
       },
       'course-fit': {
         icon: '⛳',
@@ -59,7 +59,7 @@ const NewsCard = ({ item, compact = false }) => {
   }
 
   const getImpactStyle = (impact) => {
-    if (impact === 'positive') return 'text-accent-green'
+    if (impact === 'positive') return 'text-gold'
     if (impact === 'negative') return 'text-red-400'
     return 'text-text-muted'
   }
@@ -148,7 +148,7 @@ const NewsCard = ({ item, compact = false }) => {
       {item.playerName && (
         <button
           onClick={handlePlayerClick}
-          className="flex items-center gap-2 mb-2 hover:text-accent-green transition-colors"
+          className="flex items-center gap-2 mb-2 hover:text-gold transition-colors"
         >
           <span className="text-lg">{item.playerFlag}</span>
           <span className="font-medium text-white">{item.playerName}</span>

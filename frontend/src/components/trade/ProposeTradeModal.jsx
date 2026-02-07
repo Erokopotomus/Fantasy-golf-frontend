@@ -70,7 +70,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
       <div className="relative bg-dark-secondary rounded-xl border border-dark-border w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-dark-border">
-          <h2 className="text-xl font-bold text-white">Propose Trade</h2>
+          <h2 className="text-xl font-bold font-display text-white">Propose Trade</h2>
           <button
             onClick={onClose}
             className="p-2 text-text-muted hover:text-white transition-colors"

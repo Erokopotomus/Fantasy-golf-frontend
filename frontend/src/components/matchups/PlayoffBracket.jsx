@@ -10,7 +10,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">Playoffs Coming Soon</h3>
+          <h3 className="text-lg font-semibold font-display text-white mb-2">Playoffs Coming Soon</h3>
           <p className="text-text-muted text-sm">
             The playoff bracket will be generated after the regular season
           </p>
@@ -27,7 +27,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold text-white mb-4">
+      <h3 className="text-lg font-semibold font-display text-white mb-4">
         Playoff Bracket ({bracket.numTeams} Teams)
       </h3>
 
@@ -51,7 +51,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                     <div
                       className={`flex items-center justify-between p-2 rounded mb-1 ${
                         matchup.winner === matchup.team1?.userId
-                          ? 'bg-accent-green/20'
+                          ? 'bg-gold/20'
                           : 'bg-dark-primary'
                       }`}
                     >
@@ -62,7 +62,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                         <span className={`text-sm font-medium truncate ${
                           matchup.team1
                             ? matchup.team1.userId === currentUserId
-                              ? 'text-accent-green'
+                              ? 'text-gold'
                               : 'text-white'
                             : 'text-text-muted'
                         }`}>
@@ -72,7 +72,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                         </span>
                       </div>
                       <span className={`text-sm font-bold ${
-                        matchup.winner === matchup.team1?.userId ? 'text-accent-green' : 'text-text-secondary'
+                        matchup.winner === matchup.team1?.userId ? 'text-gold' : 'text-text-secondary'
                       }`}>
                         {matchup.score1 ?? '-'}
                       </span>
@@ -82,7 +82,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                     <div
                       className={`flex items-center justify-between p-2 rounded ${
                         matchup.winner === matchup.team2?.userId
-                          ? 'bg-accent-green/20'
+                          ? 'bg-gold/20'
                           : 'bg-dark-primary'
                       }`}
                     >
@@ -93,7 +93,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                         <span className={`text-sm font-medium truncate ${
                           matchup.team2
                             ? matchup.team2.userId === currentUserId
-                              ? 'text-accent-green'
+                              ? 'text-gold'
                               : 'text-white'
                             : 'text-text-muted'
                         }`}>
@@ -103,7 +103,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                         </span>
                       </div>
                       <span className={`text-sm font-bold ${
-                        matchup.winner === matchup.team2?.userId ? 'text-accent-green' : 'text-text-secondary'
+                        matchup.winner === matchup.team2?.userId ? 'text-gold' : 'text-text-secondary'
                       }`}>
                         {matchup.score2 ?? '-'}
                       </span>

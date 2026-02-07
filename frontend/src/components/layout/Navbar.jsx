@@ -38,27 +38,27 @@ const Navbar = () => {
   const navLinkStyles = (path) => `
     px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
     ${isActive(path)
-      ? 'bg-dark-tertiary text-white'
-      : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'
+      ? 'text-gold bg-surface-bright'
+      : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
     }
   `
 
   const mobileNavLinkStyles = (path) => `
     block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300
     ${isActive(path)
-      ? 'bg-dark-tertiary text-white'
-      : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'
+      ? 'text-gold bg-surface-bright'
+      : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
     }
   `
 
   return (
-    <nav className="bg-dark-secondary border-b border-dark-border sticky top-0 z-50">
+    <nav className="backdrop-blur-xl backdrop-saturate-150 bg-dark-secondary/80 border-b border-white/[0.08] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <ClutchLogo size={32} className="shadow-button rounded-lg" />
-            <span className="text-xl font-bold text-white">Clutch</span>
+          <Link to="/" className="flex items-center gap-2.5">
+            <ClutchLogo size={32} className="rounded-lg" />
+            <span className="text-xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -80,14 +80,14 @@ const Navbar = () => {
                     className={`
                       px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
                       ${isTournamentActive
-                        ? 'bg-dark-tertiary text-white'
-                        : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'}
+                        ? 'text-gold bg-surface-bright'
+                        : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'}
                     `}
                   >
                     {isLiveTournament && (
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
                       </span>
                     )}
                     {isLiveTournament ? 'Live' : 'Tournament'}
@@ -120,13 +120,13 @@ const Navbar = () => {
                       setNotifOpen(!notifOpen)
                       setProfileMenuOpen(false)
                     }}
-                    className="relative p-2 text-text-secondary hover:text-white hover:bg-dark-tertiary rounded-lg transition-colors"
+                    className="relative p-2 text-text-muted hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                     {inbox.unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gold text-dark-primary text-[10px] font-bold rounded-full flex items-center justify-center">
                         {inbox.unreadCount > 9 ? '9+' : inbox.unreadCount}
                       </span>
                     )}
@@ -152,9 +152,9 @@ const Navbar = () => {
                       setProfileMenuOpen(!profileMenuOpen)
                       setNotifOpen(false)
                     }}
-                    className="hidden sm:flex items-center gap-2 text-sm text-text-secondary hover:text-white transition-colors p-1 rounded-lg hover:bg-dark-tertiary"
+                    className="hidden sm:flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors p-1 rounded-lg hover:bg-surface-hover"
                   >
-                    <div className="w-8 h-8 bg-accent-green rounded-full flex items-center justify-center text-white font-semibold shadow-button">
+                    <div className="w-8 h-8 bg-gradient-to-br from-gold to-orange rounded-full flex items-center justify-center text-dark-primary font-semibold shadow-button">
                       {user.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <span className="hidden lg:block">{user.name || user.email}</span>
@@ -170,10 +170,10 @@ const Navbar = () => {
                         className="fixed inset-0 z-10"
                         onClick={() => setProfileMenuOpen(false)}
                       />
-                      <div className="absolute right-0 mt-2 w-48 bg-dark-secondary border border-dark-border rounded-lg shadow-lg z-20 py-1">
+                      <div className="absolute right-0 mt-2 w-48 backdrop-blur-xl bg-dark-secondary/90 border border-white/[0.08] rounded-card shadow-lg z-20 py-1">
                         <Link
                           to="/profile"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-dark-tertiary transition-colors"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/leagues"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-white hover:bg-dark-tertiary transition-colors"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -195,13 +195,13 @@ const Navbar = () => {
                             My Leagues
                           </div>
                         </Link>
-                        <div className="border-t border-dark-border my-1" />
+                        <div className="border-t border-white/[0.08] my-1" />
                         <button
                           onClick={() => {
                             setProfileMenuOpen(false)
                             logout()
                           }}
-                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-dark-tertiary transition-colors"
+                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-surface-hover transition-colors"
                         >
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +236,7 @@ const Navbar = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-dark-tertiary text-text-secondary hover:text-white transition-all duration-300"
+              className="md:hidden p-2 rounded-lg hover:bg-surface-hover text-text-muted hover:text-text-primary transition-all duration-300"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -255,7 +255,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-dark-secondary border-t border-dark-border animate-slide-down">
+        <div className="md:hidden backdrop-blur-xl bg-dark-secondary/90 border-t border-white/[0.08] animate-slide-down">
           <div className="px-4 py-4 space-y-2">
             {user ? (
               <>
@@ -291,8 +291,8 @@ const Navbar = () => {
                   >
                     {isLiveTournament && (
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
                       </span>
                     )}
                     {isLiveTournament ? 'Live Tournament' : 'Tournament'}

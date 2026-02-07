@@ -13,7 +13,7 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
   const getPositionColor = (pos) => {
     const num = getPositionValue(pos)
     if (num === 1) return 'bg-yellow-400'
-    if (num <= 3) return 'bg-accent-green'
+    if (num <= 3) return 'bg-gold'
     if (num <= 10) return 'bg-green-500'
     if (num <= 25) return 'bg-blue-400'
     return 'bg-text-muted'
@@ -56,7 +56,7 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
             {tournamentHistory.slice(0, 5).map((t, index) => (
               <div key={index} className="flex items-center justify-between text-sm">
                 <span className="text-text-secondary truncate flex-1 mr-2">{t.name}</span>
-                <span className={`font-medium ${getPositionValue(t.position) <= 10 ? 'text-accent-green' : 'text-white'}`}>
+                <span className={`font-medium ${getPositionValue(t.position) <= 10 ? 'text-gold' : 'text-white'}`}>
                   {t.position}
                 </span>
               </div>

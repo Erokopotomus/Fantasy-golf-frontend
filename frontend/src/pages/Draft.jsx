@@ -18,7 +18,7 @@ const Draft = () => {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading drafts...</p>
         </div>
       </div>
@@ -31,7 +31,7 @@ const Draft = () => {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Draft Center</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Draft Center</h1>
             <p className="text-text-secondary mt-1">
               Access your league drafts or practice with a mock draft
             </p>
@@ -39,11 +39,11 @@ const Draft = () => {
 
           {/* Draft History Link */}
           <Link to="/draft/history" className="block mb-4 group">
-            <Card className="border-dark-border hover:border-accent-blue/40 transition-all">
+            <Card className="border-dark-border hover:border-orange/40 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-accent-blue/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 bg-orange/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-6 h-6 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                     </svg>
                   </div>
@@ -52,7 +52,7 @@ const Draft = () => {
                     <p className="text-text-secondary text-sm">Review past drafts with pick-by-pick grades</p>
                   </div>
                 </div>
-                <svg className="w-5 h-5 text-text-muted group-hover:text-accent-blue group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-text-muted group-hover:text-orange group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -61,11 +61,11 @@ const Draft = () => {
 
           {/* Mock Draft CTA */}
           <Link to="/mock-draft" className="block mb-6 group">
-            <Card className="border-accent-green/30 hover:border-accent-green/60 transition-all">
+            <Card className="border-gold/30 hover:border-gold/60 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-accent-green/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6 text-accent-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 bg-gold/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
@@ -74,7 +74,7 @@ const Draft = () => {
                     <p className="text-text-secondary text-sm">Practice your strategy against AI opponents</p>
                   </div>
                 </div>
-                <svg className="w-5 h-5 text-text-muted group-hover:text-accent-green group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-text-muted group-hover:text-gold group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -82,7 +82,7 @@ const Draft = () => {
           </Link>
 
           {/* League Drafts */}
-          <h2 className="text-lg font-semibold text-white mb-4">League Drafts</h2>
+          <h2 className="text-lg font-semibold font-display text-white mb-4">League Drafts</h2>
 
           {leagues.length === 0 ? (
             <Card className="text-center py-12">
@@ -118,13 +118,13 @@ const Draft = () => {
                 const isDraftComplete = draftStatus === 'COMPLETED'
 
                 return (
-                  <Card key={league.id} className={isDraftReady ? 'border-accent-green/50' : ''}>
+                  <Card key={league.id} className={isDraftReady ? 'border-gold/50' : ''}>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="text-lg font-semibold text-white">{league.name}</h3>
+                          <h3 className="text-lg font-semibold font-display text-white">{league.name}</h3>
                           {isDraftReady && (
-                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-accent-green/20 text-accent-green">
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-gold/20 text-gold">
                               {memberCount >= maxMembers ? 'Ready to Draft' : 'Pre-Draft'}
                             </span>
                           )}
@@ -179,7 +179,7 @@ const Draft = () => {
                           <p className="text-text-muted text-xs">Status</p>
                           <p className={`font-medium ${
                             isDraftInProgress ? 'text-yellow-400' :
-                            isDraftReady && memberCount >= maxMembers ? 'text-accent-green' :
+                            isDraftReady && memberCount >= maxMembers ? 'text-gold' :
                             isDraftReady ? 'text-yellow-400' :
                             'text-text-secondary'
                           }`}>
@@ -198,10 +198,10 @@ const Draft = () => {
           )}
 
           {/* Tips */}
-          <Card className="mt-8 bg-dark-primary border-accent-blue/30">
+          <Card className="mt-8 bg-dark-primary border-orange/30">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-accent-blue/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-orange/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

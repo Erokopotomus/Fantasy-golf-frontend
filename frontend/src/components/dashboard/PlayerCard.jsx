@@ -17,8 +17,8 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
 
   const getFormColor = (result) => {
     if (result.includes('1st')) return 'text-yellow-400'
-    if (result.includes('2nd') || result.includes('3rd')) return 'text-accent-green'
-    if (result.startsWith('T') && parseInt(result.slice(1)) <= 10) return 'text-accent-blue'
+    if (result.includes('2nd') || result.includes('3rd')) return 'text-gold'
+    if (result.startsWith('T') && parseInt(result.slice(1)) <= 10) return 'text-orange'
     return 'text-text-secondary'
   }
 
@@ -26,13 +26,13 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
     if (position === '1st') return 'text-yellow-400'
     if (position.includes('T2') || position === '2nd') return 'text-gray-300'
     if (position.includes('T3') || position === '3rd') return 'text-amber-600'
-    if (position.includes('T') && parseInt(position.slice(1)) <= 10) return 'text-accent-green'
+    if (position.includes('T') && parseInt(position.slice(1)) <= 10) return 'text-gold'
     return 'text-white'
   }
 
   if (compact) {
     return (
-      <div className="flex items-center justify-between p-3 bg-dark-secondary rounded-lg border border-dark-border hover:border-accent-green/50 transition-colors">
+      <div className="flex items-center justify-between p-3 bg-dark-secondary rounded-lg border border-dark-border hover:border-gold/50 transition-colors">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-dark-tertiary rounded-full flex items-center justify-center text-lg">
             {countryFlag}
@@ -54,7 +54,7 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
         )}
         {(!showTournamentStatus || !tournamentStatus) && stats && (
           <div className="text-right">
-            <p className={`font-bold ${stats.sgTotal > 0 ? 'text-accent-green' : 'text-red-400'}`}>
+            <p className={`font-bold ${stats.sgTotal > 0 ? 'text-gold' : 'text-red-400'}`}>
               {formatStat(stats.sgTotal)}
             </p>
             <p className="text-text-muted text-xs">SG Total</p>
@@ -92,31 +92,31 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
       {stats && (
         <div className="grid grid-cols-5 gap-2 mb-4">
           <div className="text-center">
-            <p className={`font-semibold text-sm ${stats.sgTotal > 0 ? 'text-accent-green' : 'text-red-400'}`}>
+            <p className={`font-semibold text-sm ${stats.sgTotal > 0 ? 'text-gold' : 'text-red-400'}`}>
               {formatStat(stats.sgTotal)}
             </p>
             <p className="text-text-muted text-xs">Total</p>
           </div>
           <div className="text-center">
-            <p className={`font-semibold text-sm ${stats.sgOffTee > 0 ? 'text-accent-green' : 'text-red-400'}`}>
+            <p className={`font-semibold text-sm ${stats.sgOffTee > 0 ? 'text-gold' : 'text-red-400'}`}>
               {formatStat(stats.sgOffTee)}
             </p>
             <p className="text-text-muted text-xs">OTT</p>
           </div>
           <div className="text-center">
-            <p className={`font-semibold text-sm ${stats.sgApproach > 0 ? 'text-accent-green' : 'text-red-400'}`}>
+            <p className={`font-semibold text-sm ${stats.sgApproach > 0 ? 'text-gold' : 'text-red-400'}`}>
               {formatStat(stats.sgApproach)}
             </p>
             <p className="text-text-muted text-xs">APP</p>
           </div>
           <div className="text-center">
-            <p className={`font-semibold text-sm ${stats.sgAroundGreen > 0 ? 'text-accent-green' : 'text-red-400'}`}>
+            <p className={`font-semibold text-sm ${stats.sgAroundGreen > 0 ? 'text-gold' : 'text-red-400'}`}>
               {formatStat(stats.sgAroundGreen)}
             </p>
             <p className="text-text-muted text-xs">ATG</p>
           </div>
           <div className="text-center">
-            <p className={`font-semibold text-sm ${stats.sgPutting > 0 ? 'text-accent-green' : 'text-red-400'}`}>
+            <p className={`font-semibold text-sm ${stats.sgPutting > 0 ? 'text-gold' : 'text-red-400'}`}>
               {formatStat(stats.sgPutting)}
             </p>
             <p className="text-text-muted text-xs">PUTT</p>

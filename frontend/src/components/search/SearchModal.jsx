@@ -144,7 +144,7 @@ const SearchModal = ({ isOpen, onClose }) => {
           <div className="max-h-[400px] overflow-y-auto">
             {loading ? (
               <div className="p-8 text-center">
-                <div className="animate-spin w-6 h-6 border-2 border-accent-green border-t-transparent rounded-full mx-auto mb-2" />
+                <div className="animate-spin w-6 h-6 border-2 border-gold border-t-transparent rounded-full mx-auto mb-2" />
                 <p className="text-text-muted text-sm">Searching...</p>
               </div>
             ) : query.length >= 2 && !hasResults ? (
@@ -288,12 +288,12 @@ const SearchResultItem = ({ item, isSelected, onClick, getTypeBadgeColor, showTy
       onClick={onClick}
       className={`
         w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
-        ${isSelected ? 'bg-accent-green/20' : 'hover:bg-dark-tertiary'}
+        ${isSelected ? 'bg-gold/20' : 'hover:bg-dark-tertiary'}
       `}
     >
       <span className="text-xl flex-shrink-0">{item.icon}</span>
       <div className="flex-1 min-w-0">
-        <p className={`font-medium truncate ${isSelected ? 'text-accent-green' : 'text-white'}`}>
+        <p className={`font-medium truncate ${isSelected ? 'text-gold' : 'text-white'}`}>
           {item.name}
         </p>
         <p className="text-text-muted text-sm truncate">{item.subtitle}</p>
@@ -304,7 +304,7 @@ const SearchResultItem = ({ item, isSelected, onClick, getTypeBadgeColor, showTy
         </span>
       )}
       {isSelected && (
-        <svg className="w-4 h-4 text-accent-green flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       )}

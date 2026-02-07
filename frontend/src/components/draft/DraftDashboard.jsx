@@ -69,7 +69,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
     <button
       onClick={() => handleSort(field)}
       className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-        sortBy === field ? 'text-accent-green' : 'text-text-muted hover:text-white'
+        sortBy === field ? 'text-gold' : 'text-text-muted hover:text-white'
       }`}
     >
       {children}
@@ -87,7 +87,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
       {/* Left Panel - Team Rosters */}
       <div className="xl:col-span-3">
         <Card padding="sm">
-          <h3 className="text-lg font-semibold text-white mb-3">Team Rosters</h3>
+          <h3 className="text-lg font-semibold font-display text-white mb-3">Team Rosters</h3>
           <div className="overflow-x-auto">
             <div className="flex gap-3" style={{ minWidth: teams.length > 4 ? `${teams.length * 160}px` : 'auto' }}>
               {teams.map((team) => {
@@ -99,22 +99,22 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                   <div
                     key={team.id}
                     className={`flex-shrink-0 rounded-lg border ${
-                      isUser ? 'border-accent-green/50 bg-accent-green/5' : 'border-dark-border bg-dark-tertiary/50'
+                      isUser ? 'border-gold/50 bg-gold/5' : 'border-dark-border bg-dark-tertiary/50'
                     }`}
                     style={{ minWidth: '148px', maxWidth: '180px', flex: '1 1 0' }}
                   >
                     {/* Team Header */}
                     <div className={`px-3 py-2 border-b ${
-                      isUser ? 'border-accent-green/30' : 'border-dark-border'
+                      isUser ? 'border-gold/30' : 'border-dark-border'
                     }`}>
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-semibold truncate ${
-                          isUser ? 'text-accent-green' : 'text-white'
+                          isUser ? 'text-gold' : 'text-white'
                         }`}>
                           {team.name}
                         </p>
                         {isUser && (
-                          <span className="text-[10px] bg-accent-green/20 text-accent-green px-1.5 py-0.5 rounded font-medium">
+                          <span className="text-[10px] bg-gold/20 text-gold px-1.5 py-0.5 rounded font-medium">
                             YOU
                           </span>
                         )}
@@ -156,7 +156,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
       <div className="xl:col-span-2">
         <Card padding="sm" className="flex flex-col" style={{ maxHeight: 'calc(100vh - 220px)' }}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-white">Available</h3>
+            <h3 className="text-lg font-semibold font-display text-white">Available</h3>
             <span className="text-text-muted text-xs">
               {availablePlayers.length} remaining
             </span>
@@ -173,7 +173,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
               placeholder="Search players..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-dark-tertiary border border-dark-border rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent-green transition-colors"
+              className="w-full bg-dark-tertiary border border-dark-border rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-text-muted focus:outline-none focus:border-gold transition-colors"
             />
           </div>
 
@@ -185,7 +185,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                 onClick={() => setPosFilter(f)}
                 className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                   posFilter === f
-                    ? 'bg-accent-green/20 text-accent-green'
+                    ? 'bg-gold/20 text-gold'
                     : 'bg-dark-tertiary text-text-muted hover:text-white'
                 }`}
               >
@@ -219,7 +219,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                     </td>
                     <td className="py-1.5 text-right">
                       <span className={`text-xs font-medium ${
-                        (player.stats?.sgTotal || 0) > 1 ? 'text-accent-green' : 'text-white'
+                        (player.stats?.sgTotal || 0) > 1 ? 'text-gold' : 'text-white'
                       }`}>
                         {player.stats?.sgTotal?.toFixed(2) || '—'}
                       </span>

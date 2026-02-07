@@ -35,7 +35,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
   return (
     <Card padding="none">
       <div className="p-4 border-b border-dark-border">
-        <h3 className="text-lg font-semibold text-white">Season Standings</h3>
+        <h3 className="text-lg font-semibold font-display text-white">Season Standings</h3>
       </div>
 
       <div className="overflow-x-auto">
@@ -67,7 +67,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
                   <td className="p-3 text-center">
                     <span className={`
                       inline-flex items-center justify-center w-8 h-8 rounded-full border
-                      font-bold text-sm ${getRankStyle(team.rank)}
+                      font-mono font-bold text-sm ${getRankStyle(team.rank)}
                     `}>
                       {team.rank}
                     </span>
@@ -85,11 +85,11 @@ const StandingsTable = ({ standings, currentUserId }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="p-3 text-center font-medium text-emerald-400">{team.wins}</td>
-                  <td className="p-3 text-center font-medium text-red-400">{team.losses}</td>
-                  <td className="p-3 text-center font-medium text-text-secondary">{team.ties}</td>
-                  <td className="p-3 text-right font-bold text-white">{(team.totalPoints || 0).toLocaleString()}</td>
-                  <td className="p-3 text-right text-text-secondary hidden sm:table-cell">
+                  <td className="p-3 text-center font-mono font-medium text-emerald-400">{team.wins}</td>
+                  <td className="p-3 text-center font-mono font-medium text-red-400">{team.losses}</td>
+                  <td className="p-3 text-center font-mono font-medium text-text-secondary">{team.ties}</td>
+                  <td className="p-3 text-right font-mono font-bold text-white">{(team.totalPoints || 0).toLocaleString()}</td>
+                  <td className="p-3 text-right font-mono text-text-secondary hidden sm:table-cell">
                     {typeof team.avgPoints === 'number' ? team.avgPoints.toFixed(1) : '-'}
                   </td>
                   <td className="p-3 text-center hidden md:table-cell">

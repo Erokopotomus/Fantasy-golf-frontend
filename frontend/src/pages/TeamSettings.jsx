@@ -87,7 +87,7 @@ const TeamSettings = () => {
     return (
       <div className="min-h-screen bg-dark-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-accent-green/30 border-t-accent-green rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading team settings...</p>
         </div>
       </div>
@@ -100,9 +100,9 @@ const TeamSettings = () => {
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
-              <h2 className="text-xl font-bold text-white mb-2">Team Not Found</h2>
+              <h2 className="text-xl font-bold font-display text-white mb-2">Team Not Found</h2>
               <p className="text-text-secondary mb-6">You don't have a team in this league.</p>
-              <Link to={`/leagues/${leagueId}`} className="text-accent-green hover:underline">
+              <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
                 Back to League
               </Link>
             </Card>
@@ -127,12 +127,12 @@ const TeamSettings = () => {
               </svg>
               Back to Roster
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Team Settings</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Team Settings</h1>
             <p className="text-text-secondary">Customize your team in {league?.name}</p>
           </div>
 
           {/* Team Preview */}
-          <Card className="mb-6 bg-gradient-to-br from-accent-green/10 to-dark-secondary border-accent-green/30">
+          <Card className="mb-6 bg-gradient-to-br from-gold/10 to-dark-secondary border-gold/30">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-dark-primary rounded-xl flex items-center justify-center text-4xl overflow-hidden">
                 {useCustomAvatar && customAvatarUrl ? (
@@ -151,7 +151,7 @@ const TeamSettings = () => {
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">{teamName || 'Your Team'}</h2>
+                <h2 className="text-xl font-bold font-display text-white">{teamName || 'Your Team'}</h2>
                 <p className="text-text-muted text-sm">{league?.name}</p>
               </div>
             </div>
@@ -159,7 +159,7 @@ const TeamSettings = () => {
 
           {/* Team Name */}
           <Card className="mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Team Name</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Team Name</h3>
             <Input
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
@@ -171,7 +171,7 @@ const TeamSettings = () => {
 
           {/* Avatar Selection */}
           <Card className="mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Team Avatar</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">Team Avatar</h3>
 
             {/* Toggle between preset and custom */}
             <div className="flex gap-2 mb-4">
@@ -179,7 +179,7 @@ const TeamSettings = () => {
                 onClick={() => setUseCustomAvatar(false)}
                 className={`flex-1 p-3 rounded-lg border transition-colors ${
                   !useCustomAvatar
-                    ? 'bg-accent-green/20 border-accent-green text-white'
+                    ? 'bg-gold/20 border-gold text-white'
                     : 'bg-dark-tertiary border-dark-border text-text-secondary hover:border-dark-border/80'
                 }`}
               >
@@ -189,7 +189,7 @@ const TeamSettings = () => {
                 onClick={() => setUseCustomAvatar(true)}
                 className={`flex-1 p-3 rounded-lg border transition-colors ${
                   useCustomAvatar
-                    ? 'bg-accent-green/20 border-accent-green text-white'
+                    ? 'bg-gold/20 border-gold text-white'
                     : 'bg-dark-tertiary border-dark-border text-text-secondary hover:border-dark-border/80'
                 }`}
               >
@@ -206,8 +206,8 @@ const TeamSettings = () => {
                     onClick={() => setSelectedAvatar(avatar)}
                     className={`w-full aspect-square rounded-lg text-2xl flex items-center justify-center transition-all ${
                       selectedAvatar === avatar
-                        ? 'bg-accent-green/20 border-2 border-accent-green scale-110'
-                        : 'bg-dark-tertiary border border-dark-border hover:border-accent-green/50'
+                        ? 'bg-gold/20 border-2 border-gold scale-110'
+                        : 'bg-dark-tertiary border border-dark-border hover:border-gold/50'
                     }`}
                   >
                     {avatar}

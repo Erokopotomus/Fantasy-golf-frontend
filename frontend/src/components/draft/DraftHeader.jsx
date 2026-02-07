@@ -28,11 +28,11 @@ const DraftHeader = ({
           {/* Left - League Info */}
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-lg sm:text-xl font-bold text-white">
+              <h1 className="text-lg sm:text-xl font-bold font-display text-white">
                 {league?.name || 'Draft Room'}
               </h1>
-              <span className={`px-2 py-1 rounded text-xs font-medium uppercase ${
-                isInProgress ? 'bg-accent-green/20 text-accent-green' :
+              <span className={`px-2 py-1 rounded text-xs font-mono font-medium uppercase ${
+                isInProgress ? 'bg-gold/20 text-gold' :
                 isPaused ? 'bg-yellow-500/20 text-yellow-400' :
                 isScheduled ? 'bg-blue-500/20 text-blue-400' :
                 'bg-dark-tertiary text-text-muted'
@@ -51,29 +51,29 @@ const DraftHeader = ({
           <div className="flex-1">
             <div className={`rounded-lg p-3 text-center ${
               isScheduled ? 'bg-blue-500/10 border border-blue-500/30' :
-              isUserTurn ? 'bg-accent-green/20 border border-accent-green' : 'bg-dark-tertiary'
+              isUserTurn ? 'bg-gold/20 border border-gold' : 'bg-dark-tertiary'
             }`}>
               {isScheduled ? (
                 <>
                   <p className="text-blue-400 text-sm font-medium">DRAFT SCHEDULED</p>
-                  <p className="text-white text-lg font-bold">
+                  <p className="text-white text-lg font-bold font-display">
                     {isCommissioner ? 'Press Start when ready' : 'Waiting for commissioner...'}
                   </p>
                 </>
               ) : currentPick?.complete ? (
                 <>
-                  <p className="text-accent-green text-sm font-medium">DRAFT COMPLETE</p>
-                  <p className="text-white text-lg font-bold">All picks are in!</p>
+                  <p className="text-gold text-sm font-medium">DRAFT COMPLETE</p>
+                  <p className="text-white text-lg font-bold font-display">All picks are in!</p>
                 </>
               ) : isUserTurn ? (
                 <>
-                  <p className="text-accent-green text-sm font-medium">YOUR PICK!</p>
-                  <p className="text-white text-lg font-bold">Make your selection</p>
+                  <p className="text-gold text-sm font-medium">YOUR PICK!</p>
+                  <p className="text-white text-lg font-bold font-display">Make your selection</p>
                 </>
               ) : (
                 <>
                   <p className="text-text-muted text-sm">On the Clock</p>
-                  <p className="text-white text-lg font-bold">
+                  <p className="text-white text-lg font-bold font-display">
                     {currentPick?.teamName || 'Waiting...'}
                   </p>
                 </>

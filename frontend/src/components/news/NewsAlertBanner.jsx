@@ -82,7 +82,7 @@ const NewsAlertBanner = () => {
         {/* View all link */}
         <button
           onClick={() => navigate('/news')}
-          className="text-xs text-accent-green hover:underline whitespace-nowrap"
+          className="text-xs text-gold hover:underline whitespace-nowrap"
         >
           View all
         </button>
