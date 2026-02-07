@@ -828,9 +828,10 @@ model Matchup {
   week         Int
   homeScore    Float   @default(0)
   awayScore    Float   @default(0)
-  isPlayoff    Boolean @default(false)
-  playoffRound Int? // 1 = semifinals, 2 = finals, etc.
-  isComplete   Boolean @default(false)
+  isPlayoff        Boolean @default(false)
+  playoffRound     Int? // 1 = quarterfinals, 2 = semifinals, 3 = finals, etc.
+  playoffMatchType String? // QUARTERFINAL, SEMIFINAL, FINAL, THIRD_PLACE, FIFTH_PLACE
+  isComplete       Boolean @default(false)
 
   leagueId      String
   league        League       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
@@ -1124,6 +1125,9 @@ model TeamSeason {
   teamId         String
   team           Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
+  // Team name at this point in time (tracks renames across seasons)
+  teamName String?
+
   // Aggregated season stats
   totalPoints Float   @default(0)
   wins        Int     @default(0)
@@ -1136,6 +1140,13 @@ model TeamSeason {
   bestWeekPoints  Float?
   worstWeekPoints Float?
   maxWinStreak    Int    @default(0)
+
+  // Playoff tracking
+  madePlayoffs   Boolean @default(false)
+  playoffSeed    Int?
+  playoffWins    Int     @default(0)
+  playoffLosses  Int     @default(0)
+  playoffByes    Int     @default(0)
 
   // Flexible stats (avgPointsPerWeek, consistency, etc.)
   stats Json @default("{}")
