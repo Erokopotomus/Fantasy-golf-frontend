@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { OnboardingProvider } from './context/OnboardingContext'
@@ -266,6 +267,7 @@ function App() {
           />
           </Routes>
           </main>
+          <Analytics />
         </div>
         </OnboardingProvider>
       </NotificationProvider>
