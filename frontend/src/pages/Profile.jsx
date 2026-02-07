@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -111,6 +112,21 @@ const Profile = () => {
                   <p className="text-2xl font-bold text-white">33%</p>
                   <p className="text-text-muted text-sm">Win Rate</p>
                 </div>
+              </div>
+            )}
+
+            {/* View Full Stats Link */}
+            {user?.id && (
+              <div className="mt-4 text-center">
+                <Link
+                  to={`/manager/${user.id}`}
+                  className="inline-flex items-center gap-2 text-accent-green hover:text-accent-green/80 text-sm font-medium transition-colors"
+                >
+                  View Full Stats & Achievements
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
             )}
           </Card>

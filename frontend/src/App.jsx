@@ -28,6 +28,7 @@ import TradeCenter from './pages/TradeCenter'
 import LeagueSettings from './pages/LeagueSettings'
 import TeamSettings from './pages/TeamSettings'
 import News from './pages/News'
+import ManagerProfile from './pages/ManagerProfile'
 import MockDraft from './pages/MockDraft'
 import MockDraftRoom from './pages/MockDraftRoom'
 // Format-specific pages
@@ -192,6 +193,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <News />
+              </ProtectedRoute>
+            }
+          />
+          {/* Manager Profile */}
+          <Route
+            path="/manager/:userId"
+            element={
+              <ProtectedRoute>
+                <ManagerProfile />
               </ProtectedRoute>
             }
           />

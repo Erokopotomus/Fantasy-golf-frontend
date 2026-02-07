@@ -375,6 +375,15 @@ class ApiService {
     return this.request(`/search?${params}`)
   }
 
+  // Manager Analytics
+  async getManagerProfile(userId) {
+    return this.request(`/managers/${userId}/profile`)
+  }
+
+  async getManagerAchievements(userId) {
+    return this.request(`/managers/${userId}/achievements`)
+  }
+
   // Sync (admin)
   async getSyncStatus(adminSecret) {
     return this.request('/sync/status', {
