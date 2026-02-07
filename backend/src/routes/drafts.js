@@ -11,6 +11,7 @@ const {
   placeBid: placeAuctionBid
 } = require('../services/draftTimer')
 const { recordTransaction } = require('../services/fantasyTracker')
+const { initializeLeagueSeason } = require('../services/seasonSetup')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -506,6 +507,10 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
         where: { id: draft.leagueId },
         data: { status: 'ACTIVE' }
       })
+
+      // Fire-and-forget: initialize season records (LeagueSeason, TeamSeason, Matchups, Budgets)
+      initializeLeagueSeason(draft.leagueId, prisma)
+        .catch(err => console.error('[drafts] Season setup failed:', err.message))
     }
 
     // Calculate new pick deadline

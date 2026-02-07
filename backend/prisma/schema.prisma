@@ -79,6 +79,7 @@ model League {
   picks         Pick[]
   leagueSeasons LeagueSeason[]
   rosterSlots   RosterSlotDefinition[] @relation("LeagueRosterSlots")
+  waiverClaims  WaiverClaim[]
 
   @@map("leagues")
 }
@@ -128,6 +129,7 @@ model Team {
   lineupSnapshots    LineupSnapshot[]
   rosterTransactions RosterTransaction[]
   budgets            TeamBudget[]
+  waiverClaims       WaiverClaim[]
 
   @@unique([userId, leagueId])
   @@map("teams")
@@ -278,6 +280,7 @@ model Player {
   positions          PlayerPosition[]
   tagAssignments     PlayerTagAssignment[]
   sportProfiles      SportPlayerProfile[]
+  waiverClaims       WaiverClaim[]
 
   @@index([owgrRank])
   @@index([name])
@@ -1830,4 +1833,43 @@ enum AchievementCategory {
   LINEUP
   SOCIAL
   MILESTONE
+}
+
+enum WaiverClaimStatus {
+  PENDING
+  WON
+  LOST
+  CANCELLED
+  INVALID
+}
+
+// ============ WAIVER CLAIMS ============
+
+model WaiverClaim {
+  id       String            @id @default(cuid())
+  leagueId String
+  league   League            @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  teamId   String
+  team     Team              @relation(fields: [teamId], references: [id])
+  userId   String
+  playerId String
+  player   Player            @relation(fields: [playerId], references: [id])
+
+  // Optional: player to drop if roster is full
+  dropPlayerId String?
+
+  bidAmount Float   @default(0)
+  priority  Int     @default(0) // User's ordering of their own claims
+
+  status      WaiverClaimStatus @default(PENDING)
+  processedAt DateTime?
+  notes       String?           // "Outbid by Team X", "Insufficient budget", etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leagueId, status])
+  @@index([teamId, status])
+  @@index([playerId])
+  @@map("waiver_claims")
 }

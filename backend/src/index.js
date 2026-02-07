@@ -23,6 +23,7 @@ const positionRoutes = require('./routes/positions')
 const playerTagRoutes = require('./routes/playerTags')
 const rosterSlotRoutes = require('./routes/rosterSlots')
 const managerAnalyticsRoutes = require('./routes/managerAnalytics')
+const waiverRoutes = require('./routes/waivers')
 
 const app = express()
 const httpServer = createServer(app)
@@ -96,6 +97,7 @@ app.use('/api', positionRoutes)
 app.use('/api', playerTagRoutes)
 app.use('/api', rosterSlotRoutes)
 app.use('/api/managers', managerAnalyticsRoutes)
+app.use('/api/leagues', waiverRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -300,6 +302,22 @@ httpServer.listen(PORT, () => {
           }
         }
       } catch (e) { cronLog('fantasy', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Wednesday 12:00 PM ET — Process waiver claims
+    const { processAllWaivers } = require('./services/waiverProcessor')
+    cron.schedule('0 12 * * 3', async () => {
+      cronLog('waivers', 'Processing waiver claims')
+      try {
+        const results = await processAllWaivers(cronPrisma)
+        if (results.length === 0) {
+          cronLog('waivers', 'No pending claims')
+        } else {
+          for (const r of results) {
+            cronLog('waivers', `League ${r.leagueId}: ${r.won} won, ${r.lost} lost, ${r.invalid} invalid`)
+          }
+        }
+      } catch (e) { cronLog('waivers', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
     // Monday 2:00 AM ET — Weekly analytics refresh + view refresh

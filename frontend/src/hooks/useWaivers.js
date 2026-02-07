@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import api from '../services/api'
 import { useNotifications } from '../context/NotificationContext'
 
-export const useWaivers = (leagueId, teamId) => {
+export const useWaivers = (leagueId, teamId, waiverType) => {
   const { notify } = useNotifications()
   const [availablePlayers, setAvailablePlayers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -10,6 +10,13 @@ export const useWaivers = (leagueId, teamId) => {
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [tour, setTour] = useState('All')
+
+  // Waiver-specific state
+  const [pendingClaims, setPendingClaims] = useState([])
+  const [recentResults, setRecentResults] = useState([])
+  const [budget, setBudget] = useState(null)
+
+  const isWaiverMode = waiverType && waiverType !== 'none'
 
   const fetchAvailable = useCallback(async () => {
     if (!leagueId) return
@@ -31,10 +38,28 @@ export const useWaivers = (leagueId, teamId) => {
     }
   }, [leagueId, search, tour])
 
+  const fetchClaims = useCallback(async () => {
+    if (!leagueId || !isWaiverMode) return
+
+    try {
+      const data = await api.getWaiverClaims(leagueId)
+      setPendingClaims(data.pendingClaims || [])
+      setRecentResults(data.recentResults || [])
+      setBudget(data.budget || null)
+    } catch (err) {
+      console.error('Failed to fetch waiver claims:', err.message)
+    }
+  }, [leagueId, isWaiverMode])
+
   useEffect(() => {
     fetchAvailable()
   }, [fetchAvailable])
 
+  useEffect(() => {
+    fetchClaims()
+  }, [fetchClaims])
+
+  // Instant add (non-waiver leagues only)
   const claimPlayer = useCallback(async (playerId, dropPlayerId = null) => {
     if (!teamId) return
 
@@ -42,12 +67,10 @@ export const useWaivers = (leagueId, teamId) => {
       setClaimLoading(true)
       setError(null)
 
-      // If dropping a player, drop first
       if (dropPlayerId) {
         await api.dropPlayerFromRoster(teamId, dropPlayerId)
       }
 
-      // Add the new player
       const result = await api.addPlayerToRoster(teamId, playerId)
       setAvailablePlayers(prev => prev.filter(p => p.id !== playerId))
       notify.success('Player Added', `${result.rosterEntry?.player?.name || 'Player'} added to your roster`)
@@ -61,6 +84,63 @@ export const useWaivers = (leagueId, teamId) => {
     }
   }, [teamId, notify])
 
+  // Submit waiver claim (FAAB/rolling)
+  const submitClaim = useCallback(async (playerId, bidAmount = 0, dropPlayerId = null) => {
+    if (!leagueId) return
+
+    try {
+      setClaimLoading(true)
+      setError(null)
+
+      const nextPriority = pendingClaims.length
+      const result = await api.submitWaiverClaim(leagueId, {
+        playerId,
+        bidAmount,
+        dropPlayerId,
+        priority: nextPriority,
+      })
+
+      notify.success('Claim Submitted', `Waiver claim placed${bidAmount > 0 ? ` ($${bidAmount})` : ''}`)
+      await fetchClaims()
+      return result
+    } catch (err) {
+      setError(err.message)
+      notify.error('Claim Failed', err.message)
+      throw err
+    } finally {
+      setClaimLoading(false)
+    }
+  }, [leagueId, pendingClaims.length, notify, fetchClaims])
+
+  // Update a pending claim
+  const updateClaim = useCallback(async (claimId, data) => {
+    if (!leagueId) return
+
+    try {
+      const result = await api.updateWaiverClaim(leagueId, claimId, data)
+      await fetchClaims()
+      notify.success('Claim Updated', 'Your waiver claim has been updated')
+      return result
+    } catch (err) {
+      notify.error('Update Failed', err.message)
+      throw err
+    }
+  }, [leagueId, notify, fetchClaims])
+
+  // Cancel a pending claim
+  const cancelClaim = useCallback(async (claimId) => {
+    if (!leagueId) return
+
+    try {
+      await api.cancelWaiverClaim(leagueId, claimId)
+      await fetchClaims()
+      notify.success('Claim Cancelled', 'Your waiver claim has been cancelled')
+    } catch (err) {
+      notify.error('Cancel Failed', err.message)
+      throw err
+    }
+  }, [leagueId, notify, fetchClaims])
+
   return {
     availablePlayers,
     loading,
@@ -71,7 +151,17 @@ export const useWaivers = (leagueId, teamId) => {
     tour,
     setTour,
     refetch: fetchAvailable,
+    // Instant add
     claimPlayer,
+    // Waiver mode
+    submitClaim,
+    updateClaim,
+    cancelClaim,
+    pendingClaims,
+    recentResults,
+    budget,
+    isWaiverMode,
+    refetchClaims: fetchClaims,
   }
 }
 

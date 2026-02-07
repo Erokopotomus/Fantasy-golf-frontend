@@ -110,6 +110,15 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Free agent pickups are locked until the draft is complete' } })
     }
 
+    // Block instant adds when waivers are active
+    const waiverType = team.league.settings?.waiverType
+    if (waiverType && waiverType !== 'none') {
+      return res.status(400).json({
+        error: { message: 'This league uses waivers. Submit a waiver claim instead.' },
+        waiverType,
+      })
+    }
+
     // Check if player is already on active roster
     const activeRoster = team.roster.filter(r => r.isActive)
     const existingEntry = activeRoster.find(r => r.playerId === playerId)

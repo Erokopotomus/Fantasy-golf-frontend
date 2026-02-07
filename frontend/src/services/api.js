@@ -389,6 +389,35 @@ class ApiService {
     return this.request(`/managers/${userId}/achievements`)
   }
 
+  // Waivers
+  async submitWaiverClaim(leagueId, { playerId, bidAmount, dropPlayerId, priority }) {
+    return this.request(`/leagues/${leagueId}/waivers/claim`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId, bidAmount, dropPlayerId, priority }),
+    })
+  }
+
+  async getWaiverClaims(leagueId) {
+    return this.request(`/leagues/${leagueId}/waivers/claims`)
+  }
+
+  async updateWaiverClaim(leagueId, claimId, data) {
+    return this.request(`/leagues/${leagueId}/waivers/claims/${claimId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async cancelWaiverClaim(leagueId, claimId) {
+    return this.request(`/leagues/${leagueId}/waivers/claims/${claimId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async getWaiverHistory(leagueId, limit = 50) {
+    return this.request(`/leagues/${leagueId}/waivers/history?limit=${limit}`)
+  }
+
   // Sync (admin)
   async getSyncStatus(adminSecret) {
     return this.request('/sync/status', {

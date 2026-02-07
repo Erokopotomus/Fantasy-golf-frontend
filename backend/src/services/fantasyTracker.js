@@ -282,6 +282,11 @@ async function computeWeeklyResults(fantasyWeekId, prisma) {
       })
     }
 
+    // Auto-score H2H matchups for this week
+    if (ls.league.format === 'HEAD_TO_HEAD') {
+      await updateMatchupScores(ls, fantasyWeekId, fantasyWeek.weekNumber, teamResults, prisma)
+    }
+
     // Update TeamSeason aggregates
     for (const tr of teamResults) {
       const allWeekResults = await prisma.weeklyTeamResult.findMany({
@@ -469,10 +474,108 @@ async function processCompletedWeeks(prisma) {
   return results
 }
 
+/**
+ * Update H2H matchup scores from weekly team results.
+ * Sets homeScore/awayScore, determines W/L/T, updates TeamSeason records.
+ *
+ * @param {Object} leagueSeason - LeagueSeason with teamSeasons
+ * @param {string} fantasyWeekId
+ * @param {number} weekNumber
+ * @param {Array} teamResults - [{ teamId, teamSeasonId, totalPoints }]
+ * @param {import('@prisma/client').PrismaClient} prisma
+ */
+async function updateMatchupScores(leagueSeason, fantasyWeekId, weekNumber, teamResults, prisma) {
+  const pointsByTeam = new Map(teamResults.map(tr => [tr.teamId, tr.totalPoints]))
+
+  // Find matchups for this league + week (try fantasyWeekId first, fall back to week number)
+  let matchups = await prisma.matchup.findMany({
+    where: { leagueId: leagueSeason.leagueId, fantasyWeekId },
+  })
+
+  if (matchups.length === 0) {
+    matchups = await prisma.matchup.findMany({
+      where: { leagueId: leagueSeason.leagueId, week: weekNumber },
+    })
+  }
+
+  if (matchups.length === 0) return
+
+  for (const matchup of matchups) {
+    const homePoints = pointsByTeam.get(matchup.homeTeamId) ?? 0
+    const awayPoints = pointsByTeam.get(matchup.awayTeamId) ?? 0
+
+    let homeResult, awayResult
+    if (homePoints > awayPoints) {
+      homeResult = 'WIN'
+      awayResult = 'LOSS'
+    } else if (awayPoints > homePoints) {
+      homeResult = 'LOSS'
+      awayResult = 'WIN'
+    } else {
+      homeResult = 'TIE'
+      awayResult = 'TIE'
+    }
+
+    // Update matchup scores
+    await prisma.matchup.update({
+      where: { id: matchup.id },
+      data: {
+        homeScore: Math.round(homePoints * 100) / 100,
+        awayScore: Math.round(awayPoints * 100) / 100,
+        isComplete: true,
+      },
+    })
+
+    // Update WeeklyTeamResult with H2H outcome
+    const homeWtr = teamResults.find(tr => tr.teamId === matchup.homeTeamId)
+    const awayWtr = teamResults.find(tr => tr.teamId === matchup.awayTeamId)
+
+    if (homeWtr) {
+      await prisma.weeklyTeamResult.update({
+        where: { id: homeWtr.result.id },
+        data: {
+          opponentTeamId: matchup.awayTeamId,
+          opponentPoints: Math.round(awayPoints * 100) / 100,
+          result: homeResult,
+        },
+      })
+    }
+    if (awayWtr) {
+      await prisma.weeklyTeamResult.update({
+        where: { id: awayWtr.result.id },
+        data: {
+          opponentTeamId: matchup.homeTeamId,
+          opponentPoints: Math.round(homePoints * 100) / 100,
+          result: awayResult,
+        },
+      })
+    }
+
+    // Increment TeamSeason W/L/T
+    if (homeWtr) {
+      const field = homeResult === 'WIN' ? 'wins' : homeResult === 'LOSS' ? 'losses' : 'ties'
+      await prisma.teamSeason.update({
+        where: { id: homeWtr.teamSeasonId },
+        data: { [field]: { increment: 1 } },
+      })
+    }
+    if (awayWtr) {
+      const field = awayResult === 'WIN' ? 'wins' : awayResult === 'LOSS' ? 'losses' : 'ties'
+      await prisma.teamSeason.update({
+        where: { id: awayWtr.teamSeasonId },
+        data: { [field]: { increment: 1 } },
+      })
+    }
+  }
+
+  console.log(`[fantasyTracker] Updated ${matchups.length} matchup scores for league ${leagueSeason.leagueId}, week ${weekNumber}`)
+}
+
 module.exports = {
   recordWeeklyScores,
   snapshotLineups,
   computeWeeklyResults,
+  updateMatchupScores,
   recordTransaction,
   finalizeLeagueSeason,
   processCompletedWeeks,

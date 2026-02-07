@@ -847,6 +847,12 @@ router.post('/:id/matchups/generate', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: { message: 'No tournaments available for scheduling' } })
     }
 
+    // Build tournament→fantasyWeek lookup
+    const fantasyWeeks = await prisma.fantasyWeek.findMany({
+      where: { tournamentId: { in: tournaments.map(t => t.id) } },
+    })
+    const fwByTournament = Object.fromEntries(fantasyWeeks.map(fw => [fw.tournamentId, fw.id]))
+
     // Delete existing matchups
     await prisma.matchup.deleteMany({ where: { leagueId: req.params.id } })
 
@@ -876,6 +882,7 @@ router.post('/:id/matchups/generate', authenticate, async (req, res, next) => {
             week: round + 1,
             leagueId: req.params.id,
             tournamentId: tournament.id,
+            fantasyWeekId: fwByTournament[tournament.id] || null,
             homeTeamId: home,
             awayTeamId: away,
             isComplete: false,
