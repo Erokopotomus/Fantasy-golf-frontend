@@ -2,6 +2,7 @@ const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { calculateLeagueStandings, calculateTournamentScoring, calculateLiveTournamentScoring } = require('../services/scoringService')
+const { notifyLeague } = require('../services/notificationService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -335,6 +336,17 @@ router.post('/:id/join', authenticate, async (req, res, next) => {
       })
     ])
 
+    // Notify league members about new member
+    try {
+      notifyLeague(league.id, {
+        type: 'MEMBER_JOINED',
+        title: 'New Member',
+        message: `${req.user.name} joined ${league.name}`,
+        actionUrl: `/leagues/${league.id}`,
+        data: { leagueId: league.id, userId: req.user.id, userName: req.user.name },
+      }, [req.user.id], prisma).catch(err => console.error('Member joined notification failed:', err.message))
+    } catch (err) { console.error('Member joined notification failed:', err.message) }
+
     res.json({ message: 'Successfully joined league' })
   } catch (error) {
     next(error)
@@ -393,6 +405,17 @@ router.post('/join-by-code', authenticate, async (req, res, next) => {
         }
       })
     ])
+
+    // Notify league members about new member
+    try {
+      notifyLeague(league.id, {
+        type: 'MEMBER_JOINED',
+        title: 'New Member',
+        message: `${req.user.name} joined ${league.name}`,
+        actionUrl: `/leagues/${league.id}`,
+        data: { leagueId: league.id, userId: req.user.id, userName: req.user.name },
+      }, [req.user.id], prisma).catch(err => console.error('Member joined notification failed:', err.message))
+    } catch (err) { console.error('Member joined notification failed:', err.message) }
 
     res.json({ league, message: 'Successfully joined league' })
   } catch (error) {

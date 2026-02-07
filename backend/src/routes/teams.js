@@ -2,6 +2,7 @@ const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
+const { notifyLeague } = require('../services/notificationService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -167,6 +168,17 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
       leagueId: team.leagueId,
     }, prisma).catch(err => console.error('Transaction log failed:', err.message))
 
+    // Notify league about the pickup (excluding the actor)
+    try {
+      notifyLeague(team.leagueId, {
+        type: 'PLAYER_ADDED',
+        title: 'Player Added',
+        message: `${team.name} added ${rosterEntry.player.name}`,
+        actionUrl: `/leagues/${team.leagueId}/waivers`,
+        data: { playerId, playerName: rosterEntry.player.name, teamId: team.id, leagueId: team.leagueId },
+      }, [req.user.id], prisma).catch(err => console.error('Player added notification failed:', err.message))
+    } catch (err) { console.error('Player added notification failed:', err.message) }
+
     res.status(201).json({ rosterEntry })
   } catch (error) {
     next(error)
@@ -213,6 +225,17 @@ router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
       playerName: entry.player.name,
       leagueId: team.leagueId,
     }, prisma).catch(err => console.error('Transaction log failed:', err.message))
+
+    // Notify league about the drop (excluding the actor)
+    try {
+      notifyLeague(team.leagueId, {
+        type: 'PLAYER_DROPPED',
+        title: 'Player Dropped',
+        message: `${team.name} dropped ${entry.player.name}`,
+        actionUrl: `/leagues/${team.leagueId}/waivers`,
+        data: { playerId, playerName: entry.player.name, teamId: team.id, leagueId: team.leagueId },
+      }, [req.user.id], prisma).catch(err => console.error('Player dropped notification failed:', err.message))
+    } catch (err) { console.error('Player dropped notification failed:', err.message) }
 
     res.json({ message: 'Player dropped' })
   } catch (error) {

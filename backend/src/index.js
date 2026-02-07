@@ -78,8 +78,9 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Make io accessible in routes
+// Make io accessible in routes and globally for notificationService
 app.set('io', io)
+global.io = io
 
 // Routes
 app.use('/api/auth', authRoutes)
@@ -122,9 +123,26 @@ app.post('/api/seed', async (req, res) => {
   }
 })
 
-// Socket.IO connection handling
+// Socket.IO connection handling — parse JWT for user room
+const jwt = require('jsonwebtoken')
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
+
+  // Auto-join user-specific room if authenticated
+  const token = socket.handshake.auth?.token
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      socket.userId = decoded.userId || decoded.id
+      if (socket.userId) {
+        socket.join(`user-${socket.userId}`)
+        console.log(`Socket ${socket.id} joined user-${socket.userId}`)
+      }
+    } catch (err) {
+      console.log(`Socket ${socket.id} invalid token — no user room`)
+    }
+  }
 
   // Join league room
   socket.on('join-league', (leagueId) => {

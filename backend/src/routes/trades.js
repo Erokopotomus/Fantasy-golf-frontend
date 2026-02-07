@@ -2,6 +2,7 @@ const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
+const { createNotification } = require('../services/notificationService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -120,18 +121,21 @@ router.post('/', authenticate, async (req, res, next) => {
       }
     })
 
-    // Notify receiver
-    await prisma.notification.create({
-      data: {
+    // Notify receiver (socket push handled by notificationService)
+    try {
+      await createNotification({
         userId: receiverId,
         type: 'TRADE_PROPOSED',
         title: 'New Trade Proposal',
         message: `${req.user.name} has proposed a trade`,
-        data: { tradeId: trade.id, leagueId }
-      }
-    })
+        actionUrl: `/leagues/${leagueId}/trades`,
+        data: { tradeId: trade.id, leagueId },
+      }, prisma)
+    } catch (err) {
+      console.error('Trade notification failed:', err.message)
+    }
 
-    // Emit socket event
+    // Emit socket event for trade board
     const io = req.app.get('io')
     io.to(`league-${leagueId}`).emit('trade-proposed', trade)
 
@@ -253,15 +257,18 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
     logTransactions().catch(err => console.error('Trade transaction log failed:', err.message))
 
     // Notify initiator
-    await prisma.notification.create({
-      data: {
+    try {
+      await createNotification({
         userId: trade.initiatorId,
         type: 'TRADE_ACCEPTED',
         title: 'Trade Accepted',
-        message: `Your trade has been accepted!`,
-        data: { tradeId: trade.id, leagueId: trade.leagueId }
-      }
-    })
+        message: 'Your trade has been accepted!',
+        actionUrl: `/leagues/${trade.leagueId}/trades`,
+        data: { tradeId: trade.id, leagueId: trade.leagueId },
+      }, prisma)
+    } catch (err) {
+      console.error('Trade accepted notification failed:', err.message)
+    }
 
     // Emit socket event
     const io = req.app.get('io')
@@ -294,15 +301,18 @@ router.post('/:id/reject', authenticate, async (req, res, next) => {
     })
 
     // Notify initiator
-    await prisma.notification.create({
-      data: {
+    try {
+      await createNotification({
         userId: trade.initiatorId,
         type: 'TRADE_REJECTED',
         title: 'Trade Rejected',
-        message: `Your trade has been rejected`,
-        data: { tradeId: trade.id, leagueId: trade.leagueId }
-      }
-    })
+        message: 'Your trade has been rejected',
+        actionUrl: `/leagues/${trade.leagueId}/trades`,
+        data: { tradeId: trade.id, leagueId: trade.leagueId },
+      }, prisma)
+    } catch (err) {
+      console.error('Trade rejected notification failed:', err.message)
+    }
 
     res.json({ message: 'Trade rejected' })
   } catch (error) {

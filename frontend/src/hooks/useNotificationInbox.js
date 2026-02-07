@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import api from '../services/api'
+import { socketService } from '../services/socket'
 
 export const useNotificationInbox = () => {
   const [notifications, setNotifications] = useState([])
@@ -63,9 +64,23 @@ export const useNotificationInbox = () => {
     fetchNotifications()
   }, [fetchNotifications])
 
-  // Poll for new notifications every 30 seconds
+  // Listen for real-time Socket.IO notifications
   useEffect(() => {
-    const interval = setInterval(fetchNotifications, 30000)
+    const socket = socketService.getSocket()
+    if (!socket) return
+
+    const handleNotification = (notification) => {
+      setNotifications(prev => [notification, ...prev])
+      setUnreadCount(prev => prev + 1)
+    }
+
+    const unsub = socketService.onNotification(handleNotification)
+    return unsub
+  }, [])
+
+  // Polling fallback every 60s (increased from 30s since we have real-time now)
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 60000)
     return () => clearInterval(interval)
   }, [fetchNotifications])
 

@@ -37,6 +37,7 @@ import MockDraftRoom from './pages/MockDraftRoom'
 import DraftHistory from './pages/DraftHistory'
 import DraftRecap from './pages/DraftRecap'
 import MockDraftRecap from './pages/MockDraftRecap'
+import NotificationSettings from './components/settings/NotificationSettings'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -207,6 +208,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <News />
+              </ProtectedRoute>
+            }
+          />
+          {/* Notification Settings */}
+          <Route
+            path="/settings/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationSettings />
               </ProtectedRoute>
             }
           />

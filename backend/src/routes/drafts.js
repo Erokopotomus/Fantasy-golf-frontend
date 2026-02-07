@@ -12,6 +12,7 @@ const {
 } = require('../services/draftTimer')
 const { recordTransaction } = require('../services/fantasyTracker')
 const { initializeLeagueSeason } = require('../services/seasonSetup')
+const { createNotification, notifyLeague } = require('../services/notificationService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -294,6 +295,17 @@ router.post('/:id/start', authenticate, async (req, res, next) => {
       draft: { ...updatedDraft, pickDeadline, userTeamId: null }
     })
 
+    // Notify all league members that draft started
+    try {
+      await notifyLeague(draft.leagueId, {
+        type: 'DRAFT_STARTED',
+        title: 'Draft Started!',
+        message: `The draft for ${updatedDraft.league.name} has begun!`,
+        actionUrl: `/leagues/${draft.leagueId}/draft`,
+        data: { draftId: draft.id, leagueId: draft.leagueId },
+      }, [req.user.id], prisma)
+    } catch (err) { console.error('Draft started notification failed:', err.message) }
+
     // Schedule server-side auto-pick timer (snake draft)
     if (updatedDraft.league.draftType !== 'AUCTION' && pickDeadline) {
       scheduleAutoPick(draft.id, pickDeadline, io)
@@ -531,6 +543,26 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       nextDrafterTeamId = nextDrafter?.teamId || null
     }
 
+    // Notify next drafter it's their turn
+    if (!isComplete && nextDrafterTeamId) {
+      try {
+        const nextTeam = await prisma.team.findUnique({
+          where: { id: nextDrafterTeamId },
+          select: { userId: true },
+        })
+        if (nextTeam && nextTeam.userId !== req.user.id) {
+          createNotification({
+            userId: nextTeam.userId,
+            type: 'DRAFT_YOUR_TURN',
+            title: "It's Your Turn!",
+            message: `It's your turn to pick in the draft (Round ${newRound}, Pick ${newPickNumber})`,
+            actionUrl: `/leagues/${draft.leagueId}/draft`,
+            data: { draftId: draft.id, leagueId: draft.leagueId },
+          }, prisma).catch(err => console.error('Your turn notification failed:', err.message))
+        }
+      } catch (err) { console.error('Your turn notification failed:', err.message) }
+    }
+
     // Emit pick event with rich data
     const io = req.app.get('io')
     io.to(`draft-${draft.id}`).emit('draft-pick', {
@@ -545,6 +577,17 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
     if (isComplete) {
       io.to(`draft-${draft.id}`).emit('draft-completed', { draftId: draft.id })
       clearAutoPick(draft.id)
+
+      // Notify league that draft is complete
+      try {
+        notifyLeague(draft.leagueId, {
+          type: 'DRAFT_COMPLETED',
+          title: 'Draft Complete!',
+          message: `The draft for your league is complete. Good luck this season!`,
+          actionUrl: `/leagues/${draft.leagueId}`,
+          data: { draftId: draft.id, leagueId: draft.leagueId },
+        }, [], prisma).catch(err => console.error('Draft completed notification failed:', err.message))
+      } catch (err) { console.error('Draft completed notification failed:', err.message) }
     } else if (pickDeadline) {
       // Schedule server-side auto-pick for next turn
       scheduleAutoPick(draft.id, pickDeadline, io)

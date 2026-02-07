@@ -120,6 +120,12 @@ export const socketService = {
     socket?.on('new-message', callback)
     return () => socket?.off('new-message', callback)
   },
+
+  // Notification methods
+  onNotification(callback) {
+    socket?.on('notification', callback)
+    return () => socket?.off('notification', callback)
+  },
 }
 
 export default socketService

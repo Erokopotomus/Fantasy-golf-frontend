@@ -9,6 +9,7 @@
  */
 
 const { recordTransaction } = require('./fantasyTracker')
+const { createNotification, notifyLeague } = require('./notificationService')
 
 /**
  * Process all pending waiver claims for a single league.
@@ -97,6 +98,17 @@ async function processLeagueWaivers(leagueId, prisma) {
           where: { id: claim.id },
           data: { status: 'LOST', processedAt: now, notes: `Outbid by ${claims[0].team.name}` },
         })
+        // Notify claim owner
+        try {
+          await createNotification({
+            userId: claim.userId,
+            type: 'WAIVER_LOST',
+            title: 'Waiver Claim Lost',
+            message: `Your claim for ${claim.player.name} was outbid by ${claims[0].team.name}`,
+            actionUrl: `/leagues/${leagueId}/waivers`,
+            data: { playerId: claim.playerId, leagueId },
+          }, prisma)
+        } catch (err) { console.error('Waiver lost notification failed:', err.message) }
         lost++
         continue
       }
@@ -108,6 +120,17 @@ async function processLeagueWaivers(leagueId, prisma) {
           where: { id: claim.id },
           data: { status: 'INVALID', processedAt: now, notes: validationError },
         })
+        // Notify claim owner
+        try {
+          await createNotification({
+            userId: claim.userId,
+            type: 'WAIVER_INVALID',
+            title: 'Waiver Claim Invalid',
+            message: `Your claim for ${claim.player.name} was invalid: ${validationError}`,
+            actionUrl: `/leagues/${leagueId}/waivers`,
+            data: { playerId: claim.playerId, leagueId },
+          }, prisma)
+        } catch (err) { console.error('Waiver invalid notification failed:', err.message) }
         invalid++
         continue
       }
@@ -186,6 +209,20 @@ async function processLeagueWaivers(leagueId, prisma) {
         data: { status: 'WON', processedAt: now, notes: claim.bidAmount > 0 ? `Won with $${claim.bidAmount} bid` : 'Claim successful' },
       })
 
+      // Notify claim owner
+      try {
+        await createNotification({
+          userId: claim.userId,
+          type: 'WAIVER_WON',
+          title: 'Waiver Claim Won!',
+          message: claim.bidAmount > 0
+            ? `You won ${claim.player.name} with a $${claim.bidAmount} bid`
+            : `You successfully claimed ${claim.player.name}`,
+          actionUrl: `/leagues/${leagueId}/waivers`,
+          data: { playerId: claim.playerId, leagueId },
+        }, prisma)
+      } catch (err) { console.error('Waiver won notification failed:', err.message) }
+
       claimedPlayers.add(playerId)
       playerClaimed = true
       won++
@@ -193,6 +230,20 @@ async function processLeagueWaivers(leagueId, prisma) {
   }
 
   console.log(`[waiverProcessor] League ${league.name}: ${won} won, ${lost} lost, ${invalid} invalid`)
+
+  // League-wide summary notification
+  if (won > 0) {
+    try {
+      await notifyLeague(leagueId, {
+        type: 'WAIVER_PROCESSED',
+        title: 'Waivers Processed',
+        message: `${won} waiver claim${won > 1 ? 's' : ''} processed in ${league.name}`,
+        actionUrl: `/leagues/${leagueId}/waivers`,
+        data: { leagueId, won, lost, invalid },
+      }, [], prisma)
+    } catch (err) { console.error('Waiver summary notification failed:', err.message) }
+  }
+
   return { processed: pendingClaims.length, won, lost, invalid }
 }
 

@@ -39,6 +39,10 @@ model User {
   managerSeasonSummaries ManagerSeasonSummary[]
   mockDraftResults       MockDraftResult[]
 
+  // Push notifications
+  pushTokens              PushToken[]
+  notificationPreferences Json    @default("{}")
+
   @@map("users")
 }
 
@@ -1938,4 +1942,33 @@ model MockDraftResult {
 
   @@index([userId, completedAt])
   @@map("mock_draft_results")
+}
+
+// ============ PUSH NOTIFICATIONS ============
+
+model PushToken {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      PushTokenType
+  token     String
+  deviceId  String?
+  userAgent String?
+  endpoint  String?       // Web Push subscription endpoint
+  p256dh    String?       // Web Push encryption key
+  auth      String?       // Web Push auth secret
+  isActive  Boolean       @default(true)
+  lastUsed  DateTime      @default(now())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([userId, token])
+  @@index([userId, isActive])
+  @@map("push_tokens")
+}
+
+enum PushTokenType {
+  WEB_PUSH
+  APNS
+  FCM
 }

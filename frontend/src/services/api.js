@@ -382,6 +382,34 @@ class ApiService {
     return this.request(`/notifications/${id}`, { method: 'DELETE' })
   }
 
+  // Push Tokens
+  async registerPushToken(data) {
+    return this.request('/notifications/tokens', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async unregisterPushToken(tokenId) {
+    return this.request(`/notifications/tokens/${tokenId}`, { method: 'DELETE' })
+  }
+
+  async getPushTokens() {
+    return this.request('/notifications/tokens')
+  }
+
+  // Notification Preferences
+  async getNotificationPreferences() {
+    return this.request('/notifications/preferences')
+  }
+
+  async updateNotificationPreferences(updates) {
+    return this.request('/notifications/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    })
+  }
+
   // Search
   async search(query, options = {}) {
     const params = new URLSearchParams({ q: query, ...options }).toString()
