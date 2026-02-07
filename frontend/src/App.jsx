@@ -39,6 +39,7 @@ import DraftHistory from './pages/DraftHistory'
 import DraftRecap from './pages/DraftRecap'
 import MockDraftRecap from './pages/MockDraftRecap'
 import NotificationSettings from './components/settings/NotificationSettings'
+import AdminDashboard from './pages/AdminDashboard'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -211,6 +212,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <News />
+              </ProtectedRoute>
+            }
+          />
+          {/* Admin Dashboard */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

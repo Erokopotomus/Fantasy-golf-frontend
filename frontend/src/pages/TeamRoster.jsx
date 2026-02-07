@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useRoster } from '../hooks/useRoster'
 import { useLineup } from '../hooks/useLineup'
@@ -9,6 +9,7 @@ import Button from '../components/common/Button'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 import LineupOptimizer from '../components/roster/LineupOptimizer'
 import { track, Events } from '../services/analytics'
+import api from '../services/api'
 
 /**
  * Normalize a roster entry from the API into a flat player object
@@ -58,6 +59,42 @@ const TeamRoster = () => {
   const [showOptimizer, setShowOptimizer] = useState(false)
   const [draggedPlayerId, setDraggedPlayerId] = useState(null)
   const [dragOverZone, setDragOverZone] = useState(null) // 'active' | 'bench' | null
+
+  // Lineup lock state
+  const [lockInfo, setLockInfo] = useState(null)
+  const [countdown, setCountdown] = useState('')
+
+  useEffect(() => {
+    if (!leagueId) return
+    api.getCurrentWeek(leagueId)
+      .then(data => setLockInfo(data))
+      .catch(() => setLockInfo(null))
+  }, [leagueId])
+
+  // Countdown timer to lock time
+  useEffect(() => {
+    if (!lockInfo?.lockTime || lockInfo.isLocked) {
+      setCountdown('')
+      return
+    }
+    const tick = () => {
+      const diff = new Date(lockInfo.lockTime).getTime() - Date.now()
+      if (diff <= 0) {
+        setCountdown('')
+        setLockInfo(prev => prev ? { ...prev, isLocked: true } : null)
+        return
+      }
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      setCountdown(`${h}h ${m}m ${s}s`)
+    }
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [lockInfo?.lockTime, lockInfo?.isLocked])
+
+  const isLineupsLocked = lockInfo?.isLocked || false
 
   const maxActive = league?.settings?.maxActiveLineup || 4
   const rosterSize = league?.settings?.rosterSize || 6
@@ -277,14 +314,46 @@ const TeamRoster = () => {
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowOptimizer(!showOptimizer)}
+                disabled={isLineupsLocked}
               >
                 {showOptimizer ? 'Hide' : 'Optimize'}
               </Button>
-              <Button size="sm" onClick={startEditing}>Edit Lineup</Button>
+              <Button size="sm" onClick={startEditing} disabled={isLineupsLocked}>Edit Lineup</Button>
             </>
           )}
         </div>
       </div>
+
+      {/* Lineup Lock Banner */}
+      {isLineupsLocked && (
+        <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
+          <svg className="w-6 h-6 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <div>
+            <p className="text-red-400 font-semibold text-sm">Lineups Locked</p>
+            <p className="text-red-400/70 text-xs">
+              {lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || 'Tournament'} has started. Lineup changes are locked until this week ends.
+            </p>
+          </div>
+        </div>
+      )}
+      {!isLineupsLocked && countdown && lockInfo?.lockTime && (
+        <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-3">
+          <svg className="w-6 h-6 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="flex-1">
+            <p className="text-yellow-400 font-semibold text-sm">
+              Lineups lock in {countdown}
+            </p>
+            <p className="text-yellow-400/70 text-xs">
+              {lockInfo.tournament?.name || lockInfo.currentWeek?.name || 'Tournament'} starts {new Date(lockInfo.lockTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+            </p>
+          </div>
+          <span className="font-mono text-yellow-400 text-lg font-bold">{countdown}</span>
+        </div>
+      )}
 
       {/* Lineup progress bar (editing mode) */}
       {isEditing && (
@@ -350,6 +419,7 @@ const TeamRoster = () => {
               isActive={true}
               isEditing={isEditing}
               isDragging={draggedPlayerId === player.id}
+              isLocked={isLineupsLocked}
               onToggle={() => togglePlayer(player.id)}
               onDragStart={(e) => handleDragStart(e, player.id)}
               onDragEnd={handleDragEnd}
@@ -403,6 +473,7 @@ const TeamRoster = () => {
               isActive={false}
               isEditing={isEditing}
               isDragging={draggedPlayerId === player.id}
+              isLocked={isLineupsLocked}
               canActivate={activeSet.size < maxActive}
               onToggle={() => togglePlayer(player.id)}
               onDragStart={(e) => handleDragStart(e, player.id)}
@@ -433,7 +504,7 @@ const TeamRoster = () => {
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, isDragging, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick }) => {
   return (
     <div
       draggable={isEditing}
@@ -513,8 +584,8 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, canActivate = true
         </svg>
       )}
 
-      {/* Drop button (only in non-editing mode) */}
-      {!isEditing && (
+      {/* Drop button (only in non-editing mode, hidden when locked) */}
+      {!isEditing && !isLocked && (
         <button
           onClick={(e) => { e.stopPropagation(); onDrop() }}
           className="text-xs text-red-400/60 hover:text-red-400 transition-colors px-2 py-1"

@@ -495,6 +495,40 @@ class ApiService {
     })
   }
 
+  // Admin
+  async getAdminStats() {
+    return this.request('/admin/stats')
+  }
+
+  async getAdminUsers(params = {}) {
+    const qs = new URLSearchParams(params).toString()
+    return this.request(`/admin/users${qs ? '?' + qs : ''}`)
+  }
+
+  async getAdminLeagues(params = {}) {
+    const qs = new URLSearchParams(params).toString()
+    return this.request(`/admin/leagues${qs ? '?' + qs : ''}`)
+  }
+
+  async updateUserRole(userId, role) {
+    return this.request(`/admin/users/${userId}/role`, {
+      method: 'POST',
+      body: JSON.stringify({ role }),
+    })
+  }
+
+  // Draft - Undo Pick
+  async undoDraftPick(draftId) {
+    return this.request(`/drafts/${draftId}/undo-pick`, {
+      method: 'POST',
+    })
+  }
+
+  // League - Current Week
+  async getCurrentWeek(leagueId) {
+    return this.request(`/leagues/${leagueId}/current-week`)
+  }
+
   async triggerSync(type, dgId, adminSecret) {
     const paths = {
       players: '/sync/players',

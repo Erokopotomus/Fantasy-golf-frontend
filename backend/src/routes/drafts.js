@@ -750,6 +750,127 @@ router.post('/:id/resume', authenticate, async (req, res, next) => {
   }
 })
 
+// POST /api/drafts/:id/undo-pick - Undo last draft pick (commissioner only)
+router.post('/:id/undo-pick', authenticate, async (req, res, next) => {
+  try {
+    const draft = await prisma.draft.findUnique({
+      where: { id: req.params.id },
+      include: {
+        league: true,
+        draftOrder: { orderBy: { position: 'asc' } },
+        picks: { orderBy: { pickNumber: 'desc' }, take: 1 },
+      }
+    })
+
+    if (!draft) {
+      return res.status(404).json({ error: { message: 'Draft not found' } })
+    }
+
+    if (draft.league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can undo picks' } })
+    }
+
+    if (draft.picks.length === 0) {
+      return res.status(400).json({ error: { message: 'No picks to undo' } })
+    }
+
+    const lastPick = draft.picks[0]
+
+    // Transaction: remove pick, roster entry, transaction log, and roll back draft state
+    await prisma.$transaction(async (tx) => {
+      // Delete the draft pick
+      await tx.draftPick.delete({ where: { id: lastPick.id } })
+
+      // Delete the roster entry (match by team, player, and acquiredVia=DRAFT)
+      const rosterEntry = await tx.rosterEntry.findFirst({
+        where: { teamId: lastPick.teamId, playerId: lastPick.playerId }
+      })
+      if (rosterEntry) {
+        await tx.rosterEntry.delete({ where: { id: rosterEntry.id } })
+      }
+
+      // Delete the roster transaction log
+      const txLog = await tx.rosterTransaction.findFirst({
+        where: { teamId: lastPick.teamId, playerId: lastPick.playerId, type: 'DRAFT_PICK' },
+        orderBy: { createdAt: 'desc' },
+      })
+      if (txLog) {
+        await tx.rosterTransaction.delete({ where: { id: txLog.id } })
+      }
+
+      // Reverse TeamBudget if auction
+      if (lastPick.amount && draft.league.draftType === 'AUCTION') {
+        const currentSeason = await tx.season.findFirst({ where: { isCurrent: true } })
+        if (currentSeason) {
+          const leagueSeason = await tx.leagueSeason.findFirst({
+            where: { leagueId: draft.leagueId, seasonId: currentSeason.id },
+          })
+          if (leagueSeason) {
+            const budget = await tx.teamBudget.findUnique({
+              where: { teamId_leagueSeasonId: { teamId: lastPick.teamId, leagueSeasonId: leagueSeason.id } },
+            })
+            if (budget) {
+              await tx.teamBudget.update({
+                where: { id: budget.id },
+                data: {
+                  spent: Math.max(0, budget.spent - lastPick.amount),
+                  remaining: budget.remaining + lastPick.amount,
+                },
+              })
+            }
+          }
+        }
+      }
+
+      // Roll back draft state
+      const wasCompleted = draft.status === 'COMPLETED'
+      const prevPickNumber = lastPick.pickNumber
+      const totalTeams = draft.draftOrder.length
+      const prevRound = Math.ceil(prevPickNumber / totalTeams)
+
+      await tx.draft.update({
+        where: { id: draft.id },
+        data: {
+          currentPick: prevPickNumber,
+          currentRound: prevRound,
+          ...(wasCompleted && { status: 'IN_PROGRESS', endTime: null }),
+        },
+      })
+
+      // If draft was completed, reopen the league to DRAFTING
+      if (wasCompleted) {
+        await tx.league.update({
+          where: { id: draft.leagueId },
+          data: { status: 'DRAFTING' },
+        })
+      }
+    })
+
+    // Reschedule auto-pick timer
+    const pickDeadline = new Date(Date.now() + (draft.timePerPick * 1000)).toISOString()
+    if (draft.league.draftType !== 'AUCTION') {
+      scheduleAutoPick(draft.id, pickDeadline, req.app.get('io'))
+    }
+
+    // Emit socket event
+    const io = req.app.get('io')
+    io.to(`draft-${draft.id}`).emit('draft-pick-undone', {
+      draftId: draft.id,
+      undonePickNumber: lastPick.pickNumber,
+      undonePlayerId: lastPick.playerId,
+      pickDeadline,
+    })
+
+    res.json({
+      message: 'Pick undone',
+      undonePickNumber: lastPick.pickNumber,
+      pickDeadline,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // PATCH /api/drafts/:id/schedule - Set or update draft scheduled date (commissioner only)
 router.patch('/:id/schedule', authenticate, async (req, res, next) => {
   try {

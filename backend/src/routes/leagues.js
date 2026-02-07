@@ -1110,4 +1110,25 @@ router.get('/:id/activity', authenticate, async (req, res, next) => {
   }
 })
 
+// GET /api/leagues/:id/current-week - Get current fantasy week and lock status
+router.get('/:id/current-week', authenticate, async (req, res, next) => {
+  try {
+    const { getCurrentFantasyWeek } = require('../services/fantasyWeekHelper')
+    const weekInfo = await getCurrentFantasyWeek(req.params.id, prisma)
+
+    if (!weekInfo) {
+      return res.json({ currentWeek: null, isLocked: false, lockTime: null })
+    }
+
+    res.json({
+      currentWeek: weekInfo.fantasyWeek,
+      tournament: weekInfo.tournament,
+      isLocked: weekInfo.isLocked,
+      lockTime: weekInfo.lockTime,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

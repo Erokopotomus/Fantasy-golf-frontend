@@ -25,7 +25,7 @@ const WaiverWire = () => {
     // Waiver-specific
     submitClaim, cancelClaim, updateClaim,
     pendingClaims, recentResults, budget,
-    isWaiverMode,
+    isWaiverMode, waiverPriority,
   } = useWaivers(leagueId, teamId, waiverType)
 
   const { roster: rawRoster, refetch: refetchRoster } = useRoster(teamId)
@@ -116,9 +116,14 @@ const WaiverWire = () => {
           <h1 className="text-2xl font-bold font-display text-white">
             {isWaiverMode ? 'Waiver Wire' : 'Free Agents'}
           </h1>
-          {isWaiverMode && budget && (
+          {isWaiverMode && waiverType === 'faab' && budget && (
             <span className="px-3 py-1 bg-emerald-500/15 text-emerald-400 text-sm font-semibold rounded-full">
               ${budget.remaining} / ${budget.total}
+            </span>
+          )}
+          {isWaiverMode && waiverType === 'rolling' && waiverPriority != null && (
+            <span className="px-3 py-1 bg-blue-500/15 text-blue-400 text-sm font-semibold rounded-full">
+              Priority: #{waiverPriority}
             </span>
           )}
           {isWaiverMode && (

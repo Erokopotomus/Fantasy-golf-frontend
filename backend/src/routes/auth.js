@@ -59,6 +59,7 @@ router.post('/signup', validateSignup, async (req, res, next) => {
         email: true,
         name: true,
         avatar: true,
+        role: true,
         createdAt: true
       }
     })
@@ -106,6 +107,7 @@ router.post('/login', validateLogin, async (req, res, next) => {
         email: user.email,
         name: user.name,
         avatar: user.avatar,
+        role: user.role || 'user',
         createdAt: user.createdAt
       },
       token

@@ -192,6 +192,14 @@ export const useDraft = (leagueId) => {
       loadDraft()
     })
 
+    const unsubUndone = socketService.on ? null : null
+    // Listen for undo pick
+    const socket = socketService.getSocket()
+    const handleUndone = () => {
+      loadDraft()
+    }
+    socket?.on('draft-pick-undone', handleUndone)
+
     // Auction draft listeners
     const unsubNomination = socketService.onAuctionNomination((data) => {
       setCurrentBid({
@@ -257,6 +265,7 @@ export const useDraft = (leagueId) => {
       unsubAuctionBid()
       unsubAuctionWon()
       unsubNextNominator()
+      socket?.off('draft-pick-undone', handleUndone)
       socketService.leaveDraft(draftId)
     }
   }, [draftId, draft?.userTeamId, dispatchPick, dispatchPause, dispatchResume, loadDraft, setCurrentBid, updateBudget])
@@ -438,6 +447,19 @@ export const useDraft = (leagueId) => {
     }
   }, [draftId, setError])
 
+  const undoPick = useCallback(async () => {
+    if (!draftId) return
+    try {
+      const result = await api.undoDraftPick(draftId)
+      pickDeadlineRef.current = result.pickDeadline
+      // Socket will broadcast draft-pick-undone, triggering reload for all
+      return result
+    } catch (err) {
+      setError(err.message)
+      throw err
+    }
+  }, [draftId, setError])
+
   const handleStartDraft = useCallback(async () => {
     if (!draftId) return
     try {
@@ -484,6 +506,7 @@ export const useDraft = (leagueId) => {
     pauseDraft: handlePauseDraft,
     resumeDraft: handleResumeDraft,
     startDraft: handleStartDraft,
+    undoPick,
     getAvailablePlayers,
     getDraftedPlayers,
     handleTimeout,

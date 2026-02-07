@@ -40,6 +40,7 @@ const DraftRoomContent = () => {
     pauseDraft,
     resumeDraft,
     startDraft,
+    undoPick,
     handleTimeout,
     getAvailablePlayers,
   } = useDraft(leagueId)
@@ -170,6 +171,8 @@ const DraftRoomContent = () => {
         onResume={resumeDraft}
         onStart={startDraft}
         onTimeout={handleTimeout}
+        onUndoPick={undoPick}
+        picksCount={picks.length}
       />
 
       {/* Tab Bar */}

@@ -25,6 +25,7 @@ const rosterSlotRoutes = require('./routes/rosterSlots')
 const managerAnalyticsRoutes = require('./routes/managerAnalytics')
 const waiverRoutes = require('./routes/waivers')
 const draftHistoryRoutes = require('./routes/draftHistory')
+const adminRoutes = require('./routes/admin')
 
 const app = express()
 const httpServer = createServer(app)
@@ -101,6 +102,7 @@ app.use('/api', rosterSlotRoutes)
 app.use('/api/managers', managerAnalyticsRoutes)
 app.use('/api/leagues', waiverRoutes)
 app.use('/api/draft-history', draftHistoryRoutes)
+app.use('/api/admin', adminRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -338,6 +340,52 @@ httpServer.listen(PORT, () => {
           }
         }
       } catch (e) { cronLog('waivers', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Every 5 min — Fantasy week status transitions (UPCOMING→LOCKED, LOCKED→IN_PROGRESS)
+    cron.schedule('*/5 * * * *', async () => {
+      try {
+        const now = new Date()
+
+        // Transition UPCOMING → LOCKED when tournament starts
+        const upcomingWeeks = await cronPrisma.fantasyWeek.findMany({
+          where: { status: 'UPCOMING' },
+          include: { tournament: { select: { id: true, startDate: true, status: true } } },
+        })
+        for (const week of upcomingWeeks) {
+          const lockTime = week.tournament?.startDate || week.startDate
+          if (lockTime && now >= new Date(lockTime)) {
+            await cronPrisma.fantasyWeek.update({
+              where: { id: week.id },
+              data: { status: 'LOCKED' },
+            })
+            cronLog('weekTransition', `${week.name}: UPCOMING → LOCKED`)
+
+            // Snapshot lineups at lock time
+            try {
+              await fantasyTracker.snapshotLineups(week.id, cronPrisma)
+              cronLog('weekTransition', `Lineups snapshotted for ${week.name}`)
+            } catch (snapErr) {
+              cronLog('weekTransition', `Lineup snapshot failed: ${snapErr.message}`)
+            }
+          }
+        }
+
+        // Transition LOCKED → IN_PROGRESS when tournament is IN_PROGRESS
+        const lockedWeeks = await cronPrisma.fantasyWeek.findMany({
+          where: { status: 'LOCKED' },
+          include: { tournament: { select: { id: true, status: true } } },
+        })
+        for (const week of lockedWeeks) {
+          if (week.tournament?.status === 'IN_PROGRESS') {
+            await cronPrisma.fantasyWeek.update({
+              where: { id: week.id },
+              data: { status: 'IN_PROGRESS' },
+            })
+            cronLog('weekTransition', `${week.name}: LOCKED → IN_PROGRESS`)
+          }
+        }
+      } catch (e) { cronLog('weekTransition', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
     // Monday 2:00 AM ET — Weekly analytics refresh + view refresh

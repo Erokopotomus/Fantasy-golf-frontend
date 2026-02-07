@@ -12,6 +12,8 @@ const DraftHeader = ({
   onResume,
   onStart,
   onTimeout,
+  onUndoPick,
+  picksCount = 0,
 }) => {
   const draftType = draft?.type || 'snake'
   const currentRound = currentPick?.round || 1
@@ -95,9 +97,19 @@ const DraftHeader = ({
                     Resume Draft
                   </Button>
                 ) : isInProgress ? (
-                  <Button size="sm" variant="secondary" onClick={onPause}>
-                    Pause Draft
-                  </Button>
+                  <>
+                    <Button size="sm" variant="secondary" onClick={onPause}>
+                      Pause Draft
+                    </Button>
+                    {picksCount > 0 && onUndoPick && (
+                      <button
+                        onClick={onUndoPick}
+                        className="px-3 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition-colors"
+                      >
+                        Undo Last Pick
+                      </button>
+                    )}
+                  </>
                 ) : null}
               </div>
             )}

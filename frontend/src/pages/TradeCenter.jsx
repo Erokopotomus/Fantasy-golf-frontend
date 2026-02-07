@@ -5,13 +5,23 @@ import TradeCard from '../components/trade/TradeCard'
 import ProposeTradeModal from '../components/trade/ProposeTradeModal'
 import useTradeCenter from '../hooks/useTradeCenter'
 import { useRoster } from '../hooks/useRoster'
+import { useLeague } from '../hooks/useLeague'
 
 const TradeCenter = () => {
   const { leagueId } = useParams()
   const { pendingTrades, tradeHistory, leagueMembers, loading, error, acceptTrade, rejectTrade, cancelTrade, proposeTrade } = useTradeCenter(leagueId)
   const { roster } = useRoster(leagueId)
+  const { league } = useLeague(leagueId)
   const [showPropose, setShowPropose] = useState(false)
   const [activeTab, setActiveTab] = useState('pending')
+
+  // Trade deadline logic
+  const tradeDeadline = league?.settings?.tradeDeadline && league?.settings?.tradeDeadlineDate
+    ? new Date(league.settings.tradeDeadlineDate)
+    : null
+  const now = new Date()
+  const isDeadlinePassed = tradeDeadline && now > tradeDeadline
+  const isDeadlineApproaching = tradeDeadline && !isDeadlinePassed && (tradeDeadline - now) < 7 * 24 * 60 * 60 * 1000
 
   if (loading) {
     return (
@@ -66,11 +76,44 @@ const TradeCenter = () => {
         </div>
         <button
           onClick={() => setShowPropose(true)}
-          className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-500/90 transition-colors"
+          disabled={isDeadlinePassed}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            isDeadlinePassed
+              ? 'bg-dark-tertiary text-text-muted cursor-not-allowed'
+              : 'bg-emerald-500 text-white hover:bg-emerald-500/90'
+          }`}
         >
           Propose Trade
         </button>
       </div>
+
+      {/* Trade Deadline Banner */}
+      {isDeadlinePassed && (
+        <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
+          <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <div>
+            <p className="text-red-400 font-semibold text-sm">Trade Deadline Passed</p>
+            <p className="text-red-400/70 text-xs">
+              The trade deadline was {tradeDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}. No more trades can be proposed or accepted.
+            </p>
+          </div>
+        </div>
+      )}
+      {isDeadlineApproaching && (
+        <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-3">
+          <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-yellow-400 font-semibold text-sm">Trade Deadline Approaching</p>
+            <p className="text-yellow-400/70 text-xs">
+              Deadline: {tradeDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">

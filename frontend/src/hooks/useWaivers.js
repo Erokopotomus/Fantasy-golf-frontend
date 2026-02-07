@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import api from '../services/api'
 import { useNotifications } from '../context/NotificationContext'
+import { useLeague } from './useLeague'
 
 export const useWaivers = (leagueId, teamId, waiverType) => {
   const { notify } = useNotifications()
+  const { league } = useLeague(leagueId)
   const [availablePlayers, setAvailablePlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [claimLoading, setClaimLoading] = useState(false)
@@ -17,6 +19,15 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
   const [budget, setBudget] = useState(null)
 
   const isWaiverMode = waiverType && waiverType !== 'none'
+
+  // Derive waiver priority for rolling waivers
+  const waiverPriority = useMemo(() => {
+    if (waiverType !== 'rolling' || !teamId) return null
+    const order = league?.settings?.waiverPriorityOrder
+    if (!Array.isArray(order)) return null
+    const idx = order.indexOf(teamId)
+    return idx === -1 ? null : idx + 1
+  }, [waiverType, teamId, league?.settings?.waiverPriorityOrder])
 
   const fetchAvailable = useCallback(async () => {
     if (!leagueId) return
@@ -161,6 +172,7 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
     recentResults,
     budget,
     isWaiverMode,
+    waiverPriority,
     refetchClaims: fetchClaims,
   }
 }

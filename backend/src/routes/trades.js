@@ -76,6 +76,14 @@ router.post('/', authenticate, async (req, res, next) => {
   try {
     const { leagueId, receiverId, senderPlayers, receiverPlayers, message } = req.body
 
+    // Check trade deadline
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { settings: true } })
+    if (league?.settings?.tradeDeadline && league.settings.tradeDeadlineDate) {
+      if (new Date() > new Date(league.settings.tradeDeadlineDate)) {
+        return res.status(403).json({ error: { message: 'The trade deadline has passed for this league' } })
+      }
+    }
+
     // Get teams
     const senderTeam = await prisma.team.findUnique({
       where: {
@@ -152,7 +160,8 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
       where: { id: req.params.id },
       include: {
         senderTeam: true,
-        receiverTeam: true
+        receiverTeam: true,
+        league: { select: { settings: true } }
       }
     })
 
@@ -166,6 +175,13 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
 
     if (trade.status !== 'PENDING') {
       return res.status(400).json({ error: { message: 'Trade is not pending' } })
+    }
+
+    // Check trade deadline
+    if (trade.league?.settings?.tradeDeadline && trade.league.settings.tradeDeadlineDate) {
+      if (new Date() > new Date(trade.league.settings.tradeDeadlineDate)) {
+        return res.status(403).json({ error: { message: 'The trade deadline has passed for this league' } })
+      }
     }
 
     // Execute the trade - swap players

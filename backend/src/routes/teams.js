@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
 const { notifyLeague } = require('../services/notificationService')
+const { getCurrentFantasyWeek } = require('../services/fantasyWeekHelper')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -299,6 +300,21 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
 
     if (team.userId !== req.user.id) {
       return res.status(403).json({ error: { message: 'Not authorized' } })
+    }
+
+    // Check lineup lock
+    try {
+      const weekInfo = await getCurrentFantasyWeek(team.leagueId, prisma)
+      if (weekInfo?.isLocked) {
+        const tournamentName = weekInfo.tournament?.name || weekInfo.fantasyWeek?.name || 'the tournament'
+        return res.status(403).json({
+          error: { message: `Lineups are locked — ${tournamentName} has started` },
+          lockInfo: weekInfo,
+        })
+      }
+    } catch (lockErr) {
+      // Don't block lineup changes if the lock check fails (e.g. no seasons set up yet)
+      console.error('Lineup lock check failed:', lockErr.message)
     }
 
     // Check max active from league settings

@@ -21,6 +21,7 @@ const authenticate = async (req, res, next) => {
         email: true,
         name: true,
         avatar: true,
+        role: true,
         createdAt: true
       }
     })
