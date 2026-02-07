@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import api from '../services/api'
+import useDraftSounds from '../hooks/useDraftSounds'
 
 // Inline player data for mock drafts (no API dependency)
 const MOCK_PLAYERS = [
@@ -283,7 +284,6 @@ const MockDraftRoom = () => {
   const [chatMessages, setChatMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
   const [draftSpeed, setDraftSpeed] = useState('fast')
-  const aiPickingRef = useRef(false)
   const timerRef = useRef(null)
   const boardRef = useRef(null)
   const chatEndRef = useRef(null)
@@ -305,6 +305,13 @@ const MockDraftRoom = () => {
   const nominateRef = useRef(null)
   const placeBidRef = useRef(null)
   const awardPlayerRef = useRef(null)
+
+  // Sound effects
+  const { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playBid, playDraftComplete } = useDraftSounds()
+
+  // Auto-pick
+  const [autoPick, setAutoPick] = useState(() => sessionStorage.getItem('mockDraftAutoPick') === 'true')
+  const autoPickRef = useRef(autoPick)
 
   // Load config
   useEffect(() => {
@@ -426,6 +433,7 @@ const MockDraftRoom = () => {
     if (!config) return
 
     clearInterval(timerRef.current)
+    playPick()
 
     setPicks(prev => {
       const pickNumber = prev.length
@@ -456,7 +464,7 @@ const MockDraftRoom = () => {
     })
 
     setQueue(prev => prev.filter(q => q.id !== player.id))
-  }, [config])
+  }, [config, playPick])
 
   // Auction: nominate a player with a starting bid
   const handleNominate = useCallback((player, startBid) => {
@@ -485,13 +493,15 @@ const MockDraftRoom = () => {
     currentNomRef.current = updated
     setTimer(15)
     setNomBidInput(amount + 1)
-  }, [userTeamId])
+    playBid()
+  }, [userTeamId, playBid])
 
   // Auction: award current nomination to highest bidder
   const handleAwardPlayer = useCallback(() => {
     const nom = currentNomRef.current
     if (!nom || !config) return
     clearInterval(timerRef.current)
+    playPick()
     setBudgets(prev => {
       const updated = { ...prev, [nom.highBidderTeamId]: prev[nom.highBidderTeamId] - nom.currentBid }
       budgetsRef.current = updated
@@ -530,7 +540,7 @@ const MockDraftRoom = () => {
       nominatorIndexRef.current = next
       return next
     })
-  }, [config])
+  }, [config, playPick])
 
   // Keep refs in sync
   makePickRef.current = handleMakePick
@@ -543,6 +553,60 @@ const MockDraftRoom = () => {
   nominateRef.current = handleNominate
   placeBidRef.current = handlePlaceBid
   awardPlayerRef.current = handleAwardPlayer
+  autoPickRef.current = autoPick
+
+  // Sound: your turn alert
+  const prevIsUserTurnRef = useRef(false)
+  const prevIsUserNominatorRef = useRef(false)
+  useEffect(() => {
+    if (isUserTurn && !prevIsUserTurnRef.current) playYourTurn()
+    prevIsUserTurnRef.current = isUserTurn
+  }, [isUserTurn, playYourTurn])
+  useEffect(() => {
+    if (isUserNominator && !prevIsUserNominatorRef.current) playYourTurn()
+    prevIsUserNominatorRef.current = isUserNominator
+  }, [isUserNominator, playYourTurn])
+
+  // Sound: draft complete
+  const prevIsCompleteRef = useRef(false)
+  useEffect(() => {
+    if (isComplete && !prevIsCompleteRef.current) playDraftComplete()
+    prevIsCompleteRef.current = isComplete
+  }, [isComplete, playDraftComplete])
+
+  // Auto-pick: snake — immediately pick after short delay when it's user's turn
+  useEffect(() => {
+    if (!autoPickRef.current || !isUserTurn || !isStarted || isPaused || isComplete) return
+    const timeout = setTimeout(() => {
+      if (!autoPickRef.current) return
+      const draftedSet = new Set(picksRef.current.map(p => p.playerId))
+      const queuePick = queueRef.current.find(q => !draftedSet.has(q.id))
+      if (queuePick) {
+        makePickRef.current?.(queuePick)
+      } else {
+        const best = allPlayersRef.current.find(p => !draftedSet.has(p.id))
+        if (best) makePickRef.current?.(best)
+      }
+    }, 500)
+    return () => clearTimeout(timeout)
+  }, [isUserTurn, isStarted, isPaused, isComplete])
+
+  // Auto-pick: auction nomination — auto-nominate when it's user's turn to nominate
+  useEffect(() => {
+    if (!autoPickRef.current || !isUserNominator || !isStarted || isPaused || isComplete) return
+    const timeout = setTimeout(() => {
+      if (!autoPickRef.current || auctionPhaseRef.current !== 'nominating') return
+      const draftedSet = new Set(picksRef.current.map(p => p.playerId))
+      const queuePick = queueRef.current.find(q => !draftedSet.has(q.id))
+      if (queuePick) {
+        nominateRef.current?.(queuePick, 1)
+      } else {
+        const best = allPlayersRef.current.find(p => !draftedSet.has(p.id))
+        if (best) nominateRef.current?.(best, 1)
+      }
+    }, 500)
+    return () => clearTimeout(timeout)
+  }, [isUserNominator, isStarted, isPaused, isComplete])
 
   // Universal pick timer — handles snake picks and auction nomination/bidding phases
   useEffect(() => {
@@ -582,20 +646,28 @@ const MockDraftRoom = () => {
         }, 1000)
       }
     } else {
-      // Snake draft timer
-      setTimer(config?.pickTimer || 90)
+      // Snake draft timer — short timer for AI turns as safety net
+      setTimer(isUserTurn ? (config?.pickTimer || 90) : 8)
       timerRef.current = setInterval(() => {
         setTimer(prev => {
           if (prev <= 1) {
             clearInterval(timerRef.current)
+            // Auto-pick: user timeout OR AI fallback (AI effect should have picked, this is safety net)
+            const draftedSet = new Set(picksRef.current.map(p => p.playerId))
             if (isUserTurn) {
-              const draftedSet = new Set(picksRef.current.map(p => p.playerId))
               const queuePick = queueRef.current.find(q => !draftedSet.has(q.id))
               if (queuePick) {
                 makePickRef.current?.(queuePick)
               } else {
                 const best = allPlayersRef.current.find(p => !draftedSet.has(p.id))
                 if (best) makePickRef.current?.(best)
+              }
+            } else {
+              // AI safety net: force pick if AI effect didn't fire
+              const available = allPlayersRef.current.filter(p => !draftedSet.has(p.id))
+              if (available.length > 0) {
+                const topN = Math.min(4, available.length)
+                makePickRef.current?.(available[Math.floor(Math.random() * topN)])
               }
             }
             return 0
@@ -608,37 +680,32 @@ const MockDraftRoom = () => {
     return () => clearInterval(timerRef.current)
   }, [isUserTurn, isStarted, isPaused, isComplete, currentPickNumber, isAuction, auctionPhase])
 
-  // Snake AI picks — use picksRef inside timeout to avoid stale closure issues
+  // Sound: timer warning tick at 10s when it's user's action
   useEffect(() => {
-    if (isAuction) return // auction has its own AI logic
-    if (!isStarted || isPaused || isComplete || isUserTurn || aiPickingRef.current) return
-    if (!config || currentPickNumber >= totalPicks) return
+    if (timer === 10 && isStarted && !isPaused && (isUserTurn || isUserNominator || (isAuction && auctionPhase === 'bidding'))) {
+      playTimerWarning()
+    }
+  }, [timer, isStarted, isPaused, isUserTurn, isUserNominator, isAuction, auctionPhase, playTimerWarning])
 
-    aiPickingRef.current = true
+  // Snake AI picks — cleanup-based cancellation (no ref guard needed)
+  useEffect(() => {
+    if (isAuction) return
+    if (!isStarted || isPaused || isComplete || isUserTurn) return
+    if (!config || currentPickNumber >= totalPicks) return
 
     const speedCfg = SPEED_CONFIG[draftSpeedRef.current]
     const aiDelay = speedCfg.aiDelay + Math.random() * speedCfg.aiJitter
     const timeout = setTimeout(() => {
       const draftedSet = new Set(picksRef.current.map(p => p.playerId))
       const available = allPlayersRef.current.filter(p => !draftedSet.has(p.id))
-
-      if (available.length === 0) {
-        aiPickingRef.current = false
-        return
-      }
+      if (available.length === 0) return
 
       const topN = Math.min(4, available.length)
-      const randomIndex = Math.floor(Math.random() * topN)
-      const selectedPlayer = available[randomIndex]
-
+      const selectedPlayer = available[Math.floor(Math.random() * topN)]
       makePickRef.current?.(selectedPlayer)
-      aiPickingRef.current = false
     }, aiDelay)
 
-    return () => {
-      clearTimeout(timeout)
-      aiPickingRef.current = false
-    }
+    return () => clearTimeout(timeout)
   }, [currentPickNumber, isStarted, isPaused, isComplete, isUserTurn, config, totalPicks, isAuction])
 
   // Auction AI: auto-nominate when it's an AI team's turn
@@ -710,6 +777,7 @@ const MockDraftRoom = () => {
   }, [isAuction, isStarted, isPaused, isComplete, auctionPhase, currentNom, config])
 
   const handleStartDraft = () => {
+    initSounds()
     setIsStarted(true)
     setIsPaused(false)
     if (config?.draftType === 'auction') {
@@ -723,8 +791,6 @@ const MockDraftRoom = () => {
   const handleTogglePause = useCallback(() => {
     setIsPaused(prev => {
       if (!prev) {
-        // Pausing — reset aiPickingRef so it doesn't get stuck
-        aiPickingRef.current = false
         clearInterval(timerRef.current)
       }
       return !prev
@@ -1047,6 +1113,28 @@ const MockDraftRoom = () => {
                     ))}
                   </div>
 
+                  {/* Sound toggle */}
+                  <button
+                    onClick={toggleSound}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      soundEnabled
+                        ? 'bg-dark-primary text-text-secondary hover:text-white border border-dark-border'
+                        : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    }`}
+                    title={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
+                  >
+                    {soundEnabled ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                      </svg>
+                    )}
+                  </button>
+
                   {/* Pause/Play button */}
                   <button
                     onClick={handleTogglePause}
@@ -1143,7 +1231,7 @@ const MockDraftRoom = () => {
             </div>
           )}
 
-          {/* Mobile speed selector */}
+          {/* Mobile speed selector + sound toggle */}
           {isStarted && (
             <div className="sm:hidden flex items-center justify-center gap-1 mt-1.5">
               <span className="text-text-muted text-[10px] mr-1">Speed:</span>
@@ -1164,6 +1252,22 @@ const MockDraftRoom = () => {
                   {s.label}
                 </button>
               ))}
+              <span className="text-dark-border mx-1">|</span>
+              <button
+                onClick={toggleSound}
+                className={`p-0.5 rounded transition-colors ${soundEnabled ? 'text-text-muted' : 'text-red-400'}`}
+              >
+                {soundEnabled ? (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M11 5L6 9H2v6h4l5 4V5z" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                  </svg>
+                )}
+              </button>
             </div>
           )}
         </div>
@@ -1573,7 +1677,35 @@ const MockDraftRoom = () => {
             {/* === QUEUE TAB === */}
             {(activeTab === 'queue' || (activeTab === 'board' && bottomTab === 'queue')) && (
               <div className="h-full flex flex-col">
-                <div className="flex-1 overflow-y-auto min-h-0 p-3">
+                {/* Auto-pick toggle */}
+                <div className="flex-shrink-0 px-3 pt-3 pb-1">
+                  <div className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg border border-dark-border">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Auto-Pick</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setAutoPick(prev => {
+                          const next = !prev
+                          autoPickRef.current = next
+                          sessionStorage.setItem('mockDraftAutoPick', String(next))
+                          return next
+                        })
+                      }}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                        autoPick ? 'bg-accent-green' : 'bg-dark-tertiary'
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                        autoPick ? 'translate-x-5' : 'translate-x-0.5'
+                      }`} />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto min-h-0 p-3 pt-2">
                   {queue.length === 0 ? (
                     <div className="text-center py-12">
                       <svg className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
