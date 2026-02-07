@@ -31,6 +31,11 @@ router.get('/', authenticate, async (req, res, next) => {
             wins: true,
             losses: true
           }
+        },
+        drafts: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { id: true, status: true, scheduledFor: true, draftType: true }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -420,6 +425,7 @@ router.post('/:id/draft', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: { message: 'An active draft already exists for this league' } })
     }
 
+    const { scheduledFor } = req.body || {}
     const timePerPick = league.settings?.timePerPick || 90
     const totalRounds = league.settings?.rosterSize || 6
 
@@ -429,6 +435,7 @@ router.post('/:id/draft', authenticate, async (req, res, next) => {
         timePerPick,
         totalRounds,
         status: 'SCHEDULED',
+        ...(scheduledFor && { scheduledFor: new Date(scheduledFor) }),
       },
       include: {
         league: {

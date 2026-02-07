@@ -707,6 +707,45 @@ router.post('/:id/resume', authenticate, async (req, res, next) => {
   }
 })
 
+// PATCH /api/drafts/:id/schedule - Set or update draft scheduled date (commissioner only)
+router.patch('/:id/schedule', authenticate, async (req, res, next) => {
+  try {
+    const { scheduledFor } = req.body
+
+    const draft = await prisma.draft.findUnique({
+      where: { id: req.params.id },
+      include: { league: true }
+    })
+
+    if (!draft) {
+      return res.status(404).json({ error: { message: 'Draft not found' } })
+    }
+
+    if (draft.league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can schedule the draft' } })
+    }
+
+    if (draft.status === 'IN_PROGRESS' || draft.status === 'COMPLETED') {
+      return res.status(400).json({ error: { message: 'Cannot schedule a draft that is in progress or completed' } })
+    }
+
+    const updatedDraft = await prisma.draft.update({
+      where: { id: draft.id },
+      data: { scheduledFor: scheduledFor ? new Date(scheduledFor) : null }
+    })
+
+    const io = req.app.get('io')
+    io.to(`league-${draft.leagueId}`).emit('draft-scheduled', {
+      draftId: draft.id,
+      scheduledFor: updatedDraft.scheduledFor
+    })
+
+    res.json({ draft: updatedDraft })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Helper: Calculate pick deadline based on draft state
 function getPickDeadline(draft) {
   if (draft.status !== 'IN_PROGRESS') return null

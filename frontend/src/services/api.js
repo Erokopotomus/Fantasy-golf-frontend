@@ -212,9 +212,17 @@ class ApiService {
     return this.request(`/drafts/league/${leagueId}`)
   }
 
-  async createDraft(leagueId) {
+  async createDraft(leagueId, { scheduledFor } = {}) {
     return this.request(`/leagues/${leagueId}/draft`, {
       method: 'POST',
+      body: JSON.stringify({ scheduledFor }),
+    })
+  }
+
+  async scheduleDraft(draftId, scheduledFor) {
+    return this.request(`/drafts/${draftId}/schedule`, {
+      method: 'PATCH',
+      body: JSON.stringify({ scheduledFor }),
     })
   }
 

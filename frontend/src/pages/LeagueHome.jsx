@@ -9,6 +9,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import ChatPanel from '../components/chat/ChatPanel'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
+import DraftCountdown from '../components/DraftCountdown'
 
 const LeagueHome = () => {
   const { leagueId } = useParams()
@@ -20,6 +21,9 @@ const LeagueHome = () => {
   const [detailedLeague, setDetailedLeague] = useState(null)
   const [detailLoading, setDetailLoading] = useState(true)
   const [currentTournament, setCurrentTournament] = useState(null)
+  const [editingDraftDate, setEditingDraftDate] = useState(false)
+  const [draftDateInput, setDraftDateInput] = useState('')
+  const [savingDate, setSavingDate] = useState(false)
 
   // Fetch detailed league data (with full members, teams, rosters)
   useEffect(() => {
@@ -58,6 +62,37 @@ const LeagueHome = () => {
       alert(err.message)
     } finally {
       setCreatingDraft(false)
+    }
+  }
+
+  const handleSaveDraftDate = async () => {
+    if (!latestDraft?.id || !draftDateInput) return
+    try {
+      setSavingDate(true)
+      await api.scheduleDraft(latestDraft.id, new Date(draftDateInput).toISOString())
+      // Refresh league data
+      const data = await api.getLeague(leagueId)
+      setDetailedLeague(data.league || data)
+      setEditingDraftDate(false)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setSavingDate(false)
+    }
+  }
+
+  const handleClearDraftDate = async () => {
+    if (!latestDraft?.id) return
+    try {
+      setSavingDate(true)
+      await api.scheduleDraft(latestDraft.id, null)
+      const data = await api.getLeague(leagueId)
+      setDetailedLeague(data.league || data)
+      setEditingDraftDate(false)
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setSavingDate(false)
     }
   }
 
@@ -256,18 +291,71 @@ const LeagueHome = () => {
               {isDraftScheduledOrInProgress && (
                 <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-dark-secondary">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-lg font-semibold text-white">
                         {draftStatus === 'SCHEDULED' ? 'Draft Scheduled' :
                          draftStatus === 'PAUSED' ? 'Draft Paused' : 'Draft In Progress'}
                       </h3>
-                      <p className="text-text-secondary text-sm">
-                        {draftStatus === 'SCHEDULED'
-                          ? 'The draft is set up and ready to start.'
-                          : draftStatus === 'PAUSED'
-                          ? 'The commissioner has paused the draft.'
-                          : 'The draft is live! Join the draft room now.'}
-                      </p>
+                      {draftStatus === 'SCHEDULED' && latestDraft?.scheduledFor && !editingDraftDate && (
+                        <div className="mt-3">
+                          <DraftCountdown scheduledFor={latestDraft.scheduledFor} />
+                          {isCommissioner && (
+                            <button
+                              onClick={() => {
+                                setDraftDateInput(new Date(latestDraft.scheduledFor).toISOString().slice(0, 16))
+                                setEditingDraftDate(true)
+                              }}
+                              className="text-xs text-text-muted hover:text-white mt-2 underline"
+                            >
+                              Change Date
+                            </button>
+                          )}
+                        </div>
+                      )}
+                      {draftStatus === 'SCHEDULED' && !latestDraft?.scheduledFor && !editingDraftDate && (
+                        <div className="mt-1">
+                          {isCommissioner ? (
+                            <button
+                              onClick={() => setEditingDraftDate(true)}
+                              className="text-sm text-accent-green hover:underline"
+                            >
+                              Set a draft date & time
+                            </button>
+                          ) : (
+                            <p className="text-text-muted text-sm">No draft date set yet</p>
+                          )}
+                        </div>
+                      )}
+                      {draftStatus === 'SCHEDULED' && editingDraftDate && isCommissioner && (
+                        <div className="mt-3 flex flex-wrap items-end gap-2">
+                          <input
+                            type="datetime-local"
+                            value={draftDateInput}
+                            onChange={(e) => setDraftDateInput(e.target.value)}
+                            className="bg-dark-primary border border-dark-border rounded-lg px-3 py-1.5 text-sm text-white"
+                          />
+                          <Button size="sm" onClick={handleSaveDraftDate} disabled={savingDate || !draftDateInput}>
+                            {savingDate ? 'Saving...' : 'Save'}
+                          </Button>
+                          {latestDraft?.scheduledFor && (
+                            <Button size="sm" variant="secondary" onClick={handleClearDraftDate} disabled={savingDate}>
+                              Clear
+                            </Button>
+                          )}
+                          <button
+                            onClick={() => setEditingDraftDate(false)}
+                            className="text-xs text-text-muted hover:text-white"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                      {draftStatus === 'PAUSED' && (
+                        <p className="text-text-secondary text-sm">The commissioner has paused the draft.</p>
+                      )}
+                      {draftStatus === 'IN_PROGRESS' && (
+                        <p className="text-text-secondary text-sm">The draft is live! Join the draft room now.</p>
+                      )}
                     </div>
                     <Button onClick={() => navigate(`/leagues/${leagueId}/draft`)}>
                       Enter Draft Room

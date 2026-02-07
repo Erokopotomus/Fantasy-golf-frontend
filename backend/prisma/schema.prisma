@@ -767,6 +767,7 @@ model Draft {
   status       DraftStatus @default(SCHEDULED)
   currentPick  Int         @default(1)
   currentRound Int         @default(1)
+  scheduledFor DateTime?
   startTime    DateTime?
   endTime      DateTime?
 

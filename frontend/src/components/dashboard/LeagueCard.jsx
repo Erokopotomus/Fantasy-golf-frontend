@@ -1,5 +1,6 @@
 import Card from '../common/Card'
 import Button from '../common/Button'
+import DraftCountdown from '../DraftCountdown'
 
 const formatMap = {
   FULL_LEAGUE: 'Full League',
@@ -113,13 +114,19 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           </div>
         </div>
       ) : isPreDraft ? (
-        <div className="bg-dark-primary rounded-lg p-3 mb-4 text-center">
-          <p className="text-text-muted text-sm">Draft hasn't started yet</p>
-          <p className="text-text-secondary text-xs mt-1">
-            {memberCount < maxMembers
-              ? `Waiting for ${maxMembers - memberCount} more member${maxMembers - memberCount !== 1 ? 's' : ''}`
-              : 'Ready to draft!'}
-          </p>
+        <div className="bg-dark-primary rounded-lg p-3 mb-4">
+          {league.drafts?.[0]?.scheduledFor ? (
+            <DraftCountdown compact scheduledFor={league.drafts[0].scheduledFor} />
+          ) : (
+            <div className="text-center">
+              <p className="text-text-muted text-sm">Draft hasn't started yet</p>
+              <p className="text-text-secondary text-xs mt-1">
+                {memberCount < maxMembers
+                  ? `Waiting for ${maxMembers - memberCount} more member${maxMembers - memberCount !== 1 ? 's' : ''}`
+                  : 'Ready to draft!'}
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-dark-primary rounded-lg p-3 mb-4">
