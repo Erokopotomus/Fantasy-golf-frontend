@@ -38,7 +38,7 @@ const PickAnnouncement = ({ pick, isUserPick }) => {
       >
         <div className="text-center">
           <p className={`text-sm font-medium mb-2 ${isUserPick ? 'text-gold' : 'text-orange'}`}>
-            {isUserPick ? 'YOUR PICK!' : `PICK #${pick.pickNumber}`}
+            {pick.isAutoPick ? 'AUTO-PICK' : isUserPick ? 'YOUR PICK!' : `PICK #${pick.pickNumber}`}
           </p>
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="text-4xl">{pick.playerFlag}</span>
@@ -51,6 +51,7 @@ const PickAnnouncement = ({ pick, isUserPick }) => {
             <span>Round {pick.round}</span>
             <span>•</span>
             <span>{pick.teamName}</span>
+            {pick.isAutoPick && <span className="text-yellow-400 text-xs font-mono">(timer expired)</span>}
           </div>
         </div>
       </div>

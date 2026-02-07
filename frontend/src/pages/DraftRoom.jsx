@@ -100,9 +100,17 @@ const DraftRoomContent = () => {
     }
   }, [placeBid])
 
+  const [hasPassed, setHasPassed] = useState(false)
+
+  // Reset pass state when a new nomination starts
+  useEffect(() => {
+    if (currentBid?.playerId) {
+      setHasPassed(false)
+    }
+  }, [currentBid?.playerId])
+
   const handlePass = useCallback(() => {
-    // In a real app, this would send a pass action to the server
-    console.log('Passed on bid')
+    setHasPassed(true)
   }, [])
 
   const isCommissioner = league?.ownerId === user?.id
@@ -208,6 +216,7 @@ const DraftRoomContent = () => {
                 userBudget={userBudget}
                 isUserTurn={isUserTurn}
                 isNominating={isNominating}
+                hasPassed={hasPassed}
                 onBid={handleBid}
                 onPass={handlePass}
                 onNominate={handleNominate}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Card from '../common/Card'
 import Button from '../common/Button'
 
@@ -7,6 +7,7 @@ const BidPanel = ({
   userBudget,
   isUserTurn,
   isNominating,
+  hasPassed,
   onBid,
   onPass,
   onNominate,
@@ -16,6 +17,8 @@ const BidPanel = ({
 }) => {
   const [bidAmount, setBidAmount] = useState(1)
   const [nominateBid, setNominateBid] = useState(1)
+  const [bidTimer, setBidTimer] = useState(0)
+  const bidTimerRef = useRef(null)
 
   const minBid = (currentBid?.amount || 0) + 1
   const maxBid = userBudget || 200
@@ -26,6 +29,23 @@ const BidPanel = ({
       setBidAmount(currentBid.amount + 1)
     }
   }, [currentBid?.amount])
+
+  // Bid countdown timer from server deadline
+  useEffect(() => {
+    if (bidTimerRef.current) clearInterval(bidTimerRef.current)
+    if (!currentBid?.deadline) {
+      setBidTimer(0)
+      return
+    }
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((new Date(currentBid.deadline) - Date.now()) / 1000))
+      setBidTimer(remaining)
+      if (remaining <= 0 && bidTimerRef.current) clearInterval(bidTimerRef.current)
+    }
+    tick()
+    bidTimerRef.current = setInterval(tick, 1000)
+    return () => clearInterval(bidTimerRef.current)
+  }, [currentBid?.deadline])
 
   const getTeamName = (teamId) => {
     if (teamId === userTeamId) return 'You'
@@ -129,16 +149,28 @@ const BidPanel = ({
 
   // Active bidding
   const isHighBidder = currentBid.highBidderTeamId === userTeamId
-  const bidDeadline = currentBid.deadline ? new Date(currentBid.deadline) : null
   const player = currentBid.player
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold font-display text-white">Current Bid</h3>
-        <div className="text-right">
-          <p className="text-text-muted text-xs">Your Budget</p>
-          <p className="text-gold font-bold">${userBudget}</p>
+        <div className="flex items-center gap-4">
+          {/* Bid Countdown */}
+          {bidTimer > 0 && (
+            <div className="text-center">
+              <p className="text-text-muted text-[10px] uppercase tracking-wider">Time</p>
+              <p className={`text-lg font-mono font-bold ${
+                bidTimer <= 5 ? 'text-red-500 animate-pulse' : bidTimer <= 10 ? 'text-yellow-400' : 'text-gold'
+              }`}>
+                {bidTimer}s
+              </p>
+            </div>
+          )}
+          <div className="text-right">
+            <p className="text-text-muted text-xs">Your Budget</p>
+            <p className="text-gold font-bold">${userBudget}</p>
+          </div>
         </div>
       </div>
 
@@ -211,23 +243,29 @@ const BidPanel = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
-        <Button
-          variant="secondary"
-          className="flex-1"
-          onClick={onPass}
-          disabled={isHighBidder}
-        >
-          Pass
-        </Button>
-        <Button
-          className="flex-1"
-          onClick={handleBid}
-          disabled={bidAmount > maxBid || bidAmount < minBid || isHighBidder}
-        >
-          Bid ${bidAmount}
-        </Button>
-      </div>
+      {hasPassed ? (
+        <div className="text-center py-3 bg-dark-tertiary rounded-lg">
+          <p className="text-text-muted text-sm font-medium">Passed — waiting for auction to resolve</p>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          <Button
+            variant="secondary"
+            className="flex-1"
+            onClick={onPass}
+            disabled={isHighBidder}
+          >
+            Pass
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleBid}
+            disabled={bidAmount > maxBid || bidAmount < minBid || isHighBidder}
+          >
+            Bid ${bidAmount}
+          </Button>
+        </div>
+      )}
 
       {isHighBidder && (
         <p className="text-gold text-sm text-center mt-2">
@@ -235,7 +273,7 @@ const BidPanel = ({
         </p>
       )}
 
-      {bidAmount > maxBid && (
+      {bidAmount > maxBid && !hasPassed && (
         <p className="text-red-500 text-sm text-center mt-2">
           Insufficient budget
         </p>
