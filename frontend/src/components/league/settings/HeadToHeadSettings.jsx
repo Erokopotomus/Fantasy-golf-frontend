@@ -5,6 +5,9 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
   const [localSettings, setLocalSettings] = useState({
     playoffTeams: settings?.playoffTeams || 4,
     playoffFormat: settings?.playoffFormat || 'single-elimination',
+    playoffWeeksPerRound: settings?.playoffWeeksPerRound || 1,
+    playoffSeeding: settings?.playoffSeeding || 'default',
+    consolationBracket: settings?.consolationBracket || 'none',
     regularSeasonWeeks: settings?.regularSeasonWeeks || 12,
     tiebreakers: settings?.tiebreakers || ['total-points', 'head-to-head'],
   })
@@ -121,6 +124,142 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                 <div>
                   <p className="text-white font-medium">Two-Week Matchups</p>
                   <p className="text-text-muted text-xs">Combined points across two tournaments</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Playoff Weeks Per Round
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="playoffWeeksPerRound"
+                  value="1"
+                  checked={localSettings.playoffWeeksPerRound === 1}
+                  onChange={() => handleChange('playoffWeeksPerRound', 1)}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">One Week Per Round</p>
+                  <p className="text-text-muted text-xs">Each playoff round is a single tournament</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="playoffWeeksPerRound"
+                  value="2-championship"
+                  checked={localSettings.playoffWeeksPerRound === '2-championship'}
+                  onChange={() => handleChange('playoffWeeksPerRound', '2-championship')}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">Two-Week Championship Only</p>
+                  <p className="text-text-muted text-xs">Only the finals span two tournaments</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="playoffWeeksPerRound"
+                  value="2"
+                  checked={localSettings.playoffWeeksPerRound === 2}
+                  onChange={() => handleChange('playoffWeeksPerRound', 2)}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">Two Weeks Per Round</p>
+                  <p className="text-text-muted text-xs">Every playoff round spans two tournaments</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Playoff Seeding
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="playoffSeeding"
+                  value="default"
+                  checked={localSettings.playoffSeeding === 'default'}
+                  onChange={(e) => handleChange('playoffSeeding', e.target.value)}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">Fixed Bracket</p>
+                  <p className="text-text-muted text-xs">Seeding locked after regular season (1v8, 2v7, etc.)</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="playoffSeeding"
+                  value="reseed"
+                  checked={localSettings.playoffSeeding === 'reseed'}
+                  onChange={(e) => handleChange('playoffSeeding', e.target.value)}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">Re-seed Each Round</p>
+                  <p className="text-text-muted text-xs">Remaining teams re-seeded after each round</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Consolation Bracket
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="consolationBracket"
+                  value="none"
+                  checked={localSettings.consolationBracket === 'none'}
+                  onChange={(e) => handleChange('consolationBracket', e.target.value)}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">None</p>
+                  <p className="text-text-muted text-xs">Eliminated teams are done</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="consolationBracket"
+                  value="consolation"
+                  checked={localSettings.consolationBracket === 'consolation'}
+                  onChange={(e) => handleChange('consolationBracket', e.target.value)}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">Consolation Bracket</p>
+                  <p className="text-text-muted text-xs">Non-playoff teams play for pride</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="consolationBracket"
+                  value="toilet-bowl"
+                  checked={localSettings.consolationBracket === 'toilet-bowl'}
+                  onChange={(e) => handleChange('consolationBracket', e.target.value)}
+                  className="text-accent-green"
+                />
+                <div>
+                  <p className="text-white font-medium">Toilet Bowl</p>
+                  <p className="text-text-muted text-xs">Bottom teams play to avoid last place</p>
                 </div>
               </label>
             </div>

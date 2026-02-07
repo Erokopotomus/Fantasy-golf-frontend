@@ -4,6 +4,7 @@ import Card from '../../common/Card'
 const FullLeagueSettings = ({ settings, onChange }) => {
   const [localSettings, setLocalSettings] = useState({
     segments: settings?.segments || 4,
+    segmentBonus: settings?.segmentBonus ?? 25,
     pointsPerPosition: settings?.pointsPerPosition || {
       1: 100,
       2: 75,
@@ -66,6 +67,25 @@ const FullLeagueSettings = ({ settings, onChange }) => {
             Segments divide the season into periods with bonus points for segment winners
           </p>
         </div>
+
+        {localSettings.segments > 1 && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Segment Winner Bonus Points
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={localSettings.segmentBonus}
+              onChange={(e) => handleChange('segmentBonus', parseInt(e.target.value) || 0)}
+              className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+            />
+            <p className="text-xs text-text-muted mt-2">
+              Bonus points awarded to the winner of each segment (0-100)
+            </p>
+          </div>
+        )}
       </Card>
 
       <Card>

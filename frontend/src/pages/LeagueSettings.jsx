@@ -40,8 +40,11 @@ const LeagueSettings = () => {
     name: league?.name || '',
     scoringType: league?.settings?.scoringType || 'standard',
     rosterSize: league?.settings?.rosterSize || 6,
+    rosterLockDeadline: league?.settings?.rosterLockDeadline || 'tournament-start',
+    maxRosterMoves: league?.settings?.maxRosterMoves || 'unlimited',
     tradeReview: 'commissioner',
-    tradeDeadline: league?.settings?.tradeDeadline || '',
+    tradeDeadline: league?.settings?.tradeDeadline || false,
+    tradeDeadlineDate: league?.settings?.tradeDeadlineDate || '',
     waiverType: 'rolling',
     waiverPriority: 'reverse-standings',
     waiverClearDay: 'wednesday',
@@ -61,6 +64,10 @@ const LeagueSettings = () => {
         name: league.name,
         scoringType: league.settings?.scoringType || 'standard',
         rosterSize: league.settings?.rosterSize || 6,
+        rosterLockDeadline: league.settings?.rosterLockDeadline || 'tournament-start',
+        maxRosterMoves: league.settings?.maxRosterMoves || 'unlimited',
+        tradeDeadline: league.settings?.tradeDeadline || false,
+        tradeDeadlineDate: league.settings?.tradeDeadlineDate || '',
         waiverType: league.settings?.waiverType || 'rolling',
         waiverPriority: league.settings?.waiverPriority || 'reverse-standings',
         waiverClearDay: league.settings?.waiverClearDay || 'wednesday',
@@ -111,8 +118,11 @@ const LeagueSettings = () => {
         settings: {
           scoringType: settings.scoringType,
           rosterSize: settings.rosterSize,
+          rosterLockDeadline: settings.rosterLockDeadline,
+          maxRosterMoves: settings.maxRosterMoves,
           tradeReview: settings.tradeReview,
           tradeDeadline: settings.tradeDeadline,
+          tradeDeadlineDate: settings.tradeDeadlineDate,
           waiverType: settings.waiverType,
           waiverPriority: settings.waiverPriority,
           waiverClearDay: settings.waiverClearDay,
@@ -182,7 +192,7 @@ const LeagueSettings = () => {
       case 'roto':
         return <RotoSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
       case 'survivor':
-        return <SurvivorSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+        return <SurvivorSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} leagueSettings={settings} />
       case 'one-and-done':
         return <OneAndDoneSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
       default:
@@ -307,6 +317,45 @@ const LeagueSettings = () => {
               </select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Roster Lock Deadline
+              </label>
+              <select
+                value={settings.rosterLockDeadline}
+                onChange={(e) => setSettings({ ...settings, rosterLockDeadline: e.target.value })}
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+              >
+                <option value="tournament-start">Tournament Start (Thursday)</option>
+                <option value="first-tee">First Tee Time</option>
+                <option value="individual-tee">Individual Player Tee Times</option>
+              </select>
+              <p className="text-xs text-text-muted mt-2">
+                When rosters lock for each tournament week
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Max Roster Moves
+              </label>
+              <select
+                value={settings.maxRosterMoves}
+                onChange={(e) => setSettings({ ...settings, maxRosterMoves: e.target.value })}
+                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+              >
+                <option value="unlimited">Unlimited</option>
+                <option value="3-week">3 per week</option>
+                <option value="5-week">5 per week</option>
+                <option value="10-season">10 per season</option>
+                <option value="20-season">20 per season</option>
+                <option value="30-season">30 per season</option>
+              </select>
+              <p className="text-xs text-text-muted mt-2">
+                Limit how many add/drop transactions teams can make
+              </p>
+            </div>
+
             {/* League Format Info */}
             {league?.format && (
               <div className="pt-4 border-t border-dark-border">
@@ -379,15 +428,43 @@ const LeagueSettings = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Trade Deadline
-              </label>
-              <input
-                type="date"
-                value={settings.tradeDeadline}
-                onChange={(e) => setSettings({ ...settings, tradeDeadline: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
-              />
+              <div className="flex items-center justify-between p-4 bg-dark-tertiary rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Trade Deadline</p>
+                  <p className="text-xs text-text-muted">Set a date after which trades are no longer allowed</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSettings({ ...settings, tradeDeadline: !settings.tradeDeadline })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    settings.tradeDeadline ? 'bg-accent-green' : 'bg-dark-border'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      settings.tradeDeadline ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {settings.tradeDeadline && (
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Deadline Date
+                  </label>
+                  <input
+                    type="date"
+                    value={settings.tradeDeadlineDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setSettings({ ...settings, tradeDeadlineDate: e.target.value })}
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                  />
+                  <p className="text-xs text-text-muted mt-2">
+                    No trades will be allowed after this date
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="pt-4">

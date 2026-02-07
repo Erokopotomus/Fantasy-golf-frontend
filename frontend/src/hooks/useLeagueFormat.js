@@ -66,6 +66,7 @@ export const DRAFT_TYPES = {
 export const DEFAULT_FORMAT_SETTINGS = {
   'full-league': {
     segments: 4,
+    segmentBonus: 25,
     pointsPerPosition: {
       1: 100,
       2: 75,
@@ -80,6 +81,9 @@ export const DEFAULT_FORMAT_SETTINGS = {
   'head-to-head': {
     playoffTeams: 4,
     playoffFormat: 'single-elimination',
+    playoffWeeksPerRound: 1,
+    playoffSeeding: 'default',
+    consolationBracket: 'none',
     regularSeasonWeeks: 12,
     tiebreakers: ['total-points', 'head-to-head'],
   },
@@ -88,7 +92,7 @@ export const DEFAULT_FORMAT_SETTINGS = {
   },
   'survivor': {
     eliminationsPerWeek: 1,
-    buyBacks: { allowed: true, max: 1 },
+    buyBacks: { allowed: true, max: 1, faabCost: 0 },
   },
   'one-and-done': {
     tiers: [

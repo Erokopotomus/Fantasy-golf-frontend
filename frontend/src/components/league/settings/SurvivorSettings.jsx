@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import Card from '../../common/Card'
 
-const SurvivorSettings = ({ settings, onChange }) => {
+const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
   const [localSettings, setLocalSettings] = useState({
     eliminationsPerWeek: settings?.eliminationsPerWeek || 1,
-    buyBacks: settings?.buyBacks || { allowed: true, max: 1 },
+    buyBacks: settings?.buyBacks || { allowed: true, max: 1, faabCost: 0 },
   })
 
   const handleChange = (key, value) => {
@@ -78,27 +78,51 @@ const SurvivorSettings = ({ settings, onChange }) => {
           </div>
 
           {localSettings.buyBacks.allowed && (
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Maximum Buy-Backs Per Team
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3].map(num => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => handleBuyBackChange('max', num)}
-                    className={`p-3 rounded-lg border-2 font-semibold transition-all ${
-                      localSettings.buyBacks.max === num
-                        ? 'border-accent-green bg-accent-green/10 text-white'
-                        : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
+            <>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Maximum Buy-Backs Per Team
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3].map(num => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => handleBuyBackChange('max', num)}
+                      className={`p-3 rounded-lg border-2 font-semibold transition-all ${
+                        localSettings.buyBacks.max === num
+                          ? 'border-accent-green bg-accent-green/10 text-white'
+                          : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              {leagueSettings?.waiverType === 'faab' && (
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Buy-Back FAAB Cost
+                  </label>
+                  <select
+                    value={localSettings.buyBacks.faabCost || 0}
+                    onChange={(e) => handleBuyBackChange('faabCost', parseInt(e.target.value))}
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-accent-green focus:outline-none"
+                  >
+                    {[0, 5, 10, 15, 20, 25].map(cost => (
+                      <option key={cost} value={cost}>
+                        {cost === 0 ? 'Free (no FAAB cost)' : `$${cost}`}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-text-muted mt-2">
+                    FAAB budget deducted when a team uses a buy-back
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </Card>
