@@ -512,6 +512,12 @@ class ApiService {
     return this.request(`/admin/leagues${qs ? '?' + qs : ''}`)
   }
 
+  async getAdminTournaments(params = {}) {
+    const filtered = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined))
+    const qs = new URLSearchParams(filtered).toString()
+    return this.request(`/admin/tournaments${qs ? '?' + qs : ''}`)
+  }
+
   async updateUserRole(userId, role) {
     return this.request(`/admin/users/${userId}/role`, {
       method: 'POST',

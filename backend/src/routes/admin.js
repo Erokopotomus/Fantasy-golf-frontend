@@ -98,6 +98,46 @@ router.get('/leagues', async (req, res, next) => {
   }
 })
 
+// GET /api/admin/tournaments - Paginated tournament list
+router.get('/tournaments', async (req, res, next) => {
+  try {
+    const { page = 1, limit = 25, search, status } = req.query
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+
+    const where = {}
+    if (search) where.name = { contains: search, mode: 'insensitive' }
+    if (status) where.status = status
+
+    const [tournaments, total] = await Promise.all([
+      prisma.tournament.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          tour: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          currentRound: true,
+          isMajor: true,
+          isSignature: true,
+          purse: true,
+          location: true,
+          course: { select: { name: true } },
+        },
+        orderBy: { startDate: 'desc' },
+        skip,
+        take: parseInt(limit),
+      }),
+      prisma.tournament.count({ where }),
+    ])
+
+    res.json({ tournaments, total, page: parseInt(page), limit: parseInt(limit) })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // POST /api/admin/users/:id/role - Update user role
 router.post('/users/:id/role', async (req, res, next) => {
   try {
