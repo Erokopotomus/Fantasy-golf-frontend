@@ -228,7 +228,7 @@ const TournamentScoring = () => {
           />
 
           {/* This Week's Calls */}
-          <EventPredictionSlate eventId={tournamentId} leaderboard={leaderboard || []} />
+          <EventPredictionSlate eventId={tournamentId} leaderboard={leaderboard || []} tournamentStatus={tournament?.status} />
 
           {/* My Team — with league dropdown */}
           <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">

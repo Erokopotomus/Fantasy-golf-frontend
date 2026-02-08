@@ -7,7 +7,7 @@ import api from '../../services/api'
  * Allows users to predict OVER/UNDER on a player's benchmark (e.g., SG Total, finish position).
  * Styled as a community poll, NOT a sportsbook card.
  */
-export default function PlayerBenchmarkCard({ player, eventId, onPredictionMade }) {
+export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus, onPredictionMade }) {
   const [consensus, setConsensus] = useState(null)
   const [existingPrediction, setExistingPrediction] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -36,6 +36,8 @@ export default function PlayerBenchmarkCard({ player, eventId, onPredictionMade 
       })
       .catch(() => {})
   }, [eventId, player?.id])
+
+  const isLocked = tournamentStatus === 'IN_PROGRESS' || tournamentStatus === 'COMPLETED'
 
   if (benchmarkValue == null || !eventId) return null
 
@@ -140,6 +142,10 @@ export default function PlayerBenchmarkCard({ player, eventId, onPredictionMade 
               {existingPrediction.outcome === 'CORRECT' ? '✓' : existingPrediction.outcome === 'INCORRECT' ? '✗' : '—'}
             </span>
           )}
+        </div>
+      ) : isLocked ? (
+        <div className="text-center py-2">
+          <span className="text-white/40 text-sm">Predictions locked — tournament in progress</span>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">

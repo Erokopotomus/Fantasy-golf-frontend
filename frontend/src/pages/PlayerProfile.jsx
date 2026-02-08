@@ -14,6 +14,7 @@ import api from '../services/api'
 const PlayerProfile = () => {
   const { playerId } = useParams()
   const [currentEventId, setCurrentEventId] = useState(null)
+  const [tournamentStatus, setTournamentStatus] = useState(null)
   const {
     player,
     projection,
@@ -28,7 +29,11 @@ const PlayerProfile = () => {
 
   useEffect(() => {
     api.getCurrentTournament()
-      .then(res => setCurrentEventId(res?.tournament?.id || res?.id))
+      .then(res => {
+        const t = res?.tournament || res
+        setCurrentEventId(t?.id)
+        setTournamentStatus(t?.status)
+      })
       .catch(() => {})
   }, [])
 
@@ -103,7 +108,7 @@ const PlayerProfile = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
-          <PlayerBenchmarkCard player={player} eventId={currentEventId} />
+          <PlayerBenchmarkCard player={player} eventId={currentEventId} tournamentStatus={tournamentStatus} />
           <PlayerPredictions predictions={predictions} liveScore={liveScore} />
           <PlayerProjection projection={projection} />
           <PlayerFormChart

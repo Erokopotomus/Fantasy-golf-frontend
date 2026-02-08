@@ -53,9 +53,26 @@ async function submitPrediction(userId, data, prisma) {
     throw new Error(`Invalid sport: ${sport}`)
   }
 
+  // Auto-calculate locksAt from tournament startDate for golf predictions
+  let effectiveLocksAt = locksAt ? new Date(locksAt) : null
+  if (!effectiveLocksAt && eventId && sport === 'golf') {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: eventId },
+      select: { startDate: true, status: true },
+    })
+    if (tournament) {
+      if (tournament.status === 'IN_PROGRESS' || tournament.status === 'COMPLETED') {
+        throw new Error('Predictions are locked — this tournament has already started')
+      }
+      if (tournament.startDate) {
+        effectiveLocksAt = tournament.startDate
+      }
+    }
+  }
+
   // Check deadline — reject if locked
-  if (locksAt && new Date(locksAt) <= new Date()) {
-    throw new Error('This prediction has already locked')
+  if (effectiveLocksAt && effectiveLocksAt <= new Date()) {
+    throw new Error('Predictions are locked — this tournament has already started')
   }
 
   // Check for duplicate prediction (same user, same event, same subject, same type)
@@ -85,7 +102,7 @@ async function submitPrediction(userId, data, prisma) {
       leagueId: leagueId || null,
       predictionData,
       isPublic,
-      locksAt: locksAt ? new Date(locksAt) : null,
+      locksAt: effectiveLocksAt || null,
       outcome: 'PENDING',
     },
   })

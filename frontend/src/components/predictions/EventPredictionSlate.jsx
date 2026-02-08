@@ -6,7 +6,7 @@ import api from '../../services/api'
  * Sidebar card for tournament pages showing open Performance Calls.
  * Shows top players in the field with quick OVER/UNDER benchmark predictions.
  */
-export default function EventPredictionSlate({ eventId, leaderboard = [] }) {
+export default function EventPredictionSlate({ eventId, leaderboard = [], tournamentStatus }) {
   const [myPredictions, setMyPredictions] = useState({})
   const [submitting, setSubmitting] = useState(null)
   const [expanded, setExpanded] = useState(false)
@@ -73,6 +73,8 @@ export default function EventPredictionSlate({ eventId, leaderboard = [] }) {
     }
   }
 
+  const isLocked = tournamentStatus === 'IN_PROGRESS' || tournamentStatus === 'COMPLETED'
+
   if (!eventId || targets.length === 0) return null
 
   const madeCount = Object.keys(myPredictions).length
@@ -88,7 +90,9 @@ export default function EventPredictionSlate({ eventId, leaderboard = [] }) {
       </div>
 
       <p className="text-white/40 text-xs mb-3">
-        Will they finish above or below their SG benchmark?
+        {isLocked
+          ? 'Predictions locked — tournament in progress'
+          : 'Will they finish above or below their SG benchmark?'}
       </p>
 
       <div className="space-y-2">
@@ -126,6 +130,10 @@ export default function EventPredictionSlate({ eventId, leaderboard = [] }) {
                       {existing.outcome === 'CORRECT' ? '✓' : '✗'}
                     </span>
                   )}
+                </div>
+              ) : isLocked ? (
+                <div className="w-20 text-right">
+                  <span className="text-xs text-white/30">Locked</span>
                 </div>
               ) : (
                 <div className="flex gap-1 w-20 justify-end">
