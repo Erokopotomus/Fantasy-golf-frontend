@@ -144,26 +144,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ══════════ THE PROBLEM ══════════ */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-6 leading-tight">
-            Everyone's an expert.
-            <span className="block text-text-muted">Nobody can prove it.</span>
-          </h2>
-          <p className="text-text-secondary text-lg leading-relaxed mb-6">
-            Sports media is top-down. Influencers and podcasters have audiences based on personality and
-            platform access — not accuracy. Nobody tracks whether their predictions are right.
-            Nobody holds them accountable.
-          </p>
-          <p className="text-text-secondary text-lg leading-relaxed">
-            On Clutch, everyone competes on the same playing field — from a nobody in Ohio to the Fantasy Footballers.
-            Predictions are locked, tracked, and scored. Records are public. The leaderboard doesn't care
-            how many followers you have. <span className="text-gold font-semibold">That's the point.</span>
-          </p>
-        </div>
-      </section>
-
       {/* ══════════ HOW IT WORKS ══════════ */}
       <section id="how-it-works" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
@@ -178,10 +158,10 @@ const Landing = () => {
               <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-dark-primary shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 1
               </div>
-              <h3 className="text-xl font-semibold font-display text-white mb-3">Prep</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-3">Play</h3>
               <p className="text-text-secondary leading-relaxed">
-                Enter your projections — player stats, game outcomes, season predictions.
-                Your reasoning is logged. Your projections become your draft cheat sheet automatically.
+                Run your season-long league on the most modern fantasy platform built. Snake or auction drafts,
+                trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, or Fantrax.
               </p>
             </div>
 
@@ -189,10 +169,10 @@ const Landing = () => {
               <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-dark-primary shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 2
               </div>
-              <h3 className="text-xl font-semibold font-display text-white mb-3">Compete</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-3">Track</h3>
               <p className="text-text-secondary leading-relaxed">
-                Predictions lock at kickoff. Scored against reality. Weekly picks, season-long contests,
-                and league leaderboards track who's actually right — not who's loudest.
+                Lock in projections and weekly picks. Everything gets logged — your reasoning, your accuracy,
+                your draft decisions. Over time, Clutch becomes your sports brain.
               </p>
             </div>
 
@@ -202,33 +182,9 @@ const Landing = () => {
               </div>
               <h3 className="text-xl font-semibold font-display text-white mb-3">Prove</h3>
               <p className="text-text-secondary leading-relaxed">
-                Your Clutch Rating builds over time. Accuracy, bold calls, consistency, draft intelligence.
-                Share your profile. Put your rating in your bio. This is your sports resume.
+                Your Clutch Rating builds from everything you do — league results, prediction accuracy, bold calls,
+                draft intelligence. Share your profile. This is your sports resume.
               </p>
-            </div>
-          </div>
-
-          {/* OR — Just play fantasy */}
-          <div className="mt-14 sm:mt-16 text-center">
-            <div className="flex items-center gap-4 max-w-md mx-auto mb-6">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gold/30" />
-              <span className="text-gold font-display font-bold text-sm tracking-widest uppercase">Or</span>
-              <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gold/30" />
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold font-display text-white mb-3">
-              Just play fantasy sports.
-            </h3>
-            <p className="text-text-secondary leading-relaxed max-w-2xl mx-auto mb-6">
-              Don't care about predictions? No problem. Run your league on the most modern fantasy platform
-              built — import your history from ESPN, Yahoo, Sleeper, or Fantrax, draft with your friends,
-              and enjoy a commissioner experience that actually doesn't suck.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {['Snake & Auction Drafts', 'League History Vault', 'Live Scoring', 'Waivers & Trades', 'In-League Chat'].map(tag => (
-                <span key={tag} className="text-xs font-mono text-gold/80 bg-gold/10 border border-gold/20 px-3 py-1.5 rounded-full">
-                  {tag}
-                </span>
-              ))}
             </div>
           </div>
         </div>
