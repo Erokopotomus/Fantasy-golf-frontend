@@ -733,6 +733,7 @@ class ApiService {
     if (options.search) params.set('search', options.search)
     if (options.position) params.set('position', options.position)
     if (options.team) params.set('team', options.team)
+    if (options.season) params.set('season', options.season)
     if (options.limit) params.set('limit', options.limit)
     if (options.offset) params.set('offset', options.offset)
     if (options.sortBy) params.set('sortBy', options.sortBy)
@@ -742,6 +743,10 @@ class ApiService {
     if (options.leagueId) params.set('leagueId', options.leagueId)
     const qs = params.toString()
     return this.request(`/nfl/players${qs ? '?' + qs : ''}`)
+  }
+
+  async getNflSeasons() {
+    return this.request('/nfl/seasons')
   }
 
   async getNflPlayer(id) {

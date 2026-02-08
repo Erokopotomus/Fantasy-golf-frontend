@@ -128,15 +128,41 @@ async function getDraftPicks(season) {
 }
 
 /**
- * Fetch team-level season stats (from player stats aggregated)
- * We compute these ourselves from player game data
+ * Fetch weekly kicking stats (all seasons in one file, or per-season)
+ * Contains: fg_made, fg_att, fg_made_0_19 through fg_made_60_, pat_made, pat_att, etc.
+ * Separate from player_stats — nflverse splits kicking into its own dataset
  */
+async function getKickingStats(season) {
+  if (season) {
+    try {
+      const url = `${NFLVERSE_BASE}/player_stats/player_stats_kicking_${season}.csv`
+      const rows = await rateLimitedFetch(url)
+      console.log(`[nflClient] Fetched ${rows.length} kicking stat rows for ${season}`)
+      return rows
+    } catch (e) {
+      // Per-season file may not exist yet — fall back to consolidated file
+      console.log(`[nflClient] No kicking file for ${season}, falling back to consolidated...`)
+    }
+  }
+  // Consolidated file (all years)
+  const url = `${NFLVERSE_BASE}/player_stats/player_stats_kicking.csv`
+  const allRows = await rateLimitedFetch(url)
+  const filtered = season ? allRows.filter(r => Number(r.season) === season) : allRows
+  console.log(`[nflClient] Fetched ${filtered.length} kicking stat rows${season ? ` for ${season}` : ' (all years)'}`)
+  return filtered
+}
 
 /**
- * Fetch advanced stats (ngs - Next Gen Stats) if available
- * These include EPA, CPOE, etc. — but these are ALSO in the weekly player stats
- * So we primarily use getWeeklyStats which has everything pre-joined
+ * Fetch team-level weekly stats for DST scoring
+ * Contains: def_sacks, def_interceptions, def_tds, def_fumbles_forced, def_safeties,
+ *           special_teams_tds, fumble_recovery_opp, fg_blocked, etc.
  */
+async function getTeamWeeklyStats(season) {
+  const url = `${NFLVERSE_BASE}/stats_team/stats_team_week_${season}.csv`
+  const rows = await rateLimitedFetch(url)
+  console.log(`[nflClient] Fetched ${rows.length} team weekly stat rows for ${season}`)
+  return rows
+}
 
 module.exports = {
   getPlayers,
@@ -144,6 +170,8 @@ module.exports = {
   getWeeklyStats,
   getWeeklyRosters,
   getDraftPicks,
+  getKickingStats,
+  getTeamWeeklyStats,
   // Utility for custom URLs
   fetchCsv: rateLimitedFetch,
 }

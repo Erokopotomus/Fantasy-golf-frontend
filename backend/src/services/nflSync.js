@@ -199,7 +199,7 @@ async function syncPlayers(prisma) {
   const dstOps = allTeams.map(team => {
     const dstGsisId = `DST-${team.abbreviation}`
     const data = {
-      name: `${team.city} ${team.name}`,
+      name: team.name,
       gsisId: dstGsisId,
       nflPosition: 'DST',
       nflTeamAbbr: team.abbreviation,
@@ -218,7 +218,7 @@ async function syncPlayers(prisma) {
     for (const team of allTeams) {
       try {
         const dstGsisId = `DST-${team.abbreviation}`
-        const data = { name: `${team.city} ${team.name}`, gsisId: dstGsisId, nflPosition: 'DST',
+        const data = { name: team.name, gsisId: dstGsisId, nflPosition: 'DST',
           nflTeamAbbr: team.abbreviation, isActive: true, sportId: sport.id, sourceProvider: 'clutch', sourceIngestedAt: new Date() }
         await prisma.player.upsert({ where: { gsisId: dstGsisId }, create: data, update: data })
         dstCount++
@@ -519,6 +519,251 @@ async function syncRosters(prisma, season) {
 }
 
 /**
+ * Sync kicking stats from nflverse kicking dataset
+ * Populates NflPlayerGame kicking fields (fgMade, fgAttempts, xpMade, etc.)
+ */
+async function syncKickingStats(prisma, season) {
+  const targetSeason = season || new Date().getFullYear()
+  console.log(`[nflSync] Starting kicking stats sync for ${targetSeason}...`)
+
+  const rows = await nfl.getKickingStats(targetSeason)
+  await stageRaw(prisma, 'nfl_kicking_stats', String(targetSeason), rows.slice(0, 10))
+
+  // Pre-load lookups
+  const allPlayers = await prisma.player.findMany({
+    where: { gsisId: { not: null } },
+    select: { id: true, gsisId: true },
+  })
+  const playerMap = Object.fromEntries(allPlayers.map(p => [p.gsisId, p.id]))
+
+  const allGames = await prisma.nflGame.findMany({
+    where: { season: targetSeason },
+    select: { id: true, week: true, homeTeam: { select: { abbreviation: true } }, awayTeam: { select: { abbreviation: true } } },
+  })
+  const gameMap = {}
+  for (const g of allGames) {
+    gameMap[`${g.week}-${g.homeTeam.abbreviation}`] = g.id
+    gameMap[`${g.week}-${g.awayTeam.abbreviation}`] = g.id
+  }
+
+  let upserted = 0, skipped = 0
+
+  const eligible = []
+  for (const row of rows) {
+    const gsisId = row.player_id
+    if (!gsisId) { skipped++; continue }
+    const playerId = playerMap[gsisId]
+    if (!playerId) { skipped++; continue }
+    const week = Number(row.week)
+    const teamAbbr = normalizeTeamAbbr(row.team || '')
+    const gameId = gameMap[`${week}-${teamAbbr}`]
+    if (!gameId) { skipped++; continue }
+    eligible.push({ row, playerId, gameId, teamAbbr, week })
+  }
+
+  console.log(`[nflSync] ${eligible.length} kicking rows to upsert (${skipped} skipped)`)
+
+  // Batch upsert kicking data onto existing NflPlayerGame records
+  const BATCH_SIZE = 30
+  for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+    const batch = eligible.slice(i, i + BATCH_SIZE)
+    const ops = batch.map(({ row, playerId, gameId, teamAbbr }) => {
+      const data = clean({
+        playerId,
+        gameId,
+        teamAbbr,
+        fgMade: num(row.fg_made),
+        fgAttempts: num(row.fg_att),
+        fgPct: num(row.fg_pct),
+        xpMade: num(row.pat_made),
+        xpAttempts: num(row.pat_att),
+        // Compute fantasy points for kickers
+        // Standard: FG=3, XP=1 (distance-based scoring computed separately)
+        fantasyPtsStd: (num(row.fg_made) || 0) * 3 + (num(row.pat_made) || 0) * 1,
+        fantasyPtsPpr: (num(row.fg_made) || 0) * 3 + (num(row.pat_made) || 0) * 1,
+        fantasyPtsHalf: (num(row.fg_made) || 0) * 3 + (num(row.pat_made) || 0) * 1,
+        sourceProvider: 'nflverse',
+        sourceIngestedAt: new Date(),
+      })
+      return prisma.nflPlayerGame.upsert({
+        where: { playerId_gameId: { playerId, gameId } },
+        create: data,
+        update: data,
+      })
+    })
+    try {
+      await prisma.$transaction(ops)
+      upserted += batch.length
+    } catch (e) {
+      for (const { row, playerId, gameId, teamAbbr, week } of batch) {
+        try {
+          const data = clean({ playerId, gameId, teamAbbr,
+            fgMade: num(row.fg_made), fgAttempts: num(row.fg_att), xpMade: num(row.pat_made), xpAttempts: num(row.pat_att),
+            fantasyPtsStd: (num(row.fg_made) || 0) * 3 + (num(row.pat_made) || 0) * 1,
+            fantasyPtsPpr: (num(row.fg_made) || 0) * 3 + (num(row.pat_made) || 0) * 1,
+            fantasyPtsHalf: (num(row.fg_made) || 0) * 3 + (num(row.pat_made) || 0) * 1,
+            sourceProvider: 'nflverse', sourceIngestedAt: new Date() })
+          await prisma.nflPlayerGame.upsert({ where: { playerId_gameId: { playerId, gameId } }, create: data, update: data })
+          upserted++
+        } catch (e2) {
+          console.warn(`[nflSync] Kicking upsert failed for week ${week}: ${e2.message}`)
+          skipped++
+        }
+      }
+    }
+    if ((i + BATCH_SIZE) % 200 === 0 || i + BATCH_SIZE >= eligible.length) {
+      console.log(`[nflSync] Kicking progress: ${Math.min(i + BATCH_SIZE, eligible.length)}/${eligible.length}`)
+    }
+  }
+
+  const result = { season: targetSeason, total: rows.length, upserted, skipped }
+  console.log(`[nflSync] Kicking stats sync complete:`, result)
+  return result
+}
+
+/**
+ * Sync DST (team defense/special teams) stats from nflverse team weekly data
+ * Creates NflPlayerGame records for DST-XXX "players" with defensive stats
+ */
+async function syncDstStats(prisma, season) {
+  const targetSeason = season || new Date().getFullYear()
+  console.log(`[nflSync] Starting DST stats sync for ${targetSeason}...`)
+
+  const rows = await nfl.getTeamWeeklyStats(targetSeason)
+  await stageRaw(prisma, 'nfl_team_weekly', String(targetSeason), rows.slice(0, 5))
+
+  // Pre-load DST players (DST-KC, DST-BAL, etc.)
+  const dstPlayers = await prisma.player.findMany({
+    where: { gsisId: { startsWith: 'DST-' } },
+    select: { id: true, gsisId: true, nflTeamAbbr: true },
+  })
+  const dstMap = Object.fromEntries(dstPlayers.map(p => [p.nflTeamAbbr, p.id]))
+
+  // Pre-load games
+  const allGames = await prisma.nflGame.findMany({
+    where: { season: targetSeason },
+    select: { id: true, week: true, homeScore: true, awayScore: true,
+      homeTeam: { select: { abbreviation: true } }, awayTeam: { select: { abbreviation: true } } },
+  })
+  const gameMap = {}
+  const gameScoreMap = {} // "week-TEAM" → points allowed
+  for (const g of allGames) {
+    gameMap[`${g.week}-${g.homeTeam.abbreviation}`] = g.id
+    gameMap[`${g.week}-${g.awayTeam.abbreviation}`] = g.id
+    // Points allowed = opponent's score
+    if (g.homeScore !== null && g.awayScore !== null) {
+      gameScoreMap[`${g.week}-${g.homeTeam.abbreviation}`] = g.awayScore // Home team allowed away score
+      gameScoreMap[`${g.week}-${g.awayTeam.abbreviation}`] = g.homeScore // Away team allowed home score
+    }
+  }
+
+  let upserted = 0, skipped = 0
+
+  const eligible = []
+  for (const row of rows) {
+    const teamAbbr = normalizeTeamAbbr(row.team || '')
+    const week = Number(row.week)
+    if (!teamAbbr || !week) { skipped++; continue }
+    const playerId = dstMap[teamAbbr]
+    if (!playerId) { skipped++; continue }
+    const gameId = gameMap[`${week}-${teamAbbr}`]
+    if (!gameId) { skipped++; continue }
+    eligible.push({ row, playerId, gameId, teamAbbr, week })
+  }
+
+  console.log(`[nflSync] ${eligible.length} DST rows to upsert (${skipped} skipped)`)
+
+  const BATCH_SIZE = 25
+  for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+    const batch = eligible.slice(i, i + BATCH_SIZE)
+    const ops = batch.map(({ row, playerId, gameId, teamAbbr, week }) => {
+      const sacks = num(row.def_sacks) || 0
+      const ints = num(row.def_interceptions) || 0
+      const fumRec = num(row.fumble_recovery_opp) || 0
+      const fumForced = num(row.def_fumbles_forced) || 0
+      const defTds = num(row.def_tds) || 0
+      const safeties = num(row.def_safeties) || 0
+      const stTds = num(row.special_teams_tds) || 0
+      const fgBlocked = num(row.fg_blocked) || 0
+      const pointsAllowed = gameScoreMap[`${week}-${teamAbbr}`] ?? null
+
+      // Standard DST fantasy scoring
+      let dstPts = 0
+      dstPts += sacks * 1         // 1 pt per sack
+      dstPts += ints * 2          // 2 pts per INT
+      dstPts += fumRec * 2        // 2 pts per fumble recovery
+      dstPts += defTds * 6        // 6 pts per defensive TD
+      dstPts += stTds * 6         // 6 pts per special teams TD
+      dstPts += safeties * 2      // 2 pts per safety
+      dstPts += fgBlocked * 2     // 2 pts per blocked kick
+      // Points allowed tiers
+      if (pointsAllowed !== null) {
+        if (pointsAllowed === 0) dstPts += 10
+        else if (pointsAllowed <= 6) dstPts += 7
+        else if (pointsAllowed <= 13) dstPts += 4
+        else if (pointsAllowed <= 20) dstPts += 1
+        else if (pointsAllowed <= 27) dstPts += 0
+        else if (pointsAllowed <= 34) dstPts -= 1
+        else dstPts -= 4
+      }
+
+      const data = clean({
+        playerId,
+        gameId,
+        teamAbbr,
+        // Map DST stats into the defense fields on NflPlayerGame
+        sacks: num(row.def_sacks),
+        tacklesSolo: num(row.def_tackles_solo),
+        tacklesAssist: num(row.def_tackle_assists),
+        passesDefended: num(row.def_pass_defended),
+        fumblesForced: num(row.def_fumbles_forced),
+        fumblesRecovered: num(row.fumble_recovery_opp),
+        defInterceptions: num(row.def_interceptions),
+        defTds: (num(row.def_tds) || 0) + (num(row.special_teams_tds) || 0),
+        // Fantasy points (same for all formats — DST scoring doesn't vary by PPR)
+        fantasyPtsStd: Math.round(dstPts * 10) / 10,
+        fantasyPtsPpr: Math.round(dstPts * 10) / 10,
+        fantasyPtsHalf: Math.round(dstPts * 10) / 10,
+        sourceProvider: 'nflverse',
+        sourceIngestedAt: new Date(),
+      })
+      return prisma.nflPlayerGame.upsert({
+        where: { playerId_gameId: { playerId, gameId } },
+        create: data,
+        update: data,
+      })
+    })
+    try {
+      await prisma.$transaction(ops)
+      upserted += batch.length
+    } catch (e) {
+      for (const { row, playerId, gameId, teamAbbr, week } of batch) {
+        try {
+          const data = clean({ playerId, gameId, teamAbbr,
+            sacks: num(row.def_sacks), defInterceptions: num(row.def_interceptions),
+            fumblesRecovered: num(row.fumble_recovery_opp), fumblesForced: num(row.def_fumbles_forced),
+            defTds: (num(row.def_tds) || 0) + (num(row.special_teams_tds) || 0),
+            fantasyPtsStd: 0, fantasyPtsPpr: 0, fantasyPtsHalf: 0,
+            sourceProvider: 'nflverse', sourceIngestedAt: new Date() })
+          await prisma.nflPlayerGame.upsert({ where: { playerId_gameId: { playerId, gameId } }, create: data, update: data })
+          upserted++
+        } catch (e2) {
+          console.warn(`[nflSync] DST upsert failed for ${teamAbbr} week ${week}: ${e2.message}`)
+          skipped++
+        }
+      }
+    }
+    if ((i + BATCH_SIZE) % 200 === 0 || i + BATCH_SIZE >= eligible.length) {
+      console.log(`[nflSync] DST progress: ${Math.min(i + BATCH_SIZE, eligible.length)}/${eligible.length}`)
+    }
+  }
+
+  const result = { season: targetSeason, total: rows.length, upserted, skipped }
+  console.log(`[nflSync] DST stats sync complete:`, result)
+  return result
+}
+
+/**
  * Full backfill: sync a complete season's data (teams must be seeded first)
  */
 async function backfillSeason(prisma, season) {
@@ -533,25 +778,59 @@ async function backfillSeason(prisma, season) {
   // 3. Schedule (creates NflGame records)
   const scheduleResult = await syncSchedule(prisma, season)
 
-  // 4. Weekly stats (links players to games)
-  const statsResult = await syncWeeklyStats(prisma, season)
+  // 4. Weekly stats (links players to games) — may 404 if season not published yet
+  let statsResult = { season, total: 0, upserted: 0, skipped: 0, note: 'skipped' }
+  try {
+    statsResult = await syncWeeklyStats(prisma, season)
+  } catch (e) {
+    console.warn(`[nflSync] Weekly stats not available for ${season}: ${e.message}`)
+    statsResult.note = `not available: ${e.message}`
+  }
 
-  // 5. Rosters (updates current team info)
-  const rosterResult = await syncRosters(prisma, season)
+  // 5. Kicking stats
+  let kickingResult = { season, total: 0, upserted: 0, skipped: 0, note: 'skipped' }
+  try {
+    kickingResult = await syncKickingStats(prisma, season)
+  } catch (e) {
+    console.warn(`[nflSync] Kicking stats not available for ${season}: ${e.message}`)
+    kickingResult.note = `not available: ${e.message}`
+  }
+
+  // 6. DST stats from team weekly data
+  let dstResult = { season, total: 0, upserted: 0, skipped: 0, note: 'skipped' }
+  try {
+    dstResult = await syncDstStats(prisma, season)
+  } catch (e) {
+    console.warn(`[nflSync] DST stats not available for ${season}: ${e.message}`)
+    dstResult.note = `not available: ${e.message}`
+  }
+
+  // 7. Rosters (updates current team info)
+  let rosterResult = { season, updated: 0, skipped: 0, note: 'skipped' }
+  try {
+    rosterResult = await syncRosters(prisma, season)
+  } catch (e) {
+    console.warn(`[nflSync] Rosters not available for ${season}: ${e.message}`)
+    rosterResult.note = `not available: ${e.message}`
+  }
 
   console.log(`\n[nflSync] ═══ Backfill complete for ${season} ═══`)
-  console.log(`  Players: ${playerResult.created} created, ${playerResult.updated} updated`)
-  console.log(`  Games: ${scheduleResult.created} created, ${scheduleResult.updated} updated`)
-  console.log(`  Stats: ${statsResult.created} created, ${statsResult.updated} updated`)
-  console.log(`  Rosters: ${rosterResult.updated} updated`)
+  console.log(`  Players: ${playerResult.upserted} upserted, ${playerResult.skipped} skipped`)
+  console.log(`  Games: ${scheduleResult.upserted} upserted, ${scheduleResult.skipped} skipped`)
+  console.log(`  Stats: ${statsResult.upserted} upserted, ${statsResult.skipped} skipped ${statsResult.note || ''}`)
+  console.log(`  Kicking: ${kickingResult.upserted} upserted, ${kickingResult.skipped} skipped ${kickingResult.note || ''}`)
+  console.log(`  DST: ${dstResult.upserted} upserted, ${dstResult.skipped} skipped ${dstResult.note || ''}`)
+  console.log(`  Rosters: ${rosterResult.updated || rosterResult.upserted || 0} updated`)
 
-  return { playerResult, scheduleResult, statsResult, rosterResult }
+  return { playerResult, scheduleResult, statsResult, kickingResult, dstResult, rosterResult }
 }
 
 module.exports = {
   syncPlayers,
   syncSchedule,
   syncWeeklyStats,
+  syncKickingStats,
+  syncDstStats,
   syncRosters,
   backfillSeason,
 }
