@@ -433,6 +433,15 @@ class ApiService {
     return this.request(`/managers/${userId}/achievements`)
   }
 
+  async getClutchRating(userId) {
+    return this.request(`/managers/${userId}/clutch-rating`)
+  }
+
+  async getWeightedConsensus(eventId, playerId, type = 'player_benchmark') {
+    const params = new URLSearchParams({ eventId, playerId, type }).toString()
+    return this.request(`/predictions/consensus-weighted?${params}`)
+  }
+
   // Waivers
   async submitWaiverClaim(leagueId, { playerId, bidAmount, dropPlayerId, priority }) {
     return this.request(`/leagues/${leagueId}/waivers/claim`, {

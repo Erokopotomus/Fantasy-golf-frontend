@@ -394,35 +394,121 @@ function TrackRecord() {
 // ─── Tab: Leaderboards ──────────────────────────────────────────────────────
 function Leaderboards() {
   const [leaderboard, setLeaderboard] = useState([])
+  const [board, setBoard] = useState('overall') // overall, hot, consistent
   const [timeframe, setTimeframe] = useState('weekly')
+  const [sortBy, setSortBy] = useState('accuracy')
+  const [minCalls, setMinCalls] = useState(3)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    api.getPredictionLeaderboard({ sport: 'golf', timeframe, limit: 50 })
+
+    const params = { sport: 'golf', limit: 50 }
+
+    if (board === 'hot') {
+      params.timeframe = '7d'
+      params.period = '7d'
+      params.sortBy = 'accuracy'
+    } else if (board === 'consistent') {
+      params.timeframe = 'all'
+      params.sortBy = 'clutchRating'
+      params.minCalls = 50
+    } else {
+      params.timeframe = timeframe
+      params.sortBy = sortBy
+      params.minCalls = minCalls
+    }
+
+    api.getPredictionLeaderboard(params)
       .then(res => setLeaderboard(res.leaderboard || []))
       .catch(() => setLeaderboard([]))
       .finally(() => setLoading(false))
-  }, [timeframe])
+  }, [board, timeframe, sortBy, minCalls])
+
+  const BOARDS = [
+    { id: 'overall', label: 'Overall' },
+    { id: 'hot', label: 'Hot Right Now' },
+    { id: 'consistent', label: 'Most Consistent' },
+  ]
+
+  const TIMEFRAMES = [
+    { id: 'weekly', label: '7d' },
+    { id: '30d', label: '30d' },
+    { id: 'all', label: 'All Time' },
+  ]
+
+  const SORT_OPTIONS = [
+    { id: 'accuracy', label: 'Accuracy' },
+    { id: 'clutchRating', label: 'Clutch Rating' },
+  ]
 
   return (
     <div>
-      {/* Timeframe tabs */}
+      {/* Board tabs */}
       <div className="flex gap-2 mb-4">
-        {['weekly', 'all'].map(tf => (
+        {BOARDS.map(b => (
           <button
-            key={tf}
-            onClick={() => setTimeframe(tf)}
+            key={b.id}
+            onClick={() => setBoard(b.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              timeframe === tf
-                ? 'bg-white/15 text-white'
+              board === b.id
+                ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
                 : 'bg-white/5 text-white/40 hover:text-white/60'
             }`}
           >
-            {tf === 'weekly' ? 'This Week' : 'All Time'}
+            {b.label}
           </button>
         ))}
       </div>
+
+      {/* Filters (only for Overall) */}
+      {board === 'overall' && (
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          {/* Timeframe */}
+          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+            {TIMEFRAMES.map(tf => (
+              <button
+                key={tf.id}
+                onClick={() => setTimeframe(tf.id)}
+                className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                  timeframe === tf.id ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+                }`}
+              >
+                {tf.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort by */}
+          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+            {SORT_OPTIONS.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setSortBy(s.id)}
+                className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                  sortBy === s.id ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Min calls slider */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-white/40">Min calls:</span>
+            <input
+              type="range"
+              min={1}
+              max={50}
+              value={minCalls}
+              onChange={e => setMinCalls(parseInt(e.target.value))}
+              className="w-20 accent-amber-500"
+            />
+            <span className="text-xs font-mono text-white/60 w-6">{minCalls}</span>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-2">
@@ -432,7 +518,7 @@ function Leaderboards() {
         </div>
       ) : leaderboard.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-4xl mb-3">🏆</div>
+          <div className="text-4xl mb-3">&#127942;</div>
           <h3 className="text-lg font-semibold text-white mb-2">No Rankings Yet</h3>
           <p className="text-white/50 text-sm">
             Make performance calls to appear on the leaderboard.
@@ -443,39 +529,74 @@ function Leaderboards() {
           {/* Header */}
           <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-white/10 text-xs text-white/40">
             <div className="col-span-1">#</div>
-            <div className="col-span-5">User</div>
+            <div className="col-span-4">User</div>
+            <div className="col-span-2 text-center">Rating</div>
             <div className="col-span-2 text-right">Accuracy</div>
-            <div className="col-span-2 text-right">Calls</div>
+            <div className="col-span-1 text-right">Calls</div>
             <div className="col-span-2 text-right">Streak</div>
           </div>
 
           {/* Rows */}
           {leaderboard.map((entry, i) => {
-            const tierCfg = TIER_CONFIG[entry.tier] || TIER_CONFIG.rookie
+            const tierCfg = TIER_CONFIG[entry.tier || entry.clutchTier] || TIER_CONFIG.rookie
+            const accuracyVal = entry.accuracyRate != null
+              ? Math.round(entry.accuracyRate * 100)
+              : entry.accuracy != null
+                ? (entry.accuracy < 1 ? Math.round(entry.accuracy * 100) : Math.round(entry.accuracy))
+                : 0
+            const clutchRating = entry.clutchRating
+            const totalCalls = entry.totalPredictions ?? entry.totalGradedCalls ?? entry.total ?? 0
+            const streak = entry.streakCurrent ?? entry.streak ?? 0
+
             return (
-              <div key={entry.userId || i} className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-                <div className="col-span-1 text-white/60 font-mono text-sm">{i + 1}</div>
-                <div className="col-span-5 flex items-center gap-2">
+              <Link
+                key={entry.userId || i}
+                to={`/manager/${entry.userId}`}
+                className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
+              >
+                <div className="col-span-1 text-white/60 font-mono text-sm flex items-center">{i + 1}</div>
+                <div className="col-span-4 flex items-center gap-2 min-w-0">
                   {entry.avatar ? (
-                    <img src={entry.avatar} alt="" className="w-6 h-6 rounded-full" />
+                    <img src={entry.avatar} alt="" className="w-6 h-6 rounded-full shrink-0" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-xs">
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-xs shrink-0">
                       {(entry.name || entry.userName || '?').charAt(0)}
                     </div>
                   )}
                   <span className="text-sm text-white truncate">{entry.name || entry.userName || 'Anonymous'}</span>
-                  <span className={`text-xs font-mono ${tierCfg.color}`}>{entry.tier}</span>
                 </div>
-                <div className="col-span-2 text-right text-sm font-mono text-white">
-                  {entry.accuracyRate != null ? Math.round(entry.accuracyRate * 100) : entry.accuracy ?? 0}%
+                <div className="col-span-2 flex items-center justify-center">
+                  {clutchRating != null ? (
+                    <div className="flex items-center gap-1">
+                      <span className={`text-sm font-mono font-bold ${
+                        clutchRating >= 90 ? 'text-amber-400' :
+                        clutchRating >= 70 ? 'text-emerald-400' :
+                        clutchRating >= 50 ? 'text-amber-500' :
+                        'text-gray-400'
+                      }`}>
+                        {Math.round(clutchRating)}
+                      </span>
+                      {(entry.trend || entry.clutchTrend) === 'up' && (
+                        <svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 2L10 7H2L6 2Z" fill="#6ABF8A" /></svg>
+                      )}
+                      {(entry.trend || entry.clutchTrend) === 'down' && (
+                        <svg width="10" height="10" viewBox="0 0 12 12"><path d="M6 10L2 5H10L6 10Z" fill="#EF4444" /></svg>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-white/20 font-mono">—</span>
+                  )}
                 </div>
-                <div className="col-span-2 text-right text-sm font-mono text-white/60">
-                  {entry.totalPredictions ?? entry.total ?? 0}
+                <div className="col-span-2 text-right text-sm font-mono text-white flex items-center justify-end">
+                  {accuracyVal}%
                 </div>
-                <div className="col-span-2 text-right text-sm font-mono text-white/60">
-                  {entry.streakCurrent ?? entry.streak ?? 0}
+                <div className="col-span-1 text-right text-sm font-mono text-white/60 flex items-center justify-end">
+                  {totalCalls}
                 </div>
-              </div>
+                <div className="col-span-2 text-right text-sm font-mono text-white/60 flex items-center justify-end">
+                  {streak}
+                </div>
+              </Link>
             )
           })}
         </div>

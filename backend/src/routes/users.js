@@ -46,19 +46,36 @@ router.get('/me', authenticate, async (req, res, next) => {
 // PATCH /api/users/me - Update current user profile
 router.patch('/me', authenticate, async (req, res, next) => {
   try {
-    const { name, avatar } = req.body
+    const { name, avatar, bio, tagline, socialLinks } = req.body
+
+    const updateData = {}
+    if (name) updateData.name = name
+    if (avatar) updateData.avatar = avatar
+    if (bio !== undefined) updateData.bio = bio ? String(bio).slice(0, 2000) : null
+    if (tagline !== undefined) updateData.tagline = tagline ? String(tagline).slice(0, 280) : null
+    if (socialLinks !== undefined) {
+      // Validate socialLinks is an object with allowed keys
+      const allowed = ['twitter', 'youtube', 'podcast', 'website']
+      const cleaned = {}
+      if (socialLinks && typeof socialLinks === 'object') {
+        for (const key of allowed) {
+          if (socialLinks[key]) cleaned[key] = String(socialLinks[key]).slice(0, 500)
+        }
+      }
+      updateData.socialLinks = cleaned
+    }
 
     const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: {
-        ...(name && { name }),
-        ...(avatar && { avatar })
-      },
+      data: updateData,
       select: {
         id: true,
         email: true,
         name: true,
         avatar: true,
+        bio: true,
+        tagline: true,
+        socialLinks: true,
         createdAt: true
       }
     })

@@ -6,38 +6,73 @@ const router = express.Router()
 const prisma = new PrismaClient()
 
 // ─── GET /api/managers/:id/profile ──────────────────────────────────────────
-// Lifetime ManagerProfile (all sports + per-sport)
+// Lifetime ManagerProfile (all sports + per-sport) + bio + Clutch Rating
 router.get('/:id/profile', authenticate, async (req, res, next) => {
   try {
     const userId = req.params.id
 
-    const profiles = await prisma.managerProfile.findMany({
-      where: { userId },
-      include: {
-        sport: { select: { id: true, slug: true, name: true } },
-      },
-    })
+    const [profiles, user, achievementCount, clutchRating] = await Promise.all([
+      prisma.managerProfile.findMany({
+        where: { userId },
+        include: {
+          sport: { select: { id: true, slug: true, name: true } },
+        },
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, avatar: true, bio: true, tagline: true, socialLinks: true, createdAt: true },
+      }),
+      prisma.achievementUnlock.count({ where: { userId } }),
+      prisma.clutchManagerRating.findUnique({ where: { userId } }).catch(() => null),
+    ])
+
+    if (!user) return res.status(404).json({ error: { message: 'User not found' } })
 
     // Separate aggregate (sportId=null) from per-sport
     const aggregate = profiles.find(p => p.sportId === null) || null
     const bySport = profiles.filter(p => p.sportId !== null)
-
-    // Get user info
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, name: true, avatar: true, createdAt: true },
-    })
-
-    if (!user) return res.status(404).json({ error: { message: 'User not found' } })
-
-    // Get total achievement count
-    const achievementCount = await prisma.achievementUnlock.count({ where: { userId } })
 
     res.json({
       user,
       aggregate,
       bySport,
       achievementCount,
+      clutchRating: clutchRating || null,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ─── GET /api/managers/:id/clutch-rating ───────────────────────────────────
+// Returns Clutch Rating + component breakdown
+router.get('/:id/clutch-rating', authenticate, async (req, res, next) => {
+  try {
+    const userId = req.params.id
+
+    const rating = await prisma.clutchManagerRating.findUnique({
+      where: { userId },
+    })
+
+    if (!rating) {
+      return res.json({
+        clutchRating: null,
+        message: 'No Clutch Rating computed yet',
+      })
+    }
+
+    res.json({
+      clutchRating: {
+        overall: rating.overallRating,
+        accuracy: rating.accuracyComponent,
+        consistency: rating.consistencyComponent,
+        volume: rating.volumeComponent,
+        breadth: rating.breadthComponent,
+        tier: rating.tier,
+        trend: rating.trend,
+        totalGradedCalls: rating.totalGradedCalls,
+        updatedAt: rating.updatedAt,
+      },
     })
   } catch (error) {
     next(error)

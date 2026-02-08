@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { track, Events } from '../../services/analytics'
 import api from '../../services/api'
+import WeightedConsensusBar from './WeightedConsensusBar'
 
 /**
  * Sidebar card for tournament pages showing open Performance Calls.
@@ -166,6 +167,20 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
           {expanded ? 'Show less' : `Show all ${totalTargets} players`}
         </button>
       )}
+
+      {/* Show weighted consensus for the first predicted player */}
+      {madeCount > 0 && (() => {
+        const firstPredicted = Object.keys(myPredictions)[0]
+        if (!firstPredicted) return null
+        return (
+          <WeightedConsensusBar
+            eventId={eventId}
+            playerId={firstPredicted}
+            type="player_benchmark"
+            className="mt-3"
+          />
+        )
+      })()}
     </div>
   )
 }

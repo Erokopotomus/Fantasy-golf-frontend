@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { track, Events } from '../../services/analytics'
 import api from '../../services/api'
+import WeightedConsensusBar from './WeightedConsensusBar'
 
 /**
  * Contextual "Player Benchmark" card shown on player profile pages.
@@ -168,6 +169,11 @@ export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus,
 
       {error && (
         <p className="text-rose-400 text-xs mt-2 text-center">{error}</p>
+      )}
+
+      {/* Weighted consensus (only show when there are predictions) */}
+      {totalVotes >= 3 && (
+        <WeightedConsensusBar eventId={eventId} playerId={player.id} type="player_benchmark" className="mt-3" />
       )}
     </div>
   )

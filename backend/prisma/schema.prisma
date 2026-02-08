@@ -52,6 +52,12 @@ model User {
   leagueImports       LeagueImport[]
   historicalSeasons    HistoricalSeason[]    @relation("HistoricalOwner")
 
+  // Phase 5: Manager profile + Clutch Rating
+  bio         String?  @db.Text
+  tagline     String?  @db.VarChar(280)
+  socialLinks Json     @default("{}") @map("social_links")
+  clutchManagerRating ClutchManagerRating?
+
   @@map("users")
 }
 
@@ -2238,4 +2244,26 @@ model ClutchFormulaLog {
   deactivatedAt DateTime?
 
   @@map("clutch_formula_log")
+}
+
+// ============ CLUTCH MANAGER RATING (Phase 5) ============
+
+model ClutchManagerRating {
+  id                   String   @id @default(cuid())
+  userId               String   @unique @map("user_id")
+  user                 User     @relation(fields: [userId], references: [id])
+  overallRating        Float?   @map("overall_rating")
+  accuracyComponent    Float?   @map("accuracy_component")
+  consistencyComponent Float?   @map("consistency_component")
+  volumeComponent      Float?   @map("volume_component")
+  breadthComponent     Float?   @map("breadth_component")
+  tier                 String   @default("developing")
+  trend                String   @default("stable")
+  totalGradedCalls     Int      @default(0) @map("total_graded_calls")
+  computationInputs    Json     @default("{}") @map("computation_inputs")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([tier])
+  @@index([overallRating(sort: Desc)])
+  @@map("clutch_manager_ratings")
 }

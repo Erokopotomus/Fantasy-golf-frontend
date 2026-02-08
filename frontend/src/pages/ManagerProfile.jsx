@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import useManagerProfile from '../hooks/useManagerProfile'
 import Card from '../components/common/Card'
+import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
+import api from '../services/api'
 
 const TIER_COLORS = {
   BRONZE: '#CD7F32',
@@ -54,12 +56,53 @@ const CATEGORY_ICONS = {
   ),
 }
 
+const SOCIAL_ICONS = {
+  twitter: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  ),
+  youtube: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  ),
+  podcast: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+    </svg>
+  ),
+  website: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+    </svg>
+  ),
+}
+
 const StatBox = ({ label, value, color = 'text-white' }) => (
   <div className="bg-dark-primary rounded-lg p-4 text-center">
     <p className={`text-2xl font-bold ${color}`}>{value}</p>
     <p className="text-text-muted text-sm">{label}</p>
   </div>
 )
+
+const ComponentBar = ({ label, value, max = 100 }) => {
+  const pct = value != null ? Math.min(100, (value / max) * 100) : 0
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span className="text-text-secondary">{label}</span>
+        <span className="text-white font-mono">{value != null ? Math.round(value) : '—'}</span>
+      </div>
+      <div className="h-1.5 bg-dark-primary rounded-full overflow-hidden">
+        <div
+          className="h-full bg-accent-gold rounded-full transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
 
 const AchievementBadge = ({ achievement }) => {
   const [showTooltip, setShowTooltip] = useState(false)
@@ -91,7 +134,6 @@ const AchievementBadge = ({ achievement }) => {
           </div>
         )}
       </div>
-      {/* Hover Tooltip — outside the opacity/grayscale container */}
       {showTooltip && (
         <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 pointer-events-none">
           <div className="rounded-lg p-3 shadow-2xl border-2" style={{ background: 'linear-gradient(135deg, #FFD700, #F5A623)', borderColor: '#B8860B' }}>
@@ -115,7 +157,14 @@ const AchievementBadge = ({ achievement }) => {
 const ManagerProfile = () => {
   const { userId } = useParams()
   const { user: currentUser } = useAuth()
-  const { user, profile, bySport, achievements, achievementStats, reputation, loading, error } = useManagerProfile(userId)
+  const { user, profile, bySport, achievements, achievementStats, reputation, clutchRating, loading, error, refetch } = useManagerProfile(userId)
+
+  // Edit mode state
+  const [editing, setEditing] = useState(false)
+  const [editBio, setEditBio] = useState('')
+  const [editTagline, setEditTagline] = useState('')
+  const [editSocial, setEditSocial] = useState({})
+  const [saving, setSaving] = useState(false)
 
   if (loading) {
     return (
@@ -162,6 +211,33 @@ const ManagerProfile = () => {
   const formatNum = (val) => val != null ? Number(val).toLocaleString() : '0'
   const formatDecimal = (val) => val != null ? Number(val).toFixed(1) : '-'
 
+  const socialLinks = user?.socialLinks || {}
+  const hasSocial = Object.values(socialLinks).some(v => v)
+
+  const startEdit = () => {
+    setEditBio(user?.bio || '')
+    setEditTagline(user?.tagline || '')
+    setEditSocial(user?.socialLinks || {})
+    setEditing(true)
+  }
+
+  const saveProfile = async () => {
+    setSaving(true)
+    try {
+      await api.updateProfile({
+        bio: editBio,
+        tagline: editTagline,
+        socialLinks: editSocial,
+      })
+      setEditing(false)
+      refetch()
+    } catch (err) {
+      console.error('Save failed:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-dark-primary">
       <div className="max-w-5xl mx-auto px-4 py-6">
@@ -173,24 +249,156 @@ const ManagerProfile = () => {
           {isOwnProfile ? 'Back to Profile' : 'Back'}
         </Link>
 
-        {/* Header */}
+        {/* Header with Clutch Rating */}
         <Card className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-start gap-4 mb-4">
+            {/* Avatar */}
             <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-white text-2xl font-bold font-display shadow-button shrink-0">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
+
+            {/* Name + bio */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold font-display text-white truncate">{user?.name || 'Manager'}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold font-display text-white truncate">{user?.name || 'Manager'}</h1>
+                {isOwnProfile && !editing && (
+                  <button
+                    onClick={startEdit}
+                    className="text-text-secondary hover:text-white transition-colors"
+                    title="Edit profile"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               {memberSince && <p className="text-text-muted text-sm">Member since {memberSince}</p>}
+
+              {/* Tagline */}
+              {!editing && user?.tagline && (
+                <p className="text-text-secondary text-sm mt-1 italic">{user.tagline}</p>
+              )}
+
+              {/* Bio */}
+              {!editing && user?.bio && (
+                <p className="text-text-secondary text-sm mt-2">{user.bio}</p>
+              )}
+
+              {/* Social links */}
+              {!editing && hasSocial && (
+                <div className="flex items-center gap-3 mt-2">
+                  {Object.entries(socialLinks).map(([key, url]) => {
+                    if (!url) return null
+                    return (
+                      <a
+                        key={key}
+                        href={url.startsWith('http') ? url : `https://${url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-text-secondary hover:text-white transition-colors"
+                        title={key.charAt(0).toUpperCase() + key.slice(1)}
+                      >
+                        {SOCIAL_ICONS[key] || key}
+                      </a>
+                    )
+                  })}
+                </div>
+              )}
             </div>
+
+            {/* Clutch Rating Gauge */}
+            {clutchRating && clutchRating.overallRating != null && (
+              <ClutchRatingGauge
+                rating={clutchRating.overallRating}
+                tier={clutchRating.tier}
+                trend={clutchRating.trend}
+                size="lg"
+              />
+            )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+
+          {/* Edit form */}
+          {editing && (
+            <div className="border-t border-dark-border pt-4 space-y-3">
+              <div>
+                <label className="text-xs text-text-secondary font-mono block mb-1">Tagline (280 chars)</label>
+                <input
+                  type="text"
+                  value={editTagline}
+                  onChange={e => setEditTagline(e.target.value.slice(0, 280))}
+                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm"
+                  placeholder="Your one-liner..."
+                />
+                <span className="text-[10px] text-text-muted font-mono">{editTagline.length}/280</span>
+              </div>
+              <div>
+                <label className="text-xs text-text-secondary font-mono block mb-1">Bio</label>
+                <textarea
+                  value={editBio}
+                  onChange={e => setEditBio(e.target.value.slice(0, 2000))}
+                  rows={3}
+                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm resize-none"
+                  placeholder="Tell us about yourself..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {['twitter', 'youtube', 'podcast', 'website'].map(key => (
+                  <div key={key}>
+                    <label className="text-xs text-text-secondary font-mono block mb-1 capitalize">{key === 'twitter' ? 'X / Twitter' : key}</label>
+                    <input
+                      type="text"
+                      value={editSocial[key] || ''}
+                      onChange={e => setEditSocial(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm"
+                      placeholder={`https://...`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setEditing(false)}
+                  className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveProfile}
+                  disabled={saving}
+                  className="px-4 py-2 text-sm bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Quick stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
             <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
             <StatBox label="Wins" value={formatNum(p.wins)} color="text-yellow-400" />
             <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
             <StatBox label="Win %" value={formatPct(p.winPct)} />
           </div>
         </Card>
+
+        {/* Clutch Rating Breakdown */}
+        {clutchRating && clutchRating.overallRating != null && (
+          <Card className="mb-6">
+            <h2 className="text-lg font-semibold font-display text-white mb-4">Clutch Rating Breakdown</h2>
+            <div className="space-y-3">
+              <ComponentBar label="Accuracy (40%)" value={clutchRating.accuracyComponent} />
+              <ComponentBar label="Consistency (25%)" value={clutchRating.consistencyComponent} />
+              <ComponentBar label="Volume (20%)" value={clutchRating.volumeComponent} />
+              <ComponentBar label="Breadth (15%)" value={clutchRating.breadthComponent} />
+            </div>
+            <p className="text-xs text-text-muted mt-3 font-mono">
+              Based on {clutchRating.totalGradedCalls || 0} graded calls
+              {clutchRating.updatedAt && ` · Updated ${new Date(clutchRating.updatedAt).toLocaleDateString()}`}
+            </p>
+          </Card>
+        )}
 
         {/* Prediction Reputation */}
         {reputation && (
@@ -212,7 +420,7 @@ const ManagerProfile = () => {
               <StatBox label="Accuracy" value={`${(reputation.accuracyRate * 100).toFixed(1)}%`} color="text-green-400" />
               <StatBox label="Total Calls" value={formatNum(reputation.totalPredictions)} />
               <StatBox label="Correct" value={formatNum(reputation.correctPredictions)} color="text-accent-gold" />
-              <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}🔥` : '0'} color="text-orange-400" />
+              <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}` : '0'} color="text-orange-400" />
             </div>
 
             {/* Tier progress */}
@@ -244,11 +452,14 @@ const ManagerProfile = () => {
               <div className="mt-4 pt-3 border-t border-dark-tertiary">
                 <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-2">Badges</p>
                 <div className="flex flex-wrap gap-2">
-                  {reputation.badges.map((badge, i) => (
-                    <span key={i} className="text-xs font-mono px-2 py-1 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
-                      {badge.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </span>
-                  ))}
+                  {reputation.badges.map((badge, i) => {
+                    const badgeName = typeof badge === 'string' ? badge : badge?.type || badge?.name || ''
+                    return (
+                      <span key={i} className="text-xs font-mono px-2 py-1 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
+                        {badgeName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                    )
+                  })}
                 </div>
               </div>
             )}

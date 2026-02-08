@@ -453,6 +453,16 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('weekTransition', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Monday 3:00 AM ET — Clutch Manager Rating recompute (after metrics)
+    const clutchRatingEngine = require('./services/clutchRatingEngine')
+    cron.schedule('0 3 * * 1', async () => {
+      cronLog('clutchRating', 'Starting weekly Clutch Rating recompute')
+      try {
+        const result = await clutchRatingEngine.recomputeAll(cronPrisma)
+        cronLog('clutchRating', `Done: ${result.computed} computed, ${result.skipped} skipped`)
+      } catch (e) { cronLog('clutchRating', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Monday 2:30 AM ET — Clutch Metrics weekly recompute (after analytics refresh)
     const clutchMetrics = require('./services/clutchMetrics')
     cron.schedule('30 2 * * 1', async () => {
