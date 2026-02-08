@@ -109,9 +109,12 @@ const Landing = () => {
                 Prove You Know
                 <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Sports.</span>
               </h1>
-              <p className="text-lg sm:text-xl text-text-secondary max-w-xl mb-10 leading-relaxed">
+              <p className="text-lg sm:text-xl text-text-secondary max-w-xl mb-4 leading-relaxed">
                 Lock in your predictions. Track your accuracy. Build your reputation.
                 The platform where sports knowledge meets accountability.
+              </p>
+              <p className="text-sm text-text-muted font-mono max-w-xl mb-10">
+                Season-long fantasy leagues. AI-powered research. Prediction tracking. Your entire sports brain — one platform.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-4">
