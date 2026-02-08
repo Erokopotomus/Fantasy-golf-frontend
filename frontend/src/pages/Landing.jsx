@@ -136,39 +136,28 @@ const Landing = () => {
               <p className="text-text-muted text-sm">Golf is live now. NFL predictions launch Spring 2026.</p>
             </div>
 
-            {/* Right: Gauge */}
-            <div className="flex-shrink-0">
-              <ClutchRatingGauge rating={84} size="xl" animated />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════ ONE PLATFORM ══════════ */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
-            One Platform. Every Sport.
-          </h2>
-          <p className="text-text-secondary max-w-xl mx-auto mb-10">
-            Your Clutch Rating spans every sport. The best sports minds don't just know one game.
-          </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
-            {[
-              { sport: 'Golf', icon: '⛳', status: 'LIVE', color: 'border-gold text-gold bg-gold/10', badge: 'bg-gold text-dark-primary' },
-              { sport: 'NFL', icon: '🏈', status: 'Spring 2026', color: 'border-orange-500/30 text-orange-400 bg-orange-500/5', badge: 'bg-orange-500/20 text-orange-400' },
-              { sport: 'NBA', icon: '🏀', status: 'Future', color: 'border-dark-border text-text-muted bg-dark-primary/50', badge: 'bg-dark-tertiary text-text-muted' },
-              { sport: 'MLB', icon: '⚾', status: 'Future', color: 'border-dark-border text-text-muted bg-dark-primary/50', badge: 'bg-dark-tertiary text-text-muted' },
-            ].map(s => (
-              <div key={s.sport} className={`rounded-xl p-5 border ${s.color}`}>
-                <div className="text-3xl mb-3">{s.icon}</div>
-                <h3 className="text-lg font-bold font-display mb-2">{s.sport}</h3>
-                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase ${s.badge}`}>
-                  {s.status}
-                </span>
+            {/* Right: Gauge + Sport Badges */}
+            <div className="flex-shrink-0 flex flex-col items-center">
+              <div className="scale-110 mb-8">
+                <ClutchRatingGauge rating={84} size="xl" animated />
               </div>
-            ))}
+              <div className="flex gap-4">
+                <div className="rounded-xl px-5 py-3 border border-gold/30 bg-gold/10 flex items-center gap-3">
+                  <span className="text-2xl">⛳</span>
+                  <div>
+                    <span className="text-white font-display font-bold text-sm block">Golf</span>
+                    <span className="text-[10px] font-mono font-bold text-gold uppercase">Live</span>
+                  </div>
+                </div>
+                <div className="rounded-xl px-5 py-3 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
+                  <span className="text-2xl">🏈</span>
+                  <div>
+                    <span className="text-white font-display font-bold text-sm block">NFL</span>
+                    <span className="text-[10px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
