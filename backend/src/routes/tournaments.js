@@ -55,6 +55,16 @@ router.get('/current', async (req, res, next) => {
       orderBy: { startDate: 'asc' }
     })
 
+    // For live tournaments, ensure currentRound accounts for date-based expected round
+    // (API data may lag between rounds, e.g. early morning before tee times)
+    if (tournament && tournament.status === 'IN_PROGRESS' && tournament.startDate) {
+      const daysSinceStart = Math.floor((Date.now() - new Date(tournament.startDate).getTime()) / 86400000)
+      const dateBasedRound = Math.min(Math.max(daysSinceStart + 1, 1), 4)
+      if (dateBasedRound > (tournament.currentRound || 0)) {
+        tournament.currentRound = dateBasedRound
+      }
+    }
+
     res.json({ tournament })
   } catch (error) {
     next(error)
@@ -90,6 +100,15 @@ router.get('/:id', async (req, res, next) => {
 
     if (!tournament) {
       return res.status(404).json({ error: { message: 'Tournament not found' } })
+    }
+
+    // Date-based round floor for live tournaments
+    if (tournament.status === 'IN_PROGRESS' && tournament.startDate) {
+      const daysSinceStart = Math.floor((Date.now() - new Date(tournament.startDate).getTime()) / 86400000)
+      const dateBasedRound = Math.min(Math.max(daysSinceStart + 1, 1), 4)
+      if (dateBasedRound > (tournament.currentRound || 0)) {
+        tournament.currentRound = dateBasedRound
+      }
     }
 
     res.json({ tournament })

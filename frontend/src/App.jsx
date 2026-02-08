@@ -24,6 +24,7 @@ import Leagues from './pages/Leagues'
 import LeagueHome from './pages/LeagueHome'
 import Draft from './pages/Draft'
 import Profile from './pages/Profile'
+import Tournaments from './pages/Tournaments'
 import TournamentScoring from './pages/TournamentScoring'
 import Standings from './pages/Standings'
 import LeagueLiveScoring from './pages/LeagueLiveScoring'
@@ -162,6 +163,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tournaments"
+            element={
+              <ProtectedRoute>
+                <Tournaments />
               </ProtectedRoute>
             }
           />

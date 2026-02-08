@@ -638,13 +638,18 @@ async function syncLiveScoring(tournamentDgId, prisma) {
   await batchTransaction(prisma, liveScoreOps)
   await batchTransaction(prisma, perfOps)
 
+  // Compute date-based expected round as a floor (API may lag between rounds)
+  const daysSinceStart = Math.floor((Date.now() - new Date(tournament.startDate).getTime()) / 86400000)
+  const dateBasedRound = Math.min(Math.max(daysSinceStart + 1, 1), 4)
+  const effectiveRound = Math.max(maxRound, dateBasedRound)
+
   // Update tournament status
   await prisma.tournament.update({
     where: { id: tournament.id },
-    data: { status: 'IN_PROGRESS', currentRound: maxRound },
+    data: { status: 'IN_PROGRESS', currentRound: effectiveRound },
   })
 
-  console.log(`[Sync] Live scoring done: ${liveScoreOps.length} players updated, round ${maxRound}`)
+  console.log(`[Sync] Live scoring done: ${liveScoreOps.length} players updated, round ${effectiveRound} (api=${maxRound}, date=${dateBasedRound})`)
   return { updated: liveScoreOps.length, tournamentStatus: 'IN_PROGRESS' }
 }
 

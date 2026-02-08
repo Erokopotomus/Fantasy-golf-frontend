@@ -77,25 +77,28 @@ const Navbar = () => {
                 <Link to="/prove-it" className={navLinkStyles('/prove-it')}>
                   Prove It
                 </Link>
-                {tournamentLink && (
-                  <Link
-                    to={tournamentLink}
-                    className={`
-                      px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
-                      ${isTournamentActive
+                <Link to="/tournaments" className={navLinkStyles('/tournaments')}>
+                  Tournaments
+                </Link>
+                <Link
+                  to={tournamentLink || '/tournaments'}
+                  className={`
+                    px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
+                    ${isLiveTournament
+                      ? 'text-gold bg-surface-bright'
+                      : isTournamentActive
                         ? 'text-gold bg-surface-bright'
                         : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'}
-                    `}
-                  >
-                    {isLiveTournament && (
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
-                      </span>
-                    )}
-                    {isLiveTournament ? 'Live' : 'Tournament'}
-                  </Link>
-                )}
+                  `}
+                >
+                  {isLiveTournament && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
+                    </span>
+                  )}
+                  Live
+                </Link>
                 <div className="ml-2">
                   <SearchButton />
                 </div>
@@ -356,24 +359,31 @@ const Navbar = () => {
                 >
                   Manager Stats
                 </Link>
-                {tournamentLink && (
-                  <Link
-                    to={tournamentLink}
-                    className={`
-                      flex items-center gap-2
-                      ${mobileNavLinkStyles(tournamentLink)}
-                    `}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {isLiveTournament && (
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
-                      </span>
-                    )}
-                    {isLiveTournament ? 'Live Tournament' : 'Tournament'}
-                  </Link>
-                )}
+                <Link
+                  to="/tournaments"
+                  className={mobileNavLinkStyles('/tournaments')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Tournaments
+                </Link>
+                <Link
+                  to={tournamentLink || '/tournaments'}
+                  className={`
+                    flex items-center gap-2
+                    ${isTournamentActive
+                      ? 'block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 text-gold bg-surface-bright'
+                      : mobileNavLinkStyles('')}
+                  `}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {isLiveTournament && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
+                    </span>
+                  )}
+                  Live
+                </Link>
               </>
             ) : (
               <>

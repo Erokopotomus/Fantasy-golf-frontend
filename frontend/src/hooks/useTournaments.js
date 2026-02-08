@@ -4,6 +4,7 @@ import api from '../services/api'
 export const useTournaments = () => {
   const [tournaments, setTournaments] = useState([])
   const [currentTournament, setCurrentTournament] = useState(null)
+  const [recentTournaments, setRecentTournaments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -26,7 +27,10 @@ export const useTournaments = () => {
         t.status === 'UPCOMING' || t.status === 'IN_PROGRESS'
       )
 
+      const recent = tournamentList.filter(t => t.status === 'COMPLETED').slice(0, 5)
+
       setTournaments(upcoming)
+      setRecentTournaments(recent)
       setCurrentTournament(currentData?.tournament || currentData || null)
     } catch (err) {
       setError(err.message)
@@ -44,7 +48,7 @@ export const useTournaments = () => {
     fetchTournaments()
   }
 
-  return { tournaments, currentTournament, loading, error, refetch }
+  return { tournaments, currentTournament, recentTournaments, loading, error, refetch }
 }
 
 export default useTournaments
