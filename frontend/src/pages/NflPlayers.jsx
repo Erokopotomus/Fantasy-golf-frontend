@@ -158,10 +158,10 @@ export default function NflPlayers() {
         <select
           value={scoring}
           onChange={e => setScoring(e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-gold/50 focus:outline-none"
+          className="bg-[#1a1917] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-gold/50 focus:outline-none"
         >
           {SCORING_TYPES.map(s => (
-            <option key={s.value} value={s.value} className="bg-dark-card">{s.label}</option>
+            <option key={s.value} value={s.value} className="bg-[#1a1917] text-white">{s.label}</option>
           ))}
         </select>
 
@@ -170,10 +170,10 @@ export default function NflPlayers() {
           <select
             value={season}
             onChange={e => setSeason(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-gold/50 focus:outline-none"
+            className="bg-[#1a1917] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-gold/50 focus:outline-none"
           >
             {availableSeasons.map(yr => (
-              <option key={yr} value={yr} className="bg-dark-card">{yr} Season</option>
+              <option key={yr} value={yr} className="bg-[#1a1917] text-white">{yr} Season</option>
             ))}
           </select>
         )}
