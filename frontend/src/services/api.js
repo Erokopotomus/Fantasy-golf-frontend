@@ -326,6 +326,10 @@ class ApiService {
     return this.request(`/leagues/${leagueId}/playoffs/generate`, { method: 'POST' })
   }
 
+  async getSeasonRecap(leagueId) {
+    return this.request(`/leagues/${leagueId}/recap`)
+  }
+
   // Tournaments
   async getTournaments(options = {}) {
     const params = new URLSearchParams(options).toString()
@@ -542,6 +546,37 @@ class ApiService {
   async getEventPredictions(eventId, options = {}) {
     const params = new URLSearchParams(options).toString()
     return this.request(`/predictions/event/${eventId}${params ? '?' + params : ''}`)
+  }
+
+  // Imports (League History / Migration)
+  async discoverSleeperLeague(leagueId) {
+    return this.request('/imports/sleeper/discover', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId }),
+    })
+  }
+
+  async importSleeperLeague(leagueId) {
+    return this.request('/imports/sleeper/import', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId }),
+    })
+  }
+
+  async getImports() {
+    return this.request('/imports')
+  }
+
+  async getImportStatus(id) {
+    return this.request(`/imports/${id}`)
+  }
+
+  async getLeagueHistory(leagueId) {
+    return this.request(`/imports/history/${leagueId}`)
+  }
+
+  async deleteImport(id) {
+    return this.request(`/imports/${id}`, { method: 'DELETE' })
   }
 
   // Sync (admin)

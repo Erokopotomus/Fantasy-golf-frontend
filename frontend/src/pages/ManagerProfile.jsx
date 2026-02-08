@@ -115,7 +115,7 @@ const AchievementBadge = ({ achievement }) => {
 const ManagerProfile = () => {
   const { userId } = useParams()
   const { user: currentUser } = useAuth()
-  const { user, profile, bySport, achievements, achievementStats, loading, error } = useManagerProfile(userId)
+  const { user, profile, bySport, achievements, achievementStats, reputation, loading, error } = useManagerProfile(userId)
 
   if (loading) {
     return (
@@ -191,6 +191,76 @@ const ManagerProfile = () => {
             <StatBox label="Win %" value={formatPct(p.winPct)} />
           </div>
         </Card>
+
+        {/* Prediction Reputation */}
+        {reputation && (
+          <Card className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold font-display text-white">Prove It Track Record</h2>
+              <span className={`text-xs font-mono font-bold px-2 py-1 rounded capitalize ${
+                reputation.tier === 'elite' ? 'bg-purple-500/20 text-purple-400' :
+                reputation.tier === 'expert' ? 'bg-accent-gold/20 text-accent-gold' :
+                reputation.tier === 'sharp' ? 'bg-blue-500/20 text-blue-400' :
+                reputation.tier === 'contender' ? 'bg-green-500/20 text-green-400' :
+                'bg-dark-tertiary text-text-secondary'
+              }`}>
+                {reputation.tier}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <StatBox label="Accuracy" value={`${(reputation.accuracyRate * 100).toFixed(1)}%`} color="text-green-400" />
+              <StatBox label="Total Calls" value={formatNum(reputation.totalPredictions)} />
+              <StatBox label="Correct" value={formatNum(reputation.correctPredictions)} color="text-accent-gold" />
+              <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}🔥` : '0'} color="text-orange-400" />
+            </div>
+
+            {/* Tier progress */}
+            {reputation.tier !== 'elite' && reputation.totalPredictions > 0 && (() => {
+              const tiers = ['rookie', 'contender', 'sharp', 'expert', 'elite']
+              const currentIdx = tiers.indexOf(reputation.tier)
+              const nextTier = tiers[currentIdx + 1]
+              const thresholds = { contender: { min: 10, acc: 0 }, sharp: { min: 20, acc: 0.55 }, expert: { min: 50, acc: 0.65 }, elite: { min: 100, acc: 0.75 } }
+              const next = thresholds[nextTier]
+              if (!next) return null
+              const predPct = Math.min(1, reputation.totalPredictions / next.min)
+              const accPct = next.acc > 0 ? Math.min(1, reputation.accuracyRate / next.acc) : 1
+              const progress = Math.min(predPct, accPct)
+              return (
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-text-secondary font-mono">Progress to {nextTier}</span>
+                    <span className="text-text-secondary font-mono">{(progress * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="h-1.5 bg-dark-primary rounded-full overflow-hidden">
+                    <div className="h-full bg-accent-gold rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Prediction badges */}
+            {reputation.badges?.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-dark-tertiary">
+                <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-2">Badges</p>
+                <div className="flex flex-wrap gap-2">
+                  {reputation.badges.map((badge, i) => (
+                    <span key={i} className="text-xs font-mono px-2 py-1 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
+                      {badge.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Best streak */}
+            {reputation.streakBest > 0 && (
+              <div className="mt-3 text-xs text-text-secondary font-mono">
+                Best streak: {reputation.streakBest} correct in a row
+              </div>
+            )}
+          </Card>
+        )}
 
         {!hasStats && achievements.length === 0 ? (
           /* Empty State */

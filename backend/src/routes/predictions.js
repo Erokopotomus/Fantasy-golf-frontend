@@ -2,13 +2,20 @@ const express = require('express')
 const router = express.Router()
 const { PrismaClient } = require('@prisma/client')
 const { authenticate, optionalAuth } = require('../middleware/auth')
+const { validateBody } = require('../middleware/validate')
 const predictionService = require('../services/predictionService')
 
 const prisma = new PrismaClient()
 
+const validatePrediction = validateBody({
+  sport: { required: true, type: 'string', enum: ['golf', 'nfl', 'nba', 'mlb'] },
+  predictionType: { required: true, type: 'string', enum: ['performance_call', 'player_benchmark', 'weekly_winner', 'bold_call'] },
+  predictionData: { required: true },
+})
+
 // ─── Submit a prediction ────────────────────────────────────────────────────
 // POST /api/predictions
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, validatePrediction, async (req, res) => {
   try {
     const prediction = await predictionService.submitPrediction(req.user.id, req.body, prisma)
     res.status(201).json({ prediction })

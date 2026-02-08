@@ -41,6 +41,9 @@ import MockDraftRecap from './pages/MockDraftRecap'
 import NotificationSettings from './components/settings/NotificationSettings'
 import AdminDashboard from './pages/AdminDashboard'
 import ProveIt from './pages/ProveIt'
+import ImportLeague from './pages/ImportLeague'
+import LeagueVault from './pages/LeagueVault'
+import SeasonRecap from './pages/SeasonRecap'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -213,6 +216,31 @@ function App() {
             element={
               <ProtectedRoute>
                 <News />
+              </ProtectedRoute>
+            }
+          />
+          {/* Import & League Vault */}
+          <Route
+            path="/import"
+            element={
+              <ProtectedRoute>
+                <ImportLeague />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/vault"
+            element={
+              <ProtectedRoute>
+                <LeagueVault />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/recap"
+            element={
+              <ProtectedRoute>
+                <SeasonRecap />
               </ProtectedRoute>
             }
           />

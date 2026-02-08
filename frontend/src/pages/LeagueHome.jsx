@@ -25,6 +25,7 @@ const LeagueHome = () => {
   const [draftDateInput, setDraftDateInput] = useState('')
   const [savingDate, setSavingDate] = useState(false)
   const [generatingPlayoffs, setGeneratingPlayoffs] = useState(false)
+  const [leagueLeaderboard, setLeagueLeaderboard] = useState([])
 
   // Fetch detailed league data (with full members, teams, rosters)
   useEffect(() => {
@@ -42,6 +43,14 @@ const LeagueHome = () => {
       .then(data => setCurrentTournament(data.tournament || data))
       .catch(() => {})
   }, [])
+
+  // Fetch league prediction leaderboard
+  useEffect(() => {
+    if (!leagueId) return
+    api.getPredictionLeaderboard({ leagueId, timeframe: 'weekly', limit: 5 })
+      .then(data => setLeagueLeaderboard(data.leaderboard || []))
+      .catch(() => {})
+  }, [leagueId])
 
   const loading = leaguesLoading && detailLoading
   const league = detailedLeague || leagues?.find(l => l.id === leagueId)
@@ -569,6 +578,85 @@ const LeagueHome = () => {
                   </div>
                 </div>
               </Card>
+
+              {/* League Vault link */}
+              {league?.settings?.importedFrom && (
+                <Link
+                  to={`/leagues/${leagueId}/vault`}
+                  className="block"
+                >
+                  <Card className="hover:border-accent-gold/50 transition-colors group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-display font-bold text-sm group-hover:text-accent-gold transition-colors">League Vault</p>
+                        <p className="text-xs text-text-secondary">View your league's imported history</p>
+                      </div>
+                      <svg className="w-4 h-4 text-text-secondary group-hover:text-accent-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </Card>
+                </Link>
+              )}
+
+              {/* Season Recap link */}
+              <Link
+                to={`/leagues/${leagueId}/recap`}
+                className="block"
+              >
+                <Card className="hover:border-accent-gold/50 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-accent-gold/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-display font-bold text-sm group-hover:text-accent-gold transition-colors">Season Recap</p>
+                      <p className="text-xs text-text-secondary">Awards, records, and final standings</p>
+                    </div>
+                    <svg className="w-4 h-4 text-text-secondary group-hover:text-accent-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </Card>
+              </Link>
+
+              {/* League Prediction Leaderboard */}
+              {leagueLeaderboard.length > 0 && (
+                <Card>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-display font-bold text-white">Sharpest Predictors</h3>
+                    <Link to="/prove-it" className="text-xs text-accent-gold hover:text-accent-gold/80 font-mono">View All</Link>
+                  </div>
+                  <div className="space-y-2">
+                    {leagueLeaderboard.map((entry, i) => (
+                      <div key={entry.userId || i} className="flex items-center gap-2">
+                        <span className={`text-xs font-mono font-bold w-5 ${i === 0 ? 'text-accent-gold' : 'text-text-secondary'}`}>
+                          {i + 1}.
+                        </span>
+                        <Link
+                          to={`/manager/${entry.userId}`}
+                          className="flex-1 text-sm text-white hover:text-accent-gold transition-colors truncate font-display"
+                        >
+                          {entry.name || entry.userName || 'Unknown'}
+                        </Link>
+                        <span className="text-xs font-mono text-green-400">
+                          {(entry.accuracyRate * 100).toFixed(0)}%
+                        </span>
+                        <span className="text-xs font-mono text-text-secondary">
+                          {entry.totalPredictions}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
 
               {/* Activity Feed */}
               <Card>

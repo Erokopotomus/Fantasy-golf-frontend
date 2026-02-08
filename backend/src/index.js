@@ -27,6 +27,9 @@ const waiverRoutes = require('./routes/waivers')
 const draftHistoryRoutes = require('./routes/draftHistory')
 const adminRoutes = require('./routes/admin')
 const predictionRoutes = require('./routes/predictions')
+const importRoutes = require('./routes/imports')
+
+const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
 const app = express()
 const httpServer = createServer(app)
@@ -84,6 +87,12 @@ app.use(express.urlencoded({ extended: true }))
 app.set('io', io)
 global.io = io
 
+// Rate limiting
+app.use('/api/auth', authLimiter)
+app.use('/api/', apiLimiter)
+app.use('/api/imports', heavyLimiter)
+app.use('/api/sync', heavyLimiter)
+
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
@@ -105,6 +114,7 @@ app.use('/api/leagues', waiverRoutes)
 app.use('/api/draft-history', draftHistoryRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/predictions', predictionRoutes)
+app.use('/api/imports', importRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

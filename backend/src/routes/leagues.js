@@ -1165,4 +1165,171 @@ router.get('/:id/current-week', authenticate, async (req, res, next) => {
   }
 })
 
+// ─── Season Recap with Auto-Generated Awards ────────────────────────────────
+// GET /api/leagues/:id/recap
+router.get('/:id/recap', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: {
+        teams: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+        leagueSeasons: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            teamSeasons: { include: { team: { include: { user: { select: { id: true, name: true } } } } } },
+          },
+        },
+      },
+    })
+
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+
+    const leagueSeason = league.leagueSeasons[0]
+    if (!leagueSeason) return res.json({ awards: [], standings: [], leagueName: league.name })
+
+    const teamSeasons = leagueSeason.teamSeasons || []
+
+    // Get all weekly results for this season
+    const weeklyResults = await prisma.weeklyTeamResult.findMany({
+      where: { leagueSeasonId: leagueSeason.id },
+      orderBy: { weekNumber: 'asc' },
+      include: { team: { include: { user: { select: { id: true, name: true } } } } },
+    })
+
+    // Get matchups for this league
+    const matchups = await prisma.matchup.findMany({
+      where: { leagueId: league.id, isComplete: true },
+      orderBy: { week: 'asc' },
+    })
+
+    const awards = []
+    const teamMap = {}
+    for (const ts of teamSeasons) {
+      teamMap[ts.teamId] = {
+        name: ts.teamName || ts.team?.user?.name || 'Unknown',
+        userId: ts.team?.userId,
+      }
+    }
+
+    // 1. MVP — Most total points
+    const mvp = [...teamSeasons].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))[0]
+    if (mvp) {
+      awards.push({ id: 'mvp', title: 'MVP', subtitle: 'Most Points Scored', icon: '🏆',
+        winner: teamMap[mvp.teamId]?.name, value: `${mvp.totalPoints?.toFixed(1)} pts` })
+    }
+
+    // 2. Best Week — Highest single-week score
+    const bestWeekTeam = [...teamSeasons].sort((a, b) => (b.bestWeekPoints || 0) - (a.bestWeekPoints || 0))[0]
+    if (bestWeekTeam?.bestWeekPoints) {
+      awards.push({ id: 'best_week', title: 'Best Week', subtitle: 'Highest Single-Week Score', icon: '🔥',
+        winner: teamMap[bestWeekTeam.teamId]?.name, value: `${bestWeekTeam.bestWeekPoints.toFixed(1)} pts` })
+    }
+
+    // 3. Longest Win Streak
+    const streakTeam = [...teamSeasons].sort((a, b) => (b.maxWinStreak || 0) - (a.maxWinStreak || 0))[0]
+    if (streakTeam?.maxWinStreak > 1) {
+      awards.push({ id: 'win_streak', title: 'On a Roll', subtitle: 'Longest Win Streak', icon: '🎯',
+        winner: teamMap[streakTeam.teamId]?.name, value: `${streakTeam.maxWinStreak} wins` })
+    }
+
+    // 4. Worst Luck — Most points left on bench (highest cumulative pointsLeftOnBench)
+    const benchByTeam = {}
+    for (const wr of weeklyResults) {
+      if (!benchByTeam[wr.teamId]) benchByTeam[wr.teamId] = 0
+      benchByTeam[wr.teamId] += wr.pointsLeftOnBench || 0
+    }
+    const worstLuck = Object.entries(benchByTeam).sort((a, b) => b[1] - a[1])[0]
+    if (worstLuck && worstLuck[1] > 0) {
+      awards.push({ id: 'worst_luck', title: 'Worst Luck', subtitle: 'Most Points Left on Bench', icon: '😤',
+        winner: teamMap[worstLuck[0]]?.name, value: `${worstLuck[1].toFixed(1)} pts wasted` })
+    }
+
+    // 5. Biggest Blowout — Largest margin of victory in a single matchup
+    let biggestBlowout = { margin: 0 }
+    for (const m of matchups) {
+      if (m.homeScore != null && m.awayScore != null) {
+        const margin = Math.abs(m.homeScore - m.awayScore)
+        if (margin > biggestBlowout.margin) {
+          const winnerId = m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId
+          biggestBlowout = { margin, winnerId, week: m.week, score: `${Math.max(m.homeScore, m.awayScore).toFixed(1)}-${Math.min(m.homeScore, m.awayScore).toFixed(1)}` }
+        }
+      }
+    }
+    if (biggestBlowout.margin > 0) {
+      awards.push({ id: 'blowout', title: 'Biggest Blowout', subtitle: 'Largest Margin of Victory', icon: '💪',
+        winner: teamMap[biggestBlowout.winnerId]?.name, value: `${biggestBlowout.score} (Week ${biggestBlowout.week})` })
+    }
+
+    // 6. Closest Matchup — Smallest margin
+    let closestMatchup = { margin: Infinity }
+    for (const m of matchups) {
+      if (m.homeScore != null && m.awayScore != null && m.homeScore !== m.awayScore) {
+        const margin = Math.abs(m.homeScore - m.awayScore)
+        if (margin < closestMatchup.margin) {
+          closestMatchup = { margin, week: m.week, score: `${Math.max(m.homeScore, m.awayScore).toFixed(1)}-${Math.min(m.homeScore, m.awayScore).toFixed(1)}` }
+        }
+      }
+    }
+    if (closestMatchup.margin < Infinity) {
+      awards.push({ id: 'closest', title: 'Photo Finish', subtitle: 'Closest Matchup', icon: '📸',
+        winner: `Week ${closestMatchup.week}`, value: closestMatchup.score })
+    }
+
+    // 7. Most Consistent — Lowest standard deviation in weekly scores
+    const weeklyByTeam = {}
+    for (const wr of weeklyResults) {
+      if (!weeklyByTeam[wr.teamId]) weeklyByTeam[wr.teamId] = []
+      weeklyByTeam[wr.teamId].push(wr.totalPoints || 0)
+    }
+    let mostConsistent = null
+    let lowestStdDev = Infinity
+    for (const [teamId, scores] of Object.entries(weeklyByTeam)) {
+      if (scores.length < 3) continue
+      const mean = scores.reduce((a, b) => a + b, 0) / scores.length
+      const variance = scores.reduce((sum, s) => sum + Math.pow(s - mean, 2), 0) / scores.length
+      const stdDev = Math.sqrt(variance)
+      if (stdDev < lowestStdDev) {
+        lowestStdDev = stdDev
+        mostConsistent = teamId
+      }
+    }
+    if (mostConsistent) {
+      awards.push({ id: 'consistent', title: 'Mr. Consistent', subtitle: 'Most Predictable Scorer', icon: '📊',
+        winner: teamMap[mostConsistent]?.name, value: `±${lowestStdDev.toFixed(1)} pts/week` })
+    }
+
+    // 8. Champion
+    const champion = teamSeasons.find(ts => ts.isChampion)
+    if (champion) {
+      awards.unshift({ id: 'champion', title: 'Champion', subtitle: 'Season Champion', icon: '👑',
+        winner: teamMap[champion.teamId]?.name, value: `${champion.wins}-${champion.losses}${champion.ties ? `-${champion.ties}` : ''}` })
+    }
+
+    // Build final standings
+    const standings = [...teamSeasons]
+      .sort((a, b) => (a.finalRank || 99) - (b.finalRank || 99) || (b.totalPoints || 0) - (a.totalPoints || 0))
+      .map((ts, idx) => ({
+        rank: ts.finalRank || idx + 1,
+        name: teamMap[ts.teamId]?.name,
+        userId: teamMap[ts.teamId]?.userId,
+        wins: ts.wins,
+        losses: ts.losses,
+        ties: ts.ties,
+        totalPoints: ts.totalPoints,
+        isChampion: ts.isChampion,
+        madePlayoffs: ts.madePlayoffs,
+      }))
+
+    res.json({
+      leagueName: league.name,
+      seasonYear: leagueSeason.season?.year,
+      awards,
+      standings,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

@@ -55,7 +55,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 ## DEVELOPMENT PHASES
 
 ### Current Status: PHASE 2 — COMPLETE ✓
-> Phases 1 & 2 built and deployed. Moving to Phase 3: League Vault & Migration.
+> Phases 1 & 2 complete. Phase 3 in progress — Sleeper import + League Vault v1 built, additional platforms and vault enhancements remaining.
 
 ### Phase 1: Core Platform — COMPLETE ✓
 
@@ -135,6 +135,20 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 - [x] IR slot management — backend lineup endpoint supports irPlayerIds, frontend IR zone in TeamRoster, irSlots setting in LeagueSettings
 - [x] Auction draft room — BidPanel, nomination, bidding, socket events all wired
 - [ ] PWA configuration (installable, offline-capable shell) — low priority, nice-to-have
+
+- [x] **Season Recap & Awards**
+  - Backend: `GET /api/leagues/:id/recap` — auto-generates awards from TeamSeason + WeeklyTeamResult data
+  - Awards: Champion, MVP (most points), Best Week, Longest Win Streak, Worst Luck (bench pts), Biggest Blowout, Photo Finish, Mr. Consistent
+  - Frontend: `SeasonRecap.jsx` at `/leagues/:leagueId/recap` — award cards + final standings
+  - Linked from LeagueHome sidebar
+
+- [x] **Security Hardening (v1)**
+  - express-rate-limit: auth (20/15min), API (120/min), imports/sync (5/5min)
+  - Input validation middleware: `validateBody()` + `sanitize()`
+  - Applied to predictions (type/sport validation) and imports (leagueId validation)
+
+- [x] **Manager Profile Enhancement**
+  - Prediction reputation stats on ManagerProfile: accuracy, tier badge, streak, badges, tier progress bar
 
 ---
 
@@ -308,50 +322,39 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 > **Critical build order:** Schema first → Player cross-reference table → Import pipeline → Vault display. The Vault is just the front-end for data the import pipeline stores. You do NOT need to pre-populate every historical player before importing — the import process itself populates the canonical player table.
 
-- [ ] **3A: Canonical Player Database Foundation**
-  - Extend `players` table with cross-reference support:
-    - `external_ids` JSONB field: `{ "yahoo": "123", "espn": "456", "sleeper": "789", "mfl": "abc", "fantrax": "def" }`
-    - Index on each external ID path for fast lookup
-  - Player matching pipeline:
-    1. Exact external ID match (fastest, most reliable)
-    2. Fuzzy match fallback: normalize name + match team + position + season
-    3. Manual resolution queue for unmatched players (admin tool)
-  - Players are created ON IMPORT — no need to pre-seed the database
-  - When an import encounters an unknown external ID, create the canonical record and store the mapping
-  - Deduplication: if Yahoo import creates "Patrick Mahomes" and ESPN import later references the same player, the cross-reference table links them to one canonical record
+- [x] **3A: Canonical Player Database Foundation**
+  - Player cross-reference columns: `sleeperId`, `mflId`, `fantraxId` on players table
+  - Player matching service: `playerMatcher.js` — exact platform ID match → fuzzy name match → manual resolution
+  - `normalizeName()`, `matchPlayer()`, `matchAndLink()`, `batchMatch()`
+  - Players created ON IMPORT via matchAndLink with createIfMissing option
 
-- [ ] **3B: League History Schema**
-  - Normalized structure that stores seasons/rosters/matchups/standings regardless of source platform
-  - New tables: `league_imports`, `historical_seasons`, `historical_rosters`, `historical_matchups`, `historical_standings`, `historical_drafts`, `historical_transactions`
-  - `league_imports`: tracks each import job (source, status, progress, error log, seasons found)
-  - `historical_seasons`: season_year, league_id, champion_user_id, standings_json, settings snapshot
-  - All historical data links to canonical player IDs via the cross-reference table
-  - Owner mapping: imported team owners map to Clutch users OR placeholder profiles (claimable later via invite)
+- [x] **3B: League History Schema**
+  - Migration `11_league_history` — applied on Railway (idempotent SQL)
+  - `league_imports` table: tracks import jobs (source, status, progress, error log, seasons found)
+  - `historical_seasons` table: per-team per-year records with JSONB for draftData, rosterData, weeklyScores
+  - `ImportStatus` enum: PENDING → SCANNING → MAPPING → IMPORTING → REVIEW → COMPLETE → FAILED
 
-- [ ] **3C: Import Pipeline — Yahoo First**
-  - OAuth 2.0 flow for commissioner authorization
-  - Full history import going back to league creation (Yahoo has the best historical data)
-  - Data pulled: rosters, scores, matchups, drafts, transactions, standings, record books
-  - Import UX flow:
-    1. Choose source platform
-    2. Connect via OAuth (Yahoo) / paste ID (Sleeper) / upload CSV (Fantrax) / enter credentials (MFL)
-    3. Discovery scan — show seasons found, team count, matchup count
-    4. Player mapping review — auto-map 95%+, surface unmatched for manual resolution
-    5. Owner mapping — map imported owners to existing Clutch users or create placeholders
-    6. Import progress — real-time progress bar, per-season summary cards
-    7. League Vault preview — the "wow moment": full history visualized
-    8. Invite league members — one-click invite link, members claim their historical team
+- [x] **3C: Import Pipeline — Sleeper First**
+  - `sleeperImport.js` service: `discoverLeague()` walks previous_league_id chain, `importSeason()` pulls all data, `runFullImport()` full pipeline
+  - `routes/imports.js`: 6 endpoints (discover, import, list, status, history, delete)
+  - Frontend: `useImports.js` hook (useImports, useSleeperImport, useLeagueHistory)
+  - Frontend: `ImportLeague.jsx` — 5-step wizard (platform → connect → discovery → importing → complete)
+  - Frontend: `api.js` — 6 import methods wired
+  - Dashboard Quick Action link to `/import`
+
+- [x] **3E: League Vault Display (v1)**
+  - `LeagueVault.jsx` — Timeline tab (season-by-season expandable cards with standings) + All-Time Records tab
+  - Season cards: champion highlight, full standings table with W/L/T/PF/PA/playoff result
+  - All-time records: computed championships, most titles, best season PF, all-time standings by win%
+  - League Vault link on LeagueHome for imported leagues
 
 - [ ] **3D: Additional Platform Imports**
   - ESPN: cookie-based auth (espn_s2 + SWID) with guided extraction. Data from 2018+ only. Marketing: "ESPN deleted your history. Clutch preserves it forever."
-  - Sleeper: public API, no auth, just league ID. Simplest import.
+  - Yahoo: OAuth 2.0 flow for commissioner authorization. Full history import.
   - Fantrax: CSV export flow with guided instructions. Web scraping as backup.
   - MFL: XML API with commissioner credentials. Deepest historical data (15-20+ years).
 
-- [ ] **3E: League Vault Display**
-  - Interactive timeline of league history (built AFTER import pipeline works)
-  - Season-by-season standings and champions
-  - All-time records: highest week, biggest blowout, longest winning streak, most championships
+- [ ] **3E: League Vault Display (v2 — enhancements)**
   - Head-to-head historical records between any two owners
   - Draft history browser (every pick, every year)
   - Transaction log across all seasons
