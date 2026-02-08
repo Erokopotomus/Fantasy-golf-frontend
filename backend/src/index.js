@@ -527,6 +527,51 @@ httpServer.listen(PORT, () => {
   } else {
     console.log('[Cron] DATAGOLF_API_KEY not set — sync jobs disabled')
   }
+
+  // ─── NFL Sync Cron Jobs ──────────────────────────────────────────────────
+  if (process.env.NFL_SYNC_ENABLED === 'true') {
+    const nflSync = require('./services/nflSync')
+
+    // Weekly Tuesday 5:00 AM — Sync NFL players (rosters change weekly)
+    cron.schedule('0 5 * * 2', async () => {
+      cronLog('nfl-players', 'Starting NFL player sync')
+      try {
+        const result = await nflSync.syncPlayers(cronPrisma)
+        cronLog('nfl-players', `Done: ${result.created} created, ${result.updated} updated`)
+      } catch (e) { cronLog('nfl-players', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Weekly Tuesday 5:30 AM — Sync NFL schedule + results
+    cron.schedule('30 5 * * 2', async () => {
+      cronLog('nfl-schedule', 'Starting NFL schedule sync')
+      try {
+        const result = await nflSync.syncSchedule(cronPrisma)
+        cronLog('nfl-schedule', `Done: ${result.created} created, ${result.updated} updated`)
+      } catch (e) { cronLog('nfl-schedule', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Weekly Tuesday 6:00 AM — Sync weekly player stats from completed games
+    cron.schedule('0 6 * * 2', async () => {
+      cronLog('nfl-stats', 'Starting NFL weekly stats sync')
+      try {
+        const result = await nflSync.syncWeeklyStats(cronPrisma)
+        cronLog('nfl-stats', `Done: ${result.created} created, ${result.updated} updated`)
+      } catch (e) { cronLog('nfl-stats', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Weekly Tuesday 6:30 AM — Sync roster updates
+    cron.schedule('30 6 * * 2', async () => {
+      cronLog('nfl-rosters', 'Starting NFL roster sync')
+      try {
+        const result = await nflSync.syncRosters(cronPrisma)
+        cronLog('nfl-rosters', `Done: ${result.updated} updated`)
+      } catch (e) { cronLog('nfl-rosters', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] NFL sync jobs scheduled (NFL_SYNC_ENABLED=true)')
+  } else {
+    console.log('[Cron] NFL sync jobs disabled (set NFL_SYNC_ENABLED=true to enable)')
+  }
 })
 
 module.exports = { app, io }

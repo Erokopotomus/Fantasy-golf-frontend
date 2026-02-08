@@ -11,6 +11,7 @@ const {
   syncTournamentResults,
 } = require('../services/datagolfSync')
 const { syncHoleScores } = require('../services/espnSync')
+const nflSync = require('../services/nflSync')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -99,6 +100,38 @@ router.post('/tournament/:dgId/finalize', async (req, res) => {
 router.post('/tournament/:tournamentId/espn', async (req, res) => {
   const { tournamentId } = req.params
   await runSync(`espn-${tournamentId}`, () => syncHoleScores(tournamentId, prisma), res)
+})
+
+// ─── NFL Sync Endpoints ─────────────────────────────────────────────────────
+
+// POST /api/sync/nfl/players
+router.post('/nfl/players', async (req, res) => {
+  await runSync('nfl-players', () => nflSync.syncPlayers(prisma), res)
+})
+
+// POST /api/sync/nfl/schedule
+router.post('/nfl/schedule', async (req, res) => {
+  const { season } = req.body
+  await runSync('nfl-schedule', () => nflSync.syncSchedule(prisma, season), res)
+})
+
+// POST /api/sync/nfl/stats
+router.post('/nfl/stats', async (req, res) => {
+  const { season } = req.body
+  await runSync('nfl-stats', () => nflSync.syncWeeklyStats(prisma, season), res)
+})
+
+// POST /api/sync/nfl/rosters
+router.post('/nfl/rosters', async (req, res) => {
+  const { season } = req.body
+  await runSync('nfl-rosters', () => nflSync.syncRosters(prisma, season), res)
+})
+
+// POST /api/sync/nfl/backfill — Full season backfill (teams must be seeded first)
+router.post('/nfl/backfill', async (req, res) => {
+  const { season } = req.body
+  if (!season) return res.status(400).json({ error: 'season is required' })
+  await runSync(`nfl-backfill-${season}`, () => nflSync.backfillSeason(prisma, season), res)
 })
 
 // GET /api/sync/status

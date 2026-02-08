@@ -202,6 +202,13 @@ model Player {
   mflId        String? // MyFantasyLeague ID
   fantraxId    String? // Fantrax ID
 
+  // NFL IDs (nflverse)
+  gsisId       String? @unique // NFL GSIS player ID
+  pfrId        String? // Pro-Football-Reference ID
+  nflPosition  String? // QB, RB, WR, TE, K, DEF, etc.
+  nflTeamAbbr  String? // Current NFL team abbreviation (KC, BAL, etc.)
+  nflNumber    Int?    // Jersey number
+
   // Basic Info
   firstName String?
   lastName  String?
@@ -315,9 +322,11 @@ model Player {
   sportProfiles      SportPlayerProfile[]
   waiverClaims       WaiverClaim[]
   clutchScores       ClutchScore[]
+  nflPlayerGames     NflPlayerGame[]
 
   @@index([owgrRank])
   @@index([name])
+  @@index([gsisId])
   @@map("players")
 }
 
@@ -2267,4 +2276,151 @@ model ClutchManagerRating {
   @@index([tier])
   @@index([overallRating(sort: Desc)])
   @@map("clutch_manager_ratings")
+}
+
+// ============ NFL EXPANSION (Phase 7) ============
+
+model NflTeam {
+  id             String   @id @default(cuid())
+  abbreviation   String   @unique // KC, BAL, SF, etc.
+  name           String   // Kansas City Chiefs
+  city           String   // Kansas City
+  conference     String   // AFC, NFC
+  division       String   // West, East, North, South
+  logoUrl        String?
+  primaryColor   String?  // hex
+  secondaryColor String?  // hex
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  homeGames   NflGame[] @relation("NflHomeTeam")
+  awayGames   NflGame[] @relation("NflAwayTeam")
+
+  @@map("nfl_teams")
+}
+
+model NflGame {
+  id            String   @id @default(cuid())
+  externalId    String?  @unique // nflverse game_id: "2024_01_KC_BAL"
+  season        Int      // 2024, 2025, 2026
+  week          Int      // 1-18 regular, 19-22 playoffs
+  gameType      String   @default("REG") // REG, WC, DIV, CON, SB
+
+  kickoff       DateTime
+  homeTeamId    String
+  awayTeamId    String
+  homeTeam      NflTeam  @relation("NflHomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam      NflTeam  @relation("NflAwayTeam", fields: [awayTeamId], references: [id])
+
+  homeScore     Int?
+  awayScore     Int?
+  status        String   @default("UPCOMING") // UPCOMING, IN_PROGRESS, FINAL
+
+  // Venue & conditions
+  venue         String?
+  surface       String?  // grass, fieldturf, etc.
+  roof          String?  // outdoors, dome, retractable
+  weather       Json?    // { temp, wind, humidity, condition }
+
+  // Lines (frozen Wednesday noon ET)
+  spreadLine    Float?   // Home team spread (negative = favored)
+  totalLine     Float?   // Over/under
+  homeMoneyline Int?     // e.g., -150
+  awayMoneyline Int?     // e.g., +130
+
+  // Source tracking
+  sourceProvider      String?
+  sourceIngestedAt    DateTime?
+  clutchTransformedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  playerStats NflPlayerGame[]
+
+  @@index([season, week])
+  @@index([status])
+  @@map("nfl_games")
+}
+
+model NflPlayerGame {
+  id        String  @id @default(cuid())
+  playerId  String
+  player    Player  @relation(fields: [playerId], references: [id])
+  gameId    String
+  game      NflGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  teamAbbr  String  // Which team they played for that game
+
+  // Passing
+  passAttempts    Int?
+  passCompletions Int?
+  passYards       Int?
+  passTds         Int?
+  interceptions   Int?
+  sacked          Int?
+  sackYards       Int?
+  passerRating    Float?
+
+  // Rushing
+  rushAttempts Int?
+  rushYards    Int?
+  rushTds      Int?
+  fumbles      Int?
+  fumblesLost  Int?
+
+  // Receiving
+  targets    Int?
+  receptions Int?
+  recYards   Int?
+  recTds     Int?
+
+  // Advanced (nflverse pre-computed)
+  epa         Float? // Expected Points Added (total)
+  cpoe        Float? // Completion % Over Expected (QBs)
+  successRate Float? // % of plays with positive EPA
+
+  // Usage
+  snapCount    Int?
+  snapPct      Float?
+  targetShare  Float?
+  rushShare     Float?
+
+  // Defense/Special Teams
+  sacks            Float?
+  tacklesSolo      Int?
+  tacklesAssist    Int?
+  passesDefended   Int?
+  fumblesForced    Int?
+  fumblesRecovered Int?
+  defInterceptions Int?
+  defTds           Int?
+
+  // Kicking
+  fgMade     Int?
+  fgAttempts Int?
+  fgPct      Float?
+  xpMade     Int?
+  xpAttempts Int?
+
+  // Fantasy points (pre-computed for convenience)
+  fantasyPtsStd  Float? // Standard scoring
+  fantasyPtsPpr  Float? // PPR scoring
+  fantasyPtsHalf Float? // Half-PPR scoring
+
+  // Source tracking
+  sourceProvider      String?
+  sourceIngestedAt    DateTime?
+  clutchTransformedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, gameId])
+  @@index([gameId])
+  @@index([playerId])
+  @@index([teamAbbr])
+  @@map("nfl_player_games")
 }
