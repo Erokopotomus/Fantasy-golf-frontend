@@ -56,11 +56,11 @@ async function getEventScorecard(eventId) {
 }
 
 /**
- * Get the current PGA leaderboard (richer than scoreboard — includes player IDs, positions, scores).
- * Returns the full leaderboard response.
+ * Get the current PGA leaderboard (full field with player IDs, positions, scores).
+ * Uses the scoreboard endpoint which includes competitors with athlete IDs.
  */
 async function getLeaderboard() {
-  return fetchJSON('https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard')
+  return fetchJSON(BASE_URL)
 }
 
 /**
