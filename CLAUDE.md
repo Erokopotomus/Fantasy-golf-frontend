@@ -348,11 +348,13 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - All-time records: computed championships, most titles, best season PF, all-time standings by win%
   - League Vault link on LeagueHome for imported leagues
 
-- [ ] **3D: Additional Platform Imports**
-  - ESPN: cookie-based auth (espn_s2 + SWID) with guided extraction. Data from 2018+ only. Marketing: "ESPN deleted your history. Clutch preserves it forever."
-  - Yahoo: OAuth 2.0 flow for commissioner authorization. Full history import.
-  - Fantrax: CSV export flow with guided instructions. Web scraping as backup.
-  - MFL: XML API with commissioner credentials. Deepest historical data (15-20+ years).
+- [x] **3D: Additional Platform Imports**
+  - ESPN: `espnImport.js` — cookie-based auth (espn_s2 + SWID), ESPN Fantasy API for 2018+ data, guided cookie extraction UI
+  - Yahoo: `yahooImport.js` — OAuth access token, Yahoo Fantasy API with auto-detected game keys per year (2015-2025)
+  - Fantrax: `fantraxImport.js` — CSV upload parsing (standings + draft), guided export instructions, robust CSV parser with quoted field handling
+  - MFL: `mflImport.js` — XML/JSON API with commissioner API key, scans back to 2000 for deep historical data (15-20+ years)
+  - All 4 platforms: discover + import routes in `imports.js`, API methods in `api.js`, per-platform hooks in `useImports.js`
+  - `ImportLeague.jsx` updated: all 5 platforms available, per-platform connect UI (cookie inputs, OAuth token, CSV upload, API key)
 
 - [ ] **3E: League Vault Display (v2 — enhancements)**
   - Head-to-head historical records between any two owners

@@ -579,6 +579,66 @@ class ApiService {
     return this.request(`/imports/${id}`, { method: 'DELETE' })
   }
 
+  // ESPN Import
+  async discoverESPNLeague(leagueId, espn_s2 = '', swid = '') {
+    return this.request('/imports/espn/discover', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, espn_s2, swid }),
+    })
+  }
+
+  async importESPNLeague(leagueId, espn_s2 = '', swid = '') {
+    return this.request('/imports/espn/import', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, espn_s2, swid }),
+    })
+  }
+
+  // Yahoo Import
+  async discoverYahooLeague(leagueId, accessToken) {
+    return this.request('/imports/yahoo/discover', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, accessToken }),
+    })
+  }
+
+  async importYahooLeague(leagueId, accessToken) {
+    return this.request('/imports/yahoo/import', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, accessToken }),
+    })
+  }
+
+  // Fantrax Import (CSV)
+  async discoverFantraxLeague({ standingsCSV, draftCSV, seasonYear, leagueName }) {
+    return this.request('/imports/fantrax/discover', {
+      method: 'POST',
+      body: JSON.stringify({ standingsCSV, draftCSV, seasonYear, leagueName }),
+    })
+  }
+
+  async importFantraxLeague({ standingsCSV, draftCSV, seasonYear, leagueName }) {
+    return this.request('/imports/fantrax/import', {
+      method: 'POST',
+      body: JSON.stringify({ standingsCSV, draftCSV, seasonYear, leagueName }),
+    })
+  }
+
+  // MFL Import
+  async discoverMFLLeague(leagueId, apiKey) {
+    return this.request('/imports/mfl/discover', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, apiKey }),
+    })
+  }
+
+  async importMFLLeague(leagueId, apiKey) {
+    return this.request('/imports/mfl/import', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, apiKey }),
+    })
+  }
+
   // Sync (admin)
   async getSyncStatus(adminSecret) {
     return this.request('/sync/status', {

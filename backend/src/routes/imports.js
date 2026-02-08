@@ -4,6 +4,10 @@ const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { validateBody, sanitize } = require('../middleware/validate')
 const sleeperImport = require('../services/sleeperImport')
+const espnImport = require('../services/espnImport')
+const yahooImport = require('../services/yahooImport')
+const fantraxImport = require('../services/fantraxImport')
+const mflImport = require('../services/mflImport')
 
 const prisma = new PrismaClient()
 
@@ -29,6 +33,130 @@ router.post('/sleeper/import', authenticate, validateLeagueId, async (req, res) 
   try {
     const leagueId = sanitize(req.body.leagueId)
     const result = await sleeperImport.runFullImport(leagueId, req.user.id, prisma)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── ESPN Import ────────────────────────────────────────────────────────────
+// POST /api/imports/espn/discover
+router.post('/espn/discover', authenticate, validateLeagueId, async (req, res) => {
+  try {
+    const leagueId = sanitize(req.body.leagueId)
+    const cookies = {
+      espn_s2: req.body.espn_s2 || '',
+      swid: req.body.swid || '',
+    }
+    const discovery = await espnImport.discoverLeague(leagueId, cookies)
+    res.json(discovery)
+  } catch (err) {
+    res.status(400).json({ error: { message: err.message } })
+  }
+})
+
+// POST /api/imports/espn/import
+router.post('/espn/import', authenticate, validateLeagueId, async (req, res) => {
+  try {
+    const leagueId = sanitize(req.body.leagueId)
+    const cookies = {
+      espn_s2: req.body.espn_s2 || '',
+      swid: req.body.swid || '',
+    }
+    const result = await espnImport.runFullImport(leagueId, req.user.id, prisma, cookies)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── Yahoo Import ───────────────────────────────────────────────────────────
+// POST /api/imports/yahoo/discover
+router.post('/yahoo/discover', authenticate, validateLeagueId, async (req, res) => {
+  try {
+    const leagueId = sanitize(req.body.leagueId)
+    const accessToken = req.body.accessToken
+    if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo access token is required' } })
+    const discovery = await yahooImport.discoverLeague(leagueId, accessToken)
+    res.json(discovery)
+  } catch (err) {
+    res.status(400).json({ error: { message: err.message } })
+  }
+})
+
+// POST /api/imports/yahoo/import
+router.post('/yahoo/import', authenticate, validateLeagueId, async (req, res) => {
+  try {
+    const leagueId = sanitize(req.body.leagueId)
+    const accessToken = req.body.accessToken
+    if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo access token is required' } })
+    const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── Fantrax Import (CSV Upload) ────────────────────────────────────────────
+// POST /api/imports/fantrax/discover
+router.post('/fantrax/discover', authenticate, async (req, res) => {
+  try {
+    const csvData = {
+      standingsCSV: req.body.standingsCSV,
+      draftCSV: req.body.draftCSV || null,
+      seasonYear: req.body.seasonYear ? parseInt(req.body.seasonYear) : undefined,
+      leagueName: req.body.leagueName ? sanitize(req.body.leagueName) : undefined,
+    }
+    if (!csvData.standingsCSV) {
+      return res.status(400).json({ error: { message: 'Standings CSV data is required' } })
+    }
+    const discovery = await fantraxImport.discoverLeague(csvData)
+    res.json(discovery)
+  } catch (err) {
+    res.status(400).json({ error: { message: err.message } })
+  }
+})
+
+// POST /api/imports/fantrax/import
+router.post('/fantrax/import', authenticate, async (req, res) => {
+  try {
+    const csvData = {
+      standingsCSV: req.body.standingsCSV,
+      draftCSV: req.body.draftCSV || null,
+      seasonYear: req.body.seasonYear ? parseInt(req.body.seasonYear) : undefined,
+      leagueName: req.body.leagueName ? sanitize(req.body.leagueName) : undefined,
+    }
+    if (!csvData.standingsCSV) {
+      return res.status(400).json({ error: { message: 'Standings CSV data is required' } })
+    }
+    const result = await fantraxImport.runFullImport(csvData, req.user.id, prisma)
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── MFL Import ─────────────────────────────────────────────────────────────
+// POST /api/imports/mfl/discover
+router.post('/mfl/discover', authenticate, validateLeagueId, async (req, res) => {
+  try {
+    const leagueId = sanitize(req.body.leagueId)
+    const apiKey = req.body.apiKey
+    if (!apiKey) return res.status(400).json({ error: { message: 'MFL API key is required' } })
+    const discovery = await mflImport.discoverLeague(leagueId, apiKey)
+    res.json(discovery)
+  } catch (err) {
+    res.status(400).json({ error: { message: err.message } })
+  }
+})
+
+// POST /api/imports/mfl/import
+router.post('/mfl/import', authenticate, validateLeagueId, async (req, res) => {
+  try {
+    const leagueId = sanitize(req.body.leagueId)
+    const apiKey = req.body.apiKey
+    if (!apiKey) return res.status(400).json({ error: { message: 'MFL API key is required' } })
+    const result = await mflImport.runFullImport(leagueId, req.user.id, prisma, apiKey)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })

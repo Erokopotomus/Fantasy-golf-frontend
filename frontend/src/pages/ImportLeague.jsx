@@ -1,16 +1,16 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
-import { useSleeperImport, useImports } from '../hooks/useImports'
+import { useSleeperImport, useESPNImport, useYahooImport, useFantraxImport, useMFLImport, useImports } from '../hooks/useImports'
 import { track, Events } from '../services/analytics'
 
 const PLATFORMS = [
   { id: 'sleeper', name: 'Sleeper', icon: '🌙', available: true, description: 'Public API — just paste your league ID' },
-  { id: 'yahoo', name: 'Yahoo', icon: '🟣', available: false, description: 'OAuth connection — coming soon' },
-  { id: 'espn', name: 'ESPN', icon: '🔴', available: false, description: 'Cookie-based auth — coming soon' },
-  { id: 'fantrax', name: 'Fantrax', icon: '🟢', available: false, description: 'CSV export — coming soon' },
-  { id: 'mfl', name: 'MFL', icon: '🔵', available: false, description: 'XML API — coming soon' },
+  { id: 'espn', name: 'ESPN', icon: '🔴', available: true, description: 'Cookie-based auth — private league support (2018+)' },
+  { id: 'yahoo', name: 'Yahoo', icon: '🟣', available: true, description: 'OAuth token — full history import' },
+  { id: 'fantrax', name: 'Fantrax', icon: '🟢', available: true, description: 'CSV export upload — standings & draft data' },
+  { id: 'mfl', name: 'MFL', icon: '🔵', available: true, description: 'XML API — deepest historical data (15+ years)' },
 ]
 
 const StepIndicator = ({ current, total }) => (
@@ -34,11 +34,50 @@ const StepIndicator = ({ current, total }) => (
 
 const ImportLeague = () => {
   const navigate = useNavigate()
-  const { discover, discovery, discovering, startImport, importing, result, error, reset } = useSleeperImport()
+  const sleeper = useSleeperImport()
+  const espn = useESPNImport()
+  const yahoo = useYahooImport()
+  const fantrax = useFantraxImport()
+  const mfl = useMFLImport()
   const { imports, refetch } = useImports()
-  const [step, setStep] = useState(0) // 0: platform, 1: connect, 2: discovery, 3: importing, 4: complete
+
+  const [step, setStep] = useState(0)
   const [platform, setPlatform] = useState(null)
+
+  // Shared input state
   const [leagueId, setLeagueId] = useState('')
+
+  // ESPN-specific
+  const [espnS2, setEspnS2] = useState('')
+  const [espnSwid, setEspnSwid] = useState('')
+
+  // Yahoo-specific
+  const [yahooToken, setYahooToken] = useState('')
+
+  // Fantrax-specific
+  const [fantraxName, setFantraxName] = useState('')
+  const [fantraxYear, setFantraxYear] = useState(new Date().getFullYear().toString())
+  const [standingsCSV, setStandingsCSV] = useState('')
+  const [draftCSV, setDraftCSV] = useState('')
+  const standingsFileRef = useRef(null)
+  const draftFileRef = useRef(null)
+
+  // MFL-specific
+  const [mflApiKey, setMflApiKey] = useState('')
+
+  // Get the active hook for the selected platform
+  const getHook = () => {
+    switch (platform?.id) {
+      case 'sleeper': return sleeper
+      case 'espn': return espn
+      case 'yahoo': return yahoo
+      case 'fantrax': return fantrax
+      case 'mfl': return mfl
+      default: return sleeper
+    }
+  }
+
+  const activeHook = getHook()
 
   const handlePlatformSelect = (p) => {
     if (!p.available) return
@@ -47,30 +86,107 @@ const ImportLeague = () => {
   }
 
   const handleDiscover = async () => {
-    if (!leagueId.trim()) return
-    const data = await discover(leagueId.trim())
+    let data = null
+    switch (platform?.id) {
+      case 'sleeper':
+        if (!leagueId.trim()) return
+        data = await sleeper.discover(leagueId.trim())
+        break
+      case 'espn':
+        if (!leagueId.trim()) return
+        data = await espn.discover(leagueId.trim(), espnS2.trim(), espnSwid.trim())
+        break
+      case 'yahoo':
+        if (!leagueId.trim() || !yahooToken.trim()) return
+        data = await yahoo.discover(leagueId.trim(), yahooToken.trim())
+        break
+      case 'fantrax':
+        if (!standingsCSV) return
+        data = await fantrax.discover({
+          standingsCSV,
+          draftCSV: draftCSV || null,
+          seasonYear: parseInt(fantraxYear) || undefined,
+          leagueName: fantraxName || undefined,
+        })
+        break
+      case 'mfl':
+        if (!leagueId.trim() || !mflApiKey.trim()) return
+        data = await mfl.discover(leagueId.trim(), mflApiKey.trim())
+        break
+    }
     if (data) setStep(2)
   }
 
   const handleImport = async () => {
     setStep(3)
     track(Events.IMPORT_STARTED, { source_platform: platform.id })
-    const data = await startImport(leagueId.trim())
+
+    let data = null
+    switch (platform?.id) {
+      case 'sleeper':
+        data = await sleeper.startImport(leagueId.trim())
+        break
+      case 'espn':
+        data = await espn.startImport(leagueId.trim(), espnS2.trim(), espnSwid.trim())
+        break
+      case 'yahoo':
+        data = await yahoo.startImport(leagueId.trim(), yahooToken.trim())
+        break
+      case 'fantrax':
+        data = await fantrax.startImport({
+          standingsCSV,
+          draftCSV: draftCSV || null,
+          seasonYear: parseInt(fantraxYear) || undefined,
+          leagueName: fantraxName || undefined,
+        })
+        break
+      case 'mfl':
+        data = await mfl.startImport(leagueId.trim(), mflApiKey.trim())
+        break
+    }
+
     if (data) {
       track(Events.IMPORT_COMPLETED, { source_platform: platform.id, seasons_imported: data.seasonsImported?.length || 0 })
       refetch()
       setStep(4)
     } else {
       track(Events.IMPORT_FAILED, { source_platform: platform.id, error_type: 'import_error' })
-      setStep(2) // go back to discovery on failure
+      setStep(2)
     }
   }
 
   const handleReset = () => {
-    reset()
+    activeHook.reset()
     setStep(0)
     setPlatform(null)
     setLeagueId('')
+    setEspnS2('')
+    setEspnSwid('')
+    setYahooToken('')
+    setFantraxName('')
+    setFantraxYear(new Date().getFullYear().toString())
+    setStandingsCSV('')
+    setDraftCSV('')
+    setMflApiKey('')
+  }
+
+  const handleFileUpload = (e, setter) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => setter(event.target.result)
+    reader.readAsText(file)
+  }
+
+  const canDiscover = () => {
+    switch (platform?.id) {
+      case 'sleeper': return leagueId.trim().length > 0
+      case 'espn': return leagueId.trim().length > 0
+      case 'yahoo': return leagueId.trim().length > 0 && yahooToken.trim().length > 0
+      case 'fantrax': return standingsCSV.length > 0
+      case 'mfl': return leagueId.trim().length > 0 && mflApiKey.trim().length > 0
+      default: return false
+    }
   }
 
   return (
@@ -158,12 +274,14 @@ const ImportLeague = () => {
             </div>
           )}
 
-          {/* Step 1: Connect / Enter ID */}
+          {/* Step 1: Connect / Enter credentials */}
           {step === 1 && (
             <Card>
               <h2 className="text-lg font-display font-bold text-white mb-4">
                 Connect to {platform?.name}
               </h2>
+
+              {/* Sleeper */}
               {platform?.id === 'sleeper' && (
                 <div>
                   <p className="text-sm text-text-secondary mb-4">
@@ -181,40 +299,253 @@ const ImportLeague = () => {
                       onKeyDown={e => e.key === 'Enter' && handleDiscover()}
                     />
                   </div>
-                  {error && (
-                    <p className="text-sm text-red-400 mb-4">{error}</p>
-                  )}
-                  <div className="flex gap-3">
-                    <Button variant="ghost" onClick={() => { setStep(0); reset() }}>Back</Button>
-                    <Button onClick={handleDiscover} disabled={!leagueId.trim() || discovering}>
-                      {discovering ? 'Scanning...' : 'Scan League'}
-                    </Button>
+                </div>
+              )}
+
+              {/* ESPN */}
+              {platform?.id === 'espn' && (
+                <div>
+                  <p className="text-sm text-text-secondary mb-4">
+                    Enter your ESPN league ID. For private leagues, you'll also need your ESPN cookies.
+                    ESPN only stores data from 2018 onwards — Clutch preserves it forever.
+                  </p>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">League ID</label>
+                    <input
+                      type="text"
+                      value={leagueId}
+                      onChange={e => setLeagueId(e.target.value)}
+                      placeholder="e.g. 12345678"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                    />
+                    <p className="text-xs text-text-muted mt-1">Find this in your ESPN league URL: fantasy.espn.com/football/league?leagueId=XXXXXXXX</p>
+                  </div>
+
+                  <div className="bg-dark-tertiary/50 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-medium text-white mb-2">Private League? Add your ESPN cookies</p>
+                    <p className="text-xs text-text-muted mb-3">
+                      Open ESPN Fantasy in Chrome, press F12, go to Application &gt; Cookies &gt; espn.com, and copy these values:
+                    </p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">espn_s2 cookie</label>
+                        <input
+                          type="text"
+                          value={espnS2}
+                          onChange={e => setEspnS2(e.target.value)}
+                          placeholder="AEB..."
+                          className="w-full px-3 py-2 bg-dark-primary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">SWID cookie</label>
+                        <input
+                          type="text"
+                          value={espnSwid}
+                          onChange={e => setEspnSwid(e.target.value)}
+                          placeholder="{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}"
+                          className="w-full px-3 py-2 bg-dark-primary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-text-muted mt-2">Leave blank for public leagues.</p>
                   </div>
                 </div>
               )}
+
+              {/* Yahoo */}
+              {platform?.id === 'yahoo' && (
+                <div>
+                  <p className="text-sm text-text-secondary mb-4">
+                    Yahoo requires OAuth authorization to access your league data.
+                    Enter your league number and Yahoo API access token.
+                  </p>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">League ID (number only)</label>
+                    <input
+                      type="text"
+                      value={leagueId}
+                      onChange={e => setLeagueId(e.target.value)}
+                      placeholder="e.g. 123456"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                    />
+                    <p className="text-xs text-text-muted mt-1">Find this in your Yahoo league URL: football.fantasysports.yahoo.com/f1/XXXXXX</p>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Access Token</label>
+                    <textarea
+                      value={yahooToken}
+                      onChange={e => setYahooToken(e.target.value)}
+                      placeholder="Paste your Yahoo OAuth access token here..."
+                      rows={3}
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors resize-none"
+                    />
+                    <p className="text-xs text-text-muted mt-1">
+                      Get your token from the Yahoo Developer Console or use a Yahoo OAuth tool.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Fantrax */}
+              {platform?.id === 'fantrax' && (
+                <div>
+                  <p className="text-sm text-text-secondary mb-4">
+                    Fantrax doesn't have a public API. Export your league data as CSV from Fantrax and upload it here.
+                  </p>
+
+                  <div className="bg-dark-tertiary/50 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-medium text-white mb-2">How to export from Fantrax:</p>
+                    <ol className="text-xs text-text-muted space-y-1 list-decimal list-inside">
+                      <li>Go to your Fantrax league page</li>
+                      <li>Click League &gt; Standings</li>
+                      <li>Click the Export / CSV icon (top right)</li>
+                      <li>Upload the downloaded CSV file below</li>
+                    </ol>
+                  </div>
+
+                  <div className="space-y-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">League Name</label>
+                      <input
+                        type="text"
+                        value={fantraxName}
+                        onChange={e => setFantraxName(e.target.value)}
+                        placeholder="e.g. The Gridiron Gang"
+                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Season Year</label>
+                      <input
+                        type="number"
+                        value={fantraxYear}
+                        onChange={e => setFantraxYear(e.target.value)}
+                        min="2000"
+                        max="2030"
+                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Standings CSV (required)</label>
+                      <input
+                        ref={standingsFileRef}
+                        type="file"
+                        accept=".csv"
+                        onChange={e => handleFileUpload(e, setStandingsCSV)}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => standingsFileRef.current?.click()}
+                        className={`w-full px-4 py-3 border border-dashed rounded-lg text-sm transition-colors flex items-center justify-center gap-2 ${
+                          standingsCSV
+                            ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
+                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-white hover:border-text-muted'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        {standingsCSV ? 'Standings CSV uploaded' : 'Upload standings CSV'}
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Draft CSV (optional)</label>
+                      <input
+                        ref={draftFileRef}
+                        type="file"
+                        accept=".csv"
+                        onChange={e => handleFileUpload(e, setDraftCSV)}
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => draftFileRef.current?.click()}
+                        className={`w-full px-4 py-3 border border-dashed rounded-lg text-sm transition-colors flex items-center justify-center gap-2 ${
+                          draftCSV
+                            ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
+                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-white hover:border-text-muted'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        {draftCSV ? 'Draft CSV uploaded' : 'Upload draft CSV (optional)'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* MFL */}
+              {platform?.id === 'mfl' && (
+                <div>
+                  <p className="text-sm text-text-secondary mb-4">
+                    MFL has the deepest historical data of any platform — some leagues go back 15-20+ years.
+                    You'll need your league ID and API key (commissioner credentials).
+                  </p>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">League ID</label>
+                    <input
+                      type="text"
+                      value={leagueId}
+                      onChange={e => setLeagueId(e.target.value)}
+                      placeholder="e.g. 12345"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                    />
+                    <p className="text-xs text-text-muted mt-1">Find this in your MFL league URL</p>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-text-secondary mb-1">API Key</label>
+                    <input
+                      type="password"
+                      value={mflApiKey}
+                      onChange={e => setMflApiKey(e.target.value)}
+                      placeholder="Your MFL API key"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                    />
+                    <p className="text-xs text-text-muted mt-1">
+                      Commissioner: My League &gt; League Settings &gt; API Key
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeHook.error && (
+                <p className="text-sm text-red-400 mb-4">{activeHook.error}</p>
+              )}
+
+              <div className="flex gap-3">
+                <Button variant="ghost" onClick={() => { setStep(0); activeHook.reset() }}>Back</Button>
+                <Button
+                  onClick={handleDiscover}
+                  disabled={!canDiscover() || activeHook.discovering}
+                >
+                  {activeHook.discovering ? 'Scanning...' : 'Scan League'}
+                </Button>
+              </div>
             </Card>
           )}
 
           {/* Step 2: Discovery Results */}
-          {step === 2 && discovery && (
+          {step === 2 && activeHook.discovery && (
             <div className="space-y-4">
               <Card>
                 <h2 className="text-lg font-display font-bold text-white mb-1">
-                  {discovery.name}
+                  {activeHook.discovery.name}
                 </h2>
                 <p className="text-sm text-text-secondary mb-4 font-mono">
-                  {discovery.sport?.toUpperCase()} · {discovery.totalSeasons} season{discovery.totalSeasons !== 1 ? 's' : ''} found
+                  {activeHook.discovery.sport?.toUpperCase()} · {activeHook.discovery.totalSeasons} season{activeHook.discovery.totalSeasons !== 1 ? 's' : ''} found
                 </p>
 
                 <div className="space-y-2 mb-4">
-                  {discovery.seasons?.map(s => (
-                    <div key={s.sleeperLeagueId} className="flex items-center justify-between py-2 px-3 bg-dark-tertiary/50 rounded-lg">
+                  {activeHook.discovery.seasons?.map((s, idx) => (
+                    <div key={s.leagueKey || s.sleeperLeagueId || s.year || idx} className="flex items-center justify-between py-2 px-3 bg-dark-tertiary/50 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-accent-gold">{s.season}</span>
+                        <span className="font-mono font-bold text-accent-gold">{s.season || s.year}</span>
                         <span className="text-sm text-white">{s.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-text-secondary">{s.totalRosters} teams</span>
+                        <span className="text-xs font-mono text-text-secondary">{s.totalRosters || s.teamCount} teams</span>
                         <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
                           s.status === 'complete' ? 'bg-green-500/20 text-green-400' : 'bg-accent-gold/20 text-accent-gold'
                         }`}>
@@ -225,14 +556,14 @@ const ImportLeague = () => {
                   ))}
                 </div>
 
-                {error && (
-                  <p className="text-sm text-red-400 mb-4">{error}</p>
+                {activeHook.error && (
+                  <p className="text-sm text-red-400 mb-4">{activeHook.error}</p>
                 )}
 
                 <div className="flex gap-3">
-                  <Button variant="ghost" onClick={() => { setStep(1); reset() }}>Back</Button>
+                  <Button variant="ghost" onClick={() => { setStep(1); activeHook.reset() }}>Back</Button>
                   <Button onClick={handleImport}>
-                    Import {discovery.totalSeasons} Season{discovery.totalSeasons !== 1 ? 's' : ''}
+                    Import {activeHook.discovery.totalSeasons} Season{activeHook.discovery.totalSeasons !== 1 ? 's' : ''}
                   </Button>
                 </div>
               </Card>
@@ -253,7 +584,7 @@ const ImportLeague = () => {
           )}
 
           {/* Step 4: Complete */}
-          {step === 4 && result && (
+          {step === 4 && activeHook.result && (
             <Card className="text-center py-8">
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,14 +595,14 @@ const ImportLeague = () => {
                 Import Complete!
               </h2>
               <p className="text-sm text-text-secondary mb-1">
-                <span className="text-accent-gold font-mono font-bold">{result.leagueName}</span>
+                <span className="text-accent-gold font-mono font-bold">{activeHook.result.leagueName}</span>
               </p>
               <p className="text-sm text-text-secondary mb-6">
-                {result.seasonsImported?.length || 0} season{(result.seasonsImported?.length || 0) !== 1 ? 's' : ''} imported successfully
+                {activeHook.result.seasonsImported?.length || 0} season{(activeHook.result.seasonsImported?.length || 0) !== 1 ? 's' : ''} imported successfully
               </p>
               <div className="flex gap-3 justify-center">
                 <Button variant="ghost" onClick={handleReset}>Import Another</Button>
-                <Button onClick={() => navigate(`/leagues/${result.leagueId}/vault`)}>
+                <Button onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault`)}>
                   View League Vault
                 </Button>
               </div>
