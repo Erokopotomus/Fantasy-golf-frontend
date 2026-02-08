@@ -134,9 +134,9 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
       color: player.top10s > 0 ? 'text-green-400' : 'text-white',
     },
     {
-      label: 'Earnings',
-      value: formatEarnings(player.earnings),
-      color: player.earnings > 0 ? 'text-white' : 'text-text-muted',
+      label: 'FedEx Pts',
+      value: player.fedexPoints > 0 ? player.fedexPoints.toLocaleString() : null,
+      color: player.fedexPoints > 0 ? 'text-green-400' : 'text-text-muted',
     },
   ]
 
@@ -173,11 +173,16 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
             )}
           </div>
 
-          {/* Badges row: rank, tour, country */}
+          {/* Badges row: rank, FedEx, tour, country */}
           <div className="flex items-center justify-center sm:justify-start gap-2 text-sm flex-wrap mb-2">
             {player.rank && (
               <span className={`px-2 py-0.5 rounded border font-mono font-medium text-xs ${getRankBadge(player.rank)}`}>
                 #{player.rank} OWGR
+              </span>
+            )}
+            {player.fedexRank && (
+              <span className="px-2 py-0.5 rounded border font-mono font-medium text-xs bg-green-500/20 text-green-400 border-green-500/50">
+                #{player.fedexRank} FedEx
               </span>
             )}
             {tourBadge && (
@@ -232,8 +237,11 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
         </div>
       </div>
 
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-5 pt-5 border-t border-white/10">
+      {/* Season Stats Row */}
+      <div className="mt-5 pt-5 border-t border-white/10">
+        <p className="text-xs text-text-muted mb-3 text-center sm:text-left">2025–26 Season</p>
+      </div>
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {quickStats.map((stat) => (
           <div key={stat.label} className="text-center">
             <p className={`text-xl font-bold font-mono ${stat.value != null ? stat.color : 'text-text-muted'}`}>
