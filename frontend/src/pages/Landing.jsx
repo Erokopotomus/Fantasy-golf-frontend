@@ -138,10 +138,10 @@ const Landing = () => {
 
             {/* Right: Gauge + Sport Badges */}
             <div className="flex-shrink-0 flex flex-col items-center">
-              <div className="scale-125 mb-6">
+              <p className="text-gold/70 text-sm font-display font-semibold uppercase tracking-widest mb-4">Your Clutch Rating</p>
+              <div className="scale-125 mb-8">
                 <ClutchRatingGauge rating={84} size="xl" animated />
               </div>
-              <p className="text-text-muted text-xs font-mono uppercase tracking-wider mb-6">Your Clutch Rating</p>
               <div className="flex gap-4">
                 <div className="rounded-xl px-5 py-3 border border-gold/30 bg-gold/10 flex items-center gap-3">
                   <span className="text-2xl">⛳</span>
