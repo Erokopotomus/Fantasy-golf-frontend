@@ -464,19 +464,30 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
     )
     playersInField++
 
-    // Tee time
-    if (entry.r1_teetime || entry.tee_time) {
-      const teeTimeStr = entry.r1_teetime || entry.tee_time
-      roundScoreUpserts.push(
-        prisma.roundScore.upsert({
-          where: {
-            tournamentId_playerId_roundNumber: { tournamentId: tournament.id, playerId, roundNumber: 1 },
-          },
-          update: { teeTime: new Date(teeTimeStr) },
-          create: { tournamentId: tournament.id, playerId, roundNumber: 1, teeTime: new Date(teeTimeStr) },
-        })
-      )
-      teeTimes++
+    // Tee times — store all available rounds (r1 through r4)
+    const teeTimeFields = [
+      { field: 'r1_teetime', round: 1 },
+      { field: 'r2_teetime', round: 2 },
+      { field: 'r3_teetime', round: 3 },
+      { field: 'r4_teetime', round: 4 },
+    ]
+    // Also check legacy single tee_time field as R1 fallback
+    if (!entry.r1_teetime && entry.tee_time) {
+      entry.r1_teetime = entry.tee_time
+    }
+    for (const { field: f, round } of teeTimeFields) {
+      if (entry[f]) {
+        roundScoreUpserts.push(
+          prisma.roundScore.upsert({
+            where: {
+              tournamentId_playerId_roundNumber: { tournamentId: tournament.id, playerId, roundNumber: round },
+            },
+            update: { teeTime: new Date(entry[f]) },
+            create: { tournamentId: tournament.id, playerId, roundNumber: round, teeTime: new Date(entry[f]) },
+          })
+        )
+        teeTimes++
+      }
     }
 
     // DFS salaries
