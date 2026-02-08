@@ -749,8 +749,11 @@ class ApiService {
     return this.request('/nfl/seasons')
   }
 
-  async getNflPlayer(id) {
-    return this.request(`/nfl/players/${id}`)
+  async getNflPlayer(id, { season } = {}) {
+    const params = new URLSearchParams()
+    if (season) params.set('season', season)
+    const qs = params.toString()
+    return this.request(`/nfl/players/${id}${qs ? '?' + qs : ''}`)
   }
 
   async getNflTeams() {

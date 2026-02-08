@@ -187,10 +187,14 @@ router.get('/players', optionalAuth, async (req, res, next) => {
 // GET /api/nfl/players/:id — NFL player detail with game log
 router.get('/players/:id', optionalAuth, async (req, res, next) => {
   try {
+    const { season } = req.query
+    const targetSeason = season ? parseInt(season) : null
+
     const player = await prisma.player.findUnique({
       where: { id: req.params.id },
       include: {
         nflPlayerGames: {
+          where: targetSeason ? { game: { season: targetSeason } } : undefined,
           include: {
             game: {
               include: {
@@ -207,6 +211,15 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
     if (!player || !player.nflPosition) {
       return res.status(404).json({ error: { message: 'NFL player not found' } })
     }
+
+    // Get available seasons for this player
+    const seasonRows = await prisma.nflPlayerGame.findMany({
+      where: { playerId: player.id },
+      select: { game: { select: { season: true } } },
+      distinct: ['gameId'],
+    })
+    const availableSeasons = [...new Set(seasonRows.map(r => r.game.season))]
+      .sort((a, b) => b - a)
 
     // Build game log
     const gameLog = player.nflPlayerGames.map(pg => {
@@ -240,6 +253,11 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
           fgMade: pg.fgMade,
           fgAttempts: pg.fgAttempts,
           xpMade: pg.xpMade,
+          sacks: pg.sacks,
+          defInterceptions: pg.defInterceptions,
+          fumblesRecovered: pg.fumblesRecovered,
+          fumblesForced: pg.fumblesForced,
+          defTds: pg.defTds,
         },
         fantasyPts: {
           standard: pg.fantasyPtsStd,
@@ -262,9 +280,19 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
       recYards: games.reduce((s, g) => s + (g.recYards || 0), 0),
       recTds: games.reduce((s, g) => s + (g.recTds || 0), 0),
       fumblesLost: games.reduce((s, g) => s + (g.fumblesLost || 0), 0),
-      fantasyPtsStd: Math.round(games.reduce((s, g) => s + (g.fantasyPtsStd || 0), 0) * 10) / 10,
-      fantasyPtsPpr: Math.round(games.reduce((s, g) => s + (g.fantasyPtsPpr || 0), 0) * 10) / 10,
-      fantasyPtsHalf: Math.round(games.reduce((s, g) => s + (g.fantasyPtsHalf || 0), 0) * 10) / 10,
+      fgMade: games.reduce((s, g) => s + (g.fgMade || 0), 0),
+      fgAttempts: games.reduce((s, g) => s + (g.fgAttempts || 0), 0),
+      xpMade: games.reduce((s, g) => s + (g.xpMade || 0), 0),
+      xpAttempts: games.reduce((s, g) => s + (g.xpAttempts || 0), 0),
+      // DST
+      sacks: games.reduce((s, g) => s + (g.sacks || 0), 0),
+      defInterceptions: games.reduce((s, g) => s + (g.defInterceptions || 0), 0),
+      fumblesRecovered: games.reduce((s, g) => s + (g.fumblesRecovered || 0), 0),
+      fumblesForced: games.reduce((s, g) => s + (g.fumblesForced || 0), 0),
+      defTds: games.reduce((s, g) => s + (g.defTds || 0), 0),
+      fantasyPtsStd: Math.round(games.reduce((s, g) => s + (g.fantasyPtsStd || 0), 0) * 100) / 100,
+      fantasyPtsPpr: Math.round(games.reduce((s, g) => s + (g.fantasyPtsPpr || 0), 0) * 100) / 100,
+      fantasyPtsHalf: Math.round(games.reduce((s, g) => s + (g.fantasyPtsHalf || 0), 0) * 100) / 100,
     }
 
     const { nflPlayerGames, ...playerData } = player
@@ -273,6 +301,7 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
       player: playerData,
       gameLog,
       seasonTotals,
+      availableSeasons,
     })
   } catch (error) {
     next(error)

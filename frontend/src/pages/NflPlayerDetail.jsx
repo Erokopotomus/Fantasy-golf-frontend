@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
 
@@ -11,25 +11,43 @@ export default function NflPlayerDetail() {
   const [seasonTotals, setSeasonTotals] = useState(null)
   const [loading, setLoading] = useState(true)
   const [scoringView, setScoringView] = useState('half_ppr')
+  const [season, setSeason] = useState('')
+  const [availableSeasons, setAvailableSeasons] = useState([])
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      try {
-        const data = await api.getNflPlayer(playerId)
-        setPlayer(data.player)
-        setGameLog(data.gameLog || [])
-        setSeasonTotals(data.seasonTotals || null)
-      } catch (err) {
-        console.error('Failed to load NFL player:', err)
-      } finally {
-        setLoading(false)
+  const loadPlayer = useCallback(async (targetSeason) => {
+    setLoading(true)
+    try {
+      const data = await api.getNflPlayer(playerId, {
+        season: targetSeason || undefined,
+      })
+      setPlayer(data.player)
+      setGameLog(data.gameLog || [])
+      setSeasonTotals(data.seasonTotals || null)
+      // Set available seasons on first load
+      if (data.availableSeasons?.length) {
+        setAvailableSeasons(data.availableSeasons)
+        if (!targetSeason) {
+          setSeason(String(data.availableSeasons[0]))
+        }
       }
+    } catch (err) {
+      console.error('Failed to load NFL player:', err)
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [playerId])
 
-  if (loading) {
+  // Initial load
+  useEffect(() => {
+    loadPlayer()
+  }, [loadPlayer])
+
+  // Re-fetch when season changes (skip initial empty)
+  useEffect(() => {
+    if (season) loadPlayer(season)
+  }, [season]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading && !player) {
     return (
       <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
         <div className="text-center py-20 text-white/30">Loading player...</div>
@@ -55,6 +73,7 @@ export default function NflPlayerDetail() {
 
   const isQb = player.nflPosition === 'QB'
   const isK = player.nflPosition === 'K'
+  const isDst = player.nflPosition === 'DST'
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
@@ -91,30 +110,45 @@ export default function NflPlayerDetail() {
             </div>
           </div>
 
-          {/* Season fantasy points */}
-          {seasonTotals && (
-            <div className="text-right">
-              <div className="text-3xl font-mono font-bold text-gold">
-                {(scoringView === 'ppr' ? seasonTotals.fantasyPtsPpr :
-                 scoringView === 'half_ppr' ? seasonTotals.fantasyPtsHalf :
-                 seasonTotals.fantasyPtsStd)?.toFixed(2) ?? '0.00'}
-              </div>
-              <div className="text-white/40 text-xs font-mono uppercase">Season FPTS</div>
-              <div className="flex gap-1 mt-1">
-                {['standard', 'half_ppr', 'ppr'].map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setScoringView(s)}
-                    className={`px-2 py-0.5 rounded text-xs font-mono ${
-                      scoringView === s ? 'bg-gold/20 text-gold' : 'text-white/30 hover:text-white/50'
-                    }`}
-                  >
-                    {SCORING_LABELS[s]}
-                  </button>
+          {/* Season fantasy points + season selector */}
+          <div className="text-right">
+            {seasonTotals && (
+              <>
+                <div className="text-3xl font-mono font-bold text-gold">
+                  {(scoringView === 'ppr' ? seasonTotals.fantasyPtsPpr :
+                   scoringView === 'half_ppr' ? seasonTotals.fantasyPtsHalf :
+                   seasonTotals.fantasyPtsStd)?.toFixed(2) ?? '0.00'}
+                </div>
+                <div className="text-white/40 text-xs font-mono uppercase">
+                  {season ? `${season} Season FPTS` : 'Season FPTS'}
+                </div>
+                <div className="flex gap-1 mt-1">
+                  {['standard', 'half_ppr', 'ppr'].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setScoringView(s)}
+                      className={`px-2 py-0.5 rounded text-xs font-mono ${
+                        scoringView === s ? 'bg-gold/20 text-gold' : 'text-white/30 hover:text-white/50'
+                      }`}
+                    >
+                      {SCORING_LABELS[s]}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {availableSeasons.length > 1 && (
+              <select
+                value={season}
+                onChange={e => setSeason(e.target.value)}
+                className="mt-2 bg-[#1a1917] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:border-gold/50 focus:outline-none"
+              >
+                {availableSeasons.map(yr => (
+                  <option key={yr} value={yr} className="bg-[#1a1917] text-white">{yr}</option>
                 ))}
-              </div>
-            </div>
-          )}
+              </select>
+            )}
+          </div>
         </div>
       </div>
 
@@ -133,7 +167,16 @@ export default function NflPlayerDetail() {
           ) : isK ? (
             <>
               <StatCard label="FG Made" value={seasonTotals.fgMade || 0} accent />
+              <StatCard label="FG Att" value={seasonTotals.fgAttempts || 0} />
               <StatCard label="XP Made" value={seasonTotals.xpMade || 0} />
+              <StatCard label="XP Att" value={seasonTotals.xpAttempts || 0} />
+            </>
+          ) : isDst ? (
+            <>
+              <StatCard label="Sacks" value={seasonTotals.sacks || 0} accent />
+              <StatCard label="INTs" value={seasonTotals.defInterceptions || 0} />
+              <StatCard label="Fum Rec" value={seasonTotals.fumblesRecovered || 0} />
+              <StatCard label="Def TDs" value={seasonTotals.defTds || 0} accent />
             </>
           ) : (
             <>
@@ -149,8 +192,13 @@ export default function NflPlayerDetail() {
 
       {/* Game Log */}
       <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/10">
-          <h2 className="text-lg font-display font-bold text-white">Game Log</h2>
+        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+          <h2 className="text-lg font-display font-bold text-white">
+            {season ? `${season} Game Log` : 'Game Log'}
+          </h2>
+          {loading && player && (
+            <span className="text-white/30 text-xs font-mono">Loading...</span>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -174,6 +222,14 @@ export default function NflPlayerDetail() {
                     <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FGM</th>
                     <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FGA</th>
                     <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">XPM</th>
+                  </>
+                ) : isDst ? (
+                  <>
+                    <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">SACK</th>
+                    <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">INT</th>
+                    <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FR</th>
+                    <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FF</th>
+                    <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">TD</th>
                   </>
                 ) : (
                   <>
@@ -215,6 +271,14 @@ export default function NflPlayerDetail() {
                         <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.fgMade ?? '-'}</td>
                         <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.fgAttempts ?? '-'}</td>
                         <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.xpMade ?? '-'}</td>
+                      </>
+                    ) : isDst ? (
+                      <>
+                        <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{g.stats.sacks ?? '-'}</td>
+                        <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{g.stats.defInterceptions ?? '-'}</td>
+                        <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.fumblesRecovered ?? '-'}</td>
+                        <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.fumblesForced ?? '-'}</td>
+                        <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.defTds ?? '-'}</td>
                       </>
                     ) : (
                       <>
