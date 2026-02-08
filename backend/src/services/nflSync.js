@@ -66,6 +66,12 @@ function mapPosition(pos) {
   return MAP[p] || p
 }
 
+/** Normalize nflverse team abbreviations to our DB format */
+function normalizeTeamAbbr(abbr) {
+  const MAP = { LA: 'LAR', OAK: 'LV', SD: 'LAC', STL: 'LAR', WSH: 'WAS' }
+  return MAP[abbr] || abbr
+}
+
 /** Get or create the NFL Sport record */
 async function getOrCreateNflSport(prisma) {
   let sport = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
@@ -103,69 +109,125 @@ async function syncPlayers(prisma) {
 
   const sport = await getOrCreateNflSport(prisma)
 
-  let created = 0, updated = 0, skipped = 0
+  let upserted = 0, skipped = 0
 
+  // Pre-filter to active, fantasy-relevant players on current NFL rosters
+  // nflverse uses: latest_team (not team_abbr), status (ACT/RES/DEV/CUT/etc.)
+  // RES = reserved/offseason (current players), ACT = active during season
+  const currentYear = new Date().getFullYear()
+  const eligible = []
   for (const row of rows) {
     const gsisId = row.gsis_id
-    if (!gsisId || !row.display_name) {
-      skipped++
-      continue
-    }
-
-    // Only sync active skill players + kickers (skip retired, practice squad inactive)
+    if (!gsisId || !row.display_name) { skipped++; continue }
     const status = (row.status || '').toUpperCase()
-    if (status === 'RET' || status === 'RES') {
-      skipped++
-      continue
-    }
-
+    // Skip retired, cut, suspended, inactive
+    if (['RET', 'CUT', 'SUS', 'INA', 'EXE'].includes(status)) { skipped++; continue }
+    // Must have a current team
+    const team = row.latest_team || row.team_abbr || ''
+    if (!team || team === 'NA' || team === '') { skipped++; continue }
+    // Must have played recently (within last 2 seasons)
+    const lastSeason = Number(row.last_season)
+    if (lastSeason && lastSeason < currentYear - 1) { skipped++; continue }
     const position = mapPosition(row.position)
-    // Focus on fantasy-relevant positions
-    if (!['QB', 'RB', 'WR', 'TE', 'K'].includes(position)) {
-      skipped++
-      continue
-    }
+    if (!['QB', 'RB', 'WR', 'TE', 'K'].includes(position)) { skipped++; continue }
+    eligible.push({ row, gsisId, position, status, team: normalizeTeamAbbr(team) })
+  }
 
-    const data = clean({
-      name: row.display_name,
-      firstName: row.first_name || null,
-      lastName: row.last_name || null,
-      gsisId,
-      pfrId: row.pfr_id || null,
-      espnId: row.espn_id ? String(row.espn_id) : null,
-      yahooId: row.yahoo_id ? String(row.yahoo_id) : null,
-      sleeperId: row.sleeper_id ? String(row.sleeper_id) : null,
-      nflPosition: position,
-      nflTeamAbbr: row.team_abbr || null,
-      nflNumber: num(row.jersey_number),
-      birthDate: row.birth_date ? new Date(row.birth_date) : null,
-      height: row.height ? `${Math.floor(row.height / 12)}'${row.height % 12}"` : null,
-      weight: num(row.weight),
-      college: row.college || null,
-      headshotUrl: row.headshot_url || row.headshot || null,
-      isActive: status !== 'INA',
-      sportId: sport.id,
-      sourceProvider: 'nflverse',
-      sourceIngestedAt: new Date(),
+  console.log(`[nflSync] ${eligible.length} eligible players (${skipped} skipped)`)
+
+  // Batch upsert in chunks of 50 via $transaction
+  const BATCH_SIZE = 50
+  for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+    const batch = eligible.slice(i, i + BATCH_SIZE)
+    const ops = batch.map(({ row, gsisId, position, status, team }) => {
+      const data = clean({
+        name: row.display_name,
+        firstName: row.first_name || null,
+        lastName: row.last_name || null,
+        gsisId,
+        pfrId: row.pfr_id || null,
+        espnId: row.espn_id ? String(row.espn_id) : null,
+        yahooId: row.yahoo_id ? String(row.yahoo_id) : null,
+        sleeperId: row.sleeper_id ? String(row.sleeper_id) : null,
+        nflPosition: position,
+        nflTeamAbbr: team,
+        nflNumber: num(row.jersey_number),
+        birthDate: row.birth_date ? new Date(row.birth_date) : null,
+        height: row.height ? `${Math.floor(Number(row.height) / 12)}'${Number(row.height) % 12}"` : null,
+        weight: num(row.weight),
+        college: row.college_name || row.college || null,
+        headshotUrl: row.headshot || row.headshot_url || null,
+        isActive: true,
+        sportId: sport.id,
+        sourceProvider: 'nflverse',
+        sourceIngestedAt: new Date(),
+      })
+      return prisma.player.upsert({
+        where: { gsisId },
+        create: data,
+        update: data,
+      })
     })
-
     try {
-      const existing = await prisma.player.findUnique({ where: { gsisId } })
-      if (existing) {
-        await prisma.player.update({ where: { gsisId }, data })
-        updated++
-      } else {
-        await prisma.player.create({ data })
-        created++
-      }
+      await prisma.$transaction(ops)
+      upserted += batch.length
     } catch (e) {
-      // Unique constraint collision on name — try update by gsisId
-      console.warn(`[nflSync] Player upsert failed for ${row.display_name}: ${e.message}`)
-      skipped++
+      // Fallback: try individually on batch failure
+      for (const op of batch) {
+        try {
+          const data = clean({
+            name: op.row.display_name, gsisId: op.gsisId, nflPosition: op.position,
+            nflTeamAbbr: op.row.team_abbr || null, sportId: sport.id,
+            sourceProvider: 'nflverse', sourceIngestedAt: new Date(),
+          })
+          await prisma.player.upsert({ where: { gsisId: op.gsisId }, create: data, update: data })
+          upserted++
+        } catch (e2) {
+          console.warn(`[nflSync] Player upsert failed for ${op.row.display_name}: ${e2.message}`)
+          skipped++
+        }
+      }
+    }
+    if ((i + BATCH_SIZE) % 500 === 0 || i + BATCH_SIZE >= eligible.length) {
+      console.log(`[nflSync] Progress: ${Math.min(i + BATCH_SIZE, eligible.length)}/${eligible.length}`)
     }
   }
 
-  const result = { total: rows.length, created, updated, skipped }
+  // Create/update DST (team defense) "player" records — one per NFL team
+  const allTeams = await prisma.nflTeam.findMany()
+  let dstCount = 0
+  const dstOps = allTeams.map(team => {
+    const dstGsisId = `DST-${team.abbreviation}`
+    const data = {
+      name: `${team.city} ${team.name}`,
+      gsisId: dstGsisId,
+      nflPosition: 'DST',
+      nflTeamAbbr: team.abbreviation,
+      isActive: true,
+      sportId: sport.id,
+      sourceProvider: 'clutch',
+      sourceIngestedAt: new Date(),
+    }
+    return prisma.player.upsert({ where: { gsisId: dstGsisId }, create: data, update: data })
+  })
+  try {
+    await prisma.$transaction(dstOps)
+    dstCount = allTeams.length
+  } catch (e) {
+    console.warn(`[nflSync] DST batch failed, trying individually...`)
+    for (const team of allTeams) {
+      try {
+        const dstGsisId = `DST-${team.abbreviation}`
+        const data = { name: `${team.city} ${team.name}`, gsisId: dstGsisId, nflPosition: 'DST',
+          nflTeamAbbr: team.abbreviation, isActive: true, sportId: sport.id, sourceProvider: 'clutch', sourceIngestedAt: new Date() }
+        await prisma.player.upsert({ where: { gsisId: dstGsisId }, create: data, update: data })
+        dstCount++
+      } catch (e2) { console.warn(`[nflSync] DST failed for ${team.abbreviation}: ${e2.message}`) }
+    }
+  }
+  console.log(`[nflSync] ${dstCount} DST records upserted`)
+
+  const result = { total: rows.length, upserted, dstCount, skipped }
   console.log(`[nflSync] Player sync complete:`, result)
   return result
 }
@@ -182,73 +244,99 @@ async function syncSchedule(prisma, season) {
   const games = allGames.filter(r => Number(r.season) === targetSeason)
   await stageRaw(prisma, 'nfl_schedule', String(targetSeason), games.slice(0, 10))
 
-  let created = 0, updated = 0, skipped = 0
+  // Pre-load all team records into a lookup map
+  const allTeams = await prisma.nflTeam.findMany()
+  const teamMap = Object.fromEntries(allTeams.map(t => [t.abbreviation, t]))
 
+  let upserted = 0, skipped = 0
+
+  // Pre-filter valid games
+  const eligible = []
   for (const row of games) {
     const externalId = row.game_id
     if (!externalId) { skipped++; continue }
-
-    // Look up team records
-    const homeTeam = await prisma.nflTeam.findUnique({ where: { abbreviation: row.home_team } })
-    const awayTeam = await prisma.nflTeam.findUnique({ where: { abbreviation: row.away_team } })
+    const homeTeam = teamMap[normalizeTeamAbbr(row.home_team)]
+    const awayTeam = teamMap[normalizeTeamAbbr(row.away_team)]
     if (!homeTeam || !awayTeam) {
       console.warn(`[nflSync] Team not found: ${row.home_team} or ${row.away_team}`)
-      skipped++
-      continue
+      skipped++; continue
     }
+    eligible.push({ row, externalId, homeTeam, awayTeam })
+  }
 
-    // Determine game status
-    let status = 'UPCOMING'
-    if (row.result !== undefined && row.result !== null && row.result !== '' && row.result !== 'NA') {
-      status = 'FINAL'
-    }
+  console.log(`[nflSync] ${eligible.length} games to upsert (${skipped} skipped)`)
 
-    const data = clean({
-      externalId,
-      season: Number(row.season),
-      week: Number(row.week),
-      gameType: row.game_type || 'REG',
-      kickoff: row.gameday && row.gametime
-        ? new Date(`${row.gameday}T${row.gametime}:00-05:00`)
-        : new Date(`${row.gameday || '2026-09-01'}T13:00:00-05:00`),
-      homeTeamId: homeTeam.id,
-      awayTeamId: awayTeam.id,
-      homeScore: num(row.home_score),
-      awayScore: num(row.away_score),
-      status,
-      venue: row.stadium || null,
-      surface: row.surface || null,
-      roof: row.roof || null,
-      weather: row.temp || row.wind ? {
-        temp: num(row.temp),
-        wind: num(row.wind),
-        humidity: null,
-        condition: row.weather_detail || null,
-      } : null,
-      spreadLine: num(row.spread_line),
-      totalLine: num(row.total_line),
-      homeMoneyline: num(row.home_moneyline),
-      awayMoneyline: num(row.away_moneyline),
-      sourceProvider: 'nflverse',
-      sourceIngestedAt: new Date(),
-    })
-
-    try {
-      const existing = await prisma.nflGame.findUnique({ where: { externalId } })
-      if (existing) {
-        await prisma.nflGame.update({ where: { externalId }, data })
-        updated++
-      } else {
-        await prisma.nflGame.create({ data })
-        created++
+  // Batch upsert in chunks of 25
+  const BATCH_SIZE = 25
+  for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+    const batch = eligible.slice(i, i + BATCH_SIZE)
+    const ops = batch.map(({ row, externalId, homeTeam, awayTeam }) => {
+      let status = 'UPCOMING'
+      if (row.result !== undefined && row.result !== null && row.result !== '' && row.result !== 'NA') {
+        status = 'FINAL'
       }
+      const data = clean({
+        externalId,
+        season: Number(row.season),
+        week: Number(row.week),
+        gameType: row.game_type || 'REG',
+        kickoff: row.gameday && row.gametime
+          ? new Date(`${row.gameday}T${row.gametime}:00-05:00`)
+          : new Date(`${row.gameday || '2026-09-01'}T13:00:00-05:00`),
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        homeScore: num(row.home_score),
+        awayScore: num(row.away_score),
+        status,
+        venue: row.stadium || null,
+        surface: row.surface || null,
+        roof: row.roof || null,
+        weather: row.temp || row.wind ? {
+          temp: num(row.temp),
+          wind: num(row.wind),
+          humidity: null,
+          condition: row.weather_detail || null,
+        } : null,
+        spreadLine: num(row.spread_line),
+        totalLine: num(row.total_line),
+        homeMoneyline: num(row.home_moneyline),
+        awayMoneyline: num(row.away_moneyline),
+        sourceProvider: 'nflverse',
+        sourceIngestedAt: new Date(),
+      })
+      return prisma.nflGame.upsert({
+        where: { externalId },
+        create: data,
+        update: data,
+      })
+    })
+    try {
+      await prisma.$transaction(ops)
+      upserted += batch.length
     } catch (e) {
-      console.warn(`[nflSync] Game upsert failed for ${externalId}: ${e.message}`)
-      skipped++
+      // Fallback: individual upserts
+      for (const { row, externalId, homeTeam, awayTeam } of batch) {
+        try {
+          let status = 'UPCOMING'
+          if (row.result !== undefined && row.result !== null && row.result !== '' && row.result !== 'NA') status = 'FINAL'
+          const data = clean({ externalId, season: Number(row.season), week: Number(row.week), gameType: row.game_type || 'REG',
+            kickoff: row.gameday && row.gametime ? new Date(`${row.gameday}T${row.gametime}:00-05:00`) : new Date(`${row.gameday || '2026-09-01'}T13:00:00-05:00`),
+            homeTeamId: homeTeam.id, awayTeamId: awayTeam.id, homeScore: num(row.home_score), awayScore: num(row.away_score), status,
+            sourceProvider: 'nflverse', sourceIngestedAt: new Date() })
+          await prisma.nflGame.upsert({ where: { externalId }, create: data, update: data })
+          upserted++
+        } catch (e2) {
+          console.warn(`[nflSync] Game upsert failed for ${externalId}: ${e2.message}`)
+          skipped++
+        }
+      }
+    }
+    if ((i + BATCH_SIZE) % 100 === 0 || i + BATCH_SIZE >= eligible.length) {
+      console.log(`[nflSync] Schedule progress: ${Math.min(i + BATCH_SIZE, eligible.length)}/${eligible.length}`)
     }
   }
 
-  const result = { season: targetSeason, total: games.length, created, updated, skipped }
+  const result = { season: targetSeason, total: games.length, upserted, skipped }
   console.log(`[nflSync] Schedule sync complete:`, result)
   return result
 }
@@ -264,105 +352,109 @@ async function syncWeeklyStats(prisma, season) {
   const rows = await nfl.getWeeklyStats(targetSeason)
   await stageRaw(prisma, 'nfl_weekly_stats', String(targetSeason), rows.slice(0, 20))
 
-  let created = 0, updated = 0, skipped = 0
+  // Pre-load lookups: players by gsisId, games by season+week+team
+  const allPlayers = await prisma.player.findMany({
+    where: { gsisId: { not: null } },
+    select: { id: true, gsisId: true },
+  })
+  const playerMap = Object.fromEntries(allPlayers.map(p => [p.gsisId, p.id]))
 
+  const allGames = await prisma.nflGame.findMany({
+    where: { season: targetSeason },
+    select: { id: true, week: true, homeTeam: { select: { abbreviation: true } }, awayTeam: { select: { abbreviation: true } } },
+  })
+  // Build game lookup: "week-TEAM" → gameId
+  const gameMap = {}
+  for (const g of allGames) {
+    gameMap[`${g.week}-${g.homeTeam.abbreviation}`] = g.id
+    gameMap[`${g.week}-${g.awayTeam.abbreviation}`] = g.id
+  }
+
+  let upserted = 0, skipped = 0
+
+  // Pre-filter eligible rows
+  const eligible = []
   for (const row of rows) {
-    // Match player by gsis_id → our gsisId field
     const gsisId = row.player_id
     if (!gsisId) { skipped++; continue }
-
-    const player = await prisma.player.findUnique({ where: { gsisId } })
-    if (!player) {
-      skipped++ // Player not yet synced
-      continue
-    }
-
-    // Find the corresponding game
+    const playerId = playerMap[gsisId]
+    if (!playerId) { skipped++; continue }
     const week = Number(row.week)
-    const teamAbbr = row.recent_team || row.team || ''
-    const game = await prisma.nflGame.findFirst({
-      where: {
-        season: targetSeason,
-        week,
-        OR: [
-          { homeTeam: { abbreviation: teamAbbr } },
-          { awayTeam: { abbreviation: teamAbbr } },
-        ],
-      },
-    })
+    const teamAbbr = normalizeTeamAbbr(row.recent_team || row.team || '')
+    const gameId = gameMap[`${week}-${teamAbbr}`]
+    if (!gameId) { skipped++; continue }
+    eligible.push({ row, playerId, gameId, teamAbbr, week })
+  }
 
-    if (!game) {
-      skipped++ // Game not yet synced for this week
-      continue
-    }
+  console.log(`[nflSync] ${eligible.length} stat rows to upsert (${skipped} skipped)`)
 
-    const data = clean({
-      playerId: player.id,
-      gameId: game.id,
-      teamAbbr,
-
-      // Passing
-      passAttempts: num(row.attempts),
-      passCompletions: num(row.completions),
-      passYards: num(row.passing_yards),
-      passTds: num(row.passing_tds),
-      interceptions: num(row.interceptions),
-      sacked: num(row.sacks),
-      sackYards: num(row.sack_yards),
-      passerRating: num(row.passer_rating),
-
-      // Rushing
-      rushAttempts: num(row.carries),
-      rushYards: num(row.rushing_yards),
-      rushTds: num(row.rushing_tds),
-      fumbles: num(row.rushing_fumbles) !== null || num(row.receiving_fumbles) !== null
-        ? (num(row.rushing_fumbles) || 0) + (num(row.receiving_fumbles) || 0)
-        : null,
-      fumblesLost: num(row.rushing_fumbles_lost) !== null || num(row.receiving_fumbles_lost) !== null
-        ? (num(row.rushing_fumbles_lost) || 0) + (num(row.receiving_fumbles_lost) || 0)
-        : null,
-
-      // Receiving
-      targets: num(row.targets),
-      receptions: num(row.receptions),
-      recYards: num(row.receiving_yards),
-      recTds: num(row.receiving_tds),
-
-      // Advanced
-      targetShare: num(row.target_share),
-
-      // Fantasy (nflverse pre-computes these)
-      fantasyPtsStd: num(row.fantasy_points),
-      fantasyPtsPpr: num(row.fantasy_points_ppr),
-      fantasyPtsHalf: num(row.fantasy_points) !== null && num(row.fantasy_points_ppr) !== null
-        ? (num(row.fantasy_points) + num(row.fantasy_points_ppr)) / 2
-        : null,
-
-      sourceProvider: 'nflverse',
-      sourceIngestedAt: new Date(),
-    })
-
-    try {
-      const existing = await prisma.nflPlayerGame.findUnique({
-        where: { playerId_gameId: { playerId: player.id, gameId: game.id } },
+  // Batch upsert in chunks of 30
+  const BATCH_SIZE = 30
+  for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+    const batch = eligible.slice(i, i + BATCH_SIZE)
+    const ops = batch.map(({ row, playerId, gameId, teamAbbr }) => {
+      const data = clean({
+        playerId,
+        gameId,
+        teamAbbr,
+        passAttempts: num(row.attempts),
+        passCompletions: num(row.completions),
+        passYards: num(row.passing_yards),
+        passTds: num(row.passing_tds),
+        interceptions: num(row.interceptions),
+        sacked: num(row.sacks),
+        sackYards: num(row.sack_yards),
+        passerRating: num(row.passer_rating),
+        rushAttempts: num(row.carries),
+        rushYards: num(row.rushing_yards),
+        rushTds: num(row.rushing_tds),
+        fumbles: num(row.rushing_fumbles) !== null || num(row.receiving_fumbles) !== null
+          ? (num(row.rushing_fumbles) || 0) + (num(row.receiving_fumbles) || 0) : null,
+        fumblesLost: num(row.rushing_fumbles_lost) !== null || num(row.receiving_fumbles_lost) !== null
+          ? (num(row.rushing_fumbles_lost) || 0) + (num(row.receiving_fumbles_lost) || 0) : null,
+        targets: num(row.targets),
+        receptions: num(row.receptions),
+        recYards: num(row.receiving_yards),
+        recTds: num(row.receiving_tds),
+        targetShare: num(row.target_share),
+        fantasyPtsStd: num(row.fantasy_points),
+        fantasyPtsPpr: num(row.fantasy_points_ppr),
+        fantasyPtsHalf: num(row.fantasy_points) !== null && num(row.fantasy_points_ppr) !== null
+          ? (num(row.fantasy_points) + num(row.fantasy_points_ppr)) / 2 : null,
+        sourceProvider: 'nflverse',
+        sourceIngestedAt: new Date(),
       })
-      if (existing) {
-        await prisma.nflPlayerGame.update({
-          where: { playerId_gameId: { playerId: player.id, gameId: game.id } },
-          data,
-        })
-        updated++
-      } else {
-        await prisma.nflPlayerGame.create({ data })
-        created++
-      }
+      return prisma.nflPlayerGame.upsert({
+        where: { playerId_gameId: { playerId, gameId } },
+        create: data,
+        update: data,
+      })
+    })
+    try {
+      await prisma.$transaction(ops)
+      upserted += batch.length
     } catch (e) {
-      console.warn(`[nflSync] Stat upsert failed for ${row.player_name} week ${week}: ${e.message}`)
-      skipped++
+      // Fallback: individual upserts
+      for (const { row, playerId, gameId, teamAbbr, week } of batch) {
+        try {
+          const data = clean({ playerId, gameId, teamAbbr, passYards: num(row.passing_yards), passTds: num(row.passing_tds),
+            rushYards: num(row.rushing_yards), rushTds: num(row.rushing_tds), recYards: num(row.receiving_yards), recTds: num(row.receiving_tds),
+            receptions: num(row.receptions), fantasyPtsStd: num(row.fantasy_points), fantasyPtsPpr: num(row.fantasy_points_ppr),
+            sourceProvider: 'nflverse', sourceIngestedAt: new Date() })
+          await prisma.nflPlayerGame.upsert({ where: { playerId_gameId: { playerId, gameId } }, create: data, update: data })
+          upserted++
+        } catch (e2) {
+          console.warn(`[nflSync] Stat upsert failed for ${row.player_name} week ${week}: ${e2.message}`)
+          skipped++
+        }
+      }
+    }
+    if ((i + BATCH_SIZE) % 500 === 0 || i + BATCH_SIZE >= eligible.length) {
+      console.log(`[nflSync] Stats progress: ${Math.min(i + BATCH_SIZE, eligible.length)}/${eligible.length}`)
     }
   }
 
-  const result = { season: targetSeason, total: rows.length, created, updated, skipped }
+  const result = { season: targetSeason, total: rows.length, upserted, skipped }
   console.log(`[nflSync] Weekly stats sync complete:`, result)
   return result
 }
@@ -381,32 +473,47 @@ async function syncRosters(prisma, season) {
   const maxWeek = Math.max(...rows.map(r => Number(r.week)).filter(n => !isNaN(n)))
   const latestRoster = rows.filter(r => Number(r.week) === maxWeek)
 
-  let updated = 0, skipped = 0
+  let upserted = 0, skipped = 0
 
+  // Pre-filter to players we have
+  const eligible = []
   for (const row of latestRoster) {
     const gsisId = row.gsis_id || row.player_id
     if (!gsisId) { skipped++; continue }
+    eligible.push({ row, gsisId })
+  }
 
-    const player = await prisma.player.findUnique({ where: { gsisId } })
-    if (!player) { skipped++; continue }
-
-    try {
-      await prisma.player.update({
+  // Batch update in chunks of 50
+  const BATCH_SIZE = 50
+  for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+    const batch = eligible.slice(i, i + BATCH_SIZE)
+    const ops = batch.map(({ row, gsisId }) =>
+      prisma.player.updateMany({
         where: { gsisId },
         data: clean({
           nflTeamAbbr: row.team || null,
-          nflPosition: mapPosition(row.position) || player.nflPosition,
-          nflNumber: num(row.jersey_number) || player.nflNumber,
+          nflPosition: mapPosition(row.position),
+          nflNumber: num(row.jersey_number),
           isActive: row.status !== 'INA',
         }),
       })
-      updated++
+    )
+    try {
+      const results = await prisma.$transaction(ops)
+      upserted += results.reduce((sum, r) => sum + r.count, 0)
+      skipped += results.reduce((sum, r) => sum + (r.count === 0 ? 1 : 0), 0)
     } catch (e) {
-      skipped++
+      // Fallback: individual updates
+      for (const { row, gsisId } of batch) {
+        try {
+          await prisma.player.updateMany({ where: { gsisId }, data: clean({ nflTeamAbbr: row.team || null, isActive: row.status !== 'INA' }) })
+          upserted++
+        } catch (e2) { skipped++ }
+      }
     }
   }
 
-  const result = { season: targetSeason, week: maxWeek, updated, skipped }
+  const result = { season: targetSeason, week: maxWeek, updated: upserted, skipped }
   console.log(`[nflSync] Roster sync complete:`, result)
   return result
 }

@@ -86,7 +86,7 @@ async function getPlayers() {
  * Contains: game_id, season, week, game_type, home_team, away_team, home_score, away_score, etc.
  */
 async function getSchedule() {
-  const url = `${NFLVERSE_BASE}/schedules/schedules.csv`
+  const url = `${NFLVERSE_BASE}/schedules/games.csv`
   const rows = await rateLimitedFetch(url)
   console.log(`[nflClient] Fetched ${rows.length} schedule rows from nflverse`)
   return rows
