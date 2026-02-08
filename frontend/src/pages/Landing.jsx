@@ -144,8 +144,37 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* ══════════ ONE PLATFORM ══════════ */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+            One Platform. Every Sport.
+          </h2>
+          <p className="text-text-secondary max-w-xl mx-auto mb-10">
+            Your Clutch Rating spans every sport. The best sports minds don't just know one game.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
+            {[
+              { sport: 'Golf', icon: '⛳', status: 'LIVE', color: 'border-gold text-gold bg-gold/10', badge: 'bg-gold text-dark-primary' },
+              { sport: 'NFL', icon: '🏈', status: 'Spring 2026', color: 'border-orange-500/30 text-orange-400 bg-orange-500/5', badge: 'bg-orange-500/20 text-orange-400' },
+              { sport: 'NBA', icon: '🏀', status: 'Future', color: 'border-dark-border text-text-muted bg-dark-primary/50', badge: 'bg-dark-tertiary text-text-muted' },
+              { sport: 'MLB', icon: '⚾', status: 'Future', color: 'border-dark-border text-text-muted bg-dark-primary/50', badge: 'bg-dark-tertiary text-text-muted' },
+            ].map(s => (
+              <div key={s.sport} className={`rounded-xl p-5 border ${s.color}`}>
+                <div className="text-3xl mb-3">{s.icon}</div>
+                <h3 className="text-lg font-bold font-display mb-2">{s.sport}</h3>
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase ${s.badge}`}>
+                  {s.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ══════════ HOW IT WORKS ══════════ */}
-      <section id="how-it-works" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <section id="how-it-works" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
@@ -186,6 +215,24 @@ const Landing = () => {
                 draft intelligence. Share your profile. This is your sports resume.
               </p>
             </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+            <Link to="/signup">
+              <Button size="lg" fullWidth className="sm:w-auto">
+                Play Fantasy Golf Now
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              className="sm:w-auto"
+              onClick={() => document.getElementById('nfl-2026')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Join the NFL 2026 Waitlist
+            </Button>
           </div>
         </div>
       </section>
@@ -707,39 +754,6 @@ const Landing = () => {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ══════════ MULTI-SPORT VISION ══════════ */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
-            One Platform. Every Sport.
-          </h2>
-          <p className="text-text-secondary max-w-xl mx-auto mb-10">
-            Your Clutch Rating spans every sport. The best sports minds don't just know one game.
-          </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
-            {[
-              { sport: 'Golf', icon: '⛳', status: 'LIVE', color: 'border-gold text-gold bg-gold/10', badge: 'bg-gold text-dark-primary' },
-              { sport: 'NFL', icon: '🏈', status: 'Spring 2026', color: 'border-orange-500/30 text-orange-400 bg-orange-500/5', badge: 'bg-orange-500/20 text-orange-400' },
-              { sport: 'NBA', icon: '🏀', status: 'Future', color: 'border-dark-border text-text-muted bg-dark-primary/50', badge: 'bg-dark-tertiary text-text-muted' },
-              { sport: 'MLB', icon: '⚾', status: 'Future', color: 'border-dark-border text-text-muted bg-dark-primary/50', badge: 'bg-dark-tertiary text-text-muted' },
-            ].map(s => (
-              <div key={s.sport} className={`rounded-xl p-5 border ${s.color}`}>
-                <div className="text-3xl mb-3">{s.icon}</div>
-                <h3 className="text-lg font-bold font-display mb-2">{s.sport}</h3>
-                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase ${s.badge}`}>
-                  {s.status}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-text-muted text-sm mt-8">
-            Getting in early means your track record starts accumulating now.
-          </p>
         </div>
       </section>
 
