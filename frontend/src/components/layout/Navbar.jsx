@@ -15,6 +15,7 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [researchOpen, setResearchOpen] = useState(false)
   const inbox = useNotificationInbox()
   const { currentTournament } = useTournaments()
 
@@ -74,9 +75,108 @@ const Navbar = () => {
                 <Link to="/prove-it" className={navLinkStyles('/prove-it')}>
                   Prove It
                 </Link>
-                <Link to="/tournaments" className={navLinkStyles('/tournaments')}>
-                  Tournaments
-                </Link>
+
+                {/* Research Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setResearchOpen(!researchOpen)
+                      setProfileMenuOpen(false)
+                      setNotifOpen(false)
+                    }}
+                    className={`
+                      px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1
+                      ${location.pathname.startsWith('/nfl/') || location.pathname.startsWith('/players') || location.pathname.startsWith('/tournaments') || location.pathname.startsWith('/courses')
+                        ? 'text-gold bg-surface-bright'
+                        : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                      }
+                    `}
+                  >
+                    Research
+                    <svg className={`w-3.5 h-3.5 transition-transform ${researchOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {researchOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setResearchOpen(false)} />
+                      <div className="absolute left-0 mt-2 w-56 backdrop-blur-xl bg-dark-secondary/90 border border-white/[0.08] rounded-card shadow-lg z-20 py-2">
+                        {/* NFL Section */}
+                        <div className="px-3 py-1.5">
+                          <span className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-widest">NFL</span>
+                        </div>
+                        <Link
+                          to="/nfl/players"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          onClick={() => setResearchOpen(false)}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Players
+                          </div>
+                        </Link>
+                        <Link
+                          to="/nfl/schedule"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          onClick={() => setResearchOpen(false)}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Schedule
+                          </div>
+                        </Link>
+                        <Link
+                          to="/nfl/teams/ARI"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          onClick={() => setResearchOpen(false)}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Teams
+                          </div>
+                        </Link>
+
+                        <div className="border-t border-white/[0.06] my-2" />
+
+                        {/* Golf Section */}
+                        <div className="px-3 py-1.5">
+                          <span className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-widest">Golf</span>
+                        </div>
+                        <Link
+                          to="/players"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          onClick={() => setResearchOpen(false)}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Players
+                          </div>
+                        </Link>
+                        <Link
+                          to="/tournaments"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          onClick={() => setResearchOpen(false)}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Tournaments
+                          </div>
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </div>
                 <Link
                   to={tournamentLink || '/tournaments'}
                   className={`
@@ -342,19 +442,38 @@ const Navbar = () => {
                 >
                   Prove It
                 </Link>
+
+                {/* Research section */}
+                <div className="pt-2 pb-1 px-4">
+                  <span className="text-[10px] font-mono font-bold text-white/25 uppercase tracking-widest">Research</span>
+                </div>
+                <div className="pl-2 space-y-1">
+                  <div className="px-3 py-1">
+                    <span className="text-[10px] font-mono text-white/20 uppercase tracking-wider">NFL</span>
+                  </div>
+                  <Link to="/nfl/players" className={mobileNavLinkStyles('/nfl/players')} onClick={() => setMobileMenuOpen(false)}>
+                    NFL Players
+                  </Link>
+                  <Link to="/nfl/schedule" className={mobileNavLinkStyles('/nfl/schedule')} onClick={() => setMobileMenuOpen(false)}>
+                    NFL Schedule
+                  </Link>
+                  <div className="px-3 py-1 pt-2">
+                    <span className="text-[10px] font-mono text-white/20 uppercase tracking-wider">Golf</span>
+                  </div>
+                  <Link to="/players" className={mobileNavLinkStyles('/players')} onClick={() => setMobileMenuOpen(false)}>
+                    Golf Players
+                  </Link>
+                  <Link to="/tournaments" className={mobileNavLinkStyles('/tournaments')} onClick={() => setMobileMenuOpen(false)}>
+                    Tournaments
+                  </Link>
+                </div>
+
                 <Link
                   to={`/manager/${user.id}`}
                   className={mobileNavLinkStyles(`/manager/${user.id}`)}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Manager Stats
-                </Link>
-                <Link
-                  to="/tournaments"
-                  className={mobileNavLinkStyles('/tournaments')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Tournaments
                 </Link>
                 <Link
                   to={tournamentLink || '/tournaments'}
