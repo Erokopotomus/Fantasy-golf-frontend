@@ -93,7 +93,7 @@ const Leagues = () => {
                         </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-text-muted">
-                        <span>{league.memberCount} / {league.maxMembers} members</span>
+                        <span>{league.memberCount || league._count?.members || 0} / {league.maxMembers || league.maxTeams || 10} members</span>
                         <span>Roster: {league.settings?.rosterSize || 6} players</span>
                         {league.userRank && (
                           <span className="text-gold">

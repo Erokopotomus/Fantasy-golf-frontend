@@ -32,7 +32,9 @@ const News = () => {
   const highPriorityNews = allNews.filter(n => n.priority === 'high')
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-dark-primary">
+      <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold font-display text-white">Player News</h1>
@@ -195,6 +197,8 @@ const News = () => {
           </button>
         </div>
       </div>
+      </div>
+      </main>
     </div>
   )
 }
