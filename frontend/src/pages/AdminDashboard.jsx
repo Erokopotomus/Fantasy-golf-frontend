@@ -195,6 +195,7 @@ const AdminDashboard = () => {
               <thead>
                 <tr className="text-text-muted border-b border-dark-border">
                   <th className="text-left py-2 px-3">Name</th>
+                  <th className="text-left py-2 px-3">Username</th>
                   <th className="text-left py-2 px-3">Email</th>
                   <th className="text-left py-2 px-3">Role</th>
                   <th className="text-left py-2 px-3">Leagues</th>
@@ -206,6 +207,7 @@ const AdminDashboard = () => {
                 {users.map(u => (
                   <tr key={u.id} className="border-b border-dark-border/50 hover:bg-surface-hover">
                     <td className="py-2 px-3 text-white">{u.name}</td>
+                    <td className="py-2 px-3 text-text-muted font-mono text-xs">{u.username ? `@${u.username}` : '—'}</td>
                     <td className="py-2 px-3 text-text-secondary">{u.email}</td>
                     <td className="py-2 px-3">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
