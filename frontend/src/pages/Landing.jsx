@@ -193,21 +193,25 @@ const Landing = () => {
       {/* ══════════ IT COMPOUNDS ══════════ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
-              Year one, you have a record.
-              <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Year three, you have a database.</span>
-            </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Every projection, every pick, every reasoning note — permanently logged. Clutch doesn't just track
-              what you predicted. It tracks whether you were right, where you were biased, and how you're improving.
-              This is the home for how you think about sports — and no one else is building it.
-            </p>
-          </div>
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center mb-16">
+            {/* Left — copy */}
+            <div className="text-center lg:text-left">
+              <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+                Year one, you have a record.
+                <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Year three, you have a database.</span>
+              </h2>
+              <p className="text-text-secondary leading-relaxed mb-6">
+                Every projection, every pick, every reasoning note — permanently logged. Clutch doesn't just track
+                what you predicted. It tracks whether you were right, where you were biased, and how you're improving.
+                This is the home for how you think about sports — and no one else is building it.
+              </p>
+              <p className="text-gold font-display font-semibold text-lg">
+                One place for everything you know. One score to prove it.
+              </p>
+            </div>
 
-          {/* ── Ecosystem Flywheel ── */}
-          <div className="mb-16">
-            <div className="w-full max-w-lg mx-auto">
+            {/* Right — flywheel */}
+            <div>
               <svg viewBox="0 0 500 500" className="w-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
@@ -276,9 +280,6 @@ const Landing = () => {
                 <text x="250" y="283" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="9" fontFamily="'DM Sans', sans-serif" fontWeight="500" letterSpacing="1">AI INSIGHTS</text>
               </svg>
             </div>
-            <p className="text-center text-gold font-display font-semibold text-lg mt-6">
-              One place for everything you know. One score to prove it.
-            </p>
           </div>
 
           {/* Three pillars */}
