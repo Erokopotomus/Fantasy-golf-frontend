@@ -199,6 +199,30 @@ const Landing = () => {
               </p>
             </div>
           </div>
+
+          {/* OR — Just play fantasy */}
+          <div className="mt-14 sm:mt-16 text-center">
+            <div className="flex items-center gap-4 max-w-md mx-auto mb-6">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gold/30" />
+              <span className="text-gold font-display font-bold text-sm tracking-widest uppercase">Or</span>
+              <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gold/30" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold font-display text-white mb-3">
+              Just play fantasy sports.
+            </h3>
+            <p className="text-text-secondary leading-relaxed max-w-2xl mx-auto mb-6">
+              Don't care about predictions? No problem. Run your league on the most modern fantasy platform
+              built — import your history from ESPN, Yahoo, Sleeper, or Fantrax, draft with your friends,
+              and enjoy a commissioner experience that actually doesn't suck.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {['Snake & Auction Drafts', 'League History Vault', 'Live Scoring', 'Waivers & Trades', 'In-League Chat'].map(tag => (
+                <span key={tag} className="text-xs font-mono text-gold/80 bg-gold/10 border border-gold/20 px-3 py-1.5 rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
