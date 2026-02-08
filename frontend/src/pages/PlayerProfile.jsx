@@ -19,6 +19,7 @@ const PlayerProfile = () => {
     projection,
     predictions,
     liveScore,
+    clutchMetrics,
     courseHistory,
     tournamentHistory,
     loading,
@@ -85,6 +86,7 @@ const PlayerProfile = () => {
       <div className="mb-6">
         <PlayerHeader
           player={player}
+          clutchMetrics={clutchMetrics}
           isOwned={player.owned}
           isOnMyTeam={player.owned}
           onAddToRoster={() => {}}
@@ -96,7 +98,7 @@ const PlayerProfile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
-          <PlayerStats player={player} />
+          <PlayerStats player={player} clutchMetrics={clutchMetrics} />
         </div>
 
         {/* Right Column */}

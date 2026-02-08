@@ -37,6 +37,8 @@ function flattenEntry(entry) {
     probabilities: entry.probabilities ?? null,
     sgTotalLive: entry.sgTotalLive ?? null,
     teeTimes: entry.teeTimes ?? null,
+    // Clutch metrics
+    clutchMetrics: entry.clutchMetrics ?? null,
   }
 }
 

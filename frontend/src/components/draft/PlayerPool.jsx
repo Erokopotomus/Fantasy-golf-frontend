@@ -33,6 +33,10 @@ const PlayerPool = ({
           aVal = a.name
           bVal = b.name
           break
+        case 'cpi':
+          aVal = a.clutchMetrics?.cpi ?? -99
+          bVal = b.clutchMetrics?.cpi ?? -99
+          break
         case 'sgTotal':
           aVal = a.sgTotal || 0
           bVal = b.sgTotal || 0
@@ -59,7 +63,7 @@ const PlayerPool = ({
       setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     } else {
       setSortBy(field)
-      setSortDir(field === 'sgTotal' || field === 'top10' ? 'desc' : 'asc')
+      setSortDir(field === 'sgTotal' || field === 'top10' || field === 'cpi' ? 'desc' : 'asc')
     }
   }
 
@@ -104,12 +108,15 @@ const PlayerPool = ({
       <div className="flex-1 overflow-auto min-h-0">
         {/* Header */}
         <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
-          <div className="grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+          <div className="grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
             <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
               Rk <SortIcon field="rank" />
             </button>
             <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
               Player <SortIcon field="name" />
+            </button>
+            <button onClick={() => handleSort('cpi')} className="text-right hover:text-white transition-colors">
+              CPI <SortIcon field="cpi" />
             </button>
             <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-white transition-colors">
               SG <SortIcon field="sgTotal" />
@@ -132,7 +139,7 @@ const PlayerPool = ({
           return (
             <div
               key={player.id}
-              className={`grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
+              className={`grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
                 inQueue ? 'bg-orange/5' : ''
               }`}
               onClick={() => onViewPlayer?.(player)}
@@ -155,6 +162,16 @@ const PlayerPool = ({
                   )}
                 </div>
               </div>
+              <span className={`text-xs text-right font-medium tabular-nums ${
+                (player.clutchMetrics?.cpi ?? 0) > 1.5 ? 'text-gold' :
+                (player.clutchMetrics?.cpi ?? 0) > 0.5 ? 'text-green-400' :
+                (player.clutchMetrics?.cpi ?? 0) > -0.5 ? 'text-yellow-400' :
+                player.clutchMetrics?.cpi != null ? 'text-red-400' : 'text-text-muted'
+              }`}>
+                {player.clutchMetrics?.cpi != null
+                  ? `${player.clutchMetrics.cpi > 0 ? '+' : ''}${player.clutchMetrics.cpi.toFixed(1)}`
+                  : '—'}
+              </span>
               <span className={`text-xs text-right font-medium tabular-nums ${
                 sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-white' : 'text-red-400'
               }`}>

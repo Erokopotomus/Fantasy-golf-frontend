@@ -435,6 +435,45 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('weekTransition', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Monday 2:30 AM ET — Clutch Metrics weekly recompute (after analytics refresh)
+    const clutchMetrics = require('./services/clutchMetrics')
+    cron.schedule('30 2 * * 1', async () => {
+      cronLog('clutchMetrics', 'Starting weekly recompute')
+      try {
+        const result = await clutchMetrics.recomputeAll(cronPrisma)
+        cronLog('clutchMetrics', `Done: ${result.computed} computed, ${result.skipped} skipped`)
+      } catch (e) { cronLog('clutchMetrics', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Wednesday 7:30 AM ET — Clutch Metrics for upcoming tournament field (after field sync at 7AM)
+    cron.schedule('30 7 * * 3', async () => {
+      const t = await getActiveTournamentDgId()
+      if (!t?.datagolfId) return cronLog('clutchMetrics-event', 'No active tournament')
+      const tournament = await cronPrisma.tournament.findFirst({
+        where: { datagolfId: String(t.datagolfId) },
+        select: { id: true },
+      })
+      if (!tournament) return cronLog('clutchMetrics-event', 'Tournament not found in DB')
+      cronLog('clutchMetrics-event', `Computing metrics for ${t.datagolfId}`)
+      try {
+        const result = await clutchMetrics.computeForEvent(tournament.id, cronPrisma)
+        cronLog('clutchMetrics-event', `Done: ${result.computed} players`)
+      } catch (e) { cronLog('clutchMetrics-event', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Sunday 4:00 AM ET — Raw provider data cleanup (> 90 days)
+    cron.schedule('0 4 * * 0', async () => {
+      cronLog('rawCleanup', 'Cleaning up old raw provider data')
+      try {
+        const cutoff = new Date()
+        cutoff.setDate(cutoff.getDate() - 90)
+        const result = await cronPrisma.rawProviderData.deleteMany({
+          where: { ingestedAt: { lt: cutoff } },
+        })
+        cronLog('rawCleanup', `Done: ${result.count} rows deleted`)
+      } catch (e) { cronLog('rawCleanup', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Monday 2:00 AM ET — Weekly analytics refresh + view refresh
     const analytics = require('./services/analyticsAggregator')
     const { refreshAllViews } = require('./services/viewRefresher')

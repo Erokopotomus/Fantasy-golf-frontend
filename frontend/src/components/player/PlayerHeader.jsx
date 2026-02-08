@@ -1,6 +1,6 @@
 import Card from '../common/Card'
 
-const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTeam }) => {
+const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, isOwned, isOnMyTeam }) => {
   if (!player) return null
 
   const getRankBadge = (rank) => {
@@ -23,18 +23,46 @@ const PlayerHeader = ({ player, onAddToRoster, onProposeTrade, isOwned, isOnMyTe
 
   const tourBadge = getTourBadge(player.primaryTour)
 
+  // CPI color coding
+  const getCPIColor = (cpi) => {
+    if (cpi == null) return 'text-text-muted'
+    if (cpi > 1.5) return 'text-gold'
+    if (cpi > 0.5) return 'text-green-400'
+    if (cpi > -0.5) return 'text-yellow-400'
+    return 'text-red-400'
+  }
+
+  // Form Score label
+  const getFormLabel = (score) => {
+    if (score == null) return null
+    if (score >= 80) return { text: Math.round(score), icon: 'HOT' }
+    if (score >= 60) return { text: Math.round(score), icon: 'WARM' }
+    if (score >= 40) return { text: Math.round(score), icon: 'COOL' }
+    return { text: Math.round(score), icon: 'COLD' }
+  }
+
+  const getFormColor = (score) => {
+    if (score == null) return 'text-text-muted'
+    if (score >= 80) return 'text-orange'
+    if (score >= 60) return 'text-yellow-400'
+    if (score >= 40) return 'text-blue-400'
+    return 'text-blue-300'
+  }
+
+  const cpi = clutchMetrics?.cpi
+  const formScore = clutchMetrics?.formScore
+  const formInfo = getFormLabel(formScore)
+
   const quickStats = [
     {
-      label: 'SG Total',
-      value: player.stats?.sgTotal != null
-        ? `${player.stats.sgTotal > 0 ? '+' : ''}${player.stats.sgTotal.toFixed(2)}`
-        : null,
-      color: 'text-gold',
+      label: 'CPI',
+      value: cpi != null ? `${cpi > 0 ? '+' : ''}${cpi.toFixed(2)}` : null,
+      color: getCPIColor(cpi),
     },
     {
-      label: 'DG Rank',
-      value: player.datagolfRank != null ? `#${player.datagolfRank}` : null,
-      color: 'text-white',
+      label: 'Form',
+      value: formInfo ? formInfo.text : null,
+      color: getFormColor(formScore),
     },
     {
       label: 'Events',

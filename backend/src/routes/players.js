@@ -54,6 +54,19 @@ router.get('/', optionalAuth, async (req, res, next) => {
       prisma.player.count({ where })
     ])
 
+    // Batch-fetch ClutchScores for listed players (latest weekly snapshot)
+    const playerIds = players.map(p => p.id)
+    const clutchScores = playerIds.length > 0 ? await prisma.clutchScore.findMany({
+      where: {
+        playerId: { in: playerIds },
+        tournamentId: null,
+        formulaVersion: 'v1.0',
+      },
+      orderBy: { computedAt: 'desc' },
+      distinct: ['playerId'],
+    }) : []
+    const clutchMap = new Map(clutchScores.map(cs => [cs.playerId, cs]))
+
     // Add recentForm array to each player
     const playersWithForm = players.map(p => {
       const recentForm = (p.performances || [])
@@ -65,7 +78,17 @@ router.get('/', optionalAuth, async (req, res, next) => {
         })
         .filter(Boolean)
       const { performances, ...rest } = p
-      return { ...rest, recentForm }
+      const cs = clutchMap.get(p.id)
+      return {
+        ...rest,
+        recentForm,
+        clutchMetrics: cs ? {
+          cpi: cs.cpi,
+          formScore: cs.formScore,
+          pressureScore: cs.pressureScore,
+          computedAt: cs.computedAt,
+        } : null,
+      }
     })
 
     res.json({
@@ -229,7 +252,31 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       earnings: player.earnings > 0 ? player.earnings : derivedStats.earnings,
     }
 
-    res.json({ player, upcomingTournaments, projection, predictions, liveScore, seasonStats })
+    // Fetch latest Clutch metrics (weekly snapshot + event-specific if applicable)
+    const [clutchMetricsWeekly, clutchMetricsEvent] = await Promise.all([
+      prisma.clutchScore.findFirst({
+        where: { playerId: req.params.id, tournamentId: null },
+        orderBy: { computedAt: 'desc' },
+      }),
+      upcomingForPredictions ? prisma.clutchScore.findFirst({
+        where: { playerId: req.params.id, tournamentId: upcomingForPredictions.id },
+        orderBy: { computedAt: 'desc' },
+      }) : null,
+    ])
+
+    const clutchMetrics = {
+      cpi: clutchMetricsWeekly?.cpi ?? null,
+      formScore: clutchMetricsWeekly?.formScore ?? null,
+      pressureScore: clutchMetricsWeekly?.pressureScore ?? null,
+      courseFitScore: clutchMetricsEvent?.courseFitScore ?? null,
+      cpiComponents: clutchMetricsWeekly?.cpiComponents ?? null,
+      formComponents: clutchMetricsWeekly?.formComponents ?? null,
+      pressureComponents: clutchMetricsWeekly?.pressureComponents ?? null,
+      fitComponents: clutchMetricsEvent?.fitComponents ?? null,
+      computedAt: clutchMetricsWeekly?.computedAt ?? null,
+    }
+
+    res.json({ player, upcomingTournaments, projection, predictions, liveScore, seasonStats, clutchMetrics })
   } catch (error) {
     next(error)
   }

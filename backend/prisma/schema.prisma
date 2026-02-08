@@ -282,6 +282,11 @@ model Player {
   sportId String?
   sportRef Sport? @relation("PlayerSport", fields: [sportId], references: [id])
 
+  // Source tracking
+  sourceProvider      String?
+  sourceIngestedAt    DateTime?
+  clutchTransformedAt DateTime?
+
   // Relations
   rosters            RosterEntry[]
   draftPicks         DraftPick[]
@@ -302,6 +307,7 @@ model Player {
   tagAssignments     PlayerTagAssignment[]
   sportProfiles      SportPlayerProfile[]
   waiverClaims       WaiverClaim[]
+  clutchScores       ClutchScore[]
 
   @@index([owgrRank])
   @@index([name])
@@ -413,6 +419,11 @@ model Tournament {
   // Field
   fieldSize Int?
 
+  // Source tracking
+  sourceProvider      String?
+  sourceIngestedAt    DateTime?
+  clutchTransformedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -428,6 +439,8 @@ model Tournament {
   weather      Weather[]
   liveScores   LiveScore[]
   fantasyWeeks FantasyWeek[]
+  clutchScores ClutchScore[]
+  eventIdMap   ClutchEventIdMap?
 
   @@map("tournaments")
 }
@@ -480,6 +493,11 @@ model Performance {
   sgApproach    Float?
   sgOffTee      Float?
   sgTeeToGreen  Float?
+
+  // Source tracking
+  sourceProvider      String?
+  sourceIngestedAt    DateTime?
+  clutchTransformedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2143,4 +2161,81 @@ model HistoricalSeason {
   @@index([leagueId, seasonYear])
   @@index([ownerUserId])
   @@map("historical_seasons")
+}
+
+// ============ DATA ARCHITECTURE (Phase 4) ============
+
+// Layer 1 — Raw Provider Staging
+model RawProviderData {
+  id          String    @id @default(cuid())
+  provider    String    // "datagolf", "espn", "pgatour", "owgr"
+  dataType    String    // "player_list", "rankings", "skill_ratings", "field_updates", "live_scoring", "predictions", "projections", "tournament_stats", "schedule"
+  eventRef    String?   // Provider's event ID (nullable for non-event data)
+  payload     Json      // Full raw JSON response
+  recordCount Int?
+  ingestedAt  DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([provider, dataType, ingestedAt])
+  @@index([provider, eventRef])
+  @@map("raw_provider_data")
+}
+
+// Layer 3 — Clutch Computed Metrics
+model ClutchScore {
+  id             String      @id @default(cuid())
+  playerId       String
+  player         Player      @relation(fields: [playerId], references: [id])
+  tournamentId   String?     // null = weekly snapshot, set = event-specific
+  tournament     Tournament? @relation(fields: [tournamentId], references: [id])
+  cpi            Float?      // Clutch Performance Index: -3.0 to +3.0
+  courseFitScore Float?      // 0-100
+  formScore      Float?      // 0-100
+  pressureScore  Float?      // -2.0 to +2.0
+  cpiComponents      Json?   // breakdown of CPI inputs
+  formComponents     Json?   // breakdown of form inputs
+  fitComponents      Json?   // player profile x course profile
+  pressureComponents Json?   // pressure vs baseline breakdown
+  formulaVersion String      // "v1.0"
+  inputs         Json        @default("{}")  // full input snapshot for reproducibility
+  computedAt     DateTime    @default(now())
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([playerId, tournamentId, formulaVersion])
+  @@index([playerId, computedAt(sort: Desc)])
+  @@index([tournamentId])
+  @@map("clutch_scores")
+}
+
+// Rosetta Stone — Event ID cross-reference
+model ClutchEventIdMap {
+  id              String      @id @default(cuid())
+  sport           String      @default("golf")
+  eventName       String
+  datagolfEventId String?     @unique
+  espnEventId     String?
+  pgaTourEventId  String?
+  owgrEventId     String?
+  startDate       DateTime?
+  endDate         DateTime?
+  tournamentId    String?     @unique
+  tournament      Tournament? @relation(fields: [tournamentId], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([sport])
+  @@map("clutch_event_id_map")
+}
+
+// Formula versioning audit log
+model ClutchFormulaLog {
+  id            String    @id @default(cuid())
+  version       String    @unique // "v1.0"
+  description   String
+  parameters    Json      @default("{}")
+  activatedAt   DateTime  @default(now())
+  deactivatedAt DateTime?
+
+  @@map("clutch_formula_log")
 }

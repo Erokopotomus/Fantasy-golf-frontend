@@ -54,8 +54,8 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ## DEVELOPMENT PHASES
 
-### Current Status: PHASE 3 — COMPLETE ✓
-> Phases 1, 2 & 3 complete. Phase 4 (Data Architecture & Proprietary Metrics) is next — building the 4-layer data system, Rosetta Stone player ID mapping, ETL pipelines, and Clutch proprietary metrics.
+### Current Status: PHASE 4 — IN PROGRESS
+> Phases 1, 2 & 3 complete. Phase 4A-4D built (migration, metrics engine, course fit, ETL, frontend). Migration 12_data_architecture pending deploy to Railway. Phase 4E (Tier 1 Public Data Sources) not yet started.
 
 ### Phase 1: Core Platform — COMPLETE ✓
 
@@ -361,42 +361,41 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ---
 
-### Phase 4: Data Architecture & Proprietary Metrics (BUILD NEXT)
+### Phase 4: Data Architecture & Proprietary Metrics — IN PROGRESS
 
 > **Philosophy:** Build on data you own, transform everything, license only what you can't replicate, architect for AI from day one. The 4-layer data system ensures no provider dependency — if DataGolf disappears tomorrow, nothing breaks except one ETL script.
 
 > **Reference docs:** `clutch-data-strategy.md` (full data ownership framework), `clutch-build-specs.md` (Sections C & D)
 
-- [ ] **4A: 4-Layer Database Architecture**
-  - **Layer 1 — Raw Provider Staging:** Provider-specific tables (`raw_datagolf_*`, `raw_pgatour_*`, `raw_espn_*`). Raw JSON payloads with `source`, `ingested_at`. Never read by application code.
-  - **Layer 2 — Clutch Canonical Tables:** Provider-agnostic schema using only Clutch IDs. `clutch_players`, `clutch_events`, `clutch_player_rounds`, `clutch_player_stats`, `clutch_schedules`, `clutch_fields`. All use `clutch_player_id` and `clutch_event_id` — no provider references.
-  - **Layer 3 — Clutch Computed Tables:** Proprietary metrics computed from Layer 2. `clutch_scores`, `clutch_predictions_model`, `clutch_player_profiles_ai`, `clutch_consensus`. Your IP, your formulas.
-  - **Layer 4 — Application reads from Layers 2 + 3 only.** No provider name appears in app code.
-  - Source tagging on every canonical record (`source_provider`, `source_ingested_at`, `clutch_transformed_at`)
-  - Transformation logging: formula version + inputs + timestamp on every computed metric
+- [x] **4A: 4-Layer Database Architecture**
+  - Migration `12_data_architecture` — 4 new models (RawProviderData, ClutchScore, ClutchEventIdMap, ClutchFormulaLog)
+  - Source tracking fields on Player, Performance, Tournament (sourceProvider, sourceIngestedAt, clutchTransformedAt)
+  - Raw staging: `stageRaw()` calls in all 7 datagolfSync functions capture full API responses
+  - ClutchScore model: per-player per-tournament computed metrics with formula versioning + input snapshots
+  - ClutchFormulaLog: audit trail for formula versions with activation/deactivation dates
+  - **NOT YET APPLIED:** Migration needs `prisma migrate deploy` on Railway
 
-- [ ] **4B: Rosetta Stone — Player & Event ID Mapping**
-  - Expand `playerMatcher.js` into full canonical ID system
-  - `clutch_player_id_map`: master key + nullable columns per provider (datagolf_id, pga_tour_id, espn_id, owgr_id, slashgolf_id, nflverse_id, pfr_id, yahoo_id, draftkings_id, fanduel_id)
-  - `clutch_event_id_map`: master event key + per-provider event IDs
-  - When new provider added: add column. When removed: column goes null. Nothing breaks.
-  - Cross-reference population from existing DataGolf data + public sources
+- [x] **4B: Rosetta Stone — Player & Event ID Mapping**
+  - Existing Player model serves as player Rosetta Stone (11 cross-reference ID columns already present)
+  - ClutchEventIdMap model links datagolfEventId → tournamentId with sport-level indexing
+  - Auto-populated during `syncSchedule()` via `etl.upsertEventIdMap()`
 
-- [ ] **4C: ETL Pipeline — DataGolf → Canonical Tables**
-  - Refactor current `datagolfSync.js` into 2-step: raw staging → canonical transform
-  - Raw staging tables capture DataGolf API responses verbatim
-  - ETL scripts transform raw → canonical with source tagging
-  - Application code (routes, services) migrated to read from canonical tables instead of direct DataGolf models
-  - Existing cron jobs adapted to feed the pipeline
-  - **Rule: no provider name in application code.** Only in ETL scripts and raw staging layer.
+- [x] **4C: ETL Pipeline — DataGolf → Canonical Tables**
+  - New service: `etlPipeline.js` — stageRaw, markProcessed, upsertEventIdMap, bulkUpsert (with source tracking), cleanupOldRawData
+  - `datagolfSync.js` refactored to call ETL pipeline for event ID mapping during schedule sync
+  - Raw data cleanup cron: Sun 4AM ET — deletes raw_provider_data older than 90 days
 
-- [ ] **4D: Clutch Proprietary Metrics (Golf First)**
-  - **Clutch Performance Index (CPI):** Weighted blend of SG components with proprietary weights + recency factor. Normalized Z-score, -3.0 to +3.0 scale.
-  - **Clutch Course Fit Score:** Dot product of player skill profile vs course demand profile. 0-100 scale. Course profiles defined manually (fairway width, green size, rough severity, elevation, grass type).
-  - **Clutch Form Score:** Recency-weighted rolling performance with exponential decay (40/25/20/15 last 4 events). Field-strength adjusted. 0-100 scale.
-  - **Clutch Pressure Score:** Performance differential in high-leverage vs normal situations (final round in contention, major championships, playoffs). -2.0 to +2.0 scale.
-  - All metrics: formula versioned, inputs logged, recomputed weekly via cron
-  - Frontend: replace raw SG displays with Clutch-branded metrics. "Clutch Form Score" not "SG Total".
+- [x] **4D: Clutch Proprietary Metrics (Golf First)**
+  - New service: `clutchMetrics.js` — 4 algorithms + batch functions
+  - **CPI** (-3.0 to +3.0): Weighted SG blend × recency decay × field strength, z-score normalized across active players
+  - **Form Score** (0-100): Last 4 events with weights [0.40, 0.25, 0.20, 0.15], field-strength + event-type adjusted
+  - **Pressure Score** (-2.0 to +2.0): Pressure vs baseline round SG delta, scaled 1.5×
+  - **Course Fit** (0-100): Player SG percentile profile × course importance weights dot product + quality floor + history bonus
+  - Cron: Mon 2:30AM recomputeAll, Wed 7:30AM computeForEvent
+  - Backend routes updated: GET /api/players, GET /api/players/:id, GET /api/tournaments/:id/leaderboard all serve clutchMetrics
+  - Frontend: PlayerHeader shows CPI + Form Score in quick stats, PlayerStats has "Clutch Scores" card with all 4 metrics
+  - Frontend: PlayerPool (draft) has sortable CPI column, useTournamentScoring passes clutchMetrics through
+  - Course profile seed script: `seedCourseProfiles.js` with ~40 PGA Tour venue importance weights
 
 - [ ] **4E: Tier 1 Public Data Sources**
   - PGA Tour website scraper (stats pages — driving, GIR, SG breakdown, scoring)

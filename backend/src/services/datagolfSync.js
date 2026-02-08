@@ -1,5 +1,30 @@
 const dg = require('./datagolfClient')
 const { calculateFantasyPoints, getDefaultScoringConfig } = require('./scoringService')
+const etl = require('./etlPipeline')
+
+// ─── Raw Staging ──────────────────────────────────────────────────────────────
+
+/** Stage raw provider data into Layer 1 for audit/reproducibility */
+async function stageRaw(prisma, provider, dataType, eventRef, payload) {
+  try {
+    const recordCount = Array.isArray(payload) ? payload.length
+      : payload?.players?.length || payload?.rankings?.length
+        || payload?.schedule?.length || payload?.field?.length
+        || payload?.data?.length || payload?.baseline?.length
+        || payload?.projections?.length || payload?.live_stats?.length || null
+    await prisma.rawProviderData.create({
+      data: {
+        provider,
+        dataType,
+        eventRef: eventRef ? String(eventRef) : null,
+        payload,
+        recordCount,
+      },
+    })
+  } catch (e) {
+    console.warn(`[StageRaw] Failed to stage ${provider}/${dataType}: ${e.message}`)
+  }
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -144,6 +169,13 @@ async function syncPlayers(prisma) {
   ])
   console.log('[Sync] API data fetched, processing...')
 
+  // Stage raw data (Layer 1)
+  await Promise.all([
+    stageRaw(prisma, 'datagolf', 'player_list', null, playerList),
+    stageRaw(prisma, 'datagolf', 'rankings', null, rankings),
+    stageRaw(prisma, 'datagolf', 'skill_ratings', null, skills),
+  ])
+
   // Index rankings and skills by dg_id
   const rankMap = {}
   if (rankings?.rankings) {
@@ -221,6 +253,7 @@ async function syncSchedule(prisma) {
   console.log('[Sync] Starting schedule sync...')
 
   const scheduleData = await dg.getSchedule('pga')
+  await stageRaw(prisma, 'datagolf', 'schedule', null, scheduleData)
   const events = scheduleData?.schedule || scheduleData || []
 
   // Load existing tournaments
@@ -277,6 +310,22 @@ async function syncSchedule(prisma) {
   })
   const newCount = rows.filter((r) => !existingMap.has(r.datagolfId)).length
 
+  // Populate ClutchEventIdMap (Rosetta Stone) for each tournament
+  for (const row of rows) {
+    try {
+      await etl.upsertEventIdMap(prisma, {
+        tournamentId: row.id,
+        datagolfEventId: row.datagolfId,
+        eventName: row.name,
+        startDate: row.startDate,
+        endDate: row.endDate,
+      })
+    } catch (e) {
+      // Non-critical — log and continue
+      console.warn(`[Sync] EventIdMap upsert failed for ${row.datagolfId}: ${e.message}`)
+    }
+  }
+
   console.log(`[Sync] Schedule done: ${newCount} created, ${rows.length - newCount} updated, ${count} total`)
   return { created: newCount, updated: rows.length - newCount, total: count }
 }
@@ -287,6 +336,7 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
   console.log(`[Sync] Syncing field for tournament DG ID: ${tournamentDgId}`)
 
   const fieldData = await dg.getFieldUpdates(tournamentDgId)
+  await stageRaw(prisma, 'datagolf', 'field_updates', tournamentDgId, fieldData)
   const field = fieldData?.field || fieldData || []
 
   const tournament = await prisma.tournament.findFirst({
@@ -400,6 +450,7 @@ async function syncLiveScoring(tournamentDgId, prisma) {
   console.log(`[Sync] Syncing live scoring for DG ID: ${tournamentDgId}`)
 
   const liveData = await dg.getLiveInPlay(tournamentDgId)
+  await stageRaw(prisma, 'datagolf', 'live_scoring', tournamentDgId, liveData)
 
   const tournament = await prisma.tournament.findFirst({
     where: { datagolfId: String(tournamentDgId) },
@@ -501,6 +552,7 @@ async function syncPreTournamentPredictions(tournamentDgId, prisma) {
   console.log(`[Sync] Syncing predictions for DG ID: ${tournamentDgId}`)
 
   const predData = await dg.getPreTournamentPredictions(tournamentDgId)
+  await stageRaw(prisma, 'datagolf', 'predictions', tournamentDgId, predData)
 
   const tournament = await prisma.tournament.findFirst({
     where: { datagolfId: String(tournamentDgId) },
@@ -566,6 +618,9 @@ async function syncFantasyProjections(tournamentDgId, prisma) {
   const [dkData, fdData] = await Promise.all([
     dg.getFantasyProjections(tournamentDgId, 'draftkings'),
     dg.getFantasyProjections(tournamentDgId, 'fanduel'),
+  ])
+  await Promise.all([
+    stageRaw(prisma, 'datagolf', 'projections', tournamentDgId, { draftkings: dkData, fanduel: fdData }),
   ])
 
   let dkCount = 0
@@ -650,6 +705,7 @@ async function syncTournamentResults(tournamentDgId, prisma) {
 
   // Get final SG stats
   const statsData = await dg.getLiveTournamentStats(tournamentDgId)
+  await stageRaw(prisma, 'datagolf', 'tournament_stats', tournamentDgId, statsData)
   const players = statsData?.live_stats || statsData?.data || statsData || []
 
   const perfOps = []

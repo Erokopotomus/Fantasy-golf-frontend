@@ -158,6 +158,32 @@ router.get('/:id/leaderboard', async (req, res, next) => {
       ? getDefaultScoringConfig(scoringPreset)
       : getDefaultScoringConfig('standard')
 
+    // Fetch Clutch metrics for all players in the field
+    const fieldPlayerIds = performances.map(p => p.playerId)
+    const clutchScores = fieldPlayerIds.length > 0 ? await prisma.clutchScore.findMany({
+      where: {
+        playerId: { in: fieldPlayerIds },
+        tournamentId: req.params.id,
+      },
+    }) : []
+    const clutchMap = new Map(clutchScores.map(cs => [cs.playerId, cs]))
+
+    // Also fetch weekly snapshots for players without event-specific scores
+    const playersWithoutEventScores = fieldPlayerIds.filter(pid => !clutchMap.has(pid))
+    if (playersWithoutEventScores.length > 0) {
+      const weeklyScores = await prisma.clutchScore.findMany({
+        where: {
+          playerId: { in: playersWithoutEventScores },
+          tournamentId: null,
+        },
+        orderBy: { computedAt: 'desc' },
+        distinct: ['playerId'],
+      })
+      for (const ws of weeklyScores) {
+        if (!clutchMap.has(ws.playerId)) clutchMap.set(ws.playerId, ws)
+      }
+    }
+
     const leaderboard = performances.map((perf, index) => {
       // Attach round scores for bonus calculation
       const perfWithRounds = { ...perf, roundScores: roundScoresByPlayer[perf.playerId] || [] }
@@ -190,6 +216,17 @@ router.get('/:id/leaderboard', async (req, res, next) => {
         birdies: perf.birdies,
         bogeys: perf.bogeys,
         teeTimes: teeTimesByPlayer[perf.playerId] || null,
+      }
+
+      // Include Clutch metrics
+      const cs = clutchMap.get(perf.playerId)
+      if (cs) {
+        entry.clutchMetrics = {
+          cpi: cs.cpi,
+          formScore: cs.formScore,
+          pressureScore: cs.pressureScore,
+          courseFitScore: cs.courseFitScore,
+        }
       }
 
       // Include live probabilities when tournament is in progress

@@ -58,6 +58,7 @@ export const usePlayerProfile = (playerId) => {
   const [projection, setProjection] = useState(null)
   const [predictions, setPredictions] = useState(null)
   const [liveScore, setLiveScore] = useState(null)
+  const [clutchMetrics, setClutchMetrics] = useState(null)
   const [upcomingTournaments, setUpcomingTournaments] = useState([])
   const [courseHistory, setCourseHistory] = useState([])
   const [tournamentHistory, setTournamentHistory] = useState([])
@@ -121,6 +122,7 @@ export const usePlayerProfile = (playerId) => {
       setProjection(data.projection || null)
       setPredictions(data.predictions || null)
       setLiveScore(data.liveScore || null)
+      setClutchMetrics(data.clutchMetrics || null)
       setUpcomingTournaments(data.upcomingTournaments || [])
 
       // Tournament history from performances
@@ -157,6 +159,7 @@ export const usePlayerProfile = (playerId) => {
     projection,
     predictions,
     liveScore,
+    clutchMetrics,
     upcomingTournaments,
     courseHistory,
     tournamentHistory,

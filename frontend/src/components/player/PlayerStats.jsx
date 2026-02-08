@@ -1,6 +1,6 @@
 import Card from '../common/Card'
 
-const PlayerStats = ({ player }) => {
+const PlayerStats = ({ player, clutchMetrics }) => {
   if (!player) return null
 
   const { stats } = player
@@ -40,8 +40,123 @@ const PlayerStats = ({ player }) => {
 
   const formatRankValue = (val) => val != null ? `#${val}` : '—'
 
+  // Clutch metric helpers
+  const getCPIColor = (v) => {
+    if (v == null) return 'text-text-muted'
+    if (v > 1.5) return 'text-gold'
+    if (v > 0.5) return 'text-green-400'
+    if (v > -0.5) return 'text-yellow-400'
+    return 'text-red-400'
+  }
+  const getFormColor = (v) => {
+    if (v == null) return 'text-text-muted'
+    if (v >= 80) return 'text-orange'
+    if (v >= 60) return 'text-yellow-400'
+    if (v >= 40) return 'text-blue-400'
+    return 'text-blue-300'
+  }
+  const getFormLabel = (v) => {
+    if (v == null) return '—'
+    if (v >= 80) return 'Hot'
+    if (v >= 60) return 'Warm'
+    if (v >= 40) return 'Cool'
+    return 'Cold'
+  }
+  const getPressureColor = (v) => {
+    if (v == null) return 'text-text-muted'
+    if (v > 0.5) return 'text-gold'
+    if (v > -0.5) return 'text-text-secondary'
+    return 'text-red-400'
+  }
+  const getPressureLabel = (v) => {
+    if (v == null) return '—'
+    if (v > 0.5) return 'Clutch'
+    if (v > -0.5) return 'Steady'
+    return 'Fades'
+  }
+  const getFitColor = (v) => {
+    if (v == null) return 'text-text-muted'
+    if (v >= 85) return 'text-gold'
+    if (v >= 70) return 'text-green-400'
+    if (v >= 50) return 'text-yellow-400'
+    return 'text-red-400'
+  }
+  const getFitLabel = (v) => {
+    if (v == null) return null
+    if (v >= 85) return 'Elite Fit'
+    if (v >= 70) return 'Strong Fit'
+    if (v >= 50) return 'Neutral'
+    return 'Poor Fit'
+  }
+
+  const hasClutchMetrics = clutchMetrics && (clutchMetrics.cpi != null || clutchMetrics.formScore != null || clutchMetrics.pressureScore != null)
+
   return (
     <div className="space-y-4">
+      {/* Clutch Scores */}
+      {hasClutchMetrics && (
+        <Card>
+          <h4 className="text-sm font-semibold text-text-muted mb-3">Clutch Scores</h4>
+          <div className="space-y-3">
+            {clutchMetrics.cpi != null && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-text-secondary text-sm">CPI</span>
+                  <span className="text-text-muted text-xs ml-1">(Performance Index)</span>
+                </div>
+                <span className={`font-mono font-bold text-lg ${getCPIColor(clutchMetrics.cpi)}`}>
+                  {clutchMetrics.cpi > 0 ? '+' : ''}{clutchMetrics.cpi.toFixed(2)}
+                </span>
+              </div>
+            )}
+            {clutchMetrics.formScore != null && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-text-secondary text-sm">Form</span>
+                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getFormColor(clutchMetrics.formScore)} bg-dark-primary`}>
+                    {getFormLabel(clutchMetrics.formScore)}
+                  </span>
+                </div>
+                <span className={`font-mono font-bold text-lg ${getFormColor(clutchMetrics.formScore)}`}>
+                  {Math.round(clutchMetrics.formScore)}
+                </span>
+              </div>
+            )}
+            {clutchMetrics.pressureScore != null && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-text-secondary text-sm">Pressure</span>
+                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getPressureColor(clutchMetrics.pressureScore)} bg-dark-primary`}>
+                    {getPressureLabel(clutchMetrics.pressureScore)}
+                  </span>
+                </div>
+                <span className={`font-mono font-bold text-lg ${getPressureColor(clutchMetrics.pressureScore)}`}>
+                  {clutchMetrics.pressureScore > 0 ? '+' : ''}{clutchMetrics.pressureScore.toFixed(2)}
+                </span>
+              </div>
+            )}
+            {clutchMetrics.courseFitScore != null && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-text-secondary text-sm">Course Fit</span>
+                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getFitColor(clutchMetrics.courseFitScore)} bg-dark-primary`}>
+                    {getFitLabel(clutchMetrics.courseFitScore)}
+                  </span>
+                </div>
+                <span className={`font-mono font-bold text-lg ${getFitColor(clutchMetrics.courseFitScore)}`}>
+                  {Math.round(clutchMetrics.courseFitScore)}
+                </span>
+              </div>
+            )}
+          </div>
+          {clutchMetrics.computedAt && (
+            <p className="text-[10px] text-text-muted mt-3 text-right">
+              Updated {new Date(clutchMetrics.computedAt).toLocaleDateString()}
+            </p>
+          )}
+        </Card>
+      )}
+
       {/* Strokes Gained */}
       {stats && (
         <Card>
