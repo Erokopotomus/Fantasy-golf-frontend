@@ -6,6 +6,7 @@
  */
 
 const espn = require('./espnClient')
+const { stageRaw } = require('./etlPipeline')
 
 /**
  * Sync hole-by-hole scores for a tournament.
@@ -317,6 +318,219 @@ async function batchTransaction(prisma, operations, chunkSize = 50) {
   }
 }
 
+/**
+ * Sync ESPN IDs by matching leaderboard competitors to our players.
+ * Also sets espnEventId on the tournament record.
+ * @param {import('@prisma/client').PrismaClient} prisma
+ */
+async function syncEspnIds(prisma) {
+  console.log('[ESPN Sync] Starting ESPN ID sync')
+
+  // 1. Fetch ESPN leaderboard
+  const data = await espn.getLeaderboard()
+  const events = data?.events || []
+  if (!events.length) {
+    console.log('[ESPN Sync] No events on ESPN leaderboard')
+    return { matched: 0, updated: 0 }
+  }
+
+  const event = events[0]
+  const espnEventId = event.id
+  const competitions = event.competitions || []
+  const competitors = competitions[0]?.competitors || []
+
+  console.log(`[ESPN Sync] ESPN event: "${event.name}" (${espnEventId}), ${competitors.length} competitors`)
+
+  // Stage raw data
+  await stageRaw(prisma, 'espn', 'leaderboard', espnEventId, data)
+
+  // 2. Update espnEventId on matching tournament
+  if (espnEventId) {
+    const eventName = event.name || ''
+    const eventStart = event.date ? new Date(event.date) : null
+
+    // Try to find our tournament by date range (within 3 days of ESPN event start)
+    if (eventStart) {
+      const startWindow = new Date(eventStart)
+      startWindow.setDate(startWindow.getDate() - 1)
+      const endWindow = new Date(eventStart)
+      endWindow.setDate(endWindow.getDate() + 3)
+
+      const tournament = await prisma.tournament.findFirst({
+        where: {
+          startDate: { gte: startWindow, lte: endWindow },
+          espnEventId: null,
+        },
+      })
+
+      if (tournament) {
+        await prisma.tournament.update({
+          where: { id: tournament.id },
+          data: { espnEventId },
+        })
+        console.log(`[ESPN Sync] Set espnEventId=${espnEventId} on tournament "${tournament.name}"`)
+      }
+    }
+  }
+
+  // 3. Build our player index for matching
+  const allPlayers = await prisma.player.findMany({
+    select: { id: true, name: true, espnId: true, firstName: true, lastName: true },
+  })
+
+  const byEspnId = new Set()
+  for (const p of allPlayers) {
+    if (p.espnId) byEspnId.add(p.espnId)
+  }
+
+  const byName = new Map()
+  for (const p of allPlayers) {
+    byName.set(normalizeName(p.name), p.id)
+    if (p.firstName && p.lastName) {
+      byName.set(normalizeName(`${p.firstName} ${p.lastName}`), p.id)
+    }
+  }
+
+  // 4. Match ESPN competitors to our players
+  let matched = 0
+  let updated = 0
+  const updates = []
+
+  for (const comp of competitors) {
+    const espnId = comp.id || comp.athlete?.id
+    if (!espnId) continue
+
+    // Skip if we already have this espnId
+    if (byEspnId.has(espnId) || byEspnId.has(String(espnId))) continue
+
+    const espnName = comp.athlete?.fullName || comp.athlete?.displayName
+    if (!espnName) continue
+
+    const playerId = byName.get(normalizeName(espnName))
+    if (!playerId) continue
+
+    matched++
+    updates.push(
+      prisma.player.update({
+        where: { id: playerId },
+        data: { espnId: String(espnId) },
+      })
+    )
+  }
+
+  // Execute updates in batches
+  await batchTransaction(prisma, updates)
+  updated = updates.length
+
+  console.log(`[ESPN Sync] ESPN ID sync done: ${matched} matched, ${updated} updated`)
+  return { matched, updated }
+}
+
+/**
+ * Sync player bios (headshots, birth date, college, etc.) from ESPN.
+ * Only fetches for players with espnId but missing headshotUrl.
+ * Max 50 per run to keep runtime reasonable.
+ * @param {import('@prisma/client').PrismaClient} prisma
+ */
+async function syncPlayerBios(prisma) {
+  console.log('[ESPN Sync] Starting player bio sync')
+
+  // Find players with espnId but missing headshotUrl
+  const players = await prisma.player.findMany({
+    where: {
+      espnId: { not: null },
+      headshotUrl: null,
+    },
+    select: { id: true, espnId: true, name: true, birthDate: true, college: true, turnedPro: true, height: true, weight: true },
+    take: 50,
+  })
+
+  if (!players.length) {
+    console.log('[ESPN Sync] No players need bio sync')
+    return { fetched: 0, updated: 0 }
+  }
+
+  console.log(`[ESPN Sync] Fetching bios for ${players.length} players`)
+
+  let fetched = 0
+  let updated = 0
+
+  for (const player of players) {
+    try {
+      const bio = await espn.getPlayerBio(player.espnId)
+
+      // Stage raw data
+      await stageRaw(prisma, 'espn', 'player_bio', null, { espnId: player.espnId, ...bio })
+
+      fetched++
+
+      // Build update object — only set fields that are currently null
+      const update = {}
+
+      // Headshot URL
+      const headshotUrl = bio?.athlete?.headshot?.href || bio?.headshot?.href
+      if (headshotUrl) update.headshotUrl = headshotUrl
+
+      // Birth date
+      if (!player.birthDate) {
+        const dob = bio?.athlete?.dateOfBirth || bio?.dateOfBirth
+        if (dob) {
+          const parsed = new Date(dob)
+          if (!isNaN(parsed.getTime())) update.birthDate = parsed
+        }
+      }
+
+      // College
+      if (!player.college) {
+        const college = bio?.athlete?.college?.name || bio?.college?.name
+        if (college) update.college = college
+      }
+
+      // Turned pro year
+      if (!player.turnedPro) {
+        const turnedPro = bio?.athlete?.turnedPro || bio?.turnedPro
+        if (turnedPro) {
+          const year = parseInt(turnedPro)
+          if (!isNaN(year) && year > 1950 && year < 2030) update.turnedPro = year
+        }
+      }
+
+      // Height (as string like "6'1\"")
+      if (!player.height) {
+        const height = bio?.athlete?.displayHeight || bio?.displayHeight
+        if (height) update.height = height
+      }
+
+      // Weight (as integer in pounds)
+      if (!player.weight) {
+        const weight = bio?.athlete?.displayWeight || bio?.displayWeight
+        if (weight) {
+          const lbs = parseInt(weight)
+          if (!isNaN(lbs) && lbs > 100 && lbs < 400) update.weight = lbs
+        }
+      }
+
+      if (Object.keys(update).length > 0) {
+        await prisma.player.update({
+          where: { id: player.id },
+          data: update,
+        })
+        updated++
+      }
+    } catch (e) {
+      console.warn(`[ESPN Sync] Failed bio for ${player.name} (${player.espnId}): ${e.message}`)
+    }
+
+    // 2-second delay between requests to be respectful
+    await new Promise((r) => setTimeout(r, 2000))
+  }
+
+  console.log(`[ESPN Sync] Bio sync done: ${fetched} fetched, ${updated} updated`)
+  return { fetched, updated }
+}
+
 module.exports = {
   syncHoleScores,
+  syncEspnIds,
+  syncPlayerBios,
 }

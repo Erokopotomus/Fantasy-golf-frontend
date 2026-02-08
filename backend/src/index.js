@@ -300,6 +300,24 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('espn', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Tuesday 4:00 AM ET — ESPN ID sync (after Sunday finalize + Monday DataGolf sync)
+    cron.schedule('0 4 * * 2', async () => {
+      cronLog('espn-ids', 'Starting ESPN ID sync')
+      try {
+        const result = await espnSync.syncEspnIds(cronPrisma)
+        cronLog('espn-ids', `Done: ${result.matched} matched, ${result.updated} updated`)
+      } catch (e) { cronLog('espn-ids', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Tuesday 4:30 AM ET — ESPN player bios (after ESPN IDs are populated)
+    cron.schedule('30 4 * * 2', async () => {
+      cronLog('espn-bios', 'Starting ESPN player bio sync')
+      try {
+        const result = await espnSync.syncPlayerBios(cronPrisma)
+        cronLog('espn-bios', `Done: ${result.fetched} fetched, ${result.updated} updated`)
+      } catch (e) { cronLog('espn-bios', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Wed 6:00 AM ET — Fantasy projections
     cron.schedule('0 6 * * 3', async () => {
       const t = await getActiveTournamentDgId()

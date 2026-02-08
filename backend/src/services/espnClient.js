@@ -56,6 +56,23 @@ async function getEventScorecard(eventId) {
 }
 
 /**
+ * Get the current PGA leaderboard (richer than scoreboard — includes player IDs, positions, scores).
+ * Returns the full leaderboard response.
+ */
+async function getLeaderboard() {
+  return fetchJSON('https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard')
+}
+
+/**
+ * Get a player's bio/profile from ESPN.
+ * @param {string} espnId - ESPN athlete ID
+ * @returns {{ name, birthDate, birthPlace, college, height, weight, headshot, turnedPro }}
+ */
+async function getPlayerBio(espnId) {
+  return fetchJSON(`https://site.web.api.espn.com/apis/common/v3/sports/golf/pga/athletes/${espnId}`)
+}
+
+/**
  * Find the ESPN event ID for a tournament by matching name and dates.
  * @param {string} tournamentName - Our tournament name (e.g., "WM Phoenix Open")
  * @param {Date} startDate - Tournament start date
@@ -103,5 +120,7 @@ module.exports = {
   getEvent,
   getCalendar,
   getEventScorecard,
+  getLeaderboard,
+  getPlayerBio,
   findEventId,
 }
