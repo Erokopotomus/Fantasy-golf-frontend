@@ -200,76 +200,55 @@ const Landing = () => {
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
               Every projection, every pick, every reasoning note — permanently logged. Clutch doesn't just track
-              what you predicted. It tracks whether you were right, where you're biased, and how you're improving.
+              what you predicted. It tracks whether you were right, where you were biased, and how you're improving.
               This is the home for how you think about sports — and no one else is building it.
             </p>
           </div>
 
-          {/* ── Unified Ecosystem Visual ── */}
+          {/* ── Ecosystem Flywheel ── */}
           <div className="mb-16">
-            <div className="w-full max-w-2xl mx-auto">
-              <svg viewBox="0 0 700 700" className="w-full" xmlns="http://www.w3.org/2000/svg">
+            <div className="w-full max-w-lg mx-auto">
+              <svg viewBox="0 0 500 500" className="w-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
                     <stop offset="0%" stopColor="rgba(232,184,77,0.12)" />
                     <stop offset="100%" stopColor="rgba(232,184,77,0)" />
                   </radialGradient>
-                  <marker id="inArrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                    <polygon points="0 0, 8 3, 0 6" fill="rgba(232,184,77,0.35)" />
+                  <marker id="flowArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                    <polygon points="0 1, 9 4, 0 7" fill="rgba(232,184,77,0.5)" />
                   </marker>
                 </defs>
 
-                {/* Ambient glow behind center */}
-                <circle cx="350" cy="350" r="130" fill="url(#coreGlow)" />
+                {/* Ambient glow */}
+                <circle cx="250" cy="250" r="120" fill="url(#coreGlow)" />
 
-                {/* ── Outer scattered items (the "before" — floating, disconnected) ── */}
+                {/* Ring glow */}
+                <circle cx="250" cy="250" r="190" fill="none" stroke="rgba(232,184,77,0.04)" strokeWidth="50" />
+                {/* Ring dashed line */}
+                <circle cx="250" cy="250" r="190" fill="none" stroke="rgba(232,184,77,0.08)" strokeWidth="1.5" strokeDasharray="6 5" />
+
+                {/* Directional flow arrows between nodes */}
                 {[
-                  { angle: -42, label: 'Draft Prep', r: 278 },
-                  { angle: 36, label: 'Projections', r: 274 },
-                  { angle: 100, label: 'Bold Takes', r: 280 },
-                  { angle: 148, label: 'League History', r: 276 },
-                  { angle: 248, label: 'Accuracy', r: 275 },
-                ].map((item, i) => {
-                  const rad = item.angle * Math.PI / 180
-                  const x = 350 + item.r * Math.cos(rad)
-                  const y = 350 + item.r * Math.sin(rad)
-                  const aFrom = { x: 350 + (item.r - 38) * Math.cos(rad), y: 350 + (item.r - 38) * Math.sin(rad) }
-                  const aTo = { x: 350 + 180 * Math.cos(rad), y: 350 + 180 * Math.sin(rad) }
+                  { from: -90, to: -18, color: '#E8B84D' },
+                  { from: -18, to: 54, color: '#E07838' },
+                  { from: 54, to: 126, color: '#6ABF8A' },
+                  { from: 126, to: 198, color: '#818CF8' },
+                  { from: 198, to: 270, color: '#E8B84D' },
+                ].map((arc, i) => {
+                  const r1 = (arc.from + 16) * Math.PI / 180
+                  const r2 = (arc.to - 16) * Math.PI / 180
+                  const x1 = 250 + 190 * Math.cos(r1)
+                  const y1 = 250 + 190 * Math.sin(r1)
+                  const x2 = 250 + 190 * Math.cos(r2)
+                  const y2 = 250 + 190 * Math.sin(r2)
                   return (
-                    <g key={i}>
-                      <line
-                        x1={aFrom.x} y1={aFrom.y} x2={aTo.x} y2={aTo.y}
-                        stroke="rgba(232,184,77,0.2)" strokeWidth="1.5" strokeDasharray="4 4"
-                        markerEnd="url(#inArrow)"
-                      />
-                      <text x={x} y={y} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize="13"
-                        fontFamily="'DM Sans', sans-serif" fontWeight="500">
-                        {item.label}
-                      </text>
-                    </g>
+                    <path key={i} d={`M ${x1} ${y1} A 190 190 0 0 1 ${x2} ${y2}`}
+                      fill="none" stroke={arc.color} strokeWidth="2.5" strokeLinecap="round"
+                      opacity="0.5" markerEnd="url(#flowArrow)" />
                   )
                 })}
 
-                {/* ── Ring glow ── */}
-                <circle cx="350" cy="350" r="150" fill="none" stroke="rgba(232,184,77,0.04)" strokeWidth="45" />
-                <circle cx="350" cy="350" r="150" fill="none" stroke="rgba(232,184,77,0.1)" strokeWidth="2" strokeDasharray="8 6" />
-
-                {/* Colored arc segments */}
-                {[0, 72, 144, 216, 288].map((angle, i) => {
-                  const colors = ['#E8B84D', '#E07838', '#6ABF8A', '#818CF8', '#E8B84D']
-                  const rad1 = (angle + 10) * Math.PI / 180
-                  const rad2 = (angle + 62) * Math.PI / 180
-                  const x1 = 350 + 150 * Math.cos(rad1)
-                  const y1 = 350 + 150 * Math.sin(rad1)
-                  const x2 = 350 + 150 * Math.cos(rad2)
-                  const y2 = 350 + 150 * Math.sin(rad2)
-                  return (
-                    <path key={i} d={`M ${x1} ${y1} A 150 150 0 0 1 ${x2} ${y2}`}
-                      fill="none" stroke={colors[i]} strokeWidth="3" strokeLinecap="round" opacity="0.45" />
-                  )
-                })}
-
-                {/* ── Ring nodes ── */}
+                {/* Ring nodes */}
                 {[
                   { angle: -90, label: 'Research', color: '#E8B84D' },
                   { angle: -18, label: 'Project', color: '#E07838' },
@@ -278,40 +257,27 @@ const Landing = () => {
                   { angle: 198, label: 'Learn', color: '#E8B84D' },
                 ].map((node, i) => {
                   const rad = node.angle * Math.PI / 180
-                  const nx = 350 + 150 * Math.cos(rad)
-                  const ny = 350 + 150 * Math.sin(rad)
+                  const nx = 250 + 190 * Math.cos(rad)
+                  const ny = 250 + 190 * Math.sin(rad)
                   return (
                     <g key={i}>
-                      <circle cx={nx} cy={ny} r="26" fill="#0A0908" stroke={node.color} strokeWidth="2" />
-                      <text x={nx} y={ny + 4} textAnchor="middle" fill="white" fontSize="11"
+                      <circle cx={nx} cy={ny} r="32" fill="#0A0908" stroke={node.color} strokeWidth="2" />
+                      <text x={nx} y={ny + 4} textAnchor="middle" fill="white" fontSize="12"
                         fontFamily="'DM Sans', sans-serif" fontWeight="700">{node.label}</text>
                     </g>
                   )
                 })}
 
-                {/* Directional chevrons between nodes */}
-                {[306, 18, 90, 162, 234].map((angle, i) => {
-                  const rad = angle * Math.PI / 180
-                  const ax = 350 + 150 * Math.cos(rad)
-                  const ay = 350 + 150 * Math.sin(rad)
-                  const t = (angle + 90) * Math.PI / 180
-                  return (
-                    <polygon key={i}
-                      points={`${ax},${ay} ${ax - 6 * Math.cos(t) - 4 * Math.cos(rad)},${ay - 6 * Math.sin(t) - 4 * Math.sin(rad)} ${ax + 6 * Math.cos(t) - 4 * Math.cos(rad)},${ay + 6 * Math.sin(t) - 4 * Math.sin(rad)}`}
-                      fill="rgba(232,184,77,0.4)" />
-                  )
-                })}
-
-                {/* ── Center — the unified output ── */}
-                <circle cx="350" cy="350" r="62" fill="rgba(232,184,77,0.06)" stroke="rgba(232,184,77,0.25)" strokeWidth="1.5" />
-                <text x="350" y="330" textAnchor="middle" fill="#E8B84D" fontSize="20" fontFamily="'Syne', sans-serif" fontWeight="800">&#x2726;</text>
-                <text x="350" y="350" textAnchor="middle" fill="#E8B84D" fontSize="10" fontFamily="'Syne', sans-serif" fontWeight="700" letterSpacing="2">CLUTCH RATING</text>
-                <text x="350" y="366" textAnchor="middle" fill="white" fontSize="10" fontFamily="'Syne', sans-serif" fontWeight="700" letterSpacing="1.5">SPORTS BRAIN</text>
-                <text x="350" y="382" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="9" fontFamily="'DM Sans', sans-serif" fontWeight="500" letterSpacing="1">AI INSIGHTS</text>
+                {/* Center */}
+                <circle cx="250" cy="250" r="65" fill="rgba(232,184,77,0.06)" stroke="rgba(232,184,77,0.2)" strokeWidth="1.5" />
+                <text x="250" y="233" textAnchor="middle" fill="#E8B84D" fontSize="18" fontFamily="'Syne', sans-serif" fontWeight="800">&#x2726;</text>
+                <text x="250" y="252" textAnchor="middle" fill="#E8B84D" fontSize="11" fontFamily="'Syne', sans-serif" fontWeight="700" letterSpacing="2">CLUTCH RATING</text>
+                <text x="250" y="268" textAnchor="middle" fill="white" fontSize="10" fontFamily="'Syne', sans-serif" fontWeight="700" letterSpacing="1.5">SPORTS BRAIN</text>
+                <text x="250" y="283" textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="9" fontFamily="'DM Sans', sans-serif" fontWeight="500" letterSpacing="1">AI INSIGHTS</text>
               </svg>
             </div>
-            <p className="text-center text-gold font-display font-semibold text-lg mt-4">
-              Every season, the loop gets tighter. Every year, you get sharper.
+            <p className="text-center text-gold font-display font-semibold text-lg mt-6">
+              One place for everything you know. One score to prove it.
             </p>
           </div>
 
