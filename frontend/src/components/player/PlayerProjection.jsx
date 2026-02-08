@@ -5,12 +5,33 @@ const PlayerProjection = ({ projection }) => {
     return (
       <Card>
         <h4 className="text-sm font-semibold text-text-muted mb-3">Fantasy Projection</h4>
-        <p className="text-text-muted text-sm">Not enough data for projections</p>
+        <p className="text-text-muted text-sm">No tournament data available yet</p>
       </Card>
     )
   }
 
   const { projected, floor, ceiling, trend, consistency, recentAvg } = projection
+
+  // Need 3+ completed events with real fantasy points for meaningful projections
+  const hasEnoughData = projection.totalEvents >= 3 && (recentAvg > 0 || floor > 0)
+
+  if (!hasEnoughData) {
+    return (
+      <Card>
+        <h4 className="text-sm font-semibold text-text-muted mb-3">Fantasy Projection</h4>
+        <div className="text-center py-4">
+          <p className="text-2xl font-bold font-display text-gold mb-1">
+            {projected > 0 ? projected.toFixed(1) : '—'}
+          </p>
+          <p className="text-xs text-text-muted mb-3">SG-Based Estimate</p>
+          <p className="text-text-muted text-sm">
+            Full projections unlock after 3+ completed events.
+            Currently tracking {projection.totalEvents} event{projection.totalEvents !== 1 ? 's' : ''}.
+          </p>
+        </div>
+      </Card>
+    )
+  }
 
   // Normalize floor/ceiling to a 0-100 bar range
   const range = ceiling - floor || 1
