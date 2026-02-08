@@ -27,6 +27,12 @@ const LeagueHome = () => {
   const [generatingPlayoffs, setGeneratingPlayoffs] = useState(false)
   const [leagueLeaderboard, setLeagueLeaderboard] = useState([])
 
+  const loading = leaguesLoading && detailLoading
+  const league = detailedLeague || leagues?.find(l => l.id === leagueId)
+  const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
+  const leagueSport = (league?.sport || 'GOLF').toUpperCase()
+  const isNflLeague = leagueSport === 'NFL'
+
   // Fetch detailed league data (with full members, teams, rosters)
   useEffect(() => {
     if (!leagueId) return
@@ -52,12 +58,6 @@ const LeagueHome = () => {
       .then(data => setLeagueLeaderboard(data.leaderboard || []))
       .catch(() => {})
   }, [leagueId])
-
-  const loading = leaguesLoading && detailLoading
-  const league = detailedLeague || leagues?.find(l => l.id === leagueId)
-  const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
-  const leagueSport = (league?.sport || 'GOLF').toUpperCase()
-  const isNflLeague = leagueSport === 'NFL'
 
   const isCommissioner = league?.ownerId === user?.id || league?.owner?.id === user?.id
   const latestDraft = league?.drafts?.[0]

@@ -96,12 +96,13 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
     <Card className="group cursor-pointer" hover onClick={handleCardClick}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          {/* Sport + Format Icon */}
-          <div className={`w-11 h-11 rounded-xl ${colors.bg} border ${colors.border} flex flex-col items-center justify-center flex-shrink-0 relative`}>
-            <span className="text-base leading-none">{sportEmojis[sport]}</span>
-            <div className={`${colors.text} mt-0.5 scale-[0.55] -mb-1`}>
-              <FormatIcon format={format} />
-            </div>
+          {/* Sport Icon */}
+          <div className={`w-10 h-10 rounded-xl ${colors.bg} border ${colors.border} flex items-center justify-center flex-shrink-0`}>
+            <span className="text-lg leading-none">{sportEmojis[sport]}</span>
+          </div>
+          {/* Format Icon */}
+          <div className="w-10 h-10 rounded-xl bg-gold/15 border border-gold/20 flex items-center justify-center flex-shrink-0 text-gold">
+            <FormatIcon format={format} />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-white font-semibold text-base sm:text-lg truncate group-hover:text-gold transition-colors">
