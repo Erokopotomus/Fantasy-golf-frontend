@@ -104,14 +104,9 @@ const Navbar = () => {
                   Prove It
                 </Link>
                 {isNfl ? (
-                  <>
-                    <Link to="/nfl/players" className={navLinkStyles('/nfl/players')}>
-                      Players
-                    </Link>
-                    <Link to="/nfl/schedule" className={navLinkStyles('/nfl/schedule')}>
-                      Schedule
-                    </Link>
-                  </>
+                  <Link to="/nfl/schedule" className={navLinkStyles('/nfl/schedule')}>
+                    Schedule
+                  </Link>
                 ) : (
                   <>
                     <Link to="/tournaments" className={navLinkStyles('/tournaments')}>
@@ -418,14 +413,9 @@ const Navbar = () => {
                   </button>
                 </div>
                 {isNfl ? (
-                  <>
-                    <Link to="/nfl/players" className={mobileNavLinkStyles('/nfl/players')} onClick={() => setMobileMenuOpen(false)}>
-                      NFL Players
-                    </Link>
-                    <Link to="/nfl/schedule" className={mobileNavLinkStyles('/nfl/schedule')} onClick={() => setMobileMenuOpen(false)}>
-                      NFL Schedule
-                    </Link>
-                  </>
+                  <Link to="/nfl/schedule" className={mobileNavLinkStyles('/nfl/schedule')} onClick={() => setMobileMenuOpen(false)}>
+                    Schedule
+                  </Link>
                 ) : (
                   <>
                     <Link
