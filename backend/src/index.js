@@ -29,6 +29,7 @@ const adminRoutes = require('./routes/admin')
 const predictionRoutes = require('./routes/predictions')
 const importRoutes = require('./routes/imports')
 const courseRoutes = require('./routes/courses')
+const waitlistRoutes = require('./routes/waitlist')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -117,6 +118,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/predictions', predictionRoutes)
 app.use('/api/imports', importRoutes)
 app.use('/api/courses', courseRoutes)
+app.use('/api/waitlist', waitlistRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
