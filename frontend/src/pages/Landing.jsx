@@ -151,10 +151,15 @@ const Landing = () => {
             Everyone's an expert.
             <span className="block text-text-muted">Nobody can prove it.</span>
           </h2>
+          <p className="text-text-secondary text-lg leading-relaxed mb-6">
+            Sports media is top-down. Influencers and podcasters have audiences based on personality and
+            platform access — not accuracy. Nobody tracks whether their predictions are right.
+            Nobody holds them accountable.
+          </p>
           <p className="text-text-secondary text-lg leading-relaxed">
-            The sports world is full of people who claim they called it. Fantasy podcasters who swear they knew.
-            Your buddy who says he predicted the Super Bowl.
-            But nobody has receipts. <span className="text-gold font-semibold">Clutch changes that.</span>
+            On Clutch, everyone competes on the same playing field — from a nobody in Ohio to the Fantasy Footballers.
+            Predictions are locked, tracked, and scored. Records are public. The leaderboard doesn't care
+            how many followers you have. <span className="text-gold font-semibold">That's the point.</span>
           </p>
         </div>
       </section>
@@ -173,10 +178,10 @@ const Landing = () => {
               <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-dark-primary shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 1
               </div>
-              <h3 className="text-xl font-semibold font-display text-white mb-3">Project</h3>
+              <h3 className="text-xl font-semibold font-display text-white mb-3">Prep</h3>
               <p className="text-text-secondary leading-relaxed">
-                Enter your predictions — player stats, game outcomes, season projections.
-                Your reasoning is logged. This is your sports journal.
+                Enter your projections — player stats, game outcomes, season predictions.
+                Your reasoning is logged. Your projections become your draft cheat sheet automatically.
               </p>
             </div>
 
@@ -186,8 +191,8 @@ const Landing = () => {
               </div>
               <h3 className="text-xl font-semibold font-display text-white mb-3">Compete</h3>
               <p className="text-text-secondary leading-relaxed">
-                Predictions lock at kickoff. Scored against reality. Leaderboards track
-                who's actually right — not who's loudest.
+                Predictions lock at kickoff. Scored against reality. Weekly picks, season-long contests,
+                and league leaderboards track who's actually right — not who's loudest.
               </p>
             </div>
 
@@ -197,8 +202,8 @@ const Landing = () => {
               </div>
               <h3 className="text-xl font-semibold font-display text-white mb-3">Prove</h3>
               <p className="text-text-secondary leading-relaxed">
-                Your Clutch Rating builds over time. Accuracy, bold calls, consistency.
-                Share your profile. This is your sports resume.
+                Your Clutch Rating builds over time. Accuracy, bold calls, consistency, draft intelligence.
+                Share your profile. Put your rating in your bio. This is your sports resume.
               </p>
             </div>
           </div>
@@ -291,8 +296,61 @@ const Landing = () => {
             </div>
           </div>
 
-          <p className="text-center text-xl font-display text-gold mt-12">
-            What would YOUR Clutch Rating be?
+          <p className="text-center text-text-secondary mt-12 max-w-lg mx-auto leading-relaxed">
+            People will put their Clutch Rating in their Twitter bio. Link their profile from podcast show notes.
+            Screenshot their badges after a big week.
+          </p>
+          <p className="text-center text-xl font-display text-gold mt-4">
+            What would yours be?
+          </p>
+        </div>
+      </section>
+
+      {/* ══════════ IT COMPOUNDS ══════════ */}
+      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+              Year one, you have a record.
+              <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Year three, you have a database.</span>
+            </h2>
+            <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Every projection, every pick, every reasoning note — permanently logged. Clutch doesn't just track
+              what you predicted. It tracks whether you were right, where you're biased, and how you're improving.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-6">
+            <div className="bg-dark-secondary rounded-xl p-6 border border-dark-border">
+              <div className="text-3xl font-bold font-mono text-gold mb-2">1</div>
+              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Sports Journal</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                Projections with reasoning notes. Draft cheat sheets built from your research.
+                Weekly picks with timestamps. Nothing lost, nothing forgotten.
+              </p>
+            </div>
+
+            <div className="bg-dark-secondary rounded-xl p-6 border border-dark-border">
+              <div className="text-3xl font-bold font-mono text-gold mb-2">2</div>
+              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Self-Scouting Report</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                AI finds patterns you can't see: positional biases, accuracy trends, which of your instincts
+                to trust and which to override. Built from your own data.
+              </p>
+            </div>
+
+            <div className="bg-dark-secondary rounded-xl p-6 border border-dark-border">
+              <div className="text-3xl font-bold font-mono text-gold mb-2">3</div>
+              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Public Resume</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                A shareable profile with your verified Clutch Rating, accuracy stats, badges, and bold calls
+                that hit. Link it from your Twitter, your podcast, your league group chat.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-center text-text-muted text-sm mt-8">
+            The longer you're on Clutch, the more valuable it gets. That's the point.
           </p>
         </div>
       </section>
@@ -447,68 +505,105 @@ const Landing = () => {
             <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
               NFL 2026 — Prove You Know Football
             </h2>
+            <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Enter your projections. Get a draft cheat sheet built from YOUR research.
+              Compete all season. See if you actually know football — or if you just think you do.
+            </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-6 mb-10">
-            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
-              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold font-display text-white mb-2">Season-Long Prediction Contest</h3>
+          {/* The Loop */}
+          <div className="grid sm:grid-cols-3 gap-6 mb-10">
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border text-center">
+              <div className="text-2xl mb-3">📊</div>
+              <h3 className="text-lg font-semibold font-display text-white mb-2">Project</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                Project every player's stats before the season. Your projections automatically become
-                your custom draft cheat sheet. Scored all season long.
+                Project every QB's passing yards. Every RB's rushing TDs. Every team's win total.
+                Your reasoning is logged — this becomes your football journal.
               </p>
             </div>
 
-            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
-              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold font-display text-white mb-2">Weekly Picks</h3>
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border text-center">
+              <div className="text-2xl mb-3">🎯</div>
+              <h3 className="text-lg font-semibold font-display text-white mb-2">Draft & Compete</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                Pick player props and game outcomes against real lines. Locked at kickoff.
-                Graded automatically. Your record is public.
+                Your projections auto-generate a personalized cheat sheet with tier breaks, value
+                targets, and auction dollar values. Then pick weekly props against real frozen lines.
               </p>
             </div>
 
-            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
-              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold font-display text-white mb-2">Draft Prep Built In</h3>
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border text-center">
+              <div className="text-2xl mb-3">🏆</div>
+              <h3 className="text-lg font-semibold font-display text-white mb-2">Get Scored</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
-                Your projections become personalized draft rankings. Tier breaks, value indicators,
-                auction dollar values — all from YOUR research.
+                Projections scored all season by accuracy. Picks graded automatically after every game.
+                Bold calls that hit get bonus credit. Your Clutch Rating updates weekly.
               </p>
             </div>
+          </div>
 
-            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
-              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center mb-4">
+          {/* Feature highlights */}
+          <div className="grid sm:grid-cols-2 gap-4 mb-10">
+            <div className="bg-dark-primary rounded-xl p-5 border border-dark-border flex gap-4">
+              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold font-display text-white mb-1">Tiered Entry</h4>
+                <p className="text-text-secondary text-xs leading-relaxed">
+                  Don't have time for 200 projections? Just project your favorite team — 15 minutes, you're on the leaderboard. Go deeper when you're ready.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-dark-primary rounded-xl p-5 border border-dark-border flex gap-4">
+              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold font-display text-white mb-2">AI Coaching (Premium)</h3>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                After a season of predictions, Clutch AI shows you patterns you can't see:
-                positional biases, accuracy trends, draft behavior analysis.
-              </p>
+              <div>
+                <h4 className="text-sm font-semibold font-display text-white mb-1">AI Self-Scouting</h4>
+                <p className="text-text-secondary text-xs leading-relaxed">
+                  After a season, Clutch AI shows patterns: "You overestimate aging RBs by 18%." "Your WR accuracy is 93rd percentile — spend more there at auction."
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-dark-primary rounded-xl p-5 border border-dark-border flex gap-4">
+              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold font-display text-white mb-1">Real Stats, Real Names</h4>
+                <p className="text-text-secondary text-xs leading-relaxed">
+                  EPA is EPA. CPOE is CPOE. Full player pages with advanced analytics, game logs, and situational splits — organized better than ESPN.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-dark-primary rounded-xl p-5 border border-dark-border flex gap-4">
+              <div className="w-10 h-10 bg-orange-500/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold font-display text-white mb-1">Season-Long Leagues Too</h4>
+                <p className="text-text-secondary text-xs leading-relaxed">
+                  Full fantasy league platform with snake/auction drafts, trades, waivers, and chat. Import your history from Sleeper, ESPN, Yahoo, or Fantrax.
+                </p>
+              </div>
             </div>
           </div>
 
           <div className="bg-dark-primary rounded-xl p-6 border border-orange-500/20 text-center mb-8">
-            <p className="text-text-secondary text-sm mb-1">
-              Don't have time for 200 projections? Just project your favorite team. 15 minutes. You're on the leaderboard.
-            </p>
-            <p className="text-text-muted text-xs mt-3">
+            <p className="text-text-secondary text-sm leading-relaxed">
               Prediction contest opens after the NFL Draft. Draft tools ready for your August drafts.
+              Golf fills the gap April through August — your Clutch Rating spans every sport.
             </p>
           </div>
 
@@ -524,9 +619,12 @@ const Landing = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
-              Who actually knows football?
+              Who actually knows sports?
             </h2>
-            <p className="text-text-secondary">Compete against anyone. Audience size doesn't matter. Accuracy does.</p>
+            <p className="text-text-secondary max-w-xl mx-auto">
+              A nobody from Ohio outprojected the Fantasy Footballers. That's a story.
+              The leaderboard doesn't care about your follower count.
+            </p>
           </div>
 
           {/* Mock Leaderboard */}
