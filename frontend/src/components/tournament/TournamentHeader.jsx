@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 const TournamentHeader = ({ tournament, leaderboard = [] }) => {
   if (!tournament) return null
 
@@ -87,9 +89,25 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
 
         {/* Tournament name + course */}
         <h1 className="text-2xl font-bold font-display text-white mb-1 tracking-tight">{tournament.name}</h1>
-        {(tournament.course || tournament.location) && (
-          <p className="text-text-secondary text-sm mb-4">{tournament.course || tournament.location}</p>
-        )}
+        <div className="text-text-secondary text-sm mb-4">
+          {tournament.course && typeof tournament.course === 'object' ? (
+            <span>
+              <Link
+                to={`/courses/${tournament.course.id}`}
+                className="hover:text-gold transition-colors"
+              >
+                {tournament.course.nickname || tournament.course.name}
+              </Link>
+              {(tournament.course.city || tournament.course.state) && (
+                <span className="text-text-muted ml-1.5">
+                  — {[tournament.course.city, tournament.course.state].filter(Boolean).join(', ')}
+                </span>
+              )}
+            </span>
+          ) : tournament.location ? (
+            <span>{tournament.location}</span>
+          ) : null}
+        </div>
 
         {/* Stats row */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">

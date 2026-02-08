@@ -19,6 +19,11 @@ router.get('/', optionalAuth, async (req, res, next) => {
     const [tournaments, total] = await Promise.all([
       prisma.tournament.findMany({
         where,
+        include: {
+          course: {
+            select: { id: true, name: true, nickname: true, city: true, state: true, par: true, yardage: true },
+          },
+        },
         orderBy: { startDate: 'desc' },
         take: parseInt(limit),
         skip: parseInt(offset)
@@ -62,6 +67,7 @@ router.get('/:id', async (req, res, next) => {
     const tournament = await prisma.tournament.findUnique({
       where: { id: req.params.id },
       include: {
+        course: true,
         performances: {
           include: {
             player: {

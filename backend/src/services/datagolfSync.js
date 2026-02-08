@@ -326,8 +326,96 @@ async function syncSchedule(prisma) {
     }
   }
 
+  // ── Link tournaments to courses ──
+  try {
+    const coursesLinked = await linkTournamentsToCourses(prisma)
+    console.log(`[Sync] Course linking: ${coursesLinked} tournaments linked`)
+  } catch (e) {
+    console.warn(`[Sync] Course linking failed: ${e.message}`)
+  }
+
   console.log(`[Sync] Schedule done: ${newCount} created, ${rows.length - newCount} updated, ${count} total`)
   return { created: newCount, updated: rows.length - newCount, total: count }
+}
+
+/**
+ * Normalize a course/location string for fuzzy matching.
+ * Strips common suffixes, lowercases, removes punctuation.
+ */
+function normalizeCourseString(s) {
+  if (!s) return ''
+  return s
+    .toLowerCase()
+    .replace(/\(.*?\)/g, '') // remove parentheticals
+    .replace(/golf\s*(club|course|links)/gi, '')
+    .replace(/country\s*club/gi, '')
+    .replace(/resort\s*(&|and)?\s*(spa|lodge)?/gi, '')
+    .replace(/[''`]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Try to match a tournament location string to a Course record.
+ * Returns course.id if matched, null otherwise.
+ */
+function matchCourseToLocation(location, courseLookup) {
+  if (!location) return null
+  const normLoc = normalizeCourseString(location)
+  if (!normLoc) return null
+
+  // Exact normalized match
+  if (courseLookup.has(normLoc)) return courseLookup.get(normLoc)
+
+  // Check if location contains or is contained by a course name
+  for (const [normName, courseId] of courseLookup) {
+    if (normLoc.includes(normName) || normName.includes(normLoc)) {
+      return courseId
+    }
+  }
+
+  return null
+}
+
+/**
+ * Link tournaments to courses by fuzzy-matching location to course names/nicknames.
+ */
+async function linkTournamentsToCourses(prisma) {
+  const courses = await prisma.course.findMany({
+    select: { id: true, name: true, nickname: true },
+  })
+
+  // Build lookup: normalized name/nickname → courseId
+  const courseLookup = new Map()
+  for (const c of courses) {
+    const normName = normalizeCourseString(c.name)
+    if (normName) courseLookup.set(normName, c.id)
+    if (c.nickname) {
+      const normNick = normalizeCourseString(c.nickname)
+      if (normNick) courseLookup.set(normNick, c.id)
+    }
+  }
+
+  // Find tournaments without a courseId that have a location
+  const unlinked = await prisma.tournament.findMany({
+    where: { courseId: null, location: { not: null } },
+    select: { id: true, location: true },
+  })
+
+  let linked = 0
+  for (const t of unlinked) {
+    const courseId = matchCourseToLocation(t.location, courseLookup)
+    if (courseId) {
+      await prisma.tournament.update({
+        where: { id: t.id },
+        data: { courseId },
+      })
+      linked++
+    }
+  }
+
+  return linked
 }
 
 // ─── 2c. Sync Field & Tee Times ────────────────────────────────────────────

@@ -334,6 +334,16 @@ class ApiService {
     return this.request(`/leagues/${leagueId}/recap`)
   }
 
+  // Courses
+  async getCourses(options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/courses${params ? '?' + params : ''}`)
+  }
+
+  async getCourse(id) {
+    return this.request(`/courses/${id}`)
+  }
+
   // Tournaments
   async getTournaments(options = {}) {
     const params = new URLSearchParams(options).toString()

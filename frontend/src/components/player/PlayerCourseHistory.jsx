@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Card from '../common/Card'
 
 const PlayerCourseHistory = ({ courseHistory }) => {
@@ -32,7 +33,13 @@ const PlayerCourseHistory = ({ courseHistory }) => {
             {courseHistory.map((course, index) => (
               <tr key={index} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
                 <td className="p-3">
-                  <p className="text-white font-medium">{course.name}</p>
+                  {course.courseId ? (
+                    <Link to={`/courses/${course.courseId}`} className="text-white font-medium hover:text-gold transition-colors">
+                      {course.name}
+                    </Link>
+                  ) : (
+                    <p className="text-white font-medium">{course.name}</p>
+                  )}
                   <p className="text-text-muted text-xs">Par {course.par}</p>
                 </td>
                 <td className="p-3 text-center text-text-secondary">{course.rounds}</td>

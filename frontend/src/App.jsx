@@ -45,6 +45,7 @@ import ImportLeague from './pages/ImportLeague'
 import LeagueVault from './pages/LeagueVault'
 import SeasonRecap from './pages/SeasonRecap'
 import PublicProfile from './pages/PublicProfile'
+import CourseDetail from './pages/CourseDetail'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -193,6 +194,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PlayerProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/courses/:courseId"
+            element={
+              <ProtectedRoute>
+                <CourseDetail />
               </ProtectedRoute>
             }
           />
