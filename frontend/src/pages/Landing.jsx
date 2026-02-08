@@ -190,13 +190,67 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ══════════ THE CLUTCH RATING ══════════ */}
+      {/* ══════════ IT COMPOUNDS ══════════ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+              Year one, you have a record.
+              <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Year three, you have a database.</span>
+            </h2>
+            <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Every projection, every pick, every reasoning note — permanently logged. Clutch doesn't just track
+              what you predicted. It tracks whether you were right, where you're biased, and how you're improving.
+              This is the home for how you think about sports — and no one else is building it.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-6">
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
+              <div className="text-3xl font-bold font-mono text-gold mb-2">1</div>
+              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Sports Journal</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                Projections with reasoning notes. Draft cheat sheets built from your research.
+                Weekly picks with timestamps. Nothing lost, nothing forgotten.
+              </p>
+            </div>
+
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
+              <div className="text-3xl font-bold font-mono text-gold mb-2">2</div>
+              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Self-Scouting Report</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                AI surfaces patterns you can't see yourself: positional biases, accuracy trends, draft tendencies.
+                Evaluate your own thinking over time. Get better every season.
+              </p>
+            </div>
+
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
+              <div className="text-3xl font-bold font-mono text-gold mb-2">3</div>
+              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Public Resume</h3>
+              <p className="text-text-secondary text-sm leading-relaxed">
+                A shareable profile with your verified Clutch Rating, accuracy stats, badges, and bold calls
+                that hit. Link it from your Twitter, your podcast, your league group chat.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-center text-text-muted text-sm mt-8">
+            The longer you're on Clutch, the more valuable it gets. That's the point.
+          </p>
+        </div>
+      </section>
+
+      {/* ══════════ THE CLUTCH RATING ══════════ */}
+      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
-              Your number. Your reputation.
+              One number for everything you know.
             </h2>
+            <p className="text-text-secondary max-w-xl mx-auto leading-relaxed">
+              Your Clutch Rating is the single score that captures it all — league performance, prediction accuracy,
+              draft intelligence, consistency across sports. Like a credit score for sports knowledge.
+            </p>
           </div>
 
           <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -253,60 +307,8 @@ const Landing = () => {
           </div>
 
           <p className="text-center text-text-secondary mt-12 max-w-lg mx-auto leading-relaxed">
-            People will put their Clutch Rating in their Twitter bio. Link their profile from podcast show notes.
-            Screenshot their badges after a big week.
-          </p>
-          <p className="text-center text-xl font-display text-gold mt-4">
-            What would yours be?
-          </p>
-        </div>
-      </section>
-
-      {/* ══════════ IT COMPOUNDS ══════════ */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
-              Year one, you have a record.
-              <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Year three, you have a database.</span>
-            </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Every projection, every pick, every reasoning note — permanently logged. Clutch doesn't just track
-              what you predicted. It tracks whether you were right, where you're biased, and how you're improving.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6">
-            <div className="bg-dark-secondary rounded-xl p-6 border border-dark-border">
-              <div className="text-3xl font-bold font-mono text-gold mb-2">1</div>
-              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Sports Journal</h3>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                Projections with reasoning notes. Draft cheat sheets built from your research.
-                Weekly picks with timestamps. Nothing lost, nothing forgotten.
-              </p>
-            </div>
-
-            <div className="bg-dark-secondary rounded-xl p-6 border border-dark-border">
-              <div className="text-3xl font-bold font-mono text-gold mb-2">2</div>
-              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Self-Scouting Report</h3>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                AI finds patterns you can't see: positional biases, accuracy trends, which of your instincts
-                to trust and which to override. Built from your own data.
-              </p>
-            </div>
-
-            <div className="bg-dark-secondary rounded-xl p-6 border border-dark-border">
-              <div className="text-3xl font-bold font-mono text-gold mb-2">3</div>
-              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Public Resume</h3>
-              <p className="text-text-secondary text-sm leading-relaxed">
-                A shareable profile with your verified Clutch Rating, accuracy stats, badges, and bold calls
-                that hit. Link it from your Twitter, your podcast, your league group chat.
-              </p>
-            </div>
-          </div>
-
-          <p className="text-center text-text-muted text-sm mt-8">
-            The longer you're on Clutch, the more valuable it gets. That's the point.
+            Every league you play, every projection you make, every bold call that hits — it all feeds your rating.
+            Put it in your bio. Link your profile from your podcast. It's the number that proves you're not just talking.
           </p>
         </div>
       </section>
