@@ -44,6 +44,7 @@ import ProveIt from './pages/ProveIt'
 import ImportLeague from './pages/ImportLeague'
 import LeagueVault from './pages/LeagueVault'
 import SeasonRecap from './pages/SeasonRecap'
+import PublicProfile from './pages/PublicProfile'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -244,6 +245,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Public Profile (no auth required) */}
+          <Route path="/u/:username" element={<PublicProfile />} />
           {/* Prove It Hub */}
           <Route
             path="/prove-it"

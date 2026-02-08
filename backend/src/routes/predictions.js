@@ -103,6 +103,7 @@ router.get('/leaderboard', async (req, res) => {
       sortBy = 'accuracy',
       minCalls,
       period,
+      include,
     } = req.query
 
     // Map period to timeframe for backwards compatibility
@@ -177,6 +178,27 @@ router.get('/leaderboard', async (req, res) => {
         streak: Number(r.streakCurrent),
       }))
 
+      // Enrich with user profile data when requested
+      if (include === 'profile') {
+        const profileUserIds = leaderboard.map(e => e.userId).filter(Boolean)
+        if (profileUserIds.length > 0) {
+          const profiles = await prisma.user.findMany({
+            where: { id: { in: profileUserIds } },
+            select: { id: true, username: true, bio: true, tagline: true, socialLinks: true },
+          })
+          const profileMap = new Map(profiles.map(p => [p.id, p]))
+          for (const entry of leaderboard) {
+            const p = profileMap.get(entry.userId)
+            if (p) {
+              entry.username = p.username
+              entry.bio = p.bio
+              entry.tagline = p.tagline
+              entry.socialLinks = p.socialLinks
+            }
+          }
+        }
+      }
+
       return res.json({ leaderboard })
     }
 
@@ -206,6 +228,24 @@ router.get('/leaderboard', async (req, res) => {
         entry.clutchRating = r?.overallRating ?? null
         entry.clutchTier = r?.tier ?? null
         entry.clutchTrend = r?.trend ?? null
+      }
+    }
+
+    // Enrich with user profile data when requested (for Analysts tab)
+    if (include === 'profile' && userIds.length > 0) {
+      const profiles = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, username: true, bio: true, tagline: true, socialLinks: true },
+      })
+      const profileMap = new Map(profiles.map(p => [p.id, p]))
+      for (const entry of leaderboard) {
+        const p = profileMap.get(entry.userId)
+        if (p) {
+          entry.username = p.username
+          entry.bio = p.bio
+          entry.tagline = p.tagline
+          entry.socialLinks = p.socialLinks
+        }
       }
     }
 

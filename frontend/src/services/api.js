@@ -85,6 +85,10 @@ class ApiService {
     })
   }
 
+  async getPublicProfile(username) {
+    return this.request(`/users/by-username/${encodeURIComponent(username)}`)
+  }
+
   // Leagues
   async getLeagues() {
     return this.request('/leagues')

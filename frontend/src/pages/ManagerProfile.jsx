@@ -72,11 +72,30 @@ const SOCIAL_ICONS = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
     </svg>
   ),
+  instagram: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+    </svg>
+  ),
+  tiktok: (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13.2a8.25 8.25 0 005.58 2.17v-3.44a4.85 4.85 0 01-3.77-1.47V6.69h3.77z" />
+    </svg>
+  ),
   website: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
     </svg>
   ),
+}
+
+const SOCIAL_LABELS = {
+  twitter: 'X / Twitter',
+  youtube: 'YouTube',
+  podcast: 'Podcast',
+  website: 'Website',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
 }
 
 const StatBox = ({ label, value, color = 'text-white' }) => (
@@ -163,8 +182,11 @@ const ManagerProfile = () => {
   const [editing, setEditing] = useState(false)
   const [editBio, setEditBio] = useState('')
   const [editTagline, setEditTagline] = useState('')
+  const [editUsername, setEditUsername] = useState('')
   const [editSocial, setEditSocial] = useState({})
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+  const [shareToast, setShareToast] = useState(false)
 
   if (loading) {
     return (
@@ -217,25 +239,37 @@ const ManagerProfile = () => {
   const startEdit = () => {
     setEditBio(user?.bio || '')
     setEditTagline(user?.tagline || '')
+    setEditUsername(user?.username || '')
     setEditSocial(user?.socialLinks || {})
+    setSaveError(null)
     setEditing(true)
   }
 
   const saveProfile = async () => {
     setSaving(true)
+    setSaveError(null)
     try {
       await api.updateProfile({
         bio: editBio,
         tagline: editTagline,
+        username: editUsername || null,
         socialLinks: editSocial,
       })
       setEditing(false)
       refetch()
     } catch (err) {
-      console.error('Save failed:', err)
+      setSaveError(err.message || 'Save failed')
     } finally {
       setSaving(false)
     }
+  }
+
+  const shareProfile = () => {
+    const url = `${window.location.origin}/u/${user?.username}`
+    navigator.clipboard.writeText(url).then(() => {
+      setShareToast(true)
+      setTimeout(() => setShareToast(false), 2000)
+    })
   }
 
   return (
@@ -272,7 +306,26 @@ const ManagerProfile = () => {
                     </svg>
                   </button>
                 )}
+                {isOwnProfile && !editing && user?.username && (
+                  <button
+                    onClick={shareProfile}
+                    className="text-text-secondary hover:text-accent-gold transition-colors ml-1"
+                    title="Share profile"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                  </button>
+                )}
+                {shareToast && (
+                  <span className="text-xs text-green-400 font-mono animate-pulse">Link copied!</span>
+                )}
               </div>
+              {!editing && user?.username && (
+                <Link to={`/u/${user.username}`} className="text-text-muted text-sm font-mono hover:text-accent-gold transition-colors">
+                  @{user.username}
+                </Link>
+              )}
               {memberSince && <p className="text-text-muted text-sm">Member since {memberSince}</p>}
 
               {/* Tagline */}
@@ -321,6 +374,29 @@ const ManagerProfile = () => {
           {/* Edit form */}
           {editing && (
             <div className="border-t border-dark-border pt-4 space-y-3">
+              {saveError && (
+                <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                  {saveError}
+                </div>
+              )}
+              <div>
+                <label className="text-xs text-text-secondary font-mono block mb-1">Username</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-text-muted text-sm font-mono">@</span>
+                  <input
+                    type="text"
+                    value={editUsername}
+                    onChange={e => setEditUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30))}
+                    className="flex-1 bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm font-mono"
+                    placeholder="your-username"
+                  />
+                </div>
+                {editUsername && (
+                  <p className="text-[10px] text-text-muted font-mono mt-1">
+                    clutchfantasysports.com/u/{editUsername}
+                  </p>
+                )}
+              </div>
               <div>
                 <label className="text-xs text-text-secondary font-mono block mb-1">Tagline (280 chars)</label>
                 <input
@@ -343,9 +419,9 @@ const ManagerProfile = () => {
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {['twitter', 'youtube', 'podcast', 'website'].map(key => (
+                {['twitter', 'youtube', 'podcast', 'website', 'instagram', 'tiktok'].map(key => (
                   <div key={key}>
-                    <label className="text-xs text-text-secondary font-mono block mb-1 capitalize">{key === 'twitter' ? 'X / Twitter' : key}</label>
+                    <label className="text-xs text-text-secondary font-mono block mb-1">{SOCIAL_LABELS[key] || key}</label>
                     <input
                       type="text"
                       value={editSocial[key] || ''}

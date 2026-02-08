@@ -53,6 +53,7 @@ model User {
   historicalSeasons    HistoricalSeason[]    @relation("HistoricalOwner")
 
   // Phase 5: Manager profile + Clutch Rating
+  username    String?  @unique @db.VarChar(30)
   bio         String?  @db.Text
   tagline     String?  @db.VarChar(280)
   socialLinks Json     @default("{}") @map("social_links")

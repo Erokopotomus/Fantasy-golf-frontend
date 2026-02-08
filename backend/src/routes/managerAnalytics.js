@@ -1,13 +1,13 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
-const { authenticate } = require('../middleware/auth')
+const { authenticate, optionalAuth } = require('../middleware/auth')
 
 const router = express.Router()
 const prisma = new PrismaClient()
 
 // ─── GET /api/managers/:id/profile ──────────────────────────────────────────
 // Lifetime ManagerProfile (all sports + per-sport) + bio + Clutch Rating
-router.get('/:id/profile', authenticate, async (req, res, next) => {
+router.get('/:id/profile', optionalAuth, async (req, res, next) => {
   try {
     const userId = req.params.id
 
@@ -20,7 +20,7 @@ router.get('/:id/profile', authenticate, async (req, res, next) => {
       }),
       prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, name: true, avatar: true, bio: true, tagline: true, socialLinks: true, createdAt: true },
+        select: { id: true, name: true, avatar: true, username: true, bio: true, tagline: true, socialLinks: true, createdAt: true },
       }),
       prisma.achievementUnlock.count({ where: { userId } }),
       prisma.clutchManagerRating.findUnique({ where: { userId } }).catch(() => null),
@@ -46,7 +46,7 @@ router.get('/:id/profile', authenticate, async (req, res, next) => {
 
 // ─── GET /api/managers/:id/clutch-rating ───────────────────────────────────
 // Returns Clutch Rating + component breakdown
-router.get('/:id/clutch-rating', authenticate, async (req, res, next) => {
+router.get('/:id/clutch-rating', optionalAuth, async (req, res, next) => {
   try {
     const userId = req.params.id
 
@@ -220,7 +220,7 @@ router.get('/:id/h2h/:opponentId', authenticate, async (req, res, next) => {
 
 // ─── GET /api/managers/:id/achievements ─────────────────────────────────────
 // All achievements: unlocked + locked
-router.get('/:id/achievements', authenticate, async (req, res, next) => {
+router.get('/:id/achievements', optionalAuth, async (req, res, next) => {
   try {
     const userId = req.params.id
 
