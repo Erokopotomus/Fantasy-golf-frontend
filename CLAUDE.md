@@ -54,8 +54,8 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ## DEVELOPMENT PHASES
 
-### Current Status: PHASE 2 — COMPLETE ✓
-> Phases 1 & 2 complete. Phase 3 in progress — Sleeper import + League Vault v1 built, additional platforms and vault enhancements remaining.
+### Current Status: PHASE 3 — COMPLETE ✓
+> Phases 1, 2 & 3 complete. Phase 4 (Data Architecture & Proprietary Metrics) is next — building the 4-layer data system, Rosetta Stone player ID mapping, ETL pipelines, and Clutch proprietary metrics.
 
 ### Phase 1: Core Platform — COMPLETE ✓
 
@@ -318,9 +318,9 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ---
 
-### Phase 3: League Vault & Migration (Build in this order)
+### Phase 3: League Vault & Migration — COMPLETE ✓
 
-> **Critical build order:** Schema first → Player cross-reference table → Import pipeline → Vault display. The Vault is just the front-end for data the import pipeline stores. You do NOT need to pre-populate every historical player before importing — the import process itself populates the canonical player table.
+> All 5 import platforms built (Sleeper, ESPN, Yahoo, Fantrax, MFL). League Vault v1 live with timeline + records.
 
 - [x] **3A: Canonical Player Database Foundation**
   - Player cross-reference columns: `sleeperId`, `mflId`, `fantraxId` on players table
@@ -356,69 +356,183 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - All 4 platforms: discover + import routes in `imports.js`, API methods in `api.js`, per-platform hooks in `useImports.js`
   - `ImportLeague.jsx` updated: all 5 platforms available, per-platform connect UI (cookie inputs, OAuth token, CSV upload, API key)
 
-- [ ] **3E: League Vault Display (v2 — enhancements)**
-  - Head-to-head historical records between any two owners
-  - Draft history browser (every pick, every year)
-  - Transaction log across all seasons
-  - "On This Day" feature — what was happening in your league 1/2/5 years ago
-  - Export option for premium users (PDF trophy case, shareable graphics)
+### Backlog (Low Priority — Build When Needed)
+- League Vault v2: Head-to-head historical records, draft history browser, transaction log, "On This Day" feature, PDF export
 
 ---
 
-### Phase 4: AI Caddie & Creator Ecosystem (After predictions are flowing + migration works)
+### Phase 4: Data Architecture & Proprietary Metrics (BUILD NEXT)
 
-> **Note:** Analyst profiles, public profiles, follow system, leaderboards, and specialty tags were moved into Phase 2 as part of the "Prove It" hub. Phase 4 covers features that DEPEND on having prediction data flowing and an active user base making calls.
+> **Philosophy:** Build on data you own, transform everything, license only what you can't replicate, architect for AI from day one. The 4-layer data system ensures no provider dependency — if DataGolf disappears tomorrow, nothing breaks except one ETL script.
 
-- [ ] **Verified Creator Program**
-  - This is a business/partnerships initiative, not just a feature build
-  - Verified badge for partnered external creators (podcasters, YouTubers, Twitter analysts)
-  - Creator application flow + admin approval queue
-  - Creator profile enhancements: external channel links (podcast, YouTube, Twitter/X), creator-branded banner, featured placement in Analysts section
-  - Creator-branded leagues: a creator can run a public league on Clutch that their audience joins
-  - Revenue share tracking: when a creator's referral link drives a premium conversion, creator gets a cut
-  - Outreach priority: Fantasy Footballers, Pat McAfee, Matthew Berry (Tier 1), then mid-tier podcast hosts, then emerging Twitter/Reddit analysts, then golf-specific creators (Rick Gehman, Pat Mayo, DataGolf)
-  - Timing: reach out March/April 2026 when football creators are in offseason
+> **Reference docs:** `clutch-data-strategy.md` (full data ownership framework), `clutch-build-specs.md` (Sections C & D)
 
-- [ ] **In-Roster Expert Insights**
-  - On roster management page, subtle expandable section per player
-  - Shows: community consensus (% OVER/UNDER), top analyst calls with their accuracy rating
-  - User pulls info — section is collapsed by default, never auto-expanded, never intrusive
-  - Requires enough prediction data to be useful (minimum ~50 active predictors making calls)
-  - Premium enhancement: AI Caddie synthesizes analyst picks + stats + projections into one recommendation
+- [ ] **4A: 4-Layer Database Architecture**
+  - **Layer 1 — Raw Provider Staging:** Provider-specific tables (`raw_datagolf_*`, `raw_pgatour_*`, `raw_espn_*`). Raw JSON payloads with `source`, `ingested_at`. Never read by application code.
+  - **Layer 2 — Clutch Canonical Tables:** Provider-agnostic schema using only Clutch IDs. `clutch_players`, `clutch_events`, `clutch_player_rounds`, `clutch_player_stats`, `clutch_schedules`, `clutch_fields`. All use `clutch_player_id` and `clutch_event_id` — no provider references.
+  - **Layer 3 — Clutch Computed Tables:** Proprietary metrics computed from Layer 2. `clutch_scores`, `clutch_predictions_model`, `clutch_player_profiles_ai`, `clutch_consensus`. Your IP, your formulas.
+  - **Layer 4 — Application reads from Layers 2 + 3 only.** No provider name appears in app code.
+  - Source tagging on every canonical record (`source_provider`, `source_ingested_at`, `clutch_transformed_at`)
+  - Transformation logging: formula version + inputs + timestamp on every computed metric
 
-- [ ] **AI Caddie Integration**
-  - Claude API (Anthropic) integration for personalized recommendations
-  - Inputs: user's roster, league scoring settings, current matchup, analyst prediction consensus, player stats/projections, weather data (golf), course history (golf), injury reports
-  - Output: natural language recommendation with cited reasoning ("82% of Expert-tier predictors say START. Scheffler's strokes gained on approach ranks #1 at this course type. I agree — start with confidence.")
-  - Appears in two places:
-    1. In-roster expandable section (per-player recommendation)
-    2. Dashboard AI Caddie widget ("2 lineup suggestions ready")
-  - Premium-only feature (Clutch Pro / Clutch Elite)
-  - Rate limiting: Free tier gets 3 AI Caddie uses/month, Pro gets unlimited, Elite gets priority queue
-  - The AI Caddie uses the ✦ icon, NOT a robot character (see Brand System anti-Sleeper rules)
+- [ ] **4B: Rosetta Stone — Player & Event ID Mapping**
+  - Expand `playerMatcher.js` into full canonical ID system
+  - `clutch_player_id_map`: master key + nullable columns per provider (datagolf_id, pga_tour_id, espn_id, owgr_id, slashgolf_id, nflverse_id, pfr_id, yahoo_id, draftkings_id, fanduel_id)
+  - `clutch_event_id_map`: master event key + per-provider event IDs
+  - When new provider added: add column. When removed: column goes null. Nothing breaks.
+  - Cross-reference population from existing DataGolf data + public sources
+
+- [ ] **4C: ETL Pipeline — DataGolf → Canonical Tables**
+  - Refactor current `datagolfSync.js` into 2-step: raw staging → canonical transform
+  - Raw staging tables capture DataGolf API responses verbatim
+  - ETL scripts transform raw → canonical with source tagging
+  - Application code (routes, services) migrated to read from canonical tables instead of direct DataGolf models
+  - Existing cron jobs adapted to feed the pipeline
+  - **Rule: no provider name in application code.** Only in ETL scripts and raw staging layer.
+
+- [ ] **4D: Clutch Proprietary Metrics (Golf First)**
+  - **Clutch Performance Index (CPI):** Weighted blend of SG components with proprietary weights + recency factor. Normalized Z-score, -3.0 to +3.0 scale.
+  - **Clutch Course Fit Score:** Dot product of player skill profile vs course demand profile. 0-100 scale. Course profiles defined manually (fairway width, green size, rough severity, elevation, grass type).
+  - **Clutch Form Score:** Recency-weighted rolling performance with exponential decay (40/25/20/15 last 4 events). Field-strength adjusted. 0-100 scale.
+  - **Clutch Pressure Score:** Performance differential in high-leverage vs normal situations (final round in contention, major championships, playoffs). -2.0 to +2.0 scale.
+  - All metrics: formula versioned, inputs logged, recomputed weekly via cron
+  - Frontend: replace raw SG displays with Clutch-branded metrics. "Clutch Form Score" not "SG Total".
+
+- [ ] **4E: Tier 1 Public Data Sources**
+  - PGA Tour website scraper (stats pages — driving, GIR, SG breakdown, scoring)
+  - ESPN Golf public JSON endpoints (leaderboards, scorecards, historical results)
+  - OWGR rankings scraper (rankings, tournament weights, points)
+  - These serve as backup/enrichment data sources feeding Layer 1 → Layer 2
+  - Evaluate SlashGolf API and SportsDataIO as potential commercial Tier 1 backbones
+
+**Transformation Rules (apply to ALL data, ALL sports):**
+1. Never display raw provider numbers with their label — always transform
+2. Always give it a Clutch name — "Clutch Form Score" not "Strokes Gained Total"
+3. Always blend multiple inputs — single raw stat = theirs; blended = yours
+4. Always add editorial context — data + analysis = content
+5. Log formula version, inputs, timestamp for every computation
+6. Tag source_provider on every canonical record
 
 ---
 
-### Phase 5: Multi-Sport Expansion
+### Phase 5: Manager Analytics & Clutch Rating
+
+> **Reference doc:** `clutch-build-specs.md` (Sections A1-A6, adapted to fantasy-first language)
+
+> **Note:** All prediction/performance tracking uses the existing non-gambling language: "Performance Calls", "Benchmarks", "Projections", "Insights". No odds, units, ROI, or sportsbook terminology.
+
+- [ ] **5A: Enhanced Manager Profile Page**
+  - Redesigned header: avatar/photo upload, display name, verified badge, tagline/bio (280 char), social links (Twitter/X, YouTube, podcast, website)
+  - Overall Clutch Rating (0-100, prominent display — see 5B)
+  - Quick stats bar: overall accuracy %, current streak, best sport, total calls, rank
+  - Active sports badges (golf/football/basketball icons — lit for active sports)
+  - Performance call type breakdown (tabbed): benchmarks, performance calls, weekly winners, bold calls — each shows record, accuracy %, chart over time
+  - Sport-by-sport breakdown (tabbed): per-sport accuracy, best call, worst miss, recent calls
+  - Recent calls feed: chronological list with sport, type, actual call, result, timestamp. Filterable.
+  - Performance charts: accuracy rolling average, calls by sport (pie), hot/cold streaks (calendar heatmap)
+  - Manager comparison: side-by-side stats with another manager
+
+- [ ] **5B: Clutch Rating System (0-100 Score)**
+  - Single composite score (0-100) representing overall credibility — like a credit score for fantasy analysis
+  - Components (weighted): Accuracy (40%), Consistency (25% — low variance rewarded), Volume (20% — min calls required), Breadth (15% — active across sports/categories)
+  - Rating tiers: 90-100 Elite (top 1%), 80-89 Expert (top 5%), 70-79 Sharp (top 15%), 60-69 Solid (top 30%), 50-59 Average, Below 50 Developing
+  - Display: circular gauge/meter visual, color coded, trend arrow, hover shows component breakdown
+  - Minimum 50 graded calls to receive a Clutch Rating
+  - Recalculates daily. 90-day recency weighting.
+
+- [ ] **5C: Enhanced Prediction Categories**
+  - Expand prediction types per sport (golf: tournament winner, top 5/10/20, make/miss cut, head-to-head matchup, round leader)
+  - NFL: game winner, player performance calls, weekly fantasy rankings
+  - Lock mechanism: calls immutable after event start (already built, enhance enforcement)
+  - All calls timestamped and logged — this is the integrity layer
+  - Pending calls visible but marked as "locked — awaiting result"
+
+- [ ] **5D: Enhanced Leaderboard**
+  - Filters: Sport, call type, time period (all time / this season / last 30 days / this week), minimum calls, sort by (Clutch Rating / accuracy / streak)
+  - Columns: rank, manager (avatar + name), Clutch Rating, record, accuracy %, streak, trend (last 10 as mini dots), sport badges
+  - Special leaderboards: "Hot Right Now" (7 days), "Most Consistent" (lowest variance, 100+ calls), "Golf Sharks", "NFL Sharps"
+  - Weekly/monthly auto-awards: "Manager of the Week" based on period performance → feeds badge system
+
+- [ ] **5E: Badge & Achievement System v2**
+  - Performance badges: #1 Overall (period), Top 5/10 (period), Sport Champion
+  - Milestone badges: Century Club (100 calls), 500 Club, Hot Streak (5/10 consecutive), Lightning Round (5+ correct in one day)
+  - Consistency badges: Steady Hand (55%+ over 200 calls), Sharpshooter (60%+ over 100), Iron Man (calls every week for 3+ months)
+  - Sport-specific badges: Golf Aces, NFL Clutch QB, etc.
+  - Social card generation: each badge auto-generates a shareable image (Spotify Wrapped style) — optimized for Twitter/X, Instagram
+  - Manager can share directly from profile page
+
+- [ ] **5F: Consensus Engine**
+  - Aggregate top managers' calls weighted by Clutch Rating
+  - Generate "Clutch Consensus" for each event: "8 of 10 top managers like Scheffler this week"
+  - Track consensus accuracy over time (does the crowd beat individuals?)
+  - Premium: see which specific managers agree/disagree, filter by minimum Clutch Rating
+
+---
+
+### Phase 6: AI Engines
+
+> **Naming convention:** All AI features use "Clutch" prefix. No robot mascots, no cartoon characters. The AI uses the ✦ icon.
+
+> **Reference docs:** `clutch-build-specs.md` (Section B), `clutch-data-strategy.md` (Part 5)
+
+- [ ] **6A: Clutch Scout — Pre-Event AI Scouting Reports**
+  - Golf: tournament preview — field analysis, course fit (from 4D metrics), form scores, value calls
+  - NFL: game preview — matchup analysis, key stats, injury impact, fantasy suggestions
+  - Input: Clutch canonical data (Layer 2) + Clutch computed metrics (Layer 3) + field list + course data
+  - Output: AI-written scouting report via Claude API, publishable as content, updated as data changes
+  - Free content drives traffic; premium version goes deeper
+
+- [ ] **6B: Clutch Edge — Value Detection Engine**
+  - Compare Clutch model probabilities vs market consensus
+  - Flag where consensus is wrong based on proprietary metrics
+  - Backtestable, improvable over time
+  - Premium paywall — crown jewel product
+
+- [ ] **6C: Clutch Advisor — Personalized AI Assistant**
+  - Claude API integration for personalized recommendations
+  - Inputs: user's roster, league scoring, matchup, consensus data, player stats/projections, weather (golf), course history
+  - Output: natural language recommendation with cited reasoning
+  - Learns user preferences over time (favorite sports, call style, league formats)
+  - Premium-only (Clutch Pro / Clutch Elite)
+  - Rate limiting: Free = 3 uses/month, Pro = unlimited, Elite = priority queue
+
+- [ ] **6D: Clutch Live — Real-Time Analysis**
+  - Live scoring + live metrics + momentum shifts
+  - Real-time AI commentary, in-event value alerts, projected outcomes
+  - Push notifications for key events
+  - Premium feature
+
+- [ ] **6E: Clutch Sim — Matchup Simulator**
+  - Input: any two players/teams + event/venue context
+  - Output: full AI breakdown — who wins, why, key factors, historical data
+  - Content tool + engagement feature
+  - Free (drives engagement) with premium depth
+
+---
+
+### Phase 7: Multi-Sport Expansion
 
 - [ ] **NFL Fantasy Support** (Target: August 2026)
-  - NFL player database and data feed
+  - NFL data pipeline: nflfastR/nflverse (MIT licensed, play-by-play back to 1999)
+  - NFL Tier 1 sources: NFL official stats, Pro-Football-Reference (with attribution)
+  - NFL Tier 3 evaluation: PFF (licensed), SportsRadar
+  - NFL canonical tables: `clutch_nfl_plays`, `clutch_nfl_player_games` — same 4-layer architecture
   - NFL-specific scoring rules engine
-  - NFL schedule integration
-  - NFL draft room (snake + auction)
-  - NFL prediction slates (weekly)
+  - NFL schedule integration + draft room
+  - NFL prediction categories (game winner, player performance calls, weekly fantasy rankings)
 
 - [ ] **NBA Fantasy Support** (Target: October 2026)
 - [ ] **MLB Fantasy Support** (Target: Spring 2027)
 
 ---
 
-### Phase 6: Scale & Monetize
+### Phase 8: Scale & Monetize
 
-- [ ] **Creator Partnership Program** (formal)
+- [ ] **Verified Creator Program** — application flow, admin approval, verified badges, external channel links, creator-branded leagues, revenue share tracking
 - [ ] **Premium Tiers** (Clutch Pro $7.99/mo, Clutch Elite $12.99/mo)
 - [ ] **Native Mobile App** (React Native / Expo)
 - [ ] **League Entry Fee Processing** (Stripe Connect, 5-10% platform fee)
+- [ ] **In-Roster Expert Insights** — per-player expandable section showing consensus + top analyst calls (requires ~50 active predictors)
 
 ---
 
@@ -571,6 +685,101 @@ CREATE TABLE historical_seasons (
   awards JSONB
 );
 CREATE INDEX idx_historical_league_year ON historical_seasons(league_id, season_year);
+```
+
+### New Tables (Phase 4 — Data Architecture)
+
+#### clutch_player_id_map (Rosetta Stone)
+```sql
+CREATE TABLE clutch_player_id_map (
+  clutch_player_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sport VARCHAR(20) NOT NULL,
+  player_name VARCHAR(200) NOT NULL,
+  datagolf_id VARCHAR(100),
+  pga_tour_id VARCHAR(100),
+  espn_id VARCHAR(100),
+  owgr_id VARCHAR(100),
+  slashgolf_id VARCHAR(100),
+  nflverse_id VARCHAR(100),
+  pfr_id VARCHAR(100),
+  yahoo_id VARCHAR(100),
+  draftkings_id VARCHAR(100),
+  fanduel_id VARCHAR(100),
+  last_synced TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_player_map_sport ON clutch_player_id_map(sport);
+CREATE INDEX idx_player_map_datagolf ON clutch_player_id_map(datagolf_id) WHERE datagolf_id IS NOT NULL;
+```
+
+#### clutch_event_id_map
+```sql
+CREATE TABLE clutch_event_id_map (
+  clutch_event_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sport VARCHAR(20) NOT NULL,
+  event_name VARCHAR(200) NOT NULL,
+  datagolf_event_id VARCHAR(100),
+  espn_event_id VARCHAR(100),
+  pga_tour_event_id VARCHAR(100),
+  nflverse_game_id VARCHAR(100),
+  start_date DATE,
+  end_date DATE,
+  venue_id VARCHAR(100)
+);
+```
+
+#### clutch_player_rounds (canonical performance data)
+```sql
+CREATE TABLE clutch_player_rounds (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clutch_player_id UUID NOT NULL REFERENCES clutch_player_id_map(clutch_player_id),
+  clutch_event_id UUID NOT NULL REFERENCES clutch_event_id_map(clutch_event_id),
+  round_number INTEGER,
+  score INTEGER,
+  sg_total FLOAT,
+  sg_ott FLOAT,
+  sg_approach FLOAT,
+  sg_arg FLOAT,
+  sg_putting FLOAT,
+  fairways_hit_pct FLOAT,
+  gir_pct FLOAT,
+  source_provider VARCHAR(50) NOT NULL,
+  source_ingested_at TIMESTAMP,
+  clutch_transformed_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### clutch_scores (proprietary computed metrics)
+```sql
+CREATE TABLE clutch_scores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clutch_player_id UUID NOT NULL REFERENCES clutch_player_id_map(clutch_player_id),
+  clutch_event_id UUID REFERENCES clutch_event_id_map(clutch_event_id),
+  clutch_performance_index FLOAT, -- CPI: -3.0 to +3.0
+  clutch_course_fit_score FLOAT, -- 0-100
+  clutch_form_score FLOAT,       -- 0-100
+  clutch_pressure_score FLOAT,   -- -2.0 to +2.0
+  formula_version VARCHAR(10) NOT NULL,
+  computed_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX idx_clutch_scores_player ON clutch_scores(clutch_player_id, computed_at DESC);
+```
+
+#### clutch_manager_ratings (Clutch Rating — 0-100)
+```sql
+CREATE TABLE clutch_manager_ratings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  overall_rating INTEGER, -- 0-100
+  accuracy_component FLOAT,     -- 40% weight
+  consistency_component FLOAT,  -- 25% weight
+  volume_component FLOAT,       -- 20% weight
+  breadth_component FLOAT,      -- 15% weight
+  tier VARCHAR(20), -- 'elite', 'expert', 'sharp', 'solid', 'average', 'developing'
+  trend VARCHAR(10), -- 'up', 'down', 'stable'
+  total_graded_calls INTEGER DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id)
+);
 ```
 
 ---
