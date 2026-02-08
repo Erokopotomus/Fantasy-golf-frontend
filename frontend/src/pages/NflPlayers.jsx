@@ -102,10 +102,10 @@ export default function NflPlayers() {
 
   const statCols = getStatColumns()
 
-  // Format number with 1 decimal place for fantasy points
+  // Format fantasy points with 2 decimal places
   const fmtPts = (val) => {
-    if (val === null || val === undefined) return '0.0'
-    return Number(val).toFixed(1)
+    if (val === null || val === undefined) return '0.00'
+    return Number(val).toFixed(2)
   }
 
   return (

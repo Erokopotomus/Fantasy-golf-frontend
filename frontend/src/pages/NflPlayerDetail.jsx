@@ -95,9 +95,9 @@ export default function NflPlayerDetail() {
           {seasonTotals && (
             <div className="text-right">
               <div className="text-3xl font-mono font-bold text-gold">
-                {scoringView === 'ppr' ? seasonTotals.fantasyPtsPpr :
+                {(scoringView === 'ppr' ? seasonTotals.fantasyPtsPpr :
                  scoringView === 'half_ppr' ? seasonTotals.fantasyPtsHalf :
-                 seasonTotals.fantasyPtsStd}
+                 seasonTotals.fantasyPtsStd)?.toFixed(2) ?? '0.00'}
               </div>
               <div className="text-white/40 text-xs font-mono uppercase">Season FPTS</div>
               <div className="flex gap-1 mt-1">
@@ -228,7 +228,7 @@ export default function NflPlayerDetail() {
                       </>
                     )}
                     <td className="text-right px-4 py-2.5 font-mono text-sm font-bold text-gold">
-                      {g.fantasyPts?.[scoringView] ?? '-'}
+                      {g.fantasyPts?.[scoringView] != null ? Number(g.fantasyPts[scoringView]).toFixed(2) : '-'}
                     </td>
                   </tr>
                 ))
