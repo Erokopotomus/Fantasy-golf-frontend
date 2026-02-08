@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSport } from '../../context/SportContext'
 import Input from '../common/Input'
 import Select from '../common/Select'
 import Button from '../common/Button'
@@ -11,17 +12,26 @@ import SurvivorSettings from './settings/SurvivorSettings'
 import OneAndDoneSettings from './settings/OneAndDoneSettings'
 import { LEAGUE_FORMATS, DEFAULT_FORMAT_SETTINGS } from '../../hooks/useLeagueFormat'
 
+const NFL_SCORING_OPTIONS = [
+  { key: 'half_ppr', label: 'Half PPR', desc: 'Half point per reception (most popular)' },
+  { key: 'ppr', label: 'PPR', desc: 'Full point per reception' },
+  { key: 'standard', label: 'Standard', desc: 'No points for receptions' },
+]
+
 const LeagueForm = ({ onSubmit, loading }) => {
+  const { activeSport } = useSport()
   const [step, setStep] = useState(1)
+  const isNfl = activeSport === 'nfl'
   const [formData, setFormData] = useState({
     name: '',
-    format: 'full-league',
+    sport: activeSport,
+    format: isNfl ? 'head-to-head' : 'full-league',
     draftType: 'snake',
-    rosterSize: '6',
-    scoringType: 'standard',
-    maxMembers: '10',
-    budget: '100',
-    formatSettings: DEFAULT_FORMAT_SETTINGS['full-league'],
+    rosterSize: isNfl ? '17' : '6',
+    scoringType: isNfl ? 'half_ppr' : 'standard',
+    maxMembers: isNfl ? '12' : '10',
+    budget: '200',
+    formatSettings: DEFAULT_FORMAT_SETTINGS[isNfl ? 'head-to-head' : 'full-league'],
   })
   const [errors, setErrors] = useState({})
 
@@ -92,6 +102,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
     if (validate()) {
       onSubmit({
         name: formData.name.trim(),
+        sport: formData.sport,
         format: formData.format,
         draftType: formData.format === 'one-and-done' ? 'none' : formData.draftType,
         rosterSize: parseInt(formData.rosterSize),
@@ -194,7 +205,14 @@ const LeagueForm = ({ onSubmit, loading }) => {
               required
             />
 
-            {formData.format !== 'one-and-done' && (
+            {isNfl ? (
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Roster Size</label>
+                <div className="px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm">
+                  17 players <span className="text-text-muted">(QB, 2 RB, 3 WR, TE, FLEX, K, DEF, 6 BN, IR)</span>
+                </div>
+              </div>
+            ) : formData.format !== 'one-and-done' ? (
               <Select
                 label="Roster Size"
                 name="rosterSize"
@@ -203,7 +221,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                 options={rosterSizeOptions}
                 required
               />
-            )}
+            ) : null}
           </div>
 
           {/* Scoring Type */}
@@ -211,57 +229,87 @@ const LeagueForm = ({ onSubmit, loading }) => {
             <label className="block text-sm font-medium text-text-secondary mb-3">
               Scoring System <span className="text-red-500">*</span>
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleChange({ target: { name: 'scoringType', value: 'standard' } })}
-                className={`
-                  p-4 rounded-lg border-2 transition-all duration-300 text-left
-                  ${formData.scoringType === 'standard'
-                    ? 'border-gold bg-gold/10'
-                    : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
-                    ${formData.scoringType === 'standard' ? 'border-gold' : 'border-text-muted'}`}>
-                    {formData.scoringType === 'standard' && (
-                      <div className="w-2 h-2 rounded-full bg-gold" />
-                    )}
+            {isNfl ? (
+              <div className="grid grid-cols-3 gap-3">
+                {NFL_SCORING_OPTIONS.map(opt => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => handleChange({ target: { name: 'scoringType', value: opt.key } })}
+                    className={`
+                      p-4 rounded-lg border-2 transition-all duration-300 text-left
+                      ${formData.scoringType === opt.key
+                        ? 'border-gold bg-gold/10'
+                        : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                        ${formData.scoringType === opt.key ? 'border-gold' : 'border-text-muted'}`}>
+                        {formData.scoringType === opt.key && (
+                          <div className="w-2 h-2 rounded-full bg-gold" />
+                        )}
+                      </div>
+                      <span className="text-white font-medium">{opt.label}</span>
+                    </div>
+                    <p className="text-text-muted text-sm">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleChange({ target: { name: 'scoringType', value: 'standard' } })}
+                  className={`
+                    p-4 rounded-lg border-2 transition-all duration-300 text-left
+                    ${formData.scoringType === 'standard'
+                      ? 'border-gold bg-gold/10'
+                      : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                      ${formData.scoringType === 'standard' ? 'border-gold' : 'border-text-muted'}`}>
+                      {formData.scoringType === 'standard' && (
+                        <div className="w-2 h-2 rounded-full bg-gold" />
+                      )}
+                    </div>
+                    <span className="text-white font-medium">Standard</span>
                   </div>
-                  <span className="text-white font-medium">Standard</span>
-                </div>
-                <p className="text-text-muted text-sm">
-                  Points based on tournament finish
-                </p>
-              </button>
+                  <p className="text-text-muted text-sm">
+                    Points based on tournament finish
+                  </p>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => handleChange({ target: { name: 'scoringType', value: 'strokes-gained' } })}
-                className={`
-                  p-4 rounded-lg border-2 transition-all duration-300 text-left
-                  ${formData.scoringType === 'strokes-gained'
-                    ? 'border-gold bg-gold/10'
-                    : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
-                  }
-                `}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
-                    ${formData.scoringType === 'strokes-gained' ? 'border-gold' : 'border-text-muted'}`}>
-                    {formData.scoringType === 'strokes-gained' && (
-                      <div className="w-2 h-2 rounded-full bg-gold" />
-                    )}
+                <button
+                  type="button"
+                  onClick={() => handleChange({ target: { name: 'scoringType', value: 'strokes-gained' } })}
+                  className={`
+                    p-4 rounded-lg border-2 transition-all duration-300 text-left
+                    ${formData.scoringType === 'strokes-gained'
+                      ? 'border-gold bg-gold/10'
+                      : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
+                      ${formData.scoringType === 'strokes-gained' ? 'border-gold' : 'border-text-muted'}`}>
+                      {formData.scoringType === 'strokes-gained' && (
+                        <div className="w-2 h-2 rounded-full bg-gold" />
+                      )}
+                    </div>
+                    <span className="text-white font-medium">Strokes Gained</span>
                   </div>
-                  <span className="text-white font-medium">Strokes Gained</span>
-                </div>
-                <p className="text-text-muted text-sm">
-                  Advanced stats-based scoring
-                </p>
-              </button>
-            </div>
+                  <p className="text-text-muted text-sm">
+                    Advanced stats-based scoring
+                  </p>
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end">
@@ -280,6 +328,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
             onSelectFormat={handleFormatChange}
             selectedDraftType={formData.draftType}
             onSelectDraftType={handleDraftTypeChange}
+            sport={formData.sport}
           />
 
           {formData.draftType === 'auction' && formData.format !== 'one-and-done' && (
@@ -341,9 +390,16 @@ const LeagueForm = ({ onSubmit, loading }) => {
                 </span>
               </div>
               <div>
+                <span className="text-text-muted">Sport:</span>
+                <span className="text-white ml-2 capitalize">{formData.sport === 'nfl' ? 'NFL' : 'Golf'}</span>
+              </div>
+              <div>
                 <span className="text-text-muted">Scoring:</span>
-                <span className="text-white ml-2 capitalize">
-                  {formData.scoringType === 'strokes-gained' ? 'Strokes Gained' : 'Standard'}
+                <span className="text-white ml-2">
+                  {isNfl
+                    ? NFL_SCORING_OPTIONS.find(o => o.key === formData.scoringType)?.label || formData.scoringType
+                    : formData.scoringType === 'strokes-gained' ? 'Strokes Gained' : 'Standard'
+                  }
                 </span>
               </div>
               {formData.format !== 'one-and-done' && (

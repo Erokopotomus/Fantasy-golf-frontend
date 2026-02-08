@@ -31,8 +31,11 @@ const FormatIcon = ({ format }) => {
   return icons[format] || icons.trophy
 }
 
-const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onSelectDraftType, showDraftType = true }) => {
-  const formats = Object.values(LEAGUE_FORMATS)
+const NFL_FORMATS = ['head-to-head', 'full-league']
+
+const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onSelectDraftType, showDraftType = true, sport = 'golf' }) => {
+  const allFormats = Object.values(LEAGUE_FORMATS)
+  const formats = sport === 'nfl' ? allFormats.filter(f => NFL_FORMATS.includes(f.id)) : allFormats
   const draftTypes = Object.values(DRAFT_TYPES).filter(dt => dt.id !== 'none')
 
   const handleFormatSelect = (formatId) => {
