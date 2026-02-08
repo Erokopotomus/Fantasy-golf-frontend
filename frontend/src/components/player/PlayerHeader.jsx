@@ -1,5 +1,3 @@
-import Card from '../common/Card'
-
 const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, isOwned, isOnMyTeam }) => {
   if (!player) return null
 
@@ -32,15 +30,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
     return 'text-red-400'
   }
 
-  // Form Score label
-  const getFormLabel = (score) => {
-    if (score == null) return null
-    if (score >= 80) return { text: Math.round(score), icon: 'HOT' }
-    if (score >= 60) return { text: Math.round(score), icon: 'WARM' }
-    if (score >= 40) return { text: Math.round(score), icon: 'COOL' }
-    return { text: Math.round(score), icon: 'COLD' }
-  }
-
+  // Form Score color
   const getFormColor = (score) => {
     if (score == null) return 'text-text-muted'
     if (score >= 80) return 'text-orange'
@@ -49,10 +39,69 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
     return 'text-blue-300'
   }
 
+  // Pressure Score color
+  const getPressureColor = (score) => {
+    if (score == null) return 'text-text-muted'
+    if (score > 0.5) return 'text-gold'
+    if (score > -0.5) return 'text-gray-300'
+    return 'text-red-400'
+  }
+
+  // Recent form badge color
+  const getFormBadgeStyle = (result) => {
+    if (!result) return 'bg-white/5 text-text-muted'
+    if (result === 'CUT') return 'bg-red-500/20 text-red-400'
+    if (result === 'WD') return 'bg-gray-500/20 text-gray-400'
+    const num = parseInt(result.replace('T', ''), 10)
+    if (isNaN(num)) return 'bg-white/5 text-text-secondary'
+    if (num === 1) return 'bg-gold/20 text-gold'
+    if (num <= 10) return 'bg-green-500/20 text-green-400'
+    if (num <= 25) return 'bg-yellow-500/20 text-yellow-400'
+    return 'bg-white/5 text-text-secondary'
+  }
+
+  // Compute age from birthDate
+  const computeAge = (birthDate) => {
+    if (!birthDate) return null
+    const dob = new Date(birthDate)
+    const today = new Date()
+    let age = today.getFullYear() - dob.getFullYear()
+    const monthDiff = today.getMonth() - dob.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--
+    }
+    return age
+  }
+
+  // Format earnings
+  const formatEarnings = (val) => {
+    if (val == null || val === 0) return null
+    if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`
+    if (val >= 1_000) return `$${(val / 1_000).toFixed(0)}K`
+    return `$${val}`
+  }
+
   const cpi = clutchMetrics?.cpi
   const formScore = clutchMetrics?.formScore
-  const formInfo = getFormLabel(formScore)
+  const pressureScore = clutchMetrics?.pressureScore
+  const age = computeAge(player.birthDate)
 
+  // Build bio parts — only show fields that exist
+  const bioParts = []
+  if (age) bioParts.push(`Age ${age}`)
+  if (player.college) bioParts.push(player.college)
+  if (player.turnedPro) bioParts.push(`Pro since ${player.turnedPro}`)
+  if (player.height) bioParts.push(player.height)
+  if (player.swings) bioParts.push(player.swings === 'R' ? 'Right' : player.swings === 'L' ? 'Left' : player.swings)
+
+  // Recent form — last 5
+  const recentForm = (player.recentForm || []).slice(0, 5)
+
+  // Headshot: prefer no-bg (transparent), then regular, then flag fallback
+  const headshotSrc = player.headshotNoBgUrl || player.headshotUrl
+  const hasHeadshot = !!headshotSrc
+
+  // Quick stats — 7 items
   const quickStats = [
     {
       label: 'CPI',
@@ -61,8 +110,13 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
     },
     {
       label: 'Form',
-      value: formInfo ? formInfo.text : null,
+      value: formScore != null ? Math.round(formScore) : null,
       color: getFormColor(formScore),
+    },
+    {
+      label: 'Pressure',
+      value: pressureScore != null ? `${pressureScore > 0 ? '+' : ''}${pressureScore.toFixed(2)}` : null,
+      color: getPressureColor(pressureScore),
     },
     {
       label: 'Events',
@@ -74,50 +128,95 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
       value: player.wins > 0 ? player.wins : player.events > 0 ? '0' : null,
       color: player.wins > 0 ? 'text-yellow-400' : 'text-white',
     },
+    {
+      label: 'Top 10s',
+      value: player.top10s > 0 ? player.top10s : player.events > 0 ? '0' : null,
+      color: player.top10s > 0 ? 'text-green-400' : 'text-white',
+    },
+    {
+      label: 'Earnings',
+      value: formatEarnings(player.earnings),
+      color: player.earnings > 0 ? 'text-white' : 'text-text-muted',
+    },
   ]
 
   return (
-    <Card className="bg-gradient-to-r from-dark-card to-dark-tertiary">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Player Avatar/Flag */}
-        <div className="flex items-center gap-4">
-          {player.headshotUrl ? (
-            <img src={player.headshotUrl} alt="" className="w-20 h-20 rounded-full object-cover bg-dark-primary border-2 border-dark-border" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 sm:p-6">
+      {/* Top section: headshot + info + actions */}
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
+        {/* Headshot */}
+        <div className="flex-shrink-0 flex justify-center sm:justify-start">
+          {hasHeadshot ? (
+            <img
+              src={headshotSrc}
+              alt=""
+              className="w-[120px] h-[120px] rounded-xl object-cover bg-dark-primary border border-white/10"
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+            />
           ) : null}
-          <div className={`w-20 h-20 rounded-full bg-dark-primary flex items-center justify-center text-4xl border-2 border-dark-border ${player.headshotUrl ? 'hidden' : ''}`}>
+          <div
+            className={`w-[120px] h-[120px] rounded-xl bg-dark-primary flex items-center justify-center text-5xl border border-white/10 ${hasHeadshot ? 'hidden' : ''}`}
+          >
             {player.countryFlag}
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold font-display text-white">{player.name}</h1>
-              {isOnMyTeam && (
-                <span className="px-2 py-0.5 bg-gold/20 text-gold text-xs rounded font-medium">
-                  My Player
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-sm flex-wrap">
-              {player.rank && (
-                <span className={`px-2 py-0.5 rounded border font-medium ${getRankBadge(player.rank)}`}>
-                  #{player.rank} OWGR
-                </span>
-              )}
-              {tourBadge && (
-                <span className={`px-2 py-0.5 rounded border font-medium ${tourBadge.cls}`}>
-                  {tourBadge.label}
-                </span>
-              )}
-              <span className="text-text-secondary">{player.country}</span>
-            </div>
           </div>
         </div>
 
+        {/* Player info */}
+        <div className="flex-1 min-w-0 text-center sm:text-left">
+          {/* Name + My Player badge */}
+          <div className="flex items-center justify-center sm:justify-start gap-2 mb-1.5">
+            <h1 className="text-2xl font-bold font-display text-white truncate">{player.name}</h1>
+            {isOnMyTeam && (
+              <span className="flex-shrink-0 px-2 py-0.5 bg-gold/20 text-gold text-xs rounded font-medium">
+                My Player
+              </span>
+            )}
+          </div>
+
+          {/* Badges row: rank, tour, country */}
+          <div className="flex items-center justify-center sm:justify-start gap-2 text-sm flex-wrap mb-2">
+            {player.rank && (
+              <span className={`px-2 py-0.5 rounded border font-mono font-medium text-xs ${getRankBadge(player.rank)}`}>
+                #{player.rank} OWGR
+              </span>
+            )}
+            {tourBadge && (
+              <span className={`px-2 py-0.5 rounded border font-medium text-xs ${tourBadge.cls}`}>
+                {tourBadge.label}
+              </span>
+            )}
+            <span className="text-text-secondary text-sm">{player.countryFlag} {player.country}</span>
+          </div>
+
+          {/* Bio line */}
+          {bioParts.length > 0 && (
+            <p className="text-text-muted text-sm mb-2.5">
+              {bioParts.join(' \u00B7 ')}
+            </p>
+          )}
+
+          {/* Recent form badges */}
+          {recentForm.length > 0 && (
+            <div className="flex items-center justify-center sm:justify-start gap-1.5">
+              <span className="text-text-muted text-xs mr-1">Recent</span>
+              {recentForm.map((result, i) => (
+                <span
+                  key={i}
+                  className={`px-2 py-0.5 rounded text-xs font-mono font-medium ${getFormBadgeStyle(result)}`}
+                >
+                  {result}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Actions */}
-        <div className="sm:ml-auto flex gap-2">
+        <div className="flex-shrink-0 flex justify-center sm:justify-end sm:items-start gap-2">
           {!isOwned && (
             <button
               onClick={onAddToRoster}
-              className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors"
+              className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors text-sm"
             >
               Add to Roster
             </button>
@@ -125,7 +224,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
           {isOwned && !isOnMyTeam && (
             <button
               onClick={onProposeTrade}
-              className="px-4 py-2 bg-orange text-white rounded-lg font-medium hover:bg-orange/90 transition-colors"
+              className="px-4 py-2 bg-orange text-white rounded-lg font-medium hover:bg-orange/90 transition-colors text-sm"
             >
               Propose Trade
             </button>
@@ -134,17 +233,17 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
       </div>
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-dark-border">
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3 mt-5 pt-5 border-t border-white/10">
         {quickStats.map((stat) => (
           <div key={stat.label} className="text-center">
-            <p className={`text-2xl font-bold ${stat.value != null ? stat.color : 'text-text-muted'}`}>
-              {stat.value ?? '—'}
+            <p className={`text-xl font-bold font-mono ${stat.value != null ? stat.color : 'text-text-muted'}`}>
+              {stat.value ?? '\u2014'}
             </p>
-            <p className="text-xs text-text-muted">{stat.label}</p>
+            <p className="text-xs text-text-muted mt-0.5">{stat.label}</p>
           </div>
         ))}
       </div>
-    </Card>
+    </div>
   )
 }
 
