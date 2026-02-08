@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { useSport } from '../../context/SportContext'
 import useNotificationInbox from '../../hooks/useNotificationInbox'
 import useTournaments from '../../hooks/useTournaments'
 import NotificationDropdown from '../notifications/NotificationDropdown'
@@ -11,7 +10,6 @@ import SearchButton from '../search/SearchButton'
 
 const Navbar = () => {
   const { user, logout } = useAuth()
-  const { activeSport, setActiveSport, isNfl } = useSport()
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -57,35 +55,11 @@ const Navbar = () => {
     <nav className="backdrop-blur-xl backdrop-saturate-150 bg-dark-secondary/80 border-b border-white/[0.08] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo + Sport Switcher */}
-          <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2.5">
-              <ClutchLogo size={32} className="rounded-lg" />
-              <span className="text-xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
-            </Link>
-            {user && (
-              <div className="hidden sm:flex items-center bg-white/5 rounded-lg p-0.5 ml-1">
-                <button
-                  onClick={() => setActiveSport('golf')}
-                  className={`px-2 py-1 rounded-md text-xs font-bold transition-colors ${
-                    !isNfl ? 'bg-green-500/20 text-green-400' : 'text-white/30 hover:text-white/50'
-                  }`}
-                  title="Golf"
-                >
-                  {'\u26F3'}
-                </button>
-                <button
-                  onClick={() => setActiveSport('nfl')}
-                  className={`px-2 py-1 rounded-md text-xs font-bold transition-colors ${
-                    isNfl ? 'bg-orange-500/20 text-orange-400' : 'text-white/30 hover:text-white/50'
-                  }`}
-                  title="NFL"
-                >
-                  {'\uD83C\uDFC8'}
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5">
+            <ClutchLogo size={32} className="rounded-lg" />
+            <span className="text-xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
+          </Link>
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-1">
@@ -94,45 +68,34 @@ const Navbar = () => {
                 <Link to="/dashboard" className={navLinkStyles('/dashboard')}>
                   Dashboard
                 </Link>
-                <Link to="/leagues" className={navLinkStyles('/leagues')}>
-                  My Leagues
-                </Link>
                 <Link to="/draft" className={navLinkStyles('/draft')}>
                   Draft
                 </Link>
                 <Link to="/prove-it" className={navLinkStyles('/prove-it')}>
                   Prove It
                 </Link>
-                {isNfl ? (
-                  <Link to="/nfl/schedule" className={navLinkStyles('/nfl/schedule')}>
-                    Schedule
-                  </Link>
-                ) : (
-                  <>
-                    <Link to="/tournaments" className={navLinkStyles('/tournaments')}>
-                      Tournaments
-                    </Link>
-                    <Link
-                      to={tournamentLink || '/tournaments'}
-                      className={`
-                        px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
-                        ${isLiveTournament
-                          ? 'text-gold bg-surface-bright'
-                          : isTournamentActive
-                            ? 'text-gold bg-surface-bright'
-                            : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'}
-                      `}
-                    >
-                      {isLiveTournament && (
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
-                        </span>
-                      )}
-                      Live
-                    </Link>
-                  </>
-                )}
+                <Link to="/tournaments" className={navLinkStyles('/tournaments')}>
+                  Tournaments
+                </Link>
+                <Link
+                  to={tournamentLink || '/tournaments'}
+                  className={`
+                    px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
+                    ${isLiveTournament
+                      ? 'text-gold bg-surface-bright'
+                      : isTournamentActive
+                        ? 'text-gold bg-surface-bright'
+                        : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'}
+                  `}
+                >
+                  {isLiveTournament && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
+                    </span>
+                  )}
+                  Live
+                </Link>
                 <div className="ml-2">
                   <SearchButton />
                 </div>
@@ -366,13 +329,6 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
-                  to="/leagues"
-                  className={mobileNavLinkStyles('/leagues')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  My Leagues
-                </Link>
-                <Link
                   to="/draft"
                   className={mobileNavLinkStyles('/draft')}
                   onClick={() => setMobileMenuOpen(false)}
@@ -393,58 +349,31 @@ const Navbar = () => {
                 >
                   Manager Stats
                 </Link>
-                {/* Sport switcher (mobile) */}
-                <div className="flex items-center gap-2 px-4 py-2">
-                  <button
-                    onClick={() => { setActiveSport('golf'); setMobileMenuOpen(false) }}
-                    className={`flex-1 py-2 rounded-lg text-sm font-bold text-center transition-colors ${
-                      !isNfl ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/5 text-white/30'
-                    }`}
-                  >
-                    {'\u26F3'} Golf
-                  </button>
-                  <button
-                    onClick={() => { setActiveSport('nfl'); setMobileMenuOpen(false) }}
-                    className={`flex-1 py-2 rounded-lg text-sm font-bold text-center transition-colors ${
-                      isNfl ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-white/5 text-white/30'
-                    }`}
-                  >
-                    {'\uD83C\uDFC8'} NFL
-                  </button>
-                </div>
-                {isNfl ? (
-                  <Link to="/nfl/schedule" className={mobileNavLinkStyles('/nfl/schedule')} onClick={() => setMobileMenuOpen(false)}>
-                    Schedule
-                  </Link>
-                ) : (
-                  <>
-                    <Link
-                      to="/tournaments"
-                      className={mobileNavLinkStyles('/tournaments')}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Tournaments
-                    </Link>
-                    <Link
-                      to={tournamentLink || '/tournaments'}
-                      className={`
-                        flex items-center gap-2
-                        ${isTournamentActive
-                          ? 'block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 text-gold bg-surface-bright'
-                          : mobileNavLinkStyles('')}
-                      `}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {isLiveTournament && (
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
-                        </span>
-                      )}
-                      Live
-                    </Link>
-                  </>
-                )}
+                <Link
+                  to="/tournaments"
+                  className={mobileNavLinkStyles('/tournaments')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Tournaments
+                </Link>
+                <Link
+                  to={tournamentLink || '/tournaments'}
+                  className={`
+                    flex items-center gap-2
+                    ${isTournamentActive
+                      ? 'block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 text-gold bg-surface-bright'
+                      : mobileNavLinkStyles('')}
+                  `}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {isLiveTournament && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-rose"></span>
+                    </span>
+                  )}
+                  Live
+                </Link>
               </>
             ) : (
               <>

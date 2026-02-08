@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useSport } from '../../context/SportContext'
 import Input from '../common/Input'
 import Select from '../common/Select'
 import Button from '../common/Button'
@@ -18,21 +17,25 @@ const NFL_SCORING_OPTIONS = [
   { key: 'standard', label: 'Standard', desc: 'No points for receptions' },
 ]
 
+const SPORT_DEFAULTS = {
+  golf: { format: 'full-league', rosterSize: '6', scoringType: 'standard', maxMembers: '10', formatSettings: DEFAULT_FORMAT_SETTINGS['full-league'] },
+  nfl: { format: 'head-to-head', rosterSize: '17', scoringType: 'half_ppr', maxMembers: '12', formatSettings: DEFAULT_FORMAT_SETTINGS['head-to-head'] },
+}
+
 const LeagueForm = ({ onSubmit, loading }) => {
-  const { activeSport } = useSport()
   const [step, setStep] = useState(1)
-  const isNfl = activeSport === 'nfl'
   const [formData, setFormData] = useState({
     name: '',
-    sport: activeSport,
-    format: isNfl ? 'head-to-head' : 'full-league',
+    sport: 'golf',
+    format: 'full-league',
     draftType: 'snake',
-    rosterSize: isNfl ? '17' : '6',
-    scoringType: isNfl ? 'half_ppr' : 'standard',
-    maxMembers: isNfl ? '12' : '10',
+    rosterSize: '6',
+    scoringType: 'standard',
+    maxMembers: '10',
     budget: '200',
-    formatSettings: DEFAULT_FORMAT_SETTINGS[isNfl ? 'head-to-head' : 'full-league'],
+    formatSettings: DEFAULT_FORMAT_SETTINGS['full-league'],
   })
+  const isNfl = formData.sport === 'nfl'
   const [errors, setErrors] = useState({})
 
   const rosterSizeOptions = Array.from({ length: 9 }, (_, i) => ({
@@ -55,6 +58,18 @@ const LeagueForm = ({ onSubmit, loading }) => {
     { value: '400', label: '$400' },
     { value: '500', label: '$500' },
   ]
+
+  const handleSportChange = (sport) => {
+    const defaults = SPORT_DEFAULTS[sport]
+    setFormData((prev) => ({
+      ...prev,
+      sport,
+      ...defaults,
+      name: prev.name,
+      draftType: 'snake',
+      budget: prev.budget,
+    }))
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -185,6 +200,49 @@ const LeagueForm = ({ onSubmit, loading }) => {
       {/* Step 1: Basic Info */}
       {step === 1 && (
         <div className="space-y-6">
+          {/* Sport Selection */}
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-3">
+              Sport <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleSportChange('golf')}
+                className={`
+                  p-4 rounded-lg border-2 transition-all duration-300 text-left flex items-center gap-3
+                  ${formData.sport === 'golf'
+                    ? 'border-gold bg-gold/10'
+                    : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                  }
+                `}
+              >
+                <span className="text-2xl">{'\u26F3'}</span>
+                <div>
+                  <span className="text-white font-medium block">Golf</span>
+                  <span className="text-text-muted text-xs">PGA Tour</span>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSportChange('nfl')}
+                className={`
+                  p-4 rounded-lg border-2 transition-all duration-300 text-left flex items-center gap-3
+                  ${formData.sport === 'nfl'
+                    ? 'border-gold bg-gold/10'
+                    : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                  }
+                `}
+              >
+                <span className="text-2xl">{'\uD83C\uDFC8'}</span>
+                <div>
+                  <span className="text-white font-medium block">NFL</span>
+                  <span className="text-text-muted text-xs">Football</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <Input
             label="League Name"
             name="name"

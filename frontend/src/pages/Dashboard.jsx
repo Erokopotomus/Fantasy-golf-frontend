@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { track, Events } from '../services/analytics'
 import { useAuth } from '../context/AuthContext'
@@ -90,7 +90,14 @@ const Dashboard = () => {
     }
   }
 
+  const [sportFilter, setSportFilter] = useState('all')
   const hasLeagues = leagues && leagues.length > 0
+  const filteredLeagues = hasLeagues
+    ? sportFilter === 'all'
+      ? leagues
+      : leagues.filter(l => (l.sport || 'GOLF').toLowerCase() === sportFilter)
+    : []
+  const hasMultipleSports = hasLeagues && new Set(leagues.map(l => (l.sport || 'GOLF').toLowerCase())).size > 1
 
   return (
     <div className="min-h-screen bg-dark-primary">
@@ -102,7 +109,7 @@ const Dashboard = () => {
               Welcome back, {user?.name || 'Player'}!
             </h1>
             <p className="text-text-secondary leading-relaxed">
-              Here's what's happening with your fantasy golf teams.
+              Here's what's happening with your fantasy teams.
             </p>
           </div>
 
@@ -180,7 +187,30 @@ const Dashboard = () => {
             {/* Left Column - My Leagues */}
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg sm:text-xl font-semibold font-display text-white">My Leagues</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg sm:text-xl font-semibold font-display text-white">My Leagues</h2>
+                  {hasMultipleSports && (
+                    <div className="flex items-center bg-white/5 rounded-lg p-0.5">
+                      {[
+                        { key: 'all', label: 'All' },
+                        { key: 'golf', label: '\u26F3' },
+                        { key: 'nfl', label: '\uD83C\uDFC8' },
+                      ].map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => setSportFilter(opt.key)}
+                          className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
+                            sportFilter === opt.key
+                              ? 'bg-gold/20 text-gold'
+                              : 'text-white/30 hover:text-white/50'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Link to="/leagues/create">
                   <Button size="sm">Create League</Button>
                 </Link>
@@ -191,9 +221,9 @@ const Dashboard = () => {
                   <LeagueCardSkeleton />
                   <LeagueCardSkeleton />
                 </div>
-              ) : hasLeagues ? (
+              ) : filteredLeagues.length > 0 ? (
                 <div className="space-y-4">
-                  {leagues.map((league) => (
+                  {filteredLeagues.map((league) => (
                     <LeagueCard
                       key={league.id}
                       league={league}
