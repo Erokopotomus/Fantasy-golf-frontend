@@ -284,9 +284,12 @@ async function syncSchedule(prisma) {
     }
 
     const now = new Date()
+    // End date from API is midnight UTC on the final day, but tournaments finish
+    // in the evening US time. Add 29 hours buffer (end of day ET + margin).
+    const effectiveEnd = endDate ? new Date(endDate.getTime() + 29 * 60 * 60 * 1000) : null
     let status = 'UPCOMING'
-    if (endDate && endDate < now) status = 'COMPLETED'
-    else if (startDate && startDate <= now && (!endDate || endDate >= now)) status = 'IN_PROGRESS'
+    if (effectiveEnd && effectiveEnd < now) status = 'COMPLETED'
+    else if (startDate && startDate <= now && (!effectiveEnd || effectiveEnd >= now)) status = 'IN_PROGRESS'
 
     rows.push({
       id: existingMap.get(dgId) || genId(),
