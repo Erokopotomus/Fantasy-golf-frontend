@@ -192,8 +192,8 @@ const Landing = () => {
 
       {/* ══════════ IT COMPOUNDS ══════════ */}
       <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
             <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
               Year one, you have a record.
               <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Year three, you have a database.</span>
@@ -205,6 +205,150 @@ const Landing = () => {
             </p>
           </div>
 
+          {/* ── Flywheel Visual ── */}
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 mb-16">
+            {/* SVG Flywheel */}
+            <div className="flex-shrink-0 w-full max-w-sm mx-auto lg:mx-0">
+              <svg viewBox="0 0 400 400" className="w-full" xmlns="http://www.w3.org/2000/svg">
+                {/* Outer ring glow */}
+                <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(232,184,77,0.06)" strokeWidth="40" />
+                {/* Connecting arc */}
+                <circle cx="200" cy="200" r="170" fill="none" stroke="rgba(232,184,77,0.15)" strokeWidth="2" strokeDasharray="8 6" />
+                {/* Arrow arcs — 5 segments */}
+                {[0, 72, 144, 216, 288].map((angle, i) => {
+                  const colors = ['#E8B84D', '#E07838', '#6ABF8A', '#818CF8', '#E8B84D']
+                  const rad1 = (angle + 8) * Math.PI / 180
+                  const rad2 = (angle + 60) * Math.PI / 180
+                  const x1 = 200 + 170 * Math.cos(rad1)
+                  const y1 = 200 + 170 * Math.sin(rad1)
+                  const x2 = 200 + 170 * Math.cos(rad2)
+                  const y2 = 200 + 170 * Math.sin(rad2)
+                  return (
+                    <path
+                      key={i}
+                      d={`M ${x1} ${y1} A 170 170 0 0 1 ${x2} ${y2}`}
+                      fill="none"
+                      stroke={colors[i]}
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      opacity="0.6"
+                    />
+                  )
+                })}
+                {/* Center */}
+                <circle cx="200" cy="200" r="60" fill="rgba(232,184,77,0.08)" stroke="rgba(232,184,77,0.25)" strokeWidth="1.5" />
+                <text x="200" y="192" textAnchor="middle" fill="#E8B84D" fontSize="11" fontFamily="'Syne', sans-serif" fontWeight="800" letterSpacing="1.5">CLUTCH</text>
+                <text x="200" y="210" textAnchor="middle" fill="#E8B84D" fontSize="10" fontFamily="'Syne', sans-serif" fontWeight="700" letterSpacing="1">RATING</text>
+                {/* Nodes */}
+                {[
+                  { angle: -90, label: 'Offseason', sub: 'Research', color: '#E8B84D' },
+                  { angle: -18, label: 'Project', sub: 'Projections', color: '#E07838' },
+                  { angle: 54, label: 'Draft', sub: 'Cheat Sheet', color: '#6ABF8A' },
+                  { angle: 126, label: 'Compete', sub: 'Season', color: '#818CF8' },
+                  { angle: 198, label: 'Learn', sub: 'AI Insights', color: '#E8B84D' },
+                ].map((node, i) => {
+                  const rad = node.angle * Math.PI / 180
+                  const nx = 200 + 170 * Math.cos(rad)
+                  const ny = 200 + 170 * Math.sin(rad)
+                  return (
+                    <g key={i}>
+                      <circle cx={nx} cy={ny} r="28" fill="#0A0908" stroke={node.color} strokeWidth="2" />
+                      <text x={nx} y={ny - 4} textAnchor="middle" fill="white" fontSize="10" fontFamily="'DM Sans', sans-serif" fontWeight="700">
+                        {node.label}
+                      </text>
+                      <text x={nx} y={ny + 9} textAnchor="middle" fill={node.color} fontSize="8" fontFamily="'JetBrains Mono', monospace" fontWeight="500" opacity="0.8">
+                        {node.sub}
+                      </text>
+                    </g>
+                  )
+                })}
+                {/* Clockwise arrows between nodes */}
+                {[342, 54, 126, 198, 270].map((angle, i) => {
+                  const rad = angle * Math.PI / 180
+                  const ax = 200 + 170 * Math.cos(rad)
+                  const ay = 200 + 170 * Math.sin(rad)
+                  const aRad = (angle + 90) * Math.PI / 180
+                  return (
+                    <polygon
+                      key={i}
+                      points={`${ax},${ay} ${ax - 6 * Math.cos(aRad) - 4 * Math.cos(rad)},${ay - 6 * Math.sin(aRad) - 4 * Math.sin(rad)} ${ax + 6 * Math.cos(aRad) - 4 * Math.cos(rad)},${ay + 6 * Math.sin(aRad) - 4 * Math.sin(rad)}`}
+                      fill="rgba(232,184,77,0.5)"
+                    />
+                  )
+                })}
+              </svg>
+            </div>
+
+            {/* Flywheel explanation */}
+            <div className="flex-1 space-y-5">
+              <h3 className="text-xl sm:text-2xl font-bold font-display text-white">
+                The loop that makes you better.
+              </h3>
+              <p className="text-text-secondary leading-relaxed">
+                Right now your sports thinking is scattered across spreadsheets you lose, text threads that disappear,
+                and apps that don't talk to each other. Your draft prep has no memory. Your projections have no scorecard.
+                Your hot takes have no receipts.
+              </p>
+              <p className="text-text-secondary leading-relaxed">
+                Clutch connects the entire cycle. Your offseason research feeds your projections. Your projections
+                generate your cheat sheet. Your draft decisions get graded against your own rankings. Your in-season
+                picks build your track record. And at the end, AI shows you what you got right, what you got wrong,
+                and exactly how to improve next year.
+              </p>
+              <p className="text-gold font-semibold">
+                Every season, the loop gets tighter. Every year, you get sharper. That's the flywheel.
+              </p>
+            </div>
+          </div>
+
+          {/* ── Before / After ── */}
+          <div className="grid md:grid-cols-2 gap-6 mb-14">
+            {/* Before — scattered */}
+            <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
+              <h4 className="text-xs font-semibold text-red-400/80 uppercase tracking-wider mb-4">Today — Scattered Everywhere</h4>
+              <div className="space-y-3">
+                {[
+                  { label: 'Draft prep', where: 'A spreadsheet you made in July and lost by September', icon: '📊' },
+                  { label: 'Projections', where: 'In your head. Maybe a tweet you deleted.', icon: '🧠' },
+                  { label: 'Bold takes', where: 'A text thread nobody can find', icon: '💬' },
+                  { label: 'League history', where: 'Locked inside ESPN. Pre-2018? Gone forever.', icon: '🗄️' },
+                  { label: 'Accuracy', where: 'Nobody knows. Including you.', icon: '❓' },
+                ].map(item => (
+                  <div key={item.label} className="flex items-start gap-3">
+                    <span className="text-base flex-shrink-0 mt-0.5">{item.icon}</span>
+                    <div>
+                      <span className="text-white text-sm font-medium">{item.label}</span>
+                      <span className="text-text-muted text-sm"> — {item.where}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* After — unified */}
+            <div className="bg-dark-primary rounded-xl p-6 border border-gold/20">
+              <h4 className="text-xs font-semibold text-gold uppercase tracking-wider mb-4">On Clutch — One Connected System</h4>
+              <div className="space-y-3">
+                {[
+                  { label: 'Draft prep', where: 'Auto-generated cheat sheet from YOUR projections', icon: '✦' },
+                  { label: 'Projections', where: 'Timestamped, locked, scored against reality', icon: '✦' },
+                  { label: 'Bold takes', where: 'Logged with reasoning. Verified when you\'re right.', icon: '✦' },
+                  { label: 'League history', where: 'Imported, preserved, connected to your record', icon: '✦' },
+                  { label: 'Accuracy', where: 'Tracked to the decimal. Public if you want it.', icon: '✦' },
+                ].map(item => (
+                  <div key={item.label} className="flex items-start gap-3">
+                    <span className="text-gold text-sm flex-shrink-0 mt-0.5">{item.icon}</span>
+                    <div>
+                      <span className="text-white text-sm font-medium">{item.label}</span>
+                      <span className="text-text-secondary text-sm"> — {item.where}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Three pillars */}
           <div className="grid sm:grid-cols-3 gap-6">
             <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
               <div className="text-3xl font-bold font-mono text-gold mb-2">1</div>
