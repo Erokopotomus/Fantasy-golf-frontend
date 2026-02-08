@@ -259,11 +259,20 @@ export default function NflPlayers() {
                     </td>
                     <td className="px-4 py-3 text-white/70 font-mono text-sm">{p.nflTeamAbbr || '-'}</td>
                     <td className="px-4 py-3 text-center text-white/50 font-mono text-sm">{p.season?.gamesPlayed || 0}</td>
-                    {statCols.map(col => (
-                      <td key={col} className="px-4 py-3 text-right text-white/70 font-mono text-sm">
-                        {p.season?.[col] != null ? p.season[col] : '-'}
-                      </td>
-                    ))}
+                    {statCols.map(col => {
+                      // In ALL view, show '-' for stats irrelevant to the player's position
+                      const pos = p.nflPosition
+                      const irrelevant = position === 'ALL' && (
+                        (['passYards'].includes(col) && !['QB'].includes(pos)) ||
+                        (['rushYards'].includes(col) && ['K', 'DST'].includes(pos)) ||
+                        (['recYards'].includes(col) && ['QB', 'K', 'DST'].includes(pos))
+                      )
+                      return (
+                        <td key={col} className="px-4 py-3 text-right text-white/70 font-mono text-sm">
+                          {irrelevant ? '-' : (p.season?.[col] != null ? p.season[col] : '-')}
+                        </td>
+                      )
+                    })}
                     <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gold">
                       {fmtPts(p.fantasyPts)}
                     </td>

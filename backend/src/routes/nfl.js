@@ -154,9 +154,9 @@ router.get('/players', optionalAuth, async (req, res, next) => {
       return {
         ...rest,
         season: seasonStats,
-        fantasyPts: Math.round(fantasyPts * 10) / 10,
+        fantasyPts: Math.round(fantasyPts * 100) / 100,
         fantasyPtsPerGame: gamesPlayed > 0
-          ? Math.round((fantasyPts / gamesPlayed) * 10) / 10
+          ? Math.round((fantasyPts / gamesPlayed) * 100) / 100
           : 0,
       }
     })
