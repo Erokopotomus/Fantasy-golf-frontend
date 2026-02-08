@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 
 const POSITIONS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K']
@@ -10,6 +10,8 @@ const SCORING_TYPES = [
 ]
 
 export default function NflPlayers() {
+  const [searchParams] = useSearchParams()
+  const leagueId = searchParams.get('league')
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -84,6 +86,17 @@ export default function NflPlayers() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-20 pb-8">
+      {leagueId && (
+        <Link
+          to={`/leagues/${leagueId}`}
+          className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-3 text-sm"
+        >
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to League
+        </Link>
+      )}
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">{'\uD83C\uDFC8'}</span>
         <h1 className="text-2xl font-display font-bold text-white">NFL Players</h1>

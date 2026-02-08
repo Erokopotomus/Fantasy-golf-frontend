@@ -37,12 +37,13 @@ const LeagueHome = () => {
       .finally(() => setDetailLoading(false))
   }, [leagueId])
 
-  // Fetch current tournament for the widget
+  // Fetch current tournament for the widget (golf leagues only)
   useEffect(() => {
+    if (isNflLeague) return
     api.getCurrentTournament()
       .then(data => setCurrentTournament(data.tournament || data))
       .catch(() => {})
-  }, [])
+  }, [isNflLeague])
 
   // Fetch league prediction leaderboard
   useEffect(() => {
@@ -55,6 +56,8 @@ const LeagueHome = () => {
   const loading = leaguesLoading && detailLoading
   const league = detailedLeague || leagues?.find(l => l.id === leagueId)
   const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
+  const leagueSport = (league?.sport || 'GOLF').toUpperCase()
+  const isNflLeague = leagueSport === 'NFL'
 
   const isCommissioner = league?.ownerId === user?.id || league?.owner?.id === user?.id
   const latestDraft = league?.drafts?.[0]
@@ -258,7 +261,7 @@ const LeagueHome = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => navigate(`/players`)}
+                onClick={() => navigate(isNflLeague ? `/nfl/players?league=${leagueId}` : `/players?league=${leagueId}`)}
               >
                 Players
               </Button>
@@ -404,8 +407,8 @@ const LeagueHome = () => {
             </div>
           )}
 
-          {/* Active Tournament Widget */}
-          {currentTournament && currentTournament.status === 'IN_PROGRESS' && (
+          {/* Active Tournament Widget (golf leagues only) */}
+          {!isNflLeague && currentTournament && currentTournament.status === 'IN_PROGRESS' && (
             <div className="mb-6">
               <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-dark-secondary">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -428,7 +431,7 @@ const LeagueHome = () => {
               </Card>
             </div>
           )}
-          {currentTournament && currentTournament.status === 'UPCOMING' && (
+          {!isNflLeague && currentTournament && currentTournament.status === 'UPCOMING' && (
             <div className="mb-6">
               <Card className="border-dark-border">
                 <div className="flex items-center gap-3">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { usePlayerComparison } from '../hooks/usePlayerComparison'
 import Card from '../components/common/Card'
@@ -11,6 +11,8 @@ import PlayerComparison from '../components/players/PlayerComparison'
 
 const Players = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const leagueId = searchParams.get('league')
   const [compareMode, setCompareMode] = useState(false)
   const {
     players,
@@ -76,6 +78,17 @@ const Players = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
+              {leagueId && (
+                <Link
+                  to={`/leagues/${leagueId}`}
+                  className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2 text-sm"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to League
+                </Link>
+              )}
               <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Players</h1>
               <p className="text-text-secondary mt-1">
                 Browse and compare {totalPlayers} golfers

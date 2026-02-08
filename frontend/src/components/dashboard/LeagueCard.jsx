@@ -16,6 +16,48 @@ const draftTypeMap = {
   NONE: 'No Draft',
 }
 
+// Format icons as SVG paths
+const FormatIcon = ({ format }) => {
+  const icons = {
+    HEAD_TO_HEAD: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    ),
+    FULL_LEAGUE: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+    ),
+    ROTO: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    SURVIVOR: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+    ONE_AND_DONE: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  }
+  return icons[format] || icons.FULL_LEAGUE
+}
+
+const sportColors = {
+  GOLF: { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/20' },
+  NFL: { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/20' },
+}
+
+const sportEmojis = {
+  GOLF: '\u26F3',
+  NFL: '\uD83C\uDFC8',
+}
+
 const LeagueCard = ({ league, onView, onManageLineup }) => {
   // Support both mock data shape and real API data shape
   const name = league.name
@@ -23,6 +65,8 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
   const maxMembers = league.maxMembers || league.maxTeams || 10
   const draftType = league.type || league.draftType || 'SNAKE'
   const format = league.format || 'FULL_LEAGUE'
+  const sport = (league.sport || 'GOLF').toUpperCase()
+  const colors = sportColors[sport] || sportColors.GOLF
 
   // User's team data from API
   const userTeam = league.teams?.[0]
@@ -51,24 +95,33 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
   return (
     <Card className="group cursor-pointer" hover onClick={handleCardClick}>
       <div className="flex items-start justify-between mb-4">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-white font-semibold text-base sm:text-lg truncate group-hover:text-gold transition-colors">
-            {name}
-          </h3>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${
-              isSnakeType
-                ? 'bg-gold/20 text-gold'
-                : 'bg-orange/20 text-orange'
-            }`}>
-              {draftLabel}
-            </span>
-            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-dark-tertiary text-text-muted">
-              {formatLabel}
-            </span>
-            <span className="text-text-muted text-xs">
-              {memberCount}/{maxMembers} members
-            </span>
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          {/* Sport + Format Icon */}
+          <div className={`w-11 h-11 rounded-xl ${colors.bg} border ${colors.border} flex flex-col items-center justify-center flex-shrink-0 relative`}>
+            <span className="text-base leading-none">{sportEmojis[sport]}</span>
+            <div className={`${colors.text} mt-0.5 scale-[0.55] -mb-1`}>
+              <FormatIcon format={format} />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-white font-semibold text-base sm:text-lg truncate group-hover:text-gold transition-colors">
+              {name}
+            </h3>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${
+                isSnakeType
+                  ? 'bg-gold/20 text-gold'
+                  : 'bg-orange/20 text-orange'
+              }`}>
+                {draftLabel}
+              </span>
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-dark-tertiary text-text-muted">
+                {formatLabel}
+              </span>
+              <span className="text-text-muted text-xs">
+                {memberCount}/{maxMembers} members
+              </span>
+            </div>
           </div>
         </div>
         {userRank ? (
