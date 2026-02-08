@@ -23,6 +23,25 @@ const formatPurse = (purse) => {
   return `$${num}`
 }
 
+const TourBadge = ({ tour }) => {
+  if (!tour) return null
+  const colors = {
+    pga: 'bg-blue-500/15 text-blue-400 border-blue-500/25',
+    'dp world': 'bg-purple-500/15 text-purple-400 border-purple-500/25',
+    liv: 'bg-red-500/15 text-red-400 border-red-500/25',
+    lpga: 'bg-pink-500/15 text-pink-400 border-pink-500/25',
+    korn: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+  }
+  const key = tour.toLowerCase()
+  const color = Object.entries(colors).find(([k]) => key.includes(k))?.[1] || 'bg-white/10 text-text-secondary border-white/10'
+  const label = key.includes('pga') ? 'PGA Tour' : tour
+  return (
+    <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${color}`}>
+      {label}
+    </span>
+  )
+}
+
 const EventBadge = ({ tournament }) => {
   const isMajor = tournament.isMajor
   const isSignature = tournament.isSignature
@@ -76,7 +95,7 @@ const Tournaments = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-display font-bold text-white">Tournaments</h1>
-        <p className="text-text-muted text-sm mt-1">PGA Tour schedule, live scoring, and results</p>
+        <p className="text-text-muted text-sm mt-1">Schedule, live scoring, and results</p>
       </div>
 
       {/* Live Now */}
@@ -97,15 +116,16 @@ const Tournaments = () => {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-lg font-display font-bold text-white">{t.name}</h3>
+                        <TourBadge tour={t.tour} />
                         <EventBadge tournament={t} />
                       </div>
-                      {t.courseName && (
+                      {(t.course?.name || t.courseName) && (
                         <Link
-                          to={`/courses/${t.courseId}`}
+                          to={`/courses/${t.course?.id || t.courseId}`}
                           className="text-sm text-gold hover:text-gold/80 transition-colors mt-0.5 inline-block"
                           onClick={e => e.stopPropagation()}
                         >
-                          {t.courseName}
+                          {t.course?.nickname || t.course?.name || t.courseName}
                         </Link>
                       )}
                       <p className="text-xs text-text-muted mt-1 font-mono">
@@ -144,15 +164,16 @@ const Tournaments = () => {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-sm font-display font-semibold text-white">{t.name}</h3>
+                        <TourBadge tour={t.tour} />
                         <EventBadge tournament={t} />
                       </div>
-                      {t.courseName && (
+                      {(t.course?.name || t.courseName) && (
                         <Link
-                          to={`/courses/${t.courseId}`}
+                          to={`/courses/${t.course?.id || t.courseId}`}
                           className="text-xs text-gold hover:text-gold/80 transition-colors mt-0.5 inline-block"
                           onClick={e => e.stopPropagation()}
                         >
-                          {t.courseName}
+                          {t.course?.nickname || t.course?.name || t.courseName}
                         </Link>
                       )}
                     </div>
@@ -182,15 +203,16 @@ const Tournaments = () => {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-sm font-display font-semibold text-white">{t.name}</h3>
+                        <TourBadge tour={t.tour} />
                         <EventBadge tournament={t} />
                       </div>
-                      {t.courseName && (
+                      {(t.course?.name || t.courseName) && (
                         <Link
-                          to={`/courses/${t.courseId}`}
+                          to={`/courses/${t.course?.id || t.courseId}`}
                           className="text-xs text-gold hover:text-gold/80 transition-colors mt-0.5 inline-block"
                           onClick={e => e.stopPropagation()}
                         >
-                          {t.courseName}
+                          {t.course?.nickname || t.course?.name || t.courseName}
                         </Link>
                       )}
                     </div>

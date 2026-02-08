@@ -41,7 +41,7 @@ const ScoreCell = ({ score, par }) => {
   )
 }
 
-const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand, timezone }) => {
+const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand, timezone, currentRound: tournamentRound }) => {
   const [expandedPlayer, setExpandedPlayer] = useState(null)
   const [expandedRound, setExpandedRound] = useState(null) // which round tab is active
   const [showRounds, setShowRounds] = useState(false)
@@ -123,13 +123,21 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     return `${h12}:${String(m).padStart(2, '0')} ${ampm}`
   }
 
-  /** Get the tee time to show for a player (current round only, only if not started) */
+  /** Get the tee time to show for a player */
   const getPlayerTeeTime = (player) => {
     if (!player.teeTimes) return null
-    const currentRound = player.currentRound || 1
-    // Only show tee time if player hasn't started current round
-    if (player.thru > 0 || player.thru === 'F' || player.thru === 18) return null
-    const teeTime = player.teeTimes[currentRound]
+    const effectiveRound = tournamentRound || player.currentRound || 1
+    const playerRound = player.currentRound || 1
+
+    // Player is mid-round in the current tournament round — no tee time needed
+    if (playerRound === effectiveRound && typeof player.thru === 'number' && player.thru > 0 && player.thru < 18) return null
+
+    // Player finished the current tournament round
+    if (playerRound === effectiveRound && (player.thru === 'F' || player.thru === 18)) return null
+
+    // Player hasn't started the tournament's current round (between rounds or pre-round)
+    // Show the tee time for the tournament's current round
+    const teeTime = player.teeTimes[effectiveRound]
     return teeTime ? formatTeeTime(teeTime) : null
   }
 

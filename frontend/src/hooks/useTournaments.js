@@ -15,7 +15,7 @@ export const useTournaments = () => {
 
       // Fetch all tournaments and current tournament
       const [allData, currentData] = await Promise.all([
-        api.getTournaments(),
+        api.getTournaments({ limit: 100 }),
         api.getCurrentTournament().catch(() => null), // Don't fail if no current tournament
       ])
 
