@@ -726,6 +726,47 @@ class ApiService {
       headers: { 'X-Sync-Secret': adminSecret },
     })
   }
+  // ─── NFL ──────────────────────────────────────────────────────────────────
+
+  async getNflPlayers(options = {}) {
+    const params = new URLSearchParams()
+    if (options.search) params.set('search', options.search)
+    if (options.position) params.set('position', options.position)
+    if (options.team) params.set('team', options.team)
+    if (options.limit) params.set('limit', options.limit)
+    if (options.offset) params.set('offset', options.offset)
+    if (options.sortBy) params.set('sortBy', options.sortBy)
+    if (options.sortOrder) params.set('sortOrder', options.sortOrder)
+    if (options.scoring) params.set('scoring', options.scoring)
+    if (options.available) params.set('available', options.available)
+    if (options.leagueId) params.set('leagueId', options.leagueId)
+    const qs = params.toString()
+    return this.request(`/nfl/players${qs ? '?' + qs : ''}`)
+  }
+
+  async getNflPlayer(id) {
+    return this.request(`/nfl/players/${id}`)
+  }
+
+  async getNflTeams() {
+    return this.request('/nfl/teams')
+  }
+
+  async getNflTeam(abbr) {
+    return this.request(`/nfl/teams/${abbr}`)
+  }
+
+  async getNflSchedule(options = {}) {
+    const params = new URLSearchParams()
+    if (options.season) params.set('season', options.season)
+    if (options.week) params.set('week', options.week)
+    const qs = params.toString()
+    return this.request(`/nfl/schedule${qs ? '?' + qs : ''}`)
+  }
+
+  async getNflScoringSystems() {
+    return this.request('/nfl/scoring-systems')
+  }
 }
 
 export const api = new ApiService()

@@ -4,6 +4,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react'
 import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { OnboardingProvider } from './context/OnboardingContext'
+import { SportProvider } from './context/SportContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import MobileNav from './components/layout/MobileNav'
@@ -47,6 +48,11 @@ import LeagueVault from './pages/LeagueVault'
 import SeasonRecap from './pages/SeasonRecap'
 import PublicProfile from './pages/PublicProfile'
 import CourseDetail from './pages/CourseDetail'
+// NFL pages
+import NflPlayers from './pages/NflPlayers'
+import NflPlayerDetail from './pages/NflPlayerDetail'
+import NflSchedule from './pages/NflSchedule'
+import NflTeamDetail from './pages/NflTeamDetail'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -56,6 +62,7 @@ import PickCenter from './pages/PickCenter'
 function App() {
   return (
     <AuthProvider>
+      <SportProvider>
       <NotificationProvider>
         <OnboardingProvider>
         <div className="min-h-screen bg-dark-primary">
@@ -343,6 +350,11 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* NFL routes */}
+          <Route path="/nfl/players" element={<ProtectedRoute><NflPlayers /></ProtectedRoute>} />
+          <Route path="/nfl/players/:playerId" element={<ProtectedRoute><NflPlayerDetail /></ProtectedRoute>} />
+          <Route path="/nfl/schedule" element={<ProtectedRoute><NflSchedule /></ProtectedRoute>} />
+          <Route path="/nfl/teams/:abbr" element={<ProtectedRoute><NflTeamDetail /></ProtectedRoute>} />
           {/* Format-specific routes */}
           <Route
             path="/leagues/:leagueId/matchups"
@@ -384,6 +396,7 @@ function App() {
         </div>
         </OnboardingProvider>
       </NotificationProvider>
+      </SportProvider>
     </AuthProvider>
   )
 }

@@ -73,19 +73,37 @@ router.post('/', authenticate, async (req, res, next) => {
     const resolvedDraftType = draftTypeMap[draftType] || draftType || 'SNAKE'
     const resolvedMaxTeams = maxTeams || maxMembers || 10
 
+    // Resolve sport — look up Sport record by slug
+    const sportSlug = (sport || 'GOLF').toLowerCase()
+    const sportRecord = await prisma.sport.findUnique({ where: { slug: sportSlug } })
+
+    // Look up scoring system for this sport
+    const resolvedScoringType = scoringType || 'standard'
+    let scoringSystemRecord = null
+    if (sportRecord) {
+      scoringSystemRecord = await prisma.scoringSystem.findUnique({
+        where: { sportId_slug: { sportId: sportRecord.id, slug: resolvedScoringType } },
+      })
+    }
+
+    // Default roster size by sport
+    const defaultRosterSize = sportSlug === 'nfl' ? 17 : 6
+
     // Combine settings
     const combinedSettings = {
       ...(settings || {}),
       ...(formatSettings || {}),
-      rosterSize: rosterSize || 6,
-      scoringType: scoringType || 'standard',
+      rosterSize: rosterSize || defaultRosterSize,
+      scoringType: resolvedScoringType,
       budget: budget || null,
     }
 
     const league = await prisma.league.create({
       data: {
         name,
-        sport: sport || 'GOLF',
+        sport: (sport || 'GOLF').toUpperCase(),
+        sportId: sportRecord?.id || null,
+        scoringSystemId: scoringSystemRecord?.id || null,
         format: resolvedFormat,
         draftType: resolvedDraftType,
         maxTeams: resolvedMaxTeams,

@@ -15,10 +15,23 @@ router.get('/', optionalAuth, async (req, res, next) => {
       sortBy = 'owgrRank',
       sortOrder = 'asc',
       available,
-      leagueId
+      leagueId,
+      sport,
+      position,
+      team,
     } = req.query
 
     const where = {}
+
+    // Sport filter: 'nfl' filters to NFL players, 'golf' or default filters to golf players
+    if (sport === 'nfl') {
+      where.nflPosition = { not: null }
+      if (position) where.nflPosition = position.toUpperCase()
+      if (team) where.nflTeamAbbr = team.toUpperCase()
+    } else if (sport === 'golf' || !sport) {
+      // Default: golf players (those without NFL position, or with golf data)
+      where.nflPosition = null
+    }
 
     // Search by name
     if (search) {
