@@ -30,34 +30,78 @@ const colorMap = {
   gold:   { border: 'border-amber-500', bg: 'bg-amber-500/10', text: 'text-amber-400', ring: 'ring-amber-500' },
 }
 
-// Example stat line for preview: QB with 280 pass yds, 2 pass TD, 1 INT, 30 rush yds
-const PREVIEW_STATS = {
-  pass_yd: 280, pass_td: 2, pass_int: 1, pass_2pt: 0, pass_cmp: 22, pass_att: 34,
-  pass_inc: 12, pass_sack: 2, pass_fd: 0, pass_td_40p: 0, pass_td_50p: 0,
-  rush_yd: 30, rush_td: 0, rush_2pt: 0, rush_att: 5, rush_fd: 0, rush_td_40p: 0, rush_td_50p: 0,
-  rec: 0, rec_yd: 0, rec_td: 0, rec_2pt: 0, rec_tgt: 0, rec_fd: 0, rec_td_40p: 0, rec_td_50p: 0,
-  fum: 0, fum_lost: 0, fum_rec: 0, fum_rec_td: 0,
-  fgm: 0, fgm_0_19: 0, fgm_20_29: 0, fgm_30_39: 0, fgm_40_49: 0, fgm_50p: 0, fgmiss: 0, xpm: 0, xpmiss: 0,
-  def_td: 0, sack: 0, int: 0, ff: 0, def_fum_rec: 0, safe: 0, blk_kick: 0, def_2pt: 0,
-  pts_allow_0: 0, pts_allow_1_6: 0, pts_allow_7_13: 0, pts_allow_14_20: 0,
-  pts_allow_21_27: 0, pts_allow_28_34: 0, pts_allow_35p: 0,
-  st_td: 0, pr_yd: 0, kr_yd: 0,
-  bonus_pass_yd_300: 0, bonus_pass_yd_400: 0,
-  bonus_rush_yd_100: 0, bonus_rush_yd_200: 0,
-  bonus_rec_yd_100: 0, bonus_rec_yd_200: 0,
-  bonus_rec_te: 0, bonus_rec_rb: 0, bonus_rec_wr: 0,
-  idp_tkl_solo: 0, idp_tkl_ast: 0, idp_tkl_loss: 0, idp_sack: 0, idp_qb_hit: 0,
-  idp_int: 0, idp_ff: 0, idp_fum_rec: 0, idp_def_td: 0, idp_pass_def: 0, idp_saf: 0, idp_blk_kick: 0,
+// Position-specific example stat lines for live preview
+const POSITION_PREVIEWS = {
+  QB: {
+    label: 'QB',
+    desc: '280 pass yds, 2 TD, 1 INT, 2 sacks, 30 rush yds',
+    stats: { pass_yd: 280, pass_td: 2, pass_int: 1, pass_sack: 2, pass_cmp: 22, pass_att: 34, rush_yd: 30, rush_att: 5, fum_lost: 0 },
+    breakdown: (r) => ({
+      Passing: 280 * (r.pass_yd||0) + 2 * (r.pass_td||0) + 1 * (r.pass_int||0) + 2 * (r.pass_sack||0) + 22 * (r.pass_cmp||0) + 34 * (r.pass_att||0),
+      Rushing: 30 * (r.rush_yd||0) + 5 * (r.rush_att||0),
+      Fumbles: 0,
+    }),
+  },
+  RB: {
+    label: 'RB',
+    desc: '85 rush yds, 1 rush TD, 4 rec, 32 rec yds, 18 att',
+    stats: { rush_yd: 85, rush_td: 1, rush_att: 18, rec: 4, rec_yd: 32, rec_tgt: 5, fum_lost: 0 },
+    breakdown: (r) => ({
+      Rushing: 85 * (r.rush_yd||0) + 1 * (r.rush_td||0) + 18 * (r.rush_att||0),
+      Receiving: 4 * (r.rec||0) + 32 * (r.rec_yd||0) + 5 * (r.rec_tgt||0),
+      Fumbles: 0,
+    }),
+  },
+  WR: {
+    label: 'WR',
+    desc: '6 rec, 95 rec yds, 1 TD, 9 targets',
+    stats: { rec: 6, rec_yd: 95, rec_td: 1, rec_tgt: 9, rush_yd: 0, fum_lost: 0 },
+    breakdown: (r) => ({
+      Receiving: 6 * (r.rec||0) + 95 * (r.rec_yd||0) + 1 * (r.rec_td||0) + 9 * (r.rec_tgt||0),
+      Fumbles: 0,
+    }),
+  },
+  TE: {
+    label: 'TE',
+    desc: '4 rec, 55 rec yds, 1 TD, 6 targets',
+    stats: { rec: 4, rec_yd: 55, rec_td: 1, rec_tgt: 6, fum_lost: 0 },
+    breakdown: (r) => ({
+      Receiving: 4 * (r.rec||0) + 55 * (r.rec_yd||0) + 1 * (r.rec_td||0) + 6 * (r.rec_tgt||0),
+      Bonuses: 4 * (r.bonus_rec_te||0),
+    }),
+  },
+  K: {
+    label: 'K',
+    desc: '2 FG (1x 30-39, 1x 40-49), 1 miss, 3 XP made',
+    stats: { fgm_30_39: 1, fgm_40_49: 1, fgmiss: 1, xpm: 3 },
+    breakdown: (r) => {
+      const hasDistance = (r.fgm_0_19 || r.fgm_20_29 || r.fgm_30_39 || r.fgm_40_49 || r.fgm_50p)
+      const fgPts = hasDistance
+        ? 1 * (r.fgm_30_39||0) + 1 * (r.fgm_40_49||0)
+        : 2 * (r.fgm||0)
+      return { Kicking: fgPts + 1 * (r.fgmiss||0) + 3 * (r.xpm||0) }
+    },
+  },
+  DEF: {
+    label: 'DEF',
+    desc: '3 sacks, 1 INT, 1 fumble rec, 17 pts allowed',
+    stats: { sack: 3, int: 1, def_fum_rec: 1, ff: 1, pointsAllowed: 17 },
+    breakdown: (r) => ({
+      Defense: 3 * (r.sack||0) + 1 * (r.int||0) + 1 * (r.def_fum_rec||0) + 1 * (r.ff||0) + (r.pts_allow_14_20||0),
+    }),
+  },
 }
 
-function calcPreview(rules) {
-  let total = 0
-  total += 280 * (rules.pass_yd || 0)  // 280 pass yards
-  total += 2 * (rules.pass_td || 0)    // 2 pass TDs
-  total += 1 * (rules.pass_int || 0)   // 1 INT
-  total += 2 * (rules.pass_sack || 0)  // 2 sacks taken
-  total += 30 * (rules.rush_yd || 0)   // 30 rush yards
-  return Math.round(total * 100) / 100
+function calcPreview(rules, pos) {
+  const preview = POSITION_PREVIEWS[pos]
+  if (!preview) return { total: 0, cats: {} }
+  const cats = preview.breakdown(rules)
+  const total = Math.round(Object.values(cats).reduce((s, v) => s + v, 0) * 100) / 100
+  // Round each category
+  for (const k of Object.keys(cats)) {
+    cats[k] = Math.round(cats[k] * 100) / 100
+  }
+  return { total, cats }
 }
 
 const NflScoringSettings = ({ leagueId, onSaved }) => {
@@ -70,6 +114,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
   const [error, setError] = useState(null)
   const [expanded, setExpanded] = useState({})
   const [dirty, setDirty] = useState(false)
+  const [previewPos, setPreviewPos] = useState('QB')
 
   useEffect(() => {
     loadSchema()
@@ -176,7 +221,8 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
   if (!schema || !rules) return null
 
   const isCustom = preset === 'custom'
-  const previewPoints = calcPreview(rules)
+  const preview = calcPreview(rules, previewPos)
+  const previewMeta = POSITION_PREVIEWS[previewPos]
 
   return (
     <div className="space-y-6">
@@ -213,26 +259,38 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
 
       {/* Live Preview */}
       <Card className="border-gold/30">
-        <h3 className="text-lg font-semibold font-display text-white mb-1">Live Preview</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold font-display text-white">Live Preview</h3>
+          <div className="flex gap-1">
+            {Object.keys(POSITION_PREVIEWS).map(pos => (
+              <button
+                key={pos}
+                type="button"
+                onClick={() => setPreviewPos(pos)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  previewPos === pos
+                    ? 'bg-gold text-white'
+                    : 'bg-dark-tertiary text-text-muted hover:text-white hover:bg-dark-border'
+                }`}
+              >
+                {pos}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="text-text-muted text-xs mb-4">
-          Example QB: 280 pass yards, 2 pass TDs, 1 INT, 2 sacks taken, 30 rush yards
+          {previewMeta.desc}
         </p>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
-            <p className="text-text-muted text-xs mb-1">Passing</p>
-            <p className="text-xl font-bold font-display text-blue-400">
-              {Math.round((280 * (rules.pass_yd || 0) + 2 * (rules.pass_td || 0) + 1 * (rules.pass_int || 0) + 2 * (rules.pass_sack || 0)) * 100) / 100}
-            </p>
-          </div>
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
-            <p className="text-text-muted text-xs mb-1">Rushing</p>
-            <p className="text-xl font-bold font-display text-green-400">
-              {Math.round(30 * (rules.rush_yd || 0) * 100) / 100}
-            </p>
-          </div>
-          <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 text-center">
+        <div className="flex gap-3">
+          {Object.entries(preview.cats).map(([cat, pts]) => (
+            <div key={cat} className="bg-dark-primary rounded-lg p-3 text-center flex-1">
+              <p className="text-text-muted text-xs mb-1">{cat}</p>
+              <p className="text-lg font-bold font-display text-text-secondary">{pts}</p>
+            </div>
+          ))}
+          <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 text-center flex-1">
             <p className="text-text-muted text-xs mb-1">Total</p>
-            <p className="text-2xl font-bold font-display text-gold">{previewPoints}</p>
+            <p className="text-2xl font-bold font-display text-gold">{preview.total}</p>
           </div>
         </div>
       </Card>
