@@ -20,6 +20,7 @@ async function generatePlayoffBracket(leagueId, prisma) {
 
   const playoffTeams = league.settings?.playoffTeams || 4
   const playoffWeeks = league.settings?.playoffWeeks || 3
+  const playoffSeeding = league.settings?.formatSettings?.playoffSeeding || 'default'
 
   // Find the current league season
   const currentSeason = await prisma.season.findFirst({
@@ -60,6 +61,26 @@ async function generatePlayoffBracket(leagueId, prisma) {
       where: { id: qualified[i].id },
       data: { madePlayoffs: true, playoffSeed: i + 1 },
     })
+  }
+
+  const qualifiedTeamsList = qualified.map((ts, i) => ({
+    seed: i + 1,
+    teamId: ts.teamId,
+    teamName: ts.team?.name,
+    ownerName: ts.team?.user?.name,
+    wins: ts.wins,
+    losses: ts.losses,
+    totalPoints: ts.totalPoints,
+  }))
+
+  // Commissioner mode: qualify teams but don't create matchups — commissioner submits pairings
+  if (playoffSeeding === 'commissioner') {
+    return {
+      mode: 'commissioner',
+      message: `${qualifiedCount} teams qualified for playoffs. Commissioner must set matchups.`,
+      qualifiedTeams: qualifiedTeamsList,
+      rounds: Math.ceil(Math.log2(qualifiedCount)),
+    }
   }
 
   // Determine number of rounds needed
@@ -107,18 +128,101 @@ async function generatePlayoffBracket(leagueId, prisma) {
   await prisma.matchup.createMany({ data: matchupsToCreate })
 
   return {
+    mode: playoffSeeding,
     message: `Playoff bracket generated: ${qualifiedCount} teams, ${numRounds} rounds`,
-    qualifiedTeams: qualified.map((ts, i) => ({
-      seed: i + 1,
-      teamId: ts.teamId,
-      teamName: ts.team?.name,
-      ownerName: ts.team?.user?.name,
-      wins: ts.wins,
-      losses: ts.losses,
-      totalPoints: ts.totalPoints,
-    })),
+    qualifiedTeams: qualifiedTeamsList,
     rounds: numRounds,
     firstRoundMatchups: matchupsToCreate.length,
+  }
+}
+
+/**
+ * Create custom playoff matchups submitted by the commissioner.
+ * Validates all teams are qualified and no team appears twice.
+ *
+ * @param {string} leagueId
+ * @param {{ homeTeamId: string, awayTeamId: string }[]} matchups
+ * @param {import('@prisma/client').PrismaClient} prisma
+ */
+async function createCustomPlayoffMatchups(leagueId, matchups, prisma) {
+  const league = await prisma.league.findUnique({ where: { id: leagueId } })
+  if (!league) throw new Error('League not found')
+
+  const currentSeason = await prisma.season.findFirst({ where: { isCurrent: true } })
+  if (!currentSeason) throw new Error('No current season found')
+
+  const leagueSeason = await prisma.leagueSeason.findFirst({
+    where: { leagueId, seasonId: currentSeason.id },
+    include: { teamSeasons: { where: { madePlayoffs: true } } },
+  })
+  if (!leagueSeason) throw new Error('No league season found')
+
+  const qualifiedTeamIds = new Set(leagueSeason.teamSeasons.map(ts => ts.teamId))
+
+  // Validate submitted matchups
+  const usedTeams = new Set()
+  for (const m of matchups) {
+    if (!m.homeTeamId || !m.awayTeamId) throw new Error('Each matchup must have homeTeamId and awayTeamId')
+    if (!qualifiedTeamIds.has(m.homeTeamId)) throw new Error(`Team ${m.homeTeamId} is not in the qualified pool`)
+    if (!qualifiedTeamIds.has(m.awayTeamId)) throw new Error(`Team ${m.awayTeamId} is not in the qualified pool`)
+    if (m.homeTeamId === m.awayTeamId) throw new Error('A team cannot play against itself')
+    if (usedTeams.has(m.homeTeamId)) throw new Error(`Team ${m.homeTeamId} appears in multiple matchups`)
+    if (usedTeams.has(m.awayTeamId)) throw new Error(`Team ${m.awayTeamId} appears in multiple matchups`)
+    usedTeams.add(m.homeTeamId)
+    usedTeams.add(m.awayTeamId)
+  }
+
+  // Determine current playoff round (check existing matchups)
+  const existingPlayoffs = await prisma.matchup.findMany({
+    where: { leagueId, isPlayoff: true },
+    orderBy: { playoffRound: 'desc' },
+  })
+  const currentMaxRound = existingPlayoffs.length > 0
+    ? Math.max(...existingPlayoffs.map(m => m.playoffRound || 0))
+    : 0
+  const playoffRound = currentMaxRound + 1
+
+  // Determine total rounds for naming
+  const totalTeams = qualifiedTeamIds.size
+  const totalRounds = Math.ceil(Math.log2(totalTeams))
+  const roundNames = getRoundNames(totalRounds)
+  const roundName = roundNames[playoffRound - 1] || `ROUND_${playoffRound}`
+
+  // Get next week number and fantasy week
+  const lastMatchup = await prisma.matchup.findFirst({
+    where: { leagueId },
+    orderBy: { week: 'desc' },
+  })
+  const nextWeek = (lastMatchup?.week || 0) + 1
+
+  const upcomingWeek = await prisma.fantasyWeek.findFirst({
+    where: {
+      seasonId: currentSeason.id,
+      status: { in: ['UPCOMING', 'IN_PROGRESS'] },
+      id: { notIn: existingPlayoffs.map(m => m.fantasyWeekId).filter(Boolean) },
+    },
+    orderBy: { weekNumber: 'asc' },
+  })
+
+  const matchupsToCreate = matchups.map(m => ({
+    leagueId,
+    week: nextWeek,
+    homeTeamId: m.homeTeamId,
+    awayTeamId: m.awayTeamId,
+    isPlayoff: true,
+    playoffRound,
+    playoffMatchType: matchups.length === 1 ? 'FINAL' : roundName,
+    isComplete: false,
+    fantasyWeekId: upcomingWeek?.id || null,
+    tournamentId: upcomingWeek?.tournamentId || null,
+  }))
+
+  await prisma.matchup.createMany({ data: matchupsToCreate })
+
+  return {
+    message: `Round ${playoffRound} matchups created: ${matchups.length} matchups`,
+    round: playoffRound,
+    matchupsCreated: matchups.length,
   }
 }
 
@@ -140,6 +244,8 @@ async function advancePlayoffWinner(matchupId, prisma) {
   })
   if (!matchup || !matchup.isPlayoff || !matchup.isComplete) return null
 
+  const playoffSeeding = matchup.league?.settings?.formatSettings?.playoffSeeding || 'default'
+
   // Determine winner
   const winnerId = matchup.homeScore > matchup.awayScore
     ? matchup.homeTeamId
@@ -157,6 +263,7 @@ async function advancePlayoffWinner(matchupId, prisma) {
 
   const leagueSeason = await prisma.leagueSeason.findFirst({
     where: { leagueId: matchup.leagueId, seasonId: currentSeason.id },
+    include: { teamSeasons: { where: { madePlayoffs: true } } },
   })
   if (!leagueSeason) return null
 
@@ -176,7 +283,6 @@ async function advancePlayoffWinner(matchupId, prisma) {
     orderBy: { playoffRound: 'desc' },
   })
 
-  const maxRound = Math.max(...allPlayoffMatchups.map(m => m.playoffRound || 0))
   const currentRoundMatchups = allPlayoffMatchups.filter(m => m.playoffRound === matchup.playoffRound)
   const nextRound = matchup.playoffRound + 1
 
@@ -205,6 +311,20 @@ async function advancePlayoffWinner(matchupId, prisma) {
   })
   if (existingNext) return { advanced: false, nextRoundAlreadyExists: true }
 
+  // Commissioner mode: don't auto-create next round — wait for commissioner to submit pairings
+  if (playoffSeeding === 'commissioner') {
+    console.log(`[playoffService] Commissioner mode: awaiting manual matchup assignment for round ${nextRound}`)
+    return {
+      advanced: false,
+      awaitingCommissioner: true,
+      nextRound,
+      winners: winners.map(teamId => {
+        const ts = leagueSeason.teamSeasons.find(t => t.teamId === teamId)
+        return { teamId, seed: ts?.playoffSeed || null }
+      }),
+    }
+  }
+
   // Determine round name
   const totalRoundsNeeded = Math.ceil(Math.log2(currentRoundMatchups.length * 2))
   const roundNames = getRoundNames(totalRoundsNeeded)
@@ -220,32 +340,55 @@ async function advancePlayoffWinner(matchupId, prisma) {
     orderBy: { weekNumber: 'asc' },
   })
 
-  // Create next round matchups (pair winners: 0 vs last, 1 vs second-last, etc.)
   const nextWeek = matchup.week + 1
   const nextMatchups = []
-  for (let i = 0; i < Math.floor(winners.length / 2); i++) {
-    nextMatchups.push({
-      leagueId: matchup.leagueId,
-      week: nextWeek,
-      homeTeamId: winners[i],
-      awayTeamId: winners[winners.length - 1 - i],
-      isPlayoff: true,
-      playoffRound: nextRound,
-      playoffMatchType: nextRoundName,
-      isComplete: false,
-      fantasyWeekId: upcomingWeek?.id || null,
-      tournamentId: upcomingWeek?.tournamentId || null,
-    })
+
+  if (playoffSeeding === 'reseed') {
+    // Re-seed: sort winners by their original playoff seed and pair highest vs lowest
+    const winnersWithSeeds = winners.map(teamId => {
+      const ts = leagueSeason.teamSeasons.find(t => t.teamId === teamId)
+      return { teamId, seed: ts?.playoffSeed || 999 }
+    }).sort((a, b) => a.seed - b.seed)
+
+    for (let i = 0; i < Math.floor(winnersWithSeeds.length / 2); i++) {
+      nextMatchups.push({
+        leagueId: matchup.leagueId,
+        week: nextWeek,
+        homeTeamId: winnersWithSeeds[i].teamId,
+        awayTeamId: winnersWithSeeds[winnersWithSeeds.length - 1 - i].teamId,
+        isPlayoff: true,
+        playoffRound: nextRound,
+        playoffMatchType: nextRoundName,
+        isComplete: false,
+        fantasyWeekId: upcomingWeek?.id || null,
+        tournamentId: upcomingWeek?.tournamentId || null,
+      })
+    }
+  } else {
+    // Default (fixed bracket): pair winners in matchup order (0 vs last, 1 vs second-last)
+    for (let i = 0; i < Math.floor(winners.length / 2); i++) {
+      nextMatchups.push({
+        leagueId: matchup.leagueId,
+        week: nextWeek,
+        homeTeamId: winners[i],
+        awayTeamId: winners[winners.length - 1 - i],
+        isPlayoff: true,
+        playoffRound: nextRound,
+        playoffMatchType: nextRoundName,
+        isComplete: false,
+        fantasyWeekId: upcomingWeek?.id || null,
+        tournamentId: upcomingWeek?.tournamentId || null,
+      })
+    }
   }
 
   if (nextMatchups.length > 0) {
     await prisma.matchup.createMany({ data: nextMatchups })
-    console.log(`[playoffService] Created ${nextMatchups.length} round ${nextRound} matchups`)
+    console.log(`[playoffService] Created ${nextMatchups.length} round ${nextRound} matchups (${playoffSeeding} seeding)`)
   }
 
   // If only 1 matchup created, the winner of that will be champion
   if (nextMatchups.length === 1) {
-    // Update the match type to FINAL
     const created = await prisma.matchup.findFirst({
       where: { leagueId: matchup.leagueId, isPlayoff: true, playoffRound: nextRound },
       orderBy: { createdAt: 'desc' },
@@ -367,5 +510,6 @@ function getRoundLabel(roundNum, totalRounds) {
 module.exports = {
   generatePlayoffBracket,
   advancePlayoffWinner,
+  createCustomPlayoffMatchups,
   getPlayoffBracket,
 }

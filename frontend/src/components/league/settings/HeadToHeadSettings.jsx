@@ -212,6 +212,20 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                   <p className="text-text-muted text-xs">Remaining teams re-seeded after each round</p>
                 </div>
               </label>
+              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+                <input
+                  type="radio"
+                  name="playoffSeeding"
+                  value="commissioner"
+                  checked={localSettings.playoffSeeding === 'commissioner'}
+                  onChange={(e) => handleChange('playoffSeeding', e.target.value)}
+                  className="text-gold"
+                />
+                <div>
+                  <p className="text-white font-medium">Commissioner's Choice</p>
+                  <p className="text-text-muted text-xs">Commissioner assigns matchups manually before each round starts</p>
+                </div>
+              </label>
             </div>
           </div>
 

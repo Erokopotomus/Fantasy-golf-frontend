@@ -2,6 +2,60 @@ import { useState, useEffect } from 'react'
 import Card from '../../common/Card'
 import api from '../../../services/api'
 
+// Hardcoded defaults matching nflScoringService.js — used as fallback when API unavailable
+const DEFAULT_RULES = {
+  // Passing
+  pass_yd: 0.04, pass_td: 4, pass_2pt: 2, pass_int: -2, pass_cmp: 0,
+  pass_att: 0, pass_inc: 0, pass_sack: 0, pass_fd: 0, pass_td_40p: 0, pass_td_50p: 0,
+  // Rushing
+  rush_yd: 0.1, rush_td: 6, rush_2pt: 2, rush_att: 0, rush_fd: 0, rush_td_40p: 0, rush_td_50p: 0,
+  // Receiving
+  rec: 0, rec_yd: 0.1, rec_td: 6, rec_2pt: 2, rec_tgt: 0, rec_fd: 0, rec_td_40p: 0, rec_td_50p: 0,
+  // Fumbles
+  fum: 0, fum_lost: -2, fum_rec: 0, fum_rec_td: 0,
+  // Kicking
+  fgm: 3, fgm_0_19: 0, fgm_20_29: 0, fgm_30_39: 0, fgm_40_49: 4, fgm_50p: 5,
+  fgmiss: -1, xpm: 1, xpmiss: -1,
+  // Defense / Special Teams
+  def_td: 6, sack: 1, int: 2, ff: 0, def_fum_rec: 2, safe: 2, blk_kick: 2, def_2pt: 2,
+  pts_allow_0: 10, pts_allow_1_6: 7, pts_allow_7_13: 4, pts_allow_14_20: 1,
+  pts_allow_21_27: 0, pts_allow_28_34: -1, pts_allow_35p: -4,
+  // Special Teams Player
+  st_td: 6, pr_yd: 0, kr_yd: 0,
+  // Bonuses
+  bonus_pass_yd_300: 2, bonus_pass_yd_400: 4, bonus_rush_yd_100: 2, bonus_rush_yd_200: 4,
+  bonus_rec_yd_100: 2, bonus_rec_yd_200: 4, bonus_rec_te: 0, bonus_rec_rb: 0, bonus_rec_wr: 0,
+  // IDP
+  idp_tkl_solo: 0, idp_tkl_ast: 0, idp_tkl_loss: 0, idp_sack: 0, idp_qb_hit: 0,
+  idp_int: 0, idp_ff: 0, idp_fum_rec: 0, idp_def_td: 0, idp_pass_def: 0, idp_saf: 0, idp_blk_kick: 0,
+}
+
+const FALLBACK_PRESETS = {
+  standard:  DEFAULT_RULES,
+  half_ppr:  { ...DEFAULT_RULES, rec: 0.5 },
+  ppr:       { ...DEFAULT_RULES, rec: 1 },
+}
+
+// Fallback schema built from DEFAULT_RULES keys, grouped by category prefix
+function buildFallbackSchema() {
+  const categoryMap = {
+    pass: 'passing', rush: 'rushing', rec: 'receiving', fum: 'fumbles',
+    fgm: 'kicking', fgmiss: 'kicking', xpm: 'kicking', xpmiss: 'kicking',
+    def: 'defense', sack: 'defense', int: 'defense', ff: 'defense', safe: 'defense',
+    blk_kick: 'defense', pts_allow: 'defense',
+    st: 'special_teams', pr: 'special_teams', kr: 'special_teams',
+    bonus: 'bonuses', idp: 'idp',
+  }
+  const schema = {}
+  for (const key of Object.keys(DEFAULT_RULES)) {
+    const prefix = Object.keys(categoryMap).find(p => key.startsWith(p)) || 'bonuses'
+    const cat = categoryMap[prefix]
+    if (!schema[cat]) schema[cat] = []
+    schema[cat].push({ key, label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), default: DEFAULT_RULES[key] })
+  }
+  return schema
+}
+
 const PRESETS = [
   { key: 'standard', name: 'Standard', desc: 'No points for receptions', color: 'green' },
   { key: 'half_ppr', name: 'Half PPR', desc: 'Half point per reception (most popular)', color: 'blue' },
@@ -134,7 +188,11 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
       const currentPreset = data.currentPreset || data.preset || detectPreset(currentRules, data.presets || {})
       setPreset(currentPreset)
     } catch (err) {
-      setError(err.message)
+      // Fallback: use hardcoded defaults so preview still works
+      setRules({ ...FALLBACK_PRESETS.standard })
+      setSchema(buildFallbackSchema())
+      setPreset('standard')
+      setPresetRules(FALLBACK_PRESETS)
     } finally {
       setLoading(false)
     }
@@ -156,7 +214,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
       setDirty(true)
       return
     }
-    const newRules = presetRules[key] || {}
+    const newRules = presetRules[key] || FALLBACK_PRESETS[key] || {}
     setRules({ ...newRules })
     setPreset(key)
     setDirty(true)

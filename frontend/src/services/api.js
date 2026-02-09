@@ -330,6 +330,13 @@ class ApiService {
     return this.request(`/leagues/${leagueId}/playoffs/generate`, { method: 'POST' })
   }
 
+  async submitCustomPlayoffMatchups(leagueId, matchups) {
+    return this.request(`/leagues/${leagueId}/playoffs/custom`, {
+      method: 'POST',
+      body: JSON.stringify({ matchups }),
+    })
+  }
+
   async getSeasonRecap(leagueId) {
     return this.request(`/leagues/${leagueId}/recap`)
   }

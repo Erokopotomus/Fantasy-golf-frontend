@@ -3,7 +3,7 @@ import Card from '../../common/Card'
 import useMatchups from '../../../hooks/useMatchups'
 import api from '../../../services/api'
 
-const ScheduleManager = ({ leagueId, notify }) => {
+const ScheduleManager = ({ leagueId, league, notify }) => {
   const { schedule, standings, loading, refetch } = useMatchups(leagueId)
   const [generating, setGenerating] = useState(false)
   const [resetting, setResetting] = useState(false)
@@ -12,6 +12,14 @@ const ScheduleManager = ({ leagueId, notify }) => {
   const [editHomeScore, setEditHomeScore] = useState('')
   const [editAwayScore, setEditAwayScore] = useState('')
   const [saving, setSaving] = useState(false)
+
+  // Commissioner matchup builder state
+  const [showMatchupBuilder, setShowMatchupBuilder] = useState(false)
+  const [qualifiedTeams, setQualifiedTeams] = useState([])
+  const [matchupSlots, setMatchupSlots] = useState([])
+  const [submittingMatchups, setSubmittingMatchups] = useState(false)
+
+  const playoffSeeding = league?.settings?.formatSettings?.playoffSeeding || 'default'
 
   const handleGenerate = async () => {
     try {
@@ -26,12 +34,84 @@ const ScheduleManager = ({ leagueId, notify }) => {
     }
   }
 
+  const handleGeneratePlayoffs = async () => {
+    try {
+      setGenerating(true)
+      const result = await api.generatePlayoffs(leagueId)
+
+      if (result.mode === 'commissioner') {
+        // Commissioner mode: show the matchup builder
+        setQualifiedTeams(result.qualifiedTeams || [])
+        const slotCount = Math.floor((result.qualifiedTeams || []).length / 2)
+        setMatchupSlots(Array.from({ length: slotCount }, () => ({ homeTeamId: '', awayTeamId: '' })))
+        setShowMatchupBuilder(true)
+        notify?.success('Teams Qualified', result.message)
+      } else {
+        notify?.success('Playoffs Generated', result.message)
+      }
+      refetch()
+    } catch (err) {
+      notify?.error('Error', err.message)
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleSlotChange = (slotIndex, side, teamId) => {
+    setMatchupSlots(prev => {
+      const updated = [...prev]
+      updated[slotIndex] = { ...updated[slotIndex], [side]: teamId }
+      return updated
+    })
+  }
+
+  const getUsedTeamIds = (excludeSlotIndex, excludeSide) => {
+    const used = new Set()
+    matchupSlots.forEach((slot, i) => {
+      if (i === excludeSlotIndex && excludeSide === 'homeTeamId' && slot.awayTeamId) {
+        used.add(slot.awayTeamId)
+      } else if (i === excludeSlotIndex && excludeSide === 'awayTeamId' && slot.homeTeamId) {
+        used.add(slot.homeTeamId)
+      } else {
+        if (slot.homeTeamId) used.add(slot.homeTeamId)
+        if (slot.awayTeamId) used.add(slot.awayTeamId)
+      }
+    })
+    return used
+  }
+
+  const allSlotsFilled = matchupSlots.every(s => s.homeTeamId && s.awayTeamId)
+
+  const handleSubmitCustomMatchups = async () => {
+    if (!allSlotsFilled) return
+    try {
+      setSubmittingMatchups(true)
+      const matchups = matchupSlots.map(s => ({
+        homeTeamId: s.homeTeamId,
+        awayTeamId: s.awayTeamId,
+      }))
+      const result = await api.submitCustomPlayoffMatchups(leagueId, matchups)
+      notify?.success('Matchups Set', result.message)
+      setShowMatchupBuilder(false)
+      setMatchupSlots([])
+      setQualifiedTeams([])
+      refetch()
+    } catch (err) {
+      notify?.error('Error', err.message)
+    } finally {
+      setSubmittingMatchups(false)
+    }
+  }
+
   const handleReset = async () => {
     try {
       setResetting(true)
       await api.resetMatchups(leagueId)
       notify?.success('Schedule Reset', 'All matchups have been deleted')
       setShowResetConfirm(false)
+      setShowMatchupBuilder(false)
+      setQualifiedTeams([])
+      setMatchupSlots([])
       refetch()
     } catch (err) {
       notify?.error('Error', err.message)
@@ -98,6 +178,14 @@ const ScheduleManager = ({ leagueId, notify }) => {
             {generating ? 'Generating...' : schedule.length > 0 ? 'Regenerate Schedule' : 'Generate Schedule'}
           </button>
 
+          <button
+            onClick={handleGeneratePlayoffs}
+            disabled={generating}
+            className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
+          >
+            {generating ? 'Generating...' : 'Generate Playoffs'}
+          </button>
+
           {schedule.length > 0 && (
             <button
               onClick={() => setShowResetConfirm(true)}
@@ -107,6 +195,12 @@ const ScheduleManager = ({ leagueId, notify }) => {
             </button>
           )}
         </div>
+
+        {playoffSeeding === 'commissioner' && !showMatchupBuilder && (
+          <p className="text-text-muted text-xs mt-3">
+            Commissioner's Choice seeding is active. After generating playoffs, you'll assign matchups manually.
+          </p>
+        )}
 
         {/* Reset Confirmation */}
         {showResetConfirm && (
@@ -132,6 +226,83 @@ const ScheduleManager = ({ leagueId, notify }) => {
           </div>
         )}
       </Card>
+
+      {/* Commissioner Matchup Builder */}
+      {showMatchupBuilder && qualifiedTeams.length > 0 && (
+        <Card className="border-gold/30">
+          <h3 className="text-lg font-semibold font-display text-white mb-2">Set Playoff Matchups</h3>
+          <p className="text-text-muted text-sm mb-4">
+            Assign matchups for the next playoff round. Each team can only appear once.
+          </p>
+
+          <div className="space-y-3">
+            {matchupSlots.map((slot, idx) => {
+              const usedForHome = getUsedTeamIds(idx, 'homeTeamId')
+              const usedForAway = getUsedTeamIds(idx, 'awayTeamId')
+
+              return (
+                <div key={idx} className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg">
+                  <span className="text-text-muted text-sm font-medium w-16 shrink-0">Game {idx + 1}</span>
+
+                  <select
+                    value={slot.homeTeamId}
+                    onChange={(e) => handleSlotChange(idx, 'homeTeamId', e.target.value)}
+                    className="flex-1 p-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  >
+                    <option value="">Select team...</option>
+                    {qualifiedTeams.map(t => {
+                      const disabled = usedForHome.has(t.teamId) && t.teamId !== slot.homeTeamId
+                      return (
+                        <option key={t.teamId} value={t.teamId} disabled={disabled}>
+                          #{t.seed} {t.teamName || t.ownerName} ({t.wins}-{t.losses})
+                        </option>
+                      )
+                    })}
+                  </select>
+
+                  <span className="text-text-muted font-bold text-sm">vs</span>
+
+                  <select
+                    value={slot.awayTeamId}
+                    onChange={(e) => handleSlotChange(idx, 'awayTeamId', e.target.value)}
+                    className="flex-1 p-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  >
+                    <option value="">Select team...</option>
+                    {qualifiedTeams.map(t => {
+                      const disabled = usedForAway.has(t.teamId) && t.teamId !== slot.awayTeamId
+                      return (
+                        <option key={t.teamId} value={t.teamId} disabled={disabled}>
+                          #{t.seed} {t.teamName || t.ownerName} ({t.wins}-{t.losses})
+                        </option>
+                      )
+                    })}
+                  </select>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handleSubmitCustomMatchups}
+              disabled={!allSlotsFilled || submittingMatchups}
+              className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
+            >
+              {submittingMatchups ? 'Submitting...' : 'Confirm Matchups'}
+            </button>
+            <button
+              onClick={() => {
+                setShowMatchupBuilder(false)
+                setMatchupSlots([])
+                setQualifiedTeams([])
+              }}
+              className="px-4 py-2 bg-dark-tertiary text-text-secondary rounded-lg font-medium hover:bg-dark-border transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </Card>
+      )}
 
       {/* Current Schedule */}
       {schedule.length > 0 ? (

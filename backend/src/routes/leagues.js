@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { calculateLeagueStandings, calculateTournamentScoring, calculateLiveTournamentScoring } = require('../services/scoringService')
 const { notifyLeague } = require('../services/notificationService')
-const { generatePlayoffBracket, getPlayoffBracket } = require('../services/playoffService')
+const { generatePlayoffBracket, getPlayoffBracket, createCustomPlayoffMatchups } = require('../services/playoffService')
 const { STANDARD_RULES, getScoringSchema, resolveRules } = require('../services/nflScoringService')
 
 const router = express.Router()
@@ -1026,6 +1026,36 @@ router.post('/:id/playoffs/generate', authenticate, async (req, res, next) => {
     res.json(result)
   } catch (error) {
     if (error.message.includes('already been generated') || error.message.includes('not found')) {
+      return res.status(400).json({ error: { message: error.message } })
+    }
+    next(error)
+  }
+})
+
+// POST /api/leagues/:id/playoffs/custom - Commissioner submits custom playoff matchups
+router.post('/:id/playoffs/custom', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can set playoff matchups' } })
+    }
+
+    const { matchups } = req.body
+    if (!Array.isArray(matchups) || matchups.length === 0) {
+      return res.status(400).json({ error: { message: 'matchups array is required' } })
+    }
+
+    const result = await createCustomPlayoffMatchups(req.params.id, matchups, prisma)
+    res.json(result)
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('not in the qualified') || error.message.includes('multiple matchups') || error.message.includes('cannot play against itself')) {
       return res.status(400).json({ error: { message: error.message } })
     }
     next(error)

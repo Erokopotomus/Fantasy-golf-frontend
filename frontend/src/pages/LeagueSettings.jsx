@@ -900,7 +900,7 @@ const LeagueSettings = () => {
 
       {/* Schedule Management - Commissioner Only */}
       {activeTab === 'schedule' && isCommissioner && (
-        <ScheduleManager leagueId={leagueId} notify={notify} />
+        <ScheduleManager leagueId={leagueId} league={league} notify={notify} />
       )}
 
       {/* Danger Zone - Commissioner Only */}
