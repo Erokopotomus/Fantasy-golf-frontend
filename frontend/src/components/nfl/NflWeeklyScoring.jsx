@@ -43,7 +43,7 @@ const NflPlayerRow = ({ ps, isBench, benchOutscoredStarter }) => {
           ? benchOutscoredStarter
             ? 'bg-amber-500/8 border border-amber-500/20'
             : 'opacity-40'
-          : 'bg-dark-tertiary/50'
+          : 'bg-dark-tertiary/50 border border-dark-border/30'
       }`}
     >
       <div className="flex items-center gap-2">
@@ -138,14 +138,24 @@ const NflWeeklyScoring = ({ leagueId }) => {
   const matchups = data?.matchups || []
   const userTeam = teams.find(t => t.userId === user?.id)
 
+  // Position display order: QB → WR → RB → TE → K → DEF, then anything else
+  const posOrder = { QB: 0, WR: 1, RB: 2, TE: 3, K: 4, DEF: 5, DST: 5, DL: 6, LB: 7, DB: 8 }
+
   // Sort + split players into starters and bench
   const splitPlayers = (playerScores) => {
     if (!playerScores) return { starters: [], bench: [] }
-    const sorted = [...playerScores].sort((a, b) => (b.points || 0) - (a.points || 0))
-    return {
-      starters: sorted.filter(p => p.position === 'ACTIVE'),
-      bench: sorted.filter(p => p.position !== 'ACTIVE'),
-    }
+    const starters = playerScores
+      .filter(p => p.position === 'ACTIVE')
+      .sort((a, b) => {
+        const pa = posOrder[a.nflPos] ?? 99
+        const pb = posOrder[b.nflPos] ?? 99
+        if (pa !== pb) return pa - pb
+        return (b.points || 0) - (a.points || 0)
+      })
+    const bench = [...playerScores]
+      .filter(p => p.position !== 'ACTIVE')
+      .sort((a, b) => (b.points || 0) - (a.points || 0))
+    return { starters, bench }
   }
 
   // Check if a bench player outscored any starter
