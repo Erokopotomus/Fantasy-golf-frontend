@@ -363,6 +363,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ### Backlog (Low Priority — Build When Needed)
 - League Vault v2: Head-to-head historical records, draft history browser, transaction log, "On This Day" feature, PDF export
+- Trading keeper rights between teams (keeper designation transfers as part of trades)
 
 ---
 
