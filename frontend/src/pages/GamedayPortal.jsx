@@ -170,16 +170,16 @@ const GamedayPortal = () => {
         {league?.name || 'League'}
       </Link>
 
-      {/* ── SCORE BAR (sticky on scroll) ── */}
-      <div className="sticky top-0 z-20 -mx-4 px-4 py-3 bg-dark-primary/95 backdrop-blur-sm border-b border-dark-border/50 mb-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${statusDot}`} />
-              <span className={`text-xs font-bold uppercase tracking-wider ${statusColor}`}>
-                {statusLabel} — Week {currentWeekNum}
-              </span>
-            </div>
+      {/* ── MAIN 2-COLUMN LAYOUT ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        {/* ── LEFT COLUMN: Score bar + Rosters (continuous flow) ── */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`w-2 h-2 rounded-full ${statusDot}`} />
+            <span className={`text-xs font-bold uppercase tracking-wider ${statusColor}`}>
+              {statusLabel} — Week {currentWeekNum}
+            </span>
           </div>
 
           {userMatchup ? (
@@ -231,15 +231,7 @@ const GamedayPortal = () => {
             <p className="text-center text-text-muted">No matchup found for this week</p>
           )}
 
-          {/* Score proportion bar removed — split card makes it redundant */}
-        </div>
-      </div>
-
-      {/* ── MAIN CONTENT ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        {/* ── SIDE-BY-SIDE ROSTERS (2 cols on desktop) ── */}
-        <div className="lg:col-span-2">
+          {/* ── ROSTER CARDS (directly below score bar) ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* YOUR PLAYERS */}
@@ -336,7 +328,7 @@ const GamedayPortal = () => {
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN: League Scoreboard + Live Feed ── */}
+        {/* ── RIGHT COLUMN: Scoreboard + Feed + Week Nav ── */}
         <div className="space-y-4">
 
           {/* LEAGUE SCOREBOARD */}
