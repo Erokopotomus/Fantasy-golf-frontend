@@ -530,14 +530,15 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ### Phase 7: Multi-Sport Expansion
 
-- [ ] **NFL Fantasy Support** (Target: August 2026)
-  - NFL data pipeline: nflfastR/nflverse (MIT licensed, play-by-play back to 1999)
-  - NFL Tier 1 sources: NFL official stats, Pro-Football-Reference (with attribution)
-  - NFL Tier 3 evaluation: PFF (licensed), SportsRadar
-  - NFL canonical tables: `clutch_nfl_plays`, `clutch_nfl_player_games` — same 4-layer architecture
-  - NFL-specific scoring rules engine
-  - NFL schedule integration + draft room
-  - NFL prediction categories (game winner, player performance calls, weekly fantasy rankings)
+- [ ] **NFL Fantasy Support** (Target: August 2026) — PARTIALLY COMPLETE
+  - [x] NFL data pipeline (NFL-1): nflverse sync — players, games, weekly stats, kicking, DST (2024 season synced, 5,174 stat rows)
+  - [x] NFL stats display (NFL-2): player browsing, team pages, schedule, compare tool, league-specific scoring applied
+  - [x] NFL scoring calculation service: `nflScoringService.js` — Standard/PPR/Half-PPR/custom rules, all positions, bonuses, kicker distance tiers, DST points-allowed tiers
+  - [x] NFL league infrastructure: sport-agnostic league creation, rosters, trades, waivers, draft room all work for NFL
+  - [ ] **NFL weekly scoring pipeline (NOT BUILT):** No FantasyWeek records for NFL weeks, no function to score teams from NflPlayerGame data, no H2H matchup processor, no weekly cron automation. The scoring *calculator* works but the *pipeline* that runs it weekly doesn't exist yet.
+  - [ ] NFL lineup lock: needs per-game kickoff lock logic (current system assumes golf tournament start times)
+  - [ ] NFL 2025 season data sync (only 2024 synced)
+  - [ ] NFL prediction categories (game winner, player performance calls, weekly fantasy rankings)
 
 - [ ] **NBA Fantasy Support** (Target: October 2026)
 - [ ] **MLB Fantasy Support** (Target: Spring 2027)
@@ -1104,4 +1105,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 8, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion (NFL-1 + NFL-2 + league infra) complete. League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking.*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: data pipeline (NFL-1), stats display (NFL-2), league infra, and scoring calculator complete — weekly scoring pipeline NOT yet built (next priority). League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking.*
