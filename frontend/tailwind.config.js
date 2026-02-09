@@ -10,9 +10,9 @@ export default {
         // Aurora Ember dark theme
         dark: {
           primary: '#0A0908',
-          secondary: '#0E0C0A',
-          tertiary: '#161310',
-          border: '#2A2520',
+          secondary: '#121010',
+          tertiary: '#1C1916',
+          border: '#332E28',
         },
         text: {
           primary: '#F2EDE8',
@@ -33,9 +33,9 @@ export default {
         orange: '#E07838',
         rose: '#D4607A',
         surface: {
-          DEFAULT: 'rgba(255,245,230,0.04)',
-          hover: 'rgba(255,245,230,0.07)',
-          bright: 'rgba(255,245,230,0.10)',
+          DEFAULT: 'rgba(255,245,230,0.07)',
+          hover: 'rgba(255,245,230,0.10)',
+          bright: 'rgba(255,245,230,0.14)',
         },
       },
       fontFamily: {
@@ -51,8 +51,8 @@ export default {
         'badge': '6px',
       },
       boxShadow: {
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
-        'card-hover': '0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.03)',
+        'card-hover': '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4)',
         'glow-gold': '0 0 20px rgba(232, 184, 77, 0.3)',
         'glow-green': '0 0 20px rgba(106, 191, 138, 0.3)',
         'glow-blue': '0 0 20px rgba(224, 120, 56, 0.3)',
