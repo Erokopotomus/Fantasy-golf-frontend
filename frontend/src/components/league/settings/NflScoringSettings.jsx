@@ -88,12 +88,12 @@ const colorMap = {
 const POSITION_PREVIEWS = {
   QB: {
     label: 'QB',
-    desc: '280 pass yds, 2 TD, 1 INT, 2 sacks, 30 rush yds',
+    desc: '280 pass yds, 2 pass TD, 1 INT, 2 sacks, 30 rush yds',
     stats: { pass_yd: 280, pass_td: 2, pass_int: 1, pass_sack: 2, pass_cmp: 22, pass_att: 34, rush_yd: 30, rush_att: 5, fum_lost: 0 },
     breakdown: (r) => ({
-      Passing: 280 * (r.pass_yd||0) + 2 * (r.pass_td||0) + 1 * (r.pass_int||0) + 2 * (r.pass_sack||0) + 22 * (r.pass_cmp||0) + 34 * (r.pass_att||0),
+      Passing: 280 * (r.pass_yd||0) + 1 * (r.pass_int||0) + 2 * (r.pass_sack||0) + 22 * (r.pass_cmp||0) + 34 * (r.pass_att||0),
       Rushing: 30 * (r.rush_yd||0) + 5 * (r.rush_att||0),
-      Fumbles: 0,
+      TDs: 2 * (r.pass_td||0),
     }),
   },
   RB: {
@@ -101,26 +101,27 @@ const POSITION_PREVIEWS = {
     desc: '85 rush yds, 1 rush TD, 4 rec, 32 rec yds, 18 att',
     stats: { rush_yd: 85, rush_td: 1, rush_att: 18, rec: 4, rec_yd: 32, rec_tgt: 5, fum_lost: 0 },
     breakdown: (r) => ({
-      Rushing: 85 * (r.rush_yd||0) + 1 * (r.rush_td||0) + 18 * (r.rush_att||0),
+      Rushing: 85 * (r.rush_yd||0) + 18 * (r.rush_att||0),
       Receiving: 4 * (r.rec||0) + 32 * (r.rec_yd||0) + 5 * (r.rec_tgt||0),
-      Fumbles: 0,
+      TDs: 1 * (r.rush_td||0),
     }),
   },
   WR: {
     label: 'WR',
-    desc: '6 rec, 95 rec yds, 1 TD, 9 targets',
+    desc: '6 rec, 95 rec yds, 1 rec TD, 9 targets',
     stats: { rec: 6, rec_yd: 95, rec_td: 1, rec_tgt: 9, rush_yd: 0, fum_lost: 0 },
     breakdown: (r) => ({
-      Receiving: 6 * (r.rec||0) + 95 * (r.rec_yd||0) + 1 * (r.rec_td||0) + 9 * (r.rec_tgt||0),
-      Fumbles: 0,
+      Receiving: 6 * (r.rec||0) + 95 * (r.rec_yd||0) + 9 * (r.rec_tgt||0),
+      TDs: 1 * (r.rec_td||0),
     }),
   },
   TE: {
     label: 'TE',
-    desc: '4 rec, 55 rec yds, 1 TD, 6 targets',
+    desc: '4 rec, 55 rec yds, 1 rec TD, 6 targets',
     stats: { rec: 4, rec_yd: 55, rec_td: 1, rec_tgt: 6, fum_lost: 0 },
     breakdown: (r) => ({
-      Receiving: 4 * (r.rec||0) + 55 * (r.rec_yd||0) + 1 * (r.rec_td||0) + 6 * (r.rec_tgt||0),
+      Receiving: 4 * (r.rec||0) + 55 * (r.rec_yd||0) + 6 * (r.rec_tgt||0),
+      TDs: 1 * (r.rec_td||0),
       Bonuses: 4 * (r.bonus_rec_te||0),
     }),
   },
