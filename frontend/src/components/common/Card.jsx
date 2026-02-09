@@ -16,9 +16,9 @@ const Card = ({
   return (
     <div
       className={`
-        backdrop-blur-xl backdrop-saturate-150 bg-[#252019] rounded-card border border-[#3A342D]
+        backdrop-blur-xl backdrop-saturate-150 bg-[#1F1B17] rounded-card border border-[#3A342D]
         ${shadow ? 'shadow-card' : ''}
-        ${hover ? 'hover:bg-[#2C2620] hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 cursor-pointer' : 'transition-colors duration-300'}
+        ${hover ? 'hover:bg-[#26211C] hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 cursor-pointer' : 'transition-colors duration-300'}
         ${paddings[padding]}
         ${className}
       `}
