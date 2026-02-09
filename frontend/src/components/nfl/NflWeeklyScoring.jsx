@@ -4,6 +4,91 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 import Card from '../common/Card'
 
+// Position color badges
+const posColors = {
+  QB: 'bg-red-500/20 text-red-400',
+  RB: 'bg-blue-500/20 text-blue-400',
+  WR: 'bg-emerald-500/20 text-emerald-400',
+  TE: 'bg-yellow-500/20 text-yellow-400',
+  K: 'bg-purple-500/20 text-purple-400',
+  DEF: 'bg-orange-500/20 text-orange-400',
+  DL: 'bg-orange-500/20 text-orange-400',
+  LB: 'bg-orange-500/20 text-orange-400',
+  DB: 'bg-cyan-500/20 text-cyan-400',
+}
+
+// Build a human-readable stat line from the statLine object
+const formatStatLine = (sl) => {
+  if (!sl) return null
+  const parts = []
+  if (sl.pass) parts.push(sl.pass)
+  if (sl.rush) parts.push(sl.rush)
+  if (sl.rec) parts.push(sl.rec)
+  if (sl.kick) parts.push(sl.kick)
+  if (sl.def) parts.push(sl.def)
+  if (sl.tackles) parts.push(sl.tackles)
+  if (sl.fumbles) parts.push(sl.fumbles)
+  return parts.length > 0 ? parts.join(' | ') : null
+}
+
+const NflPlayerRow = ({ ps, isBench, benchOutscoredStarter }) => {
+  const posClass = posColors[ps.nflPos] || 'bg-dark-tertiary text-text-muted'
+  const statLine = formatStatLine(ps.statLine)
+
+  return (
+    <div
+      className={`py-2 px-2.5 rounded-lg ${
+        isBench
+          ? benchOutscoredStarter
+            ? 'bg-amber-500/8 border border-amber-500/20'
+            : 'opacity-40'
+          : 'bg-dark-tertiary/50'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {/* Position badge */}
+        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded w-8 text-center flex-shrink-0 ${posClass}`}>
+          {ps.nflPos || '—'}
+        </span>
+
+        {/* Name + team */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-medium text-white truncate">{ps.playerName}</p>
+            {ps.nflTeam && (
+              <span className="text-[10px] text-text-muted flex-shrink-0">{ps.nflTeam}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Slot label */}
+        <span className="text-[10px] text-text-muted w-5 text-center flex-shrink-0">
+          {isBench ? 'BN' : 'S'}
+        </span>
+
+        {/* Points */}
+        <span className={`text-sm font-bold font-mono w-12 text-right flex-shrink-0 ${
+          ps.points > 20 ? 'text-emerald-400' :
+          ps.points > 10 ? 'text-white' :
+          ps.points > 0 ? 'text-text-secondary' : 'text-text-muted'
+        }`}>
+          {(ps.points || 0).toFixed(1)}
+        </span>
+      </div>
+
+      {/* Stat line */}
+      {statLine && (
+        <p className="text-[10px] text-text-muted mt-0.5 ml-10 truncate">{statLine}</p>
+      )}
+
+      {/* Bench outscore indicator */}
+      {isBench && benchOutscoredStarter && (
+        <p className="text-[10px] text-amber-400 mt-0.5 ml-10">Outscored a starter</p>
+      )}
+    </div>
+  )
+}
+
 const NflWeeklyScoring = ({ leagueId }) => {
   const { user } = useAuth()
   const [weekNumber, setWeekNumber] = useState(1)
@@ -51,6 +136,95 @@ const NflWeeklyScoring = ({ leagueId }) => {
   const teams = data?.teams || []
   const matchups = data?.matchups || []
   const userTeam = teams.find(t => t.userId === user?.id)
+
+  // Sort + split players into starters and bench
+  const splitPlayers = (playerScores) => {
+    if (!playerScores) return { starters: [], bench: [] }
+    const sorted = [...playerScores].sort((a, b) => (b.points || 0) - (a.points || 0))
+    return {
+      starters: sorted.filter(p => p.position === 'ACTIVE'),
+      bench: sorted.filter(p => p.position !== 'ACTIVE'),
+    }
+  }
+
+  // Check if a bench player outscored any starter
+  const getLowestStarterPoints = (starters) => {
+    if (!starters.length) return 0
+    return Math.min(...starters.map(s => s.points || 0))
+  }
+
+  const renderTeamDetail = (team) => {
+    const { starters, bench } = splitPlayers(team.playerScores)
+    const lowestStarter = getLowestStarterPoints(starters)
+
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <span className={`text-2xl font-bold ${
+              team.weekRank === 1 ? 'text-yellow-400' :
+              team.weekRank <= 3 ? 'text-emerald-400' : 'text-white'
+            }`}>
+              #{team.weekRank}
+            </span>
+            <div>
+              <h3 className="text-lg font-semibold font-display text-white">{team.teamName}</h3>
+              <p className="text-xs text-text-muted">
+                {starters.length} starters, {bench.length} bench
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold font-display text-emerald-400">
+              {team.totalPoints?.toFixed(1)}
+            </p>
+            <p className="text-xs text-text-muted">fantasy pts</p>
+          </div>
+        </div>
+
+        {/* Optimal bar */}
+        {team.optimalPoints > team.totalPoints && (
+          <div className="mb-3 p-2 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+            Optimal lineup: {team.optimalPoints?.toFixed(1)} pts ({team.pointsLeftOnBench?.toFixed(1)} left on bench)
+          </div>
+        )}
+
+        {/* Starters */}
+        <div className="space-y-1">
+          {starters.map((ps, i) => (
+            <NflPlayerRow
+              key={ps.playerId || i}
+              ps={ps}
+              isBench={false}
+            />
+          ))}
+        </div>
+
+        {/* Bench */}
+        {bench.length > 0 && (
+          <div className="mt-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] text-text-muted uppercase tracking-wider">Bench</span>
+              <div className="flex-1 border-t border-dark-border/30" />
+              <span className="text-xs text-text-muted">
+                {bench.reduce((s, p) => s + (p.points || 0), 0).toFixed(1)} pts
+              </span>
+            </div>
+            <div className="space-y-1">
+              {bench.map((ps, i) => (
+                <NflPlayerRow
+                  key={ps.playerId || i}
+                  ps={ps}
+                  isBench={true}
+                  benchOutscoredStarter={(ps.points || 0) > lowestStarter && starters.length > 0}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-dark-primary">
@@ -114,75 +288,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
               {/* Your Team */}
               <Card>
                 <h3 className="text-base font-semibold text-white mb-4">Your Team</h3>
-                {userTeam ? (
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <span className={`text-2xl font-bold ${
-                          userTeam.weekRank === 1 ? 'text-yellow-400' :
-                          userTeam.weekRank <= 3 ? 'text-emerald-400' : 'text-white'
-                        }`}>
-                          #{userTeam.weekRank}
-                        </span>
-                        <div>
-                          <h3 className="text-lg font-semibold font-display text-white">{userTeam.teamName}</h3>
-                          <p className="text-xs text-text-muted">
-                            {userTeam.playerScores?.length || 0} players scored
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold font-display text-emerald-400">
-                          {userTeam.totalPoints?.toFixed(1)}
-                        </p>
-                        <p className="text-xs text-text-muted">fantasy pts</p>
-                      </div>
-                    </div>
-
-                    {/* Optimal bar */}
-                    {userTeam.optimalPoints > userTeam.totalPoints && (
-                      <div className="mb-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-400">
-                        Optimal: {userTeam.optimalPoints?.toFixed(1)} pts ({userTeam.pointsLeftOnBench?.toFixed(1)} on bench)
-                      </div>
-                    )}
-
-                    {/* Player scores */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-3 px-2 text-[10px] text-text-muted uppercase tracking-wider mb-1">
-                        <div className="flex-1">Player</div>
-                        <div className="w-10 text-center">Pos</div>
-                        <div className="w-14 text-right">Pts</div>
-                      </div>
-                      {(userTeam.playerScores || [])
-                        .sort((a, b) => {
-                          if (a.position === 'ACTIVE' && b.position !== 'ACTIVE') return -1
-                          if (a.position !== 'ACTIVE' && b.position === 'ACTIVE') return 1
-                          return (b.points || 0) - (a.points || 0)
-                        })
-                        .map((ps, i) => {
-                          const isBench = ps.position !== 'ACTIVE'
-                          return (
-                            <div
-                              key={ps.playerId || i}
-                              className={`flex items-center gap-3 py-2 px-2 rounded-lg ${
-                                isBench ? 'opacity-50' : 'bg-dark-tertiary/50'
-                              }`}
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">{ps.playerName}</p>
-                              </div>
-                              <div className="w-10 text-center text-xs text-text-muted">
-                                {isBench ? 'BN' : 'S'}
-                              </div>
-                              <div className="w-14 text-right text-sm font-bold text-emerald-400">
-                                {(ps.points || 0).toFixed(1)}
-                              </div>
-                            </div>
-                          )
-                        })}
-                    </div>
-                  </div>
-                ) : (
+                {userTeam ? renderTeamDetail(userTeam) : (
                   <div className="text-center py-8 text-text-muted">
                     <p>You don't have a team in this league.</p>
                   </div>
@@ -197,17 +303,20 @@ const NflWeeklyScoring = ({ leagueId }) => {
                   <div className="space-y-2">
                     {teams.map(team => {
                       const isUser = team.userId === user?.id
+                      const isExpanded = expandedTeamId === team.teamId
                       return (
                         <div
                           key={team.teamId}
-                          onClick={() => setExpandedTeamId(expandedTeamId === team.teamId ? null : team.teamId)}
-                          className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                          className={`rounded-lg transition-colors ${
                             isUser
                               ? 'bg-emerald-500/10 border border-emerald-500/30'
                               : 'bg-dark-tertiary/50 hover:bg-dark-tertiary'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div
+                            onClick={() => setExpandedTeamId(isExpanded ? null : team.teamId)}
+                            className="flex items-center gap-3 p-3 cursor-pointer"
+                          >
                             <span className={`text-lg font-bold w-7 text-center ${
                               team.weekRank === 1 ? 'text-yellow-400' :
                               team.weekRank === 2 ? 'text-gray-300' :
@@ -226,31 +335,44 @@ const NflWeeklyScoring = ({ leagueId }) => {
                                 {team.totalPoints?.toFixed(1)}
                               </p>
                             </div>
-                            <svg className={`w-4 h-4 text-text-muted transition-transform ${expandedTeamId === team.teamId ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`w-4 h-4 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </div>
 
-                          {expandedTeamId === team.teamId && team.playerScores && (
-                            <div className="mt-3 space-y-1 border-t border-dark-border/50 pt-3">
-                              {team.playerScores
+                          {isExpanded && team.playerScores && (
+                            <div className="px-3 pb-3 border-t border-dark-border/50 pt-2 space-y-1">
+                              {[...team.playerScores]
                                 .sort((a, b) => {
                                   if (a.position === 'ACTIVE' && b.position !== 'ACTIVE') return -1
                                   if (a.position !== 'ACTIVE' && b.position === 'ACTIVE') return 1
                                   return (b.points || 0) - (a.points || 0)
                                 })
-                                .map((ps, i) => (
-                                  <div
-                                    key={ps.playerId || i}
-                                    className={`flex items-center gap-3 py-1.5 px-2 rounded text-sm ${
-                                      ps.position !== 'ACTIVE' ? 'opacity-40' : ''
-                                    }`}
-                                  >
-                                    <span className="flex-1 text-white truncate">{ps.playerName}</span>
-                                    <span className="text-xs text-text-muted">{ps.position !== 'ACTIVE' ? 'BN' : 'S'}</span>
-                                    <span className="font-bold text-emerald-400 w-12 text-right">{(ps.points || 0).toFixed(1)}</span>
-                                  </div>
-                                ))}
+                                .map((ps, i) => {
+                                  const isBench = ps.position !== 'ACTIVE'
+                                  const statLine = formatStatLine(ps.statLine)
+                                  return (
+                                    <div
+                                      key={ps.playerId || i}
+                                      className={`py-1.5 px-2 rounded text-sm ${
+                                        isBench ? 'opacity-40' : ''
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        {ps.nflPos && (
+                                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center ${posColors[ps.nflPos] || 'bg-dark-tertiary text-text-muted'}`}>
+                                            {ps.nflPos}
+                                          </span>
+                                        )}
+                                        <span className="flex-1 text-white truncate">{ps.playerName}</span>
+                                        <span className="font-bold text-emerald-400 w-12 text-right">{(ps.points || 0).toFixed(1)}</span>
+                                      </div>
+                                      {statLine && (
+                                        <p className="text-[9px] text-text-muted mt-0.5 ml-9 truncate">{statLine}</p>
+                                      )}
+                                    </div>
+                                  )
+                                })}
                             </div>
                           )}
                         </div>

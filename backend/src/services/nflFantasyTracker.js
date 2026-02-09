@@ -171,6 +171,40 @@ async function computeNflWeeklyResults(fantasyWeekId, prisma) {
     })
     const scoreMap = new Map(weekScores.map((s) => [s.playerId, s]))
 
+    // Get NflPlayerGame stats for all rostered players this week (for stat lines)
+    const allRosteredPlayerIds = ls.league.teams.flatMap(t => t.roster.map(r => r.playerId))
+    const playerGameStats = await prisma.nflPlayerGame.findMany({
+      where: {
+        playerId: { in: allRosteredPlayerIds },
+        game: {
+          season: fantasyWeek.season.year,
+          week: fantasyWeek.weekNumber,
+          gameType: 'REG',
+        },
+      },
+      select: {
+        playerId: true,
+        // Passing
+        passCompletions: true, passAttempts: true, passYards: true, passTds: true, interceptions: true,
+        // Rushing
+        rushAttempts: true, rushYards: true, rushTds: true,
+        // Receiving
+        receptions: true, targets: true, recYards: true, recTds: true,
+        // Fumbles
+        fumblesLost: true,
+        // Kicking
+        fgMade: true, fgAttempts: true, fgMade0_19: true, fgMade20_29: true, fgMade30_39: true, fgMade40_49: true, fgMade50Plus: true, xpMade: true, xpAttempts: true,
+        // Defense
+        sacks: true, defInterceptions: true, fumblesRecovered: true, fumblesForced: true, defTds: true, safeties: true, blockedKicks: true, pointsAllowed: true,
+        tacklesSolo: true, tacklesAssist: true, passesDefended: true,
+        // Special teams
+        returnTds: true,
+        // Player info
+        player: { select: { nflPosition: true, nflTeamAbbr: true } },
+      },
+    })
+    const gameStatsMap = new Map(playerGameStats.map((pg) => [pg.playerId, pg]))
+
     const teamResults = []
 
     for (const team of ls.league.teams) {
@@ -186,11 +220,46 @@ async function computeNflWeeklyResults(fantasyWeekId, prisma) {
         const pts = fs ? fs.totalPoints : 0
         const entryStatus = entry.rosterStatus || entry.position
 
+        const gameStats = gameStatsMap.get(entry.playerId)
+        const nflPos = gameStats?.player?.nflPosition || null
+        const nflTeam = gameStats?.player?.nflTeamAbbr || null
+
+        // Build compact stat line based on position
+        let statLine = null
+        if (gameStats) {
+          const g = gameStats
+          if (g.passAttempts > 0 || g.rushAttempts > 0 || g.targets > 0 || g.fgAttempts > 0 || g.sacks > 0 || g.tacklesSolo > 0) {
+            statLine = {}
+            if (g.passAttempts > 0) statLine.pass = `${g.passCompletions || 0}/${g.passAttempts} ${g.passYards || 0}yd ${g.passTds || 0}TD${g.interceptions ? ` ${g.interceptions}INT` : ''}`
+            if (g.rushAttempts > 0) statLine.rush = `${g.rushAttempts}car ${g.rushYards || 0}yd ${g.rushTds || 0}TD`
+            if (g.targets > 0 || g.receptions > 0) statLine.rec = `${g.receptions || 0}rec ${g.recYards || 0}yd ${g.recTds || 0}TD`
+            if (g.fgAttempts > 0 || g.xpAttempts > 0) statLine.kick = `${g.fgMade || 0}/${g.fgAttempts || 0}FG ${g.xpMade || 0}/${g.xpAttempts || 0}XP`
+            if (g.sacks > 0 || g.defInterceptions > 0 || g.pointsAllowed != null) {
+              const parts = []
+              if (g.sacks) parts.push(`${g.sacks}sk`)
+              if (g.defInterceptions) parts.push(`${g.defInterceptions}INT`)
+              if (g.fumblesRecovered) parts.push(`${g.fumblesRecovered}FR`)
+              if (g.defTds) parts.push(`${g.defTds}TD`)
+              if (g.pointsAllowed != null) parts.push(`${g.pointsAllowed}PA`)
+              if (parts.length > 0) statLine.def = parts.join(' ')
+            }
+            if (g.tacklesSolo > 0 || g.tacklesAssist > 0) {
+              statLine.tackles = `${(g.tacklesSolo || 0) + (g.tacklesAssist || 0)}tkl`
+              if (g.passesDefended) statLine.tackles += ` ${g.passesDefended}PD`
+            }
+            if (g.fumblesLost) statLine.fumbles = `${g.fumblesLost}FL`
+          }
+        }
+
         playerScores.push({
           playerId: entry.playerId,
           playerName: entry.player.name,
           points: pts,
           position: entryStatus,
+          nflPos,
+          nflTeam,
+          breakdown: fs?.breakdown || null,
+          statLine,
         })
 
         if (entryStatus === 'ACTIVE') {

@@ -74,6 +74,7 @@ const Matchups = () => {
 
   // Accept both frontend and backend format strings
   const isH2H = league?.format === 'HEAD_TO_HEAD' || league?.format === 'head-to-head'
+  const isNfl = (league?.sport || 'GOLF').toUpperCase() === 'NFL'
 
   if (!league || !isH2H) {
     return (
@@ -150,9 +151,19 @@ const Matchups = () => {
           {/* Your Matchup - hero card */}
           {userMatchup && heroWeek && (
             <div>
-              <h2 className="text-lg font-semibold font-display text-white mb-4">
-                Your Matchup — Week {heroWeek.week}
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold font-display text-white">
+                  Your Matchup — Week {heroWeek.week}
+                </h2>
+                {isNfl && (
+                  <Link
+                    to={`/leagues/${leagueId}/gameday`}
+                    className="text-sm text-emerald-400 hover:text-emerald-300 font-medium"
+                  >
+                    Gameday Portal →
+                  </Link>
+                )}
+              </div>
               <div className="max-w-md">
                 <MatchupCard
                   matchup={userMatchup}

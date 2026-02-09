@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useLeagues } from '../hooks/useLeagues'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
 import { useAuth } from '../context/AuthContext'
 import useActivity from '../hooks/useActivity'
+import useMatchups from '../hooks/useMatchups'
 import api from '../services/api'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -32,6 +33,66 @@ const LeagueHome = () => {
   const { format, hasDraft, isHeadToHead, isRoto, isSurvivor, isOneAndDone } = useLeagueFormat(league)
   const leagueSport = (league?.sport || 'GOLF').toUpperCase()
   const isNflLeague = leagueSport === 'NFL'
+
+  // Fetch matchup data for H2H NFL leagues (hero card)
+  const { schedule: matchupSchedule, standings: matchupStandings } = useMatchups(
+    isHeadToHead ? leagueId : null
+  )
+
+  // Derive current matchup for the hero card
+  const nflMatchupData = useMemo(() => {
+    if (!isHeadToHead || !matchupSchedule || matchupSchedule.length === 0) return null
+
+    // Active week (in progress) or last completed or next upcoming
+    const active = matchupSchedule.find(w => {
+      const hasScores = w.matchups.some(m => m.homeScore > 0 || m.awayScore > 0)
+      const hasIncomplete = w.matchups.some(m => !m.completed)
+      return hasScores && hasIncomplete
+    })
+    const completed = matchupSchedule.filter(w => w.matchups.every(m => m.completed))
+    const lastCompleted = completed.length > 0 ? completed[completed.length - 1] : null
+    const upcoming = matchupSchedule.find(w => {
+      const hasScores = w.matchups.some(m => m.homeScore > 0 || m.awayScore > 0)
+      const allComplete = w.matchups.every(m => m.completed)
+      return !hasScores && !allComplete
+    })
+
+    const heroWeek = active || lastCompleted || upcoming
+    if (!heroWeek) return null
+
+    const userMatchup = heroWeek.matchups.find(m => m.home === user?.id || m.away === user?.id)
+    if (!userMatchup) return null
+
+    const isHome = userMatchup.home === user?.id
+    const opponentId = isHome ? userMatchup.away : userMatchup.home
+    const teamLookup = matchupStandings.reduce((acc, t) => { acc[t.userId] = t; return acc }, {})
+
+    const isLive = !!active && heroWeek === active
+    const isComplete = heroWeek.matchups.every(m => m.completed)
+
+    return {
+      week: heroWeek.week,
+      userScore: isHome ? userMatchup.homeScore : userMatchup.awayScore,
+      opponentScore: isHome ? userMatchup.awayScore : userMatchup.homeScore,
+      userTeam: teamLookup[user?.id],
+      opponentTeam: teamLookup[opponentId],
+      isLive,
+      isComplete,
+      userWon: isComplete && ((isHome ? userMatchup.homeScore : userMatchup.awayScore) > (isHome ? userMatchup.awayScore : userMatchup.homeScore)),
+      // Previous completed week (for "last week" result)
+      lastResult: lastCompleted && lastCompleted !== heroWeek ? (() => {
+        const lm = lastCompleted.matchups.find(m => m.home === user?.id || m.away === user?.id)
+        if (!lm) return null
+        const lHome = lm.home === user?.id
+        return {
+          week: lastCompleted.week,
+          userScore: lHome ? lm.homeScore : lm.awayScore,
+          opponentScore: lHome ? lm.awayScore : lm.homeScore,
+          won: (lHome ? lm.homeScore : lm.awayScore) > (lHome ? lm.awayScore : lm.homeScore),
+        }
+      })() : null,
+    }
+  }, [isHeadToHead, matchupSchedule, matchupStandings, user?.id])
 
   // Fetch detailed league data (with full members, teams, rosters)
   useEffect(() => {
@@ -230,13 +291,24 @@ const LeagueHome = () => {
 
               {/* Format-specific buttons */}
               {isHeadToHead && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/leagues/${leagueId}/matchups`)}
-                >
-                  Matchups
-                </Button>
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate(`/leagues/${leagueId}/matchups`)}
+                  >
+                    Matchups
+                  </Button>
+                  {isNflLeague && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/leagues/${leagueId}/gameday`)}
+                    >
+                      Gameday
+                    </Button>
+                  )}
+                </>
               )}
               {isRoto && (
                 <Button
@@ -465,6 +537,114 @@ const LeagueHome = () => {
                     </p>
                   </div>
                 </div>
+              </Card>
+            </div>
+          )}
+
+          {/* NFL Matchup Hero Card */}
+          {isNflLeague && isHeadToHead && nflMatchupData && (
+            <div className="mb-6">
+              <Card className={`border-${nflMatchupData.isLive ? 'emerald-500' : 'gold'}/30 bg-gradient-to-r ${
+                nflMatchupData.isLive
+                  ? 'from-emerald-500/10 to-dark-secondary'
+                  : nflMatchupData.isComplete
+                    ? 'from-dark-tertiary to-dark-secondary'
+                    : 'from-gold/10 to-dark-secondary'
+              }`}>
+                {/* Week label + status */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    {nflMatchupData.isLive && (
+                      <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                    )}
+                    <h3 className="text-sm font-display font-bold text-white uppercase tracking-wide">
+                      {nflMatchupData.isLive ? 'Live — ' : nflMatchupData.isComplete ? '' : 'Up Next — '}
+                      Week {nflMatchupData.week}
+                    </h3>
+                  </div>
+                  {nflMatchupData.isComplete && (
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                      nflMatchupData.userWon ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {nflMatchupData.userWon ? 'WIN' : 'LOSS'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Scoreboard */}
+                <div className="flex items-center justify-between gap-4">
+                  {/* Your team */}
+                  <div className="flex-1 text-center">
+                    <p className="text-xs text-emerald-400 font-medium mb-1">You</p>
+                    <p className="text-sm text-white font-medium truncate">
+                      {nflMatchupData.userTeam?.teamName || 'Your Team'}
+                    </p>
+                    {nflMatchupData.userTeam && (
+                      <p className="text-xs text-text-muted">
+                        {nflMatchupData.userTeam.wins}-{nflMatchupData.userTeam.losses}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Score */}
+                  <div className="flex items-center gap-3 px-4">
+                    <span className={`text-3xl font-bold font-display ${
+                      nflMatchupData.isComplete
+                        ? nflMatchupData.userWon ? 'text-emerald-400' : 'text-red-400'
+                        : 'text-white'
+                    }`}>
+                      {nflMatchupData.userScore?.toFixed(1) || '0.0'}
+                    </span>
+                    <span className="text-text-muted text-lg">—</span>
+                    <span className={`text-3xl font-bold font-display ${
+                      nflMatchupData.isComplete
+                        ? !nflMatchupData.userWon ? 'text-emerald-400' : 'text-red-400'
+                        : 'text-white'
+                    }`}>
+                      {nflMatchupData.opponentScore?.toFixed(1) || '0.0'}
+                    </span>
+                  </div>
+
+                  {/* Opponent */}
+                  <div className="flex-1 text-center">
+                    <p className="text-xs text-text-muted font-medium mb-1">Opponent</p>
+                    <p className="text-sm text-white font-medium truncate">
+                      {nflMatchupData.opponentTeam?.teamName || 'Opponent'}
+                    </p>
+                    {nflMatchupData.opponentTeam && (
+                      <p className="text-xs text-text-muted">
+                        {nflMatchupData.opponentTeam.wins}-{nflMatchupData.opponentTeam.losses}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* CTAs */}
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => navigate(`/leagues/${leagueId}/roster`)}
+                  >
+                    Set Lineup
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/leagues/${leagueId}/gameday`)}
+                  >
+                    {nflMatchupData.isLive ? 'Watch Live' : 'Gameday Portal'}
+                  </Button>
+                </div>
+
+                {/* Last week result */}
+                {nflMatchupData.lastResult && (
+                  <div className="mt-3 pt-3 border-t border-dark-border/50 text-center">
+                    <p className="text-xs text-text-muted">
+                      Last week: {nflMatchupData.lastResult.won ? 'W' : 'L'}{' '}
+                      {nflMatchupData.lastResult.userScore.toFixed(1)} - {nflMatchupData.lastResult.opponentScore.toFixed(1)}
+                    </p>
+                  </div>
+                )}
               </Card>
             </div>
           )}

@@ -1,6 +1,4 @@
-import { Link } from 'react-router-dom'
-
-const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, detailed = false }) => {
+const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, detailed = false, onClick, isExpanded = false }) => {
   const isUserMatch = matchup.home === currentUserId || matchup.away === currentUserId
   const homeWon = matchup.completed && matchup.homeScore > matchup.awayScore
   const awayWon = matchup.completed && matchup.awayScore > matchup.homeScore
@@ -8,9 +6,10 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
 
   return (
     <div
-      className={`bg-dark-tertiary rounded-lg overflow-hidden ${
+      className={`bg-dark-tertiary rounded-lg overflow-hidden cursor-pointer transition-colors hover:bg-dark-tertiary/80 ${
         isUserMatch ? 'ring-2 ring-gold/50' : ''
-      }`}
+      } ${isExpanded ? 'ring-2 ring-emerald-500/50' : ''}`}
+      onClick={onClick}
     >
       {/* Matchup Header */}
       <div className="px-4 py-2 bg-dark-primary/50 border-b border-dark-border flex items-center justify-between">
@@ -105,14 +104,11 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
         )}
       </div>
 
-      {/* View Details Link */}
-      {detailed && leagueId && (
-        <Link
-          to={`/leagues/${leagueId}/matchups`}
-          className="block px-4 py-2 text-center text-sm text-gold hover:bg-gold/10 transition-colors border-t border-dark-border"
-        >
-          View Details
-        </Link>
+      {/* Expand indicator */}
+      {detailed && (
+        <div className="px-4 py-1.5 text-center text-xs text-text-muted border-t border-dark-border">
+          {isExpanded ? 'Click to collapse' : 'Click to see rosters'}
+        </div>
       )}
     </div>
   )

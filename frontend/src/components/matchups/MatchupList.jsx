@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import MatchupCard from './MatchupCard'
+import MatchupDetail from './MatchupDetail'
 
 const MatchupList = ({ week, teams, leagueId, currentUserId }) => {
+  const [expandedIndex, setExpandedIndex] = useState(null)
+
   if (!week || !week.matchups) {
     return (
       <div className="text-center py-8 text-text-muted">
@@ -14,6 +18,8 @@ const MatchupList = ({ week, teams, leagueId, currentUserId }) => {
     acc[team.userId] = team
     return acc
   }, {})
+
+  const hasScores = week.matchups.some(m => m.homeScore > 0 || m.awayScore > 0)
 
   return (
     <div className="space-y-4">
@@ -41,15 +47,30 @@ const MatchupList = ({ week, teams, leagueId, currentUserId }) => {
       {/* Matchups Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {week.matchups.map((matchup, index) => (
-          <MatchupCard
-            key={index}
-            matchup={matchup}
-            homeTeam={teamLookup[matchup.home]}
-            awayTeam={teamLookup[matchup.away]}
-            leagueId={leagueId}
-            currentUserId={currentUserId}
-            detailed
-          />
+          <div key={index}>
+            <MatchupCard
+              matchup={matchup}
+              homeTeam={teamLookup[matchup.home]}
+              awayTeam={teamLookup[matchup.away]}
+              leagueId={leagueId}
+              currentUserId={currentUserId}
+              detailed={hasScores}
+              isExpanded={expandedIndex === index}
+              onClick={hasScores ? () => setExpandedIndex(expandedIndex === index ? null : index) : undefined}
+            />
+            {expandedIndex === index && (
+              <MatchupDetail
+                leagueId={leagueId}
+                weekNumber={week.week}
+                homeUserId={matchup.home}
+                awayUserId={matchup.away}
+                homeTeam={teamLookup[matchup.home]}
+                awayTeam={teamLookup[matchup.away]}
+                matchup={matchup}
+                onClose={() => setExpandedIndex(null)}
+              />
+            )}
+          </div>
         ))}
       </div>
     </div>
