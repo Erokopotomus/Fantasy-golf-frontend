@@ -183,36 +183,42 @@ const GamedayPortal = () => {
           </div>
 
           {userMatchup ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* User team */}
-              <div className="flex-1 text-right">
-                <p className="text-sm font-medium text-white truncate">
-                  {userTeamInfo?.teamName || userTeamInfo?.name || 'Your Team'}
-                </p>
-                <p className="text-xs text-text-muted">
-                  {userTeamInfo?.wins || 0}-{userTeamInfo?.losses || 0}
-                </p>
+              <div className="flex-1 text-right pr-2 border-r-2 border-emerald-500/40">
+                <div className="flex items-center justify-end gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-emerald-400 truncate">
+                      {userTeamInfo?.teamName || userTeamInfo?.name || 'Your Team'}
+                    </p>
+                    <p className="text-[10px] text-emerald-400/50">
+                      {userTeamInfo?.wins || 0}-{userTeamInfo?.losses || 0}
+                    </p>
+                  </div>
+                  <span className="text-2xl font-bold font-mono text-emerald-400 flex-shrink-0">
+                    {(userScore || 0).toFixed(1)}
+                  </span>
+                </div>
               </div>
 
-              {/* Scores */}
-              <div className="flex items-center gap-3 px-4">
-                <span className="text-2xl font-bold font-mono text-white">
-                  {(userScore || 0).toFixed(1)}
-                </span>
-                <span className="text-text-muted text-sm">vs</span>
-                <span className="text-2xl font-bold font-mono text-white">
-                  {(opponentScore || 0).toFixed(1)}
-                </span>
-              </div>
+              {/* Divider */}
+              <span className="text-text-muted text-xs px-1">vs</span>
 
               {/* Opponent team */}
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white truncate">
-                  {opponentTeamInfo?.teamName || opponentTeamInfo?.name || 'Opponent'}
-                </p>
-                <p className="text-xs text-text-muted">
-                  {opponentTeamInfo?.wins || 0}-{opponentTeamInfo?.losses || 0}
-                </p>
+              <div className="flex-1 pl-2 border-l-2 border-red-500/20">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold font-mono text-text-secondary flex-shrink-0">
+                    {(opponentScore || 0).toFixed(1)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-text-secondary truncate">
+                      {opponentTeamInfo?.teamName || opponentTeamInfo?.name || 'Opponent'}
+                    </p>
+                    <p className="text-[10px] text-text-muted">
+                      {opponentTeamInfo?.wins || 0}-{opponentTeamInfo?.losses || 0}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
