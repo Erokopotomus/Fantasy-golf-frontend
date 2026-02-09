@@ -575,6 +575,11 @@ async function syncKickingStats(prisma, season) {
         fgMade: num(row.fg_made),
         fgAttempts: num(row.fg_att),
         fgPct: num(row.fg_pct),
+        fgMade0_19: num(row.fg_made_0_19),
+        fgMade20_29: num(row.fg_made_20_29),
+        fgMade30_39: num(row.fg_made_30_39),
+        fgMade40_49: num(row.fg_made_40_49),
+        fgMade50Plus: (num(row.fg_made_50_59) || 0) + (num(row.fg_made_60_) || 0),
         xpMade: num(row.pat_made),
         xpAttempts: num(row.pat_att),
         // Compute fantasy points for kickers
