@@ -576,6 +576,20 @@ httpServer.listen(PORT, () => {
   } else {
     console.log('[Cron] NFL sync jobs disabled (set NFL_SYNC_ENABLED=true to enable)')
   }
+
+  // Trade review processor — runs every 15 minutes
+  const { PrismaClient: TradePrismaClient } = require('@prisma/client')
+  const tradePrisma = new TradePrismaClient()
+  const { processExpiredReviews } = require('./services/tradeReviewProcessor')
+
+  setInterval(async () => {
+    try {
+      await processExpiredReviews(tradePrisma)
+    } catch (err) {
+      console.error('[tradeReviewProcessor] Error:', err.message)
+    }
+  }, 15 * 60 * 1000) // 15 minutes
+  console.log('[Trade Review] Processor scheduled (every 15 minutes)')
 })
 
 module.exports = { app, io }

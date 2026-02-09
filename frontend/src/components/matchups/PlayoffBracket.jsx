@@ -1,7 +1,29 @@
 import Card from '../common/Card'
 
 const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
-  if (!bracket || !bracket.rounds) {
+  // Inject BYE placeholders into round 1 for bye teams
+  const processedBracket = bracket && bracket.rounds && bracket.byeTeams?.length > 0
+    ? {
+        ...bracket,
+        rounds: bracket.rounds.map((round, i) => {
+          if (i !== 0) return round
+          // Add bye matchups at the top of round 1 for display
+          const byeMatchups = bracket.byeTeams.map(bt => ({
+            isBye: true,
+            seed1: bt.seed,
+            team1: { userId: null, name: bt.teamName },
+            team2: null,
+            score1: null,
+            score2: null,
+            winner: null,
+            completed: false,
+          }))
+          return { ...round, matchups: [...byeMatchups, ...round.matchups] }
+        }),
+      }
+    : bracket
+
+  if (!processedBracket || !processedBracket.rounds) {
     return (
       <Card>
         <div className="text-center py-8">
@@ -28,12 +50,12 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
   return (
     <Card>
       <h3 className="text-lg font-semibold font-display text-white mb-4">
-        Playoff Bracket ({bracket.numTeams} Teams)
+        Playoff Bracket ({processedBracket.numTeams} Teams)
       </h3>
 
       <div className="overflow-x-auto">
         <div className="flex gap-8 min-w-max p-4">
-          {bracket.rounds.map((round, roundIndex) => (
+          {processedBracket.rounds.map((round, roundIndex) => (
             <div key={roundIndex} className="flex flex-col justify-around">
               {/* Round Header */}
               <h4 className="text-sm font-medium text-text-secondary mb-4 text-center">
@@ -42,74 +64,87 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
 
               {/* Matchups */}
               <div className="flex flex-col gap-8 justify-around flex-1">
-                {round.matchups.map((matchup, matchIndex) => (
-                  <div
-                    key={matchIndex}
-                    className="bg-dark-tertiary rounded-lg p-3 w-48"
-                  >
-                    {/* Team 1 */}
+                {round.matchups.map((matchup, matchIndex) => {
+                  const isBye = matchup.isBye
+                  return (
                     <div
-                      className={`flex items-center justify-between p-2 rounded mb-1 ${
-                        matchup.winner === matchup.team1?.userId
-                          ? 'bg-gold/20'
-                          : 'bg-dark-primary'
-                      }`}
+                      key={matchIndex}
+                      className="bg-dark-tertiary rounded-lg p-3 w-48"
                     >
-                      <div className="flex items-center gap-2">
-                        {matchup.seed1 && (
-                          <span className="text-xs text-text-muted w-4">{matchup.seed1}</span>
-                        )}
-                        <span className={`text-sm font-medium truncate ${
-                          matchup.team1
-                            ? matchup.team1.userId === currentUserId
-                              ? 'text-gold'
-                              : 'text-white'
-                            : 'text-text-muted'
+                      {/* Team 1 */}
+                      <div
+                        className={`flex items-center justify-between p-2 rounded mb-1 ${
+                          matchup.winner === matchup.team1?.userId
+                            ? 'bg-gold/20'
+                            : 'bg-dark-primary'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {matchup.seed1 && (
+                            <span className="text-xs text-text-muted w-4">{matchup.seed1}</span>
+                          )}
+                          <span className={`text-sm font-medium truncate ${
+                            matchup.team1
+                              ? matchup.team1.userId === currentUserId
+                                ? 'text-gold'
+                                : 'text-white'
+                              : 'text-text-muted'
+                          }`}>
+                            {matchup.team1
+                              ? teamLookup[matchup.team1.userId]?.name || matchup.team1.name || 'TBD'
+                              : 'TBD'}
+                          </span>
+                        </div>
+                        <span className={`text-sm font-bold ${
+                          matchup.winner === matchup.team1?.userId ? 'text-gold' : 'text-text-secondary'
                         }`}>
-                          {matchup.team1
-                            ? teamLookup[matchup.team1.userId]?.name || matchup.team1.name || 'TBD'
-                            : 'TBD'}
+                          {isBye ? '' : (matchup.score1 ?? '-')}
                         </span>
                       </div>
-                      <span className={`text-sm font-bold ${
-                        matchup.winner === matchup.team1?.userId ? 'text-gold' : 'text-text-secondary'
-                      }`}>
-                        {matchup.score1 ?? '-'}
-                      </span>
-                    </div>
 
-                    {/* Team 2 */}
-                    <div
-                      className={`flex items-center justify-between p-2 rounded ${
-                        matchup.winner === matchup.team2?.userId
-                          ? 'bg-gold/20'
-                          : 'bg-dark-primary'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        {matchup.seed2 && (
-                          <span className="text-xs text-text-muted w-4">{matchup.seed2}</span>
+                      {/* Team 2 / BYE */}
+                      <div
+                        className={`flex items-center justify-between p-2 rounded ${
+                          isBye
+                            ? 'bg-dark-primary/50'
+                            : matchup.winner === matchup.team2?.userId
+                              ? 'bg-gold/20'
+                              : 'bg-dark-primary'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {isBye ? (
+                            <span className="text-sm font-medium text-text-muted italic">BYE</span>
+                          ) : (
+                            <>
+                              {matchup.seed2 && (
+                                <span className="text-xs text-text-muted w-4">{matchup.seed2}</span>
+                              )}
+                              <span className={`text-sm font-medium truncate ${
+                                matchup.team2
+                                  ? matchup.team2.userId === currentUserId
+                                    ? 'text-gold'
+                                    : 'text-white'
+                                  : 'text-text-muted'
+                              }`}>
+                                {matchup.team2
+                                  ? teamLookup[matchup.team2.userId]?.name || matchup.team2.name || 'TBD'
+                                  : 'TBD'}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {!isBye && (
+                          <span className={`text-sm font-bold ${
+                            matchup.winner === matchup.team2?.userId ? 'text-gold' : 'text-text-secondary'
+                          }`}>
+                            {matchup.score2 ?? '-'}
+                          </span>
                         )}
-                        <span className={`text-sm font-medium truncate ${
-                          matchup.team2
-                            ? matchup.team2.userId === currentUserId
-                              ? 'text-gold'
-                              : 'text-white'
-                            : 'text-text-muted'
-                        }`}>
-                          {matchup.team2
-                            ? teamLookup[matchup.team2.userId]?.name || matchup.team2.name || 'TBD'
-                            : 'TBD'}
-                        </span>
                       </div>
-                      <span className={`text-sm font-bold ${
-                        matchup.winner === matchup.team2?.userId ? 'text-gold' : 'text-text-secondary'
-                      }`}>
-                        {matchup.score2 ?? '-'}
-                      </span>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ))}
@@ -128,8 +163,8 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
               </div>
               <p className="text-yellow-500 font-semibold">
                 {/* Find champion from last round */}
-                {bracket.rounds[bracket.rounds.length - 1]?.matchups[0]?.winner
-                  ? teamLookup[bracket.rounds[bracket.rounds.length - 1].matchups[0].winner]?.name || 'Champion'
+                {processedBracket.rounds[processedBracket.rounds.length - 1]?.matchups[0]?.winner
+                  ? teamLookup[processedBracket.rounds[processedBracket.rounds.length - 1].matchups[0].winner]?.name || 'Champion'
                   : 'TBD'}
               </p>
             </div>

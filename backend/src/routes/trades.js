@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
 const { createNotification } = require('../services/notificationService')
+const { validatePositionLimits } = require('../services/positionLimitValidator')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -184,9 +185,49 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
       }
     }
 
+    // Check if league uses league-vote trade review
+    const tradeReview = trade.league?.settings?.tradeReview
+    if (tradeReview === 'league-vote') {
+      const reviewHours = trade.league.settings.tradeReviewHours || 48
+      const reviewUntil = new Date(Date.now() + reviewHours * 60 * 60 * 1000)
+
+      await prisma.trade.update({
+        where: { id: trade.id },
+        data: { status: 'IN_REVIEW', reviewUntil, vetoVotes: [] },
+      })
+
+      // Notify league about trade under review
+      const io = req.app.get('io')
+      io.to(`league-${trade.leagueId}`).emit('trade-in-review', { tradeId: trade.id, reviewUntil })
+
+      return res.json({ message: 'Trade accepted and now under league review', reviewUntil })
+    }
+
     // Execute the trade - swap players
     const senderPlayerIds = trade.senderPlayers
     const receiverPlayerIds = trade.receiverPlayers
+
+    // Check position limits for both sides (net of outgoing players)
+    for (const playerId of receiverPlayerIds) {
+      const check = await validatePositionLimits(trade.senderTeamId, playerId, trade.leagueId, prisma, {
+        dropPlayerIds: senderPlayerIds,
+      })
+      if (!check.valid) {
+        return res.status(400).json({
+          error: { message: `Trade blocked: ${trade.senderTeam.name} would exceed ${check.position} limit (${check.limit} max)` },
+        })
+      }
+    }
+    for (const playerId of senderPlayerIds) {
+      const check = await validatePositionLimits(trade.receiverTeamId, playerId, trade.leagueId, prisma, {
+        dropPlayerIds: receiverPlayerIds,
+      })
+      if (!check.valid) {
+        return res.status(400).json({
+          error: { message: `Trade blocked: ${trade.receiverTeam.name} would exceed ${check.position} limit (${check.limit} max)` },
+        })
+      }
+    }
 
     await prisma.$transaction([
       // Move sender's players to receiver's team
@@ -331,6 +372,132 @@ router.post('/:id/reject', authenticate, async (req, res, next) => {
     }
 
     res.json({ message: 'Trade rejected' })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/trades/:id/vote - Cast a veto/approve vote on a trade under review
+router.post('/:id/vote', authenticate, async (req, res, next) => {
+  try {
+    const { vote } = req.body // 'veto' or 'approve'
+    if (!['veto', 'approve'].includes(vote)) {
+      return res.status(400).json({ error: { message: 'Vote must be "veto" or "approve"' } })
+    }
+
+    const trade = await prisma.trade.findUnique({
+      where: { id: req.params.id },
+      include: {
+        league: { include: { members: { select: { userId: true } } } },
+      },
+    })
+
+    if (!trade) return res.status(404).json({ error: { message: 'Trade not found' } })
+    if (trade.status !== 'IN_REVIEW') {
+      return res.status(400).json({ error: { message: 'Trade is not under review' } })
+    }
+
+    // Trade parties cannot vote
+    if (req.user.id === trade.initiatorId || req.user.id === trade.receiverId) {
+      return res.status(403).json({ error: { message: 'Trade parties cannot vote' } })
+    }
+
+    // Must be a league member
+    const isMember = trade.league.members.some(m => m.userId === req.user.id)
+    if (!isMember) {
+      return res.status(403).json({ error: { message: 'Not a league member' } })
+    }
+
+    // Check if already voted
+    const existingVotes = Array.isArray(trade.vetoVotes) ? trade.vetoVotes : []
+    if (existingVotes.some(v => v.userId === req.user.id)) {
+      return res.status(400).json({ error: { message: 'You have already voted' } })
+    }
+
+    const updatedVotes = [...existingVotes, { userId: req.user.id, vote, votedAt: new Date().toISOString() }]
+
+    await prisma.trade.update({
+      where: { id: trade.id },
+      data: { vetoVotes: updatedVotes },
+    })
+
+    // Check if veto threshold already met for early veto
+    const vetoThreshold = trade.league.settings?.tradeVetoThreshold || 50
+    const eligibleVoters = trade.league.members.filter(
+      m => m.userId !== trade.initiatorId && m.userId !== trade.receiverId
+    ).length
+    const vetoVoteCount = updatedVotes.filter(v => v.vote === 'veto').length
+    const vetoPercent = eligibleVoters > 0 ? (vetoVoteCount / eligibleVoters) * 100 : 0
+
+    if (vetoPercent >= vetoThreshold) {
+      await prisma.trade.update({
+        where: { id: trade.id },
+        data: { status: 'VETOED' },
+      })
+
+      try {
+        await createNotification({
+          userId: trade.initiatorId,
+          type: 'TRADE_VETOED',
+          title: 'Trade Vetoed',
+          message: 'Your trade was vetoed by league vote',
+          actionUrl: `/leagues/${trade.leagueId}/trades`,
+          data: { tradeId: trade.id, leagueId: trade.leagueId },
+        }, prisma)
+      } catch (err) { console.error('Trade veto notification failed:', err.message) }
+
+      const io = req.app.get('io')
+      io.to(`league-${trade.leagueId}`).emit('trade-vetoed', { tradeId: trade.id })
+
+      return res.json({ message: 'Trade vetoed by league vote', status: 'VETOED' })
+    }
+
+    res.json({ message: 'Vote recorded', voteCount: updatedVotes.length, eligibleVoters })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/trades/:id/votes - Get vote counts for a trade under review
+router.get('/:id/votes', authenticate, async (req, res, next) => {
+  try {
+    const trade = await prisma.trade.findUnique({
+      where: { id: req.params.id },
+      include: {
+        league: {
+          select: { settings: true, members: { select: { userId: true } } },
+        },
+      },
+    })
+
+    if (!trade) return res.status(404).json({ error: { message: 'Trade not found' } })
+
+    const votes = Array.isArray(trade.vetoVotes) ? trade.vetoVotes : []
+    const eligibleVoters = trade.league.members.filter(
+      m => m.userId !== trade.initiatorId && m.userId !== trade.receiverId
+    ).length
+
+    const vetoCount = votes.filter(v => v.vote === 'veto').length
+    const approveCount = votes.filter(v => v.vote === 'approve').length
+    const threshold = trade.league.settings?.tradeVetoThreshold || 50
+    const visibility = trade.league.settings?.tradeVetoVisibility || 'anonymous'
+
+    const response = {
+      totalVotes: votes.length,
+      vetoCount,
+      approveCount,
+      eligibleVoters,
+      threshold,
+      reviewUntil: trade.reviewUntil,
+      userVote: votes.find(v => v.userId === req.user.id)?.vote || null,
+    }
+
+    // Only include voter details if visibility allows
+    if (visibility === 'visible') {
+      response.voters = votes.map(v => ({ userId: v.userId, vote: v.vote }))
+    }
+
+    res.json(response)
   } catch (error) {
     next(error)
   }

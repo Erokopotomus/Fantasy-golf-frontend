@@ -55,11 +55,19 @@ async function generatePlayoffBracket(leagueId, prisma) {
   const qualifiedCount = Math.min(playoffTeams, sorted.length)
   const qualified = sorted.slice(0, qualifiedCount)
 
-  // Mark playoff qualifiers
+  // Calculate byes: if qualifiedCount is not a power of two, top seeds get byes
+  const bracketSize = nextPowerOfTwo(qualifiedCount)
+  const byeCount = bracketSize - qualifiedCount
+
+  // Mark playoff qualifiers and byes
   for (let i = 0; i < qualified.length; i++) {
     await prisma.teamSeason.update({
       where: { id: qualified[i].id },
-      data: { madePlayoffs: true, playoffSeed: i + 1 },
+      data: {
+        madePlayoffs: true,
+        playoffSeed: i + 1,
+        playoffByes: i < byeCount ? 1 : 0,
+      },
     })
   }
 
@@ -71,6 +79,7 @@ async function generatePlayoffBracket(leagueId, prisma) {
     wins: ts.wins,
     losses: ts.losses,
     totalPoints: ts.totalPoints,
+    hasBye: i < byeCount,
   }))
 
   // Commissioner mode: qualify teams but don't create matchups — commissioner submits pairings
@@ -79,12 +88,13 @@ async function generatePlayoffBracket(leagueId, prisma) {
       mode: 'commissioner',
       message: `${qualifiedCount} teams qualified for playoffs. Commissioner must set matchups.`,
       qualifiedTeams: qualifiedTeamsList,
-      rounds: Math.ceil(Math.log2(qualifiedCount)),
+      rounds: Math.ceil(Math.log2(bracketSize)),
+      byeTeams: qualifiedTeamsList.filter(t => t.hasBye),
     }
   }
 
-  // Determine number of rounds needed
-  const numRounds = Math.ceil(Math.log2(qualifiedCount))
+  // Determine number of rounds needed (based on bracket size, not qualified count)
+  const numRounds = Math.ceil(Math.log2(bracketSize))
 
   // Get upcoming fantasy weeks for playoff scheduling
   const upcomingWeeks = await prisma.fantasyWeek.findMany({
@@ -103,13 +113,16 @@ async function generatePlayoffBracket(leagueId, prisma) {
   })
   const startWeek = (lastMatchup?.week || 0) + 1
 
-  // Generate first round matchups (standard seeding: 1 vs N, 2 vs N-1, etc.)
+  // Generate first round matchups — only non-bye teams play round 1
   const roundMatchTypes = getRoundNames(numRounds)
   const matchupsToCreate = []
 
-  for (let i = 0; i < Math.floor(qualifiedCount / 2); i++) {
-    const highSeed = qualified[i]
-    const lowSeed = qualified[qualifiedCount - 1 - i]
+  // Non-bye teams: seeds (byeCount+1) through qualifiedCount play round 1
+  // Standard seeding within the non-bye pool: highest seed vs lowest seed
+  const nonByeTeams = qualified.slice(byeCount)
+  for (let i = 0; i < Math.floor(nonByeTeams.length / 2); i++) {
+    const highSeed = nonByeTeams[i]
+    const lowSeed = nonByeTeams[nonByeTeams.length - 1 - i]
 
     matchupsToCreate.push({
       leagueId,
@@ -129,10 +142,11 @@ async function generatePlayoffBracket(leagueId, prisma) {
 
   return {
     mode: playoffSeeding,
-    message: `Playoff bracket generated: ${qualifiedCount} teams, ${numRounds} rounds`,
+    message: `Playoff bracket generated: ${qualifiedCount} teams, ${numRounds} rounds${byeCount > 0 ? `, ${byeCount} bye${byeCount > 1 ? 's' : ''}` : ''}`,
     qualifiedTeams: qualifiedTeamsList,
     rounds: numRounds,
     firstRoundMatchups: matchupsToCreate.length,
+    byeTeams: qualifiedTeamsList.filter(t => t.hasBye),
   }
 }
 
@@ -295,8 +309,16 @@ async function advancePlayoffWinner(matchupId, prisma) {
     return m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId
   })
 
-  // If only one winner left, they're champion
-  if (winners.length === 1) {
+  // If round 1 just completed, merge bye teams into the pool for round 2
+  let advancingTeams = [...winners]
+  if (matchup.playoffRound === 1) {
+    const byeTeamSeasons = leagueSeason.teamSeasons.filter(ts => ts.playoffByes > 0)
+    const byeTeamIds = byeTeamSeasons.map(ts => ts.teamId)
+    advancingTeams = [...byeTeamIds, ...winners]
+  }
+
+  // If only one team left (or one winner and no byes), they're champion
+  if (advancingTeams.length === 1) {
     await prisma.teamSeason.updateMany({
       where: { leagueSeasonId: leagueSeason.id, teamId: winnerId },
       data: { isChampion: true },
@@ -318,15 +340,16 @@ async function advancePlayoffWinner(matchupId, prisma) {
       advanced: false,
       awaitingCommissioner: true,
       nextRound,
-      winners: winners.map(teamId => {
+      winners: advancingTeams.map(teamId => {
         const ts = leagueSeason.teamSeasons.find(t => t.teamId === teamId)
         return { teamId, seed: ts?.playoffSeed || null }
       }),
     }
   }
 
-  // Determine round name
-  const totalRoundsNeeded = Math.ceil(Math.log2(currentRoundMatchups.length * 2))
+  // Determine round name using total playoff teams (including byes)
+  const totalPlayoffTeams = leagueSeason.teamSeasons.filter(ts => ts.madePlayoffs).length
+  const totalRoundsNeeded = Math.ceil(Math.log2(nextPowerOfTwo(totalPlayoffTeams)))
   const roundNames = getRoundNames(totalRoundsNeeded)
   const nextRoundName = roundNames[nextRound - 1] || `ROUND_${nextRound}`
 
@@ -344,18 +367,18 @@ async function advancePlayoffWinner(matchupId, prisma) {
   const nextMatchups = []
 
   if (playoffSeeding === 'reseed') {
-    // Re-seed: sort winners by their original playoff seed and pair highest vs lowest
-    const winnersWithSeeds = winners.map(teamId => {
+    // Re-seed: sort advancing teams by their original playoff seed and pair highest vs lowest
+    const teamsWithSeeds = advancingTeams.map(teamId => {
       const ts = leagueSeason.teamSeasons.find(t => t.teamId === teamId)
       return { teamId, seed: ts?.playoffSeed || 999 }
     }).sort((a, b) => a.seed - b.seed)
 
-    for (let i = 0; i < Math.floor(winnersWithSeeds.length / 2); i++) {
+    for (let i = 0; i < Math.floor(teamsWithSeeds.length / 2); i++) {
       nextMatchups.push({
         leagueId: matchup.leagueId,
         week: nextWeek,
-        homeTeamId: winnersWithSeeds[i].teamId,
-        awayTeamId: winnersWithSeeds[winnersWithSeeds.length - 1 - i].teamId,
+        homeTeamId: teamsWithSeeds[i].teamId,
+        awayTeamId: teamsWithSeeds[teamsWithSeeds.length - 1 - i].teamId,
         isPlayoff: true,
         playoffRound: nextRound,
         playoffMatchType: nextRoundName,
@@ -365,13 +388,18 @@ async function advancePlayoffWinner(matchupId, prisma) {
       })
     }
   } else {
-    // Default (fixed bracket): pair winners in matchup order (0 vs last, 1 vs second-last)
-    for (let i = 0; i < Math.floor(winners.length / 2); i++) {
+    // Default (fixed bracket): pair advancing teams by seed (highest vs lowest)
+    const teamsWithSeeds = advancingTeams.map(teamId => {
+      const ts = leagueSeason.teamSeasons.find(t => t.teamId === teamId)
+      return { teamId, seed: ts?.playoffSeed || 999 }
+    }).sort((a, b) => a.seed - b.seed)
+
+    for (let i = 0; i < Math.floor(teamsWithSeeds.length / 2); i++) {
       nextMatchups.push({
         leagueId: matchup.leagueId,
         week: nextWeek,
-        homeTeamId: winners[i],
-        awayTeamId: winners[winners.length - 1 - i],
+        homeTeamId: teamsWithSeeds[i].teamId,
+        awayTeamId: teamsWithSeeds[teamsWithSeeds.length - 1 - i].teamId,
         isPlayoff: true,
         playoffRound: nextRound,
         playoffMatchType: nextRoundName,
@@ -422,20 +450,32 @@ async function getPlayoffBracket(leagueId, prisma) {
 
   if (playoffMatchups.length === 0) return null
 
-  // Get seeds from TeamSeason
+  // Get seeds and bye info from TeamSeason
   const currentSeason = await prisma.season.findFirst({ where: { isCurrent: true } })
   let seedMap = {}
+  let byeTeams = []
   if (currentSeason) {
     const leagueSeason = await prisma.leagueSeason.findFirst({
       where: { leagueId, seasonId: currentSeason.id },
       include: {
-        teamSeasons: { where: { madePlayoffs: true } },
+        teamSeasons: {
+          where: { madePlayoffs: true },
+          include: { team: { include: { user: { select: { id: true, name: true } } } } },
+        },
       },
     })
     if (leagueSeason) {
       seedMap = Object.fromEntries(
         leagueSeason.teamSeasons.map(ts => [ts.teamId, ts.playoffSeed])
       )
+      byeTeams = leagueSeason.teamSeasons
+        .filter(ts => ts.playoffByes > 0)
+        .map(ts => ({
+          seed: ts.playoffSeed,
+          teamId: ts.teamId,
+          teamName: ts.team?.name,
+          ownerName: ts.team?.user?.name,
+        }))
     }
   }
 
@@ -480,7 +520,17 @@ async function getPlayoffBracket(leagueId, prisma) {
   return {
     rounds,
     numTeams: allTeamIds.size,
+    byeTeams,
   }
+}
+
+/**
+ * Return the smallest power of two >= n.
+ */
+function nextPowerOfTwo(n) {
+  let p = 1
+  while (p < n) p *= 2
+  return p
 }
 
 /**

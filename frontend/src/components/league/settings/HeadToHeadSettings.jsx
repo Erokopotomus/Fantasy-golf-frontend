@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Card from '../../common/Card'
 
-const HeadToHeadSettings = ({ settings, onChange }) => {
+const HeadToHeadSettings = ({ settings, onChange, teams }) => {
   const [localSettings, setLocalSettings] = useState({
     playoffTeams: settings?.playoffTeams || 4,
     playoffFormat: settings?.playoffFormat || 'single-elimination',
@@ -10,6 +10,9 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
     consolationBracket: settings?.consolationBracket || 'none',
     regularSeasonWeeks: settings?.regularSeasonWeeks || 12,
     tiebreakers: settings?.tiebreakers || ['total-points', 'head-to-head'],
+    divisions: settings?.divisions || [],
+    divisionAssignments: settings?.divisionAssignments || {},
+    divisionsEnabled: settings?.divisions?.length > 0 || false,
   })
 
   const handleChange = (key, value) => {
@@ -68,6 +71,143 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
         </div>
       </Card>
 
+      {/* Divisions */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold font-display text-white">Divisions</h3>
+          <button
+            type="button"
+            onClick={() => {
+              const enabled = !localSettings.divisionsEnabled
+              const updated = {
+                ...localSettings,
+                divisionsEnabled: enabled,
+                divisions: enabled && localSettings.divisions.length === 0 ? ['East', 'West'] : enabled ? localSettings.divisions : [],
+                divisionAssignments: enabled ? localSettings.divisionAssignments : {},
+              }
+              setLocalSettings(updated)
+              onChange?.({ ...updated, divisionsEnabled: undefined })
+            }}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              localSettings.divisionsEnabled ? 'bg-gold' : 'bg-dark-border'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                localSettings.divisionsEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        {localSettings.divisionsEnabled && (
+          <div className="space-y-4">
+            {/* Division Names */}
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Division Names
+              </label>
+              <div className="space-y-2">
+                {localSettings.divisions.map((div, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={div}
+                      onChange={(e) => {
+                        const oldName = localSettings.divisions[idx]
+                        const newDivisions = [...localSettings.divisions]
+                        newDivisions[idx] = e.target.value
+                        // Update assignments that reference the old name
+                        const newAssignments = { ...localSettings.divisionAssignments }
+                        for (const [teamId, assignedDiv] of Object.entries(newAssignments)) {
+                          if (assignedDiv === oldName) newAssignments[teamId] = e.target.value
+                        }
+                        const updated = { ...localSettings, divisions: newDivisions, divisionAssignments: newAssignments }
+                        setLocalSettings(updated)
+                        onChange?.({ ...updated, divisionsEnabled: undefined })
+                      }}
+                      className="flex-1 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                    />
+                    {localSettings.divisions.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const removed = localSettings.divisions[idx]
+                          const newDivisions = localSettings.divisions.filter((_, i) => i !== idx)
+                          const newAssignments = { ...localSettings.divisionAssignments }
+                          for (const [teamId, assignedDiv] of Object.entries(newAssignments)) {
+                            if (assignedDiv === removed) delete newAssignments[teamId]
+                          }
+                          const updated = { ...localSettings, divisions: newDivisions, divisionAssignments: newAssignments }
+                          setLocalSettings(updated)
+                          onChange?.({ ...updated, divisionsEnabled: undefined })
+                        }}
+                        className="p-2 text-red-400 hover:text-red-300"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {localSettings.divisions.length < 4 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const names = ['East', 'West', 'North', 'South']
+                    const newName = names.find(n => !localSettings.divisions.includes(n)) || `Division ${localSettings.divisions.length + 1}`
+                    const updated = { ...localSettings, divisions: [...localSettings.divisions, newName] }
+                    setLocalSettings(updated)
+                    onChange?.({ ...updated, divisionsEnabled: undefined })
+                  }}
+                  className="mt-2 px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-white hover:border-gold transition-colors"
+                >
+                  + Add Division
+                </button>
+              )}
+            </div>
+
+            {/* Team Assignments */}
+            {teams && teams.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Team Assignments
+                </label>
+                <div className="space-y-2">
+                  {teams.map(team => (
+                    <div key={team.id} className="flex items-center gap-3 p-2 bg-dark-tertiary rounded-lg">
+                      <span className="text-white text-sm flex-1 truncate">{team.name || team.user?.name || 'Unknown'}</span>
+                      <select
+                        value={localSettings.divisionAssignments[team.id] || ''}
+                        onChange={(e) => {
+                          const newAssignments = { ...localSettings.divisionAssignments }
+                          if (e.target.value) {
+                            newAssignments[team.id] = e.target.value
+                          } else {
+                            delete newAssignments[team.id]
+                          }
+                          const updated = { ...localSettings, divisionAssignments: newAssignments }
+                          setLocalSettings(updated)
+                          onChange?.({ ...updated, divisionsEnabled: undefined })
+                        }}
+                        className="p-1 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-gold focus:outline-none"
+                      >
+                        <option value="">Unassigned</option>
+                        {localSettings.divisions.map(div => (
+                          <option key={div} value={div}>{div}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+
       <Card>
         <h3 className="text-lg font-semibold font-display text-white mb-4">Playoff Settings</h3>
         <div className="space-y-4">
@@ -91,6 +231,16 @@ const HeadToHeadSettings = ({ settings, onChange }) => {
                 </button>
               ))}
             </div>
+            {localSettings.playoffTeams === 6 && (
+              <p className="text-xs text-gold mt-2">
+                Top 2 seeds receive a first-round bye
+              </p>
+            )}
+            {localSettings.playoffTeams === 5 && (
+              <p className="text-xs text-gold mt-2">
+                Top 3 seeds receive a first-round bye
+              </p>
+            )}
           </div>
 
           <div>

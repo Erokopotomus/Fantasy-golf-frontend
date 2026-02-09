@@ -35,6 +35,8 @@ function flattenRosterEntry(entry) {
     rosterPosition: entry.position, // ACTIVE, BENCH, or IR
     acquiredVia: entry.acquiredVia,
     acquiredAt: entry.acquiredAt,
+    isKeeper: entry.isKeeper || false,
+    keeperCost: entry.keeperCost,
   }
 }
 
@@ -178,6 +180,26 @@ const TeamRoster = () => {
       // error handled by hook
     }
   }, [roster, dropPlayer, refetch])
+
+  // Keeper league support
+  const keeperSettings = league?.settings?.keeperSettings
+  const keepersEnabled = keeperSettings?.enabled || false
+  const maxKeepers = keeperSettings?.maxKeepers || 3
+  const currentKeeperCount = roster.filter(p => p.isKeeper).length
+
+  const handleToggleKeeper = useCallback(async (player) => {
+    if (!teamId) return
+    try {
+      if (player.isKeeper) {
+        await api.undesignateKeeper(teamId, player.id)
+      } else {
+        await api.designateKeeper(teamId, player.id)
+      }
+      await refetch()
+    } catch (err) {
+      console.error('Keeper toggle failed:', err.message)
+    }
+  }, [teamId, refetch])
 
   const getActiveSet = () => {
     if (pendingActive) return pendingActive
@@ -434,6 +456,18 @@ const TeamRoster = () => {
         </div>
       )}
 
+      {/* Keeper Counter */}
+      {keepersEnabled && (
+        <div className="mb-4 flex items-center gap-2 px-1">
+          <span className="text-xs font-medium text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded">
+            Keepers: {currentKeeperCount}/{maxKeepers}
+          </span>
+          {currentKeeperCount >= maxKeepers && (
+            <span className="text-xs text-text-muted">All keeper slots filled</span>
+          )}
+        </div>
+      )}
+
       {/* Active Lineup */}
       <div
         className={`mb-6 rounded-lg transition-all duration-200 ${
@@ -465,6 +499,10 @@ const TeamRoster = () => {
               onDragEnd={handleDragEnd}
               onDrop={() => handleDrop(player)}
               onClick={() => handlePlayerClick(player)}
+              keepersEnabled={keepersEnabled}
+              onToggleKeeper={() => handleToggleKeeper(player)}
+              maxKeepers={maxKeepers}
+              currentKeeperCount={currentKeeperCount}
             />
           ))}
           {/* Empty slot placeholders */}
@@ -524,6 +562,10 @@ const TeamRoster = () => {
               isIR={false}
               onToggleIR={irSlots > 0 ? () => toggleIR(player.id) : undefined}
               canIR={irSet.size < irSlots}
+              keepersEnabled={keepersEnabled}
+              onToggleKeeper={() => handleToggleKeeper(player)}
+              maxKeepers={maxKeepers}
+              currentKeeperCount={currentKeeperCount}
             />
           ))}
           {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length === 0 && (
@@ -569,6 +611,10 @@ const TeamRoster = () => {
                 onDrop={() => handleDrop(player)}
                 onClick={() => handlePlayerClick(player)}
                 isIR={true}
+                keepersEnabled={keepersEnabled}
+                onToggleKeeper={() => handleToggleKeeper(player)}
+                maxKeepers={maxKeepers}
+                currentKeeperCount={currentKeeperCount}
               />
             ))}
             {/* Empty IR slot placeholders */}
@@ -605,7 +651,7 @@ const TeamRoster = () => {
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0 }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0 }) => {
   return (
     <div
       draggable={isEditing}
@@ -656,6 +702,9 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           {isIR && !isEditing && (
             <span className="text-[10px] font-medium text-red-400 bg-red-500/10 px-1.5 rounded">IR</span>
           )}
+          {player.isKeeper && (
+            <span className="text-[10px] font-medium text-yellow-400 bg-yellow-500/10 px-1.5 rounded">K</span>
+          )}
         </div>
         <div className="flex items-center gap-3 text-xs text-text-muted">
           {player.owgrRank && <span>#{player.owgrRank}</span>}
@@ -701,6 +750,23 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
         <svg className="w-4 h-4 text-text-muted/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
+      )}
+
+      {/* Keeper toggle (non-editing mode) */}
+      {!isEditing && keepersEnabled && onToggleKeeper && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleKeeper() }}
+          disabled={!player.isKeeper && currentKeeperCount >= maxKeepers}
+          className={`text-xs transition-colors px-2 py-1 ${
+            player.isKeeper
+              ? 'text-yellow-400 hover:text-yellow-300'
+              : currentKeeperCount >= maxKeepers
+                ? 'text-text-muted/30 cursor-not-allowed'
+                : 'text-yellow-400/60 hover:text-yellow-400'
+          }`}
+        >
+          {player.isKeeper ? 'Unkeep' : 'Keep'}
+        </button>
       )}
 
       {/* Drop button (only in non-editing mode, hidden when locked) */}

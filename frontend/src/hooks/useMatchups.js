@@ -6,6 +6,7 @@ export const useMatchups = (leagueId) => {
   const [currentWeek, setCurrentWeek] = useState(null)
   const [playoffs, setPlayoffs] = useState(null)
   const [standings, setStandings] = useState([])
+  const [divisionStandings, setDivisionStandings] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -25,6 +26,7 @@ export const useMatchups = (leagueId) => {
       setCurrentWeek(data.currentWeek || null)
       setPlayoffs(data.playoffs || null)
       setStandings(data.standings || [])
+      setDivisionStandings(data.divisionStandings || null)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -51,6 +53,7 @@ export const useMatchups = (leagueId) => {
     currentWeek,
     playoffs,
     standings,
+    divisionStandings,
     loading,
     error,
     refetch: fetchMatchups,

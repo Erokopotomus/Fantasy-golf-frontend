@@ -981,6 +981,67 @@ router.get('/:id/matchups', authenticate, async (req, res, next) => {
       }
     }
 
+    // Compute division records if divisions exist
+    const divisions = league.settings?.formatSettings?.divisions
+    const divisionAssignments = league.settings?.formatSettings?.divisionAssignments || {}
+    let divisionStandings = null
+
+    if (divisions && divisions.length > 0) {
+      // Build teamId-to-division map (divisionAssignments uses teamId)
+      const teamDivision = {}
+      for (const team of league.teams) {
+        teamDivision[team.id] = divisionAssignments[team.id] || null
+      }
+
+      // Compute division W-L for each team from completed matchups
+      const divRecord = {} // userId -> { divWins, divLosses, divTies }
+      league.teams.forEach(t => {
+        divRecord[t.userId] = { divWins: 0, divLosses: 0, divTies: 0 }
+      })
+
+      for (const m of matchups) {
+        if (!m.isComplete || m.isPlayoff) continue
+        const homeDivision = teamDivision[m.homeTeamId]
+        const awayDivision = teamDivision[m.awayTeamId]
+        if (!homeDivision || !awayDivision || homeDivision !== awayDivision) continue
+
+        const homeUid = m.homeTeam.userId
+        const awayUid = m.awayTeam.userId
+        if (m.homeScore > m.awayScore) {
+          divRecord[homeUid].divWins++
+          divRecord[awayUid].divLosses++
+        } else if (m.awayScore > m.homeScore) {
+          divRecord[awayUid].divWins++
+          divRecord[homeUid].divLosses++
+        } else {
+          divRecord[homeUid].divTies++
+          divRecord[awayUid].divTies++
+        }
+      }
+
+      // Attach division info to each standings entry
+      Object.values(standings).forEach(s => {
+        const team = league.teams.find(t => t.userId === s.userId)
+        s.division = team ? (divisionAssignments[team.id] || null) : null
+        const dr = divRecord[s.userId] || { divWins: 0, divLosses: 0, divTies: 0 }
+        s.divWins = dr.divWins
+        s.divLosses = dr.divLosses
+        s.divTies = dr.divTies
+      })
+
+      // Build grouped division standings
+      divisionStandings = {}
+      for (const div of divisions) {
+        divisionStandings[div] = Object.values(standings)
+          .filter(s => s.division === div)
+          .sort((a, b) => {
+            if (b.wins !== a.wins) return b.wins - a.wins
+            if (b.ties !== a.ties) return b.ties - a.ties
+            return b.pointsFor - a.pointsFor
+          })
+      }
+    }
+
     // Sort standings by wins, then pointsFor
     const sortedStandings = Object.values(standings).sort((a, b) => {
       if (b.wins !== a.wins) return b.wins - a.wins
@@ -1000,6 +1061,7 @@ router.get('/:id/matchups', authenticate, async (req, res, next) => {
       schedule,
       currentWeek,
       standings: sortedStandings,
+      divisionStandings,
       playoffs: playoffBracket,
     })
   } catch (error) {

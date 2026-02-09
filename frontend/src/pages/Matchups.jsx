@@ -13,7 +13,7 @@ const Matchups = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
   const { league, loading: leagueLoading } = useLeague(leagueId)
-  const { schedule, currentWeek, playoffs, standings, loading, error } = useMatchups(leagueId)
+  const { schedule, currentWeek, playoffs, standings, divisionStandings, loading, error } = useMatchups(leagueId)
 
   const [activeTab, setActiveTab] = useState('current')
   const [selectedWeek, setSelectedWeek] = useState(null)
@@ -191,7 +191,7 @@ const Matchups = () => {
 
       {/* Standings Tab */}
       {activeTab === 'standings' && (
-        <H2HStandings standings={standings} currentUserId={user?.id} />
+        <H2HStandings standings={standings} currentUserId={user?.id} divisionStandings={divisionStandings} />
       )}
 
       {/* Playoffs Tab */}

@@ -9,6 +9,7 @@
 
 const { recordTransaction } = require('./fantasyTracker')
 const { createNotification, notifyLeague } = require('./notificationService')
+const { validatePositionLimits } = require('./positionLimitValidator')
 
 /**
  * Process all pending waiver claims for a single league.
@@ -304,6 +305,14 @@ async function validateClaim(claim, league, leagueSeason, rosterCounts, budgetDe
     }
   }
 
+  // Check position limits (NFL leagues)
+  const posCheck = await validatePositionLimits(claim.teamId, claim.playerId, league.id, prisma, {
+    dropPlayerIds: claim.dropPlayerId ? [claim.dropPlayerId] : [],
+  })
+  if (!posCheck.valid) {
+    return `${posCheck.position} limit reached (${posCheck.current}/${posCheck.limit})`
+  }
+
   return null
 }
 
@@ -470,6 +479,19 @@ async function processRollingWaivers(leagueId, prisma) {
           invalid++
           continue
         }
+      }
+
+      // Check position limits (NFL leagues)
+      const posCheck = await validatePositionLimits(claim.teamId, claim.playerId, league.id, prisma, {
+        dropPlayerIds: claim.dropPlayerId ? [claim.dropPlayerId] : [],
+      })
+      if (!posCheck.valid) {
+        await prisma.waiverClaim.update({
+          where: { id: claim.id },
+          data: { status: 'INVALID', processedAt: now, notes: `${posCheck.position} limit reached (${posCheck.current}/${posCheck.limit})` },
+        })
+        invalid++
+        continue
       }
 
       // Process the winning claim

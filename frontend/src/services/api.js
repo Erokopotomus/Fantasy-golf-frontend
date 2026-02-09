@@ -793,6 +793,37 @@ class ApiService {
       body: JSON.stringify(data),
     })
   }
+
+  // Keepers
+  async designateKeeper(teamId, playerId) {
+    return this.request(`/teams/${teamId}/keeper/designate`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId }),
+    })
+  }
+
+  async undesignateKeeper(teamId, playerId) {
+    return this.request(`/teams/${teamId}/keeper/undesignate`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId }),
+    })
+  }
+
+  async getKeepers(teamId) {
+    return this.request(`/teams/${teamId}/keepers`)
+  }
+
+  // Trade Veto Voting
+  async castTradeVote(tradeId, vote) {
+    return this.request(`/trades/${tradeId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ vote }),
+    })
+  }
+
+  async getTradeVotes(tradeId) {
+    return this.request(`/trades/${tradeId}/votes`)
+  }
 }
 
 export const api = new ApiService()

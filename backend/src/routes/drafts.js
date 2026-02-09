@@ -244,6 +244,27 @@ router.post('/:id/start', authenticate, async (req, res, next) => {
 
     const now = new Date()
 
+    // Pre-assign keepers if keeper league is enabled
+    const keeperSettings = draft.league.settings?.keeperSettings
+    const keeperPicks = []
+    if (keeperSettings?.enabled) {
+      for (const team of teams) {
+        const keepers = await prisma.rosterEntry.findMany({
+          where: { teamId: team.id, isActive: true, isKeeper: true },
+          include: { player: { select: { id: true, name: true } } },
+        })
+        for (const keeper of keepers) {
+          keeperPicks.push({
+            draftId: draft.id,
+            teamId: team.id,
+            playerId: keeper.playerId,
+            isKeeper: true,
+            amount: keeper.keeperCost || 0,
+          })
+        }
+      }
+    }
+
     await prisma.$transaction([
       ...shuffled.map((team, index) =>
         prisma.draftOrder.create({
@@ -251,6 +272,19 @@ router.post('/:id/start', authenticate, async (req, res, next) => {
             draftId: draft.id,
             teamId: team.id,
             position: index + 1
+          }
+        })
+      ),
+      // Create keeper picks (pre-assigned before draft starts)
+      ...keeperPicks.map((kp, idx) =>
+        prisma.draftPick.create({
+          data: {
+            draftId: kp.draftId,
+            teamId: kp.teamId,
+            playerId: kp.playerId,
+            pickNumber: -(idx + 1), // Negative pick numbers indicate keeper selections
+            round: 0,
+            amount: kp.amount,
           }
         })
       ),

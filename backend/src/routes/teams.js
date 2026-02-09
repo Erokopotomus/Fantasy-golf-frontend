@@ -4,6 +4,7 @@ const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
 const { notifyLeague } = require('../services/notificationService')
 const { getCurrentFantasyWeek } = require('../services/fantasyWeekHelper')
+const { validatePositionLimits } = require('../services/positionLimitValidator')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -145,6 +146,14 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
 
     if (playerOnOtherTeam) {
       return res.status(400).json({ error: { message: 'Player is on another team' } })
+    }
+
+    // Check position limits (NFL leagues)
+    const posCheck = await validatePositionLimits(req.params.id, playerId, team.leagueId, prisma)
+    if (!posCheck.valid) {
+      return res.status(400).json({
+        error: { message: `${posCheck.position} limit reached (${posCheck.current}/${posCheck.limit})` },
+      })
     }
 
     const rosterEntry = await prisma.rosterEntry.create({
@@ -363,6 +372,115 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
     })
 
     res.json({ roster: updatedTeam.roster })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/teams/:id/keeper/designate - Designate a player as keeper
+router.post('/:id/keeper/designate', authenticate, async (req, res, next) => {
+  try {
+    const { playerId } = req.body
+
+    const team = await prisma.team.findUnique({
+      where: { id: req.params.id },
+      include: { league: true, roster: { where: { isActive: true } } },
+    })
+
+    if (!team) return res.status(404).json({ error: { message: 'Team not found' } })
+    if (team.userId !== req.user.id) return res.status(403).json({ error: { message: 'Not authorized' } })
+
+    const keeperSettings = team.league.settings?.keeperSettings
+    if (!keeperSettings?.enabled) {
+      return res.status(400).json({ error: { message: 'Keeper league is not enabled' } })
+    }
+
+    // Check max keepers
+    const currentKeepers = team.roster.filter(r => r.isKeeper)
+    const maxKeepers = keeperSettings.maxKeepers || 3
+    if (currentKeepers.length >= maxKeepers) {
+      return res.status(400).json({ error: { message: `Maximum ${maxKeepers} keepers allowed (${currentKeepers.length} already designated)` } })
+    }
+
+    // Find the roster entry
+    const entry = team.roster.find(r => r.playerId === playerId)
+    if (!entry) {
+      return res.status(400).json({ error: { message: 'Player not on active roster' } })
+    }
+    if (entry.isKeeper) {
+      return res.status(400).json({ error: { message: 'Player is already a keeper' } })
+    }
+
+    // Compute keeper cost based on cost model
+    let keeperCost = null
+    if (keeperSettings.costModel === 'round-penalty') {
+      // Find original draft pick
+      const draftPick = await prisma.draftPick.findFirst({
+        where: { playerId, teamId: req.params.id },
+        orderBy: { createdAt: 'desc' },
+      })
+      keeperCost = draftPick ? Math.max(1, (draftPick.round || 1) - 1) : 1
+    } else if (keeperSettings.costModel === 'auction-cost') {
+      const draftPick = await prisma.draftPick.findFirst({
+        where: { playerId, teamId: req.params.id },
+        orderBy: { createdAt: 'desc' },
+      })
+      keeperCost = draftPick?.amount || 0
+    }
+
+    const updated = await prisma.rosterEntry.update({
+      where: { id: entry.id },
+      data: {
+        isKeeper: true,
+        keeperCost,
+        keeperYear: new Date().getFullYear(),
+        keptAt: new Date(),
+      },
+      include: { player: { select: { id: true, name: true } } },
+    })
+
+    res.json({ rosterEntry: updated })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/teams/:id/keeper/undesignate - Remove keeper designation
+router.post('/:id/keeper/undesignate', authenticate, async (req, res, next) => {
+  try {
+    const { playerId } = req.body
+
+    const team = await prisma.team.findUnique({ where: { id: req.params.id } })
+    if (!team) return res.status(404).json({ error: { message: 'Team not found' } })
+    if (team.userId !== req.user.id) return res.status(403).json({ error: { message: 'Not authorized' } })
+
+    const entry = await prisma.rosterEntry.findFirst({
+      where: { teamId: req.params.id, playerId, isActive: true },
+    })
+    if (!entry) return res.status(400).json({ error: { message: 'Player not on active roster' } })
+    if (!entry.isKeeper) return res.status(400).json({ error: { message: 'Player is not a keeper' } })
+
+    const updated = await prisma.rosterEntry.update({
+      where: { id: entry.id },
+      data: { isKeeper: false, keeperCost: null, keeperYear: null, keptAt: null },
+      include: { player: { select: { id: true, name: true } } },
+    })
+
+    res.json({ rosterEntry: updated })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/teams/:id/keepers - Get designated keepers
+router.get('/:id/keepers', authenticate, async (req, res, next) => {
+  try {
+    const keepers = await prisma.rosterEntry.findMany({
+      where: { teamId: req.params.id, isActive: true, isKeeper: true },
+      include: { player: true },
+    })
+
+    res.json({ keepers })
   } catch (error) {
     next(error)
   }

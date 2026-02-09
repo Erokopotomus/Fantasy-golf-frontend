@@ -23,7 +23,7 @@ const Standings = () => {
   const { format, isHeadToHead, isRoto, isSurvivor, isOneAndDone, isFullLeague } = useLeagueFormat(league)
 
   const { standings, weeklyResults, loading, error, refetch } = useStandings(leagueId)
-  const { standings: matchupStandings } = useMatchups(leagueId)
+  const { standings: matchupStandings, divisionStandings } = useMatchups(leagueId)
   const { standings: rotoStandings } = useRotoCategories(leagueId)
   const { survivorData } = useSurvivor(leagueId)
 
@@ -160,7 +160,7 @@ const Standings = () => {
       {/* Main Content Grid - Format-Aware */}
       {isHeadToHead && (
         <div className="space-y-6">
-          <H2HStandings standings={matchupStandings} currentUserId={user?.id} />
+          <H2HStandings standings={matchupStandings} currentUserId={user?.id} divisionStandings={divisionStandings} />
           <Card>
             <h3 className="text-lg font-semibold font-display text-white mb-4">Tournament Results</h3>
             <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />

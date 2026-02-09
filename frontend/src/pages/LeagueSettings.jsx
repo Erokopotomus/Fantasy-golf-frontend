@@ -56,6 +56,11 @@ const LeagueSettings = () => {
     waiverPeriodHours: 24,
     playoffTeams: league?.settings?.playoffTeams || 4,
     playoffWeeks: league?.settings?.playoffWeeks || 3,
+    positionLimits: league?.settings?.positionLimits || {},
+    keeperSettings: league?.settings?.keeperSettings || {},
+    tradeReviewHours: league?.settings?.tradeReviewHours || 48,
+    tradeVetoThreshold: league?.settings?.tradeVetoThreshold || 50,
+    tradeVetoVisibility: league?.settings?.tradeVetoVisibility || 'anonymous',
     formatSettings: league?.settings?.formatSettings || {},
   })
 
@@ -82,6 +87,11 @@ const LeagueSettings = () => {
         waiverPeriodHours: league.settings?.waiverPeriodHours || 24,
         playoffTeams: league.settings?.playoffTeams || 4,
         playoffWeeks: league.settings?.playoffWeeks || 3,
+        positionLimits: league.settings?.positionLimits || {},
+        keeperSettings: league.settings?.keeperSettings || {},
+        tradeReviewHours: league.settings?.tradeReviewHours || 48,
+        tradeVetoThreshold: league.settings?.tradeVetoThreshold || 50,
+        tradeVetoVisibility: league.settings?.tradeVetoVisibility || 'anonymous',
         formatSettings: league.settings?.formatSettings || {},
       }))
     }
@@ -140,6 +150,11 @@ const LeagueSettings = () => {
           waiverPeriodHours: settings.waiverPeriodHours,
           playoffTeams: settings.playoffTeams,
           playoffWeeks: settings.playoffWeeks,
+          positionLimits: settings.positionLimits,
+          keeperSettings: settings.keeperSettings,
+          tradeReviewHours: settings.tradeReviewHours,
+          tradeVetoThreshold: settings.tradeVetoThreshold,
+          tradeVetoVisibility: settings.tradeVetoVisibility,
           formatSettings: settings.formatSettings,
         }
       })
@@ -202,7 +217,7 @@ const LeagueSettings = () => {
       case 'full-league':
         return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
       case 'head-to-head':
-        return <HeadToHeadSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+        return <HeadToHeadSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} teams={league?.teams} />
       case 'roto':
         return <RotoSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
       case 'survivor':
@@ -348,6 +363,122 @@ const LeagueSettings = () => {
               <p className="text-xs text-text-muted mt-2">
                 Injured reserve slots let teams hold injured players without using bench spots
               </p>
+            </div>
+
+            {/* Position Limits (NFL only) */}
+            {league?.sport?.toLowerCase() === 'nfl' && (
+              <div className="pt-4 border-t border-dark-border">
+                <label className="block text-sm font-medium text-text-secondary mb-3">
+                  Position Limits
+                </label>
+                <p className="text-xs text-text-muted mb-3">
+                  Maximum number of each position on a roster. Leave blank for no limit.
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(pos => (
+                    <div key={pos}>
+                      <label className="block text-xs font-medium text-text-muted mb-1">{pos}</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        placeholder="No limit"
+                        value={settings.positionLimits?.[pos] ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? null : parseInt(e.target.value)
+                          setSettings(prev => ({
+                            ...prev,
+                            positionLimits: { ...prev.positionLimits, [pos]: val },
+                          }))
+                        }}
+                        className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Keeper League Settings */}
+            <div className="pt-4 border-t border-dark-border">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary">Keeper League</label>
+                  <p className="text-xs text-text-muted">Allow teams to keep players between seasons</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSettings(prev => ({
+                    ...prev,
+                    keeperSettings: {
+                      ...prev.keeperSettings,
+                      enabled: !prev.keeperSettings?.enabled,
+                    },
+                  }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    settings.keeperSettings?.enabled ? 'bg-gold' : 'bg-dark-border'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      settings.keeperSettings?.enabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {settings.keeperSettings?.enabled && (
+                <div className="space-y-3 pl-0">
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1">Max Keepers per Team</label>
+                    <select
+                      value={settings.keeperSettings?.maxKeepers || 3}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        keeperSettings: { ...prev.keeperSettings, maxKeepers: parseInt(e.target.value) },
+                      }))}
+                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                    >
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1">Keeper Cost Model</label>
+                    <select
+                      value={settings.keeperSettings?.costModel || 'no-cost'}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        keeperSettings: { ...prev.keeperSettings, costModel: e.target.value },
+                      }))}
+                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                    >
+                      <option value="no-cost">No Cost</option>
+                      <option value="round-penalty">Round Penalty (draft round - 1)</option>
+                      <option value="auction-cost">Auction Cost (original bid)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1">Keeper Duration</label>
+                    <select
+                      value={settings.keeperSettings?.keeperYears || 'unlimited'}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        keeperSettings: { ...prev.keeperSettings, keeperYears: e.target.value },
+                      }))}
+                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                    >
+                      <option value="1">1 Year</option>
+                      <option value="2">2 Years</option>
+                      <option value="3">3 Years</option>
+                      <option value="4">4 Years</option>
+                      <option value="5">5 Years</option>
+                      <option value="unlimited">Unlimited</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -513,6 +644,50 @@ const LeagueSettings = () => {
                 <option value="none">No Review (Instant)</option>
               </select>
             </div>
+
+            {/* League Vote Settings */}
+            {settings.tradeReview === 'league-vote' && (
+              <div className="space-y-3 p-4 bg-dark-tertiary/50 rounded-lg border border-dark-border">
+                <div>
+                  <label className="block text-xs font-medium text-text-muted mb-1">Veto Threshold</label>
+                  <select
+                    value={settings.tradeVetoThreshold}
+                    onChange={(e) => setSettings({ ...settings, tradeVetoThreshold: parseInt(e.target.value) })}
+                    className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  >
+                    <option value="33">33% of league</option>
+                    <option value="50">50% of league</option>
+                    <option value="67">67% of league</option>
+                  </select>
+                  <p className="text-xs text-text-muted mt-1">Percentage of eligible voters needed to veto a trade</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-text-muted mb-1">Review Period</label>
+                  <select
+                    value={settings.tradeReviewHours}
+                    onChange={(e) => setSettings({ ...settings, tradeReviewHours: parseInt(e.target.value) })}
+                    className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  >
+                    <option value="24">24 hours</option>
+                    <option value="48">48 hours</option>
+                    <option value="72">72 hours</option>
+                  </select>
+                  <p className="text-xs text-text-muted mt-1">How long league members have to vote on a trade</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-text-muted mb-1">Vote Visibility</label>
+                  <select
+                    value={settings.tradeVetoVisibility}
+                    onChange={(e) => setSettings({ ...settings, tradeVetoVisibility: e.target.value })}
+                    className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  >
+                    <option value="anonymous">Anonymous</option>
+                    <option value="visible">Visible to All</option>
+                    <option value="commissioner-only">Commissioner Only</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between p-4 bg-dark-tertiary rounded-lg">
