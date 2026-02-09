@@ -213,7 +213,7 @@ const LeagueSettings = () => {
   }
 
   const renderFormatSettings = () => {
-    switch (league?.format) {
+    switch (format?.id) {
       case 'full-league':
         return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
       case 'head-to-head':
