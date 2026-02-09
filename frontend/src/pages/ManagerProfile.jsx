@@ -5,6 +5,9 @@ import useManagerProfile from '../hooks/useManagerProfile'
 import Card from '../components/common/Card'
 import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
 import api from '../services/api'
+import ShareButton from '../components/share/ShareButton'
+import RatingCard from '../components/share/cards/RatingCard'
+import BadgeCard from '../components/share/cards/BadgeCard'
 
 const TIER_COLORS = {
   BRONZE: '#CD7F32',
@@ -123,10 +126,11 @@ const ComponentBar = ({ label, value, max = 100 }) => {
   )
 }
 
-const AchievementBadge = ({ achievement }) => {
+const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
   const [showTooltip, setShowTooltip] = useState(false)
   const tierColor = TIER_COLORS[achievement.tier] || '#666'
   const unlocked = achievement.unlocked
+  const badgeSlug = achievement.slug || achievement.name?.toLowerCase().replace(/\s+/g, '_')
 
   return (
     <div
@@ -150,6 +154,40 @@ const AchievementBadge = ({ achievement }) => {
             <svg className="w-5 h-5 text-text-muted" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
             </svg>
+          </div>
+        )}
+        {/* Pin indicator */}
+        {isPinned && !editing && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center">
+            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2l1.5 4.5H16l-3.5 2.5L14 13.5 10 11l-4 2.5 1.5-4.5L4 6.5h4.5z" />
+            </svg>
+          </div>
+        )}
+        {/* Edit mode pin/unpin button */}
+        {editing && unlocked && onTogglePin && (
+          <button
+            onClick={() => onTogglePin(badgeSlug)}
+            className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] transition-colors ${
+              isPinned ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/40 hover:bg-white/20'
+            }`}
+            title={isPinned ? 'Unpin badge' : 'Pin badge (max 3)'}
+          >
+            📌
+          </button>
+        )}
+        {/* Share badge icon */}
+        {unlocked && !editing && (
+          <div className="absolute -bottom-1 -right-1">
+            <ShareButton
+              CardComponent={BadgeCard}
+              cardProps={{
+                badgeName: badgeSlug,
+                tier: achievement.tier?.toLowerCase(),
+                description: achievement.description,
+              }}
+              label=""
+            />
           </div>
         )}
       </div>
@@ -187,6 +225,7 @@ const ManagerProfile = () => {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [shareToast, setShareToast] = useState(false)
+  const [pinnedBadges, setPinnedBadges] = useState(user?.pinnedBadges || [])
 
   if (loading) {
     return (
@@ -272,6 +311,29 @@ const ManagerProfile = () => {
     })
   }
 
+  const togglePinnedBadge = async (badgeName) => {
+    const current = Array.isArray(pinnedBadges) ? [...pinnedBadges] : []
+    let updated
+    if (current.includes(badgeName)) {
+      updated = current.filter(b => b !== badgeName)
+    } else {
+      if (current.length >= 3) return // Max 3
+      updated = [...current, badgeName]
+    }
+    setPinnedBadges(updated)
+    try {
+      await api.updatePinnedBadges(updated)
+    } catch (err) {
+      console.error('Pin badge failed:', err)
+      setPinnedBadges(current) // revert
+    }
+  }
+
+  // Sync pinnedBadges when user data loads
+  const effectivePinnedBadges = Array.isArray(pinnedBadges) && pinnedBadges.length > 0
+    ? pinnedBadges
+    : (Array.isArray(user?.pinnedBadges) ? user.pinnedBadges : [])
+
   return (
     <div className="min-h-screen bg-dark-primary">
       <div className="max-w-5xl mx-auto px-4 py-6">
@@ -295,6 +357,15 @@ const ManagerProfile = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold font-display text-white truncate">{user?.name || 'Manager'}</h1>
+                {effectivePinnedBadges.length > 0 && (
+                  <span className="flex items-center gap-1 ml-1">
+                    {effectivePinnedBadges.slice(0, 3).map((badge, i) => (
+                      <span key={i} className="text-sm" title={badge.replace(/_/g, ' ')}>
+                        {badge === 'hot_streak_5' || badge === 'hot_streak_10' ? '🔥' : badge === 'sharpshooter' ? '🎯' : badge === 'clutch_caller' ? '⚡' : badge === 'iron_will' ? '🛡' : badge === 'volume_king' ? '👑' : '🏆'}
+                      </span>
+                    ))}
+                  </span>
+                )}
                 {isOwnProfile && !editing && (
                   <button
                     onClick={startEdit}
@@ -317,14 +388,43 @@ const ManagerProfile = () => {
                     </svg>
                   </button>
                 )}
+                {clutchRating && clutchRating.overallRating != null && !editing && (
+                  <ShareButton
+                    CardComponent={RatingCard}
+                    cardProps={{
+                      rating: clutchRating.overallRating,
+                      tier: clutchRating.tier,
+                      trend: clutchRating.trend,
+                      components: {
+                        accuracy: clutchRating.accuracyComponent,
+                        consistency: clutchRating.consistencyComponent,
+                        volume: clutchRating.volumeComponent,
+                        breadth: clutchRating.breadthComponent,
+                      },
+                      userName: user?.name,
+                      username: user?.username,
+                    }}
+                    label="Share"
+                  />
+                )}
                 {shareToast && (
                   <span className="text-xs text-green-400 font-mono animate-pulse">Link copied!</span>
                 )}
               </div>
               {!editing && user?.username && (
-                <Link to={`/u/${user.username}`} className="text-text-muted text-sm font-mono hover:text-accent-gold transition-colors">
-                  @{user.username}
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link to={`/u/${user.username}`} className="text-text-muted text-sm font-mono hover:text-accent-gold transition-colors">
+                    @{user.username}
+                  </Link>
+                  {!isOwnProfile && (
+                    <Link
+                      to={`/prove-it?tab=compare&target=${userId}`}
+                      className="text-xs px-2 py-1 rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/20 font-medium transition-colors"
+                    >
+                      Compare
+                    </Link>
+                  )}
+                </div>
               )}
               {memberSince && <p className="text-text-muted text-sm">Member since {memberSince}</p>}
 
@@ -462,7 +562,26 @@ const ManagerProfile = () => {
         {/* Clutch Rating Breakdown */}
         {clutchRating && clutchRating.overallRating != null && (
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold font-display text-white mb-4">Clutch Rating Breakdown</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold font-display text-white">Clutch Rating Breakdown</h2>
+              <ShareButton
+                CardComponent={RatingCard}
+                cardProps={{
+                  rating: clutchRating.overallRating,
+                  tier: clutchRating.tier,
+                  trend: clutchRating.trend,
+                  components: {
+                    accuracy: clutchRating.accuracyComponent,
+                    consistency: clutchRating.consistencyComponent,
+                    volume: clutchRating.volumeComponent,
+                    breadth: clutchRating.breadthComponent,
+                  },
+                  userName: user?.name,
+                  username: user?.username,
+                }}
+                label="Share"
+              />
+            </div>
             <div className="space-y-3">
               <ComponentBar label="Accuracy (40%)" value={clutchRating.accuracyComponent} />
               <ComponentBar label="Consistency (25%)" value={clutchRating.consistencyComponent} />
@@ -660,9 +779,18 @@ const ManagerProfile = () => {
                       </h3>
                     </div>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {items.map((a) => (
-                        <AchievementBadge key={a.id} achievement={a} />
-                      ))}
+                      {items.map((a) => {
+                        const badgeSlug = a.slug || a.name?.toLowerCase().replace(/\s+/g, '_')
+                        return (
+                          <AchievementBadge
+                            key={a.id}
+                            achievement={a}
+                            editing={editing}
+                            isPinned={effectivePinnedBadges.includes(badgeSlug)}
+                            onTogglePin={isOwnProfile ? togglePinnedBadge : undefined}
+                          />
+                        )
+                      })}
                     </div>
                   </div>
                 ))}

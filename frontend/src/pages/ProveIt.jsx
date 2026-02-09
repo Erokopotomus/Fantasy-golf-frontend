@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { track, Events } from '../services/analytics'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
+import HeadToHead from '../components/predictions/HeadToHead'
+import ShareButton from '../components/share/ShareButton'
+import PicksResultCard from '../components/share/cards/PicksResultCard'
+import StreakCard from '../components/share/cards/StreakCard'
 
 // ─── Tier helpers ───────────────────────────────────────────────────────────
 const TIER_CONFIG = {
@@ -229,6 +234,7 @@ function WeeklySlate({ onPredictionMade }) {
 
 // ─── Tab: My Track Record ───────────────────────────────────────────────────
 function TrackRecord() {
+  const { user } = useAuth()
   const [reputation, setReputation] = useState(null)
   const [predictions, setPredictions] = useState([])
   const [nflRecord, setNflRecord] = useState(null)
@@ -359,6 +365,35 @@ function TrackRecord() {
             <div className="text-xs text-white/40">Best Streak</div>
           </div>
         </div>
+
+        {/* Share buttons */}
+        {total > 0 && (
+          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
+            <ShareButton
+              CardComponent={PicksResultCard}
+              cardProps={{
+                correct,
+                total,
+                percentile: rep?.percentileRank,
+                sport: sportFilter !== 'all' ? sportFilter : null,
+                username: user?.username,
+              }}
+              label="Share Record"
+            />
+            {streak >= 5 && (
+              <ShareButton
+                CardComponent={StreakCard}
+                cardProps={{
+                  streakLength: streak,
+                  type: 'correct',
+                  userName: user?.name,
+                  username: user?.username,
+                }}
+                label="Share Streak"
+              />
+            )}
+          </div>
+        )}
 
         {/* Tier progress */}
         {progress && (
@@ -628,6 +663,15 @@ function Leaderboards() {
                     </div>
                   )}
                   <span className="text-sm text-white truncate">{entry.name || entry.userName || 'Anonymous'}</span>
+                  {Array.isArray(entry.pinnedBadges) && entry.pinnedBadges.length > 0 && (
+                    <span className="flex items-center gap-0.5 ml-1 shrink-0">
+                      {entry.pinnedBadges.slice(0, 3).map((badge, bi) => (
+                        <span key={bi} className="text-[10px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono leading-none" title={badge.replace(/_/g, ' ')}>
+                          {badge === 'hot_streak_5' || badge === 'hot_streak_10' ? '🔥' : badge === 'sharpshooter' ? '🎯' : badge === 'clutch_caller' ? '⚡' : badge === 'iron_will' ? '🛡' : badge === 'volume_king' ? '👑' : '🏆'}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </div>
                 <div className="col-span-2 flex items-center justify-center">
                   {clutchRating != null ? (
@@ -1089,12 +1133,22 @@ const TABS = [
   { id: 'slate', label: 'Golf Slate' },
   { id: 'record', label: 'My Track Record' },
   { id: 'leaderboard', label: 'Leaderboards' },
+  { id: 'compare', label: 'Compare' },
   { id: 'analysts', label: 'Analysts' },
 ]
 
 export default function ProveIt() {
-  const [activeTab, setActiveTab] = useState('nfl')
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const targetParam = searchParams.get('target')
+  const [activeTab, setActiveTab] = useState(tabParam || 'nfl')
   const [refreshKey, setRefreshKey] = useState(0)
+
+  useEffect(() => {
+    if (tabParam && TABS.some(t => t.id === tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
 
   useEffect(() => {
     track(Events.PAGE_VIEWED, { path: '/prove-it', tab: activeTab })
@@ -1136,6 +1190,7 @@ export default function ProveIt() {
       {activeTab === 'slate' && <WeeklySlate key={refreshKey} onPredictionMade={handlePredictionMade} />}
       {activeTab === 'record' && <TrackRecord key={refreshKey} />}
       {activeTab === 'leaderboard' && <Leaderboards />}
+      {activeTab === 'compare' && <HeadToHead initialTarget={targetParam || 'consensus'} />}
       {activeTab === 'analysts' && <Analysts />}
     </div>
   )

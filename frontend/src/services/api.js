@@ -883,6 +883,19 @@ class ApiService {
       body: JSON.stringify(data),
     })
   }
+
+  // Phase 5: Compare + Pinned Badges
+  async comparePredictions(targetUserId, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/predictions/compare/${encodeURIComponent(targetUserId)}${params ? '?' + params : ''}`)
+  }
+
+  async updatePinnedBadges(pinnedBadges) {
+    return this.request('/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify({ pinnedBadges }),
+    })
+  }
 }
 
 export const api = new ApiService()

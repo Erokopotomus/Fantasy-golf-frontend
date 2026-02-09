@@ -184,7 +184,7 @@ router.get('/leaderboard', async (req, res) => {
         if (profileUserIds.length > 0) {
           const profiles = await prisma.user.findMany({
             where: { id: { in: profileUserIds } },
-            select: { id: true, username: true, bio: true, tagline: true, socialLinks: true },
+            select: { id: true, username: true, bio: true, tagline: true, socialLinks: true, pinnedBadges: true },
           })
           const profileMap = new Map(profiles.map(p => [p.id, p]))
           for (const entry of leaderboard) {
@@ -214,20 +214,29 @@ router.get('/leaderboard', async (req, res) => {
       prisma
     )
 
-    // Enrich with Clutch Rating data if available
+    // Enrich with Clutch Rating data + pinnedBadges
     const userIds = leaderboard.map(e => e.userId).filter(Boolean)
     if (userIds.length > 0) {
-      const ratings = await prisma.clutchManagerRating.findMany({
-        where: { userId: { in: userIds } },
-        select: { userId: true, overallRating: true, tier: true, trend: true },
-      })
+      const [ratings, users] = await Promise.all([
+        prisma.clutchManagerRating.findMany({
+          where: { userId: { in: userIds } },
+          select: { userId: true, overallRating: true, tier: true, trend: true },
+        }),
+        prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, pinnedBadges: true },
+        }),
+      ])
       const ratingMap = new Map(ratings.map(r => [r.userId, r]))
+      const userMap = new Map(users.map(u => [u.id, u]))
 
       for (const entry of leaderboard) {
         const r = ratingMap.get(entry.userId)
         entry.clutchRating = r?.overallRating ?? null
         entry.clutchTier = r?.tier ?? null
         entry.clutchTrend = r?.trend ?? null
+        const u = userMap.get(entry.userId)
+        entry.pinnedBadges = u?.pinnedBadges ?? []
       }
     }
 
@@ -235,7 +244,7 @@ router.get('/leaderboard', async (req, res) => {
     if (include === 'profile' && userIds.length > 0) {
       const profiles = await prisma.user.findMany({
         where: { id: { in: userIds } },
-        select: { id: true, username: true, bio: true, tagline: true, socialLinks: true },
+        select: { id: true, username: true, bio: true, tagline: true, socialLinks: true, pinnedBadges: true },
       })
       const profileMap = new Map(profiles.map(p => [p.id, p]))
       for (const entry of leaderboard) {
@@ -245,6 +254,7 @@ router.get('/leaderboard', async (req, res) => {
           entry.bio = p.bio
           entry.tagline = p.tagline
           entry.socialLinks = p.socialLinks
+          entry.pinnedBadges = p.pinnedBadges
         }
       }
     }
@@ -467,6 +477,194 @@ router.post('/resolve-event/:eventId', authenticate, async (req, res) => {
     )
 
     res.json({ results })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── Compare: User vs User or User vs Consensus ─────────────────────────
+// GET /api/predictions/compare/:targetUserId?sport=nfl
+router.get('/compare/:targetUserId', authenticate, async (req, res) => {
+  try {
+    const myUserId = req.user.id
+    const { targetUserId } = req.params
+    const { sport } = req.query
+    const isConsensus = targetUserId === 'consensus'
+
+    // Fetch the authed user info
+    const myUser = await prisma.user.findUnique({
+      where: { id: myUserId },
+      select: { id: true, name: true, avatar: true, username: true },
+    })
+
+    // Fetch my resolved predictions
+    const myWhere = {
+      userId: myUserId,
+      outcome: { in: ['CORRECT', 'INCORRECT'] },
+    }
+    if (sport && sport !== 'all') myWhere.sport = sport
+
+    const myPredictions = await prisma.prediction.findMany({
+      where: myWhere,
+      select: {
+        id: true,
+        eventId: true,
+        subjectPlayerId: true,
+        predictionType: true,
+        predictionData: true,
+        outcome: true,
+        sport: true,
+      },
+    })
+
+    if (isConsensus) {
+      // Compare against consensus direction for each prediction
+      let overlapTotal = 0
+      let myCorrect = 0
+      let consensusCorrect = 0
+      const bySport = {}
+
+      for (const pred of myPredictions) {
+        if (!pred.eventId || !pred.subjectPlayerId) continue
+
+        // Get all public predictions for the same event+player+type
+        const allPreds = await prisma.prediction.findMany({
+          where: {
+            eventId: pred.eventId,
+            subjectPlayerId: pred.subjectPlayerId,
+            predictionType: pred.predictionType,
+            isPublic: true,
+            outcome: { in: ['CORRECT', 'INCORRECT'] },
+            userId: { not: myUserId },
+          },
+          select: { predictionData: true, outcome: true },
+        })
+
+        if (allPreds.length === 0) continue
+
+        // Determine consensus direction
+        const directions = {}
+        for (const p of allPreds) {
+          const dir = p.predictionData?.direction || 'unknown'
+          directions[dir] = (directions[dir] || 0) + 1
+        }
+        const consensusDir = Object.entries(directions).sort((a, b) => b[1] - a[1])[0]?.[0]
+        const myDir = pred.predictionData?.direction
+
+        // Did consensus match the correct outcome?
+        const consensusPredCorrect = allPreds.filter(p => p.predictionData?.direction === consensusDir && p.outcome === 'CORRECT').length
+        const consensusPredTotal = allPreds.filter(p => p.predictionData?.direction === consensusDir).length
+        const consensusWasRight = consensusPredTotal > 0 && consensusPredCorrect > consensusPredTotal / 2
+
+        overlapTotal++
+        if (pred.outcome === 'CORRECT') myCorrect++
+        if (consensusWasRight) consensusCorrect++
+
+        // Track by sport
+        const s = pred.sport || 'other'
+        if (!bySport[s]) bySport[s] = { overlapTotal: 0, myCorrect: 0, theirCorrect: 0 }
+        bySport[s].overlapTotal++
+        if (pred.outcome === 'CORRECT') bySport[s].myCorrect++
+        if (consensusWasRight) bySport[s].theirCorrect++
+      }
+
+      // Get Clutch Ratings
+      const myRating = await prisma.clutchManagerRating.findUnique({ where: { userId: myUserId } }).catch(() => null)
+
+      return res.json({
+        myUser,
+        targetUser: { id: 'consensus', name: 'Community Consensus', avatar: null },
+        isConsensus: true,
+        summary: {
+          overlapTotal,
+          myCorrect,
+          theirCorrect: consensusCorrect,
+          myAccuracy: overlapTotal > 0 ? myCorrect / overlapTotal : 0,
+          theirAccuracy: overlapTotal > 0 ? consensusCorrect / overlapTotal : 0,
+        },
+        bySport,
+        myClutchRating: myRating?.overallRating ?? null,
+        theirClutchRating: null,
+      })
+    }
+
+    // User vs User
+    const targetUser = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { id: true, name: true, avatar: true, username: true },
+    })
+    if (!targetUser) {
+      return res.status(404).json({ error: { message: 'User not found' } })
+    }
+
+    // Fetch target's resolved predictions
+    const theirWhere = {
+      userId: targetUserId,
+      outcome: { in: ['CORRECT', 'INCORRECT'] },
+    }
+    if (sport && sport !== 'all') theirWhere.sport = sport
+
+    const theirPredictions = await prisma.prediction.findMany({
+      where: theirWhere,
+      select: {
+        id: true,
+        eventId: true,
+        subjectPlayerId: true,
+        predictionType: true,
+        outcome: true,
+        sport: true,
+      },
+    })
+
+    // Build a key map for overlap
+    const theirMap = new Map()
+    for (const p of theirPredictions) {
+      const key = `${p.eventId}|${p.subjectPlayerId}|${p.predictionType}`
+      theirMap.set(key, p)
+    }
+
+    let overlapTotal = 0
+    let myCorrect = 0
+    let theirCorrect = 0
+    const bySport = {}
+
+    for (const pred of myPredictions) {
+      const key = `${pred.eventId}|${pred.subjectPlayerId}|${pred.predictionType}`
+      const theirPred = theirMap.get(key)
+      if (!theirPred) continue
+
+      overlapTotal++
+      if (pred.outcome === 'CORRECT') myCorrect++
+      if (theirPred.outcome === 'CORRECT') theirCorrect++
+
+      const s = pred.sport || 'other'
+      if (!bySport[s]) bySport[s] = { overlapTotal: 0, myCorrect: 0, theirCorrect: 0 }
+      bySport[s].overlapTotal++
+      if (pred.outcome === 'CORRECT') bySport[s].myCorrect++
+      if (theirPred.outcome === 'CORRECT') bySport[s].theirCorrect++
+    }
+
+    // Get Clutch Ratings
+    const [myRating, theirRating] = await Promise.all([
+      prisma.clutchManagerRating.findUnique({ where: { userId: myUserId } }).catch(() => null),
+      prisma.clutchManagerRating.findUnique({ where: { userId: targetUserId } }).catch(() => null),
+    ])
+
+    res.json({
+      myUser,
+      targetUser,
+      isConsensus: false,
+      summary: {
+        overlapTotal,
+        myCorrect,
+        theirCorrect,
+        myAccuracy: overlapTotal > 0 ? myCorrect / overlapTotal : 0,
+        theirAccuracy: overlapTotal > 0 ? theirCorrect / overlapTotal : 0,
+      },
+      bySport,
+      myClutchRating: myRating?.overallRating ?? null,
+      theirClutchRating: theirRating?.overallRating ?? null,
+    })
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
   }

@@ -1120,4 +1120,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 9, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: data pipeline (NFL-1), stats display (NFL-2), league infra, scoring calculator, weekly scoring pipeline, frontend sport-awareness (all pages), matchups/standings fixes, test league seeder, and gameday UX spec (NFL-3 near-complete) all done. League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking. Next: build out UX doc Phase 1 items (remaining page polish), then Phase 2 (Gameday Portal).*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-5 complete, Phase 6 partial. Phase 5 adds: shareable moment cards (html2canvas, 5 card types), head-to-head comparison (vs consensus + vs any user), pinned badges (up to 3, displayed on profile + leaderboard), Compare tab on Prove It page, ShareButtons throughout ManagerProfile and Track Record. Next: UX doc Phase 6 remainder (AI Coaching), Phase 7 (Preseason Experience).*

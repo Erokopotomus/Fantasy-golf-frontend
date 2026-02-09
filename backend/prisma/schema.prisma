@@ -60,6 +60,7 @@ model User {
   bio         String?  @db.Text
   tagline     String?  @db.VarChar(280)
   socialLinks Json     @default("{}") @map("social_links")
+  pinnedBadges Json    @default("[]") @map("pinned_badges")
   clutchManagerRating ClutchManagerRating?
 
   @@map("users")

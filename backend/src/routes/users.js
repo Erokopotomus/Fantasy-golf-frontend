@@ -22,6 +22,7 @@ router.get('/me', authenticate, async (req, res, next) => {
         bio: true,
         tagline: true,
         socialLinks: true,
+        pinnedBadges: true,
         createdAt: true,
         teams: {
           include: {
@@ -53,7 +54,7 @@ router.get('/me', authenticate, async (req, res, next) => {
 // PATCH /api/users/me - Update current user profile
 router.patch('/me', authenticate, async (req, res, next) => {
   try {
-    const { name, avatar, bio, tagline, socialLinks, username } = req.body
+    const { name, avatar, bio, tagline, socialLinks, username, pinnedBadges } = req.body
 
     const updateData = {}
     if (name) updateData.name = name
@@ -68,6 +69,32 @@ router.patch('/me', authenticate, async (req, res, next) => {
         }
       }
       updateData.socialLinks = cleaned
+    }
+
+    // Pinned badges validation (max 3, must be in user's earned badges)
+    if (pinnedBadges !== undefined) {
+      if (!Array.isArray(pinnedBadges) || pinnedBadges.length > 3) {
+        return res.status(400).json({ error: { message: 'pinnedBadges must be an array with at most 3 entries' } })
+      }
+      // Validate each badge exists in user's earned badges
+      const reps = await prisma.userReputation.findMany({
+        where: { userId: req.user.id },
+        select: { badges: true },
+      })
+      const earnedBadges = new Set()
+      for (const rep of reps) {
+        const badges = Array.isArray(rep.badges) ? rep.badges : []
+        for (const b of badges) {
+          const badgeName = typeof b === 'string' ? b : (b?.type || b?.name || '')
+          if (badgeName) earnedBadges.add(badgeName)
+        }
+      }
+      for (const badge of pinnedBadges) {
+        if (typeof badge !== 'string' || !earnedBadges.has(badge)) {
+          return res.status(400).json({ error: { message: `Badge "${badge}" not earned` } })
+        }
+      }
+      updateData.pinnedBadges = pinnedBadges
     }
 
     // Username validation
@@ -100,6 +127,7 @@ router.patch('/me', authenticate, async (req, res, next) => {
           bio: true,
           tagline: true,
           socialLinks: true,
+          pinnedBadges: true,
           createdAt: true
         }
       })
@@ -131,6 +159,7 @@ router.get('/by-username/:username', async (req, res, next) => {
         bio: true,
         tagline: true,
         socialLinks: true,
+        pinnedBadges: true,
         createdAt: true,
       }
     })

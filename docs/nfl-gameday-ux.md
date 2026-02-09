@@ -1701,12 +1701,28 @@ The migration helper is the most important tool for growth. If a commissioner ca
 - Badge-aware reputation updates using shared predictionService
 - 688 test props generated for 2024 weeks 5-10, 477 resolved
 
-### Phase 5: Expert Tracking + Shareable Cards
+### Phase 5: Expert Tracking + Shareable Cards — ✅ COMPLETE
 **Build:** Expert comparison tracker, delta cards, shareable moment cards, badge milestone cards, trophy case
 **Data needed:** Expert rankings (start with Clutch Consensus; named experts require partnerships)
 **Blocker:** LOW for consensus, HIGH for named experts
 **Shareable cards:** Must be designed for Instagram Stories (1080x1920) AND Twitter (1200x675)
 **Milestone:** User shares an "I told you so" card in their group chat
+**What was built:**
+- `pinnedBadges` field on User model (up to 3 pinned badges displayed on profile + leaderboard)
+- `GET /api/predictions/compare/:targetUserId` — user vs user or user vs consensus comparison
+- Pinned badges validation in `PATCH /api/users/me`, leaderboard enrichment with pinnedBadges
+- `html2canvas` for client-side image capture (lazy-loaded, 48KB gzip chunk)
+- `MomentCardBase.jsx` — shared card template (1200x675 Twitter format, Aurora Ember palette)
+- `ShareButton.jsx` — offscreen capture + dropdown (Download PNG, Copy to Clipboard, Native Share API)
+- 5 card types: PicksResultCard, StreakCard, BadgeCard, RatingCard, HeadToHeadCard
+- `HeadToHead.jsx` — comparison component (vs Consensus default, user search, sport filter)
+- Compare tab added to ProveIt page (between Leaderboards and Analysts)
+- Query param support: `?tab=compare&target=userId`
+- ShareButton on Track Record stats (PicksResultCard) and streaks >= 5 (StreakCard)
+- ShareButton on ManagerProfile header (RatingCard), Clutch Rating breakdown, each unlocked badge (BadgeCard)
+- Pin/Unpin toggle on badges in edit mode, pinned badge icons in profile header + leaderboard rows
+- "Compare with..." link on other users' profiles → navigates to Compare tab
+**Still needed:** Named expert partnerships (business decision), Instagram Story format (1080x1920), Delta cards (need Phase 7 preseason rankings)
 
 ### Phase 6: Week in Review + AI Coaching — ✅ PARTIAL (Review done, AI coaching not started)
 **Build:** Decision grading, optimal lineup calc, season trends, Decision DNA, Clutch Rating v2
@@ -1726,5 +1742,5 @@ The migration helper is the most important tool for growth. If a commissioner ca
 ---
 
 *Document created: February 9, 2026*
-*Version: 1.3 — Phases 4+6 (partial) implemented: Prove It picks, line generation, Week in Review*
+*Version: 1.4 — Phase 5 implemented: Shareable cards, head-to-head comparison, pinned badges*
 *References: entry-points-addendum.md, data-strategy.md, nfl-expansion.md, brand-system.md*
