@@ -74,7 +74,8 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Season setup auto-runs on draft completion (matchups, team seasons, budgets)
   - Position limits: per-position roster caps (NFL), enforced on roster add, trades, and waivers
   - Divisions: labels, team assignments, grouped standings with division W-L records
-  - Keeper league support: designate/undesignate keepers, max keepers, cost models (no-cost/round penalty/auction), draft pre-assignment
+  - Keeper league support: designate/undesignate keepers, max keepers, cost models (no-cost/round penalty/auction/auction-escalator), draft pre-assignment
+  - Auction escalator keepers: compounding cost formula `ceil(max(base × multiplier, base + floor))`, `keeperYearsKept` tracking, live cost preview in settings
   - Playoff byes: automatic bye calculation from playoff team count, bracket generation skips bye teams in round 1
 
 - [x] **Draft Room**
@@ -104,6 +105,18 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Trade history log (RosterTransaction audit trail)
   - Trade deadline enforcement (date-based, configurable per league)
   - Trade veto voting: league-vote review mode with configurable threshold (33/50/67%), review period (24/48/72h), vote visibility (anonymous/visible/commissioner-only), auto-processor every 15 min
+  - Draft dollar trading: trades can include current-year and next-year auction dollars alongside players, balances transfer atomically on trade acceptance
+
+- [x] **Draft Dollar Tracking**
+  - Per-team draft dollar accounts (current year + next year balances) with configurable default budget
+  - Bumper enforcement: min/max budget limits validated on all transfers
+  - Commissioner tools: record standalone transactions (side bets, adjustments), direct balance adjustments
+  - Transaction ledger: full history with team filter, category badges (Trade/Side Bet/Adjustment), year badges
+  - Trade integration: propose trades with dollar amounts, auto-transfer on acceptance
+  - Season initialization: accounts auto-created for all teams when enabled
+  - Settings: enable toggle, default budget, min/max bumpers, allow next-year trades toggle
+  - Dedicated page: `/leagues/:leagueId/draft-dollars`
+  - Backend: `draftDollarService.js` (transfers, validation), `draftDollars.js` route (4 endpoints)
 
 - [x] **Notifications**
   - Socket.IO real-time notifications (user rooms)
@@ -549,11 +562,13 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 - `league_members` — league_id, user_id, role, joined_at
 - `players` — id, name, sportId, rank, sgTotal, sgOffTee, sgApproach, sgAroundGreen, sgPutting, primaryTour, headshotUrl, countryFlag, recentForm, etc.
 - `teams` — id, name, leagueId, userId, totalPoints
-- `roster_entries` — id, teamId, playerId, position, rosterStatus, isActive, droppedAt, acquiredVia, isKeeper, keeperCost, keeperYear, keptAt
+- `roster_entries` — id, teamId, playerId, position, rosterStatus, isActive, droppedAt, acquiredVia, isKeeper, keeperCost, keeperYear, keptAt, keeperYearsKept
 - `matchups` — id, leagueId, fantasyWeekId, homeTeamId, awayTeamId, homeScore, awayScore, result
 - `transactions` (RosterTransaction) — id, teamId, leagueId, type, playerId, playerName, metadata
 - `draft_picks` — id, draftId, teamId, playerId, round, pickNumber, playerRank
 - `notifications` — id, userId, type, title, message, actionUrl, isRead, data
+- `draft_dollar_accounts` — id, teamId, leagueSeasonId, currentBalance, nextYearBalance (@@unique teamId+leagueSeasonId)
+- `draft_dollar_transactions` — id, leagueId, leagueSeasonId, fromTeamId, toTeamId, amount, yearType, category, description, tradeId, initiatedById
 
 ### Sport/Season Infrastructure (built in Phase 1)
 - `sports` — id, name, slug, config (JSONB)
@@ -1089,4 +1104,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 8, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion (NFL-1 + NFL-2 + league infra) complete. League management features added: position limits, divisions, keepers, trade veto voting, playoff byes.*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion (NFL-1 + NFL-2 + league infra) complete. League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking.*
