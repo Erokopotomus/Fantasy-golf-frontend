@@ -183,34 +183,40 @@ const GamedayPortal = () => {
           </div>
 
           {userMatchup ? (
-            <div className="flex items-center gap-2">
-              {/* User team */}
-              <div className="flex-1 text-right pr-2 border-r-2 border-emerald-500/40">
-                <div className="flex items-center justify-end gap-2">
-                  <div className="min-w-0">
+            <div className="relative flex items-stretch rounded-xl overflow-hidden">
+              {/* Your side */}
+              <div className="flex-1 bg-emerald-500/10 border border-emerald-500/20 rounded-l-xl px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 mr-2">
+                    <p className="text-[10px] uppercase tracking-wider text-emerald-400/60 font-bold mb-0.5">You</p>
                     <p className="text-sm font-semibold text-emerald-400 truncate">
                       {userTeamInfo?.teamName || userTeamInfo?.name || 'Your Team'}
                     </p>
-                    <p className="text-[10px] text-emerald-400/50">
+                    <p className="text-[10px] text-emerald-400/40">
                       {userTeamInfo?.wins || 0}-{userTeamInfo?.losses || 0}
                     </p>
                   </div>
-                  <span className="text-2xl font-bold font-mono text-emerald-400 flex-shrink-0">
+                  <span className="text-3xl font-bold font-mono text-emerald-400 flex-shrink-0">
                     {(userScore || 0).toFixed(1)}
                   </span>
                 </div>
               </div>
 
-              {/* Divider */}
-              <span className="text-text-muted text-xs px-1">vs</span>
+              {/* Floating VS badge */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                <div className="w-9 h-9 rounded-full bg-dark-primary border-2 border-dark-border flex items-center justify-center shadow-lg">
+                  <span className="text-[10px] font-bold text-text-muted uppercase">VS</span>
+                </div>
+              </div>
 
-              {/* Opponent team */}
-              <div className="flex-1 pl-2 border-l-2 border-red-500/20">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold font-mono text-text-secondary flex-shrink-0">
+              {/* Opponent side */}
+              <div className="flex-1 bg-red-500/5 border border-red-500/10 rounded-r-xl px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-3xl font-bold font-mono text-text-secondary flex-shrink-0">
                     {(opponentScore || 0).toFixed(1)}
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 ml-2 text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-red-400/40 font-bold mb-0.5">Opp</p>
                     <p className="text-sm font-medium text-text-secondary truncate">
                       {opponentTeamInfo?.teamName || opponentTeamInfo?.name || 'Opponent'}
                     </p>
