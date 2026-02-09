@@ -79,12 +79,12 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                       {team.divWins != null ? `${team.divWins}-${team.divLosses}${team.divTies ? `-${team.divTies}` : ''}` : '-'}
                     </td>
                   )}
-                  <td className="py-3 text-right font-mono text-white">{(team.pointsFor || 0).toLocaleString()}</td>
-                  <td className="py-3 text-right font-mono text-text-secondary">{(team.pointsAgainst || 0).toLocaleString()}</td>
+                  <td className="py-3 text-right font-mono text-white">{(team.pointsFor || 0).toFixed(1)}</td>
+                  <td className="py-3 text-right font-mono text-text-secondary">{(team.pointsAgainst || 0).toFixed(1)}</td>
                   <td className={`py-3 text-right pr-2 font-mono font-semibold ${
                     diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-text-muted'
                   }`}>
-                    {diff > 0 ? '+' : ''}{diff}
+                    {diff > 0 ? '+' : ''}{diff.toFixed(1)}
                   </td>
                 </tr>
               )
@@ -131,13 +131,13 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                 </div>
               </div>
               <div className="flex justify-between text-xs text-text-muted">
-                <span>PF: {(team.pointsFor || 0).toLocaleString()}</span>
-                <span>PA: {(team.pointsAgainst || 0).toLocaleString()}</span>
+                <span>PF: {(team.pointsFor || 0).toFixed(1)}</span>
+                <span>PA: {(team.pointsAgainst || 0).toFixed(1)}</span>
                 {hasDivisions && team.divWins != null && (
                   <span>Div: {team.divWins}-{team.divLosses}</span>
                 )}
                 <span className={diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : ''}>
-                  {diff > 0 ? '+' : ''}{diff}
+                  {diff > 0 ? '+' : ''}{diff.toFixed(1)}
                 </span>
               </div>
             </div>

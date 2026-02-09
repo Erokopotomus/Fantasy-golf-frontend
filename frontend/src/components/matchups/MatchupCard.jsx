@@ -15,7 +15,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
       {/* Matchup Header */}
       <div className="px-4 py-2 bg-dark-primary/50 border-b border-dark-border flex items-center justify-between">
         <span className="text-xs text-text-muted">
-          {matchup.completed ? 'Final' : 'In Progress'}
+          {matchup.completed ? 'Final' : (matchup.homeScore > 0 || matchup.awayScore > 0) ? 'In Progress' : 'Upcoming'}
         </span>
         {isUserMatch && (
           <span className="text-xs text-gold font-medium">Your Matchup</span>

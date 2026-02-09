@@ -490,6 +490,99 @@ router.get('/scoring-schema', async (req, res, next) => {
   }
 })
 
+// ─── NFL League Available Players ────────────────────────────────────────
+
+// GET /api/nfl/leagues/:leagueId/available-players — NFL players not rostered in league
+router.get('/leagues/:leagueId/available-players', authenticate, async (req, res, next) => {
+  try {
+    const { leagueId } = req.params
+    const { search, position, limit = 100, offset = 0 } = req.query
+
+    // Verify league exists and user is a member
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      include: { members: { select: { userId: true } }, scoringSystem: true },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember) return res.status(403).json({ error: { message: 'Not a member of this league' } })
+
+    // Get rostered player IDs in this league
+    const rostered = await prisma.rosterEntry.findMany({
+      where: { team: { leagueId }, isActive: true },
+      select: { playerId: true },
+    })
+    const rosteredIds = rostered.map(r => r.playerId)
+
+    const where = {
+      nflPosition: { not: null },
+      id: { notIn: rosteredIds },
+    }
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' }
+    }
+    if (position && position !== 'All') {
+      where.nflPosition = position.toUpperCase()
+    }
+
+    // Fetch players with their game stats for season totals
+    const nflSeason = await prisma.season.findFirst({
+      where: { sport: { slug: 'nfl' }, isCurrent: true },
+    })
+    const seasonYear = nflSeason?.year || 2024
+
+    const [players, total] = await Promise.all([
+      prisma.player.findMany({
+        where,
+        include: {
+          nflPlayerGames: {
+            where: { game: { season: seasonYear } },
+            select: {
+              fantasyPtsHalf: true,
+              fantasyPtsPpr: true,
+              fantasyPtsStd: true,
+            },
+          },
+        },
+        orderBy: { name: 'asc' },
+        take: parseInt(limit),
+        skip: parseInt(offset),
+      }),
+      prisma.player.count({ where }),
+    ])
+
+    // Compute season fantasy points and sort by points desc
+    const playersWithPts = players.map(p => {
+      const games = p.nflPlayerGames || []
+      const fantasyPts = games.reduce((s, g) => s + (g.fantasyPtsHalf || 0), 0)
+      const { nflPlayerGames, ...rest } = p
+      return {
+        ...rest,
+        fantasyPts: Math.round(fantasyPts * 100) / 100,
+        fantasyPtsPerGame: games.length > 0
+          ? Math.round((fantasyPts / games.length) * 100) / 100
+          : 0,
+        gamesPlayed: games.length,
+      }
+    })
+
+    // Sort by fantasy points descending
+    playersWithPts.sort((a, b) => b.fantasyPts - a.fantasyPts)
+
+    res.json({
+      players: playersWithPts,
+      pagination: {
+        total,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        hasMore: parseInt(offset) + playersWithPts.length < total,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // ─── NFL Fantasy League Scoring ──────────────────────────────────────────
 
 // GET /api/nfl/leagues/:leagueId/weekly-scores/:weekNumber

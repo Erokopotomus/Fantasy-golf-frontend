@@ -5,7 +5,7 @@ import { useLeague } from './useLeague'
 
 export const useWaivers = (leagueId, teamId, waiverType) => {
   const { notify } = useNotifications()
-  const { league } = useLeague(leagueId)
+  const { league, loading: leagueLoading } = useLeague(leagueId)
   const [availablePlayers, setAvailablePlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [claimLoading, setClaimLoading] = useState(false)
@@ -29,25 +29,33 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
     return idx === -1 ? null : idx + 1
   }, [waiverType, teamId, league?.settings?.waiverPriorityOrder])
 
+  const isNfl = (league?.sport || 'GOLF').toUpperCase() === 'NFL'
+
   const fetchAvailable = useCallback(async () => {
-    if (!leagueId) return
+    if (!leagueId || leagueLoading) return
 
     try {
       setLoading(true)
       setError(null)
       const params = {}
       if (search) params.search = search
-      if (tour !== 'All') params.tour = tour
+      if (!isNfl && tour !== 'All') params.tour = tour
+      if (isNfl && tour !== 'All') params.position = tour
       params.limit = '100'
 
-      const data = await api.getAvailablePlayers(leagueId, params)
+      let data
+      if (isNfl) {
+        data = await api.getNflAvailablePlayers(leagueId, params)
+      } else {
+        data = await api.getAvailablePlayers(leagueId, params)
+      }
       setAvailablePlayers(data.players || [])
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }, [leagueId, search, tour])
+  }, [leagueId, search, tour, isNfl, leagueLoading])
 
   const fetchClaims = useCallback(async () => {
     if (!leagueId || !isWaiverMode) return
@@ -173,6 +181,7 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
     budget,
     isWaiverMode,
     waiverPriority,
+    isNfl,
     refetchClaims: fetchClaims,
   }
 }

@@ -279,6 +279,21 @@ async function computeNflWeeklyResults(fantasyWeekId, prisma) {
       })
     }
 
+    // Sync Team model (totalPoints, wins, losses) so getLeague returns correct data
+    for (const tr of teamResults) {
+      const ts = await prisma.teamSeason.findUnique({ where: { id: tr.teamSeasonId } })
+      if (ts) {
+        await prisma.team.update({
+          where: { id: tr.teamId },
+          data: {
+            totalPoints: Math.round(ts.totalPoints * 100) / 100,
+            wins: ts.wins || 0,
+            losses: ts.losses || 0,
+          },
+        })
+      }
+    }
+
     console.log(`[nflFantasyTracker] Computed ${teamResults.length} team results for league "${ls.league.name}", week ${fantasyWeek.weekNumber}`)
   }
 

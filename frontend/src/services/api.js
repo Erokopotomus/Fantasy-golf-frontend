@@ -35,6 +35,7 @@ class ApiService {
     const response = await fetch(url, {
       ...options,
       headers,
+      cache: 'no-store',
     })
 
     const data = await response.json()
@@ -205,6 +206,15 @@ class ApiService {
   async getAvailablePlayers(leagueId, options = {}) {
     const params = new URLSearchParams(options).toString()
     return this.request(`/leagues/${leagueId}/available-players${params ? '?' + params : ''}`)
+  }
+
+  async getNflAvailablePlayers(leagueId, options = {}) {
+    const params = new URLSearchParams(options).toString()
+    return this.request(`/nfl/leagues/${leagueId}/available-players${params ? '?' + params : ''}`)
+  }
+
+  async getNflWeeklyScores(leagueId, weekNumber) {
+    return this.request(`/nfl/leagues/${leagueId}/weekly-scores/${weekNumber}`)
   }
 
   // Drafts

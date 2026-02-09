@@ -59,10 +59,19 @@ const LeagueHome = () => {
       .catch(() => {})
   }, [leagueId])
 
+  // Derive user position from standings data
+  const userTeamStanding = league?.standings?.find(t => t.userId === user?.id)
+  const userRank = userTeamStanding?.rank || '-'
+  const userPoints = userTeamStanding?.totalPoints || 0
+  const leaderStanding = league?.standings?.[0]
+  const leaderPoints = leaderStanding?.totalPoints || 0
+  const pointsDiff = leaderPoints - userPoints
+
   const isCommissioner = league?.ownerId === user?.id || league?.owner?.id === user?.id
   const latestDraft = league?.drafts?.[0]
   const draftStatus = latestDraft?.status
   const hasDraftRecord = !!latestDraft
+  const teamsHavePlayers = league?.teams?.some(t => t.totalPoints > 0 || t.wins > 0)
   const isDraftScheduledOrInProgress = draftStatus === 'SCHEDULED' || draftStatus === 'IN_PROGRESS' || draftStatus === 'PAUSED'
   const isDraftComplete = draftStatus === 'COMPLETED'
 
@@ -177,7 +186,7 @@ const LeagueHome = () => {
                   </>
                 )}
                 <span className="text-text-muted">•</span>
-                <span className="text-text-secondary">{league.memberCount} members</span>
+                <span className="text-text-secondary">{league.members?.length || league._count?.members || league.memberCount || 0} members</span>
                 <span className="text-text-muted">•</span>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                   league.status === 'active' ? 'bg-gold/20 text-gold' :
@@ -200,7 +209,7 @@ const LeagueHome = () => {
                   >
                     My Roster
                   </Button>
-                  {hasDraft && (
+                  {hasDraft && isDraftScheduledOrInProgress && (
                     <Button
                       variant="secondary"
                       size="sm"
@@ -310,7 +319,7 @@ const LeagueHome = () => {
           {/* Draft Status Banner */}
           {hasDraft && !isOneAndDone && (
             <div className="mb-6">
-              {!hasDraftRecord && isCommissioner && (
+              {!hasDraftRecord && isCommissioner && !teamsHavePlayers && (
                 <Card className="border-gold/30 bg-gradient-to-r from-gold/10 to-dark-secondary">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -498,20 +507,20 @@ const LeagueHome = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold font-display text-white">Your Position</h3>
                   <span className={`text-3xl font-bold ${
-                    league.userRank === 1 ? 'text-yellow-400' :
-                    league.userRank <= 3 ? 'text-gold' : 'text-white'
+                    userRank === 1 ? 'text-yellow-400' :
+                    userRank <= 3 ? 'text-gold' : 'text-white'
                   }`}>
-                    #{league.userRank}
+                    #{userRank}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-dark-primary/50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold font-display text-gold">{league.userPoints?.toLocaleString()}</p>
+                    <p className="text-2xl font-bold font-display text-gold">{userPoints?.toLocaleString()}</p>
                     <p className="text-text-muted text-xs">Total Points</p>
                   </div>
                   <div className="bg-dark-primary/50 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold font-display text-white">
-                      {league.leader?.points - league.userPoints > 0 ? '-' : '+'}{Math.abs(league.leader?.points - league.userPoints)}
+                      {pointsDiff > 0 ? '-' : '+'}{Math.abs(pointsDiff).toLocaleString()}
                     </p>
                     <p className="text-text-muted text-xs">vs Leader</p>
                   </div>
@@ -708,7 +717,7 @@ const LeagueHome = () => {
                         return (
                           <tr
                             key={team.id || i}
-                            onClick={() => team.id && navigate(`/leagues/${leagueId}/roster/${team.id}`)}
+                            onClick={() => team.id && navigate(`/leagues/${leagueId}/roster`)}
                             className={`
                               border-b border-dark-border/30 transition-colors cursor-pointer
                               ${isMe ? 'bg-emerald-500/8' : 'hover:bg-dark-tertiary/50'}

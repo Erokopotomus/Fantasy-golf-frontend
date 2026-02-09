@@ -25,7 +25,7 @@ const WaiverWire = () => {
     // Waiver-specific
     submitClaim, cancelClaim, updateClaim,
     pendingClaims, recentResults, budget,
-    isWaiverMode, waiverPriority,
+    isWaiverMode, waiverPriority, isNfl,
   } = useWaivers(leagueId, teamId, waiverType)
 
   const { roster: rawRoster, refetch: refetchRoster } = useRoster(teamId)
@@ -72,7 +72,9 @@ const WaiverWire = () => {
     setBidAmount(0)
   }
 
-  const tours = ['All', 'PGA', 'LIV', 'DP World']
+  const tours = isNfl
+    ? ['All', 'QB', 'RB', 'WR', 'TE', 'K', 'DEF']
+    : ['All', 'PGA', 'LIV', 'DP World']
 
   const isDraftLocked = league && (league.status === 'DRAFT_PENDING' || league.status === 'DRAFTING')
 
@@ -230,10 +232,19 @@ const WaiverWire = () => {
 
           {/* Player list */}
           <div className={`rounded-xl border border-dark-border bg-dark-secondary overflow-hidden ${isDraftLocked ? 'opacity-50 pointer-events-none' : ''}`}>
-            <div className="grid grid-cols-[1fr_80px_80px_72px] gap-2 px-4 py-2.5 bg-dark-tertiary/80 text-[11px] text-text-muted uppercase tracking-wider font-medium">
+            <div className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_72px]'} gap-2 px-4 py-2.5 bg-dark-tertiary/80 text-[11px] text-text-muted uppercase tracking-wider font-medium`}>
               <div>Player</div>
-              <div className="text-center">Rank</div>
-              <div className="text-center">SG Total</div>
+              {isNfl ? (
+                <>
+                  <div className="text-center">Pos</div>
+                  <div className="text-center">Pts/G</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-center">Rank</div>
+                  <div className="text-center">SG Total</div>
+                </>
+              )}
               <div></div>
             </div>
 
@@ -241,7 +252,7 @@ const WaiverWire = () => {
               {availablePlayers.map(player => (
                 <div
                   key={player.id}
-                  className="grid grid-cols-[1fr_80px_80px_72px] gap-2 items-center px-4 py-3 hover:bg-dark-tertiary/40 transition-colors cursor-pointer"
+                  className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_72px]'} gap-2 items-center px-4 py-3 hover:bg-dark-tertiary/40 transition-colors cursor-pointer`}
                   onClick={() => setDrawerPlayerId(player.id)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -249,23 +260,38 @@ const WaiverWire = () => {
                       <img src={player.headshotUrl} alt="" className="w-9 h-9 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-dark-tertiary flex items-center justify-center text-lg flex-shrink-0">
-                        {player.countryFlag || '?'}
+                        {isNfl ? (player.name?.charAt(0) || '?') : (player.countryFlag || '?')}
                       </div>
                     )}
                     <div className="min-w-0">
                       <p className="text-white font-semibold text-sm truncate">{player.name}</p>
                       <p className="text-text-muted text-xs">
-                        {player.primaryTour || ''}
-                        {player.wins > 0 ? ` · ${player.wins}W` : ''}
+                        {isNfl
+                          ? (player.nflTeamAbbr || '')
+                          : (player.primaryTour || '') + (player.wins > 0 ? ` · ${player.wins}W` : '')
+                        }
                       </p>
                     </div>
                   </div>
-                  <div className="text-center text-sm text-text-secondary">
-                    {player.owgrRank ? `#${player.owgrRank}` : '\u2014'}
-                  </div>
-                  <div className="text-center text-sm text-text-secondary">
-                    {player.sgTotal != null ? player.sgTotal.toFixed(1) : '\u2014'}
-                  </div>
+                  {isNfl ? (
+                    <>
+                      <div className="text-center text-sm text-text-secondary font-medium">
+                        {player.nflPosition || '\u2014'}
+                      </div>
+                      <div className="text-center text-sm text-text-secondary">
+                        {player.fantasyPtsPerGame?.toFixed(1) || '\u2014'}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-center text-sm text-text-secondary">
+                        {player.owgrRank ? `#${player.owgrRank}` : '\u2014'}
+                      </div>
+                      <div className="text-center text-sm text-text-secondary">
+                        {player.sgTotal != null ? player.sgTotal.toFixed(1) : '\u2014'}
+                      </div>
+                    </>
+                  )}
                   <div className="text-right">
                     <Button
                       size="sm"
@@ -394,8 +420,10 @@ const WaiverWire = () => {
                 <div>
                   <p className="text-white font-semibold">{claimTarget.name}</p>
                   <p className="text-text-muted text-sm">
-                    {claimTarget.owgrRank ? `#${claimTarget.owgrRank}` : ''} {claimTarget.primaryTour || ''}
-                    {claimTarget.sgTotal != null ? ` · SG: ${claimTarget.sgTotal.toFixed(1)}` : ''}
+                    {isNfl
+                      ? `${claimTarget.nflPosition || ''} ${claimTarget.nflTeamAbbr || ''}`
+                      : `${claimTarget.owgrRank ? `#${claimTarget.owgrRank}` : ''} ${claimTarget.primaryTour || ''}${claimTarget.sgTotal != null ? ` · SG: ${claimTarget.sgTotal.toFixed(1)}` : ''}`
+                    }
                   </p>
                 </div>
               </div>

@@ -30,7 +30,11 @@ const MatchupList = ({ week, teams, leagueId, currentUserId }) => {
             ? 'bg-gold/20 text-gold'
             : 'bg-yellow-500/20 text-yellow-400'
         }`}>
-          {week.matchups.every(m => m.completed) ? 'Complete' : 'In Progress'}
+          {week.matchups.every(m => m.completed)
+            ? 'Complete'
+            : week.matchups.some(m => m.homeScore > 0 || m.awayScore > 0)
+            ? 'In Progress'
+            : 'Upcoming'}
         </span>
       </div>
 

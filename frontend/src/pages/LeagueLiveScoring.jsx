@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import useLeagueLiveScoring from '../hooks/useLeagueLiveScoring'
+import { useLeague } from '../hooks/useLeague'
 import Card from '../components/common/Card'
+import NflWeeklyScoring from '../components/nfl/NflWeeklyScoring'
 
 const formatToPar = (toPar) => {
   if (toPar == null) return '–'
@@ -158,6 +160,18 @@ const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
 
 const LeagueLiveScoring = () => {
   const { leagueId } = useParams()
+  const { league: leagueData } = useLeague(leagueId)
+  const isNfl = (leagueData?.sport || 'GOLF').toUpperCase() === 'NFL'
+
+  // Route NFL leagues to the NFL-specific scoring component
+  if (isNfl) {
+    return <NflWeeklyScoring leagueId={leagueId} />
+  }
+
+  return <GolfLiveScoring leagueId={leagueId} />
+}
+
+const GolfLiveScoring = ({ leagueId }) => {
   const navigate = useNavigate()
   const { tournament, isLive, teams, userTeam, loading, error } = useLeagueLiveScoring(leagueId)
   const [mobileTab, setMobileTab] = useState('myteam')

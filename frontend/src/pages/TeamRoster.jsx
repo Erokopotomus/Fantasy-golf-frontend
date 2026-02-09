@@ -14,14 +14,26 @@ import api from '../services/api'
 /**
  * Normalize a roster entry from the API into a flat player object
  */
-function flattenRosterEntry(entry) {
+function flattenRosterEntry(entry, isNfl = false) {
   const p = entry.player || {}
-  return {
+  const base = {
     id: p.id || entry.playerId,
     entryId: entry.id,
     name: p.name || 'Unknown',
-    countryFlag: p.countryFlag || '',
     headshotUrl: p.headshotUrl || null,
+    rosterPosition: entry.rosterStatus || entry.position, // ACTIVE, BENCH, or IR
+    acquiredVia: entry.acquiredVia,
+    acquiredAt: entry.acquiredAt,
+    isKeeper: entry.isKeeper || false,
+    keeperCost: entry.keeperCost,
+    keeperYearsKept: entry.keeperYearsKept || 0,
+  }
+  if (isNfl) {
+    return { ...base, nflPosition: p.nflPosition, nflTeam: p.nflTeamAbbr, countryFlag: '' }
+  }
+  return {
+    ...base,
+    countryFlag: p.countryFlag || '',
     country: p.country || '',
     owgrRank: p.owgrRank,
     primaryTour: p.primaryTour,
@@ -32,12 +44,6 @@ function flattenRosterEntry(entry) {
     wins: p.wins,
     top5s: p.top5s,
     top10s: p.top10s,
-    rosterPosition: entry.position, // ACTIVE, BENCH, or IR
-    acquiredVia: entry.acquiredVia,
-    acquiredAt: entry.acquiredAt,
-    isKeeper: entry.isKeeper || false,
-    keeperCost: entry.keeperCost,
-    keeperYearsKept: entry.keeperYearsKept || 0,
   }
 }
 
@@ -47,13 +53,15 @@ const TeamRoster = () => {
   const { user } = useAuth()
   const { league, loading: leagueLoading } = useLeague(leagueId)
 
+  const isNflLeague = (league?.sport || 'GOLF').toUpperCase() === 'NFL'
+
   const userTeam = league?.teams?.find(t => t.userId === user?.id)
   const teamId = userTeam?.id
 
   const { roster: rawRoster, loading: rosterLoading, error: rosterError, dropPlayer, refetch } = useRoster(teamId)
   const { saveLineup, loading: lineupLoading, saved } = useLineup(teamId)
 
-  const roster = rawRoster.map(flattenRosterEntry)
+  const roster = rawRoster.map(e => flattenRosterEntry(e, isNflLeague))
   const activePlayers = roster.filter(p => p.rosterPosition === 'ACTIVE')
 
   const [isEditing, setIsEditing] = useState(false)
@@ -69,11 +77,12 @@ const TeamRoster = () => {
   const [countdown, setCountdown] = useState('')
 
   useEffect(() => {
-    if (!leagueId) return
+    if (!leagueId || !league) return // wait for league to load
+    if (isNflLeague) { setLockInfo(null); return } // NFL doesn't use golf lock
     api.getCurrentWeek(leagueId)
       .then(data => setLockInfo(data))
       .catch(() => setLockInfo(null))
-  }, [leagueId])
+  }, [leagueId, league, isNflLeague])
 
   // Countdown timer to lock time
   useEffect(() => {
@@ -396,7 +405,7 @@ const TeamRoster = () => {
           <div>
             <p className="text-red-400 font-semibold text-sm">Lineups Locked</p>
             <p className="text-red-400/70 text-xs">
-              {lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || 'Tournament'} has started. Lineup changes are locked until this week ends.
+              {lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} has started. Lineup changes are locked until this {isNflLeague ? 'week' : 'event'} ends.
             </p>
           </div>
         </div>
@@ -411,7 +420,7 @@ const TeamRoster = () => {
               Lineups lock in {countdown}
             </p>
             <p className="text-yellow-400/70 text-xs">
-              {lockInfo.tournament?.name || lockInfo.currentWeek?.name || 'Tournament'} starts {new Date(lockInfo.lockTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+              {lockInfo.tournament?.name || lockInfo.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {new Date(lockInfo.lockTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
             </p>
           </div>
           <span className="font-mono text-yellow-400 text-lg font-bold">{countdown}</span>
@@ -504,6 +513,7 @@ const TeamRoster = () => {
               onToggleKeeper={() => handleToggleKeeper(player)}
               maxKeepers={maxKeepers}
               currentKeeperCount={currentKeeperCount}
+              isNfl={isNflLeague}
             />
           ))}
           {/* Empty slot placeholders */}
@@ -515,7 +525,7 @@ const TeamRoster = () => {
               }`}
             >
               <div className="w-10 h-10 rounded-full border-2 border-dashed border-dark-border/40 flex items-center justify-center flex-shrink-0">
-                <span className="text-text-muted/30 text-sm font-bold">G{roster.filter(p => activeSet.has(p.id)).length + i + 1}</span>
+                <span className="text-text-muted/30 text-sm font-bold">{isNflLeague ? roster.filter(p => activeSet.has(p.id)).length + i + 1 : `G${roster.filter(p => activeSet.has(p.id)).length + i + 1}`}</span>
               </div>
               <span className="text-text-muted/40 text-sm">
                 {isEditing
@@ -567,6 +577,7 @@ const TeamRoster = () => {
               onToggleKeeper={() => handleToggleKeeper(player)}
               maxKeepers={maxKeepers}
               currentKeeperCount={currentKeeperCount}
+              isNfl={isNflLeague}
             />
           ))}
           {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length === 0 && (
@@ -616,6 +627,7 @@ const TeamRoster = () => {
                 onToggleKeeper={() => handleToggleKeeper(player)}
                 maxKeepers={maxKeepers}
                 currentKeeperCount={currentKeeperCount}
+                isNfl={isNflLeague}
               />
             ))}
             {/* Empty IR slot placeholders */}
@@ -646,13 +658,14 @@ const TeamRoster = () => {
         isOpen={!!drawerPlayerId}
         onClose={() => setDrawerPlayerId(null)}
         rosterContext={getDrawerRosterContext()}
+        isNfl={isNflLeague}
       />
     </div>
   )
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0 }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0, isNfl = false }) => {
   return (
     <div
       draggable={isEditing}
@@ -710,9 +723,18 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           )}
         </div>
         <div className="flex items-center gap-3 text-xs text-text-muted">
-          {player.owgrRank && <span>#{player.owgrRank}</span>}
-          {player.primaryTour && <span>{player.primaryTour}</span>}
-          {player.sgTotal != null && <span>SG: {player.sgTotal.toFixed(1)}</span>}
+          {isNfl ? (
+            <>
+              {player.nflPosition && <span className="font-semibold text-text-secondary">{player.nflPosition}</span>}
+              {player.nflTeam && <span>{player.nflTeam}</span>}
+            </>
+          ) : (
+            <>
+              {player.owgrRank && <span>#{player.owgrRank}</span>}
+              {player.primaryTour && <span>{player.primaryTour}</span>}
+              {player.sgTotal != null && <span>SG: {player.sgTotal.toFixed(1)}</span>}
+            </>
+          )}
           {player.acquiredVia && (
             <span className="text-text-muted/60">{player.acquiredVia.toLowerCase()}</span>
           )}
@@ -720,11 +742,13 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       </div>
 
       {/* Stats */}
-      <div className="hidden sm:flex items-center gap-4 text-xs text-text-secondary">
-        {player.wins > 0 && <span>{player.wins}W</span>}
-        {player.top5s > 0 && <span>{player.top5s} T5</span>}
-        {player.top10s > 0 && <span>{player.top10s} T10</span>}
-      </div>
+      {!isNfl && (
+        <div className="hidden sm:flex items-center gap-4 text-xs text-text-secondary">
+          {player.wins > 0 && <span>{player.wins}W</span>}
+          {player.top5s > 0 && <span>{player.top5s} T5</span>}
+          {player.top10s > 0 && <span>{player.top10s} T10</span>}
+        </div>
+      )}
 
       {/* IR toggle button in edit mode (for bench players) */}
       {isEditing && onToggleIR && !isActive && !isIR && (

@@ -21,9 +21,10 @@ const Standings = () => {
   const { user } = useAuth()
   const { league, loading: leagueLoading } = useLeague(leagueId)
   const { format, isHeadToHead, isRoto, isSurvivor, isOneAndDone, isFullLeague } = useLeagueFormat(league)
+  const isNflLeague = (league?.sport || 'GOLF').toUpperCase() === 'NFL'
 
   const { standings, weeklyResults, loading, error, refetch } = useStandings(leagueId)
-  const { standings: matchupStandings, divisionStandings } = useMatchups(leagueId)
+  const { schedule: matchupSchedule, standings: matchupStandings, divisionStandings } = useMatchups(leagueId)
   const { standings: rotoStandings } = useRotoCategories(leagueId)
   const { survivorData } = useSurvivor(leagueId)
 
@@ -86,8 +87,8 @@ const Standings = () => {
   // Backend: { tournamentId, tournamentName, teams: [{ teamId, teamName, points }] }
   // Component expects: { tournamentId, tournamentName, dates, status, results: [{ userId, teamId, teamName, points }] }
   const mappedWeeklyResults = weeklyResults.map(w => ({
-    tournamentId: w.tournamentId,
-    tournamentName: w.tournamentName,
+    tournamentId: w.tournamentId || w.fantasyWeekId,
+    tournamentName: w.tournamentName || w.weekName || `Week ${w.weekNumber}`,
     status: 'completed',
     results: [...(w.teams || [])].sort((a, b) => b.points - a.points).map(t => {
       const standing = standings.find(s => s.teamId === t.teamId)
@@ -100,10 +101,23 @@ const Standings = () => {
     }),
   }))
 
-  // Calculate league stats
-  const leaderPoints = mappedStandings[0]?.totalPoints || 0
-  const userTeam = mappedStandings.find(t => t.userId === user?.id)
-  const pointsBehind = userTeam ? leaderPoints - userTeam.totalPoints : 0
+  // Calculate league stats — prefer matchup standings for H2H (more reliable)
+  const statSource = isHeadToHead && matchupStandings.length > 0
+    ? [...matchupStandings].sort((a, b) => (b.pointsFor || 0) - (a.pointsFor || 0))
+    : mappedStandings
+  const userStat = isHeadToHead
+    ? matchupStandings.find(t => t.userId === user?.id)
+    : mappedStandings.find(t => t.userId === user?.id)
+  const userPoints = isHeadToHead ? (userStat?.pointsFor || 0) : (userStat?.totalPoints || 0)
+  const leaderPoints = isHeadToHead ? (statSource[0]?.pointsFor || 0) : (statSource[0]?.totalPoints || 0)
+  const pointsBehind = leaderPoints - userPoints
+  const userRank = isHeadToHead
+    ? [...matchupStandings].sort((a, b) => (b.wins - a.wins) || (b.pointsFor - a.pointsFor)).findIndex(t => t.userId === user?.id) + 1
+    : (userStat?.rank || 0)
+  // Count completed weeks from schedule (matchups data)
+  const completedWeekCount = isHeadToHead
+    ? (matchupSchedule || []).filter(w => w.matchups?.every(m => m.completed)).length
+    : weeklyResults.length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -127,15 +141,15 @@ const Standings = () => {
         <Card>
           <p className="text-xs text-text-muted mb-1">Your Rank</p>
           <p className="text-2xl font-bold font-display text-white">
-            {userTeam ? `#${userTeam.rank}` : '-'}
+            {userRank > 0 ? `#${userRank}` : '-'}
           </p>
-          <p className="text-xs text-text-secondary">of {mappedStandings.length} teams</p>
+          <p className="text-xs text-text-secondary">of {mappedStandings.length || matchupStandings.length} teams</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Your Points</p>
           <p className="text-2xl font-bold font-display text-emerald-400">
-            {userTeam?.totalPoints?.toLocaleString() || 0}
+            {userPoints > 0 ? userPoints.toFixed(1) : 0}
           </p>
           <p className="text-xs text-text-secondary">total fantasy points</p>
         </Card>
@@ -143,15 +157,15 @@ const Standings = () => {
         <Card>
           <p className="text-xs text-text-muted mb-1">Points Behind</p>
           <p className={`text-2xl font-bold ${pointsBehind > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-            {pointsBehind > 0 ? `-${pointsBehind.toLocaleString()}` : userTeam?.rank === 1 ? 'Leader' : '-'}
+            {pointsBehind > 0 ? `-${pointsBehind.toFixed(1)}` : userRank === 1 ? 'Leader' : '-'}
           </p>
           <p className="text-xs text-text-secondary">from 1st place</p>
         </Card>
 
         <Card>
-          <p className="text-xs text-text-muted mb-1">Tournaments</p>
+          <p className="text-xs text-text-muted mb-1">{isNflLeague ? 'Weeks' : 'Tournaments'}</p>
           <p className="text-2xl font-bold font-display text-white">
-            {weeklyResults.length}
+            {completedWeekCount}
           </p>
           <p className="text-xs text-text-secondary">completed</p>
         </Card>
@@ -162,7 +176,7 @@ const Standings = () => {
         <div className="space-y-6">
           <H2HStandings standings={matchupStandings} currentUserId={user?.id} divisionStandings={divisionStandings} />
           <Card>
-            <h3 className="text-lg font-semibold font-display text-white mb-4">Tournament Results</h3>
+            <h3 className="text-lg font-semibold font-display text-white mb-4">{isNflLeague ? 'Weekly Results' : 'Tournament Results'}</h3>
             <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />
           </Card>
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../../services/api'
 
-const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
+const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false }) => {
   const [player, setPlayer] = useState(null)
   const [projection, setProjection] = useState(null)
   const [upcoming, setUpcoming] = useState([])
@@ -12,16 +12,37 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
     if (!playerId) return
     setLoading(true)
     try {
-      const data = await api.getPlayerProfile(playerId)
-      setPlayer(data.player)
-      setProjection(data.projection)
-      setUpcoming(data.upcomingTournaments || [])
+      if (isNfl) {
+        const data = await api.getNflPlayer(playerId, { season: 2024 })
+        const p = data.player || data
+        const totals = data.seasonTotals || {}
+        // Merge season totals into player for the stat cards
+        p.gamesPlayed = totals.gamesPlayed || 0
+        p.seasonFantasyPts = totals.fantasyPtsHalf || 0
+        p.fantasyPtsPerGame = p.gamesPlayed > 0 ? Math.round((p.seasonFantasyPts / p.gamesPlayed) * 10) / 10 : 0
+        p.gameLog = data.gameLog || []
+        setPlayer(p)
+        const ppg = p.fantasyPtsPerGame || 0
+        setProjection({
+          projected: Math.round(ppg),
+          avgFantasyPoints: ppg.toFixed(1),
+          trend: 0,
+          consistency: p.gamesPlayed > 0 ? 100 : 0,
+          floor: 0, ceiling: 0, totalEvents: p.gamesPlayed, recentAvg: ppg.toFixed(1),
+        })
+        setUpcoming([])
+      } else {
+        const data = await api.getPlayerProfile(playerId)
+        setPlayer(data.player)
+        setProjection(data.projection)
+        setUpcoming(data.upcomingTournaments || [])
+      }
     } catch (err) {
       console.error('Failed to load player:', err)
     } finally {
       setLoading(false)
     }
-  }, [playerId])
+  }, [playerId, isNfl])
 
   useEffect(() => {
     if (isOpen && playerId) {
@@ -39,12 +60,17 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
 
   if (!isOpen) return null
 
-  const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'results', label: 'Results' },
-    { id: 'schedule', label: 'Schedule' },
-    { id: 'sg', label: 'Strokes Gained' },
-  ]
+  const tabs = isNfl
+    ? [
+        { id: 'overview', label: 'Overview' },
+        { id: 'gamelog', label: 'Game Log' },
+      ]
+    : [
+        { id: 'overview', label: 'Overview' },
+        { id: 'results', label: 'Results' },
+        { id: 'schedule', label: 'Schedule' },
+        { id: 'sg', label: 'Strokes Gained' },
+      ]
 
   const formatStat = (value, prefix = '') => {
     if (value == null) return '\u2014'
@@ -111,17 +137,31 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
               <div className="min-w-0">
                 <h2 className="text-xl font-bold font-display text-white truncate">{player?.name || 'Loading...'}</h2>
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  {player?.owgrRank && <span>#{player.owgrRank} OWGR</span>}
-                  {player?.primaryTour && (
+                  {isNfl ? (
                     <>
-                      <span className="text-text-muted">&middot;</span>
-                      <span>{player.primaryTour}</span>
+                      {player?.nflPosition && <span className="font-medium text-emerald-400">{player.nflPosition}</span>}
+                      {player?.nflTeamAbbr && (
+                        <>
+                          <span className="text-text-muted">&middot;</span>
+                          <span>{player.nflTeamAbbr}</span>
+                        </>
+                      )}
                     </>
-                  )}
-                  {player?.country && (
+                  ) : (
                     <>
-                      <span className="text-text-muted">&middot;</span>
-                      <span>{player.countryFlag} {player.country}</span>
+                      {player?.owgrRank && <span>#{player.owgrRank} OWGR</span>}
+                      {player?.primaryTour && (
+                        <>
+                          <span className="text-text-muted">&middot;</span>
+                          <span>{player.primaryTour}</span>
+                        </>
+                      )}
+                      {player?.country && (
+                        <>
+                          <span className="text-text-muted">&middot;</span>
+                          <span>{player.countryFlag} {player.country}</span>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -247,25 +287,38 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
                   )}
 
                   {/* Quick Stats */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <StatCard label="SG: Total" value={formatStat(player.sgTotal, '+')} color={getStatColor(player.sgTotal)} />
-                    <StatCard label="Avg Score" value={player.avgScore?.toFixed(1) || '\u2014'} color="text-white" />
-                    <StatCard label="Wins" value={player.wins || 0} color={player.wins > 0 ? 'text-yellow-400' : 'text-white'} />
-                    <StatCard label="Top 10s" value={player.top10s || 0} color="text-white" />
-                    <StatCard label="Cuts Made" value={player.cutsMade || 0} color="text-white" />
-                    <StatCard label="Earnings" value={player.earnings > 0 ? `$${(player.earnings / 1e6).toFixed(1)}M` : '\u2014'} color="text-emerald-400" />
-                  </div>
-
-                  {/* SG Summary */}
-                  <div className="bg-dark-secondary rounded-lg border border-dark-border p-3">
-                    <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Strokes Gained Summary</h3>
-                    <div className="space-y-2">
-                      <SGBar label="Off the Tee" value={player.sgOffTee} />
-                      <SGBar label="Approach" value={player.sgApproach} />
-                      <SGBar label="Around Green" value={player.sgAroundGreen} />
-                      <SGBar label="Putting" value={player.sgPutting} />
+                  {isNfl ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <StatCard label="Position" value={player.nflPosition || '\u2014'} color="text-emerald-400" />
+                      <StatCard label="Team" value={player.nflTeamAbbr || '\u2014'} color="text-white" />
+                      <StatCard label="Games" value={player.gamesPlayed || 0} color="text-white" />
+                      <StatCard label="Fantasy Pts" value={player.fantasyPtsHalf?.toFixed(1) || player.seasonFantasyPts?.toFixed(1) || '\u2014'} color="text-emerald-400" />
+                      <StatCard label="Pts/Game" value={player.fantasyPtsPerGame?.toFixed(1) || '\u2014'} color="text-white" />
+                      <StatCard label="Status" value={player.injuryStatus || 'Active'} color={player.injuryStatus ? 'text-red-400' : 'text-emerald-400'} />
                     </div>
-                  </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <StatCard label="SG: Total" value={formatStat(player.sgTotal, '+')} color={getStatColor(player.sgTotal)} />
+                      <StatCard label="Avg Score" value={player.avgScore?.toFixed(1) || '\u2014'} color="text-white" />
+                      <StatCard label="Wins" value={player.wins || 0} color={player.wins > 0 ? 'text-yellow-400' : 'text-white'} />
+                      <StatCard label="Top 10s" value={player.top10s || 0} color="text-white" />
+                      <StatCard label="Cuts Made" value={player.cutsMade || 0} color="text-white" />
+                      <StatCard label="Earnings" value={player.earnings > 0 ? `$${(player.earnings / 1e6).toFixed(1)}M` : '\u2014'} color="text-emerald-400" />
+                    </div>
+                  )}
+
+                  {/* SG Summary (golf only) */}
+                  {!isNfl && (
+                    <div className="bg-dark-secondary rounded-lg border border-dark-border p-3">
+                      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Strokes Gained Summary</h3>
+                      <div className="space-y-2">
+                        <SGBar label="Off the Tee" value={player.sgOffTee} />
+                        <SGBar label="Approach" value={player.sgApproach} />
+                        <SGBar label="Around Green" value={player.sgAroundGreen} />
+                        <SGBar label="Putting" value={player.sgPutting} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -376,6 +429,35 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext }) => {
                         </div>
                       </div>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Game Log Tab (NFL) */}
+              {activeTab === 'gamelog' && (
+                <div className="p-4 space-y-2">
+                  <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">2024 Game Log</h3>
+                  {(player.gameLog || []).length === 0 ? (
+                    <div className="text-center py-8 text-text-muted">No game data available</div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 px-2 text-[10px] text-text-muted uppercase tracking-wider">
+                        <div className="w-8">Wk</div>
+                        <div className="flex-1">Opp</div>
+                        <div className="w-16 text-right">Half PPR</div>
+                      </div>
+                      {player.gameLog.map((g) => (
+                        <div key={g.week} className="flex items-center gap-2 py-2 px-2 rounded-lg bg-dark-secondary/50">
+                          <div className="w-8 text-sm text-text-muted">{g.week}</div>
+                          <div className="flex-1 text-sm text-white">
+                            {g.isHome ? 'vs' : '@'} {g.opponent}
+                          </div>
+                          <div className="w-16 text-right text-sm font-bold text-emerald-400">
+                            {g.fantasyPts?.half_ppr?.toFixed(1) || '0.0'}
+                          </div>
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               )}

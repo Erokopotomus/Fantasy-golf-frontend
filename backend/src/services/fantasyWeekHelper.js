@@ -13,16 +13,18 @@
  * @returns {{ fantasyWeek, tournament, isLocked, lockTime } | null}
  */
 async function getCurrentFantasyWeek(leagueId, prisma) {
-  // Find current season
-  const currentSeason = await prisma.season.findFirst({ where: { isCurrent: true } })
-  if (!currentSeason) return null
-
   // Find the league's sport
   const league = await prisma.league.findUnique({
     where: { id: leagueId },
     select: { sportId: true },
   })
   if (!league) return null
+
+  // Find current season for this league's sport
+  const currentSeason = await prisma.season.findFirst({
+    where: { isCurrent: true, ...(league.sportId ? { sportId: league.sportId } : {}) },
+  })
+  if (!currentSeason) return null
 
   // Find the first UPCOMING, LOCKED, or IN_PROGRESS fantasy week for this season
   const fantasyWeek = await prisma.fantasyWeek.findFirst({

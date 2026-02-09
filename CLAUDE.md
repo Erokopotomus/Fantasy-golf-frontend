@@ -378,6 +378,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 - League Vault v2: Head-to-head historical records, draft history browser, transaction log, "On This Day" feature, PDF export
 - Trading keeper rights between teams (keeper designation transfers as part of trades)
 - **NFL live scoring frequency review**: Current nflSync crons run weekly (Tuesdays). During active NFL game windows (Sun 1pm-midnight, Mon/Thu night), need near-real-time stat updates (every 1-2 minutes minimum) for live fantasy point tracking. Evaluate: nflverse update latency during games, alternative live data sources (ESPN live endpoints, NFL API), WebSocket push vs polling, caching strategy for high-frequency reads. Users expect up-to-the-minute fantasy point updates during games — 30-min intervals are far too slow for game day.
+- **Cleanup NFL test data**: `node backend/prisma/seedNflTestLeague.js cleanup` removes all `[TEST]`-prefixed data (league, teams, users, scores, matchups) and restores 2025 as current NFL season. Manifest file at `backend/prisma/nfl-test-manifest.json` tracks all created IDs. Also delete any orphaned 2024 NFL FantasyScores if needed. **Run this before any production deploy.**
 
 ---
 
@@ -538,6 +539,11 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - [x] NFL league infrastructure: sport-agnostic league creation, rosters, trades, waivers, draft room all work for NFL
   - [x] **NFL weekly scoring pipeline:** `nflFantasyTracker.js` — `scoreNflWeek()` creates FantasyScore records from NflPlayerGame data, `computeNflWeeklyResults()` aggregates team scores + processes H2H matchups, `processCompletedNflWeeks()` is the cron entry point. `createNflFantasyWeeks()` in seasonSetup.js generates 18 FantasyWeek records from NflGame kickoff dates. Tuesday 6:30 AM cron auto-scores, 30-min cron handles week status transitions (Sep-Feb). API: `GET /api/nfl/leagues/:id/weekly-scores/:week`, `POST /api/nfl/leagues/:id/score-week` (commissioner manual trigger).
   - [x] NFL lineup lock: `fantasyWeekHelper.js` detects NFL leagues and locks at earliest game kickoff in the week (not tournament start)
+  - [x] **NFL frontend sport-awareness:** All frontend pages now detect NFL leagues and adapt terminology, filters, slot labels, and player stats. Fixes applied to: LeagueHome (position card, member count, team row clicks, draft banner), TeamRoster (NFL positions/teams, slot labels, lock messages), WaiverWire (NFL position filters QB/RB/WR/TE/K/DEF, NFL player display), Standings ("Weeks" not "Tournaments", "Weekly Results" not "Tournament Results"), LeagueLiveScoring (sport routing to NflWeeklyScoring), H2HStandings (floating point .toFixed fix), MatchupCard/MatchupList (tri-state: Final/In Progress/Upcoming), PlayerDrawer (NFL-aware stats). Backend: NFL available-players endpoint in nfl.js, Team model sync in nflFantasyTracker.js, fantasyWeekHelper sportId filter.
+  - [x] **NFL matchups page rewrite:** `Matchups.jsx` computes currentWeek entirely from schedule data on the frontend using `useMemo` (active week → last completed → next upcoming), bypassing backend `currentWeek` field. Fixes 0-0 score display bug caused by browser HTTP caching. Also added `cache: 'no-store'` to all fetch calls in `api.js`.
+  - [x] **NFL standings stat cards fix:** Standings.jsx stat cards now derive from matchup standings data (useMatchups) for H2H leagues instead of useStandings, which had stale data. Correctly shows user rank, points, points behind, and completed week count.
+  - [x] **NFL test league seeder:** `backend/prisma/seedNflTestLeague.js` creates a complete test league with 8 teams, 15 players each, 4 scored weeks, H2H matchups, and standings. Manifest at `backend/prisma/nfl-test-manifest.json`.
+  - [x] **NFL gameday UX spec:** Comprehensive UX document at `docs/nfl-gameday-ux.md` (v1.2) — two-layer platform architecture, weekly NFL manager flow, 9 page-by-page wireframes, reward engine (I Told You So engine, delta cards, Decision DNA, Clutch Rating, badges/streaks), golf parity, data dependencies by phase, mobile-first layouts, notification strategy, onboarding flow. 7 implementation phases mapped with blockers.
   - [ ] NFL 2025 season data sync (only 2024 synced)
   - [ ] NFL prediction categories (game winner, player performance calls, weekly fantasy rankings)
 
@@ -1045,6 +1051,9 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │   │   ├── seedStatsDb.js       ← Sport/Season/FantasyWeek seed
 │   │   ├── seedPlayerProfile.js ← Position/Tag/Profile seed
 │   │   └── seedAchievements.js  ← Achievement definitions seed
+│   ├── prisma/
+│   │   ├── seedNflTestLeague.js ← NFL test league seeder (8 teams, 4 weeks scored)
+│   │   └── nfl-test-manifest.json ← Tracks test data IDs for cleanup
 │   └── src/
 │       ├── index.js             ← Express app + cron jobs + Socket.IO
 │       ├── middleware/           ← auth.js, requireAdmin.js
@@ -1055,10 +1064,13 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │       │   ├── notifications.js, draftHistory.js
 │       │   ├── managerAnalytics.js, positions.js
 │       │   ├── playerTags.js, rosterSlots.js, sync.js
+│       │   ├── nfl.js           ← NFL-specific routes (scoring, available players)
 │       │   └── ...
 │       └── services/            ← Business logic
 │           ├── datagolfClient.js, datagolfSync.js
 │           ├── scoringService.js, fantasyTracker.js
+│           ├── nflFantasyTracker.js ← NFL scoring pipeline
+│           ├── nflScoringService.js ← NFL scoring calculator
 │           ├── seasonSetup.js, waiverProcessor.js
 │           ├── notificationService.js, webPushService.js
 │           ├── draftGrader.js, fantasyWeekHelper.js
@@ -1071,6 +1083,7 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │   │   │   ├── common/          ← Card, Button, Modal, etc.
 │   │   │   ├── layout/          ← Navbar, Sidebar
 │   │   │   ├── draft/           ← DraftBoard, DraftHeader, PlayerPool, etc.
+│   │   │   ├── nfl/             ← NflWeeklyScoring.jsx (NFL scoring view)
 │   │   │   └── dashboard/       ← LeagueCard, etc.
 │   │   ├── pages/               ← Route pages
 │   │   ├── hooks/               ← Custom React hooks
@@ -1096,6 +1109,7 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 | `docs/data-strategy.md` | Data ownership framework (3 tiers), golf free data sources, DataGolf transformation strategy, NFL data sources (nflfastR/nflverse), AI engines roadmap, 4-layer database architecture, modular provider design |
 | `docs/build-specs.md` | Manager stats page spec (A1-A6), AI engines spec (B1-B5), database architecture (C1-C3), data transformation layer (D1-D2), original build priority queue |
 | `docs/brand-system.md` | Full Aurora Ember brand system: colors, typography, glassmorphism, logo SVG, component code, anti-Sleeper rules |
+| `docs/nfl-gameday-ux.md` | NFL gameday UX spec (v1.2): two-layer platform architecture, weekly manager flow, 9 page wireframes, reward engine (I Told You So, delta cards, Decision DNA), golf parity, data deps, mobile layouts, notifications, onboarding, 7 implementation phases |
 
 **Desktop docs (not in repo, for reference):**
 - `CLUTCH_ARCHITECTURE.md` — Original architecture doc (superseded by this CLAUDE.md)
@@ -1106,4 +1120,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 9, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: data pipeline (NFL-1), stats display (NFL-2), league infra, scoring calculator, and weekly scoring pipeline (NFL-3 partial) all complete. League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking.*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: data pipeline (NFL-1), stats display (NFL-2), league infra, scoring calculator, weekly scoring pipeline, frontend sport-awareness (all pages), matchups/standings fixes, test league seeder, and gameday UX spec (NFL-3 near-complete) all done. League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking. Next: build out UX doc Phase 1 items (remaining page polish), then Phase 2 (Gameday Portal).*

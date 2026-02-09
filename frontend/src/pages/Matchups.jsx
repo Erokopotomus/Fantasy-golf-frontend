@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLeague } from '../hooks/useLeague'
@@ -13,10 +13,38 @@ const Matchups = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
   const { league, loading: leagueLoading } = useLeague(leagueId)
-  const { schedule, currentWeek, playoffs, standings, divisionStandings, loading, error } = useMatchups(leagueId)
+  const { schedule, playoffs, standings, divisionStandings, loading, error } = useMatchups(leagueId)
 
   const [activeTab, setActiveTab] = useState('current')
   const [selectedWeek, setSelectedWeek] = useState(null)
+
+  // Compute active/completed weeks from schedule data directly (no backend dependency)
+  const { lastCompletedWeek, activeWeek, nextUpcomingWeek } = useMemo(() => {
+    if (!schedule || schedule.length === 0) return {}
+
+    // Active week = has some scores but not all complete (games in progress)
+    const active = schedule.find(w => {
+      const hasScores = w.matchups.some(m => m.homeScore > 0 || m.awayScore > 0)
+      const hasIncomplete = w.matchups.some(m => !m.completed)
+      return hasScores && hasIncomplete
+    })
+
+    // All completed weeks (all matchups done)
+    const completed = schedule.filter(w => w.matchups.every(m => m.completed))
+    const lastCompleted = completed.length > 0 ? completed[completed.length - 1] : null
+
+    // Next upcoming = first week with no scores and not complete
+    const upcoming = schedule.find(w => {
+      const hasScores = w.matchups.some(m => m.homeScore > 0 || m.awayScore > 0)
+      const allComplete = w.matchups.every(m => m.completed)
+      return !hasScores && !allComplete
+    })
+
+    return { lastCompletedWeek: lastCompleted, activeWeek: active, nextUpcomingWeek: upcoming }
+  }, [schedule])
+
+  // The "primary" week for Full Schedule default selection
+  const primaryWeek = activeWeek || lastCompletedWeek || nextUpcomingWeek
 
   if (leagueLoading || loading) {
     return (
@@ -69,8 +97,9 @@ const Matchups = () => {
     return acc
   }, {})
 
-  // Get user's current matchup
-  const userMatchup = currentWeek?.matchups?.find(
+  // Show the most relevant matchup: active game week > last completed > next upcoming
+  const heroWeek = activeWeek || lastCompletedWeek || nextUpcomingWeek
+  const userMatchup = heroWeek?.matchups?.find(
     m => m.home === user?.id || m.away === user?.id
   )
 
@@ -118,10 +147,12 @@ const Matchups = () => {
       {/* Current Week Tab */}
       {activeTab === 'current' && (
         <div className="space-y-6">
-          {/* Your Matchup */}
-          {userMatchup && (
+          {/* Your Matchup - hero card */}
+          {userMatchup && heroWeek && (
             <div>
-              <h2 className="text-lg font-semibold font-display text-white mb-4">Your Matchup</h2>
+              <h2 className="text-lg font-semibold font-display text-white mb-4">
+                Your Matchup — Week {heroWeek.week}
+              </h2>
               <div className="max-w-md">
                 <MatchupCard
                   matchup={userMatchup}
@@ -134,17 +165,37 @@ const Matchups = () => {
             </div>
           )}
 
-          {/* All Matchups This Week */}
-          {currentWeek && (
+          {/* Last Completed Week Results (if different from hero) */}
+          {lastCompletedWeek && lastCompletedWeek !== heroWeek && (
             <MatchupList
-              week={currentWeek}
+              week={lastCompletedWeek}
               teams={standings}
               leagueId={leagueId}
               currentUserId={user?.id}
             />
           )}
 
-          {!currentWeek && (
+          {/* Current/Hero Week - all matchups */}
+          {heroWeek && (
+            <MatchupList
+              week={heroWeek}
+              teams={standings}
+              leagueId={leagueId}
+              currentUserId={user?.id}
+            />
+          )}
+
+          {/* Upcoming week preview (if hero is completed and there's a next week) */}
+          {nextUpcomingWeek && heroWeek && heroWeek !== nextUpcomingWeek && (
+            <MatchupList
+              week={nextUpcomingWeek}
+              teams={standings}
+              leagueId={leagueId}
+              currentUserId={user?.id}
+            />
+          )}
+
+          {!heroWeek && (
             <Card className="text-center py-8">
               <p className="text-text-muted">No matchups scheduled yet</p>
             </Card>
@@ -162,7 +213,7 @@ const Matchups = () => {
                 key={week.week}
                 onClick={() => setSelectedWeek(week.week)}
                 className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                  selectedWeek === week.week || (!selectedWeek && week.week === currentWeek?.week)
+                  selectedWeek === week.week || (!selectedWeek && week.week === primaryWeek?.week)
                     ? 'bg-emerald-500 text-white'
                     : week.matchups?.every(m => m.completed)
                     ? 'bg-dark-tertiary text-text-secondary'
@@ -176,7 +227,7 @@ const Matchups = () => {
 
           {/* Selected Week Matchups */}
           {schedule.map(week => (
-            (selectedWeek === week.week || (!selectedWeek && week.week === currentWeek?.week)) && (
+            (selectedWeek === week.week || (!selectedWeek && week.week === primaryWeek?.week)) && (
               <MatchupList
                 key={week.week}
                 week={week}

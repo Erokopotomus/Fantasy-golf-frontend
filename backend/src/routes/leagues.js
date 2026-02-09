@@ -713,6 +713,63 @@ router.get('/:id/standings', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Not authorized to view this league' } })
     }
 
+    // NFL leagues use TeamSeason/WeeklyTeamResult, not golf performances
+    if ((league.sport || '').toUpperCase() === 'NFL') {
+      const leagueSeason = await prisma.leagueSeason.findFirst({
+        where: { leagueId: league.id },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          teamSeasons: {
+            include: { team: { include: { user: { select: { id: true, name: true, avatar: true } } } } },
+          },
+        },
+      })
+      if (!leagueSeason) return res.json({ standings: [], weeklyResults: [] })
+
+      const teamSeasons = leagueSeason.teamSeasons || []
+      const standings = [...teamSeasons]
+        .sort((a, b) => (b.wins || 0) - (a.wins || 0) || (b.totalPoints || 0) - (a.totalPoints || 0))
+        .map((ts, i) => ({
+          teamId: ts.teamId,
+          teamName: ts.teamName || ts.team?.name,
+          userId: ts.team?.userId,
+          userName: ts.team?.user?.name,
+          userAvatar: ts.team?.user?.avatar,
+          totalPoints: Math.round((ts.totalPoints || 0) * 100) / 100,
+          wins: ts.wins || 0,
+          losses: ts.losses || 0,
+          rank: i + 1,
+        }))
+
+      // Weekly results from WeeklyTeamResult
+      const weeklyTeamResults = await prisma.weeklyTeamResult.findMany({
+        where: { leagueSeasonId: leagueSeason.id },
+        orderBy: { weekNumber: 'asc' },
+        include: { fantasyWeek: { select: { name: true } } },
+      })
+
+      const weekMap = new Map()
+      for (const wr of weeklyTeamResults) {
+        if (!weekMap.has(wr.weekNumber)) {
+          weekMap.set(wr.weekNumber, {
+            weekNumber: wr.weekNumber,
+            weekName: wr.fantasyWeek?.name || `Week ${wr.weekNumber}`,
+            fantasyWeekId: wr.fantasyWeekId,
+            teams: [],
+          })
+        }
+        weekMap.get(wr.weekNumber).teams.push({
+          teamId: wr.teamId,
+          teamName: standings.find(s => s.teamId === wr.teamId)?.teamName || '',
+          points: Math.round((wr.totalPoints || 0) * 100) / 100,
+        })
+      }
+
+      const weeklyResults = Array.from(weekMap.values()).sort((a, b) => a.weekNumber - b.weekNumber)
+
+      return res.json({ standings, weeklyResults })
+    }
+
     const data = await calculateLeagueStandings(req.params.id, prisma)
     res.json(data)
   } catch (error) {
@@ -933,10 +990,21 @@ router.get('/:id/matchups', authenticate, async (req, res, next) => {
 
     const schedule = Object.values(weekMap).sort((a, b) => a.week - b.week)
 
-    // Current week = latest incomplete, or most recent completed
-    let currentWeek = schedule.find(w => w.matchups.some(m => !m.completed))
-    if (!currentWeek && schedule.length > 0) {
-      currentWeek = schedule[schedule.length - 1]
+    // Current week logic:
+    // 1. If a week has scores but isn't fully complete → it's actively in progress
+    // 2. Otherwise, show the last fully completed week (post-game results)
+    // 3. If nothing is completed, show the first week
+    let currentWeek = schedule.find(w => {
+      const hasScores = w.matchups.some(m => m.homeScore > 0 || m.awayScore > 0)
+      const hasIncomplete = w.matchups.some(m => !m.completed)
+      return hasScores && hasIncomplete
+    })
+
+    if (!currentWeek) {
+      const completedWeeks = schedule.filter(w => w.matchups.every(m => m.completed))
+      currentWeek = completedWeeks.length > 0
+        ? completedWeeks[completedWeeks.length - 1]
+        : schedule[0] || null
     }
 
     // Build standings from completed matchups
