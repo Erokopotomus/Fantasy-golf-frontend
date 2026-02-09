@@ -1060,5 +1060,27 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 
 ---
 
-*Last updated: February 7, 2026*
-*Phase 1 complete. Phase 2 in progress.*
+---
+
+## REFERENCE DOCS (in repo)
+
+All detailed spec documents live in `docs/` and are version-controlled with the repo:
+
+| Doc | What It Contains |
+|-----|-----------------|
+| `docs/nfl-expansion.md` | Complete NFL expansion plan: vision, data sources, pick types, metrics philosophy, schema, build phases (with completion status), dual-track pick system, projection contest, draft cheat sheets, self-scouting AI, monetization, competitive moat |
+| `docs/entry-points-addendum.md` | Revised participation tiers (5 levels from weekly picks to full projections), drag-and-drop ranking interface, quick-tap reason chips, "Start From" expert templates, expert following as content engine |
+| `docs/data-strategy.md` | Data ownership framework (3 tiers), golf free data sources, DataGolf transformation strategy, NFL data sources (nflfastR/nflverse), AI engines roadmap, 4-layer database architecture, modular provider design |
+| `docs/build-specs.md` | Manager stats page spec (A1-A6), AI engines spec (B1-B5), database architecture (C1-C3), data transformation layer (D1-D2), original build priority queue |
+| `docs/brand-system.md` | Full Aurora Ember brand system: colors, typography, glassmorphism, logo SVG, component code, anti-Sleeper rules |
+
+**Desktop docs (not in repo, for reference):**
+- `CLUTCH_ARCHITECTURE.md` — Original architecture doc (superseded by this CLAUDE.md)
+- `clutch-landing-page-brief.md` — Landing page design brief
+- `Clutch_Implementation_Plan.pdf` — Implementation plan document
+- `CLUTCH_BUSINESS_ROADMAP.md.pdf` — Business roadmap
+
+---
+
+*Last updated: February 8, 2026*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion (NFL-1 + NFL-2 + league infra) complete.*
