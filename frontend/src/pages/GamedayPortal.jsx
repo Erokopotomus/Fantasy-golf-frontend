@@ -231,19 +231,7 @@ const GamedayPortal = () => {
             <p className="text-center text-text-muted">No matchup found for this week</p>
           )}
 
-          {/* Score bar visual */}
-          {userMatchup && totalPts > 0 && (
-            <div className="flex h-1.5 rounded-full overflow-hidden mt-2 bg-dark-tertiary">
-              <div
-                className="bg-emerald-500 transition-all duration-500"
-                style={{ width: `${userBarPct}%` }}
-              />
-              <div
-                className="bg-red-500/70 transition-all duration-500"
-                style={{ width: `${100 - userBarPct}%` }}
-              />
-            </div>
-          )}
+          {/* Score proportion bar removed — split card makes it redundant */}
         </div>
       </div>
 
