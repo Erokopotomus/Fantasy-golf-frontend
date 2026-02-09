@@ -5,7 +5,68 @@
  * - LeagueSeason + TeamSeason upserts
  * - H2H matchup generation with FantasyWeek links
  * - FAAB TeamBudget creation
+ * - NFL FantasyWeek creation from NflGame schedule
  */
+
+/**
+ * Create 18 FantasyWeek records for an NFL regular season by querying NflGame dates.
+ * Idempotent — upserts on @@unique(seasonId, weekNumber).
+ *
+ * @param {number} seasonYear — e.g. 2024
+ * @param {import('@prisma/client').PrismaClient} prisma
+ * @returns {{ created: number, seasonId: string }}
+ */
+async function createNflFantasyWeeks(seasonYear, prisma) {
+  // Find the NFL Season record
+  const nflSport = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
+  if (!nflSport) throw new Error('NFL sport not found — run seed first')
+
+  const season = await prisma.season.findFirst({
+    where: { sportId: nflSport.id, year: seasonYear },
+  })
+  if (!season) throw new Error(`NFL season ${seasonYear} not found`)
+
+  let created = 0
+
+  for (let weekNum = 1; weekNum <= 18; weekNum++) {
+    // Find all regular-season games in this week
+    const games = await prisma.nflGame.findMany({
+      where: { season: seasonYear, week: weekNum, gameType: 'REG' },
+      orderBy: { kickoff: 'asc' },
+    })
+
+    if (games.length === 0) continue
+
+    const startDate = games[0].kickoff
+    // endDate = last kickoff + 4 hours (game duration buffer)
+    const lastKickoff = games[games.length - 1].kickoff
+    const endDate = new Date(lastKickoff.getTime() + 4 * 60 * 60 * 1000)
+
+    // Determine status: if endDate is in the past, COMPLETED; otherwise UPCOMING
+    const now = new Date()
+    const status = endDate < now ? 'COMPLETED' : 'UPCOMING'
+
+    await prisma.fantasyWeek.upsert({
+      where: {
+        seasonId_weekNumber: { seasonId: season.id, weekNumber: weekNum },
+      },
+      update: { startDate, endDate, status },
+      create: {
+        seasonId: season.id,
+        weekNumber: weekNum,
+        name: `Week ${weekNum}`,
+        startDate,
+        endDate,
+        status,
+        tournamentId: null,
+      },
+    })
+    created++
+  }
+
+  console.log(`[seasonSetup] Created/updated ${created} NFL fantasy weeks for ${seasonYear}`)
+  return { created, seasonId: season.id }
+}
 
 /**
  * Initialize a league's season after draft completion.
@@ -23,13 +84,33 @@ async function initializeLeagueSeason(leagueId, prisma) {
   })
   if (!league) throw new Error(`League ${leagueId} not found`)
 
-  // Find current season
-  const currentSeason = await prisma.season.findFirst({
-    where: { isCurrent: true },
-  })
+  // Find current season for this league's sport
+  const isNfl = league.sport === 'NFL' || league.sport === 'nfl'
+
+  let currentSeason
+  if (isNfl && league.sportId) {
+    currentSeason = await prisma.season.findFirst({
+      where: { sportId: league.sportId, isCurrent: true },
+    })
+  }
+  if (!currentSeason) {
+    currentSeason = await prisma.season.findFirst({
+      where: { isCurrent: true },
+    })
+  }
   if (!currentSeason) {
     console.warn('[seasonSetup] No current season found — skipping season init')
     return null
+  }
+
+  // For NFL leagues: ensure FantasyWeeks exist for this season
+  if (isNfl) {
+    const existingWeeks = await prisma.fantasyWeek.count({
+      where: { seasonId: currentSeason.id },
+    })
+    if (existingWeeks === 0) {
+      await createNflFantasyWeeks(currentSeason.year, prisma)
+    }
   }
 
   // 1. Upsert LeagueSeason
@@ -187,4 +268,4 @@ async function generateH2HMatchups(league, season, prisma) {
   }
 }
 
-module.exports = { initializeLeagueSeason }
+module.exports = { initializeLeagueSeason, createNflFantasyWeeks }

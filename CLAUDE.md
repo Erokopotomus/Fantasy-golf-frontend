@@ -377,6 +377,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 ### Backlog (Low Priority — Build When Needed)
 - League Vault v2: Head-to-head historical records, draft history browser, transaction log, "On This Day" feature, PDF export
 - Trading keeper rights between teams (keeper designation transfers as part of trades)
+- **NFL live scoring frequency review**: Current nflSync crons run weekly (Tuesdays). During active NFL game windows (Sun 1pm-midnight, Mon/Thu night), need near-real-time stat updates (every 1-2 minutes minimum) for live fantasy point tracking. Evaluate: nflverse update latency during games, alternative live data sources (ESPN live endpoints, NFL API), WebSocket push vs polling, caching strategy for high-frequency reads. Users expect up-to-the-minute fantasy point updates during games — 30-min intervals are far too slow for game day.
 
 ---
 
@@ -535,8 +536,8 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - [x] NFL stats display (NFL-2): player browsing, team pages, schedule, compare tool, league-specific scoring applied
   - [x] NFL scoring calculation service: `nflScoringService.js` — Standard/PPR/Half-PPR/custom rules, all positions, bonuses, kicker distance tiers, DST points-allowed tiers
   - [x] NFL league infrastructure: sport-agnostic league creation, rosters, trades, waivers, draft room all work for NFL
-  - [ ] **NFL weekly scoring pipeline (NOT BUILT):** No FantasyWeek records for NFL weeks, no function to score teams from NflPlayerGame data, no H2H matchup processor, no weekly cron automation. The scoring *calculator* works but the *pipeline* that runs it weekly doesn't exist yet.
-  - [ ] NFL lineup lock: needs per-game kickoff lock logic (current system assumes golf tournament start times)
+  - [x] **NFL weekly scoring pipeline:** `nflFantasyTracker.js` — `scoreNflWeek()` creates FantasyScore records from NflPlayerGame data, `computeNflWeeklyResults()` aggregates team scores + processes H2H matchups, `processCompletedNflWeeks()` is the cron entry point. `createNflFantasyWeeks()` in seasonSetup.js generates 18 FantasyWeek records from NflGame kickoff dates. Tuesday 6:30 AM cron auto-scores, 30-min cron handles week status transitions (Sep-Feb). API: `GET /api/nfl/leagues/:id/weekly-scores/:week`, `POST /api/nfl/leagues/:id/score-week` (commissioner manual trigger).
+  - [x] NFL lineup lock: `fantasyWeekHelper.js` detects NFL leagues and locks at earliest game kickoff in the week (not tournament start)
   - [ ] NFL 2025 season data sync (only 2024 synced)
   - [ ] NFL prediction categories (game winner, player performance calls, weekly fantasy rankings)
 
@@ -1104,5 +1105,5 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 
 ---
 
-*Last updated: February 8, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: data pipeline (NFL-1), stats display (NFL-2), league infra, and scoring calculator complete — weekly scoring pipeline NOT yet built (next priority). League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking.*
+*Last updated: February 9, 2026*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: data pipeline (NFL-1), stats display (NFL-2), league infra, scoring calculator, and weekly scoring pipeline (NFL-3 partial) all complete. League management features: position limits, divisions, keepers (with auction-escalator), trade veto voting, playoff byes, draft dollar tracking.*

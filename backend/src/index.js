@@ -574,7 +574,91 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('nfl-rosters', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
-    console.log('[Cron] NFL sync jobs scheduled (NFL_SYNC_ENABLED=true)')
+    // ─── NFL Fantasy Scoring Pipeline ────────────────────────────────────
+    const nflFantasyTracker = require('./services/nflFantasyTracker')
+
+    // Every 30 min Sep-Feb — NFL fantasy week status transitions
+    cron.schedule('*/30 * * * *', async () => {
+      const month = new Date().getMonth() // 0-indexed
+      // Skip Mar-Aug (months 2-7)
+      if (month >= 2 && month <= 7) return
+
+      try {
+        const nflSport = await cronPrisma.sport.findUnique({ where: { slug: 'nfl' } })
+        if (!nflSport) return
+
+        const nflSeason = await cronPrisma.season.findFirst({
+          where: { sportId: nflSport.id, isCurrent: true },
+        })
+        if (!nflSeason) return
+
+        const openWeeks = await cronPrisma.fantasyWeek.findMany({
+          where: { seasonId: nflSeason.id, status: { not: 'COMPLETED' } },
+          orderBy: { weekNumber: 'asc' },
+        })
+
+        for (const week of openWeeks) {
+          const games = await cronPrisma.nflGame.findMany({
+            where: { season: nflSeason.year, week: week.weekNumber, gameType: 'REG' },
+          })
+          if (games.length === 0) continue
+
+          const allFinal = games.every(g => g.status === 'FINAL')
+          const anyInProgress = games.some(g => g.status === 'IN_PROGRESS')
+          const anyFinal = games.some(g => g.status === 'FINAL')
+          const now = new Date()
+
+          let newStatus = null
+          if (allFinal) {
+            newStatus = 'COMPLETED'
+          } else if (anyInProgress || anyFinal) {
+            newStatus = 'IN_PROGRESS'
+          } else if (now >= week.startDate) {
+            newStatus = 'LOCKED'
+          }
+
+          if (newStatus && newStatus !== week.status) {
+            await cronPrisma.fantasyWeek.update({
+              where: { id: week.id },
+              data: { status: newStatus },
+            })
+            cronLog('nflWeekStatus', `${week.name}: ${week.status} → ${newStatus}`)
+
+            // Snapshot lineups when transitioning to LOCKED
+            if (newStatus === 'LOCKED') {
+              try {
+                const ft = require('./services/fantasyTracker')
+                await ft.snapshotLineups(week.id, cronPrisma)
+                cronLog('nflWeekStatus', `Lineups snapshotted for ${week.name}`)
+              } catch (snapErr) {
+                cronLog('nflWeekStatus', `Lineup snapshot failed: ${snapErr.message}`)
+              }
+            }
+          }
+        }
+      } catch (e) { cronLog('nflWeekStatus', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Tuesday 6:30 AM ET — Score completed NFL weeks (after stats sync at 6AM)
+    cron.schedule('30 6 * * 2', async () => {
+      const month = new Date().getMonth()
+      // Skip Mar-Aug (months 2-7)
+      if (month >= 2 && month <= 7) return
+
+      cronLog('nflScoring', 'Processing completed NFL fantasy weeks')
+      try {
+        const results = await nflFantasyTracker.processCompletedNflWeeks(cronPrisma)
+        if (results.length === 0) {
+          cronLog('nflScoring', 'No unscored NFL weeks to process')
+        } else {
+          for (const r of results) {
+            cronLog('nflScoring', `${r.weekName}: ${r.scored} scores, ${r.snapped} snapshots, ${r.computed} results`)
+          }
+        }
+      } catch (e) { cronLog('nflScoring', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] NFL sync + scoring jobs scheduled (NFL_SYNC_ENABLED=true)')
   } else {
     console.log('[Cron] NFL sync jobs disabled (set NFL_SYNC_ENABLED=true to enable)')
   }

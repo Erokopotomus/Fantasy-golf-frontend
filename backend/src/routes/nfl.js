@@ -1,19 +1,21 @@
 /**
  * NFL Routes — NFL-specific API endpoints
  *
- * GET /api/nfl/players         — Browse NFL players (filterable by position, team)
- * GET /api/nfl/players/:id     — NFL player detail with game log
- * GET /api/nfl/schedule        — NFL schedule by season/week
- * GET /api/nfl/teams           — All 32 NFL teams
- * GET /api/nfl/teams/:abbr     — Team detail with roster + schedule
- * GET /api/nfl/standings       — NFL standings by conference/division
- * GET /api/nfl/scoring-systems — Available NFL scoring presets
+ * GET  /api/nfl/players                             — Browse NFL players (filterable by position, team)
+ * GET  /api/nfl/players/:id                         — NFL player detail with game log
+ * GET  /api/nfl/schedule                            — NFL schedule by season/week
+ * GET  /api/nfl/teams                               — All 32 NFL teams
+ * GET  /api/nfl/teams/:abbr                         — Team detail with roster + schedule
+ * GET  /api/nfl/scoring-systems                     — Available NFL scoring presets
+ * GET  /api/nfl/leagues/:leagueId/weekly-scores/:wk — Team scores for a specific NFL week
+ * POST /api/nfl/leagues/:leagueId/score-week        — Commissioner: manually score a week
  */
 
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
-const { optionalAuth } = require('../middleware/auth')
+const { optionalAuth, authenticate } = require('../middleware/auth')
 const { calculateFantasyPoints, resolveRules, getScoringSchema, PRESETS } = require('../services/nflScoringService')
+const { scoreNflWeek, computeNflWeeklyResults } = require('../services/nflFantasyTracker')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -483,6 +485,157 @@ router.get('/scoring-schema', async (req, res, next) => {
   try {
     const schema = getScoringSchema()
     res.json({ schema, presets: Object.keys(PRESETS) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ─── NFL Fantasy League Scoring ──────────────────────────────────────────
+
+// GET /api/nfl/leagues/:leagueId/weekly-scores/:weekNumber
+// Returns team scores for a specific NFL week in a league
+router.get('/leagues/:leagueId/weekly-scores/:weekNumber', authenticate, async (req, res, next) => {
+  try {
+    const { leagueId, weekNumber } = req.params
+
+    // Verify league exists and user is a member
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      include: {
+        members: { select: { userId: true } },
+        scoringSystem: true,
+      },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember) return res.status(403).json({ error: { message: 'Not a member of this league' } })
+
+    // Find NFL season
+    const nflSport = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
+    if (!nflSport) return res.status(404).json({ error: { message: 'NFL sport not found' } })
+
+    const nflSeason = await prisma.season.findFirst({
+      where: { sportId: nflSport.id, isCurrent: true },
+    })
+    if (!nflSeason) return res.status(404).json({ error: { message: 'No current NFL season' } })
+
+    // Find FantasyWeek
+    const fantasyWeek = await prisma.fantasyWeek.findUnique({
+      where: {
+        seasonId_weekNumber: {
+          seasonId: nflSeason.id,
+          weekNumber: parseInt(weekNumber),
+        },
+      },
+    })
+    if (!fantasyWeek) return res.status(404).json({ error: { message: `Week ${weekNumber} not found` } })
+
+    // Find LeagueSeason
+    const leagueSeason = await prisma.leagueSeason.findFirst({
+      where: { leagueId, seasonId: nflSeason.id },
+    })
+    if (!leagueSeason) return res.status(404).json({ error: { message: 'League season not found' } })
+
+    // Fetch WeeklyTeamResults
+    const teamResults = await prisma.weeklyTeamResult.findMany({
+      where: { leagueSeasonId: leagueSeason.id, fantasyWeekId: fantasyWeek.id },
+      include: {
+        team: { select: { id: true, name: true, userId: true } },
+      },
+      orderBy: { weekRank: 'asc' },
+    })
+
+    // Fetch Matchups
+    const matchups = await prisma.matchup.findMany({
+      where: { leagueId, fantasyWeekId: fantasyWeek.id },
+      include: {
+        homeTeam: { select: { id: true, name: true } },
+        awayTeam: { select: { id: true, name: true } },
+      },
+    })
+
+    res.json({
+      week: {
+        id: fantasyWeek.id,
+        weekNumber: fantasyWeek.weekNumber,
+        name: fantasyWeek.name,
+        status: fantasyWeek.status,
+        startDate: fantasyWeek.startDate,
+        endDate: fantasyWeek.endDate,
+      },
+      teams: teamResults.map(tr => ({
+        teamId: tr.team.id,
+        teamName: tr.team.name,
+        userId: tr.team.userId,
+        totalPoints: tr.totalPoints,
+        optimalPoints: tr.optimalPoints,
+        pointsLeftOnBench: tr.pointsLeftOnBench,
+        weekRank: tr.weekRank,
+        result: tr.result,
+        opponentPoints: tr.opponentPoints,
+        playerScores: tr.playerScores,
+      })),
+      matchups: matchups.map(m => ({
+        id: m.id,
+        homeTeam: m.homeTeam,
+        awayTeam: m.awayTeam,
+        homeScore: m.homeScore,
+        awayScore: m.awayScore,
+        isComplete: m.isComplete,
+      })),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/nfl/leagues/:leagueId/score-week — Commissioner manual trigger
+router.post('/leagues/:leagueId/score-week', authenticate, async (req, res, next) => {
+  try {
+    const { leagueId } = req.params
+    const { weekNumber } = req.body
+
+    if (!weekNumber) return res.status(400).json({ error: { message: 'weekNumber is required' } })
+
+    // Verify commissioner
+    const member = await prisma.leagueMember.findFirst({
+      where: { leagueId, userId: req.user.id },
+    })
+    if (!member || member.role !== 'commissioner') {
+      return res.status(403).json({ error: { message: 'Only the commissioner can manually score weeks' } })
+    }
+
+    // Find NFL season
+    const nflSport = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
+    if (!nflSport) return res.status(404).json({ error: { message: 'NFL sport not found' } })
+
+    const nflSeason = await prisma.season.findFirst({
+      where: { sportId: nflSport.id, isCurrent: true },
+    })
+    if (!nflSeason) return res.status(404).json({ error: { message: 'No current NFL season' } })
+
+    // Find FantasyWeek
+    const fantasyWeek = await prisma.fantasyWeek.findUnique({
+      where: {
+        seasonId_weekNumber: {
+          seasonId: nflSeason.id,
+          weekNumber: parseInt(weekNumber),
+        },
+      },
+    })
+    if (!fantasyWeek) return res.status(404).json({ error: { message: `Week ${weekNumber} not found` } })
+
+    // Run scoring pipeline
+    const scoreResult = await scoreNflWeek(fantasyWeek.id, prisma)
+    const weekResult = await computeNflWeeklyResults(fantasyWeek.id, prisma)
+
+    res.json({
+      success: true,
+      weekNumber: parseInt(weekNumber),
+      scoring: scoreResult,
+      results: weekResult,
+    })
   } catch (error) {
     next(error)
   }

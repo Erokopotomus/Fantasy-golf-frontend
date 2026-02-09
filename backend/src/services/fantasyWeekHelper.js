@@ -48,7 +48,33 @@ async function getCurrentFantasyWeek(leagueId, prisma) {
 
   const now = new Date()
   const tournament = fantasyWeek.tournament
-  const lockTime = tournament?.startDate || fantasyWeek.startDate
+
+  // Determine lock time based on sport
+  let lockTime
+  const isNfl = league.sportId
+    ? (await prisma.sport.findUnique({ where: { id: league.sportId }, select: { slug: true } }))?.slug === 'nfl'
+    : false
+
+  if (isNfl) {
+    // NFL: lock at the earliest game kickoff in this week
+    const season = await prisma.season.findUnique({
+      where: { id: fantasyWeek.seasonId },
+      select: { year: true },
+    })
+    if (season) {
+      const earliestGame = await prisma.nflGame.findFirst({
+        where: { season: season.year, week: fantasyWeek.weekNumber, gameType: 'REG' },
+        orderBy: { kickoff: 'asc' },
+        select: { kickoff: true },
+      })
+      lockTime = earliestGame?.kickoff || fantasyWeek.startDate
+    } else {
+      lockTime = fantasyWeek.startDate
+    }
+  } else {
+    // Golf: lock at tournament start
+    lockTime = tournament?.startDate || fantasyWeek.startDate
+  }
 
   // Determine lock status
   const isLocked =
