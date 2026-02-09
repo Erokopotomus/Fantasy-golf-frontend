@@ -231,17 +231,21 @@ function WeeklySlate({ onPredictionMade }) {
 function TrackRecord() {
   const [reputation, setReputation] = useState(null)
   const [predictions, setPredictions] = useState([])
+  const [nflRecord, setNflRecord] = useState(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, correct, incorrect, pending
+  const [sportFilter, setSportFilter] = useState('all') // all, golf, nfl
 
   useEffect(() => {
     Promise.all([
       api.getMyReputation().catch(() => null),
-      api.getMyPredictions({ sport: 'golf', limit: 100 }).catch(() => ({ predictions: [] })),
+      api.getMyPredictions({ limit: 200 }).catch(() => ({ predictions: [] })),
+      api.getNflPickRecord().catch(() => null),
     ])
-      .then(([rep, preds]) => {
+      .then(([rep, preds, nfl]) => {
         setReputation(rep)
         setPredictions(preds.predictions || [])
+        setNflRecord(nfl)
       })
       .finally(() => setLoading(false))
   }, [])
@@ -255,7 +259,11 @@ function TrackRecord() {
     )
   }
 
-  const rep = reputation?.find?.(r => r.sport === 'golf') || reputation?.[0] || null
+  // Pick the reputation based on sport filter
+  const repSport = sportFilter === 'nfl' ? 'nfl' : sportFilter === 'golf' ? 'golf' : null
+  const rep = repSport
+    ? (reputation?.find?.(r => r.sport === repSport) || null)
+    : (reputation?.find?.(r => r.sport === 'all') || reputation?.[0] || null)
   const total = rep?.totalPredictions || 0
   const correct = rep?.correctPredictions || 0
   const accuracy = rep?.accuracyRate ? Math.round(rep.accuracyRate * 100) : 0
@@ -267,6 +275,8 @@ function TrackRecord() {
   const progress = getTierProgress(total, rep?.accuracyRate || 0)
 
   const filtered = predictions.filter(p => {
+    if (sportFilter === 'golf' && p.sport !== 'golf') return false
+    if (sportFilter === 'nfl' && p.sport !== 'nfl') return false
     if (filter === 'all') return true
     if (filter === 'pending') return p.outcome === 'PENDING'
     if (filter === 'correct') return p.outcome === 'CORRECT'
@@ -276,6 +286,44 @@ function TrackRecord() {
 
   return (
     <div className="space-y-4">
+      {/* Sport filter */}
+      <div className="flex gap-1 bg-white/5 rounded-lg p-1 w-fit">
+        {['all', 'nfl', 'golf'].map(s => (
+          <button
+            key={s}
+            onClick={() => setSportFilter(s)}
+            className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+              sportFilter === s ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+            }`}
+          >
+            {s === 'all' ? 'All Sports' : s.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      {/* NFL Quick Record (when NFL filter active) */}
+      {sportFilter === 'nfl' && nflRecord && nflRecord.record?.total > 0 && (
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="text-xl font-mono font-bold text-white">{nflRecord.record.winLoss}</div>
+              <div className="text-xs text-white/40">NFL Record</div>
+            </div>
+            {nflRecord.streak > 0 && (
+              <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+                W{nflRecord.streak}
+              </span>
+            )}
+          </div>
+          {nflRecord.clutchRating != null && (
+            <div className="text-right">
+              <div className="text-xl font-mono font-bold text-amber-400">{Math.round(nflRecord.clutchRating)}</div>
+              <div className="text-xs text-white/40">Clutch Rating</div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Stats overview */}
       <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5">
         <div className="flex items-center gap-3 mb-4">
@@ -369,17 +417,33 @@ function TrackRecord() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-white truncate">
-                    {p.predictionData?.playerName || 'Unknown'}{' '}
-                    <span className={`font-mono font-bold ${p.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {p.predictionData?.direction?.toUpperCase()}
-                    </span>
-                    {' '}
-                    <span className="text-white/40 font-mono">
-                      {p.predictionData?.benchmarkValue > 0 ? '+' : ''}{p.predictionData?.benchmarkValue}
-                    </span>
+                    {p.sport === 'nfl' ? (
+                      <>
+                        {p.predictionData?.description || p.predictionData?.playerName || 'Unknown'}{' '}
+                        <span className={`font-mono font-bold ${p.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {p.predictionData?.direction?.toUpperCase()}
+                        </span>
+                        {' '}
+                        <span className="text-white/40 font-mono">{p.predictionData?.lineValue}</span>
+                      </>
+                    ) : (
+                      <>
+                        {p.predictionData?.playerName || 'Unknown'}{' '}
+                        <span className={`font-mono font-bold ${p.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {p.predictionData?.direction?.toUpperCase()}
+                        </span>
+                        {' '}
+                        <span className="text-white/40 font-mono">
+                          {p.predictionData?.benchmarkValue > 0 ? '+' : ''}{p.predictionData?.benchmarkValue}
+                        </span>
+                      </>
+                    )}
                   </div>
-                  <div className="text-xs text-white/30 font-mono">
+                  <div className="text-xs text-white/30 font-mono flex items-center gap-2">
                     {new Date(p.createdAt).toLocaleDateString()}
+                    {sportFilter === 'all' && (
+                      <span className="px-1 py-0.5 rounded bg-white/5 text-[10px] uppercase">{p.sport}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -769,16 +833,267 @@ function Analysts() {
   )
 }
 
+// ─── NFL Props Tab ──────────────────────────────────────────────────────────
+
+const REASON_CHIPS = ['Matchup', 'Weather', 'Gut feel', 'Volume', 'Game script', 'Data model']
+const nflPosColors = {
+  QB: 'bg-red-500/20 text-red-400',
+  RB: 'bg-blue-500/20 text-blue-400',
+  WR: 'bg-emerald-500/20 text-emerald-400',
+  TE: 'bg-yellow-500/20 text-yellow-400',
+  K: 'bg-purple-500/20 text-purple-400',
+  DEF: 'bg-orange-500/20 text-orange-400',
+}
+
+function NflWeeklyProps({ onPredictionMade }) {
+  const [season] = useState(2024)
+  const [week, setWeek] = useState(5)
+  const [props, setProps] = useState({ playerProps: [], gameProps: [] })
+  const [record, setRecord] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState({})
+  const [showReasonFor, setShowReasonFor] = useState(null)
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [propsData, recordData] = await Promise.all([
+        api.getNflProps(season, week),
+        api.getNflPickRecord().catch(() => null),
+      ])
+      setProps(propsData)
+      setRecord(recordData)
+    } catch {
+      setProps({ playerProps: [], gameProps: [] })
+    } finally {
+      setLoading(false)
+    }
+  }, [season, week])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  const handlePick = async (propId, direction) => {
+    setSubmitting(prev => ({ ...prev, [propId]: true }))
+    try {
+      await api.submitNflPick(propId, direction)
+      setShowReasonFor(propId)
+      setTimeout(() => setShowReasonFor(prev => prev === propId ? null : prev), 5000)
+      fetchData()
+      onPredictionMade?.()
+    } catch (err) {
+      console.error('Pick failed:', err.message)
+    } finally {
+      setSubmitting(prev => ({ ...prev, [propId]: false }))
+    }
+  }
+
+  const handleReasonChip = async (propId, chip) => {
+    try {
+      const prop = [...props.playerProps, ...props.gameProps].find(p => p.id === propId)
+      const direction = prop?.userPick?.predictionData?.direction
+      if (direction) await api.submitNflPick(propId, direction, chip)
+      setShowReasonFor(null)
+    } catch {}
+  }
+
+  const totalProps = props.playerProps.length + props.gameProps.length
+  const weeks = Array.from({ length: 18 }, (_, i) => i + 1)
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {/* Week selector + record */}
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setWeek(w => Math.max(1, w - 1))} disabled={week <= 1}
+              className="p-1.5 rounded bg-white/10 text-white/60 hover:text-white disabled:opacity-30">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div>
+              <h3 className="text-white font-semibold">NFL Week {week}</h3>
+              <p className="text-white/40 text-xs">{totalProps} prop{totalProps !== 1 ? 's' : ''} available</p>
+            </div>
+            <button onClick={() => setWeek(w => Math.min(18, w + 1))} disabled={week >= 18}
+              className="p-1.5 rounded bg-white/10 text-white/60 hover:text-white disabled:opacity-30">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          {record && record.record.total > 0 && (
+            <div className="flex items-center gap-4 text-right">
+              <div>
+                <div className="text-lg font-mono font-bold text-white">{record.record.winLoss}</div>
+                <div className="text-xs text-white/40">Record</div>
+              </div>
+              {record.record.accuracy && (
+                <div>
+                  <div className="text-lg font-mono font-bold text-emerald-400">
+                    {(parseFloat(record.record.accuracy) * 100).toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-white/40">Accuracy</div>
+                </div>
+              )}
+              {record.streak > 0 && (
+                <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+                  W{record.streak}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Player Props */}
+      {props.playerProps.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Player Props</h3>
+          <div className="space-y-2">
+            {props.playerProps.map(prop => (
+              <NflPropCard key={prop.id} prop={prop} onPick={handlePick} onReasonChip={handleReasonChip}
+                submitting={submitting[prop.id]} showReason={showReasonFor === prop.id} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Game Props */}
+      {props.gameProps.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Game Props</h3>
+          <div className="space-y-2">
+            {props.gameProps.map(prop => (
+              <NflPropCard key={prop.id} prop={prop} onPick={handlePick} onReasonChip={handleReasonChip}
+                submitting={submitting[prop.id]} showReason={showReasonFor === prop.id} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {totalProps === 0 && (
+        <div className="text-center py-12">
+          <div className="text-4xl mb-3">🏈</div>
+          <h3 className="text-lg font-semibold text-white mb-2">No Props for Week {week}</h3>
+          <p className="text-white/50 text-sm">Props are generated from player performance data. Try a different week.</p>
+        </div>
+      )}
+
+      {/* All weeks */}
+      <div className="mt-6">
+        <div className="flex flex-wrap gap-1.5">
+          {weeks.map(w => (
+            <button key={w} onClick={() => setWeek(w)}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                w === week ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/40 hover:text-white/60'
+              }`}>{w}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
+  const userPick = prop.userPick
+  const userDirection = userPick?.predictionData?.direction
+  const isResolved = prop.resolvedAt != null
+  const isLocked = prop.locksAt && new Date(prop.locksAt) <= new Date()
+
+  return (
+    <div className={`bg-white/5 backdrop-blur-sm border rounded-xl p-3 ${
+      userPick?.outcome === 'CORRECT' ? 'border-emerald-500/30' :
+      userPick?.outcome === 'INCORRECT' ? 'border-rose-500/30' :
+      userDirection ? 'border-white/20' : 'border-white/10'
+    }`}>
+      <div className="flex items-center gap-3">
+        {prop.player?.nflPosition && (
+          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${
+            nflPosColors[prop.player.nflPosition] || 'bg-white/10 text-white/40'
+          }`}>{prop.player.nflPosition}</span>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-white truncate">{prop.description}</p>
+          {prop.player?.nflTeamAbbr && <p className="text-[10px] text-white/40">{prop.player.nflTeamAbbr}</p>}
+        </div>
+        <div className="text-center mx-2">
+          <p className="text-[10px] text-white/40 uppercase">O/U</p>
+          <p className="text-sm font-bold font-mono text-white">{prop.lineValue}</p>
+        </div>
+
+        {isResolved ? (
+          <div className="flex items-center gap-2">
+            {prop.actualValue != null && <span className="text-xs font-mono text-white/40">Actual: {prop.actualValue}</span>}
+            {userDirection && (
+              <span className={`text-sm font-bold ${
+                userPick?.outcome === 'CORRECT' ? 'text-emerald-400' :
+                userPick?.outcome === 'INCORRECT' ? 'text-rose-400' : 'text-yellow-400'
+              }`}>{userPick?.outcome === 'CORRECT' ? '✓' : userPick?.outcome === 'INCORRECT' ? '✗' : '—'}</span>
+            )}
+          </div>
+        ) : isLocked ? (
+          <div className="flex items-center gap-1.5">
+            {userDirection && (
+              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                userDirection === 'over' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+              }`}>{userDirection.toUpperCase()}</span>
+            )}
+            <span className="text-[10px] text-white/30">Locked</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => onPick(prop.id, 'over')} disabled={submitting}
+              className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${
+                userDirection === 'over' ? 'bg-emerald-500 text-white' : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/30'
+              } disabled:opacity-50`}>Over</button>
+            <button onClick={() => onPick(prop.id, 'under')} disabled={submitting}
+              className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${
+                userDirection === 'under' ? 'bg-rose-500 text-white' : 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/30'
+              } disabled:opacity-50`}>Under</button>
+          </div>
+        )}
+      </div>
+
+      {showReason && !isLocked && !isResolved && (
+        <div className="mt-2 pt-2 border-t border-white/5">
+          <p className="text-[10px] text-white/30 mb-1.5">Why? (optional)</p>
+          <div className="flex flex-wrap gap-1.5">
+            {REASON_CHIPS.map(chip => (
+              <button key={chip} onClick={() => onReasonChip(prop.id, chip)}
+                className={`px-2 py-0.5 rounded-full text-[10px] transition-colors ${
+                  userPick?.predictionData?.reasonChip === chip
+                    ? 'bg-emerald-500/30 text-emerald-400' : 'bg-white/5 text-white/30 hover:text-white/60'
+                }`}>{chip}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main ProveIt Hub ───────────────────────────────────────────────────────
 const TABS = [
-  { id: 'slate', label: "This Week's Slate" },
+  { id: 'nfl', label: 'NFL Props' },
+  { id: 'slate', label: 'Golf Slate' },
   { id: 'record', label: 'My Track Record' },
   { id: 'leaderboard', label: 'Leaderboards' },
   { id: 'analysts', label: 'Analysts' },
 ]
 
 export default function ProveIt() {
-  const [activeTab, setActiveTab] = useState('slate')
+  const [activeTab, setActiveTab] = useState('nfl')
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -817,6 +1132,7 @@ export default function ProveIt() {
       </div>
 
       {/* Tab content */}
+      {activeTab === 'nfl' && <NflWeeklyProps key={refreshKey} onPredictionMade={handlePredictionMade} />}
       {activeTab === 'slate' && <WeeklySlate key={refreshKey} onPredictionMade={handlePredictionMade} />}
       {activeTab === 'record' && <TrackRecord key={refreshKey} />}
       {activeTab === 'leaderboard' && <Leaderboards />}

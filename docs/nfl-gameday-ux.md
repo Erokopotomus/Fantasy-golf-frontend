@@ -1688,12 +1688,18 @@ The migration helper is the most important tool for growth. If a commissioner ca
 **Golf equivalent:** Already exists via DataGolf round-by-round data
 **Milestone:** Tap any completed week and see exactly how each player scored their points
 
-### Phase 4: Prove It + Reward Foundation
+### Phase 4: Prove It + Reward Foundation ✅ COMPLETE
 **Build:** Picks interface, reason chips, record tracking, streaks, Clutch Rating v1, badges, leaderboard
 **Data needed:** Weekly props/lines (generated from our own statistical models using nflverse data)
-**Blocker:** MEDIUM — Need to build the line-generation model
-**Mobile-first:** Picks must be fast single-tap on mobile (primary usage context)
-**Milestone:** A user can make 10 picks in under 2 minutes, see results Sunday night
+**What was built:**
+- `nflLineGenerator.js` — weighted-average line generation from NflPlayerGame historical data
+- `PropLine` Prisma model — stores generated O/U lines per week per player
+- NFL Props tab on ProveIt page with Over/Under buttons, reason chips, week selector
+- Props resolution pipeline (checks actual stats, grades predictions, updates reputations + Clutch Rating)
+- NFL picks record endpoint, leaderboard endpoint
+- Track Record tab updated with sport filter (All/NFL/Golf) and NFL record display
+- Badge-aware reputation updates using shared predictionService
+- 688 test props generated for 2024 weeks 5-10, 477 resolved
 
 ### Phase 5: Expert Tracking + Shareable Cards
 **Build:** Expert comparison tracker, delta cards, shareable moment cards, badge milestone cards, trophy case
@@ -1702,12 +1708,14 @@ The migration helper is the most important tool for growth. If a commissioner ca
 **Shareable cards:** Must be designed for Instagram Stories (1080x1920) AND Twitter (1200x675)
 **Milestone:** User shares an "I told you so" card in their group chat
 
-### Phase 6: Week in Review + AI Coaching
+### Phase 6: Week in Review + AI Coaching — ✅ PARTIAL (Review done, AI coaching not started)
 **Build:** Decision grading, optimal lineup calc, season trends, Decision DNA, Clutch Rating v2
 **Data needed:** 3+ weeks of user data (auto-captured from Phases 1-4)
-**Blocker:** MEDIUM — Need LLM pipeline (Claude API) for natural language insight generation
-**Key constraint:** Factual tone, not judgmental. Show facts, let users draw conclusions.
-**Milestone:** After Week 8, a user opens their Decision DNA and sees real patterns in their decision-making
+**What was built:**
+- `WeekInReview.jsx` — matchup result, optimal lineup comparison, decision grades, season efficiency trends
+- Backend `week-review/:week` endpoint with optimal lineup calc, start/sit grading, efficiency tracking
+- Integrated into NflWeeklyScoring page via "Week in Review" toggle button
+**Still needed:** AI coaching (Claude API pipeline for natural language insights), Decision DNA
 
 ### Phase 7: Preseason Experience
 **Build:** Rankings (drag-and-drop), reason chips on moves, stat projections, draft companion, cheat sheet, expert templates
@@ -1718,5 +1726,5 @@ The migration helper is the most important tool for growth. If a commissioner ca
 ---
 
 *Document created: February 9, 2026*
-*Version: 1.2 — Added Golf Parity, Data Dependencies, Mobile Layouts, Notifications, Onboarding*
+*Version: 1.3 — Phases 4+6 (partial) implemented: Prove It picks, line generation, Week in Review*
 *References: entry-points-addendum.md, data-strategy.md, nfl-expansion.md, brand-system.md*

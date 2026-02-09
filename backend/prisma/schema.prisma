@@ -341,6 +341,7 @@ model Player {
   waiverClaims       WaiverClaim[]
   clutchScores       ClutchScore[]
   nflPlayerGames     NflPlayerGame[]
+  propLines          PropLine[]
 
   @@index([owgrRank])
   @@index([name])
@@ -2531,4 +2532,46 @@ model NflPlayerGame {
   @@index([playerId])
   @@index([teamAbbr])
   @@map("nfl_player_games")
+}
+
+// ============ PROVE IT — WEEKLY PROP LINES ============
+
+model PropLine {
+  id        String @id @default(cuid())
+  sport     String // 'nfl', 'golf'
+  season    Int
+  week      Int    // NFL week number (1-18)
+
+  // Subject — a player or a game
+  playerId  String?
+  player    Player?  @relation(fields: [playerId], references: [id])
+  gameId    String?  // NflGame.id for game-level props
+  teamAbbr  String?  // For display: "BUF", "PHI"
+
+  // Prop details
+  propType  String  // 'passing_yards', 'rushing_yards', 'receptions', 'receiving_yards', 'passing_tds', 'rushing_tds', 'game_total', 'game_spread'
+  lineValue Float   // The O/U number (e.g., 264.5)
+  category  String  // 'player_prop', 'game_prop'
+
+  // Display
+  description  String  // "Josh Allen passing yards"
+  displayLine  String  // "O/U 264.5"
+
+  // Generation metadata
+  generatedFrom Json? // { method, seasonAvg, last3Avg, adjustment, sampleSize }
+
+  // Lock + resolution
+  locksAt     DateTime? // Kickoff time of the relevant game
+  actualValue Float?    // After game: actual stat value
+  result      String?   // 'over', 'under', 'push'
+  resolvedAt  DateTime?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sport, season, week, playerId, propType])
+  @@index([sport, season, week, isActive])
+  @@index([locksAt])
+  @@map("prop_lines")
 }

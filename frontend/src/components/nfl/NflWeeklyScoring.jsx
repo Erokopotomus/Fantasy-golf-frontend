@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'
 import Card from '../common/Card'
+import WeekInReview from './WeekInReview'
 
 // Position color badges
 const posColors = {
@@ -96,6 +97,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [expandedTeamId, setExpandedTeamId] = useState(null)
+  const [showReview, setShowReview] = useState(false)
 
   useEffect(() => {
     if (!leagueId) return
@@ -287,13 +289,36 @@ const NflWeeklyScoring = ({ leagueId }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Your Team */}
               <Card>
-                <h3 className="text-base font-semibold text-white mb-4">Your Team</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white">Your Team</h3>
+                  {userTeam && week?.status === 'COMPLETED' && (
+                    <button
+                      onClick={() => setShowReview(!showReview)}
+                      className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                        showReview
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-white/5 text-white/40 hover:text-white/60'
+                      }`}
+                    >
+                      {showReview ? 'Hide Review' : 'Week in Review'}
+                    </button>
+                  )}
+                </div>
                 {userTeam ? renderTeamDetail(userTeam) : (
                   <div className="text-center py-8 text-text-muted">
                     <p>You don't have a team in this league.</p>
                   </div>
                 )}
               </Card>
+
+              {/* Week in Review */}
+              {showReview && userTeam && (
+                <WeekInReview
+                  leagueId={leagueId}
+                  weekNumber={weekNumber}
+                  onClose={() => setShowReview(false)}
+                />
+              )}
 
               {/* League Scoreboard + Matchups */}
               <div className="space-y-6">

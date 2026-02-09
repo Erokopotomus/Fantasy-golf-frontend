@@ -734,4 +734,524 @@ router.post('/leagues/:leagueId/score-week', authenticate, async (req, res, next
   }
 })
 
+// ─── Prove It — Weekly Props & Picks ─────────────────────────────────────────
+
+const { generateWeeklyProps, resolveWeeklyProps } = require('../services/nflLineGenerator')
+
+// GET /api/nfl/props/:season/:week — Get available prop lines for a week
+router.get('/props/:season/:week', optionalAuth, async (req, res, next) => {
+  try {
+    const season = parseInt(req.params.season)
+    const week = parseInt(req.params.week)
+
+    const props = await prisma.propLine.findMany({
+      where: {
+        sport: 'nfl',
+        season,
+        week,
+        isActive: true,
+      },
+      include: {
+        player: { select: { id: true, name: true, nflPosition: true, nflTeamAbbr: true, headshotUrl: true } },
+      },
+      orderBy: [{ category: 'asc' }, { propType: 'asc' }, { lineValue: 'desc' }],
+    })
+
+    // If user is logged in, also fetch their picks for this week
+    let userPicks = []
+    if (req.user) {
+      userPicks = await prisma.prediction.findMany({
+        where: {
+          userId: req.user.id,
+          sport: 'nfl',
+          eventId: { in: props.map(p => p.id) },
+        },
+        select: {
+          id: true,
+          eventId: true,
+          predictionData: true,
+          outcome: true,
+          resolvedAt: true,
+        },
+      })
+    }
+
+    // Map picks by prop ID for quick lookup
+    const picksByProp = userPicks.reduce((acc, p) => {
+      acc[p.eventId] = p
+      return acc
+    }, {})
+
+    // Enhance props with user pick data
+    const enhancedProps = props.map(p => ({
+      ...p,
+      userPick: picksByProp[p.id] || null,
+    }))
+
+    // Group by category
+    const playerProps = enhancedProps.filter(p => p.category === 'player_prop')
+    const gameProps = enhancedProps.filter(p => p.category === 'game_prop')
+
+    res.json({
+      season,
+      week,
+      playerProps,
+      gameProps,
+      totalProps: props.length,
+      userPickCount: userPicks.length,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/nfl/props/:propId/pick — Submit a pick on a prop line
+router.post('/props/:propId/pick', authenticate, async (req, res, next) => {
+  try {
+    const { propId } = req.params
+    const { direction, reasonChip } = req.body // direction: 'over' | 'under'
+
+    if (!['over', 'under'].includes(direction)) {
+      return res.status(400).json({ error: 'Direction must be "over" or "under"' })
+    }
+
+    // Get the prop line
+    const prop = await prisma.propLine.findUnique({ where: { id: propId } })
+    if (!prop) return res.status(404).json({ error: 'Prop not found' })
+    if (!prop.isActive) return res.status(400).json({ error: 'This prop is no longer active' })
+
+    // Check if locked
+    if (prop.locksAt && prop.locksAt <= new Date()) {
+      return res.status(400).json({ error: 'This prop is locked — game has started' })
+    }
+
+    // Check for existing pick on this prop
+    const existing = await prisma.prediction.findFirst({
+      where: {
+        userId: req.user.id,
+        eventId: propId,
+        sport: 'nfl',
+      },
+    })
+
+    if (existing) {
+      // Allow changing pick before lock
+      const updated = await prisma.prediction.update({
+        where: { id: existing.id },
+        data: {
+          predictionData: {
+            direction,
+            reasonChip: reasonChip || null,
+            propType: prop.propType,
+            lineValue: prop.lineValue,
+            description: prop.description,
+          },
+        },
+      })
+      return res.json({ pick: updated, changed: true })
+    }
+
+    // Create new pick
+    const prediction = await prisma.prediction.create({
+      data: {
+        userId: req.user.id,
+        sport: 'nfl',
+        predictionType: 'player_benchmark',
+        category: 'weekly',
+        eventId: propId,
+        subjectPlayerId: prop.playerId,
+        predictionData: {
+          direction,
+          reasonChip: reasonChip || null,
+          propType: prop.propType,
+          lineValue: prop.lineValue,
+          description: prop.description,
+        },
+        isPublic: true,
+        locksAt: prop.locksAt,
+      },
+    })
+
+    res.json({ pick: prediction, changed: false })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/nfl/picks/record — Get user's pick record and stats
+router.get('/picks/record', authenticate, async (req, res, next) => {
+  try {
+    const userId = req.user.id
+
+    // Overall NFL pick record
+    const [total, correct, incorrect, pending] = await Promise.all([
+      prisma.prediction.count({ where: { userId, sport: 'nfl', predictionType: 'player_benchmark' } }),
+      prisma.prediction.count({ where: { userId, sport: 'nfl', predictionType: 'player_benchmark', outcome: 'CORRECT' } }),
+      prisma.prediction.count({ where: { userId, sport: 'nfl', predictionType: 'player_benchmark', outcome: 'INCORRECT' } }),
+      prisma.prediction.count({ where: { userId, sport: 'nfl', predictionType: 'player_benchmark', outcome: 'PENDING' } }),
+    ])
+
+    // Get reputation (streaks, tier, etc.)
+    const reputation = await prisma.userReputation.findUnique({
+      where: { userId_sport: { userId, sport: 'nfl' } },
+    })
+
+    // Get Clutch Rating
+    const rating = await prisma.clutchManagerRating.findUnique({
+      where: { userId },
+    })
+
+    // Calculate percentile (what % of users this user beats)
+    let percentile = null
+    if (total >= 5) {
+      const userAccuracy = total > 0 ? correct / (correct + incorrect || 1) : 0
+      const allUsers = await prisma.userReputation.findMany({
+        where: { sport: 'nfl', totalPredictions: { gte: 5 } },
+        select: { accuracyRate: true },
+      })
+      if (allUsers.length > 0) {
+        const beatCount = allUsers.filter(u => userAccuracy > u.accuracyRate).length
+        percentile = Math.round((beatCount / allUsers.length) * 100)
+      }
+    }
+
+    res.json({
+      record: {
+        total,
+        correct,
+        incorrect,
+        pending,
+        accuracy: (correct + incorrect) > 0 ? (correct / (correct + incorrect)).toFixed(3) : null,
+        winLoss: `${correct}-${incorrect}`,
+      },
+      streak: reputation?.streakCurrent || 0,
+      bestStreak: reputation?.streakBest || 0,
+      tier: reputation?.tier || 'rookie',
+      percentile,
+      clutchRating: rating?.overallRating || null,
+      clutchTier: rating?.tier || 'developing',
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/nfl/picks/leaderboard — Picks leaderboard
+router.get('/picks/leaderboard', optionalAuth, async (req, res, next) => {
+  try {
+    const { limit = 25 } = req.query
+
+    const leaderboard = await prisma.userReputation.findMany({
+      where: {
+        sport: 'nfl',
+        totalPredictions: { gte: 5 },
+      },
+      include: {
+        user: { select: { id: true, name: true, avatar: true } },
+      },
+      orderBy: [{ accuracyRate: 'desc' }, { totalPredictions: 'desc' }],
+      take: parseInt(limit),
+    })
+
+    const entries = leaderboard.map((entry, i) => ({
+      rank: i + 1,
+      userId: entry.userId,
+      name: entry.user.name,
+      avatar: entry.user.avatar,
+      record: `${entry.correctPredictions}-${entry.totalPredictions - entry.correctPredictions}`,
+      accuracy: entry.accuracyRate,
+      total: entry.totalPredictions,
+      streak: entry.streakCurrent,
+      tier: entry.tier,
+    }))
+
+    res.json({ leaderboard: entries })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/nfl/props/generate/:season/:week — Admin: generate props for a week
+router.post('/props/generate/:season/:week', authenticate, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin only' })
+    }
+    const season = parseInt(req.params.season)
+    const week = parseInt(req.params.week)
+    const result = await generateWeeklyProps(season, week)
+    res.json(result)
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/nfl/props/resolve/:season/:week — Admin: resolve props for a week
+router.post('/props/resolve/:season/:week', authenticate, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin only' })
+    }
+    const season = parseInt(req.params.season)
+    const week = parseInt(req.params.week)
+    const result = await resolveWeeklyProps(season, week)
+    res.json(result)
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ─── Week in Review ──────────────────────────────────────────────────────────
+
+// GET /api/nfl/leagues/:leagueId/week-review/:week — Week in Review for a user
+router.get('/leagues/:leagueId/week-review/:week', authenticate, async (req, res, next) => {
+  try {
+    const { leagueId, week: weekParam } = req.params
+    const weekNumber = parseInt(weekParam)
+    const userId = req.user.id
+
+    // Get the league and verify membership
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      include: {
+        members: { where: { userId } },
+        currentSeason: true,
+      },
+    })
+    if (!league || league.members.length === 0) {
+      return res.status(404).json({ error: 'League not found' })
+    }
+
+    // Get the user's team
+    const team = await prisma.team.findFirst({
+      where: { leagueId, userId },
+    })
+    if (!team) return res.status(404).json({ error: 'Team not found' })
+
+    // Get the fantasy week for this NFL week
+    const fantasyWeek = await prisma.fantasyWeek.findFirst({
+      where: {
+        seasonId: league.currentSeasonId,
+        weekNumber,
+      },
+    })
+    if (!fantasyWeek) return res.status(404).json({ error: 'Week not found' })
+
+    // Get the team season
+    const teamSeason = await prisma.teamSeason.findFirst({
+      where: {
+        teamId: team.id,
+        seasonId: league.currentSeasonId,
+      },
+    })
+
+    // Get the weekly result
+    const weeklyResult = teamSeason ? await prisma.weeklyTeamResult.findFirst({
+      where: {
+        teamSeasonId: teamSeason.id,
+        fantasyWeekId: fantasyWeek.id,
+      },
+    }) : null
+
+    // Get all player scores for this team/week from playerScores JSONB
+    const playerScores = weeklyResult?.playerScores || []
+
+    // Get roster entries to determine starters vs bench
+    const starters = playerScores.filter(p => p.position === 'ACTIVE')
+    const bench = playerScores.filter(p => p.position !== 'ACTIVE')
+
+    // Calculate optimal lineup
+    // For NFL: need to respect position limits (1 QB, 2 RB, 2 WR, 1 TE, 1 K, 1 DEF, 1 FLEX)
+    const allPlayers = [...starters, ...bench]
+    const optimalLineup = calculateOptimalLineup(allPlayers)
+    const optimalPoints = optimalLineup.reduce((sum, p) => sum + (p.points || 0), 0)
+    const actualPoints = starters.reduce((sum, p) => sum + (p.points || 0), 0)
+
+    // Grade each start/sit decision
+    const decisions = gradeDecisions(starters, bench)
+
+    // Get matchup result
+    const matchup = await prisma.matchup.findFirst({
+      where: {
+        fantasyWeekId: fantasyWeek.id,
+        OR: [
+          { homeTeamId: team.id },
+          { awayTeamId: team.id },
+        ],
+      },
+    })
+
+    // Get season trends (3+ weeks)
+    let seasonTrends = null
+    if (weekNumber >= 3 && teamSeason) {
+      const allWeeklyResults = await prisma.weeklyTeamResult.findMany({
+        where: { teamSeasonId: teamSeason.id },
+        include: { fantasyWeek: true },
+        orderBy: { fantasyWeek: { weekNumber: 'asc' } },
+      })
+
+      seasonTrends = calculateSeasonTrends(allWeeklyResults)
+    }
+
+    res.json({
+      weekNumber,
+      result: matchup ? {
+        won: matchup.homeTeamId === team.id
+          ? matchup.homeScore > matchup.awayScore
+          : matchup.awayScore > matchup.homeScore,
+        yourScore: matchup.homeTeamId === team.id ? matchup.homeScore : matchup.awayScore,
+        oppScore: matchup.homeTeamId === team.id ? matchup.awayScore : matchup.homeScore,
+      } : null,
+      lineup: {
+        starters,
+        bench,
+        optimalLineup,
+        actualPoints: Math.round(actualPoints * 10) / 10,
+        optimalPoints: Math.round(optimalPoints * 10) / 10,
+        efficiency: actualPoints > 0 ? Math.round((actualPoints / optimalPoints) * 1000) / 10 : 0,
+        pointsLeftOnBench: Math.round((optimalPoints - actualPoints) * 10) / 10,
+      },
+      decisions,
+      seasonTrends,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+/**
+ * Calculate optimal lineup from all available players.
+ * Standard NFL lineup: 1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX (RB/WR/TE), 1 K, 1 DEF
+ */
+function calculateOptimalLineup(players) {
+  // Group by NFL position
+  const byPos = {}
+  for (const p of players) {
+    const pos = p.nflPos || 'UNKNOWN'
+    if (!byPos[pos]) byPos[pos] = []
+    byPos[pos].push(p)
+  }
+
+  // Sort each position group by points desc
+  for (const pos of Object.keys(byPos)) {
+    byPos[pos].sort((a, b) => (b.points || 0) - (a.points || 0))
+  }
+
+  const lineup = []
+  const used = new Set()
+
+  // Fill required slots
+  const slots = [
+    { pos: 'QB', count: 1 },
+    { pos: 'RB', count: 2 },
+    { pos: 'WR', count: 2 },
+    { pos: 'TE', count: 1 },
+    { pos: 'K', count: 1 },
+    { pos: 'DEF', count: 1 },
+  ]
+
+  for (const slot of slots) {
+    const available = (byPos[slot.pos] || []).filter(p => !used.has(p.playerId))
+    for (let i = 0; i < slot.count && i < available.length; i++) {
+      lineup.push({ ...available[i], optimalSlot: slot.pos })
+      used.add(available[i].playerId)
+    }
+  }
+
+  // FLEX: best remaining RB/WR/TE
+  const flexCandidates = ['RB', 'WR', 'TE']
+    .flatMap(pos => (byPos[pos] || []).filter(p => !used.has(p.playerId)))
+    .sort((a, b) => (b.points || 0) - (a.points || 0))
+
+  if (flexCandidates.length > 0) {
+    lineup.push({ ...flexCandidates[0], optimalSlot: 'FLEX' })
+    used.add(flexCandidates[0].playerId)
+  }
+
+  return lineup
+}
+
+/**
+ * Grade start/sit decisions by comparing starters vs bench at same position.
+ */
+function gradeDecisions(starters, bench) {
+  const decisions = []
+
+  for (const starter of starters) {
+    // Find bench players at the same position who outscored this starter
+    const betterBench = bench.filter(b =>
+      b.nflPos === starter.nflPos && (b.points || 0) > (starter.points || 0)
+    )
+
+    if (betterBench.length > 0) {
+      const best = betterBench[0]
+      decisions.push({
+        type: 'miss',
+        starter: { name: starter.playerName, points: starter.points, pos: starter.nflPos },
+        alternative: { name: best.playerName, points: best.points, pos: best.nflPos },
+        diff: Math.round(((best.points || 0) - (starter.points || 0)) * 10) / 10,
+      })
+    } else {
+      // Good decision — no bench player at this position outscored
+      const samePosOnBench = bench.filter(b => b.nflPos === starter.nflPos)
+      if (samePosOnBench.length > 0) {
+        decisions.push({
+          type: 'good',
+          starter: { name: starter.playerName, points: starter.points, pos: starter.nflPos },
+          alternative: { name: samePosOnBench[0].playerName, points: samePosOnBench[0].points, pos: samePosOnBench[0].nflPos },
+          diff: Math.round(((starter.points || 0) - (samePosOnBench[0].points || 0)) * 10) / 10,
+        })
+      }
+    }
+  }
+
+  return decisions.sort((a, b) => {
+    // Misses first, then good decisions
+    if (a.type !== b.type) return a.type === 'miss' ? -1 : 1
+    return Math.abs(b.diff) - Math.abs(a.diff)
+  })
+}
+
+/**
+ * Calculate season trends from weekly results.
+ */
+function calculateSeasonTrends(weeklyResults) {
+  if (weeklyResults.length < 3) return null
+
+  const weeklyEfficiencies = []
+  let totalOptimal = 0
+  let totalActual = 0
+
+  for (const wr of weeklyResults) {
+    const players = wr.playerScores || []
+    const starters = players.filter(p => p.position === 'ACTIVE')
+    const bench = players.filter(p => p.position !== 'ACTIVE')
+    const allPlayers = [...starters, ...bench]
+
+    const actualPts = starters.reduce((s, p) => s + (p.points || 0), 0)
+    const optimal = calculateOptimalLineup(allPlayers)
+    const optimalPts = optimal.reduce((s, p) => s + (p.points || 0), 0)
+
+    totalActual += actualPts
+    totalOptimal += optimalPts
+
+    if (optimalPts > 0) {
+      weeklyEfficiencies.push({
+        week: wr.fantasyWeek?.weekNumber,
+        efficiency: Math.round((actualPts / optimalPts) * 1000) / 10,
+        pointsLeft: Math.round((optimalPts - actualPts) * 10) / 10,
+      })
+    }
+  }
+
+  const avgEfficiency = totalOptimal > 0 ? Math.round((totalActual / totalOptimal) * 1000) / 10 : 0
+
+  return {
+    weeksAnalyzed: weeklyResults.length,
+    avgEfficiency,
+    totalPointsLeft: Math.round((totalOptimal - totalActual) * 10) / 10,
+    weeklyEfficiencies,
+  }
+}
+
 module.exports = router

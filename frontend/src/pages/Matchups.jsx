@@ -156,12 +156,20 @@ const Matchups = () => {
                   Your Matchup — Week {heroWeek.week}
                 </h2>
                 {isNfl && (
-                  <Link
-                    to={`/leagues/${leagueId}/gameday`}
-                    className="text-sm text-emerald-400 hover:text-emerald-300 font-medium"
-                  >
-                    Gameday Portal →
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      to={`/leagues/${leagueId}/gameday`}
+                      className="text-sm text-emerald-400 hover:text-emerald-300 font-medium"
+                    >
+                      Gameday Portal →
+                    </Link>
+                    <Link
+                      to={`/leagues/${leagueId}/scoring`}
+                      className="text-sm text-white/40 hover:text-white/60 font-medium"
+                    >
+                      Scoring →
+                    </Link>
+                  </div>
                 )}
               </div>
               <div className="max-w-md">

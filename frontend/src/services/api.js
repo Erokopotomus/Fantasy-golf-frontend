@@ -217,6 +217,31 @@ class ApiService {
     return this.request(`/nfl/leagues/${leagueId}/weekly-scores/${weekNumber}`)
   }
 
+  // Prove It — NFL Props & Picks
+  async getNflProps(season, week) {
+    return this.request(`/nfl/props/${season}/${week}`)
+  }
+
+  async submitNflPick(propId, direction, reasonChip) {
+    return this.request(`/nfl/props/${propId}/pick`, {
+      method: 'POST',
+      body: JSON.stringify({ direction, reasonChip }),
+    })
+  }
+
+  async getNflPickRecord() {
+    return this.request('/nfl/picks/record')
+  }
+
+  async getNflPicksLeaderboard(limit = 25) {
+    return this.request(`/nfl/picks/leaderboard?limit=${limit}`)
+  }
+
+  // Week in Review
+  async getNflWeekReview(leagueId, week) {
+    return this.request(`/nfl/leagues/${leagueId}/week-review/${week}`)
+  }
+
   // Drafts
   async getDraft(id) {
     return this.request(`/drafts/${id}`)
