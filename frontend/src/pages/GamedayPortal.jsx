@@ -353,30 +353,29 @@ const GamedayPortal = () => {
                 return (
                   <div
                     key={i}
-                    className={`p-2 rounded-lg text-sm ${
+                    className={`p-2.5 rounded-lg text-sm ${
                       isUserMatchup ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-dark-tertiary/30'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 text-right">
-                        <span className={`truncate ${homeWon ? 'text-emerald-400 font-semibold' : 'text-white'}`}>
-                          {homeTeam?.teamName || homeTeam?.name || 'Home'}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 font-mono text-xs">
-                        <span className={homeWon ? 'text-emerald-400 font-bold' : 'text-white'}>
-                          {(m.homeScore || 0).toFixed(1)}
-                        </span>
-                        <span className="text-text-muted">-</span>
-                        <span className={awayWon ? 'text-emerald-400 font-bold' : 'text-white'}>
-                          {(m.awayScore || 0).toFixed(1)}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <span className={`truncate ${awayWon ? 'text-emerald-400 font-semibold' : 'text-white'}`}>
-                          {awayTeam?.teamName || awayTeam?.name || 'Away'}
-                        </span>
-                      </div>
+                    {/* Home team row */}
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs truncate flex-1 mr-2 ${homeWon ? 'text-emerald-400 font-semibold' : 'text-white'}`}>
+                        {homeWon && <span className="text-emerald-400 mr-1">W</span>}
+                        {homeTeam?.teamName || homeTeam?.name || 'Home'}
+                      </span>
+                      <span className={`font-mono text-xs font-bold ${homeWon ? 'text-emerald-400' : 'text-white'}`}>
+                        {(m.homeScore || 0).toFixed(1)}
+                      </span>
+                    </div>
+                    {/* Away team row */}
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className={`text-xs truncate flex-1 mr-2 ${awayWon ? 'text-emerald-400 font-semibold' : 'text-text-secondary'}`}>
+                        {awayWon && <span className="text-emerald-400 mr-1">W</span>}
+                        {awayTeam?.teamName || awayTeam?.name || 'Away'}
+                      </span>
+                      <span className={`font-mono text-xs font-bold ${awayWon ? 'text-emerald-400' : 'text-text-secondary'}`}>
+                        {(m.awayScore || 0).toFixed(1)}
+                      </span>
                     </div>
                   </div>
                 )
