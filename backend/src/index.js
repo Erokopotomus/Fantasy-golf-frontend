@@ -31,6 +31,7 @@ const importRoutes = require('./routes/imports')
 const courseRoutes = require('./routes/courses')
 const waitlistRoutes = require('./routes/waitlist')
 const nflRoutes = require('./routes/nfl')
+const yahooAuthRoutes = require('./routes/yahooAuth')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -121,6 +122,7 @@ app.use('/api/imports', importRoutes)
 app.use('/api/courses', courseRoutes)
 app.use('/api/waitlist', waitlistRoutes)
 app.use('/api/nfl', nflRoutes)
+app.use('/api/auth', yahooAuthRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

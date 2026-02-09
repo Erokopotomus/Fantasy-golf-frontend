@@ -26,16 +26,32 @@ const NFL_GAME_KEYS = {
 /**
  * Fetch JSON from Yahoo Fantasy API.
  * Yahoo returns XML by default — we request JSON format.
+ * Supports auto-refresh: if onTokenRefresh callback is provided and a 401 is
+ * received, it will attempt to refresh the token and retry once.
  */
-async function yahooFetch(path, accessToken) {
+async function yahooFetch(path, accessToken, onTokenRefresh) {
   if (!accessToken) throw new Error('Yahoo access token is required')
 
   const url = `${BASE}${path}?format=json`
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${accessToken}`,
     },
   })
+
+  // Auto-refresh on 401 if callback provided
+  if (res.status === 401 && onTokenRefresh) {
+    try {
+      const newToken = await onTokenRefresh()
+      res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${newToken}`,
+        },
+      })
+    } catch {
+      throw new Error('Yahoo authentication expired and refresh failed. Please re-authorize.')
+    }
+  }
 
   if (!res.ok) {
     if (res.status === 401) throw new Error('Yahoo authentication expired. Please re-authorize.')

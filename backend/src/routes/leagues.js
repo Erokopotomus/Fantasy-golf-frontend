@@ -4,6 +4,7 @@ const { authenticate } = require('../middleware/auth')
 const { calculateLeagueStandings, calculateTournamentScoring, calculateLiveTournamentScoring } = require('../services/scoringService')
 const { notifyLeague } = require('../services/notificationService')
 const { generatePlayoffBracket, getPlayoffBracket } = require('../services/playoffService')
+const { STANDARD_RULES, getScoringSchema, resolveRules } = require('../services/nflScoringService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -81,9 +82,30 @@ router.post('/', authenticate, async (req, res, next) => {
     const resolvedScoringType = scoringType || 'standard'
     let scoringSystemRecord = null
     if (sportRecord) {
-      scoringSystemRecord = await prisma.scoringSystem.findUnique({
-        where: { sportId_slug: { sportId: sportRecord.id, slug: resolvedScoringType } },
-      })
+      if (resolvedScoringType === 'custom' && sportSlug === 'nfl') {
+        // For custom NFL scoring, create a per-league ScoringSystem cloned from half_ppr defaults
+        const basePreset = req.body.basePreset || 'half_ppr'
+        const baseSystem = await prisma.scoringSystem.findUnique({
+          where: { sportId_slug: { sportId: sportRecord.id, slug: basePreset } },
+        })
+        const baseRules = baseSystem ? baseSystem.rules : { preset: 'custom', ...STANDARD_RULES }
+        const customRules = { ...baseRules, preset: 'custom', ...(req.body.scoringRules || {}) }
+
+        scoringSystemRecord = await prisma.scoringSystem.create({
+          data: {
+            sportId: sportRecord.id,
+            name: `Custom - ${name}`,
+            slug: `custom_${Date.now()}`,
+            isDefault: false,
+            isSystem: false,
+            rules: customRules,
+          },
+        })
+      } else {
+        scoringSystemRecord = await prisma.scoringSystem.findUnique({
+          where: { sportId_slug: { sportId: sportRecord.id, slug: resolvedScoringType } },
+        })
+      }
     }
 
     // Default roster size by sport
@@ -266,6 +288,123 @@ router.patch('/:id', authenticate, async (req, res, next) => {
     })
 
     res.json({ league: updatedLeague })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// PATCH /api/leagues/:id/scoring - Update NFL league scoring rules (commissioner only)
+router.patch('/:id/scoring', authenticate, async (req, res, next) => {
+  try {
+    const { rules, preset } = req.body
+
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { scoringSystem: true },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can update scoring rules' } })
+    }
+
+    // If switching to a system preset, just update the league's scoringSystemId
+    if (preset && preset !== 'custom') {
+      const sportRecord = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
+      if (!sportRecord) {
+        return res.status(400).json({ error: { message: 'NFL sport not found' } })
+      }
+      const presetSystem = await prisma.scoringSystem.findUnique({
+        where: { sportId_slug: { sportId: sportRecord.id, slug: preset } },
+      })
+      if (!presetSystem) {
+        return res.status(400).json({ error: { message: `Preset "${preset}" not found` } })
+      }
+
+      const updated = await prisma.league.update({
+        where: { id: req.params.id },
+        data: {
+          scoringSystemId: presetSystem.id,
+          settings: { ...league.settings, scoringType: preset },
+        },
+        include: { scoringSystem: true },
+      })
+      return res.json({ league: updated, scoringSystem: presetSystem })
+    }
+
+    // Custom rules update
+    if (!rules || typeof rules !== 'object') {
+      return res.status(400).json({ error: { message: 'Scoring rules object is required' } })
+    }
+
+    // If the league already has a non-system scoring system, update it in place
+    if (league.scoringSystem && !league.scoringSystem.isSystem) {
+      const updatedRules = { ...league.scoringSystem.rules, ...rules, preset: 'custom' }
+      const updated = await prisma.scoringSystem.update({
+        where: { id: league.scoringSystem.id },
+        data: { rules: updatedRules },
+      })
+      const updatedLeague = await prisma.league.update({
+        where: { id: req.params.id },
+        data: { settings: { ...league.settings, scoringType: 'custom' } },
+      })
+      return res.json({ league: updatedLeague, scoringSystem: updated })
+    }
+
+    // Otherwise, create a new per-league scoring system
+    const baseRules = league.scoringSystem ? league.scoringSystem.rules : STANDARD_RULES
+    const customRules = { ...baseRules, ...rules, preset: 'custom' }
+
+    const sportRecord = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
+    const newSystem = await prisma.scoringSystem.create({
+      data: {
+        sportId: sportRecord.id,
+        name: `Custom - ${league.name}`,
+        slug: `custom_${league.id}`,
+        isDefault: false,
+        isSystem: false,
+        rules: customRules,
+      },
+    })
+
+    const updatedLeague = await prisma.league.update({
+      where: { id: req.params.id },
+      data: {
+        scoringSystemId: newSystem.id,
+        settings: { ...league.settings, scoringType: 'custom' },
+      },
+    })
+
+    res.json({ league: updatedLeague, scoringSystem: newSystem })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/leagues/:id/scoring-schema - Get NFL scoring schema metadata
+router.get('/:id/scoring-schema', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { scoringSystem: true },
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const schema = getScoringSchema()
+    const currentRules = league.scoringSystem ? resolveRules(league.scoringSystem) : STANDARD_RULES
+
+    res.json({
+      schema,
+      currentRules,
+      scoringType: league.settings?.scoringType || 'standard',
+      isCustom: league.scoringSystem ? !league.scoringSystem.isSystem : false,
+    })
   } catch (error) {
     next(error)
   }

@@ -71,12 +71,39 @@ router.post('/espn/import', authenticate, validateLeagueId, async (req, res) => 
 })
 
 // ─── Yahoo Import ───────────────────────────────────────────────────────────
+
+/**
+ * Resolve Yahoo access token: use body param if provided, otherwise look up stored token.
+ */
+async function resolveYahooToken(req) {
+  // Body param takes priority (backward compat)
+  if (req.body.accessToken) return req.body.accessToken
+
+  // Look up stored OAuth token
+  const stored = await prisma.userOAuthToken.findUnique({
+    where: { userId_provider: { userId: req.user.id, provider: 'yahoo' } },
+  })
+  if (!stored) return null
+
+  // Check if expired and refresh is possible
+  if (stored.expiresAt && new Date() > new Date(stored.expiresAt) && stored.refreshToken) {
+    try {
+      const { refreshYahooToken } = require('./yahooAuth')
+      return await refreshYahooToken(req.user.id)
+    } catch {
+      return stored.accessToken // Try with existing token anyway
+    }
+  }
+
+  return stored.accessToken
+}
+
 // POST /api/imports/yahoo/discover
 router.post('/yahoo/discover', authenticate, validateLeagueId, async (req, res) => {
   try {
     const leagueId = sanitize(req.body.leagueId)
-    const accessToken = req.body.accessToken
-    if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo access token is required' } })
+    const accessToken = await resolveYahooToken(req)
+    if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo not connected. Please authorize via Settings or provide an access token.' } })
     const discovery = await yahooImport.discoverLeague(leagueId, accessToken)
     res.json(discovery)
   } catch (err) {
@@ -88,8 +115,8 @@ router.post('/yahoo/discover', authenticate, validateLeagueId, async (req, res) 
 router.post('/yahoo/import', authenticate, validateLeagueId, async (req, res) => {
   try {
     const leagueId = sanitize(req.body.leagueId)
-    const accessToken = req.body.accessToken
-    if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo access token is required' } })
+    const accessToken = await resolveYahooToken(req)
+    if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo not connected. Please authorize via Settings or provide an access token.' } })
     const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken)
     res.json(result)
   } catch (err) {

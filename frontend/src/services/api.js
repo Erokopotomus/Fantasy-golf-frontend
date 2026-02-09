@@ -775,6 +775,17 @@ class ApiService {
   async getNflScoringSystems() {
     return this.request('/nfl/scoring-systems')
   }
+
+  async getNflScoringSchema(leagueId) {
+    return this.request(`/leagues/${leagueId}/scoring-schema`)
+  }
+
+  async updateNflScoring(leagueId, data) {
+    return this.request(`/leagues/${leagueId}/scoring`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
 }
 
 export const api = new ApiService()

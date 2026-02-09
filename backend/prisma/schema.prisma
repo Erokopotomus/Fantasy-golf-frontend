@@ -52,6 +52,9 @@ model User {
   leagueImports       LeagueImport[]
   historicalSeasons    HistoricalSeason[]    @relation("HistoricalOwner")
 
+  // OAuth tokens (Yahoo, etc.)
+  oauthTokens         UserOAuthToken[]
+
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
   bio         String?  @db.Text
@@ -2278,6 +2281,23 @@ model ClutchManagerRating {
   @@map("clutch_manager_ratings")
 }
 
+// ============ OAUTH TOKENS ============
+
+model UserOAuthToken {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String    // "yahoo", "espn", etc.
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, provider])
+  @@map("user_oauth_tokens")
+}
+
 // ============ NFL EXPANSION (Phase 7) ============
 
 model NflTeam {
@@ -2398,12 +2418,32 @@ model NflPlayerGame {
   defInterceptions Int?
   defTds           Int?
 
+  // 2-point conversions
+  pass2pt    Int?
+  rush2pt    Int?
+  rec2pt     Int?
+
+  // Special teams / return stats
+  returnYards Int?
+  returnTds   Int?
+
   // Kicking
   fgMade     Int?
   fgAttempts Int?
   fgPct      Float?
+  fgMade0_19   Int? // FG made 0-19 yards
+  fgMade20_29  Int? // FG made 20-29 yards
+  fgMade30_39  Int? // FG made 30-39 yards
+  fgMade40_49  Int? // FG made 40-49 yards
+  fgMade50Plus Int? // FG made 50+ yards
   xpMade     Int?
   xpAttempts Int?
+
+  // Team defense extras
+  safeties        Int?
+  blockedKicks    Int?
+  pointsAllowed   Int? // Total points allowed (for DST scoring tiers)
+  yardsAllowed    Int? // Total yards allowed (for DST scoring tiers)
 
   // Fantasy points (pre-computed for convenience)
   fantasyPtsStd  Float? // Standard scoring

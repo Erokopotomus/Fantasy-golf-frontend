@@ -9,85 +9,8 @@
  */
 
 const { PrismaClient } = require('@prisma/client')
+const { STANDARD_RULES, PPR_RULES, HALF_PPR_RULES } = require('../src/services/nflScoringService')
 const prisma = new PrismaClient()
-
-// ─── NFL Scoring Configs ────────────────────────────────────────────────────
-
-const NFL_STANDARD_CONFIG = {
-  preset: 'standard',
-  passing: {
-    perYard: 0.04,        // 1 pt per 25 yards
-    perTd: 4,
-    perInt: -2,
-    per2pt: 2,
-    perSack: 0,           // Some leagues penalize sacks
-  },
-  rushing: {
-    perYard: 0.1,         // 1 pt per 10 yards
-    perTd: 6,
-    per2pt: 2,
-  },
-  receiving: {
-    perYard: 0.1,         // 1 pt per 10 yards
-    perTd: 6,
-    perReception: 0,      // Standard = 0 PPR
-    per2pt: 2,
-  },
-  fumbles: {
-    perFumbleLost: -2,
-  },
-  kicking: {
-    perFgMade: 3,
-    perFg40_49: 4,        // Bonus for long FGs
-    perFg50Plus: 5,
-    perFgMissed: -1,
-    perXpMade: 1,
-    perXpMissed: -1,
-  },
-  defense: {
-    perSack: 1,
-    perInt: 2,
-    perFumbleRecovery: 2,
-    perTd: 6,
-    perSafety: 2,
-    perBlockedKick: 2,
-    pointsAllowed: {
-      0: 10,
-      '1-6': 7,
-      '7-13': 4,
-      '14-20': 1,
-      '21-27': 0,
-      '28-34': -1,
-      '35+': -4,
-    },
-  },
-  bonuses: {
-    passing300: 2,
-    passing400: 4,
-    rushing100: 2,
-    rushing200: 4,
-    receiving100: 2,
-    receiving200: 4,
-  },
-}
-
-const NFL_PPR_CONFIG = {
-  ...NFL_STANDARD_CONFIG,
-  preset: 'ppr',
-  receiving: {
-    ...NFL_STANDARD_CONFIG.receiving,
-    perReception: 1,      // Full PPR
-  },
-}
-
-const NFL_HALF_PPR_CONFIG = {
-  ...NFL_STANDARD_CONFIG,
-  preset: 'half_ppr',
-  receiving: {
-    ...NFL_STANDARD_CONFIG.receiving,
-    perReception: 0.5,    // Half PPR
-  },
-}
 
 // ─── 2025 NFL Schedule (Week start dates — Thursday to Monday) ──────────────
 
@@ -115,12 +38,20 @@ const NFL_2025_WEEKS = [
 // ─── NFL Positions ──────────────────────────────────────────────────────────
 
 const NFL_POSITIONS = [
-  { abbr: 'QB',  name: 'Quarterback',           sortOrder: 1 },
-  { abbr: 'RB',  name: 'Running Back',          sortOrder: 2 },
-  { abbr: 'WR',  name: 'Wide Receiver',         sortOrder: 3 },
-  { abbr: 'TE',  name: 'Tight End',             sortOrder: 4 },
-  { abbr: 'K',   name: 'Kicker',                sortOrder: 5 },
-  { abbr: 'DEF', name: 'Defense/Special Teams',  sortOrder: 6 },
+  { abbr: 'QB',  name: 'Quarterback',           sortOrder: 1,  config: {} },
+  { abbr: 'RB',  name: 'Running Back',          sortOrder: 2,  config: {} },
+  { abbr: 'WR',  name: 'Wide Receiver',         sortOrder: 3,  config: {} },
+  { abbr: 'TE',  name: 'Tight End',             sortOrder: 4,  config: {} },
+  { abbr: 'K',   name: 'Kicker',                sortOrder: 5,  config: {} },
+  { abbr: 'DEF', name: 'Defense/Special Teams',  sortOrder: 6,  config: {} },
+  // IDP positions (future — available in Position table for when IDP leagues are enabled)
+  { abbr: 'DL',  name: 'Defensive Line',        sortOrder: 10, config: { category: 'IDP' } },
+  { abbr: 'LB',  name: 'Linebacker',            sortOrder: 11, config: { category: 'IDP' } },
+  { abbr: 'DB',  name: 'Defensive Back',        sortOrder: 12, config: { category: 'IDP' } },
+  { abbr: 'DE',  name: 'Defensive End',         sortOrder: 13, config: { category: 'IDP' } },
+  { abbr: 'DT',  name: 'Defensive Tackle',      sortOrder: 14, config: { category: 'IDP' } },
+  { abbr: 'CB',  name: 'Cornerback',            sortOrder: 15, config: { category: 'IDP' } },
+  { abbr: 'S',   name: 'Safety',                sortOrder: 16, config: { category: 'IDP' } },
 ]
 
 // ─── NFL Roster Slots ───────────────────────────────────────────────────────
@@ -180,29 +111,31 @@ async function seed() {
   })
   console.log('[1] NFL sport config updated')
 
-  // 2. Scoring Systems
+  // 2. Scoring Systems (flat key-value maps — Sleeper-style)
   const scoringConfigs = [
-    { name: 'Standard',  slug: 'standard',  rules: NFL_STANDARD_CONFIG, isDefault: true },
-    { name: 'PPR',       slug: 'ppr',        rules: NFL_PPR_CONFIG,      isDefault: false },
-    { name: 'Half PPR',  slug: 'half_ppr',   rules: NFL_HALF_PPR_CONFIG, isDefault: false },
+    { name: 'Standard',  slug: 'standard',  rules: { preset: 'standard', ...STANDARD_RULES },  isDefault: true },
+    { name: 'PPR',       slug: 'ppr',        rules: { preset: 'ppr', ...PPR_RULES },            isDefault: false },
+    { name: 'Half PPR',  slug: 'half_ppr',   rules: { preset: 'half_ppr', ...HALF_PPR_RULES },  isDefault: false },
+    { name: 'Custom',    slug: 'custom',     rules: { preset: 'custom', ...HALF_PPR_RULES },    isDefault: false, isSystem: false },
   ]
 
   const scoringSystems = {}
   for (const cfg of scoringConfigs) {
+    const isSystem = cfg.isSystem !== undefined ? cfg.isSystem : true
     const ss = await prisma.scoringSystem.upsert({
       where: { sportId_slug: { sportId: sport.id, slug: cfg.slug } },
-      update: { name: cfg.name, rules: cfg.rules, isDefault: cfg.isDefault },
+      update: { name: cfg.name, rules: cfg.rules, isDefault: cfg.isDefault, isSystem },
       create: {
         sportId: sport.id,
         name: cfg.name,
         slug: cfg.slug,
         isDefault: cfg.isDefault,
-        isSystem: true,
+        isSystem,
         rules: cfg.rules,
       },
     })
     scoringSystems[cfg.slug] = ss
-    console.log(`[2] Scoring system: ${cfg.name}`)
+    console.log(`[2] Scoring system: ${cfg.name}${isSystem ? '' : ' (template)'}`)
   }
 
   // 3. Positions
@@ -210,18 +143,18 @@ async function seed() {
   for (const pos of NFL_POSITIONS) {
     const p = await prisma.position.upsert({
       where: { sportId_abbr: { sportId: sport.id, abbr: pos.abbr } },
-      update: { name: pos.name, sortOrder: pos.sortOrder },
+      update: { name: pos.name, sortOrder: pos.sortOrder, config: pos.config || {} },
       create: {
         sportId: sport.id,
         abbr: pos.abbr,
         name: pos.name,
         sortOrder: pos.sortOrder,
-        config: {},
+        config: pos.config || {},
       },
     })
     positions[pos.abbr] = p
   }
-  console.log(`[3] ${NFL_POSITIONS.length} positions created/updated`)
+  console.log(`[3] ${NFL_POSITIONS.length} positions created/updated (includes IDP)`)
 
   // 4. Roster Slot Definitions (on Standard scoring system — other presets share same slots)
   const standardSS = scoringSystems['standard']

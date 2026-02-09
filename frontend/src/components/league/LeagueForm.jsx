@@ -15,6 +15,7 @@ const NFL_SCORING_OPTIONS = [
   { key: 'half_ppr', label: 'Half PPR', desc: 'Half point per reception (most popular)' },
   { key: 'ppr', label: 'PPR', desc: 'Full point per reception' },
   { key: 'standard', label: 'Standard', desc: 'No points for receptions' },
+  { key: 'custom', label: 'Custom', desc: 'Configure every stat value after creation' },
 ]
 
 const SPORT_DEFAULTS = {
@@ -288,7 +289,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
               Scoring System <span className="text-red-500">*</span>
             </label>
             {isNfl ? (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {NFL_SCORING_OPTIONS.map(opt => (
                   <button
                     key={opt.key}

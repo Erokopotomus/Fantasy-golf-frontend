@@ -13,7 +13,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { optionalAuth } = require('../middleware/auth')
-const { calculateFantasyPoints } = require('../services/nflScoringService')
+const { calculateFantasyPoints, resolveRules, getScoringSchema, PRESETS } = require('../services/nflScoringService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -109,6 +109,18 @@ router.get('/players', optionalAuth, async (req, res, next) => {
       prisma.player.count({ where }),
     ])
 
+    // If leagueId provided, load league-specific scoring rules
+    let leagueRules = null
+    if (leagueId) {
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        include: { scoringSystem: true },
+      })
+      if (league?.scoringSystem) {
+        leagueRules = resolveRules(league.scoringSystem)
+      }
+    }
+
     // Compute season totals and per-game averages
     const playersWithStats = players.map(p => {
       const games = p.nflPlayerGames || []
@@ -140,9 +152,12 @@ router.get('/players', optionalAuth, async (req, res, next) => {
         defTds: games.reduce((s, g) => s + (g.defTds || 0), 0),
       }
 
-      // Use pre-computed fantasy points from nflverse or calculate our own
+      // Calculate fantasy points per game using league-specific rules or preset
       let fantasyPts = 0
-      if (scoring === 'ppr') {
+      if (leagueRules) {
+        // League-specific scoring: calculate each game with custom rules, sum up
+        fantasyPts = games.reduce((s, g) => s + calculateFantasyPoints(g, leagueRules).total, 0)
+      } else if (scoring === 'ppr') {
         fantasyPts = games.reduce((s, g) => s + (g.fantasyPtsPpr || 0), 0)
       } else if (scoring === 'half_ppr') {
         fantasyPts = games.reduce((s, g) => s + (g.fantasyPtsHalf || 0), 0)
@@ -458,6 +473,16 @@ router.get('/scoring-systems', async (req, res, next) => {
     })
 
     res.json({ scoringSystems: systems })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/nfl/scoring-schema — NFL scoring schema metadata for UI
+router.get('/scoring-schema', async (req, res, next) => {
+  try {
+    const schema = getScoringSchema()
+    res.json({ schema, presets: Object.keys(PRESETS) })
   } catch (error) {
     next(error)
   }

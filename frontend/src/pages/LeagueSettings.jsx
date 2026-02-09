@@ -14,6 +14,7 @@ import RotoSettings from '../components/league/settings/RotoSettings'
 import SurvivorSettings from '../components/league/settings/SurvivorSettings'
 import OneAndDoneSettings from '../components/league/settings/OneAndDoneSettings'
 import ScoringSettings from '../components/league/settings/ScoringSettings'
+import NflScoringSettings from '../components/league/settings/NflScoringSettings'
 import ScheduleManager from '../components/league/settings/ScheduleManager'
 
 const LeagueSettings = () => {
@@ -473,11 +474,23 @@ const LeagueSettings = () => {
       {/* Scoring Settings */}
       {activeTab === 'scoring' && (
         <div className="space-y-6">
-          <ScoringSettings
-            settings={settings}
-            onChange={(scoringUpdates) => setSettings({ ...settings, ...scoringUpdates })}
-          />
-          <Button onClick={handleSave} loading={saving}>Save Scoring Settings</Button>
+          {league?.sport?.toLowerCase() === 'nfl' ? (
+            <NflScoringSettings
+              leagueId={leagueId}
+              onSaved={() => {
+                notify.success('Scoring Saved', 'NFL scoring settings have been updated')
+                refetch()
+              }}
+            />
+          ) : (
+            <>
+              <ScoringSettings
+                settings={settings}
+                onChange={(scoringUpdates) => setSettings({ ...settings, ...scoringUpdates })}
+              />
+              <Button onClick={handleSave} loading={saving}>Save Scoring Settings</Button>
+            </>
+          )}
         </div>
       )}
 
