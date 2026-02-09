@@ -72,6 +72,10 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - League settings: roster size, bench spots, trade deadline, waiver type (FAAB/priority/rolling), lineup lock
   - Invite system: shareable invite codes, one-click join
   - Season setup auto-runs on draft completion (matchups, team seasons, budgets)
+  - Position limits: per-position roster caps (NFL), enforced on roster add, trades, and waivers
+  - Divisions: labels, team assignments, grouped standings with division W-L records
+  - Keeper league support: designate/undesignate keepers, max keepers, cost models (no-cost/round penalty/auction), draft pre-assignment
+  - Playoff byes: automatic bye calculation from playoff team count, bracket generation skips bye teams in round 1
 
 - [x] **Draft Room**
   - Snake draft (live + mock)
@@ -99,6 +103,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Trade accept/reject/cancel
   - Trade history log (RosterTransaction audit trail)
   - Trade deadline enforcement (date-based, configurable per league)
+  - Trade veto voting: league-vote review mode with configurable threshold (33/50/67%), review period (24/48/72h), vote visibility (anonymous/visible/commissioner-only), auto-processor every 15 min
 
 - [x] **Notifications**
   - Socket.IO real-time notifications (user rooms)
@@ -543,7 +548,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 - `league_members` — league_id, user_id, role, joined_at
 - `players` — id, name, sportId, rank, sgTotal, sgOffTee, sgApproach, sgAroundGreen, sgPutting, primaryTour, headshotUrl, countryFlag, recentForm, etc.
 - `teams` — id, name, leagueId, userId, totalPoints
-- `roster_entries` — id, teamId, playerId, position, rosterStatus, isActive, droppedAt, acquiredVia
+- `roster_entries` — id, teamId, playerId, position, rosterStatus, isActive, droppedAt, acquiredVia, isKeeper, keeperCost, keeperYear, keptAt
 - `matchups` — id, leagueId, fantasyWeekId, homeTeamId, awayTeamId, homeScore, awayScore, result
 - `transactions` (RosterTransaction) — id, teamId, leagueId, type, playerId, playerName, metadata
 - `draft_picks` — id, draftId, teamId, playerId, round, pickNumber, playerRank
@@ -1083,4 +1088,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 8, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion (NFL-1 + NFL-2 + league infra) complete.*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion (NFL-1 + NFL-2 + league infra) complete. League management features added: position limits, divisions, keepers, trade veto voting, playoff byes.*
