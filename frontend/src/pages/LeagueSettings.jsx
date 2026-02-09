@@ -58,6 +58,7 @@ const LeagueSettings = () => {
     playoffWeeks: league?.settings?.playoffWeeks || 3,
     positionLimits: league?.settings?.positionLimits || {},
     keeperSettings: league?.settings?.keeperSettings || {},
+    draftDollarSettings: league?.settings?.draftDollarSettings || {},
     tradeReviewHours: league?.settings?.tradeReviewHours || 48,
     tradeVetoThreshold: league?.settings?.tradeVetoThreshold || 50,
     tradeVetoVisibility: league?.settings?.tradeVetoVisibility || 'anonymous',
@@ -89,6 +90,7 @@ const LeagueSettings = () => {
         playoffWeeks: league.settings?.playoffWeeks || 3,
         positionLimits: league.settings?.positionLimits || {},
         keeperSettings: league.settings?.keeperSettings || {},
+        draftDollarSettings: league.settings?.draftDollarSettings || {},
         tradeReviewHours: league.settings?.tradeReviewHours || 48,
         tradeVetoThreshold: league.settings?.tradeVetoThreshold || 50,
         tradeVetoVisibility: league.settings?.tradeVetoVisibility || 'anonymous',
@@ -457,8 +459,59 @@ const LeagueSettings = () => {
                       <option value="no-cost">No Cost</option>
                       <option value="round-penalty">Round Penalty (draft round - 1)</option>
                       <option value="auction-cost">Auction Cost (original bid)</option>
+                      <option value="auction-escalator">Auction Escalator (compounding cost)</option>
                     </select>
                   </div>
+                  {settings.keeperSettings?.costModel === 'auction-escalator' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-text-muted mb-1">Multiplier</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="1.0"
+                            value={settings.keeperSettings?.escalatorMultiplier || 1.5}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              keeperSettings: { ...prev.keeperSettings, escalatorMultiplier: parseFloat(e.target.value) || 1.5 },
+                            }))}
+                            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-text-muted mb-1">Floor ($)</label>
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            value={settings.keeperSettings?.escalatorFloor || 10}
+                            onChange={(e) => setSettings(prev => ({
+                              ...prev,
+                              keeperSettings: { ...prev.keeperSettings, escalatorFloor: parseInt(e.target.value) || 10 },
+                            }))}
+                            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="bg-dark-primary/50 rounded-lg p-2 text-xs text-text-secondary">
+                        <p className="font-medium text-text-muted mb-1">Cost Preview (max of multiplier vs floor):</p>
+                        {(() => {
+                          const m = settings.keeperSettings?.escalatorMultiplier || 1.5
+                          const f = settings.keeperSettings?.escalatorFloor || 10
+                          const y0 = 1
+                          const y1 = Math.ceil(Math.max(y0 * m, y0 + f))
+                          const y2 = Math.ceil(Math.max(y1 * m, y1 + f))
+                          const y3 = Math.ceil(Math.max(y2 * m, y2 + f))
+                          return (
+                            <p className="font-mono text-gold">
+                              Drafted ${y0} → Y1: ${y1} → Y2: ${y2} → Y3: ${y3}
+                            </p>
+                          )
+                        })()}
+                      </div>
+                    </>
+                  )}
                   <div>
                     <label className="block text-xs font-medium text-text-muted mb-1">Keeper Duration</label>
                     <select
@@ -476,6 +529,109 @@ const LeagueSettings = () => {
                       <option value="5">5 Years</option>
                       <option value="unlimited">Unlimited</option>
                     </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Draft Dollar Trading */}
+            <div className="pt-4 border-t border-dark-border">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary">Draft Dollar Trading</label>
+                  <p className="text-xs text-text-muted">Track auction draft dollar trades and side bets between managers</p>
+                </div>
+                <button
+                  onClick={() => setSettings(prev => ({
+                    ...prev,
+                    draftDollarSettings: {
+                      ...prev.draftDollarSettings,
+                      enabled: !prev.draftDollarSettings?.enabled,
+                    },
+                  }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    settings.draftDollarSettings?.enabled ? 'bg-gold' : 'bg-dark-border'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      settings.draftDollarSettings?.enabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {settings.draftDollarSettings?.enabled && (
+                <div className="space-y-3 pl-0">
+                  <div>
+                    <label className="block text-xs font-medium text-text-muted mb-1">Default Budget ($)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={settings.draftDollarSettings?.defaultBudget || 200}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        draftDollarSettings: { ...prev.draftDollarSettings, defaultBudget: parseInt(e.target.value) || 200 },
+                      }))}
+                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-text-muted mb-1">Min Budget ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={settings.draftDollarSettings?.minBudget ?? ''}
+                        onChange={(e) => setSettings(prev => ({
+                          ...prev,
+                          draftDollarSettings: {
+                            ...prev.draftDollarSettings,
+                            minBudget: e.target.value === '' ? null : parseInt(e.target.value),
+                          },
+                        }))}
+                        placeholder="No limit"
+                        className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-text-muted mb-1">Max Budget ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={settings.draftDollarSettings?.maxBudget ?? ''}
+                        onChange={(e) => setSettings(prev => ({
+                          ...prev,
+                          draftDollarSettings: {
+                            ...prev.draftDollarSettings,
+                            maxBudget: e.target.value === '' ? null : parseInt(e.target.value),
+                          },
+                        }))}
+                        placeholder="No limit"
+                        className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-text-muted">Allow Next Year Trades</label>
+                    <button
+                      onClick={() => setSettings(prev => ({
+                        ...prev,
+                        draftDollarSettings: {
+                          ...prev.draftDollarSettings,
+                          allowNextYearTrades: !prev.draftDollarSettings?.allowNextYearTrades,
+                        },
+                      }))}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        settings.draftDollarSettings?.allowNextYearTrades !== false ? 'bg-gold' : 'bg-dark-border'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          settings.draftDollarSettings?.allowNextYearTrades !== false ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
               )}

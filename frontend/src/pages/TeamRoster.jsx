@@ -37,6 +37,7 @@ function flattenRosterEntry(entry) {
     acquiredAt: entry.acquiredAt,
     isKeeper: entry.isKeeper || false,
     keeperCost: entry.keeperCost,
+    keeperYearsKept: entry.keeperYearsKept || 0,
   }
 }
 
@@ -703,7 +704,9 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
             <span className="text-[10px] font-medium text-red-400 bg-red-500/10 px-1.5 rounded">IR</span>
           )}
           {player.isKeeper && (
-            <span className="text-[10px] font-medium text-yellow-400 bg-yellow-500/10 px-1.5 rounded">K</span>
+            <span className="text-[10px] font-medium text-yellow-400 bg-yellow-500/10 px-1.5 rounded">
+              K{player.keeperCost != null ? ` $${player.keeperCost}` : ''}{player.keeperYearsKept > 1 ? ` Yr ${player.keeperYearsKept}` : ''}
+            </span>
           )}
         </div>
         <div className="flex items-center gap-3 text-xs text-text-muted">

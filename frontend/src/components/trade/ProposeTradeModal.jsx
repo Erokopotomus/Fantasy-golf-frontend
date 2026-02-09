@@ -1,12 +1,19 @@
 import { useState } from 'react'
 import Card from '../common/Card'
 
-const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose }) => {
+const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose, draftDollarSettings }) => {
   const [selectedTeam, setSelectedTeam] = useState('')
   const [myPlayersToSend, setMyPlayersToSend] = useState([])
   const [theirPlayersToReceive, setTheirPlayersToReceive] = useState([])
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [senderCurrentDollars, setSenderCurrentDollars] = useState(0)
+  const [senderNextDollars, setSenderNextDollars] = useState(0)
+  const [receiverCurrentDollars, setReceiverCurrentDollars] = useState(0)
+  const [receiverNextDollars, setReceiverNextDollars] = useState(0)
+
+  const dollarsEnabled = draftDollarSettings?.enabled || false
+  const allowNextYear = draftDollarSettings?.allowNextYearTrades !== false
 
   if (!isOpen) return null
 
@@ -33,18 +40,27 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
 
     setSubmitting(true)
     try {
-      await onPropose({
+      const tradeData = {
         toUserId: selectedTeam,
         toTeamName: selectedMember?.name,
         playersOffered: myPlayersToSend,
         playersRequested: theirPlayersToReceive,
         message: message || undefined,
-      })
+      }
+      if (dollarsEnabled) {
+        tradeData.senderDollars = { current: senderCurrentDollars || 0, next: senderNextDollars || 0 }
+        tradeData.receiverDollars = { current: receiverCurrentDollars || 0, next: receiverNextDollars || 0 }
+      }
+      await onPropose(tradeData)
       // Reset state
       setSelectedTeam('')
       setMyPlayersToSend([])
       setTheirPlayersToReceive([])
       setMessage('')
+      setSenderCurrentDollars(0)
+      setSenderNextDollars(0)
+      setReceiverCurrentDollars(0)
+      setReceiverNextDollars(0)
       onClose()
     } finally {
       setSubmitting(false)
@@ -192,6 +208,73 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
             </div>
           </div>
 
+          {/* Draft Dollars */}
+          {dollarsEnabled && selectedTeam && (
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-text-muted mb-3">Draft Dollars</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-dark-tertiary rounded-lg p-3">
+                  <p className="text-xs text-red-400 mb-2">You Send</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-text-muted w-20">Current $</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={senderCurrentDollars || ''}
+                        onChange={(e) => setSenderCurrentDollars(parseInt(e.target.value) || 0)}
+                        placeholder="0"
+                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                      />
+                    </div>
+                    {allowNextYear && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-muted w-20">Next Year $</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={senderNextDollars || ''}
+                          onChange={(e) => setSenderNextDollars(parseInt(e.target.value) || 0)}
+                          placeholder="0"
+                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="bg-dark-tertiary rounded-lg p-3">
+                  <p className="text-xs text-emerald-400 mb-2">You Receive</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-text-muted w-20">Current $</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={receiverCurrentDollars || ''}
+                        onChange={(e) => setReceiverCurrentDollars(parseInt(e.target.value) || 0)}
+                        placeholder="0"
+                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                      />
+                    </div>
+                    {allowNextYear && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-muted w-20">Next Year $</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={receiverNextDollars || ''}
+                          onChange={(e) => setReceiverNextDollars(parseInt(e.target.value) || 0)}
+                          placeholder="0"
+                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Trade Summary */}
           {(myPlayersToSend.length > 0 || theirPlayersToReceive.length > 0) && (
             <Card className="mt-6 bg-dark-primary">
@@ -205,6 +288,12 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                       <p key={id} className="text-white text-sm">{player.name}</p>
                     ) : null
                   })}
+                  {dollarsEnabled && senderCurrentDollars > 0 && (
+                    <p className="text-gold text-sm font-mono">${senderCurrentDollars} current-year</p>
+                  )}
+                  {dollarsEnabled && senderNextDollars > 0 && (
+                    <p className="text-purple-400 text-sm font-mono">${senderNextDollars} next-year</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-emerald-400 mb-1">You Receive:</p>
@@ -214,6 +303,12 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                       <p key={id} className="text-white text-sm">{player.name}</p>
                     ) : null
                   })}
+                  {dollarsEnabled && receiverCurrentDollars > 0 && (
+                    <p className="text-gold text-sm font-mono">${receiverCurrentDollars} current-year</p>
+                  )}
+                  {dollarsEnabled && receiverNextDollars > 0 && (
+                    <p className="text-purple-400 text-sm font-mono">${receiverNextDollars} next-year</p>
+                  )}
                 </div>
               </div>
             </Card>

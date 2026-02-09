@@ -46,6 +46,7 @@ import ProveIt from './pages/ProveIt'
 import ImportLeague from './pages/ImportLeague'
 import LeagueVault from './pages/LeagueVault'
 import SeasonRecap from './pages/SeasonRecap'
+import DraftDollars from './pages/DraftDollars'
 import PublicProfile from './pages/PublicProfile'
 import CourseDetail from './pages/CourseDetail'
 // NFL pages
@@ -268,6 +269,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SeasonRecap />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/draft-dollars"
+            element={
+              <ProtectedRoute>
+                <DraftDollars />
               </ProtectedRoute>
             }
           />

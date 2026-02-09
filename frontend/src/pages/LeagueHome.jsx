@@ -288,6 +288,15 @@ const LeagueHome = () => {
                   Trades
                 </Button>
               )}
+              {league?.settings?.draftDollarSettings?.enabled && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/leagues/${leagueId}/draft-dollars`)}
+                >
+                  Draft Dollars
+                </Button>
+              )}
               <Button
                 variant="secondary"
                 size="sm"

@@ -75,7 +75,7 @@ router.get('/', authenticate, async (req, res, next) => {
 // POST /api/trades - Propose a trade
 router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { leagueId, receiverId, senderPlayers, receiverPlayers, message } = req.body
+    const { leagueId, receiverId, senderPlayers, receiverPlayers, message, senderDollars, receiverDollars } = req.body
 
     // Check trade deadline
     const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { settings: true } })
@@ -117,6 +117,8 @@ router.post('/', authenticate, async (req, res, next) => {
         receiverTeamId: receiverTeam.id,
         senderPlayers: senderPlayers || [],
         receiverPlayers: receiverPlayers || [],
+        senderDollars: senderDollars || {},
+        receiverDollars: receiverDollars || {},
         message,
         status: 'PENDING'
       },
@@ -260,6 +262,93 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
         data: { status: 'ACCEPTED' }
       })
     ])
+
+    // Execute draft dollar transfers if trade includes dollars
+    const hasDollars = (d) => d && (d.current > 0 || d.next > 0)
+    if (hasDollars(trade.senderDollars) || hasDollars(trade.receiverDollars)) {
+      try {
+        const draftDollarService = require('../services/draftDollarService')
+        const draftDollarSettings = trade.league?.settings?.draftDollarSettings || {}
+
+        if (draftDollarSettings.enabled) {
+          const leagueSeason = await prisma.leagueSeason.findFirst({
+            where: { leagueId: trade.leagueId, status: { in: ['ACTIVE', 'PLAYOFFS'] } },
+            orderBy: { createdAt: 'desc' },
+          })
+
+          if (leagueSeason) {
+            // Sender dollars go FROM sender team TO receiver team
+            const sd = trade.senderDollars || {}
+            if (sd.current > 0) {
+              await draftDollarService.transferDollars({
+                fromTeamId: trade.senderTeamId,
+                toTeamId: trade.receiverTeamId,
+                amount: sd.current,
+                yearType: 'current',
+                leagueId: trade.leagueId,
+                leagueSeasonId: leagueSeason.id,
+                category: 'trade',
+                description: `Trade #${trade.id.slice(-6)}`,
+                tradeId: trade.id,
+                initiatedById: trade.initiatorId,
+                settings: draftDollarSettings,
+              }, prisma)
+            }
+            if (sd.next > 0) {
+              await draftDollarService.transferDollars({
+                fromTeamId: trade.senderTeamId,
+                toTeamId: trade.receiverTeamId,
+                amount: sd.next,
+                yearType: 'next',
+                leagueId: trade.leagueId,
+                leagueSeasonId: leagueSeason.id,
+                category: 'trade',
+                description: `Trade #${trade.id.slice(-6)}`,
+                tradeId: trade.id,
+                initiatedById: trade.initiatorId,
+                settings: draftDollarSettings,
+              }, prisma)
+            }
+
+            // Receiver dollars go FROM receiver team TO sender team
+            const rd = trade.receiverDollars || {}
+            if (rd.current > 0) {
+              await draftDollarService.transferDollars({
+                fromTeamId: trade.receiverTeamId,
+                toTeamId: trade.senderTeamId,
+                amount: rd.current,
+                yearType: 'current',
+                leagueId: trade.leagueId,
+                leagueSeasonId: leagueSeason.id,
+                category: 'trade',
+                description: `Trade #${trade.id.slice(-6)}`,
+                tradeId: trade.id,
+                initiatedById: trade.initiatorId,
+                settings: draftDollarSettings,
+              }, prisma)
+            }
+            if (rd.next > 0) {
+              await draftDollarService.transferDollars({
+                fromTeamId: trade.receiverTeamId,
+                toTeamId: trade.senderTeamId,
+                amount: rd.next,
+                yearType: 'next',
+                leagueId: trade.leagueId,
+                leagueSeasonId: leagueSeason.id,
+                category: 'trade',
+                description: `Trade #${trade.id.slice(-6)}`,
+                tradeId: trade.id,
+                initiatedById: trade.initiatorId,
+                settings: draftDollarSettings,
+              }, prisma)
+            }
+          }
+        }
+      } catch (dollarErr) {
+        console.error('Draft dollar transfer failed:', dollarErr.message)
+        // Don't block the trade — log the error but continue
+      }
+    }
 
     // Log roster transactions for both sides
     const logTransactions = async () => {

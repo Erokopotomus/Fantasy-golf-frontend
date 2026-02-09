@@ -413,6 +413,7 @@ router.post('/:id/keeper/designate', authenticate, async (req, res, next) => {
 
     // Compute keeper cost based on cost model
     let keeperCost = null
+    let keeperYearsKept = 1
     if (keeperSettings.costModel === 'round-penalty') {
       // Find original draft pick
       const draftPick = await prisma.draftPick.findFirst({
@@ -426,6 +427,23 @@ router.post('/:id/keeper/designate', authenticate, async (req, res, next) => {
         orderBy: { createdAt: 'desc' },
       })
       keeperCost = draftPick?.amount || 0
+    } else if (keeperSettings.costModel === 'auction-escalator') {
+      const multiplier = keeperSettings.escalatorMultiplier || 1.5
+      const floor = keeperSettings.escalatorFloor || 10
+      // If already kept (re-designating after a season rollover), use previous keeperCost as base
+      let baseCost
+      if (entry.keeperCost != null && entry.keeperYearsKept > 0) {
+        baseCost = entry.keeperCost
+        keeperYearsKept = entry.keeperYearsKept + 1
+      } else {
+        // First-time keeper: use original draft pick amount
+        const draftPick = await prisma.draftPick.findFirst({
+          where: { playerId, teamId: req.params.id },
+          orderBy: { createdAt: 'desc' },
+        })
+        baseCost = draftPick?.amount || 1
+      }
+      keeperCost = Math.ceil(Math.max(baseCost * multiplier, baseCost + floor))
     }
 
     const updated = await prisma.rosterEntry.update({
@@ -435,6 +453,7 @@ router.post('/:id/keeper/designate', authenticate, async (req, res, next) => {
         keeperCost,
         keeperYear: new Date().getFullYear(),
         keptAt: new Date(),
+        keeperYearsKept,
       },
       include: { player: { select: { id: true, name: true } } },
     })
@@ -462,7 +481,7 @@ router.post('/:id/keeper/undesignate', authenticate, async (req, res, next) => {
 
     const updated = await prisma.rosterEntry.update({
       where: { id: entry.id },
-      data: { isKeeper: false, keeperCost: null, keeperYear: null, keptAt: null },
+      data: { isKeeper: false, keeperCost: null, keeperYear: null, keptAt: null, keeperYearsKept: 0 },
       include: { player: { select: { id: true, name: true } } },
     })
 

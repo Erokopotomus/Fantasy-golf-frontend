@@ -108,6 +108,9 @@ model League {
   leagueImports    LeagueImport[]    @relation("LeagueImports")
   historicalSeasons HistoricalSeason[] @relation("LeagueHistory")
 
+  // Draft dollar tracking
+  draftDollarTransactions DraftDollarTransaction[]
+
   @@map("leagues")
 }
 
@@ -159,6 +162,11 @@ model Team {
   waiverClaims       WaiverClaim[]
   draftGrades        DraftGrade[]
 
+  // Draft dollar tracking
+  draftDollarAccounts  DraftDollarAccount[]
+  draftDollarsSent     DraftDollarTransaction[] @relation("DollarFrom")
+  draftDollarsReceived DraftDollarTransaction[] @relation("DollarTo")
+
   @@unique([userId, leagueId])
   @@map("teams")
 }
@@ -175,10 +183,11 @@ model RosterEntry {
   droppedAt DateTime?
 
   // Keeper league support
-  isKeeper   Boolean   @default(false)
-  keeperCost Int?
-  keeperYear Int?
-  keptAt     DateTime?
+  isKeeper        Boolean   @default(false)
+  keeperCost      Int?
+  keeperYear      Int?
+  keptAt          DateTime?
+  keeperYearsKept Int       @default(0) // Consecutive years kept (0 = never, 1 = first year, etc.)
 
   teamId   String
   team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -977,6 +986,10 @@ model Trade {
   // Trade veto voting
   vetoVotes Json @default("[]")
 
+  // Draft dollar trading
+  senderDollars   Json @default("{}") // { current: 0, next: 0 }
+  receiverDollars Json @default("{}") // { current: 0, next: 0 }
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1186,6 +1199,10 @@ model LeagueSeason {
   rosterTransactions RosterTransaction[]
   draftValueTrackers DraftValueTracker[]
   teamBudgets        TeamBudget[]
+
+  // Draft dollar tracking
+  draftDollarAccounts      DraftDollarAccount[]
+  draftDollarTransactions  DraftDollarTransaction[]
 
   @@unique([leagueId, seasonId])
   @@map("league_seasons")
@@ -2306,6 +2323,47 @@ model UserOAuthToken {
 
   @@unique([userId, provider])
   @@map("user_oauth_tokens")
+}
+
+// ============ DRAFT DOLLAR TRACKING ============
+
+model DraftDollarAccount {
+  id              String       @id @default(cuid())
+  teamId          String
+  leagueSeasonId  String
+  currentBalance  Int          @default(200)
+  nextYearBalance Int          @default(200)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  team         Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  leagueSeason LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, leagueSeasonId])
+  @@map("draft_dollar_accounts")
+}
+
+model DraftDollarTransaction {
+  id              String    @id @default(cuid())
+  leagueId        String
+  leagueSeasonId  String
+  fromTeamId      String?
+  toTeamId        String?
+  amount          Int
+  yearType        String    // "current" | "next"
+  category        String    // "trade" | "side_bet" | "commissioner_adjustment"
+  description     String?
+  tradeId         String?
+  initiatedById   String
+  createdAt       DateTime  @default(now())
+
+  league       League       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueSeason LeagueSeason @relation(fields: [leagueSeasonId], references: [id])
+  fromTeam     Team?        @relation("DollarFrom", fields: [fromTeamId], references: [id])
+  toTeam       Team?        @relation("DollarTo", fields: [toTeamId], references: [id])
+
+  @@index([leagueId, createdAt])
+  @@map("draft_dollar_transactions")
 }
 
 // ============ NFL EXPANSION (Phase 7) ============

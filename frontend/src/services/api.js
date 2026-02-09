@@ -824,6 +824,30 @@ class ApiService {
   async getTradeVotes(tradeId) {
     return this.request(`/trades/${tradeId}/votes`)
   }
+
+  // Draft Dollars
+  async getDraftDollarBalances(leagueId) {
+    return this.request(`/leagues/${leagueId}/draft-dollars`)
+  }
+
+  async getDraftDollarLedger(leagueId, params = {}) {
+    const qs = new URLSearchParams(params).toString()
+    return this.request(`/leagues/${leagueId}/draft-dollars/ledger${qs ? '?' + qs : ''}`)
+  }
+
+  async recordDraftDollarTransaction(leagueId, data) {
+    return this.request(`/leagues/${leagueId}/draft-dollars/transaction`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async adjustDraftDollarBalance(leagueId, data) {
+    return this.request(`/leagues/${leagueId}/draft-dollars/adjust`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
 }
 
 export const api = new ApiService()

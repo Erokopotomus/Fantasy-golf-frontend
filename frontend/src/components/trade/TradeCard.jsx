@@ -16,6 +16,14 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
   const youReceive = isIncoming ? trade.playersOffered : trade.playersRequested
   const youSend = isIncoming ? trade.playersRequested : trade.playersOffered
 
+  // Draft dollars — parse JSON if needed
+  const senderDollars = typeof trade.senderDollars === 'string' ? JSON.parse(trade.senderDollars || '{}') : (trade.senderDollars || {})
+  const receiverDollars = typeof trade.receiverDollars === 'string' ? JSON.parse(trade.receiverDollars || '{}') : (trade.receiverDollars || {})
+  const hasDollars = (senderDollars.current > 0 || senderDollars.next > 0 || receiverDollars.current > 0 || receiverDollars.next > 0)
+  // For incoming: sender dollars = what they send you, receiver dollars = what they want from you
+  const dollarsYouReceive = isIncoming ? senderDollars : receiverDollars
+  const dollarsYouSend = isIncoming ? receiverDollars : senderDollars
+
   return (
     <Card className={isIncoming ? 'border-blue-500/50' : ''}>
       <div className="flex items-center justify-between mb-4">
@@ -57,7 +65,13 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
                 )}
               </div>
             ))}
-            {youReceive.length === 0 && (
+            {hasDollars && dollarsYouReceive.current > 0 && (
+              <p className="text-gold text-sm font-mono">${dollarsYouReceive.current} current-year</p>
+            )}
+            {hasDollars && dollarsYouReceive.next > 0 && (
+              <p className="text-purple-400 text-sm font-mono">${dollarsYouReceive.next} next-year</p>
+            )}
+            {youReceive.length === 0 && !hasDollars && (
               <p className="text-text-muted text-sm">No players</p>
             )}
           </div>
@@ -75,7 +89,13 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
                 )}
               </div>
             ))}
-            {youSend.length === 0 && (
+            {hasDollars && dollarsYouSend.current > 0 && (
+              <p className="text-gold text-sm font-mono">${dollarsYouSend.current} current-year</p>
+            )}
+            {hasDollars && dollarsYouSend.next > 0 && (
+              <p className="text-purple-400 text-sm font-mono">${dollarsYouSend.next} next-year</p>
+            )}
+            {youSend.length === 0 && !hasDollars && (
               <p className="text-text-muted text-sm">No players</p>
             )}
           </div>

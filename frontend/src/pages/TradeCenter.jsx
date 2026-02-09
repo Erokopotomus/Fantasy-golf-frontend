@@ -245,6 +245,7 @@ const TradeCenter = () => {
         myRoster={roster || []}
         leagueMembers={leagueMembers}
         onPropose={proposeTrade}
+        draftDollarSettings={league?.settings?.draftDollarSettings}
       />
     </div>
   )

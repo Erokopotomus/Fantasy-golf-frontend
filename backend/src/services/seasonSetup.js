@@ -92,6 +92,30 @@ async function initializeLeagueSeason(leagueId, prisma) {
     }
   }
 
+  // 5. For leagues with draft dollar tracking: create DraftDollarAccount records
+  const draftDollarSettings = league.settings?.draftDollarSettings
+  if (draftDollarSettings?.enabled) {
+    const defaultBudget = draftDollarSettings.defaultBudget || 200
+    for (const team of league.teams) {
+      await prisma.draftDollarAccount.upsert({
+        where: {
+          teamId_leagueSeasonId: {
+            teamId: team.id,
+            leagueSeasonId: leagueSeason.id,
+          },
+        },
+        update: {},
+        create: {
+          teamId: team.id,
+          leagueSeasonId: leagueSeason.id,
+          currentBalance: defaultBudget,
+          nextYearBalance: defaultBudget,
+        },
+      })
+    }
+    console.log(`[seasonSetup] Created draft dollar accounts (budget: $${defaultBudget}) for ${league.teams.length} teams`)
+  }
+
   console.log(`[seasonSetup] Initialized season for league ${league.name}: ${league.teams.length} teams, format=${league.format}, waivers=${waiverType || 'none'}`)
 
   return { leagueSeasonId: leagueSeason.id, teams: league.teams.length }
