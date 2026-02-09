@@ -1067,14 +1067,39 @@ router.get('/leagues/:leagueId/week-review/:week', authenticate, async (req, res
     // Get all player scores for this team/week from playerScores JSONB
     const playerScores = weeklyResult?.playerScores || []
 
+    // Get the league's roster slot definitions for optimal lineup calculation
+    let rosterSlots = await prisma.rosterSlotDefinition.findMany({
+      where: { leagueId, slotType: 'STARTER' },
+      include: {
+        eligibility: {
+          include: { position: { select: { abbr: true } } },
+        },
+      },
+      orderBy: { sortOrder: 'asc' },
+    })
+    if (rosterSlots.length === 0 && league.scoringSystemId) {
+      rosterSlots = await prisma.rosterSlotDefinition.findMany({
+        where: { scoringSystemId: league.scoringSystemId, slotType: 'STARTER' },
+        include: {
+          eligibility: {
+            include: { position: { select: { abbr: true } } },
+          },
+        },
+        orderBy: { sortOrder: 'asc' },
+      })
+    }
+    const slotConfig = rosterSlots.map(s => ({
+      slotKey: s.slotKey,
+      eligiblePositions: s.eligibility.map(e => e.position.abbr),
+    }))
+
     // Get roster entries to determine starters vs bench
     const starters = playerScores.filter(p => p.position === 'ACTIVE')
     const bench = playerScores.filter(p => p.position !== 'ACTIVE')
 
-    // Calculate optimal lineup
-    // For NFL: need to respect position limits (1 QB, 2 RB, 2 WR, 1 TE, 1 K, 1 DEF, 1 FLEX)
+    // Calculate optimal lineup using actual league roster slots
     const allPlayers = [...starters, ...bench]
-    const optimalLineup = calculateOptimalLineup(allPlayers)
+    const optimalLineup = calculateOptimalLineup(allPlayers, slotConfig)
     const optimalPoints = optimalLineup.reduce((sum, p) => sum + (p.points || 0), 0)
     const actualPoints = starters.reduce((sum, p) => sum + (p.points || 0), 0)
 
@@ -1101,7 +1126,7 @@ router.get('/leagues/:leagueId/week-review/:week', authenticate, async (req, res
         orderBy: { fantasyWeek: { weekNumber: 'asc' } },
       })
 
-      seasonTrends = calculateSeasonTrends(allWeeklyResults)
+      seasonTrends = calculateSeasonTrends(allWeeklyResults, slotConfig)
     }
 
     res.json({
@@ -1131,52 +1156,43 @@ router.get('/leagues/:leagueId/week-review/:week', authenticate, async (req, res
 })
 
 /**
- * Calculate optimal lineup from all available players.
- * Standard NFL lineup: 1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX (RB/WR/TE), 1 K, 1 DEF
+ * Calculate optimal lineup from all available players using actual league roster slots.
+ * Falls back to standard 9-slot config if no slot config is provided.
  */
-function calculateOptimalLineup(players) {
-  // Group by NFL position
-  const byPos = {}
-  for (const p of players) {
-    const pos = p.nflPos || 'UNKNOWN'
-    if (!byPos[pos]) byPos[pos] = []
-    byPos[pos].push(p)
+function calculateOptimalLineup(players, slotConfig) {
+  // Fallback to standard slots if no config provided
+  if (!slotConfig || slotConfig.length === 0) {
+    slotConfig = [
+      { slotKey: 'QB1', eligiblePositions: ['QB'] },
+      { slotKey: 'RB1', eligiblePositions: ['RB'] },
+      { slotKey: 'RB2', eligiblePositions: ['RB'] },
+      { slotKey: 'WR1', eligiblePositions: ['WR'] },
+      { slotKey: 'WR2', eligiblePositions: ['WR'] },
+      { slotKey: 'TE1', eligiblePositions: ['TE'] },
+      { slotKey: 'FLEX1', eligiblePositions: ['RB', 'WR', 'TE'] },
+      { slotKey: 'K1', eligiblePositions: ['K'] },
+      { slotKey: 'DEF1', eligiblePositions: ['DEF'] },
+    ]
   }
 
-  // Sort each position group by points desc
-  for (const pos of Object.keys(byPos)) {
-    byPos[pos].sort((a, b) => (b.points || 0) - (a.points || 0))
-  }
+  // Sort slots by specificity — fill most restricted slots first (fewer eligible positions)
+  const sortedSlots = [...slotConfig].sort((a, b) =>
+    a.eligiblePositions.length - b.eligiblePositions.length
+  )
 
-  const lineup = []
+  // Sort players by points desc
+  const sortedPlayers = [...players].sort((a, b) => (b.points || 0) - (a.points || 0))
   const used = new Set()
+  const lineup = []
 
-  // Fill required slots
-  const slots = [
-    { pos: 'QB', count: 1 },
-    { pos: 'RB', count: 2 },
-    { pos: 'WR', count: 2 },
-    { pos: 'TE', count: 1 },
-    { pos: 'K', count: 1 },
-    { pos: 'DEF', count: 1 },
-  ]
-
-  for (const slot of slots) {
-    const available = (byPos[slot.pos] || []).filter(p => !used.has(p.playerId))
-    for (let i = 0; i < slot.count && i < available.length; i++) {
-      lineup.push({ ...available[i], optimalSlot: slot.pos })
-      used.add(available[i].playerId)
+  for (const slot of sortedSlots) {
+    const best = sortedPlayers.find(p =>
+      !used.has(p.playerId) && slot.eligiblePositions.includes(p.nflPos)
+    )
+    if (best) {
+      lineup.push({ ...best, optimalSlot: slot.slotKey.replace(/\d+$/, '') })
+      used.add(best.playerId)
     }
-  }
-
-  // FLEX: best remaining RB/WR/TE
-  const flexCandidates = ['RB', 'WR', 'TE']
-    .flatMap(pos => (byPos[pos] || []).filter(p => !used.has(p.playerId)))
-    .sort((a, b) => (b.points || 0) - (a.points || 0))
-
-  if (flexCandidates.length > 0) {
-    lineup.push({ ...flexCandidates[0], optimalSlot: 'FLEX' })
-    used.add(flexCandidates[0].playerId)
   }
 
   return lineup
@@ -1226,7 +1242,7 @@ function gradeDecisions(starters, bench) {
 /**
  * Calculate season trends from weekly results.
  */
-function calculateSeasonTrends(weeklyResults) {
+function calculateSeasonTrends(weeklyResults, slotConfig) {
   if (weeklyResults.length < 3) return null
 
   const weeklyEfficiencies = []
@@ -1240,7 +1256,7 @@ function calculateSeasonTrends(weeklyResults) {
     const allPlayers = [...starters, ...bench]
 
     const actualPts = starters.reduce((s, p) => s + (p.points || 0), 0)
-    const optimal = calculateOptimalLineup(allPlayers)
+    const optimal = calculateOptimalLineup(allPlayers, slotConfig)
     const optimalPts = optimal.reduce((s, p) => s + (p.points || 0), 0)
 
     totalActual += actualPts
