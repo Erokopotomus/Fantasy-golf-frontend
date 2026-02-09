@@ -187,7 +187,7 @@ const GamedayPortal = () => {
               {/* User team */}
               <div className="flex-1 text-right">
                 <p className="text-sm font-medium text-white truncate">
-                  {userTeamInfo?.teamName || 'Your Team'}
+                  {userTeamInfo?.teamName || userTeamInfo?.name || 'Your Team'}
                 </p>
                 <p className="text-xs text-text-muted">
                   {userTeamInfo?.wins || 0}-{userTeamInfo?.losses || 0}
@@ -208,7 +208,7 @@ const GamedayPortal = () => {
               {/* Opponent team */}
               <div className="flex-1">
                 <p className="text-sm font-medium text-white truncate">
-                  {opponentTeamInfo?.teamName || 'Opponent'}
+                  {opponentTeamInfo?.teamName || opponentTeamInfo?.name || 'Opponent'}
                 </p>
                 <p className="text-xs text-text-muted">
                   {opponentTeamInfo?.wins || 0}-{opponentTeamInfo?.losses || 0}
@@ -360,7 +360,7 @@ const GamedayPortal = () => {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 text-right">
                         <span className={`truncate ${homeWon ? 'text-emerald-400 font-semibold' : 'text-white'}`}>
-                          {homeTeam?.teamName?.split(' ').pop() || 'Home'}
+                          {homeTeam?.teamName || homeTeam?.name || 'Home'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 font-mono text-xs">
@@ -374,7 +374,7 @@ const GamedayPortal = () => {
                       </div>
                       <div className="flex-1">
                         <span className={`truncate ${awayWon ? 'text-emerald-400 font-semibold' : 'text-white'}`}>
-                          {awayTeam?.teamName?.split(' ').pop() || 'Away'}
+                          {awayTeam?.teamName || awayTeam?.name || 'Away'}
                         </span>
                       </div>
                     </div>

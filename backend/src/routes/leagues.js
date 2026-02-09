@@ -1014,6 +1014,7 @@ router.get('/:id/matchups', authenticate, async (req, res, next) => {
         userId: t.userId,
         teamId: t.id,
         name: t.user.name,
+        teamName: t.name || t.user.name,
         avatar: t.user.avatar,
         wins: 0,
         losses: 0,

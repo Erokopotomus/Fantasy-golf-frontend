@@ -577,7 +577,7 @@ const LeagueHome = () => {
                   <div className="flex-1 text-center">
                     <p className="text-xs text-emerald-400 font-medium mb-1">You</p>
                     <p className="text-sm text-white font-medium truncate">
-                      {nflMatchupData.userTeam?.teamName || 'Your Team'}
+                      {nflMatchupData.userTeam?.teamName || nflMatchupData.userTeam?.name || 'Your Team'}
                     </p>
                     {nflMatchupData.userTeam && (
                       <p className="text-xs text-text-muted">
@@ -609,7 +609,7 @@ const LeagueHome = () => {
                   <div className="flex-1 text-center">
                     <p className="text-xs text-text-muted font-medium mb-1">Opponent</p>
                     <p className="text-sm text-white font-medium truncate">
-                      {nflMatchupData.opponentTeam?.teamName || 'Opponent'}
+                      {nflMatchupData.opponentTeam?.teamName || nflMatchupData.opponentTeam?.name || 'Opponent'}
                     </p>
                     {nflMatchupData.opponentTeam && (
                       <p className="text-xs text-text-muted">
