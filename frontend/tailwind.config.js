@@ -10,9 +10,9 @@ export default {
         // Aurora Ember dark theme
         dark: {
           primary: '#0A0908',
-          secondary: '#121010',
-          tertiary: '#1C1916',
-          border: '#332E28',
+          secondary: '#151210',
+          tertiary: '#221F1B',
+          border: '#3D3730',
         },
         text: {
           primary: '#F2EDE8',
@@ -33,9 +33,9 @@ export default {
         orange: '#E07838',
         rose: '#D4607A',
         surface: {
-          DEFAULT: 'rgba(255,245,230,0.07)',
-          hover: 'rgba(255,245,230,0.10)',
-          bright: 'rgba(255,245,230,0.14)',
+          DEFAULT: 'rgba(255,245,230,0.10)',
+          hover: 'rgba(255,245,230,0.14)',
+          bright: 'rgba(255,245,230,0.18)',
         },
       },
       fontFamily: {
