@@ -1015,7 +1015,6 @@ router.get('/leagues/:leagueId/week-review/:week', authenticate, async (req, res
       where: { id: leagueId },
       include: {
         members: { where: { userId } },
-        currentSeason: true,
       },
     })
     if (!league || league.members.length === 0) {
@@ -1028,22 +1027,34 @@ router.get('/leagues/:leagueId/week-review/:week', authenticate, async (req, res
     })
     if (!team) return res.status(404).json({ error: 'Team not found' })
 
+    // Find NFL sport + current season (same pattern as weekly-scores endpoint)
+    const nflSport = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
+    if (!nflSport) return res.status(404).json({ error: 'NFL sport not found' })
+
+    const nflSeason = await prisma.season.findFirst({
+      where: { sportId: nflSport.id, isCurrent: true },
+    })
+    if (!nflSeason) return res.status(404).json({ error: 'No current NFL season' })
+
     // Get the fantasy week for this NFL week
     const fantasyWeek = await prisma.fantasyWeek.findFirst({
       where: {
-        seasonId: league.currentSeasonId,
+        seasonId: nflSeason.id,
         weekNumber,
       },
     })
     if (!fantasyWeek) return res.status(404).json({ error: 'Week not found' })
 
-    // Get the team season
-    const teamSeason = await prisma.teamSeason.findFirst({
+    // Get the team season via LeagueSeason
+    const leagueSeason = await prisma.leagueSeason.findFirst({
+      where: { leagueId, seasonId: nflSeason.id },
+    })
+    const teamSeason = leagueSeason ? await prisma.teamSeason.findFirst({
       where: {
         teamId: team.id,
-        seasonId: league.currentSeasonId,
+        leagueSeasonId: leagueSeason.id,
       },
-    })
+    }) : null
 
     // Get the weekly result
     const weeklyResult = teamSeason ? await prisma.weeklyTeamResult.findFirst({
