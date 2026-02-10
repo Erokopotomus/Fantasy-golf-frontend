@@ -153,79 +153,84 @@ const NewsCard = ({ item, compact = false }) => {
         hover:bg-dark-tertiary transition-colors
       `}
     >
-      {/* Header image */}
-      {item.imageUrl && (
-        <div className="mb-3 -mx-4 -mt-4 overflow-hidden rounded-t-lg">
-          <img
-            src={item.imageUrl}
-            alt=""
-            className="w-full h-40 object-cover"
-            loading="lazy"
-          />
-        </div>
-      )}
+      <div className={item.imageUrl ? 'flex gap-4' : ''}>
+        {/* Left-side thumbnail */}
+        {item.imageUrl && (
+          <div className="flex-shrink-0">
+            <img
+              src={item.imageUrl}
+              alt=""
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <span className={`
-            inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-            ${config.bg} ${config.text}
-          `}>
-            <span>{config.icon}</span>
-            <span>{config.label}</span>
-          </span>
-          {(item.priority === 'high' || item.priority === 1) && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
-              Important
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2">
+              <span className={`
+                inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                ${config.bg} ${config.text}
+              `}>
+                <span>{config.icon}</span>
+                <span>{config.label}</span>
+              </span>
+              {(item.priority === 'high' || item.priority === 1) && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                  Important
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-text-muted whitespace-nowrap">
+              {formatTimeAgo(item.timestamp || item.published)}
             </span>
-          )}
-        </div>
-        <span className="text-xs text-text-muted whitespace-nowrap">
-          {formatTimeAgo(item.timestamp || item.published)}
-        </span>
-      </div>
+          </div>
 
-      {/* Player info (if applicable) */}
-      {item.playerName && (
-        <button
-          onClick={handlePlayerClick}
-          className="flex items-center gap-2 mb-2 hover:text-gold transition-colors"
-        >
-          <span className="text-lg">{item.playerFlag}</span>
-          <span className="font-medium text-white">{item.playerName}</span>
-        </button>
-      )}
-
-      {/* Content */}
-      <h4 className="text-white font-semibold mb-2">{item.headline}</h4>
-      {(item.summary || item.description) && (
-        <p className="text-sm text-text-secondary mb-3 line-clamp-3">{item.summary || item.description}</p>
-      )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-text-muted">
-          {item.byline ? `via ${item.byline}` : item.source ? `Source: ${item.source}` : item.provider ? `via ${item.provider.toUpperCase()}` : ''}
-        </span>
-        <div className="flex items-center gap-3">
-          {item.url && (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gold hover:text-gold/80 font-medium transition-colors"
+          {/* Player info (if applicable) */}
+          {item.playerName && (
+            <button
+              onClick={handlePlayerClick}
+              className="flex items-center gap-2 mb-1 hover:text-gold transition-colors"
             >
-              Read More →
-            </a>
+              <span className="text-lg">{item.playerFlag}</span>
+              <span className="font-medium text-white text-sm">{item.playerName}</span>
+            </button>
           )}
-          {item.impact && (
-            <span className={`font-medium ${getImpactStyle(item.impact)}`}>
-              {item.impact === 'positive' && '↑ Positive'}
-              {item.impact === 'negative' && '↓ Negative'}
-              {item.impact === 'neutral' && '→ Neutral'}
+
+          {/* Content */}
+          <h4 className="text-white font-semibold text-sm leading-snug mb-1">{item.headline}</h4>
+          {(item.summary || item.description) && (
+            <p className="text-xs text-text-secondary mb-2 line-clamp-2">{item.summary || item.description}</p>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-text-muted">
+              {item.byline ? `via ${item.byline}` : item.source ? `Source: ${item.source}` : item.provider ? `via ${item.provider.toUpperCase()}` : ''}
             </span>
-          )}
+            <div className="flex items-center gap-3">
+              {item.url && (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gold hover:text-gold/80 font-medium transition-colors"
+                >
+                  Read More →
+                </a>
+              )}
+              {item.impact && (
+                <span className={`font-medium ${getImpactStyle(item.impact)}`}>
+                  {item.impact === 'positive' && '↑ Positive'}
+                  {item.impact === 'negative' && '↓ Negative'}
+                  {item.impact === 'neutral' && '→ Neutral'}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

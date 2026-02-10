@@ -6,22 +6,13 @@ import { useOnboarding } from '../context/OnboardingContext'
 import { useLeagues } from '../hooks/useLeagues'
 import { useTournaments } from '../hooks/useTournaments'
 import { useActivity } from '../hooks/useActivity'
-import { useStats } from '../hooks/useStats'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import LeagueCard from '../components/dashboard/LeagueCard'
 import TournamentCard from '../components/dashboard/TournamentCard'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import PredictionWidget from '../components/predictions/PredictionWidget'
-import FeedCard from '../components/feed/FeedCard'
 import api from '../services/api'
-
-const StatCardSkeleton = () => (
-  <Card className="text-center animate-pulse" hover>
-    <div className="h-3 bg-dark-tertiary rounded w-20 mx-auto mb-2" />
-    <div className="h-8 bg-dark-tertiary rounded w-12 mx-auto" />
-  </Card>
-)
 
 const LeagueCardSkeleton = () => (
   <Card className="animate-pulse">
@@ -53,7 +44,6 @@ const Dashboard = () => {
   const { currentTournament, loading: tournamentsLoading } = useTournaments()
   const primaryLeagueId = leagues?.[0]?.id
   const { activity, loading: activityLoading } = useActivity(primaryLeagueId, 8)
-  const { stats, loading: statsLoading } = useStats()
 
   useEffect(() => {
     track(Events.DASHBOARD_VIEWED, { leagueCount: leagues?.length || 0 })
@@ -100,7 +90,7 @@ const Dashboard = () => {
   const feedSport = leagueSports.length === 1 ? leagueSports[0] : 'all'
 
   useEffect(() => {
-    api.getFeed(feedSport, { limit: 4 })
+    api.getFeed(feedSport, { limit: 3 })
       .then(data => setFeedCards(data.cards || []))
       .catch(() => setFeedCards([]))
       .finally(() => setFeedLoading(false))
@@ -129,101 +119,51 @@ const Dashboard = () => {
             </p>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            {statsLoading ? (
-              <>
-                <StatCardSkeleton />
-                <StatCardSkeleton />
-                <StatCardSkeleton />
-                <StatCardSkeleton />
-              </>
-            ) : (
-              <>
-                <Link to="/leagues">
-                  <Card className="text-center" hover>
-                    <p className="text-text-muted text-xs sm:text-sm mb-1">Active Leagues</p>
-                    <p className="text-2xl sm:text-3xl font-mono font-bold text-white">
-                      {stats?.activeLeagues ?? 0}
-                    </p>
-                  </Card>
-                </Link>
-                <Link to="/profile">
-                  <Card className="text-center" hover>
-                    <p className="text-text-muted text-xs sm:text-sm mb-1">Total Points</p>
-                    <p className="text-2xl sm:text-3xl font-mono font-bold text-gold">
-                      {stats?.totalPoints?.toLocaleString() ?? '—'}
-                    </p>
-                  </Card>
-                </Link>
-                <Link to="/leagues">
-                  <Card className="text-center" hover>
-                    <p className="text-text-muted text-xs sm:text-sm mb-1">Best Finish</p>
-                    <p className="text-2xl sm:text-3xl font-mono font-bold text-yellow-400">
-                      {stats?.bestFinish ? `${stats.bestFinish}${stats.bestFinish === 1 ? 'st' : stats.bestFinish === 2 ? 'nd' : stats.bestFinish === 3 ? 'rd' : 'th'}` : '—'}
-                    </p>
-                  </Card>
-                </Link>
-                <Link to="/profile">
-                  <Card className="text-center" hover>
-                    <p className="text-text-muted text-xs sm:text-sm mb-1">Win Rate</p>
-                    <p className="text-2xl sm:text-3xl font-mono font-bold text-white">
-                      {stats?.winRate !== undefined ? `${stats.winRate}%` : '—'}
-                    </p>
-                  </Card>
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Mock Draft Banner */}
-          <Link to="/mock-draft" className="block mb-6 sm:mb-8 group">
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-gold/20 via-dark-secondary to-yellow-500/20 border border-gold/30 p-5 sm:p-6 hover:border-gold/50 transition-all">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gold/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-bold text-lg">Mock Draft</h3>
-                    <p className="text-text-secondary text-sm">Practice your draft strategy against AI opponents</p>
-                  </div>
-                </div>
-                <svg className="w-5 h-5 text-text-muted group-hover:text-gold group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </Link>
-
-          {/* Your Feed Tease */}
+          {/* Latest Updates Tease */}
           {(feedLoading || feedCards.length > 0) && (
-            <div className="mb-6 sm:mb-8">
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 mb-6 sm:mb-8">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg sm:text-xl font-semibold font-display text-white">Your Feed</h2>
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <h2 className="text-sm font-semibold font-display text-white">Latest Updates</h2>
+                </div>
                 <Link
                   to="/feed"
-                  className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors"
+                  className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors flex items-center gap-1"
                 >
-                  View All
+                  View Feed
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
                 </Link>
               </div>
               {feedLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 animate-pulse">
-                      <div className="h-3 w-20 bg-white/10 rounded mb-2" />
-                      <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-                      <div className="h-3 w-full bg-white/10 rounded" />
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-3 animate-pulse">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/10 flex-shrink-0" />
+                      <div className="h-3 bg-white/10 rounded flex-1" />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {feedCards.map(card => (
-                    <FeedCard key={card.id} card={card} />
+                <div className="space-y-2">
+                  {feedCards.slice(0, 3).map(card => (
+                    <Link
+                      key={card.id}
+                      to={card.actions?.[0]?.href || '/feed'}
+                      className="flex items-start gap-3 group"
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                        style={{ backgroundColor: card.category === 'Big Performance' ? '#EF4444' : card.category === 'Stat Leader' ? '#F59E0B' : card.category === 'Team Trend' ? '#3B82F6' : card.category === 'Game Result' ? '#10B981' : '#F59E0B' }}
+                      />
+                      <span className="text-white/70 text-xs leading-snug group-hover:text-white transition-colors line-clamp-1">
+                        {card.headline}
+                      </span>
+                    </Link>
                   ))}
                 </div>
               )}
