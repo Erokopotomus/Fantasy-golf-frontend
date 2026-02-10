@@ -27,6 +27,8 @@ const PlayerProfile = () => {
     error
   } = usePlayerProfile(playerId)
 
+  const [playerSchedule, setPlayerSchedule] = useState([])
+
   useEffect(() => {
     api.getCurrentTournament()
       .then(res => {
@@ -36,6 +38,14 @@ const PlayerProfile = () => {
       })
       .catch(() => {})
   }, [])
+
+  // Fetch upcoming schedule for this player
+  useEffect(() => {
+    if (!playerId) return
+    api.getPlayerSchedule(playerId)
+      .then(data => setPlayerSchedule(data.schedule || []))
+      .catch(() => setPlayerSchedule([]))
+  }, [playerId])
 
   useEffect(() => {
     if (player) {
@@ -116,6 +126,52 @@ const PlayerProfile = () => {
             tournamentHistory={tournamentHistory}
           />
           <PlayerCourseHistory courseHistory={courseHistory} />
+
+          {/* Upcoming Schedule */}
+          {playerSchedule.length > 0 && (
+            <div className="bg-dark-secondary border border-dark-border rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-dark-border">
+                <h3 className="text-sm font-display font-bold text-white">Upcoming Schedule</h3>
+              </div>
+              <div className="divide-y divide-dark-border/30">
+                {playerSchedule.map(t => {
+                  const startDate = t.startDate ? new Date(t.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
+                  const endDate = t.endDate ? new Date(t.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
+                  const dateRange = endDate ? `${startDate} – ${endDate}` : startDate
+                  return (
+                    <Link
+                      key={t.id}
+                      to={`/tournaments/${t.id}`}
+                      className="flex items-center justify-between px-4 py-3 hover:bg-dark-tertiary/50 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-white truncate">{t.shortName || t.name}</span>
+                          {t.isMajor && <span className="text-[9px] font-mono font-bold text-gold bg-gold/15 px-1 rounded">MAJOR</span>}
+                          {t.isSignature && <span className="text-[9px] font-mono font-bold text-orange bg-orange/15 px-1 rounded">SIG</span>}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+                          {t.course && <span>{t.course.nickname || t.course.name}</span>}
+                          <span className="font-mono">{dateRange}</span>
+                        </div>
+                      </div>
+                      <div className="shrink-0 ml-3">
+                        {t.status === 'IN_PROGRESS' ? (
+                          <span className="text-[10px] font-mono font-semibold text-rose bg-rose/10 px-2 py-0.5 rounded">LIVE</span>
+                        ) : t.inField ? (
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">CONFIRMED</span>
+                        ) : t.fieldAnnounced ? (
+                          <span className="text-[10px] font-mono text-text-muted/60 bg-white/[0.04] px-2 py-0.5 rounded">NOT IN FIELD</span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-text-muted bg-white/[0.06] px-2 py-0.5 rounded">TBD</span>
+                        )}
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

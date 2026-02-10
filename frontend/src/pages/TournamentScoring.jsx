@@ -155,6 +155,126 @@ const TournamentScoring = () => {
     )
   }
 
+  // UPCOMING field view — show confirmed field instead of empty leaderboard
+  const isUpcoming = tournament?.status === 'UPCOMING'
+  const hasField = leaderboard && leaderboard.length > 0
+
+  if (isUpcoming) {
+    return (
+      <div className="space-y-4">
+        <TournamentHeader tournament={tournament} leaderboard={leaderboard} />
+
+        {hasField ? (
+          <div>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="text-lg font-display font-bold text-white">
+                Confirmed Field
+              </h2>
+              <span className="text-xs font-mono text-text-muted">{leaderboard.length} players</span>
+            </div>
+
+            {/* Highlight roster players */}
+            {myPlayerIds.length > 0 && (
+              <div className="mb-4 p-3 bg-emerald-500/[0.06] border border-emerald-500/20 rounded-lg">
+                <p className="text-xs font-semibold text-emerald-400 mb-1">
+                  Your Roster Players in Field: {leaderboard.filter(p => myPlayerIds.includes(p.player?.id)).length}/{myPlayerIds.length}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {myPlayerIds.map(pid => {
+                    const inField = leaderboard.some(p => p.player?.id === pid)
+                    const player = leaderboard.find(p => p.player?.id === pid)?.player
+                    return (
+                      <span
+                        key={pid}
+                        className={`text-xs px-2 py-0.5 rounded ${
+                          inField
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
+                            : 'bg-white/5 text-text-muted border border-white/10'
+                        }`}
+                      >
+                        {player?.name || 'Unknown'}
+                      </span>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Field table */}
+            <div className="bg-dark-secondary border border-dark-border rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-dark-border text-text-muted text-xs">
+                    <th className="text-left px-4 py-2.5 font-medium">#</th>
+                    <th className="text-left px-4 py-2.5 font-medium">Player</th>
+                    <th className="text-right px-4 py-2.5 font-medium hidden sm:table-cell">OWGR</th>
+                    <th className="text-right px-4 py-2.5 font-medium hidden sm:table-cell">SG Total</th>
+                    <th className="text-right px-4 py-2.5 font-medium hidden md:table-cell">Tour</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-dark-border/30">
+                  {leaderboard
+                    .sort((a, b) => (a.player?.owgrRank || 999) - (b.player?.owgrRank || 999))
+                    .map((entry, i) => {
+                      const p = entry.player || {}
+                      const isMyPlayer = myPlayerIds.includes(p.id)
+                      return (
+                        <tr
+                          key={p.id || i}
+                          className={`hover:bg-dark-tertiary/50 transition-colors ${isMyPlayer ? 'bg-gold/[0.04]' : ''}`}
+                        >
+                          <td className="px-4 py-2.5 text-text-muted font-mono text-xs">{i + 1}</td>
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2.5">
+                              {p.headshotUrl ? (
+                                <img src={p.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-dark-tertiary" />
+                              ) : (
+                                <div className="w-7 h-7 rounded-full bg-dark-tertiary flex items-center justify-center text-sm">
+                                  {p.countryFlag || '?'}
+                                </div>
+                              )}
+                              <span className={`font-semibold ${isMyPlayer ? 'text-gold' : 'text-white'}`}>{p.name}</span>
+                              {isMyPlayer && <span className="text-[10px] text-gold">★</span>}
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-text-secondary font-mono text-xs hidden sm:table-cell">
+                            {p.owgrRank || '—'}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono text-xs hidden sm:table-cell">
+                            <span className={entry.sgTotalLive != null || p.sgTotal != null
+                              ? (entry.sgTotalLive || p.sgTotal) > 0 ? 'text-emerald-400' : 'text-red-400'
+                              : 'text-text-muted'
+                            }>
+                              {(entry.sgTotalLive || p.sgTotal)?.toFixed(2) || '—'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-text-muted text-xs hidden md:table-cell">
+                            {p.primaryTour || '—'}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-dark-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-text-muted/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-display font-bold text-white mb-2">Field Not Yet Announced</h2>
+            <p className="text-text-muted text-sm max-w-md mx-auto">
+              PGA Tour fields are typically published Tuesday evening. Check back soon for the confirmed player list.
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Tournament Header — full width */}

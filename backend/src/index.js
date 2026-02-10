@@ -276,6 +276,36 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('field', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Tuesday 8:00 PM ET — Early field sync (PGA fields usually published Tue evening)
+    cron.schedule('0 20 * * 2', async () => {
+      const t = await cronPrisma.tournament.findFirst({
+        where: { status: 'UPCOMING', datagolfId: { not: null } },
+        orderBy: { startDate: 'asc' },
+        select: { datagolfId: true },
+      })
+      if (!t?.datagolfId) return cronLog('earlyField', 'No upcoming tournament')
+      cronLog('earlyField', `Tue 8PM — Syncing field for ${t.datagolfId}`)
+      try {
+        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
+        cronLog('earlyField', `Done: ${result.playersInField} players`)
+      } catch (e) { cronLog('earlyField', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Wednesday 8:00 AM ET — Catch late field updates
+    cron.schedule('0 8 * * 3', async () => {
+      const t = await cronPrisma.tournament.findFirst({
+        where: { status: 'UPCOMING', datagolfId: { not: null } },
+        orderBy: { startDate: 'asc' },
+        select: { datagolfId: true },
+      })
+      if (!t?.datagolfId) return cronLog('earlyField', 'No upcoming tournament')
+      cronLog('earlyField', `Wed 8AM — Syncing field for ${t.datagolfId}`)
+      try {
+        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
+        cronLog('earlyField', `Done: ${result.playersInField} players`)
+      } catch (e) { cronLog('earlyField', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Wed + Thu 6:00 AM ET — Pre-tournament predictions
     cron.schedule('0 6 * * 3,4', async () => {
       const t = await getActiveTournamentDgId()

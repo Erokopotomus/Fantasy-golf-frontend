@@ -400,6 +400,14 @@ class ApiService {
     return this.request(`/tournaments/${id}`)
   }
 
+  async getUpcomingTournamentsWithFields() {
+    return this.request('/tournaments/upcoming-with-fields')
+  }
+
+  async getPlayerSchedule(playerId) {
+    return this.request(`/players/${playerId}/schedule`)
+  }
+
   async getTournamentLeaderboard(id, options = {}) {
     const params = new URLSearchParams(options).toString()
     return this.request(`/tournaments/${id}/leaderboard${params ? '?' + params : ''}`)

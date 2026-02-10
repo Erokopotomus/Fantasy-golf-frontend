@@ -64,6 +64,15 @@ const TeamRoster = () => {
   const roster = rawRoster.map(e => flattenRosterEntry(e, isNflLeague))
   const activePlayers = roster.filter(p => p.rosterPosition === 'ACTIVE')
 
+  // Golf schedule awareness — fetch upcoming fields
+  const [scheduleData, setScheduleData] = useState(null)
+  useEffect(() => {
+    if (isNflLeague || !league) return
+    api.getUpcomingTournamentsWithFields()
+      .then(data => setScheduleData(data.tournaments || []))
+      .catch(() => setScheduleData(null))
+  }, [isNflLeague, league])
+
   const [isEditing, setIsEditing] = useState(false)
   const [pendingActive, setPendingActive] = useState(null)
   const [pendingIR, setPendingIR] = useState(null)
@@ -210,6 +219,40 @@ const TeamRoster = () => {
       console.error('Keeper toggle failed:', err.message)
     }
   }, [teamId, refetch])
+
+  // Compute schedule badge for each golf roster player
+  const getScheduleBadge = (playerId) => {
+    if (isNflLeague || !scheduleData || scheduleData.length === 0) return null
+    // First tournament = this week (in-progress or nearest upcoming)
+    const thisWeek = scheduleData[0]
+    const nextWeek = scheduleData[1]
+    const thisWeekFieldIds = new Set((thisWeek?.field || []).map(p => p.playerId))
+    const nextWeekFieldIds = nextWeek ? new Set((nextWeek?.field || []).map(p => p.playerId)) : new Set()
+    const thisWeekAnnounced = thisWeek && (thisWeek.fieldSize > 0 || thisWeek.field?.length > 0)
+    const nextWeekAnnounced = nextWeek && (nextWeek.fieldSize > 0 || nextWeek.field?.length > 0)
+
+    if (thisWeekFieldIds.has(playerId)) {
+      return { label: 'IN FIELD', color: 'text-emerald-400 bg-emerald-500/10', tournament: thisWeek }
+    }
+    if (thisWeekAnnounced && nextWeekFieldIds.has(playerId)) {
+      return { label: 'NEXT WEEK', color: 'text-yellow-400 bg-yellow-500/10', tournament: nextWeek }
+    }
+    if (!thisWeekAnnounced) {
+      return { label: 'TBD', color: 'text-text-muted bg-white/[0.06]', tournament: thisWeek }
+    }
+    return { label: 'NOT IN FIELD', color: 'text-text-muted/60 bg-white/[0.04]', tournament: thisWeek }
+  }
+
+  // Schedule summary for header
+  const scheduleSummary = (() => {
+    if (isNflLeague || !scheduleData || scheduleData.length === 0 || roster.length === 0) return null
+    const thisWeek = scheduleData[0]
+    if (!thisWeek) return null
+    const fieldIds = new Set((thisWeek.field || []).map(p => p.playerId))
+    const confirmed = roster.filter(p => fieldIds.has(p.id)).length
+    const announced = thisWeek.fieldSize > 0 || thisWeek.field?.length > 0
+    return { tournament: thisWeek, confirmed, total: roster.length, announced }
+  })()
 
   const getActiveSet = () => {
     if (pendingActive) return pendingActive
@@ -478,6 +521,25 @@ const TeamRoster = () => {
         </div>
       )}
 
+      {/* Golf Schedule Summary */}
+      {scheduleSummary && (
+        <div className="mb-4 p-3 bg-white/[0.03] border border-white/[0.08] rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-emerald-400">⛳ This Week:</span>
+              <span className="text-xs text-white font-semibold">{scheduleSummary.tournament.shortName || scheduleSummary.tournament.name}</span>
+            </div>
+            {scheduleSummary.announced ? (
+              <span className="text-xs font-mono text-emerald-400">
+                {scheduleSummary.confirmed}/{scheduleSummary.total} players confirmed
+              </span>
+            ) : (
+              <span className="text-xs text-text-muted/60">Field expected Tuesday evening</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Active Lineup */}
       <div
         className={`mb-6 rounded-lg transition-all duration-200 ${
@@ -514,6 +576,7 @@ const TeamRoster = () => {
               maxKeepers={maxKeepers}
               currentKeeperCount={currentKeeperCount}
               isNfl={isNflLeague}
+              scheduleBadge={getScheduleBadge(player.id)}
             />
           ))}
           {/* Empty slot placeholders */}
@@ -578,6 +641,7 @@ const TeamRoster = () => {
               maxKeepers={maxKeepers}
               currentKeeperCount={currentKeeperCount}
               isNfl={isNflLeague}
+              scheduleBadge={getScheduleBadge(player.id)}
             />
           ))}
           {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length === 0 && (
@@ -665,7 +729,7 @@ const TeamRoster = () => {
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0, isNfl = false }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0, isNfl = false, scheduleBadge = null }) => {
   return (
     <div
       draggable={isEditing}
@@ -719,6 +783,11 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           {player.isKeeper && (
             <span className="text-[10px] font-medium text-yellow-400 bg-yellow-500/10 px-1.5 rounded">
               K{player.keeperCost != null ? ` $${player.keeperCost}` : ''}{player.keeperYearsKept > 1 ? ` Yr ${player.keeperYearsKept}` : ''}
+            </span>
+          )}
+          {scheduleBadge && !isEditing && (
+            <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded ${scheduleBadge.color}`} title={scheduleBadge.tournament?.name}>
+              {scheduleBadge.label}
             </span>
           )}
         </div>

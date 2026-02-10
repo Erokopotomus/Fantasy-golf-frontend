@@ -118,6 +118,44 @@ router.get('/', optionalAuth, async (req, res, next) => {
   }
 })
 
+// GET /api/players/:id/schedule — Upcoming tournaments with confirmed/TBD field status
+router.get('/:id/schedule', async (req, res, next) => {
+  try {
+    const playerId = req.params.id
+
+    // Get next 4 upcoming + any in-progress tournaments
+    const upcoming = await prisma.tournament.findMany({
+      where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
+      orderBy: { startDate: 'asc' },
+      take: 5,
+      select: {
+        id: true, name: true, shortName: true, startDate: true, endDate: true,
+        status: true, purse: true, tour: true, isMajor: true, isSignature: true,
+        fieldSize: true,
+        course: { select: { id: true, name: true, nickname: true } },
+      },
+    })
+
+    // Check which tournaments this player is confirmed in
+    const tournamentIds = upcoming.map(t => t.id)
+    const performances = tournamentIds.length > 0 ? await prisma.performance.findMany({
+      where: { playerId, tournamentId: { in: tournamentIds } },
+      select: { tournamentId: true },
+    }) : []
+    const confirmedSet = new Set(performances.map(p => p.tournamentId))
+
+    const schedule = upcoming.map(t => ({
+      ...t,
+      inField: confirmedSet.has(t.id),
+      fieldAnnounced: t.fieldSize > 0 || confirmedSet.has(t.id),
+    }))
+
+    res.json({ schedule })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/players/:id - Get player details with performances, upcoming, and projection
 router.get('/:id', optionalAuth, async (req, res, next) => {
   try {

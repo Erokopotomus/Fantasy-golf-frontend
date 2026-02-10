@@ -71,6 +71,58 @@ router.get('/current', async (req, res, next) => {
   }
 })
 
+// GET /api/tournaments/upcoming-with-fields — Next 4 upcoming + current in-progress tournaments with field data
+router.get('/upcoming-with-fields', optionalAuth, async (req, res, next) => {
+  try {
+    const tournaments = await prisma.tournament.findMany({
+      where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
+      orderBy: { startDate: 'asc' },
+      take: 5,
+      include: {
+        course: {
+          select: { id: true, name: true, nickname: true, city: true, state: true, par: true },
+        },
+        performances: {
+          select: {
+            playerId: true,
+            player: {
+              select: { id: true, name: true, countryFlag: true, owgrRank: true, sgTotal: true, primaryTour: true },
+            },
+          },
+        },
+      },
+    })
+
+    const result = tournaments.map(t => ({
+      id: t.id,
+      name: t.name,
+      shortName: t.shortName,
+      startDate: t.startDate,
+      endDate: t.endDate,
+      status: t.status,
+      purse: t.purse,
+      tour: t.tour,
+      isMajor: t.isMajor,
+      isSignature: t.isSignature,
+      currentRound: t.currentRound,
+      fieldSize: t.fieldSize || t.performances.length,
+      course: t.course,
+      field: t.performances.map(p => ({
+        playerId: p.player.id,
+        playerName: p.player.name,
+        countryFlag: p.player.countryFlag,
+        owgrRank: p.player.owgrRank,
+        sgTotal: p.player.sgTotal,
+        primaryTour: p.player.primaryTour,
+      })),
+    }))
+
+    res.json({ tournaments: result })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/tournaments/:id - Get tournament details
 router.get('/:id', async (req, res, next) => {
   try {
