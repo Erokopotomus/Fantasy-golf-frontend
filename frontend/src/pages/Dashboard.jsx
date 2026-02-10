@@ -233,13 +233,44 @@ const Dashboard = () => {
                     <p className="text-text-secondary mb-6 max-w-sm mx-auto text-sm sm:text-base leading-relaxed">
                       Create your first league or join an existing one to start competing!
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
                       <Link to="/leagues/create">
                         <Button>Create a League</Button>
                       </Link>
                       <Link to="/leagues/join">
                         <Button variant="outline">Join a League</Button>
                       </Link>
+                    </div>
+
+                    {/* Sport Hub shortcuts */}
+                    <div className="border-t border-dark-border pt-6">
+                      <p className="text-text-muted text-xs uppercase tracking-wider font-semibold mb-4">Explore while you wait</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
+                        <Link
+                          to="/golf"
+                          className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl hover:border-emerald-500/40 transition-colors group"
+                        >
+                          <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                            <span className="text-lg">&#x26f3;</span>
+                          </div>
+                          <div className="text-left">
+                            <p className="text-white font-semibold text-sm">Golf Hub</p>
+                            <p className="text-emerald-400/70 text-xs">PGA Tour, stats & previews</p>
+                          </div>
+                        </Link>
+                        <Link
+                          to="/nfl"
+                          className="flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl hover:border-blue-500/40 transition-colors group"
+                        >
+                          <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                            <span className="text-lg">&#x1f3c8;</span>
+                          </div>
+                          <div className="text-left">
+                            <p className="text-white font-semibold text-sm">NFL Hub</p>
+                            <p className="text-blue-400/70 text-xs">Players, teams & leaderboards</p>
+                          </div>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </Card>
