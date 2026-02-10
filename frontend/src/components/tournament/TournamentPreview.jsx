@@ -7,10 +7,41 @@
  * C. Field Analysis (table sorted by Course Fit + Quick Insights sidebar)
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import WeatherStrip from './WeatherStrip'
 import QuickInsights from './QuickInsights'
+
+/** Tooltip wrapper for column headers — shows explanation on hover */
+const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, className = '' }) => {
+  const [show, setShow] = useState(false)
+  const timeoutRef = useRef(null)
+
+  const handleEnter = () => {
+    timeoutRef.current = setTimeout(() => setShow(true), 400)
+  }
+  const handleLeave = () => {
+    clearTimeout(timeoutRef.current)
+    setShow(false)
+  }
+
+  return (
+    <th
+      className={`text-${align} px-2 py-2 font-medium cursor-pointer hover:text-white transition-colors relative ${sortBy === sortKey ? 'text-gold' : ''} ${className}`}
+      onClick={() => onSort(sortKey)}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <span className="border-b border-dotted border-current">{label}</span>
+      {show && (
+        <div className="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-dark-primary border border-dark-border shadow-xl text-left normal-case tracking-normal pointer-events-none">
+          <p className="text-[11px] text-white font-semibold mb-0.5 leading-tight">{label}</p>
+          <p className="text-[10px] text-text-muted font-normal leading-snug">{tip}</p>
+        </div>
+      )}
+    </th>
+  )
+}
 
 const FILTER_OPTIONS = [
   { key: 'all', label: 'All' },
@@ -204,36 +235,34 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                 <thead>
                   <tr className="border-b border-dark-border text-text-muted text-[10px] uppercase tracking-wider">
                     <th className="text-left px-4 py-2 font-medium">Player</th>
-                    <th
-                      className={`text-center px-2 py-2 font-medium cursor-pointer hover:text-white transition-colors ${sortBy === 'cpi' ? 'text-gold' : ''}`}
-                      onClick={() => setSortBy('cpi')}
-                    >
-                      CPI
-                    </th>
-                    <th
-                      className={`text-center px-2 py-2 font-medium cursor-pointer hover:text-white transition-colors ${sortBy === 'form' ? 'text-gold' : ''}`}
-                      onClick={() => setSortBy('form')}
-                    >
-                      Form
-                    </th>
-                    <th
-                      className={`text-center px-2 py-2 font-medium cursor-pointer hover:text-white transition-colors ${sortBy === 'courseFit' ? 'text-gold' : ''}`}
-                      onClick={() => setSortBy('courseFit')}
-                    >
-                      Fit
-                    </th>
-                    <th
-                      className={`text-center px-2 py-2 font-medium cursor-pointer hover:text-white transition-colors hidden sm:table-cell ${sortBy === 'history' ? 'text-gold' : ''}`}
-                      onClick={() => setSortBy('history')}
-                    >
-                      History
-                    </th>
-                    <th
-                      className={`text-right px-4 py-2 font-medium cursor-pointer hover:text-white transition-colors hidden sm:table-cell ${sortBy === 'owgr' ? 'text-gold' : ''}`}
-                      onClick={() => setSortBy('owgr')}
-                    >
-                      OWGR
-                    </th>
+                    <HeaderTooltip
+                      label="CPI"
+                      tip="Clutch Performance Index (-3 to +3). A weighted blend of strokes gained skills — higher means a stronger all-around player."
+                      sortBy={sortBy} sortKey="cpi" onSort={setSortBy}
+                    />
+                    <HeaderTooltip
+                      label="Form"
+                      tip="Current form rating (0-100). Blends recent skill level with world ranking momentum. 80+ means hot."
+                      sortBy={sortBy} sortKey="form" onSort={setSortBy}
+                    />
+                    <HeaderTooltip
+                      label="Fit"
+                      tip="Course Fit score (0-100). How well this player's skill profile matches what this course demands. Higher = better matchup."
+                      sortBy={sortBy} sortKey="courseFit" onSort={setSortBy}
+                    />
+                    <HeaderTooltip
+                      label="History"
+                      tip="Average score to par at this specific course from past tournaments. Fewer rounds = less reliable."
+                      sortBy={sortBy} sortKey="history" onSort={setSortBy}
+                      className="hidden sm:table-cell"
+                    />
+                    <HeaderTooltip
+                      label="OWGR"
+                      tip="Official World Golf Ranking. Lower is better — #1 is the top-ranked player in the world."
+                      align="right"
+                      sortBy={sortBy} sortKey="owgr" onSort={setSortBy}
+                      className="hidden sm:table-cell px-4"
+                    />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-dark-border/30">
