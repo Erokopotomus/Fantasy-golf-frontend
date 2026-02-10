@@ -2,7 +2,7 @@
  * TournamentPreview — Intelligence page for UPCOMING tournaments
  *
  * Layout: 2/3 field table + 1/3 sidebar (insights + weather)
- * Course DNA is a compact strip inside the table card header.
+ * Course DNA is displayed in TournamentHeader.
  */
 
 import { useState, useRef } from 'react'
@@ -49,35 +49,11 @@ const FILTER_OPTIONS = [
 ]
 
 const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlayerIds = [] }) => {
-  const course = tournament?.course
-
   // Auto-detect whether clutch metrics exist to pick smart defaults
   const hasClutchData = leaderboard.some(p => p.clutchMetrics?.courseFitScore != null)
-  const hasHistoryData = leaderboard.some(p => p.courseHistory != null)
 
   const [filter, setFilter] = useState('all')
   const [sortBy, setSortBy] = useState(hasClutchData ? 'courseFit' : 'owgr')
-
-  // Course DNA — translate raw weights into actionable labels
-  const getDnaLabel = (val) => {
-    if (val == null) return null
-    if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bg: 'bg-gold/15 border-gold/25' }
-    if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/25' }
-    if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bg: 'bg-white/5 border-white/10' }
-    return { text: 'Low', color: 'text-text-muted', bg: 'bg-white/[0.03] border-white/[0.06]' }
-  }
-
-  const dnaCategories = course ? [
-    { label: 'Driving', value: course.drivingImportance },
-    { label: 'Approach', value: course.approachImportance },
-    { label: 'Short Game', value: course.aroundGreenImportance },
-    { label: 'Putting', value: course.puttingImportance },
-  ].filter(d => d.value != null).map(d => ({ ...d, rating: getDnaLabel(d.value) })) : []
-
-  const premiumSkills = dnaCategories.filter(d => d.value >= 0.27).sort((a, b) => b.value - a.value)
-  const courseSummary = premiumSkills.length > 0
-    ? `Rewards ${premiumSkills.map(s => s.label.toLowerCase()).join(' and ')}`
-    : null
 
   // Filter leaderboard
   let filteredField = [...leaderboard]
@@ -116,50 +92,6 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
       {/* ── Left: Field Table ── */}
       <div className="lg:col-span-2">
         <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-          {/* Course DNA strip — compact inline above filters */}
-          {course && dnaCategories.length > 0 && (
-            <div className="px-4 py-3 border-b border-dark-border">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-bold text-white">What Wins Here</span>
-                  {courseSummary && (
-                    <span className="text-[10px] text-emerald-400 font-medium">{courseSummary}</span>
-                  )}
-                </div>
-                {course && (
-                  <Link
-                    to={`/courses/${course.id}`}
-                    className="text-[10px] text-gold hover:text-gold/80 transition-colors font-medium"
-                  >
-                    Course Profile →
-                  </Link>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                {dnaCategories.map((cat) => (
-                  <div key={cat.label} className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 ${cat.rating.bg}`}>
-                    <span className="text-[10px] text-text-secondary font-medium">{cat.label}</span>
-                    <span className={`text-[10px] font-mono font-bold ${cat.rating.color}`}>
-                      {cat.rating.text}
-                    </span>
-                  </div>
-                ))}
-                {/* Specs */}
-                <div className="ml-auto flex items-center gap-3 text-text-muted">
-                  {course.par && (
-                    <span className="text-[10px] font-mono">Par {course.par}</span>
-                  )}
-                  {course.yardage && (
-                    <span className="text-[10px] font-mono">{course.yardage?.toLocaleString()} yds</span>
-                  )}
-                  {course.grassType && (
-                    <span className="text-[10px] font-mono">{course.grassType}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Filters */}
           <div className="px-4 py-3 border-b border-dark-border">
             <div className="flex items-center justify-between mb-2">
