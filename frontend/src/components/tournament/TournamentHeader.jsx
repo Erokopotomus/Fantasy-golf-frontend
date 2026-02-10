@@ -204,15 +204,14 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                 </Link>
               </div>
 
-              <div className="space-y-2.5 flex-1">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2 flex-1">
                 {dnaCategories.map((cat) => {
-                  // Bar width: map 0.15-0.40 range to 20%-100%
                   const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
                   return (
                     <div key={cat.label}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] text-text-secondary font-medium">{cat.label}</span>
-                        <span className={`text-[10px] font-mono font-bold ${cat.rating.color}`}>
+                        <span className="text-[10px] text-text-secondary font-medium">{cat.label}</span>
+                        <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>
                           {cat.rating.text}
                         </span>
                       </div>
