@@ -108,27 +108,43 @@ function HourlyDetail({ hourlyData }) {
                 {/* Temp */}
                 <span className="text-xs font-mono font-bold text-white">{h.temp}°</span>
 
-                {/* Wind */}
-                <span className={`text-[10px] font-mono font-bold px-1 rounded ${windColor} ${windBg}`}>
-                  {h.windSpeed}
-                </span>
+                {/* Wind speed + gusts */}
+                <div className="flex flex-col items-center">
+                  <span className={`text-[10px] font-mono font-bold px-1 rounded ${windColor} ${windBg}`}>
+                    {h.windSpeed} mph
+                  </span>
+                  {h.windGust > h.windSpeed + 3 && (
+                    <span className={`text-[9px] font-mono ${getWindColor(h.windGust)}`}>
+                      G {h.windGust}
+                    </span>
+                  )}
+                </div>
 
                 {/* Wind direction */}
                 <span className="text-[9px] font-mono text-text-muted">{h.windDir || ''}</span>
 
-                {/* Precip bar */}
-                <div className="w-4 h-6 flex items-end justify-center">
-                  {precipHeight > 0 && (
-                    <div
-                      className="w-3 rounded-t bg-blue-400/60"
-                      style={{ height: `${precipHeight}px` }}
-                      title={`${h.precip}"`}
-                    />
+                {/* Precip chance + amount */}
+                <div className="flex flex-col items-center">
+                  {h.precipChance != null && h.precipChance > 0 ? (
+                    <span className={`text-[10px] font-mono font-bold ${h.precipChance >= 50 ? 'text-blue-400' : 'text-blue-400/60'}`}>
+                      {h.precipChance}%
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono text-text-muted/40">0%</span>
+                  )}
+                  <div className="w-4 h-5 flex items-end justify-center">
+                    {precipHeight > 0 && (
+                      <div
+                        className="w-3 rounded-t bg-blue-400/60"
+                        style={{ height: `${precipHeight}px` }}
+                        title={`${h.precip}"`}
+                      />
+                    )}
+                  </div>
+                  {h.precip > 0 && (
+                    <span className="text-[9px] font-mono text-blue-400">{h.precip}"</span>
                   )}
                 </div>
-                {h.precip > 0 && (
-                  <span className="text-[9px] font-mono text-blue-400">{h.precip}"</span>
-                )}
               </div>
             )
           })}

@@ -25,7 +25,7 @@ const WMO_CODES = {
 async function getTournamentForecast(lat, lon, startDate, endDate) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,windgusts_10m_max,winddirection_10m_dominant,weathercode`
-    + `&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m,precipitation,weathercode`
+    + `&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m,precipitation,precipitation_probability,weathercode`
     + `&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch`
     + `&start_date=${startDate}&end_date=${endDate}`
     + `&timezone=auto`
@@ -56,6 +56,7 @@ async function getTournamentForecast(lat, lon, startDate, endDate) {
         windGust: Math.round(data.hourly.windgusts_10m[h]),
         windDir: degreesToDirection(data.hourly.winddirection_10m[h]),
         precip: +(data.hourly.precipitation[h] || 0).toFixed(2),
+        precipChance: data.hourly.precipitation_probability?.[h] ?? null,
         weatherCode: data.hourly.weathercode[h],
       })
     }
