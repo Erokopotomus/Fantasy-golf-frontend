@@ -1,12 +1,12 @@
 /**
- * WeatherStrip — 4-column weather forecast for tournament rounds
+ * WeatherStrip — Tournament round weather with always-visible hourly detail
  *
- * Shows temp, wind, precipitation, and difficulty for each round day.
- * Color-coded: green (calm) → yellow (moderate) → red (tough)
- * Click a round to expand hourly breakdown (6 AM – 7 PM).
+ * Round tabs across the top — today's round auto-selected with gold highlight.
+ * Full hourly breakdown always shown below for the selected round.
+ * Wind sustained vs gusts, rain chance, and precipitation all easy to read.
  */
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 const WMO_ICONS = {
   0: '☀️', 1: '🌤', 2: '⛅', 3: '☁️',
@@ -34,7 +34,13 @@ function getWindColor(speed) {
 function getWindBg(speed) {
   if (speed >= 25) return 'bg-red-500/20'
   if (speed >= 15) return 'bg-orange-500/20'
-  return ''
+  return 'bg-white/5'
+}
+
+function getPrecipColor(chance) {
+  if (chance >= 60) return 'text-blue-400'
+  if (chance >= 30) return 'text-blue-400/70'
+  return 'text-text-muted'
 }
 
 function formatHour(h) {
@@ -44,12 +50,29 @@ function formatHour(h) {
   return `${h - 12}p`
 }
 
-/** Hourly detail expansion for a round */
-function HourlyDetail({ hourlyData }) {
+/** Figure out which round index is "today" or the nearest upcoming */
+function getCurrentRoundIndex(weather) {
+  const today = new Date().toISOString().split('T')[0]
+  // Exact match first
+  const todayIdx = weather.findIndex(d => {
+    const ts = d.timestamp ? new Date(d.timestamp).toISOString().split('T')[0] : null
+    return ts === today
+  })
+  if (todayIdx !== -1) return todayIdx
+  // Nearest upcoming
+  for (let i = 0; i < weather.length; i++) {
+    const ts = weather[i].timestamp ? new Date(weather[i].timestamp).toISOString().split('T')[0] : null
+    if (ts && ts > today) return i
+  }
+  return 0
+}
+
+/** Hourly detail — full width, comfortable sizing */
+function HourlyDetail({ hourlyData, roundLabel }) {
   if (!hourlyData || hourlyData.length === 0) {
     return (
-      <div className="px-4 py-3 text-center text-text-muted text-xs">
-        Hourly data not available for this round
+      <div className="px-4 py-6 text-center text-text-muted text-sm">
+        Hourly data not available for {roundLabel}
       </div>
     )
   }
@@ -58,104 +81,190 @@ function HourlyDetail({ hourlyData }) {
   let bestIdx = 0, worstIdx = 0
   let bestScore = Infinity, worstScore = -Infinity
   hourlyData.forEach((h, i) => {
-    const score = h.windSpeed + (h.precip * 50) // weight precip heavily
+    const score = h.windSpeed + (h.windGust || 0) * 0.3 + (h.precip * 50) + ((h.precipChance || 0) * 0.2)
     if (score < bestScore) { bestScore = score; bestIdx = i }
     if (score > worstScore) { worstScore = score; worstIdx = i }
   })
+  const showBestWorst = bestScore !== worstScore
 
   // Max precip for bar scaling
   const maxPrecip = Math.max(...hourlyData.map(h => h.precip), 0.1)
 
   return (
-    <div className="border-t border-dark-border bg-dark-card/50">
-      <div className="px-4 py-2 flex items-center justify-between">
-        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">Hourly Breakdown</span>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> Best
-          </span>
-          <span className="flex items-center gap-1 text-[10px] font-mono text-red-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" /> Worst
-          </span>
-        </div>
+    <div className="bg-dark-card/30">
+      {/* Legend row */}
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+        <span className="text-xs font-mono text-text-muted uppercase tracking-wider">{roundLabel} — Hour by Hour</span>
+        {showBestWorst && (
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-xs font-mono text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> Best Window
+            </span>
+            <span className="flex items-center gap-1.5 text-xs font-mono text-red-400">
+              <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> Toughest
+            </span>
+          </div>
+        )}
       </div>
-      <div className="overflow-x-auto scrollbar-thin">
-        <div className="flex min-w-max px-2 pb-3">
-          {hourlyData.map((h, i) => {
-            const icon = WMO_ICONS[h.weatherCode] ?? '🌤'
-            const windColor = getWindColor(h.windSpeed)
-            const windBg = getWindBg(h.windSpeed)
-            const isBest = i === bestIdx && bestScore !== worstScore
-            const isWorst = i === worstIdx && bestScore !== worstScore
-            const precipHeight = maxPrecip > 0 ? Math.max((h.precip / maxPrecip) * 24, h.precip > 0 ? 3 : 0) : 0
 
-            return (
-              <div
-                key={h.hour}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[48px] transition-colors
-                  ${isBest ? 'bg-emerald-500/10 ring-1 ring-emerald-500/30' : ''}
-                  ${isWorst ? 'bg-red-500/10 ring-1 ring-red-500/30' : ''}
-                `}
-              >
-                {/* Hour label */}
-                <span className="text-[10px] font-mono text-text-muted font-bold">
-                  {formatHour(h.hour)}
-                </span>
+      {/* Row labels + scrollable hours */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-max">
+          <thead>
+            <tr className="text-[10px] font-mono text-text-muted uppercase">
+              <th className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1 text-left w-20 z-10">Time</th>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                return (
+                  <th key={h.hour} className={`px-1 py-1 text-center min-w-[56px] ${isBest ? 'text-emerald-400' : isWorst ? 'text-red-400' : ''}`}>
+                    {formatHour(h.hour)}
+                  </th>
+                )
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {/* Conditions row */}
+            <tr>
+              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Skies</td>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                return (
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                    <span className="text-base">{WMO_ICONS[h.weatherCode] ?? '🌤'}</span>
+                  </td>
+                )
+              })}
+            </tr>
 
-                {/* Weather icon */}
-                <span className="text-sm leading-none">{icon}</span>
+            {/* Temp row */}
+            <tr>
+              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Temp</td>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                return (
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                    <span className="text-sm font-mono font-bold text-white">{h.temp}°</span>
+                  </td>
+                )
+              })}
+            </tr>
 
-                {/* Temp */}
-                <span className="text-xs font-mono font-bold text-white">{h.temp}°</span>
-
-                {/* Wind speed + gusts */}
-                <div className="flex flex-col items-center">
-                  <span className={`text-[10px] font-mono font-bold px-1 rounded ${windColor} ${windBg}`}>
-                    {h.windSpeed} mph
-                  </span>
-                  {h.windGust > h.windSpeed + 3 && (
-                    <span className={`text-[9px] font-mono ${getWindColor(h.windGust)}`}>
-                      G {h.windGust}
+            {/* Wind sustained row */}
+            <tr>
+              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Wind</td>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                return (
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                    <span className={`text-sm font-mono font-bold ${getWindColor(h.windSpeed)}`}>
+                      {h.windSpeed}
                     </span>
-                  )}
-                </div>
+                    <span className="text-[10px] font-mono text-text-muted ml-0.5">mph</span>
+                  </td>
+                )
+              })}
+            </tr>
 
-                {/* Wind direction */}
-                <span className="text-[9px] font-mono text-text-muted">{h.windDir || ''}</span>
-
-                {/* Precip chance + amount */}
-                <div className="flex flex-col items-center">
-                  {h.precipChance != null && h.precipChance > 0 ? (
-                    <span className={`text-[10px] font-mono font-bold ${h.precipChance >= 50 ? 'text-blue-400' : 'text-blue-400/60'}`}>
-                      {h.precipChance}%
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-mono text-text-muted/40">0%</span>
-                  )}
-                  <div className="w-4 h-5 flex items-end justify-center">
-                    {precipHeight > 0 && (
-                      <div
-                        className="w-3 rounded-t bg-blue-400/60"
-                        style={{ height: `${precipHeight}px` }}
-                        title={`${h.precip}"`}
-                      />
+            {/* Gusts row */}
+            <tr>
+              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Gusts</td>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                const hasGust = h.windGust && h.windGust > h.windSpeed + 2
+                return (
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                    {hasGust ? (
+                      <>
+                        <span className={`text-sm font-mono font-bold ${getWindColor(h.windGust)}`}>
+                          {h.windGust}
+                        </span>
+                        <span className="text-[10px] font-mono text-text-muted ml-0.5">mph</span>
+                      </>
+                    ) : (
+                      <span className="text-xs font-mono text-text-muted/30">—</span>
                     )}
-                  </div>
-                  {h.precip > 0 && (
-                    <span className="text-[9px] font-mono text-blue-400">{h.precip}"</span>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                  </td>
+                )
+              })}
+            </tr>
+
+            {/* Wind direction row */}
+            <tr>
+              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Dir</td>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                return (
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                    <span className="text-xs font-mono text-text-muted">{h.windDir || '—'}</span>
+                  </td>
+                )
+              })}
+            </tr>
+
+            {/* Rain chance row */}
+            <tr>
+              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Rain %</td>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                const chance = h.precipChance ?? 0
+                return (
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                    <span className={`text-sm font-mono font-bold ${getPrecipColor(chance)}`}>
+                      {chance}%
+                    </span>
+                  </td>
+                )
+              })}
+            </tr>
+
+            {/* Rainfall amount row */}
+            <tr>
+              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-2 text-xs font-mono text-text-muted z-10">Rain</td>
+              {hourlyData.map((h, i) => {
+                const isBest = showBestWorst && i === bestIdx
+                const isWorst = showBestWorst && i === worstIdx
+                const precipHeight = maxPrecip > 0 ? Math.max((h.precip / maxPrecip) * 20, h.precip > 0 ? 3 : 0) : 0
+                return (
+                  <td key={h.hour} className={`px-1 py-2 ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="w-5 h-5 flex items-end justify-center">
+                        {precipHeight > 0 && (
+                          <div
+                            className="w-4 rounded-t bg-blue-400/50"
+                            style={{ height: `${precipHeight}px` }}
+                          />
+                        )}
+                      </div>
+                      {h.precip > 0 && (
+                        <span className="text-[10px] font-mono text-blue-400">{h.precip}"</span>
+                      )}
+                    </div>
+                  </td>
+                )
+              })}
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   )
 }
 
 const WeatherStrip = ({ weather = [], tournamentStart }) => {
-  const [expandedRound, setExpandedRound] = useState(null)
+  const defaultRound = useMemo(() => {
+    if (!weather?.length) return 0
+    return getCurrentRoundIndex(weather)
+  }, [weather])
+
+  const [selectedRound, setSelectedRound] = useState(defaultRound)
 
   if (!weather || weather.length === 0) {
     if (tournamentStart) {
@@ -181,66 +290,54 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
     )
   }
 
-  const hasAnyHourly = weather.some(d => d.hourlyData?.length > 0)
   const rounds = weather.slice(0, 4)
+  const active = rounds[selectedRound] || rounds[0]
 
   return (
     <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-      <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-dark-border">
         <h3 className="text-sm font-semibold text-text-muted">Weather Forecast</h3>
-        {hasAnyHourly && (
-          <span className="text-[10px] text-text-muted font-mono">Tap round for hourly</span>
-        )}
       </div>
 
+      {/* Round tabs — always visible, selected one highlighted */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-dark-border">
         {rounds.map((day, i) => {
           const weatherCode = guessWeatherCode(day.conditions)
           const icon = WMO_ICONS[weatherCode] || '🌤'
           const difficulty = getDifficultyLabel(day.difficultyImpact || 0)
           const windColor = getWindColor(day.windSpeed || 0)
-          const isExpanded = expandedRound === i
-          const hasHourly = day.hourlyData?.length > 0
+          const isSelected = selectedRound === i
 
           return (
             <div
               key={i}
-              className={`bg-dark-secondary p-3 space-y-2 transition-colors
-                ${hasHourly ? 'cursor-pointer hover:bg-dark-card/50' : ''}
-                ${isExpanded ? 'bg-dark-card/50 border-t-2 border-t-gold' : 'border-t-2 border-t-transparent'}
+              className={`relative p-3 space-y-2 cursor-pointer transition-all
+                ${isSelected
+                  ? 'bg-dark-card/60 border-t-2 border-t-gold'
+                  : 'bg-dark-secondary border-t-2 border-t-transparent hover:bg-dark-card/30'
+                }
               `}
-              onClick={() => hasHourly && setExpandedRound(isExpanded ? null : i)}
+              onClick={() => setSelectedRound(i)}
             >
-              {/* Round label + chevron */}
+              {/* Round label */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold text-text-muted uppercase">
+                <span className={`text-xs font-mono font-bold uppercase ${isSelected ? 'text-gold' : 'text-text-muted'}`}>
                   Round {day.round || i + 1}
                 </span>
-                <div className="flex items-center gap-1">
-                  <span className="text-lg">{icon}</span>
-                  {hasHourly && (
-                    <svg
-                      className={`w-3 h-3 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  )}
-                </div>
+                <span className="text-lg">{icon}</span>
               </div>
 
               {/* Temp */}
-              <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-mono font-bold text-white">
-                    {day.temperature != null ? `${Math.round(day.temperature)}°` : '--'}
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg font-mono font-bold text-white">
+                  {day.temperature != null ? `${Math.round(day.temperature)}°` : '--'}
+                </span>
+                {day.feelsLike != null && (
+                  <span className="text-xs font-mono text-text-muted">
+                    / {Math.round(day.feelsLike)}°
                   </span>
-                  {day.feelsLike != null && (
-                    <span className="text-xs font-mono text-text-muted">
-                      / {Math.round(day.feelsLike)}°
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Wind */}
@@ -282,10 +379,11 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
         })}
       </div>
 
-      {/* Hourly expansion — full width below the grid */}
-      {expandedRound != null && rounds[expandedRound] && (
-        <HourlyDetail hourlyData={rounds[expandedRound].hourlyData} />
-      )}
+      {/* Hourly detail — always visible for selected round */}
+      <HourlyDetail
+        hourlyData={active.hourlyData}
+        roundLabel={`Round ${active.round || selectedRound + 1}`}
+      />
     </div>
   )
 }
