@@ -28,6 +28,7 @@ import Profile from './pages/Profile'
 import Tournaments from './pages/Tournaments'
 import TournamentScoring from './pages/TournamentScoring'
 import TournamentPreviewPage from './pages/TournamentPreviewPage'
+import Courses from './pages/Courses'
 import Standings from './pages/Standings'
 import LeagueLiveScoring from './pages/LeagueLiveScoring'
 import PlayerProfile from './pages/PlayerProfile'
@@ -228,6 +229,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PlayerProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/courses"
+            element={
+              <ProtectedRoute>
+                <Courses />
               </ProtectedRoute>
             }
           />
