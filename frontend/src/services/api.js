@@ -959,6 +959,59 @@ class ApiService {
     })
   }
 
+  // ─── Workspace: Draft Boards ──────────────────────────────────────────────
+
+  async getDraftBoards() {
+    return this.request('/draft-boards')
+  }
+
+  async createDraftBoard(data) {
+    return this.request('/draft-boards', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getDraftBoard(id) {
+    return this.request(`/draft-boards/${id}`)
+  }
+
+  async updateDraftBoard(id, data) {
+    return this.request(`/draft-boards/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteDraftBoard(id) {
+    return this.request(`/draft-boards/${id}`, { method: 'DELETE' })
+  }
+
+  async saveDraftBoardEntries(id, entries) {
+    return this.request(`/draft-boards/${id}/entries`, {
+      method: 'PUT',
+      body: JSON.stringify({ entries }),
+    })
+  }
+
+  async addDraftBoardEntry(id, playerId) {
+    return this.request(`/draft-boards/${id}/entries`, {
+      method: 'POST',
+      body: JSON.stringify({ playerId }),
+    })
+  }
+
+  async removeDraftBoardEntry(id, playerId) {
+    return this.request(`/draft-boards/${id}/entries/${playerId}`, { method: 'DELETE' })
+  }
+
+  async updateDraftBoardEntryNotes(id, playerId, notes) {
+    return this.request(`/draft-boards/${id}/entries/${playerId}/notes`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes }),
+    })
+  }
+
   // Phase 5: Compare + Pinned Badges
   async comparePredictions(targetUserId, options = {}) {
     const params = new URLSearchParams(options).toString()

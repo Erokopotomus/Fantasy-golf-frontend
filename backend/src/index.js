@@ -35,6 +35,7 @@ const feedRoutes = require('./routes/feed')
 const newsRoutes = require('./routes/news')
 const yahooAuthRoutes = require('./routes/yahooAuth')
 const draftDollarsRouter = require('./routes/draftDollars')
+const draftBoardRoutes = require('./routes/draftBoards')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -129,6 +130,7 @@ app.use('/api/feed', feedRoutes)
 app.use('/api/news', newsRoutes)
 app.use('/api/auth', yahooAuthRoutes)
 app.use('/api/leagues', draftDollarsRouter)
+app.use('/api/draft-boards', draftBoardRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

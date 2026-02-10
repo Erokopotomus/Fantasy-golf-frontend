@@ -64,6 +64,9 @@ import NflTeamDetail from './pages/NflTeamDetail'
 import NflCompare from './pages/NflCompare'
 import NflLeaderboards from './pages/NflLeaderboards'
 import GamedayPortal from './pages/GamedayPortal'
+// Workspace
+import DraftBoards from './pages/DraftBoards'
+import DraftBoardEditor from './pages/DraftBoardEditor'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -306,6 +309,23 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProveIt />
+              </ProtectedRoute>
+            }
+          />
+          {/* Workspace */}
+          <Route
+            path="/workspace"
+            element={
+              <ProtectedRoute>
+                <DraftBoards />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/workspace/:boardId"
+            element={
+              <ProtectedRoute>
+                <DraftBoardEditor />
               </ProtectedRoute>
             }
           />

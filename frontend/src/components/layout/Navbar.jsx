@@ -93,6 +93,15 @@ const Navbar = () => {
                 <Link to="/draft" className={navLinkStyles('/draft')}>
                   Draft
                 </Link>
+                <Link to="/workspace" className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                  ${location.pathname.startsWith('/workspace')
+                    ? 'text-gold bg-surface-bright'
+                    : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                  }
+                `}>
+                  Workspace
+                </Link>
                 <Link to="/prove-it" className={navLinkStyles('/prove-it')}>
                   Prove It
                 </Link>
@@ -485,6 +494,13 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Draft
+                </Link>
+                <Link
+                  to="/workspace"
+                  className={mobileNavLinkStyles('/workspace')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Workspace
                 </Link>
                 <Link
                   to="/prove-it"

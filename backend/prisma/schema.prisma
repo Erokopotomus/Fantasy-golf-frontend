@@ -55,6 +55,9 @@ model User {
   // OAuth tokens (Yahoo, etc.)
   oauthTokens         UserOAuthToken[]
 
+  // Workspace
+  draftBoards   DraftBoard[]
+
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
   bio         String?  @db.Text
@@ -343,6 +346,7 @@ model Player {
   clutchScores       ClutchScore[]
   nflPlayerGames     NflPlayerGame[]
   propLines          PropLine[]
+  draftBoardEntries  DraftBoardEntry[]
 
   @@index([owgrRank])
   @@index([name])
@@ -2604,4 +2608,44 @@ model PropLine {
   @@index([sport, season, week, isActive])
   @@index([locksAt])
   @@map("prop_lines")
+}
+
+// ============ WORKSPACE — DRAFT BOARDS ============
+
+model DraftBoard {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  scoringFormat  String   @default("ppr")     // ppr, half_ppr, standard
+  sport          String   @default("nfl")     // nfl, golf
+  season         Int      @default(2026)
+  boardType      String   @default("overall") // overall, qb, rb, wr, te
+  isPublished    Boolean  @default(false)
+  publishedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  entries        DraftBoardEntry[]
+
+  @@index([userId])
+  @@index([userId, sport])
+  @@map("clutch_draft_boards")
+}
+
+model DraftBoardEntry {
+  id        String     @id @default(cuid())
+  boardId   String
+  board     DraftBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  rank      Int
+  tier      Int?
+  notes     String?    @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([boardId, playerId])
+  @@index([boardId])
+  @@index([boardId, rank])
+  @@map("clutch_draft_board_entries")
 }
