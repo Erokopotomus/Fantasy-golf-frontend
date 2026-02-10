@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import useNotificationInbox from '../../hooks/useNotificationInbox'
@@ -16,8 +16,29 @@ const Navbar = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [researchOpen, setResearchOpen] = useState(false)
+  const researchRef = useRef(null)
+  const profileRef = useRef(null)
+  const notifRef = useRef(null)
   const inbox = useNotificationInbox()
   const { currentTournament } = useTournaments()
+
+  // Close dropdowns on outside click (backdrop-filter breaks fixed overlays)
+  useEffect(() => {
+    if (!researchOpen && !profileMenuOpen && !notifOpen) return
+    const handleClick = (e) => {
+      if (researchOpen && researchRef.current && !researchRef.current.contains(e.target)) {
+        setResearchOpen(false)
+      }
+      if (profileMenuOpen && profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileMenuOpen(false)
+      }
+      if (notifOpen && notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [researchOpen, profileMenuOpen, notifOpen])
 
   const isActive = (path) => location.pathname === path
   const isTournamentActive = location.pathname.startsWith('/tournaments/')
@@ -80,7 +101,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* Research Dropdown */}
-                <div className="relative">
+                <div className="relative" ref={researchRef}>
                   <button
                     onClick={() => {
                       setResearchOpen(!researchOpen)
@@ -102,8 +123,6 @@ const Navbar = () => {
                   </button>
 
                   {researchOpen && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setResearchOpen(false)} />
                       <div className="absolute left-0 mt-2 w-56 backdrop-blur-xl bg-dark-secondary/90 border border-white/[0.08] rounded-card shadow-lg z-20 py-2">
                         {/* NFL Hub */}
                         <Link
@@ -216,7 +235,6 @@ const Navbar = () => {
                           </div>
                         </Link>
                       </div>
-                    </>
                   )}
                 </div>
                 <Link
@@ -259,7 +277,7 @@ const Navbar = () => {
             {user ? (
               <>
                 {/* Notification Bell */}
-                <div className="relative">
+                <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => {
                       setNotifOpen(!notifOpen)
@@ -277,8 +295,6 @@ const Navbar = () => {
                     )}
                   </button>
                   {notifOpen && (
-                    <>
-                      <div className="fixed inset-0 z-20" onClick={() => setNotifOpen(false)} />
                       <NotificationDropdown
                         notifications={inbox.notifications}
                         unreadCount={inbox.unreadCount}
@@ -287,11 +303,10 @@ const Navbar = () => {
                         onDelete={inbox.deleteNotification}
                         onClose={() => setNotifOpen(false)}
                       />
-                    </>
                   )}
                 </div>
 
-                <div className="relative">
+                <div className="relative" ref={profileRef}>
                   <button
                     onClick={() => {
                       setProfileMenuOpen(!profileMenuOpen)
@@ -310,11 +325,6 @@ const Navbar = () => {
 
                   {/* Profile Dropdown */}
                   {profileMenuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setProfileMenuOpen(false)}
-                      />
                       <div className="absolute right-0 mt-2 w-52 backdrop-blur-xl bg-dark-secondary/90 border border-white/[0.08] rounded-card shadow-lg z-20 py-1">
                         <div className="px-4 py-2 border-b border-white/[0.08]">
                           <p className="text-sm font-medium text-white truncate">{user.name || 'User'}</p>
@@ -415,7 +425,6 @@ const Navbar = () => {
                           </div>
                         </button>
                       </div>
-                    </>
                   )}
                 </div>
                 <Button variant="ghost" size="sm" onClick={logout} className="sm:hidden">
