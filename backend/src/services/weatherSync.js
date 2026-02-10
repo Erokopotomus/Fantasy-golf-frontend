@@ -92,6 +92,7 @@ async function syncTournamentWeather(prisma) {
           precipitation: day.precipitation,
           conditions: day.conditions,
           difficultyImpact: day.difficultyImpact,
+          hourlyData: day.hourly?.length ? day.hourly : undefined,
         }
 
         if (existing) {

@@ -841,6 +841,9 @@ model Weather {
   // Impact scoring
   difficultyImpact Float? // How much harder conditions make the course
 
+  // Hourly breakdown
+  hourlyData Json? // [{ hour, temp, windSpeed, windGust, windDir, precip, weatherCode }]
+
   @@map("weather")
 }
 

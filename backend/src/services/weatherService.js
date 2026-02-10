@@ -25,6 +25,7 @@ const WMO_CODES = {
 async function getTournamentForecast(lat, lon, startDate, endDate) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
     + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,windgusts_10m_max,winddirection_10m_dominant,weathercode`
+    + `&hourly=temperature_2m,windspeed_10m,windgusts_10m,winddirection_10m,precipitation,weathercode`
     + `&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch`
     + `&start_date=${startDate}&end_date=${endDate}`
     + `&timezone=auto`
@@ -37,6 +38,27 @@ async function getTournamentForecast(lat, lon, startDate, endDate) {
   const data = await res.json()
   if (!data.daily?.time) {
     return { days: [] }
+  }
+
+  // Group hourly data by date, filtered to golf hours (6 AM – 7 PM)
+  const hourlyByDate = {}
+  if (data.hourly?.time) {
+    for (let h = 0; h < data.hourly.time.length; h++) {
+      const dt = new Date(data.hourly.time[h])
+      const dateStr = data.hourly.time[h].substring(0, 10) // YYYY-MM-DD
+      const hour = dt.getHours()
+      if (hour < 6 || hour > 19) continue // 6 AM – 7 PM only
+      if (!hourlyByDate[dateStr]) hourlyByDate[dateStr] = []
+      hourlyByDate[dateStr].push({
+        hour,
+        temp: Math.round(data.hourly.temperature_2m[h]),
+        windSpeed: Math.round(data.hourly.windspeed_10m[h]),
+        windGust: Math.round(data.hourly.windgusts_10m[h]),
+        windDir: degreesToDirection(data.hourly.winddirection_10m[h]),
+        precip: +(data.hourly.precipitation[h] || 0).toFixed(2),
+        weatherCode: data.hourly.weathercode[h],
+      })
+    }
   }
 
   const days = data.daily.time.map((date, i) => ({
@@ -56,6 +78,7 @@ async function getTournamentForecast(lat, lon, startDate, endDate) {
       tempHigh: data.daily.temperature_2m_max[i],
       tempLow: data.daily.temperature_2m_min[i],
     }),
+    hourly: hourlyByDate[date] || [],
   }))
 
   return { days, timezone: data.timezone }
