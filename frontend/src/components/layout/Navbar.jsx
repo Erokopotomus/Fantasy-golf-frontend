@@ -75,6 +75,9 @@ const Navbar = () => {
                 <Link to="/prove-it" className={navLinkStyles('/prove-it')}>
                   Prove It
                 </Link>
+                <Link to="/feed" className={navLinkStyles('/feed')}>
+                  Feed
+                </Link>
 
                 {/* Research Dropdown */}
                 <div className="relative">
@@ -102,13 +105,16 @@ const Navbar = () => {
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setResearchOpen(false)} />
                       <div className="absolute left-0 mt-2 w-56 backdrop-blur-xl bg-dark-secondary/90 border border-white/[0.08] rounded-card shadow-lg z-20 py-2">
-                        {/* NFL Section */}
+                        {/* NFL Hub */}
                         <Link
                           to="/nfl"
-                          className="block px-3 py-1.5 hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm font-semibold text-orange hover:bg-surface-hover transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
-                          <span className="text-[10px] font-mono font-bold text-white/30 hover:text-orange uppercase tracking-widest">NFL</span>
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-base">🏈</span>
+                            NFL Hub
+                          </div>
                         </Link>
                         <Link
                           to="/nfl/players"
@@ -161,13 +167,16 @@ const Navbar = () => {
 
                         <div className="border-t border-white/[0.06] my-2" />
 
-                        {/* Golf Section */}
+                        {/* Golf Hub */}
                         <Link
                           to="/golf"
-                          className="block px-3 py-1.5 hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm font-semibold text-emerald-400 hover:bg-surface-hover transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
-                          <span className="text-[10px] font-mono font-bold text-white/30 hover:text-emerald-400 uppercase tracking-widest">Golf</span>
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-base">⛳</span>
+                            Golf Hub
+                          </div>
                         </Link>
                         <Link
                           to="/players"
@@ -462,14 +471,21 @@ const Navbar = () => {
                 >
                   Prove It
                 </Link>
+                <Link
+                  to="/feed"
+                  className={mobileNavLinkStyles('/feed')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Feed
+                </Link>
 
                 {/* Research section */}
                 <div className="pt-2 pb-1 px-4">
                   <span className="text-[10px] font-mono font-bold text-white/25 uppercase tracking-widest">Research</span>
                 </div>
                 <div className="pl-2 space-y-1">
-                  <Link to="/nfl" className="block px-3 py-1" onClick={() => setMobileMenuOpen(false)}>
-                    <span className="text-[10px] font-mono text-white/20 hover:text-orange uppercase tracking-wider">NFL</span>
+                  <Link to="/nfl" className={mobileNavLinkStyles('/nfl')} onClick={() => setMobileMenuOpen(false)}>
+                    <span className="flex items-center gap-2">🏈 NFL Hub</span>
                   </Link>
                   <Link to="/nfl/players" className={mobileNavLinkStyles('/nfl/players')} onClick={() => setMobileMenuOpen(false)}>
                     NFL Players
@@ -480,8 +496,8 @@ const Navbar = () => {
                   <Link to="/nfl/schedule" className={mobileNavLinkStyles('/nfl/schedule')} onClick={() => setMobileMenuOpen(false)}>
                     NFL Schedule
                   </Link>
-                  <Link to="/golf" className="block px-3 py-1 pt-2" onClick={() => setMobileMenuOpen(false)}>
-                    <span className="text-[10px] font-mono text-white/20 hover:text-emerald-400 uppercase tracking-wider">Golf</span>
+                  <Link to="/golf" className={mobileNavLinkStyles('/golf')} onClick={() => setMobileMenuOpen(false)}>
+                    <span className="flex items-center gap-2">⛳ Golf Hub</span>
                   </Link>
                   <Link to="/players" className={mobileNavLinkStyles('/players')} onClick={() => setMobileMenuOpen(false)}>
                     Golf Players

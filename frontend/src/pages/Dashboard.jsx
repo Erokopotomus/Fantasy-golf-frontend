@@ -204,7 +204,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg sm:text-xl font-semibold font-display text-white">Your Feed</h2>
                 <Link
-                  to={feedSport === 'golf' ? '/golf' : '/nfl'}
+                  to="/feed"
                   className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors"
                 >
                   View All
