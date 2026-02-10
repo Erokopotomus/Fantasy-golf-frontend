@@ -55,6 +55,7 @@ import NflPlayerDetail from './pages/NflPlayerDetail'
 import NflSchedule from './pages/NflSchedule'
 import NflTeamDetail from './pages/NflTeamDetail'
 import NflCompare from './pages/NflCompare'
+import NflLeaderboards from './pages/NflLeaderboards'
 import GamedayPortal from './pages/GamedayPortal'
 // Format-specific pages
 import Matchups from './pages/Matchups'
@@ -364,9 +365,10 @@ function App() {
           {/* NFL routes */}
           <Route path="/nfl/players" element={<NflPlayers />} />
           <Route path="/nfl/players/:playerId" element={<NflPlayerDetail />} />
+          <Route path="/nfl/leaderboards" element={<NflLeaderboards />} />
           <Route path="/nfl/compare" element={<ProtectedRoute><NflCompare /></ProtectedRoute>} />
           <Route path="/nfl/schedule" element={<ProtectedRoute><NflSchedule /></ProtectedRoute>} />
-          <Route path="/nfl/teams/:abbr" element={<ProtectedRoute><NflTeamDetail /></ProtectedRoute>} />
+          <Route path="/nfl/teams/:abbr" element={<NflTeamDetail />} />
           {/* Gameday Portal */}
           <Route
             path="/leagues/:leagueId/gameday"

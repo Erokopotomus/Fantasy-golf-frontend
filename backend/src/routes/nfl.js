@@ -614,6 +614,282 @@ router.get('/teams/:abbr', async (req, res, next) => {
   }
 })
 
+// GET /api/nfl/teams/:abbr/stats — Team stats aggregated from player + game data
+router.get('/teams/:abbr/stats', async (req, res, next) => {
+  try {
+    const abbr = req.params.abbr.toUpperCase()
+    const season = parseInt(req.query.season) || 2024
+
+    const team = await prisma.nflTeam.findUnique({ where: { abbreviation: abbr } })
+    if (!team) return res.status(404).json({ error: { message: 'Team not found' } })
+
+    // Get all games for this team in the season
+    const games = await prisma.nflGame.findMany({
+      where: {
+        season,
+        status: 'FINAL',
+        OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
+      },
+      orderBy: { week: 'asc' },
+      include: {
+        homeTeam: { select: { abbreviation: true } },
+        awayTeam: { select: { abbreviation: true } },
+      },
+    })
+
+    // Compute W-L, points for/against from games
+    let wins = 0, losses = 0, ties = 0, pointsFor = 0, pointsAgainst = 0
+    for (const g of games) {
+      const isHome = g.homeTeamId === team.id
+      const pf = isHome ? g.homeScore : g.awayScore
+      const pa = isHome ? g.awayScore : g.homeScore
+      if (pf == null || pa == null) continue
+      pointsFor += pf
+      pointsAgainst += pa
+      if (pf > pa) wins++
+      else if (pf < pa) losses++
+      else ties++
+    }
+    const gamesPlayed = wins + losses + ties
+
+    // Get all player game stats for this team in the season
+    const playerGames = await prisma.nflPlayerGame.findMany({
+      where: { teamAbbr: abbr, game: { season, status: 'FINAL' } },
+      include: { player: { select: { nflPosition: true } } },
+    })
+
+    // Aggregate offensive stats
+    let passYards = 0, passTds = 0, passAttempts = 0, passCompletions = 0, interceptions = 0
+    let rushYards = 0, rushTds = 0, rushAttempts = 0
+    let recYards = 0, recTds = 0, receptions = 0, targets = 0
+    let fumbles = 0, fumblesLost = 0
+    let totalEpa = 0, epaCount = 0
+
+    // Aggregate defensive stats
+    let defSacks = 0, defInts = 0, defTds = 0, defFumblesForced = 0, defFumblesRecovered = 0
+    let defPassesDefended = 0, tacklesSolo = 0, tacklesAssist = 0
+
+    for (const pg of playerGames) {
+      // Offense
+      passYards += pg.passYards || 0
+      passTds += pg.passTds || 0
+      passAttempts += pg.passAttempts || 0
+      passCompletions += pg.passCompletions || 0
+      interceptions += pg.interceptions || 0
+      rushYards += pg.rushYards || 0
+      rushTds += pg.rushTds || 0
+      rushAttempts += pg.rushAttempts || 0
+      recYards += pg.recYards || 0
+      recTds += pg.recTds || 0
+      receptions += pg.receptions || 0
+      targets += pg.targets || 0
+      fumbles += pg.fumbles || 0
+      fumblesLost += pg.fumblesLost || 0
+      if (pg.epa != null) { totalEpa += pg.epa; epaCount++ }
+
+      // Defense
+      defSacks += pg.sacks || 0
+      defInts += pg.defInterceptions || 0
+      defTds += pg.defTds || 0
+      defFumblesForced += pg.fumblesForced || 0
+      defFumblesRecovered += pg.fumblesRecovered || 0
+      defPassesDefended += pg.passesDefended || 0
+      tacklesSolo += pg.tacklesSolo || 0
+      tacklesAssist += pg.tacklesAssist || 0
+    }
+
+    const totalTds = passTds + rushTds + recTds
+    const totalYards = passYards + rushYards
+    const pg = gamesPlayed || 1 // avoid division by zero
+
+    // Get top fantasy performers for this team
+    const topPlayers = await prisma.$queryRaw`
+      SELECT p.id, p.name, p."nfl_position" as position, p."headshot_url" as "headshotUrl",
+             COUNT(pg.id)::int as games,
+             ROUND(SUM(COALESCE(pg."fantasy_pts_half", 0))::numeric, 1) as "fantasyPts",
+             ROUND((SUM(COALESCE(pg."fantasy_pts_half", 0)) / NULLIF(COUNT(pg.id), 0))::numeric, 1) as "ptsPerGame"
+      FROM nfl_player_games pg
+      JOIN players p ON p.id = pg."player_id"
+      JOIN nfl_games g ON g.id = pg."game_id"
+      WHERE pg."team_abbr" = ${abbr} AND g.season = ${season} AND g.status = 'FINAL'
+      GROUP BY p.id, p.name, p."nfl_position", p."headshot_url"
+      HAVING SUM(COALESCE(pg."fantasy_pts_half", 0)) > 0
+      ORDER BY SUM(COALESCE(pg."fantasy_pts_half", 0)) DESC
+      LIMIT 10
+    `
+
+    // Compute league-wide averages for ranking context (all 32 teams)
+    const allTeams = await prisma.nflTeam.findMany({ select: { id: true, abbreviation: true } })
+    const allTeamGames = await prisma.nflGame.findMany({
+      where: { season, status: 'FINAL' },
+      select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true },
+    })
+
+    // Build per-team points for/against for ranking
+    const teamPF = {}, teamPA = {}, teamGP = {}
+    for (const t of allTeams) { teamPF[t.id] = 0; teamPA[t.id] = 0; teamGP[t.id] = 0 }
+    for (const g of allTeamGames) {
+      if (g.homeScore == null || g.awayScore == null) continue
+      teamPF[g.homeTeamId] += g.homeScore; teamPA[g.homeTeamId] += g.awayScore; teamGP[g.homeTeamId]++
+      teamPF[g.awayTeamId] += g.awayScore; teamPA[g.awayTeamId] += g.homeScore; teamGP[g.awayTeamId]++
+    }
+
+    // Rank this team's PPG and PA/G
+    const ppgList = allTeams.map(t => ({ id: t.id, ppg: teamGP[t.id] ? teamPF[t.id] / teamGP[t.id] : 0 })).sort((a, b) => b.ppg - a.ppg)
+    const papgList = allTeams.map(t => ({ id: t.id, papg: teamGP[t.id] ? teamPA[t.id] / teamGP[t.id] : 0 })).sort((a, b) => a.papg - b.papg)
+    const offRank = ppgList.findIndex(t => t.id === team.id) + 1
+    const defRank = papgList.findIndex(t => t.id === team.id) + 1
+
+    res.json({
+      team: { abbreviation: abbr, name: team.name, city: team.city, conference: team.conference, division: team.division },
+      season,
+      record: { wins, losses, ties, gamesPlayed },
+      offense: {
+        pointsFor,
+        ppg: +(pointsFor / pg).toFixed(1),
+        rank: offRank,
+        totalYards,
+        ypg: +(totalYards / pg).toFixed(1),
+        passing: { yards: passYards, tds: passTds, attempts: passAttempts, completions: passCompletions, interceptions, ypg: +(passYards / pg).toFixed(1) },
+        rushing: { yards: rushYards, tds: rushTds, attempts: rushAttempts, ypg: +(rushYards / pg).toFixed(1) },
+        receiving: { yards: recYards, tds: recTds, receptions, targets },
+        totalTds,
+        turnovers: interceptions + fumblesLost,
+        epa: { total: +totalEpa.toFixed(1), perGame: +(totalEpa / pg).toFixed(2) },
+      },
+      defense: {
+        pointsAgainst,
+        papg: +(pointsAgainst / pg).toFixed(1),
+        rank: defRank,
+        sacks: defSacks,
+        interceptions: defInts,
+        tds: defTds,
+        fumblesForced: defFumblesForced,
+        fumblesRecovered: defFumblesRecovered,
+        passesDefended: defPassesDefended,
+        tackles: { solo: tacklesSolo, assist: tacklesAssist, total: tacklesSolo + tacklesAssist },
+      },
+      topPlayers,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/nfl/leaderboards — Stat leaderboards with filters
+router.get('/leaderboards', async (req, res, next) => {
+  try {
+    const {
+      stat = 'fantasy_half',
+      season = '2024',
+      position,
+      team,
+      limit: rawLimit = '50',
+      offset: rawOffset = '0',
+    } = req.query
+
+    const seasonInt = parseInt(season)
+    const limitInt = Math.min(parseInt(rawLimit) || 50, 100)
+    const offsetInt = parseInt(rawOffset) || 0
+
+    // Map stat param to SQL aggregation
+    const statMap = {
+      // Fantasy
+      fantasy_half: { expr: 'SUM(COALESCE(pg."fantasy_pts_half", 0))', label: 'Fantasy Pts (Half)' },
+      fantasy_ppr: { expr: 'SUM(COALESCE(pg."fantasy_pts_ppr", 0))', label: 'Fantasy Pts (PPR)' },
+      fantasy_std: { expr: 'SUM(COALESCE(pg."fantasy_pts_std", 0))', label: 'Fantasy Pts (Std)' },
+      // Passing
+      pass_yards: { expr: 'SUM(COALESCE(pg."pass_yards", 0))', label: 'Passing Yards' },
+      pass_tds: { expr: 'SUM(COALESCE(pg."pass_tds", 0))', label: 'Passing TDs' },
+      completions: { expr: 'SUM(COALESCE(pg."pass_completions", 0))', label: 'Completions' },
+      comp_pct: { expr: 'CASE WHEN SUM(COALESCE(pg."pass_attempts",0)) > 0 THEN ROUND((SUM(COALESCE(pg."pass_completions",0))::numeric / SUM(pg."pass_attempts") * 100), 1) ELSE 0 END', label: 'Comp %' },
+      interceptions: { expr: 'SUM(COALESCE(pg."interceptions", 0))', label: 'Interceptions', sortAsc: true },
+      // Rushing
+      rush_yards: { expr: 'SUM(COALESCE(pg."rush_yards", 0))', label: 'Rushing Yards' },
+      rush_tds: { expr: 'SUM(COALESCE(pg."rush_tds", 0))', label: 'Rushing TDs' },
+      rush_attempts: { expr: 'SUM(COALESCE(pg."rush_attempts", 0))', label: 'Rush Attempts' },
+      // Receiving
+      receptions: { expr: 'SUM(COALESCE(pg."receptions", 0))', label: 'Receptions' },
+      rec_yards: { expr: 'SUM(COALESCE(pg."rec_yards", 0))', label: 'Receiving Yards' },
+      rec_tds: { expr: 'SUM(COALESCE(pg."rec_tds", 0))', label: 'Receiving TDs' },
+      targets: { expr: 'SUM(COALESCE(pg."targets", 0))', label: 'Targets' },
+      // Advanced
+      epa: { expr: 'ROUND(SUM(COALESCE(pg.epa, 0))::numeric, 1)', label: 'EPA' },
+      target_share: { expr: 'ROUND(AVG(COALESCE(pg."target_share", 0))::numeric * 100, 1)', label: 'Target Share %' },
+      snap_pct: { expr: 'ROUND(AVG(COALESCE(pg."snap_pct", 0))::numeric * 100, 1)', label: 'Snap %' },
+      // Defense
+      def_sacks: { expr: 'SUM(COALESCE(pg.sacks, 0))', label: 'Sacks' },
+      def_ints: { expr: 'SUM(COALESCE(pg."def_interceptions", 0))', label: 'Interceptions' },
+      def_tds: { expr: 'SUM(COALESCE(pg."def_tds", 0))', label: 'Defensive TDs' },
+      tackles: { expr: 'SUM(COALESCE(pg."tackles_solo", 0)) + SUM(COALESCE(pg."tackles_assist", 0))', label: 'Total Tackles' },
+    }
+
+    const statDef = statMap[stat]
+    if (!statDef) return res.status(400).json({ error: { message: `Unknown stat: ${stat}. Valid: ${Object.keys(statMap).join(', ')}` } })
+
+    // Build WHERE clauses
+    const conditions = [`g.season = ${seasonInt}`, `g.status = 'FINAL'`]
+    if (position) conditions.push(`p."nfl_position" = '${position.toUpperCase()}'`)
+    if (team) conditions.push(`pg."team_abbr" = '${team.toUpperCase()}'`)
+    const whereClause = conditions.join(' AND ')
+
+    const sortDir = statDef.sortAsc ? 'ASC' : 'DESC'
+
+    // Count total matching players
+    const countResult = await prisma.$queryRawUnsafe(`
+      SELECT COUNT(DISTINCT p.id)::int as total
+      FROM nfl_player_games pg
+      JOIN players p ON p.id = pg."player_id"
+      JOIN nfl_games g ON g.id = pg."game_id"
+      WHERE ${whereClause}
+    `)
+    const total = countResult[0]?.total || 0
+
+    // Get leaderboard
+    const players = await prisma.$queryRawUnsafe(`
+      SELECT p.id, p.name, p."nfl_position" as position, p."nfl_team_abbr" as "teamAbbr",
+             p."headshot_url" as "headshotUrl",
+             COUNT(pg.id)::int as games,
+             ${statDef.expr} as "statValue",
+             ROUND(SUM(COALESCE(pg."fantasy_pts_half", 0))::numeric, 1) as "fantasyPtsHalf",
+             ROUND(SUM(COALESCE(pg."fantasy_pts_ppr", 0))::numeric, 1) as "fantasyPtsPpr",
+             ROUND(SUM(COALESCE(pg."fantasy_pts_std", 0))::numeric, 1) as "fantasyPtsStd",
+             SUM(COALESCE(pg."pass_yards", 0))::int as "passYards",
+             SUM(COALESCE(pg."pass_tds", 0))::int as "passTds",
+             SUM(COALESCE(pg."rush_yards", 0))::int as "rushYards",
+             SUM(COALESCE(pg."rush_tds", 0))::int as "rushTds",
+             SUM(COALESCE(pg."receptions", 0))::int as "receptions",
+             SUM(COALESCE(pg."rec_yards", 0))::int as "recYards",
+             SUM(COALESCE(pg."rec_tds", 0))::int as "recTds",
+             SUM(COALESCE(pg."targets", 0))::int as "targets"
+      FROM nfl_player_games pg
+      JOIN players p ON p.id = pg."player_id"
+      JOIN nfl_games g ON g.id = pg."game_id"
+      WHERE ${whereClause}
+      GROUP BY p.id, p.name, p."nfl_position", p."nfl_team_abbr", p."headshot_url"
+      HAVING ${statDef.expr} > 0
+      ORDER BY "statValue" ${sortDir}
+      LIMIT ${limitInt} OFFSET ${offsetInt}
+    `)
+
+    // Add rank
+    const ranked = players.map((p, i) => ({ ...p, rank: offsetInt + i + 1 }))
+
+    res.json({
+      stat,
+      statLabel: statDef.label,
+      season: seasonInt,
+      filters: { position: position || null, team: team || null },
+      total,
+      limit: limitInt,
+      offset: offsetInt,
+      players: ranked,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // ─── NFL Schedule ───────────────────────────────────────────────────────────
 
 // GET /api/nfl/schedule — NFL schedule by season/week

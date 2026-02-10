@@ -810,6 +810,25 @@ class ApiService {
     return this.request(`/nfl/teams/${abbr}`)
   }
 
+  async getNflTeamStats(abbr, { season } = {}) {
+    const params = new URLSearchParams()
+    if (season) params.set('season', season)
+    const qs = params.toString()
+    return this.request(`/nfl/teams/${abbr}/stats${qs ? '?' + qs : ''}`)
+  }
+
+  async getNflLeaderboards(options = {}) {
+    const params = new URLSearchParams()
+    if (options.stat) params.set('stat', options.stat)
+    if (options.season) params.set('season', options.season)
+    if (options.position) params.set('position', options.position)
+    if (options.team) params.set('team', options.team)
+    if (options.limit) params.set('limit', options.limit)
+    if (options.offset) params.set('offset', options.offset)
+    const qs = params.toString()
+    return this.request(`/nfl/leaderboards${qs ? '?' + qs : ''}`)
+  }
+
   async getNflSchedule(options = {}) {
     const params = new URLSearchParams()
     if (options.season) params.set('season', options.season)
