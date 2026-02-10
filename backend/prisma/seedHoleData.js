@@ -17,7 +17,7 @@ async function seedHoleData() {
     SELECT DISTINCT c.id as "courseId", c.name as "courseName"
     FROM courses c
     JOIN tournaments t ON t."courseId" = c.id
-    JOIN "hole_scores" hs ON hs."tournamentId" = t.id
+    JOIN hole_scores hs ON hs."tournamentId" = t.id
     ORDER BY c.name
   `
 

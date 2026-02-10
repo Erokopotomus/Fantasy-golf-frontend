@@ -20,10 +20,14 @@ const FILTER_OPTIONS = [
 ]
 
 const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlayerIds = [] }) => {
-  const [filter, setFilter] = useState('all')
-  const [sortBy, setSortBy] = useState('courseFit')
-
   const course = tournament?.course
+
+  // Auto-detect whether clutch metrics exist to pick smart defaults
+  const hasClutchData = leaderboard.some(p => p.clutchMetrics?.courseFitScore != null)
+  const hasHistoryData = leaderboard.some(p => p.courseHistory != null)
+
+  const [filter, setFilter] = useState('all')
+  const [sortBy, setSortBy] = useState(hasClutchData ? 'courseFit' : 'owgr')
 
   // Course DNA weights
   const dnaCategories = course ? [
@@ -157,19 +161,25 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {FILTER_OPTIONS.map(opt => (
-                  <button
-                    key={opt.key}
-                    onClick={() => setFilter(opt.key)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                      filter === opt.key
-                        ? 'bg-gold/15 text-gold border border-gold/25'
-                        : 'bg-dark-tertiary text-text-muted border border-dark-border hover:text-white'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                {FILTER_OPTIONS.map(opt => {
+                  const disabled = !hasClutchData && (opt.key === 'top20fit' || opt.key === 'hotForm')
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => !disabled && setFilter(opt.key)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        filter === opt.key
+                          ? 'bg-gold/15 text-gold border border-gold/25'
+                          : disabled
+                            ? 'bg-dark-tertiary text-text-muted/40 border border-dark-border cursor-not-allowed'
+                            : 'bg-dark-tertiary text-text-muted border border-dark-border hover:text-white'
+                      }`}
+                      title={disabled ? 'Clutch metrics not yet computed for this event' : ''}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
@@ -293,6 +303,67 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
         {/* Quick Insights Sidebar */}
         <div className="space-y-4">
           <QuickInsights leaderboard={leaderboard} />
+
+          {/* Field snapshot when no clutch data */}
+          {!hasClutchData && leaderboard.length > 0 && (
+            <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+              <div className="px-4 py-3 border-b border-dark-border bg-gradient-to-r from-emerald-500/5 to-transparent">
+                <h3 className="text-sm font-bold text-white">Field Snapshot</h3>
+              </div>
+              <div className="p-4 space-y-4">
+                {/* Top OWGR */}
+                <div className="space-y-1.5">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wider font-bold">Top Ranked</p>
+                  {[...leaderboard]
+                    .filter(p => p.owgrRank != null)
+                    .sort((a, b) => a.owgrRank - b.owgrRank)
+                    .slice(0, 5)
+                    .map((p, i) => (
+                      <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between py-1 hover:bg-dark-tertiary/50 -mx-1 px-1 rounded transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-xs font-mono text-text-muted w-4">{i + 1}.</span>
+                          {p.headshotUrl ? (
+                            <img src={p.headshotUrl} alt="" className="w-5 h-5 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                          ) : (
+                            <span className="text-xs">{p.countryFlag || '?'}</span>
+                          )}
+                          <span className="text-xs font-medium text-white truncate">{p.name}</span>
+                        </div>
+                        <span className="text-xs font-mono text-gold ml-2 flex-shrink-0">#{p.owgrRank}</span>
+                      </Link>
+                    ))
+                  }
+                </div>
+
+                {/* Field stats */}
+                <div className="pt-3 border-t border-dark-border/50 space-y-2">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wider font-bold">Field Stats</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-muted">Total Players</span>
+                    <span className="text-xs font-mono text-white">{leaderboard.length}</span>
+                  </div>
+                  {(() => {
+                    const ranked = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 50).length
+                    return ranked > 0 ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-text-muted">Top 50 OWGR</span>
+                        <span className="text-xs font-mono text-emerald-400">{ranked}</span>
+                      </div>
+                    ) : null
+                  })()}
+                  {(() => {
+                    const ranked = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 100).length
+                    return ranked > 0 ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-text-muted">Top 100 OWGR</span>
+                        <span className="text-xs font-mono text-text-secondary">{ranked}</span>
+                      </div>
+                    ) : null
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -10,10 +10,10 @@ async function aggregateAllCourseHistory(prisma) {
 
   // Get all (playerId, courseId) pairs with performance records
   const pairs = await prisma.$queryRaw`
-    SELECT DISTINCT p."player_id" as "playerId", t."course_id" as "courseId"
+    SELECT DISTINCT p."playerId", t."courseId"
     FROM performances p
-    JOIN tournaments t ON t.id = p."tournament_id"
-    WHERE t."course_id" IS NOT NULL
+    JOIN tournaments t ON t.id = p."tournamentId"
+    WHERE t."courseId" IS NOT NULL
   `
 
   if (pairs.length === 0) {
@@ -26,31 +26,31 @@ async function aggregateAllCourseHistory(prisma) {
   // Batch aggregate using raw SQL for efficiency
   const stats = await prisma.$queryRaw`
     SELECT
-      p."player_id" as "playerId",
-      t."course_id" as "courseId",
+      p."playerId",
+      t."courseId",
       COUNT(DISTINCT p.id)::int as tournaments,
       COALESCE(SUM(
-        CASE WHEN p.round1 IS NOT NULL THEN 1 ELSE 0 END +
-        CASE WHEN p.round2 IS NOT NULL THEN 1 ELSE 0 END +
-        CASE WHEN p.round3 IS NOT NULL THEN 1 ELSE 0 END +
-        CASE WHEN p.round4 IS NOT NULL THEN 1 ELSE 0 END
+        CASE WHEN p."round1" IS NOT NULL THEN 1 ELSE 0 END +
+        CASE WHEN p."round2" IS NOT NULL THEN 1 ELSE 0 END +
+        CASE WHEN p."round3" IS NOT NULL THEN 1 ELSE 0 END +
+        CASE WHEN p."round4" IS NOT NULL THEN 1 ELSE 0 END
       ), 0)::int as rounds,
-      ROUND(AVG(p."total_score")::numeric, 2) as "avgScore",
-      ROUND(AVG(p."total_to_par")::numeric, 2) as "avgToPar",
+      ROUND(AVG(p."totalScore")::numeric, 2) as "avgScore",
+      ROUND(AVG(p."totalToPar")::numeric, 2) as "avgToPar",
       MIN(CASE WHEN p.position IS NOT NULL AND p.status = 'ACTIVE' THEN p.position END) as "bestFinish",
       SUM(CASE WHEN p.position = 1 AND p.status = 'ACTIVE' THEN 1 ELSE 0 END)::int as wins,
       SUM(CASE WHEN p.position IS NOT NULL AND p.position <= 10 AND p.status = 'ACTIVE' THEN 1 ELSE 0 END)::int as top10s,
       COUNT(DISTINCT p.id)::int as cuts,
-      SUM(CASE WHEN p.status = 'ACTIVE' OR p.round3 IS NOT NULL THEN 1 ELSE 0 END)::int as "cutsMade",
-      ROUND(AVG(p."sg_total")::numeric, 3) as "sgTotal",
-      ROUND(AVG(p."sg_putting")::numeric, 3) as "sgPutting",
-      ROUND(AVG(p."sg_approach")::numeric, 3) as "sgApproach",
-      ROUND(AVG(p."sg_off_tee")::numeric, 3) as "sgOffTee",
-      MAX(t."end_date") as "lastPlayed"
+      SUM(CASE WHEN p.status = 'ACTIVE' OR p."round3" IS NOT NULL THEN 1 ELSE 0 END)::int as "cutsMade",
+      ROUND(AVG(p."sgTotal")::numeric, 3) as "sgTotal",
+      ROUND(AVG(p."sgPutting")::numeric, 3) as "sgPutting",
+      ROUND(AVG(p."sgApproach")::numeric, 3) as "sgApproach",
+      ROUND(AVG(p."sgOffTee")::numeric, 3) as "sgOffTee",
+      MAX(t."endDate") as "lastPlayed"
     FROM performances p
-    JOIN tournaments t ON t.id = p."tournament_id"
-    WHERE t."course_id" IS NOT NULL
-    GROUP BY p."player_id", t."course_id"
+    JOIN tournaments t ON t.id = p."tournamentId"
+    WHERE t."courseId" IS NOT NULL
+    GROUP BY p."playerId", t."courseId"
   `
 
   let aggregated = 0
@@ -112,30 +112,30 @@ async function aggregateForCourse(courseId, prisma) {
 
   const stats = await prisma.$queryRaw`
     SELECT
-      p."player_id" as "playerId",
+      p."playerId",
       COUNT(DISTINCT p.id)::int as tournaments,
       COALESCE(SUM(
-        CASE WHEN p.round1 IS NOT NULL THEN 1 ELSE 0 END +
-        CASE WHEN p.round2 IS NOT NULL THEN 1 ELSE 0 END +
-        CASE WHEN p.round3 IS NOT NULL THEN 1 ELSE 0 END +
-        CASE WHEN p.round4 IS NOT NULL THEN 1 ELSE 0 END
+        CASE WHEN p."round1" IS NOT NULL THEN 1 ELSE 0 END +
+        CASE WHEN p."round2" IS NOT NULL THEN 1 ELSE 0 END +
+        CASE WHEN p."round3" IS NOT NULL THEN 1 ELSE 0 END +
+        CASE WHEN p."round4" IS NOT NULL THEN 1 ELSE 0 END
       ), 0)::int as rounds,
-      ROUND(AVG(p."total_score")::numeric, 2) as "avgScore",
-      ROUND(AVG(p."total_to_par")::numeric, 2) as "avgToPar",
+      ROUND(AVG(p."totalScore")::numeric, 2) as "avgScore",
+      ROUND(AVG(p."totalToPar")::numeric, 2) as "avgToPar",
       MIN(CASE WHEN p.position IS NOT NULL AND p.status = 'ACTIVE' THEN p.position END) as "bestFinish",
       SUM(CASE WHEN p.position = 1 AND p.status = 'ACTIVE' THEN 1 ELSE 0 END)::int as wins,
       SUM(CASE WHEN p.position IS NOT NULL AND p.position <= 10 AND p.status = 'ACTIVE' THEN 1 ELSE 0 END)::int as top10s,
       COUNT(DISTINCT p.id)::int as cuts,
-      SUM(CASE WHEN p.status = 'ACTIVE' OR p.round3 IS NOT NULL THEN 1 ELSE 0 END)::int as "cutsMade",
-      ROUND(AVG(p."sg_total")::numeric, 3) as "sgTotal",
-      ROUND(AVG(p."sg_putting")::numeric, 3) as "sgPutting",
-      ROUND(AVG(p."sg_approach")::numeric, 3) as "sgApproach",
-      ROUND(AVG(p."sg_off_tee")::numeric, 3) as "sgOffTee",
-      MAX(t."end_date") as "lastPlayed"
+      SUM(CASE WHEN p.status = 'ACTIVE' OR p."round3" IS NOT NULL THEN 1 ELSE 0 END)::int as "cutsMade",
+      ROUND(AVG(p."sgTotal")::numeric, 3) as "sgTotal",
+      ROUND(AVG(p."sgPutting")::numeric, 3) as "sgPutting",
+      ROUND(AVG(p."sgApproach")::numeric, 3) as "sgApproach",
+      ROUND(AVG(p."sgOffTee")::numeric, 3) as "sgOffTee",
+      MAX(t."endDate") as "lastPlayed"
     FROM performances p
-    JOIN tournaments t ON t.id = p."tournament_id"
-    WHERE t."course_id" = ${courseId}
-    GROUP BY p."player_id"
+    JOIN tournaments t ON t.id = p."tournamentId"
+    WHERE t."courseId" = ${courseId}
+    GROUP BY p."playerId"
   `
 
   let aggregated = 0

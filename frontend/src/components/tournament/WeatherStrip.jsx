@@ -30,7 +30,6 @@ function getWindColor(speed) {
 
 const WeatherStrip = ({ weather = [], tournamentStart }) => {
   if (!weather || weather.length === 0) {
-    // Check if too far out
     if (tournamentStart) {
       const daysOut = Math.floor((new Date(tournamentStart) - new Date()) / 86400000)
       if (daysOut > 16) {
@@ -44,7 +43,15 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
         )
       }
     }
-    return null
+    // Show a placeholder card instead of nothing
+    return (
+      <div className="rounded-xl border border-dark-border bg-dark-secondary p-4">
+        <h3 className="text-sm font-semibold text-text-muted mb-2">Weather Forecast</h3>
+        <p className="text-text-muted text-xs text-center py-3">
+          Weather data syncs automatically before the tournament. Check back soon.
+        </p>
+      </div>
+    )
   }
 
   return (
