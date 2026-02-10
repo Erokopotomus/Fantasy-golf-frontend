@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 
-const TEAM_NAMES = [
+const GOLF_TEAM_NAMES = [
   'Birdie Brigade', 'Eagle Eyes', 'Fairway Legends', 'The Caddies',
   'Green Machine', 'Bogey Boys', 'Par Patrol', 'Iron Giants',
   'Wedge Warriors', 'Pin Seekers', 'The Shanks', 'Albatross Army',
@@ -11,35 +11,67 @@ const TEAM_NAMES = [
   'Putter Patrol', 'Tee Time Titans', 'The Slicers', 'Hook Heroes',
 ]
 
+const NFL_TEAM_NAMES = [
+  'Touchdown Titans', 'Red Zone Raiders', 'Blitz Brigade', 'Gridiron Legends',
+  'End Zone Elite', 'Fourth & Goal', 'Hail Mary Heroes', 'The Snap Kings',
+  'Pocket Passers', 'Sack Attack', 'Goal Line Gang', 'Two Minute Drill',
+  'Scramble Squad', 'The Audibles', 'Pick Six Pack', 'Turnover Chain',
+  'Fantasy Franchise', 'Waiver Wire Wizards', 'The Trade Block', 'Bye Week Bandits',
+]
+
+const SPORT_DEFAULTS = {
+  golf: { teamCount: 8, rosterSize: 6, teamCounts: [4, 6, 8, 10, 12], rosterSizes: [4, 5, 6, 8, 10], budget: 100 },
+  nfl:  { teamCount: 10, rosterSize: 15, teamCounts: [8, 10, 12, 14], rosterSizes: [10, 12, 15], budget: 200 },
+}
+
 const MockDraft = () => {
   const navigate = useNavigate()
+  const [sport, setSport] = useState(() => {
+    const stored = sessionStorage.getItem('mockDraftConfig')
+    if (stored) {
+      try { return JSON.parse(stored).sport || 'golf' } catch { /* ignore */ }
+    }
+    return 'golf'
+  })
+  const defaults = SPORT_DEFAULTS[sport]
   const [settings, setSettings] = useState({
-    teamCount: 8,
-    rosterSize: 6,
+    teamCount: defaults.teamCount,
+    rosterSize: defaults.rosterSize,
     draftType: 'snake',
     pickTimer: 90,
     userPosition: 1,
   })
   const [starting, setStarting] = useState(false)
 
+  const handleSportChange = (newSport) => {
+    setSport(newSport)
+    const d = SPORT_DEFAULTS[newSport]
+    setSettings(s => ({
+      ...s,
+      teamCount: d.teamCount,
+      rosterSize: d.rosterSize,
+      userPosition: Math.min(s.userPosition, d.teamCount),
+    }))
+  }
+
   const handleStart = () => {
     setStarting(true)
-    // Store mock draft config in sessionStorage so DraftRoom can pick it up
+    const teamNames = sport === 'nfl' ? NFL_TEAM_NAMES : GOLF_TEAM_NAMES
     const teams = Array.from({ length: settings.teamCount }, (_, i) => ({
       id: `team-${i + 1}`,
-      name: i === settings.userPosition - 1 ? 'Your Team' : TEAM_NAMES[i % TEAM_NAMES.length],
+      name: i === settings.userPosition - 1 ? 'Your Team' : teamNames[i % teamNames.length],
       isUser: i === settings.userPosition - 1,
-      budget: 100,
+      budget: defaults.budget,
     }))
 
     const mockConfig = {
       ...settings,
+      sport,
       teams,
       isMockDraft: true,
     }
 
     sessionStorage.setItem('mockDraftConfig', JSON.stringify(mockConfig))
-    // Navigate to a special mock draft room
     navigate('/mock-draft/room')
   }
 
@@ -69,6 +101,33 @@ const MockDraft = () => {
             <h2 className="text-lg font-semibold font-display text-white mb-6">Draft Settings</h2>
 
             <div className="space-y-6">
+              {/* Sport Selector */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-3">Sport</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleSportChange('golf')}
+                    className={`py-3 px-4 rounded-lg border-2 text-center font-semibold transition-all ${
+                      sport === 'golf'
+                        ? 'border-gold bg-gold/10 text-gold'
+                        : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-dark-border/80 hover:text-white'
+                    }`}
+                  >
+                    Golf
+                  </button>
+                  <button
+                    onClick={() => handleSportChange('nfl')}
+                    className={`py-3 px-4 rounded-lg border-2 text-center font-semibold transition-all ${
+                      sport === 'nfl'
+                        ? 'border-gold bg-gold/10 text-gold'
+                        : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-dark-border/80 hover:text-white'
+                    }`}
+                  >
+                    NFL
+                  </button>
+                </div>
+              </div>
+
               {/* Draft Type */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-3">Draft Type</label>
@@ -120,7 +179,7 @@ const MockDraft = () => {
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-3">Number of Teams</label>
                 <div className="grid grid-cols-4 gap-2">
-                  {[4, 6, 8, 10, 12].map(count => (
+                  {defaults.teamCounts.map(count => (
                     <button
                       key={count}
                       onClick={() => setSettings(s => ({
@@ -143,8 +202,8 @@ const MockDraft = () => {
               {/* Roster Size */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-3">Roster Size</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {[4, 5, 6, 8, 10].map(size => (
+                <div className={`grid gap-2 ${defaults.rosterSizes.length <= 3 ? 'grid-cols-3' : 'grid-cols-5'}`}>
+                  {defaults.rosterSizes.map(size => (
                     <button
                       key={size}
                       onClick={() => setSettings(s => ({ ...s, rosterSize: size }))}
@@ -221,6 +280,10 @@ const MockDraft = () => {
           <Card className="mb-6 border-gold/30">
             <h3 className="text-sm font-medium text-text-muted mb-3">DRAFT SUMMARY</h3>
             <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-text-muted text-xs">Sport</p>
+                <p className="text-white font-medium uppercase">{sport}</p>
+              </div>
               <div>
                 <p className="text-text-muted text-xs">Type</p>
                 <p className="text-white font-medium capitalize">{settings.draftType}</p>

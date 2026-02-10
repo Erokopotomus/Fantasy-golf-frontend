@@ -19,6 +19,15 @@ const gradeBgColors = {
   F: 'bg-red-500/20',
 }
 
+const NFL_POS_COLORS = {
+  QB: 'bg-red-500/20 text-red-400',
+  RB: 'bg-emerald-500/20 text-emerald-400',
+  WR: 'bg-blue-500/20 text-blue-400',
+  TE: 'bg-orange-500/20 text-orange-400',
+  K: 'bg-purple-500/20 text-purple-400',
+  DEF: 'bg-teal-500/20 text-teal-400',
+}
+
 const MockDraftRecap = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -48,14 +57,18 @@ const MockDraftRecap = () => {
   const allPicks = result.picks || []
   const teamNames = result.teamNames || []
 
+  // Detect sport from saved data (sport record or pick data)
+  const sport = result?.sport?.slug || (result?.picks?.[0]?.playerPosition ? 'nfl' : 'golf')
+
   const handleDraftAgain = () => {
     sessionStorage.setItem('mockDraftConfig', JSON.stringify({
+      sport,
       draftType: result.draftType,
       teamCount: result.teamCount,
       rosterSize: result.rosterSize,
       userPosition: result.userPosition,
     }))
-    navigate('/mock-draft/room')
+    navigate('/mock-draft')
   }
 
   return (
@@ -72,6 +85,9 @@ const MockDraftRecap = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold font-display text-white">Mock Draft Recap</h1>
               <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
+                <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
+                  sport === 'nfl' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'
+                }`}>{sport}</span>
                 <span className="px-2 py-0.5 bg-dark-tertiary rounded text-xs capitalize">{result.draftType}</span>
                 <span>{result.teamCount} teams</span>
                 <span>{result.rosterSize} rounds</span>
@@ -122,7 +138,13 @@ const MockDraftRecap = () => {
                   <div key={pick.pickNumber || i} className="flex items-center justify-between p-3 bg-dark-primary rounded-lg">
                     <div className="flex items-center gap-3">
                       <span className="text-text-muted text-sm w-8">R{pick.round}</span>
-                      <span className="text-lg">{pick.playerFlag || ''}</span>
+                      {sport === 'nfl' && pick.playerPosition ? (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${NFL_POS_COLORS[pick.playerPosition] || ''}`}>
+                          {pick.playerPosition}
+                        </span>
+                      ) : (
+                        <span className="text-lg">{pick.playerFlag || ''}</span>
+                      )}
                       <div>
                         <p className="text-white font-medium">{pick.playerName}</p>
                         <p className="text-text-muted text-xs">
@@ -188,6 +210,11 @@ const MockDraftRecap = () => {
                           >
                             {pick ? (
                               <div className="truncate">
+                                {sport === 'nfl' && pick.playerPosition && (
+                                  <span className={`text-[8px] font-bold mr-0.5 ${NFL_POS_COLORS[pick.playerPosition]?.split(' ')[1] || ''}`}>
+                                    {pick.playerPosition}
+                                  </span>
+                                )}
                                 <span className="text-white text-xs">{pick.playerName?.split(' ').pop()}</span>
                                 {pg && (
                                   <span className={`ml-1 text-[10px] font-bold ${gradeColors[pg.grade] || ''}`}>{pg.grade}</span>

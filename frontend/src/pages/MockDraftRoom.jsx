@@ -70,6 +70,201 @@ const MOCK_PLAYERS = [
   { id: 'p60', name: 'Jake Knapp', rank: 60, country: 'USA', flag: '🇺🇸', sg: -0.12 },
 ]
 
+// NFL fallback players (~150, ranked by 2024 half-PPR PPG)
+const MOCK_NFL_PLAYERS = [
+  { id: 'nfl-1', name: 'CeeDee Lamb', rank: 1, position: 'WR', team: 'DAL', ppg: 21.4 },
+  { id: 'nfl-2', name: 'Tyreek Hill', rank: 2, position: 'WR', team: 'MIA', ppg: 20.8 },
+  { id: 'nfl-3', name: 'Ja\'Marr Chase', rank: 3, position: 'WR', team: 'CIN', ppg: 20.5 },
+  { id: 'nfl-4', name: 'Christian McCaffrey', rank: 4, position: 'RB', team: 'SF', ppg: 20.2 },
+  { id: 'nfl-5', name: 'Amon-Ra St. Brown', rank: 5, position: 'WR', team: 'DET', ppg: 19.8 },
+  { id: 'nfl-6', name: 'Bijan Robinson', rank: 6, position: 'RB', team: 'ATL', ppg: 19.5 },
+  { id: 'nfl-7', name: 'Josh Allen', rank: 7, position: 'QB', team: 'BUF', ppg: 25.1 },
+  { id: 'nfl-8', name: 'Jalen Hurts', rank: 8, position: 'QB', team: 'PHI', ppg: 24.3 },
+  { id: 'nfl-9', name: 'Lamar Jackson', rank: 9, position: 'QB', team: 'BAL', ppg: 24.0 },
+  { id: 'nfl-10', name: 'Breece Hall', rank: 10, position: 'RB', team: 'NYJ', ppg: 18.2 },
+  { id: 'nfl-11', name: 'Garrett Wilson', rank: 11, position: 'WR', team: 'NYJ', ppg: 17.6 },
+  { id: 'nfl-12', name: 'Travis Kelce', rank: 12, position: 'TE', team: 'KC', ppg: 16.8 },
+  { id: 'nfl-13', name: 'Puka Nacua', rank: 13, position: 'WR', team: 'LAR', ppg: 18.9 },
+  { id: 'nfl-14', name: 'Davante Adams', rank: 14, position: 'WR', team: 'LV', ppg: 17.2 },
+  { id: 'nfl-15', name: 'Sam LaPorta', rank: 15, position: 'TE', team: 'DET', ppg: 14.5 },
+  { id: 'nfl-16', name: 'Patrick Mahomes', rank: 16, position: 'QB', team: 'KC', ppg: 22.5 },
+  { id: 'nfl-17', name: 'Kyren Williams', rank: 17, position: 'RB', team: 'LAR', ppg: 17.1 },
+  { id: 'nfl-18', name: 'De\'Von Achane', rank: 18, position: 'RB', team: 'MIA', ppg: 18.0 },
+  { id: 'nfl-19', name: 'A.J. Brown', rank: 19, position: 'WR', team: 'PHI', ppg: 17.8 },
+  { id: 'nfl-20', name: 'Derrick Henry', rank: 20, position: 'RB', team: 'BAL', ppg: 16.5 },
+  { id: 'nfl-21', name: 'Mike Evans', rank: 21, position: 'WR', team: 'TB', ppg: 16.2 },
+  { id: 'nfl-22', name: 'Deebo Samuel', rank: 22, position: 'WR', team: 'SF', ppg: 15.9 },
+  { id: 'nfl-23', name: 'Chris Olave', rank: 23, position: 'WR', team: 'NO', ppg: 15.6 },
+  { id: 'nfl-24', name: 'Jonathan Taylor', rank: 24, position: 'RB', team: 'IND', ppg: 15.8 },
+  { id: 'nfl-25', name: 'Saquon Barkley', rank: 25, position: 'RB', team: 'PHI', ppg: 16.0 },
+  { id: 'nfl-26', name: 'Travis Etienne', rank: 26, position: 'RB', team: 'JAX', ppg: 15.2 },
+  { id: 'nfl-27', name: 'DK Metcalf', rank: 27, position: 'WR', team: 'SEA', ppg: 15.4 },
+  { id: 'nfl-28', name: 'Jaylen Waddle', rank: 28, position: 'WR', team: 'MIA', ppg: 15.0 },
+  { id: 'nfl-29', name: 'Joe Burrow', rank: 29, position: 'QB', team: 'CIN', ppg: 21.8 },
+  { id: 'nfl-30', name: 'Dak Prescott', rank: 30, position: 'QB', team: 'DAL', ppg: 21.2 },
+  { id: 'nfl-31', name: 'Mark Andrews', rank: 31, position: 'TE', team: 'BAL', ppg: 13.8 },
+  { id: 'nfl-32', name: 'Jahmyr Gibbs', rank: 32, position: 'RB', team: 'DET', ppg: 15.5 },
+  { id: 'nfl-33', name: 'Isiah Pacheco', rank: 33, position: 'RB', team: 'KC', ppg: 14.2 },
+  { id: 'nfl-34', name: 'Rachaad White', rank: 34, position: 'RB', team: 'TB', ppg: 13.8 },
+  { id: 'nfl-35', name: 'Brandon Aiyuk', rank: 35, position: 'WR', team: 'SF', ppg: 14.5 },
+  { id: 'nfl-36', name: 'Stefon Diggs', rank: 36, position: 'WR', team: 'HOU', ppg: 14.2 },
+  { id: 'nfl-37', name: 'Tank Dell', rank: 37, position: 'WR', team: 'HOU', ppg: 14.8 },
+  { id: 'nfl-38', name: 'Tee Higgins', rank: 38, position: 'WR', team: 'CIN', ppg: 14.0 },
+  { id: 'nfl-39', name: 'DeVonta Smith', rank: 39, position: 'WR', team: 'PHI', ppg: 13.8 },
+  { id: 'nfl-40', name: 'George Kittle', rank: 40, position: 'TE', team: 'SF', ppg: 12.5 },
+  { id: 'nfl-41', name: 'Josh Jacobs', rank: 41, position: 'RB', team: 'GB', ppg: 13.5 },
+  { id: 'nfl-42', name: 'Rhamondre Stevenson', rank: 42, position: 'RB', team: 'NE', ppg: 13.0 },
+  { id: 'nfl-43', name: 'C.J. Stroud', rank: 43, position: 'QB', team: 'HOU', ppg: 20.5 },
+  { id: 'nfl-44', name: 'Tua Tagovailoa', rank: 44, position: 'QB', team: 'MIA', ppg: 20.0 },
+  { id: 'nfl-45', name: 'Justin Jefferson', rank: 45, position: 'WR', team: 'MIN', ppg: 18.5 },
+  { id: 'nfl-46', name: 'Jordan Addison', rank: 46, position: 'WR', team: 'MIN', ppg: 13.2 },
+  { id: 'nfl-47', name: 'Marquise Brown', rank: 47, position: 'WR', team: 'ARI', ppg: 12.8 },
+  { id: 'nfl-48', name: 'Keenan Allen', rank: 48, position: 'WR', team: 'CHI', ppg: 12.5 },
+  { id: 'nfl-49', name: 'Joe Mixon', rank: 49, position: 'RB', team: 'HOU', ppg: 13.2 },
+  { id: 'nfl-50', name: 'Aaron Jones', rank: 50, position: 'RB', team: 'MIN', ppg: 12.8 },
+  { id: 'nfl-51', name: 'Tony Pollard', rank: 51, position: 'RB', team: 'TEN', ppg: 12.5 },
+  { id: 'nfl-52', name: 'Najee Harris', rank: 52, position: 'RB', team: 'PIT', ppg: 12.2 },
+  { id: 'nfl-53', name: 'Kenneth Walker III', rank: 53, position: 'RB', team: 'SEA', ppg: 13.0 },
+  { id: 'nfl-54', name: 'James Cook', rank: 54, position: 'RB', team: 'BUF', ppg: 12.5 },
+  { id: 'nfl-55', name: 'Dalton Kincaid', rank: 55, position: 'TE', team: 'BUF', ppg: 11.8 },
+  { id: 'nfl-56', name: 'T.J. Hockenson', rank: 56, position: 'TE', team: 'MIN', ppg: 12.2 },
+  { id: 'nfl-57', name: 'Jared Goff', rank: 57, position: 'QB', team: 'DET', ppg: 19.5 },
+  { id: 'nfl-58', name: 'Anthony Richardson', rank: 58, position: 'QB', team: 'IND', ppg: 19.0 },
+  { id: 'nfl-59', name: 'Jordan Love', rank: 59, position: 'QB', team: 'GB', ppg: 19.2 },
+  { id: 'nfl-60', name: 'Drake London', rank: 60, position: 'WR', team: 'ATL', ppg: 12.0 },
+  { id: 'nfl-61', name: 'DJ Moore', rank: 61, position: 'WR', team: 'CHI', ppg: 12.2 },
+  { id: 'nfl-62', name: 'Michael Pittman Jr.', rank: 62, position: 'WR', team: 'IND', ppg: 11.8 },
+  { id: 'nfl-63', name: 'Zay Flowers', rank: 63, position: 'WR', team: 'BAL', ppg: 12.5 },
+  { id: 'nfl-64', name: 'Nico Collins', rank: 64, position: 'WR', team: 'HOU', ppg: 14.0 },
+  { id: 'nfl-65', name: 'Terry McLaurin', rank: 65, position: 'WR', team: 'WAS', ppg: 11.5 },
+  { id: 'nfl-66', name: 'Christian Kirk', rank: 66, position: 'WR', team: 'JAX', ppg: 11.2 },
+  { id: 'nfl-67', name: 'David Njoku', rank: 67, position: 'TE', team: 'CLE', ppg: 10.8 },
+  { id: 'nfl-68', name: 'Evan Engram', rank: 68, position: 'TE', team: 'JAX', ppg: 11.0 },
+  { id: 'nfl-69', name: 'Brian Robinson Jr.', rank: 69, position: 'RB', team: 'WAS', ppg: 11.5 },
+  { id: 'nfl-70', name: 'David Montgomery', rank: 70, position: 'RB', team: 'DET', ppg: 12.0 },
+  { id: 'nfl-71', name: 'James Conner', rank: 71, position: 'RB', team: 'ARI', ppg: 11.8 },
+  { id: 'nfl-72', name: 'Alvin Kamara', rank: 72, position: 'RB', team: 'NO', ppg: 14.5 },
+  { id: 'nfl-73', name: 'Nick Chubb', rank: 73, position: 'RB', team: 'CLE', ppg: 11.0 },
+  { id: 'nfl-74', name: 'Javonte Williams', rank: 74, position: 'RB', team: 'DEN', ppg: 10.5 },
+  { id: 'nfl-75', name: 'Zack Moss', rank: 75, position: 'RB', team: 'CIN', ppg: 11.2 },
+  { id: 'nfl-76', name: 'Brock Purdy', rank: 76, position: 'QB', team: 'SF', ppg: 18.8 },
+  { id: 'nfl-77', name: 'Trevor Lawrence', rank: 77, position: 'QB', team: 'JAX', ppg: 18.0 },
+  { id: 'nfl-78', name: 'Kyler Murray', rank: 78, position: 'QB', team: 'ARI', ppg: 18.5 },
+  { id: 'nfl-79', name: 'Caleb Williams', rank: 79, position: 'QB', team: 'CHI', ppg: 17.5 },
+  { id: 'nfl-80', name: 'Jayden Daniels', rank: 80, position: 'QB', team: 'WAS', ppg: 18.2 },
+  { id: 'nfl-81', name: 'Rome Odunze', rank: 81, position: 'WR', team: 'CHI', ppg: 10.5 },
+  { id: 'nfl-82', name: 'Rashee Rice', rank: 82, position: 'WR', team: 'KC', ppg: 12.8 },
+  { id: 'nfl-83', name: 'George Pickens', rank: 83, position: 'WR', team: 'PIT', ppg: 11.8 },
+  { id: 'nfl-84', name: 'Diontae Johnson', rank: 84, position: 'WR', team: 'CAR', ppg: 10.8 },
+  { id: 'nfl-85', name: 'Curtis Samuel', rank: 85, position: 'WR', team: 'BUF', ppg: 10.2 },
+  { id: 'nfl-86', name: 'Tyler Lockett', rank: 86, position: 'WR', team: 'SEA', ppg: 10.0 },
+  { id: 'nfl-87', name: 'Courtland Sutton', rank: 87, position: 'WR', team: 'DEN', ppg: 10.5 },
+  { id: 'nfl-88', name: 'Gabe Davis', rank: 88, position: 'WR', team: 'JAX', ppg: 9.8 },
+  { id: 'nfl-89', name: 'Pat Freiermuth', rank: 89, position: 'TE', team: 'PIT', ppg: 9.5 },
+  { id: 'nfl-90', name: 'Jake Ferguson', rank: 90, position: 'TE', team: 'DAL', ppg: 10.2 },
+  { id: 'nfl-91', name: 'Chuba Hubbard', rank: 91, position: 'RB', team: 'CAR', ppg: 10.0 },
+  { id: 'nfl-92', name: 'D\'Andre Swift', rank: 92, position: 'RB', team: 'CHI', ppg: 10.8 },
+  { id: 'nfl-93', name: 'Austin Ekeler', rank: 93, position: 'RB', team: 'WAS', ppg: 11.0 },
+  { id: 'nfl-94', name: 'Miles Sanders', rank: 94, position: 'RB', team: 'CAR', ppg: 9.2 },
+  { id: 'nfl-95', name: 'Tyler Allgeier', rank: 95, position: 'RB', team: 'ATL', ppg: 9.5 },
+  { id: 'nfl-96', name: 'Jaylen Warren', rank: 96, position: 'RB', team: 'PIT', ppg: 9.8 },
+  { id: 'nfl-97', name: 'Gus Edwards', rank: 97, position: 'RB', team: 'LAC', ppg: 9.0 },
+  { id: 'nfl-98', name: 'Tyjae Spears', rank: 98, position: 'RB', team: 'TEN', ppg: 10.2 },
+  { id: 'nfl-99', name: 'Jerome Ford', rank: 99, position: 'RB', team: 'CLE', ppg: 9.5 },
+  { id: 'nfl-100', name: 'Zamir White', rank: 100, position: 'RB', team: 'LV', ppg: 9.8 },
+  { id: 'nfl-101', name: 'Matthew Stafford', rank: 101, position: 'QB', team: 'LAR', ppg: 17.2 },
+  { id: 'nfl-102', name: 'Deshaun Watson', rank: 102, position: 'QB', team: 'CLE', ppg: 16.5 },
+  { id: 'nfl-103', name: 'Kirk Cousins', rank: 103, position: 'QB', team: 'ATL', ppg: 17.0 },
+  { id: 'nfl-104', name: 'Geno Smith', rank: 104, position: 'QB', team: 'SEA', ppg: 17.5 },
+  { id: 'nfl-105', name: 'Baker Mayfield', rank: 105, position: 'QB', team: 'TB', ppg: 17.8 },
+  { id: 'nfl-106', name: 'Marvin Harrison Jr.', rank: 106, position: 'WR', team: 'ARI', ppg: 11.5 },
+  { id: 'nfl-107', name: 'Malik Nabers', rank: 107, position: 'WR', team: 'NYG', ppg: 11.0 },
+  { id: 'nfl-108', name: 'Josh Downs', rank: 108, position: 'WR', team: 'IND', ppg: 10.2 },
+  { id: 'nfl-109', name: 'Jaxon Smith-Njigba', rank: 109, position: 'WR', team: 'SEA', ppg: 10.0 },
+  { id: 'nfl-110', name: 'Quentin Johnston', rank: 110, position: 'WR', team: 'LAC', ppg: 9.5 },
+  { id: 'nfl-111', name: 'Jameson Williams', rank: 111, position: 'WR', team: 'DET', ppg: 9.8 },
+  { id: 'nfl-112', name: 'Darnell Mooney', rank: 112, position: 'WR', team: 'ATL', ppg: 9.5 },
+  { id: 'nfl-113', name: 'Cole Kmet', rank: 113, position: 'TE', team: 'CHI', ppg: 9.0 },
+  { id: 'nfl-114', name: 'Dallas Goedert', rank: 114, position: 'TE', team: 'PHI', ppg: 9.5 },
+  { id: 'nfl-115', name: 'Kyle Pitts', rank: 115, position: 'TE', team: 'ATL', ppg: 8.5 },
+  { id: 'nfl-116', name: 'Jonnu Smith', rank: 116, position: 'TE', team: 'MIA', ppg: 8.0 },
+  { id: 'nfl-117', name: 'Harrison Butker', rank: 117, position: 'K', team: 'KC', ppg: 9.2 },
+  { id: 'nfl-118', name: 'Brandon Aubrey', rank: 118, position: 'K', team: 'DAL', ppg: 9.5 },
+  { id: 'nfl-119', name: 'Jake Moody', rank: 119, position: 'K', team: 'SF', ppg: 8.8 },
+  { id: 'nfl-120', name: 'Tyler Bass', rank: 120, position: 'K', team: 'BUF', ppg: 8.5 },
+  { id: 'nfl-121', name: 'Justin Tucker', rank: 121, position: 'K', team: 'BAL', ppg: 8.2 },
+  { id: 'nfl-122', name: 'Younghoe Koo', rank: 122, position: 'K', team: 'ATL', ppg: 8.0 },
+  { id: 'nfl-123', name: 'Ka\'imi Fairbairn', rank: 123, position: 'K', team: 'HOU', ppg: 8.5 },
+  { id: 'nfl-124', name: 'Evan McPherson', rank: 124, position: 'K', team: 'CIN', ppg: 7.8 },
+  { id: 'nfl-125', name: 'Jason Sanders', rank: 125, position: 'K', team: 'MIA', ppg: 7.5 },
+  { id: 'nfl-126', name: 'Cameron Dicker', rank: 126, position: 'K', team: 'LAC', ppg: 8.0 },
+  { id: 'nfl-127', name: 'Dallas Cowboys', rank: 127, position: 'DEF', team: 'DAL', ppg: 8.5 },
+  { id: 'nfl-128', name: 'San Francisco 49ers', rank: 128, position: 'DEF', team: 'SF', ppg: 8.2 },
+  { id: 'nfl-129', name: 'Buffalo Bills', rank: 129, position: 'DEF', team: 'BUF', ppg: 8.0 },
+  { id: 'nfl-130', name: 'Cleveland Browns', rank: 130, position: 'DEF', team: 'CLE', ppg: 7.8 },
+  { id: 'nfl-131', name: 'New York Jets', rank: 131, position: 'DEF', team: 'NYJ', ppg: 7.5 },
+  { id: 'nfl-132', name: 'Baltimore Ravens', rank: 132, position: 'DEF', team: 'BAL', ppg: 7.2 },
+  { id: 'nfl-133', name: 'Pittsburgh Steelers', rank: 133, position: 'DEF', team: 'PIT', ppg: 7.0 },
+  { id: 'nfl-134', name: 'Miami Dolphins', rank: 134, position: 'DEF', team: 'MIA', ppg: 6.8 },
+  { id: 'nfl-135', name: 'Kansas City Chiefs', rank: 135, position: 'DEF', team: 'KC', ppg: 6.5 },
+  { id: 'nfl-136', name: 'Philadelphia Eagles', rank: 136, position: 'DEF', team: 'PHI', ppg: 6.2 },
+  { id: 'nfl-137', name: 'Jonathon Brooks', rank: 137, position: 'RB', team: 'CAR', ppg: 9.0 },
+  { id: 'nfl-138', name: 'Bucky Irving', rank: 138, position: 'RB', team: 'TB', ppg: 9.2 },
+  { id: 'nfl-139', name: 'Rico Dowdle', rank: 139, position: 'RB', team: 'DAL', ppg: 8.8 },
+  { id: 'nfl-140', name: 'Chase Brown', rank: 140, position: 'RB', team: 'CIN', ppg: 8.5 },
+  { id: 'nfl-141', name: 'Raheem Mostert', rank: 141, position: 'RB', team: 'MIA', ppg: 10.0 },
+  { id: 'nfl-142', name: 'Deuce Vaughn', rank: 142, position: 'RB', team: 'DAL', ppg: 7.5 },
+  { id: 'nfl-143', name: 'Will Levis', rank: 143, position: 'QB', team: 'TEN', ppg: 15.5 },
+  { id: 'nfl-144', name: 'Sam Howell', rank: 144, position: 'QB', team: 'SEA', ppg: 15.0 },
+  { id: 'nfl-145', name: 'Bryce Young', rank: 145, position: 'QB', team: 'CAR', ppg: 14.5 },
+  { id: 'nfl-146', name: 'Drake Maye', rank: 146, position: 'QB', team: 'NE', ppg: 15.8 },
+  { id: 'nfl-147', name: 'Bo Nix', rank: 147, position: 'QB', team: 'DEN', ppg: 16.0 },
+  { id: 'nfl-148', name: 'Trey McBride', rank: 148, position: 'TE', team: 'ARI', ppg: 10.5 },
+  { id: 'nfl-149', name: 'Michael Mayer', rank: 149, position: 'TE', team: 'LV', ppg: 7.5 },
+  { id: 'nfl-150', name: 'Luke Musgrave', rank: 150, position: 'TE', team: 'GB', ppg: 7.0 },
+]
+
+// NFL position badge colors
+const NFL_POS_COLORS = {
+  QB: 'bg-red-500/20 text-red-400',
+  RB: 'bg-emerald-500/20 text-emerald-400',
+  WR: 'bg-blue-500/20 text-blue-400',
+  TE: 'bg-orange-500/20 text-orange-400',
+  K: 'bg-purple-500/20 text-purple-400',
+  DEF: 'bg-teal-500/20 text-teal-400',
+}
+
+// NFL position-aware AI drafting
+const NFL_POS_CAPS = { QB: 2, RB: 5, WR: 5, TE: 2, K: 1, DEF: 1 }
+
+function aiSelectPlayer(available, teamPicks, sport) {
+  if (sport !== 'nfl' || available.length === 0) {
+    // Golf: random from top 4
+    const topN = Math.min(4, available.length)
+    return available[Math.floor(Math.random() * topN)]
+  }
+  // NFL: position-aware
+  const posCounts = {}
+  teamPicks.forEach(p => {
+    if (p.playerPosition) posCounts[p.playerPosition] = (posCounts[p.playerPosition] || 0) + 1
+  })
+  const filtered = available.filter(p => {
+    const cap = NFL_POS_CAPS[p.position] || 3
+    return (posCounts[p.position] || 0) < cap
+  })
+  const pool = filtered.length > 0 ? filtered : available
+  const topN = Math.min(6, pool.length)
+  // Weighted random: higher rank = higher weight
+  const weights = pool.slice(0, topN).map((_, i) => topN - i)
+  const totalWeight = weights.reduce((a, b) => a + b, 0)
+  let r = Math.random() * totalWeight
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i]
+    if (r <= 0) return pool[i]
+  }
+  return pool[0]
+}
+
 const getPickInfo = (pickNumber, teamCount) => {
   const round = Math.floor(pickNumber / teamCount) + 1
   const pickInRound = pickNumber % teamCount
@@ -78,8 +273,35 @@ const getPickInfo = (pickNumber, teamCount) => {
   return { round, pickInRound, orderIndex }
 }
 
+// NFL position-specific stats for popup
+const getNflPositionStats = (player) => {
+  const pos = player.position
+  const stats = []
+  if (pos === 'QB') {
+    stats.push({ label: 'Pass Yds', value: player.passYards?.toLocaleString() || '0' })
+    stats.push({ label: 'Pass TDs', value: player.passTds || 0 })
+    stats.push({ label: 'INTs', value: player.interceptions || 0 })
+    stats.push({ label: 'Rush Yds', value: player.rushYards?.toLocaleString() || '0' })
+    stats.push({ label: 'Rush TDs', value: player.rushTds || 0 })
+  } else if (pos === 'RB') {
+    stats.push({ label: 'Rush Yds', value: player.rushYards?.toLocaleString() || '0' })
+    stats.push({ label: 'Rush TDs', value: player.rushTds || 0 })
+    stats.push({ label: 'Rec', value: player.receptions || 0 })
+    stats.push({ label: 'Rec Yds', value: player.recYards?.toLocaleString() || '0' })
+    stats.push({ label: 'Rec TDs', value: player.recTds || 0 })
+    stats.push({ label: 'Targets', value: player.targets || 0 })
+  } else if (pos === 'WR' || pos === 'TE') {
+    stats.push({ label: 'Rec', value: player.receptions || 0 })
+    stats.push({ label: 'Rec Yds', value: player.recYards?.toLocaleString() || '0' })
+    stats.push({ label: 'Rec TDs', value: player.recTds || 0 })
+    stats.push({ label: 'Targets', value: player.targets || 0 })
+    stats.push({ label: 'Rush Yds', value: player.rushYards?.toLocaleString() || '0' })
+  }
+  return stats
+}
+
 // Player detail popup
-const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn, isUserNominator, isAuction, inQueue, isDrafted }) => {
+const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn, isUserNominator, isAuction, inQueue, isDrafted, sport }) => {
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', h)
@@ -87,6 +309,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
   }, [onClose])
 
   if (!player) return null
+  const isNflPopup = sport === 'nfl'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -97,19 +320,32 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
           <div className="flex items-center gap-3">
             {player.headshot ? (
               <img src={player.headshot} alt="" className="w-11 h-11 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+            ) : isNflPopup ? (
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${NFL_POS_COLORS[player.position] || 'bg-dark-tertiary text-text-muted'}`}>
+                <span className="text-xs font-bold">{player.position}</span>
+              </div>
             ) : (
               <span className="text-2xl">{player.flag}</span>
             )}
             <div>
               <h3 className="text-white font-bold text-lg leading-tight">{player.name}</h3>
               <div className="flex items-center gap-1.5">
-                <p className="text-text-muted text-sm">{player.country}</p>
-                {player.primaryTour && (
-                  <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
-                    player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
-                    player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
-                    'bg-purple-500/20 text-purple-400'
-                  }`}>{player.primaryTour}</span>
+                {isNflPopup ? (
+                  <>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${NFL_POS_COLORS[player.position] || ''}`}>{player.position}</span>
+                    <span className="text-text-muted text-sm">{player.team}</span>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-text-muted text-sm">{player.country}</p>
+                    {player.primaryTour && (
+                      <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
+                        player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
+                        player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
+                        'bg-purple-500/20 text-purple-400'
+                      }`}>{player.primaryTour}</span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -126,74 +362,112 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
 
         {/* Stats */}
         <div className="p-4 space-y-4">
-          <div className="grid grid-cols-4 gap-2">
-            <div className="bg-dark-primary rounded-lg p-2 text-center">
-              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
-              <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
-                {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
-              </p>
-            </div>
-            <div className="bg-dark-primary rounded-lg p-2 text-center">
-              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Top 10</p>
-              <p className="text-white text-base font-bold">{player.top10}%</p>
-            </div>
-            <div className="bg-dark-primary rounded-lg p-2 text-center">
-              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Cuts</p>
-              <p className="text-white text-base font-bold">{player.cutsPct || 0}%</p>
-            </div>
-            <div className="bg-dark-primary rounded-lg p-2 text-center">
-              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Events</p>
-              <p className="text-white text-base font-bold">{player.tournaments}</p>
-            </div>
-          </div>
-
-          {/* SG Breakdown */}
-          <div>
-            <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Strokes Gained</p>
-            <div className="space-y-1.5">
-              {[
-                { label: 'OTT', value: player.sgOTT },
-                { label: 'APP', value: player.sgAPP },
-                { label: 'ATG', value: player.sgATG },
-                { label: 'Putt', value: player.sgPutt },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center gap-2">
-                  <span className="text-text-muted text-xs w-8 text-right">{label}</span>
-                  <div className="flex-1 h-1.5 bg-dark-primary rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${value >= 0 ? 'bg-gold' : 'bg-red-400'}`}
-                      style={{ width: `${Math.min(100, Math.abs(value) / 1.0 * 100)}%` }}
-                    />
-                  </div>
-                  <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-gold' : value >= 0 ? 'text-white' : 'text-red-400'}`}>
-                    {value > 0 ? '+' : ''}{value.toFixed(2)}
-                  </span>
+          {isNflPopup ? (
+            <>
+              {/* NFL: PPG, Total Pts, Games */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">PPG</p>
+                  <p className="text-gold text-base font-bold">{player.ppg?.toFixed(1) || '0.0'}</p>
                 </div>
-              ))}
-            </div>
-          </div>
+                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Total Pts</p>
+                  <p className="text-white text-base font-bold">{player.totalPts?.toFixed(1) || '0.0'}</p>
+                </div>
+                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Games</p>
+                  <p className="text-white text-base font-bold">{player.gamesPlayed || 0}</p>
+                </div>
+              </div>
+              {/* Position-specific stats */}
+              {getNflPositionStats(player).length > 0 && (
+                <div>
+                  <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Season Stats</p>
+                  <div className={`grid gap-2 ${getNflPositionStats(player).length > 4 ? 'grid-cols-3' : 'grid-cols-' + getNflPositionStats(player).length}`}>
+                    {getNflPositionStats(player).map(s => (
+                      <div key={s.label} className="bg-dark-primary rounded-lg p-2 text-center">
+                        <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{s.label}</p>
+                        <p className="text-white text-sm font-bold">{s.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
+                  <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
+                    {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Top 10</p>
+                  <p className="text-white text-base font-bold">{player.top10}%</p>
+                </div>
+                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Cuts</p>
+                  <p className="text-white text-base font-bold">{player.cutsPct || 0}%</p>
+                </div>
+                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Events</p>
+                  <p className="text-white text-base font-bold">{player.tournaments}</p>
+                </div>
+              </div>
 
-          {/* Recent Form */}
-          <div>
-            <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Recent Form</p>
-            <div className="flex gap-1.5">
-              {player.form.map((result, i) => {
-                const pos = parseInt(result.replace('T', ''))
-                return (
-                  <span key={i} className={`flex-1 text-center py-1.5 rounded text-xs font-medium ${
-                    result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
-                    result === 'CUT' ? 'bg-red-500/15 text-red-400' :
-                    pos <= 5 ? 'bg-gold/20 text-gold' :
-                    pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
-                    pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
-                    'bg-dark-tertiary text-text-muted'
-                  }`}>
-                    {result === '1' ? '1st' : result}
-                  </span>
-                )
-              })}
-            </div>
-          </div>
+              {/* SG Breakdown */}
+              <div>
+                <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Strokes Gained</p>
+                <div className="space-y-1.5">
+                  {[
+                    { label: 'OTT', value: player.sgOTT },
+                    { label: 'APP', value: player.sgAPP },
+                    { label: 'ATG', value: player.sgATG },
+                    { label: 'Putt', value: player.sgPutt },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center gap-2">
+                      <span className="text-text-muted text-xs w-8 text-right">{label}</span>
+                      <div className="flex-1 h-1.5 bg-dark-primary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${value >= 0 ? 'bg-gold' : 'bg-red-400'}`}
+                          style={{ width: `${Math.min(100, Math.abs(value) / 1.0 * 100)}%` }}
+                        />
+                      </div>
+                      <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-gold' : value >= 0 ? 'text-white' : 'text-red-400'}`}>
+                        {value > 0 ? '+' : ''}{value?.toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Form */}
+              {player.form?.length > 0 && (
+                <div>
+                  <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Recent Form</p>
+                  <div className="flex gap-1.5">
+                    {player.form.map((result, i) => {
+                      const pos = parseInt(result.replace('T', ''))
+                      return (
+                        <span key={i} className={`flex-1 text-center py-1.5 rounded text-xs font-medium ${
+                          result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
+                          result === 'CUT' ? 'bg-red-500/15 text-red-400' :
+                          pos <= 5 ? 'bg-gold/20 text-gold' :
+                          pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
+                          pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
+                          'bg-dark-tertiary text-text-muted'
+                        }`}>
+                          {result === '1' ? '1st' : result}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Actions */}
@@ -236,7 +510,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
 }
 
 // AI draft chat flavor messages
-const DRAFT_CHAT = {
+const GOLF_DRAFT_CHAT = {
   pick: [
     (n) => `${n} 🔥`,
     (n) => `Surprised ${n} was still there`,
@@ -255,6 +529,29 @@ const DRAFT_CHAT = {
     'GL everyone',
     'This is fun',
     'Who\'s everyone targeting?',
+  ],
+}
+
+const NFL_DRAFT_CHAT = {
+  pick: [
+    (n) => `${n} 🔥 steal!`,
+    (n) => `Surprised ${n} was still on the board`,
+    (n) => `${n}? Bold move.`,
+    (n) => `I had ${n} next on my list!`,
+    (n) => `${n} is gonna eat this season`,
+    (n) => `Nice grab, ${n} is a target monster`,
+    (n) => `Sleeper SZN with ${n}`,
+    (n) => `${n} was my guy, smh`,
+  ],
+  general: [
+    'Who needs a QB? 🏈',
+    'Zero RB strategy all day',
+    'My WR room is stacked 💪',
+    'RB dead zone is real',
+    'TE premium league vibes',
+    'Handcuff SZN',
+    'Who\'s everyone targeting in the mid rounds?',
+    'Don\'t sleep on the rookie class',
   ],
 }
 
@@ -328,37 +625,65 @@ const MockDraftRoom = () => {
     setConfig(JSON.parse(stored))
   }, [navigate])
 
-  // Fetch real player data from API (falls back to MOCK_PLAYERS if unavailable)
+  // Fetch real player data from API (falls back to MOCK_PLAYERS/MOCK_NFL_PLAYERS if unavailable)
   useEffect(() => {
+    if (!config) return
     const fetchPlayers = async () => {
       try {
-        const data = await api.getPlayers({ limit: 300, sortBy: 'owgrRank', sortOrder: 'asc' })
-        const players = data?.players
-        if (Array.isArray(players) && players.length > 0) {
-          setApiPlayers(players.map(p => ({
-            id: p.id,
-            name: p.name,
-            rank: p.owgrRank || 999,
-            country: p.country || 'Unknown',
-            flag: p.countryFlag || '🏳️',
-            primaryTour: p.primaryTour || null,
-            sg: p.sgTotal || 0,
-            sgOTT: p.sgOffTee || 0,
-            sgAPP: p.sgApproach || 0,
-            sgATG: p.sgAroundGreen || 0,
-            sgPutt: p.sgPutting || 0,
-            top10: p.events > 0 ? Math.round((p.top10s || 0) / p.events * 100) : 0,
-            cutsPct: p.events > 0 ? Math.round((p.cutsMade || 0) / p.events * 100) : 0,
-            tournaments: p.events || 0,
-            form: p.recentForm || [],
-            headshot: p.headshotUrl || null,
-            wins: p.wins || 0,
-            top5s: p.top5s || 0,
-            top10s: p.top10s || 0,
-            top25s: p.top25s || 0,
-            cutsMade: p.cutsMade || 0,
-            earnings: p.earnings || 0,
-          })))
+        if (config.sport === 'nfl') {
+          const data = await api.getNflPlayers({ limit: 300, sortBy: 'fantasyPts', sortOrder: 'desc', scoring: 'half_ppr' })
+          const players = data?.players
+          if (Array.isArray(players) && players.length > 0) {
+            setApiPlayers(players.map((p, i) => ({
+              id: p.id,
+              name: p.name,
+              rank: i + 1,
+              position: p.nflPosition || 'WR',
+              team: p.nflTeamAbbr || '',
+              ppg: p.fantasyPtsPerGame || 0,
+              totalPts: p.fantasyPts || 0,
+              gamesPlayed: p.season?.gamesPlayed || 0,
+              headshot: p.headshotUrl || null,
+              passYards: p.season?.passingYards || 0,
+              passTds: p.season?.passingTds || 0,
+              interceptions: p.season?.interceptions || 0,
+              rushYards: p.season?.rushingYards || 0,
+              rushTds: p.season?.rushingTds || 0,
+              receptions: p.season?.receptions || 0,
+              recYards: p.season?.receivingYards || 0,
+              recTds: p.season?.receivingTds || 0,
+              targets: p.season?.targets || 0,
+            })))
+          }
+        } else {
+          const data = await api.getPlayers({ limit: 300, sortBy: 'owgrRank', sortOrder: 'asc' })
+          const players = data?.players
+          if (Array.isArray(players) && players.length > 0) {
+            setApiPlayers(players.map(p => ({
+              id: p.id,
+              name: p.name,
+              rank: p.owgrRank || 999,
+              country: p.country || 'Unknown',
+              flag: p.countryFlag || '🏳️',
+              primaryTour: p.primaryTour || null,
+              sg: p.sgTotal || 0,
+              sgOTT: p.sgOffTee || 0,
+              sgAPP: p.sgApproach || 0,
+              sgATG: p.sgAroundGreen || 0,
+              sgPutt: p.sgPutting || 0,
+              top10: p.events > 0 ? Math.round((p.top10s || 0) / p.events * 100) : 0,
+              cutsPct: p.events > 0 ? Math.round((p.cutsMade || 0) / p.events * 100) : 0,
+              tournaments: p.events || 0,
+              form: p.recentForm || [],
+              headshot: p.headshotUrl || null,
+              wins: p.wins || 0,
+              top5s: p.top5s || 0,
+              top10s: p.top10s || 0,
+              top25s: p.top25s || 0,
+              cutsMade: p.cutsMade || 0,
+              earnings: p.earnings || 0,
+            })))
+          }
         }
       } catch (err) {
         console.warn('Mock draft: using offline player data', err)
@@ -367,12 +692,16 @@ const MockDraftRoom = () => {
       }
     }
     fetchPlayers()
-  }, [])
+  }, [config])
+
+  const isNfl = config?.sport === 'nfl'
 
   // Use real API data if available, otherwise fall back to enriched mock data
   const allPlayers = useMemo(() => {
     if (apiPlayers) return apiPlayers
-    // Fallback: compute stats from MOCK_PLAYERS
+    // NFL fallback
+    if (config?.sport === 'nfl') return MOCK_NFL_PLAYERS
+    // Golf fallback: compute stats from MOCK_PLAYERS
     return MOCK_PLAYERS.map(p => {
       const r = p.rank
       const variance = Math.sin(r * 1.7) * 0.25
@@ -399,7 +728,7 @@ const MockDraftRoom = () => {
       const cutsMadeEst = Math.round(tournaments * cutsPct / 100)
       return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, cutsPct, form, tournaments, headshot: null, wins: winsEst, top5s: top5sEst, top10s: top10sEst, top25s: top25sEst, cutsMade: cutsMadeEst, earnings: 0 }
     })
-  }, [apiPlayers])
+  }, [apiPlayers, config])
 
   // Keep allPlayers ref in sync for timer/AI callbacks
   allPlayersRef.current = allPlayers
@@ -422,12 +751,23 @@ const MockDraftRoom = () => {
   const userTeamId = config?.teams?.find(t => t.isUser)?.id
   const isUserBidding = isAuction && auctionPhase === 'bidding' && currentNom && currentNom.highBidderTeamId !== userTeamId
 
+  // NFL position filter
+  const [posFilter, setPosFilter] = useState('ALL')
+
   // Sort and filter players
   const filteredPlayers = useMemo(() => {
     let result = showDrafted ? allPlayers.map(p => ({ ...p, isDrafted: draftedIds.includes(p.id) })) : availablePlayers.map(p => ({ ...p, isDrafted: false }))
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
-      result = result.filter(p => p.name.toLowerCase().includes(q) || p.country.toLowerCase().includes(q))
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.country && p.country.toLowerCase().includes(q)) ||
+        (p.position && p.position.toLowerCase().includes(q)) ||
+        (p.team && p.team.toLowerCase().includes(q))
+      )
+    }
+    if (isNfl && posFilter !== 'ALL') {
+      result = result.filter(p => p.position === posFilter)
     }
     result.sort((a, b) => {
       // When showing drafted, push drafted players to the bottom
@@ -436,12 +776,14 @@ const MockDraftRoom = () => {
       if (sortBy === 'name') { aVal = a.name; bVal = b.name }
       else if (sortBy === 'sg') { aVal = a.sg; bVal = b.sg }
       else if (sortBy === 'top10') { aVal = a.top10; bVal = b.top10 }
+      else if (sortBy === 'ppg') { aVal = a.ppg; bVal = b.ppg }
+      else if (sortBy === 'totalPts') { aVal = a.totalPts; bVal = b.totalPts }
       else { aVal = a.rank; bVal = b.rank }
       if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
       return sortDir === 'asc' ? aVal - bVal : bVal - aVal
     })
     return result
-  }, [availablePlayers, allPlayers, draftedIds, showDrafted, searchQuery, sortBy, sortDir])
+  }, [availablePlayers, allPlayers, draftedIds, showDrafted, searchQuery, sortBy, sortDir, isNfl, posFilter])
 
   // Stable ref for makePick to avoid stale closures in timers
   const makePickRef = useRef(null)
@@ -467,6 +809,8 @@ const MockDraftRoom = () => {
         playerName: player.name,
         playerFlag: player.flag,
         playerRank: player.rank,
+        playerPosition: player.position || null,
+        playerTeam: player.team || null,
       }
 
       setRecentPick(pick)
@@ -537,6 +881,8 @@ const MockDraftRoom = () => {
         playerName: nom.player.name,
         playerFlag: nom.player.flag,
         playerRank: nom.player.rank,
+        playerPosition: nom.player.position || null,
+        playerTeam: nom.player.team || null,
         amount: nom.currentBid,
       }
       setRecentPick(pick)
@@ -687,8 +1033,11 @@ const MockDraftRoom = () => {
               // AI safety net: force pick if AI effect didn't fire
               const available = allPlayersRef.current.filter(p => !draftedSet.has(p.id))
               if (available.length > 0) {
-                const topN = Math.min(4, available.length)
-                makePickRef.current?.(available[Math.floor(Math.random() * topN)])
+                const info = getPickInfo(picksRef.current.length, config.teamCount)
+                const team = config.teams[info.orderIndex]
+                const teamPicks = picksRef.current.filter(p => p.teamId === team?.id)
+                const selected = aiSelectPlayer(available, teamPicks, config?.sport)
+                if (selected) makePickRef.current?.(selected)
               }
             }
             return 0
@@ -721,9 +1070,11 @@ const MockDraftRoom = () => {
       const available = allPlayersRef.current.filter(p => !draftedSet.has(p.id))
       if (available.length === 0) return
 
-      const topN = Math.min(4, available.length)
-      const selectedPlayer = available[Math.floor(Math.random() * topN)]
-      makePickRef.current?.(selectedPlayer)
+      const info = getPickInfo(picksRef.current.length, config.teamCount)
+      const team = config.teams[info.orderIndex]
+      const teamPicks = picksRef.current.filter(p => p.teamId === team?.id)
+      const selected = aiSelectPlayer(available, teamPicks, config.sport)
+      if (selected) makePickRef.current?.(selected)
     }, aiDelay)
 
     return () => clearTimeout(timeout)
@@ -742,13 +1093,13 @@ const MockDraftRoom = () => {
       const draftedSet = new Set(picksRef.current.map(p => p.playerId))
       const available = allPlayersRef.current.filter(p => !draftedSet.has(p.id))
       if (available.length === 0) return
-      const topN = Math.min(4, available.length)
-      const player = available[Math.floor(Math.random() * topN)]
-      nominateRef.current?.(player, 1)
+      const teamPicks = picksRef.current.filter(p => p.teamId === nominatorTeam?.id)
+      const player = aiSelectPlayer(available, teamPicks, config?.sport)
+      if (player) nominateRef.current?.(player, 1)
     }, delay)
 
     return () => clearTimeout(timeout)
-  }, [isAuction, isStarted, isPaused, isComplete, auctionPhase, nominatorTeam, nominatorIndex])
+  }, [isAuction, isStarted, isPaused, isComplete, auctionPhase, nominatorTeam, nominatorIndex, config])
 
   // Auction AI: evaluate bids from AI teams after each nomination/bid
   useEffect(() => {
@@ -866,7 +1217,8 @@ const MockDraftRoom = () => {
     const chatChance = draftSpeedRef.current === 'instant' ? 0.10 : 0.35
     if (Math.random() > chatChance) return
 
-    const templates = Math.random() > 0.25 ? DRAFT_CHAT.pick : DRAFT_CHAT.general
+    const chatObj = config.sport === 'nfl' ? NFL_DRAFT_CHAT : GOLF_DRAFT_CHAT
+    const templates = Math.random() > 0.25 ? chatObj.pick : chatObj.general
     const msg = typeof templates[0] === 'function'
       ? templates[Math.floor(Math.random() * templates.length)](lastPick.playerName.split(' ').pop())
       : templates[Math.floor(Math.random() * templates.length)]
@@ -891,11 +1243,11 @@ const MockDraftRoom = () => {
       setChatMessages([{
         id: 'msg-welcome',
         sender: 'System',
-        text: 'Draft has started! Good luck everyone 🏌️',
+        text: config?.sport === 'nfl' ? 'Draft has started! Good luck everyone 🏈' : 'Draft has started! Good luck everyone 🏌️',
         isSystem: true,
       }])
     }
-  }, [isStarted])
+  }, [isStarted, config])
 
   // Auto-scroll chat
   useEffect(() => {
@@ -907,7 +1259,7 @@ const MockDraftRoom = () => {
       setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     } else {
       setSortBy(field)
-      setSortDir(field === 'sg' || field === 'top10' ? 'desc' : 'asc')
+      setSortDir(field === 'sg' || field === 'top10' || field === 'ppg' || field === 'totalPts' ? 'desc' : 'asc')
     }
   }
 
@@ -947,6 +1299,8 @@ const MockDraftRoom = () => {
       playerId: p.playerId || p.id,
       playerName: p.playerName,
       playerRank: p.playerRank,
+      playerPosition: p.playerPosition || null,
+      playerTeam: p.playerTeam || null,
       isUser: p.teamId === userTeamLocal?.id,
     }))
 
@@ -958,11 +1312,14 @@ const MockDraftRoom = () => {
       playerName: p.playerName,
       playerRank: p.playerRank,
       playerFlag: p.playerFlag,
+      playerPosition: p.playerPosition || null,
+      playerTeam: p.playerTeam || null,
     }))
 
     const teamNamesList = config.teams.map(t => t.name)
 
     api.saveMockDraft({
+      sport: config.sport || 'golf',
       draftType: config.draftType || 'snake',
       teamCount: config.teamCount || config.teams.length,
       rosterSize: config.rosterSize || Math.max(...picks.map(p => p.round), 6),
@@ -1287,10 +1644,17 @@ const MockDraftRoom = () => {
               ? 'bg-gold text-white'
               : 'bg-dark-secondary border border-dark-border text-white'
           }`}>
-            <span className="text-base">{recentPick.playerFlag}</span>
+            {isNfl && recentPick.playerPosition ? (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${NFL_POS_COLORS[recentPick.playerPosition] || ''}`}>
+                {recentPick.playerPosition}
+              </span>
+            ) : (
+              <span className="text-base">{recentPick.playerFlag}</span>
+            )}
             <div>
               <p className="font-semibold text-sm">{recentPick.playerName}</p>
               <p className="text-xs opacity-80">
+                {recentPick.playerPosition && isNfl ? `${recentPick.playerTeam} · ` : ''}
                 {recentPick.amount ? `$${recentPick.amount} · ` : `#${recentPick.pickNumber} · `}{recentPick.teamName}
               </p>
             </div>
@@ -1331,7 +1695,17 @@ const MockDraftRoom = () => {
                 <div className="flex items-center gap-1.5 text-[10px] text-text-muted">
                   <span>#{enriched?.rank}</span>
                   <span>·</span>
-                  <span>SG {enriched?.sg > 0 ? '+' : ''}{enriched?.sg?.toFixed(2)}</span>
+                  {isNfl ? (
+                    <>
+                      <span className={`font-bold ${NFL_POS_COLORS[enriched?.position]?.split(' ')[1] || ''}`}>{enriched?.position}</span>
+                      <span>·</span>
+                      <span>{enriched?.team}</span>
+                      <span>·</span>
+                      <span>{enriched?.ppg?.toFixed(1)} PPG</span>
+                    </>
+                  ) : (
+                    <span>SG {enriched?.sg > 0 ? '+' : ''}{enriched?.sg?.toFixed(2)}</span>
+                  )}
                   <span>·</span>
                   <span>Nom {config.teams.find(t => t.id === currentNom.nominatedByTeamId)?.name}</span>
                 </div>
@@ -1573,13 +1947,21 @@ const MockDraftRoom = () => {
                           {pick ? (
                             <div className="text-center w-full truncate px-0.5">
                               <div className="flex items-center justify-center gap-0.5">
-                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                                  pick.playerRank <= 10 ? 'bg-yellow-400' :
-                                  pick.playerRank <= 25 ? 'bg-gold' :
-                                  pick.playerRank <= 40 ? 'bg-blue-400' :
-                                  'bg-dark-border/40'
-                                }`} />
-                                <span className="text-xs">{pick.playerFlag}</span>
+                                {isNfl && pick.playerPosition ? (
+                                  <span className={`text-[8px] font-bold px-1 rounded ${NFL_POS_COLORS[pick.playerPosition] || 'text-text-muted'}`}>
+                                    {pick.playerPosition}
+                                  </span>
+                                ) : (
+                                  <>
+                                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                      pick.playerRank <= 10 ? 'bg-yellow-400' :
+                                      pick.playerRank <= 25 ? 'bg-gold' :
+                                      pick.playerRank <= 40 ? 'bg-blue-400' :
+                                      'bg-dark-border/40'
+                                    }`} />
+                                    <span className="text-xs">{pick.playerFlag}</span>
+                                  </>
+                                )}
                               </div>
                               <p className={`text-[10px] leading-tight truncate ${
                                 isUserTeamCell ? 'text-gold font-medium' : 'text-text-secondary'
@@ -1648,27 +2030,66 @@ const MockDraftRoom = () => {
                   </div>
                 </div>
 
+                {/* NFL position filter pills */}
+                {isNfl && (
+                  <div className="flex-shrink-0 px-3 pb-2 flex gap-1.5 overflow-x-auto">
+                    {['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(pos => (
+                      <button
+                        key={pos}
+                        onClick={() => setPosFilter(pos)}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap transition-colors ${
+                          posFilter === pos
+                            ? pos === 'ALL' ? 'bg-gold/20 text-gold' : (NFL_POS_COLORS[pos] || 'bg-gold/20 text-gold')
+                            : 'bg-dark-primary text-text-muted hover:text-white'
+                        }`}
+                      >
+                        {pos}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Player Table */}
                 <div className="flex-1 overflow-y-auto min-h-0">
                   {/* Table Header */}
                   <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
-                    <div className="grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-                      <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
-                        Rk <SortIcon field="rank" />
-                      </button>
-                      <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
-                        Player <SortIcon field="name" />
-                      </button>
-                      <button onClick={() => handleSort('sg')} className="text-right hover:text-white transition-colors">
-                        SG <SortIcon field="sg" />
-                      </button>
-                      <button onClick={() => handleSort('top10')} className="text-right hover:text-white transition-colors">
-                        T10 <SortIcon field="top10" />
-                      </button>
-                      <span className="text-center" title="Tournaments played">Evt</span>
-                      <span className="text-center">Form</span>
-                      <div />
-                    </div>
+                    {isNfl ? (
+                      <div className="grid grid-cols-[30px_1fr_36px_36px_48px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                        <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
+                          Rk <SortIcon field="rank" />
+                        </button>
+                        <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
+                          Player <SortIcon field="name" />
+                        </button>
+                        <span className="text-center">Pos</span>
+                        <span className="text-center">Team</span>
+                        <button onClick={() => handleSort('ppg')} className="text-right hover:text-white transition-colors">
+                          PPG <SortIcon field="ppg" />
+                        </button>
+                        <button onClick={() => handleSort('totalPts')} className="text-right hover:text-white transition-colors">
+                          Pts <SortIcon field="totalPts" />
+                        </button>
+                        <div />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                        <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
+                          Rk <SortIcon field="rank" />
+                        </button>
+                        <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
+                          Player <SortIcon field="name" />
+                        </button>
+                        <button onClick={() => handleSort('sg')} className="text-right hover:text-white transition-colors">
+                          SG <SortIcon field="sg" />
+                        </button>
+                        <button onClick={() => handleSort('top10')} className="text-right hover:text-white transition-colors">
+                          T10 <SortIcon field="top10" />
+                        </button>
+                        <span className="text-center" title="Tournaments played">Evt</span>
+                        <span className="text-center">Form</span>
+                        <div />
+                      </div>
+                    )}
                   </div>
 
                   {/* Player Rows */}
@@ -1677,7 +2098,7 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors ${
+                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[30px_1fr_44px_36px_30px_44px_48px]'} px-3 py-2 border-b border-dark-border/30 items-center transition-colors ${
                           player.isDrafted
                             ? 'opacity-40 bg-dark-primary/50'
                             : `cursor-pointer hover:bg-dark-tertiary/50 ${inQueue ? 'bg-orange/5' : ''}`
@@ -1686,38 +2107,65 @@ const MockDraftRoom = () => {
                       >
                         <span className="text-text-muted text-xs">{player.rank}</span>
                         <div className="flex items-center gap-2 min-w-0">
-                          {player.headshot ? (
-                            <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                          {isNfl ? (
+                            player.headshot ? (
+                              <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                            ) : (
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${NFL_POS_COLORS[player.position] || 'bg-dark-tertiary text-text-muted'}`}>
+                                <span className="text-[8px] font-bold">{player.position}</span>
+                              </div>
+                            )
                           ) : (
-                            <span className="text-sm flex-shrink-0">{player.flag}</span>
+                            player.headshot ? (
+                              <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                            ) : (
+                              <span className="text-sm flex-shrink-0">{player.flag}</span>
+                            )
                           )}
                           <span className="text-white text-sm truncate">{player.name}</span>
                         </div>
-                        <span className={`text-xs text-right font-medium tabular-nums ${
-                          player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'
-                        }`}>
-                          {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}
-                        </span>
-                        <span className="text-xs text-right text-text-secondary tabular-nums">
-                          {player.top10}%
-                        </span>
-                        <span className="text-xs text-center text-text-muted tabular-nums">
-                          {player.tournaments}
-                        </span>
-                        <div className="flex items-center justify-center gap-1">
-                          {player.form.slice(0, 4).map((f, i) => {
-                            const pos = parseInt(f.replace('T', ''))
-                            return (
-                              <span key={i} className={`w-2 h-2 rounded-full ${
-                                f === '1' ? 'bg-yellow-400' :
-                                f === 'CUT' ? 'bg-red-400' :
-                                pos <= 5 ? 'bg-gold' :
-                                pos <= 15 ? 'bg-emerald-400/60' :
-                                'bg-dark-border/30'
-                              }`} title={f} />
-                            )
-                          })}
-                        </div>
+                        {isNfl ? (
+                          <>
+                            <span className={`text-[10px] text-center font-bold ${NFL_POS_COLORS[player.position]?.split(' ')[1] || 'text-text-muted'}`}>
+                              {player.position}
+                            </span>
+                            <span className="text-xs text-center text-text-secondary">{player.team}</span>
+                            <span className="text-xs text-right font-medium text-gold tabular-nums">
+                              {player.ppg?.toFixed(1)}
+                            </span>
+                            <span className="text-xs text-right text-text-secondary tabular-nums">
+                              {player.totalPts?.toFixed(0) || '—'}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className={`text-xs text-right font-medium tabular-nums ${
+                              player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'
+                            }`}>
+                              {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
+                            </span>
+                            <span className="text-xs text-right text-text-secondary tabular-nums">
+                              {player.top10}%
+                            </span>
+                            <span className="text-xs text-center text-text-muted tabular-nums">
+                              {player.tournaments}
+                            </span>
+                            <div className="flex items-center justify-center gap-1">
+                              {player.form?.slice(0, 4).map((f, i) => {
+                                const pos = parseInt(f.replace('T', ''))
+                                return (
+                                  <span key={i} className={`w-2 h-2 rounded-full ${
+                                    f === '1' ? 'bg-yellow-400' :
+                                    f === 'CUT' ? 'bg-red-400' :
+                                    pos <= 5 ? 'bg-gold' :
+                                    pos <= 15 ? 'bg-emerald-400/60' :
+                                    'bg-dark-border/30'
+                                  }`} title={f} />
+                                )
+                              })}
+                            </div>
+                          </>
+                        )}
                         <div className="flex items-center justify-end gap-1">
                           {player.isDrafted ? (
                             <span className="px-1.5 py-0.5 bg-dark-border/40 text-text-muted text-[9px] font-mono uppercase rounded">
@@ -1885,10 +2333,20 @@ const MockDraftRoom = () => {
                         <div key={player.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg group">
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-orange text-xs font-bold w-5 text-center">{i + 1}</span>
-                            <span className="text-sm">{player.flag}</span>
+                            {isNfl && player.position ? (
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${NFL_POS_COLORS[player.position] || ''}`}>
+                                {player.position}
+                              </span>
+                            ) : (
+                              <span className="text-sm">{player.flag}</span>
+                            )}
                             <div className="min-w-0">
                               <p className="text-white text-sm font-medium truncate">{player.name}</p>
-                              <p className="text-text-muted text-xs">#{player.rank} · SG {player.sg > 0 ? '+' : ''}{player.sg.toFixed(2)}</p>
+                              <p className="text-text-muted text-xs">
+                                {isNfl
+                                  ? `#${player.rank} · ${player.team} · ${player.ppg?.toFixed(1)} PPG`
+                                  : `#${player.rank} · SG ${player.sg > 0 ? '+' : ''}${player.sg?.toFixed(2)}`}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
@@ -1946,10 +2404,19 @@ const MockDraftRoom = () => {
                         <div key={pick.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg">
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-gold text-xs font-bold w-5 text-center">R{pick.round}</span>
-                            <span className="text-sm">{pick.playerFlag}</span>
+                            {isNfl && pick.playerPosition ? (
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${NFL_POS_COLORS[pick.playerPosition] || ''}`}>
+                                {pick.playerPosition}
+                              </span>
+                            ) : (
+                              <span className="text-sm">{pick.playerFlag}</span>
+                            )}
                             <div className="min-w-0">
                               <p className="text-white text-sm font-medium truncate">{pick.playerName}</p>
-                              <p className="text-text-muted text-xs">Pick #{pick.pickNumber} · Rank #{pick.playerRank}</p>
+                              <p className="text-text-muted text-xs">
+                                {isNfl && pick.playerTeam ? `${pick.playerTeam} · ` : ''}
+                                Pick #{pick.pickNumber} · Rank #{pick.playerRank}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -1983,7 +2450,13 @@ const MockDraftRoom = () => {
                         }`}>
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-text-muted text-xs font-bold w-6 text-right">#{pick.pickNumber}</span>
-                            <span className="text-sm">{pick.playerFlag}</span>
+                            {isNfl && pick.playerPosition ? (
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${NFL_POS_COLORS[pick.playerPosition] || ''}`}>
+                                {pick.playerPosition}
+                              </span>
+                            ) : (
+                              <span className="text-sm">{pick.playerFlag}</span>
+                            )}
                             <div className="min-w-0">
                               <p className="text-white text-sm truncate">{pick.playerName}</p>
                               <p className="text-text-muted text-xs">R{pick.round} · {pick.teamName}</p>
@@ -2079,6 +2552,7 @@ const MockDraftRoom = () => {
           isAuction={isAuction}
           inQueue={!!queue.find(q => q.id === selectedPlayer.id)}
           isDrafted={!!selectedPlayer._drafted}
+          sport={config?.sport}
         />
       )}
     </div>

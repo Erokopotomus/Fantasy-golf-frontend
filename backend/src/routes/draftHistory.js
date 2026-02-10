@@ -294,6 +294,7 @@ router.get('/mock-drafts/:id', async (req, res) => {
   try {
     const result = await prisma.mockDraftResult.findUnique({
       where: { id: req.params.id },
+      include: { sport: { select: { slug: true, name: true } } },
     })
     if (!result) return res.status(404).json({ error: { message: 'Mock draft not found' } })
     if (result.userId !== req.user.id) return res.status(403).json({ error: { message: 'Not your mock draft' } })
@@ -328,13 +329,14 @@ router.post('/mock-drafts', async (req, res) => {
       { teamCount, rosterSize }
     )
 
-    // Get golf sport ID
-    const golfSport = await prisma.sport.findFirst({ where: { slug: 'golf' } })
+    // Get sport ID from request (defaults to golf for backward compat)
+    const { sport: sportSlug = 'golf' } = req.body
+    const sportRecord = await prisma.sport.findFirst({ where: { slug: sportSlug } })
 
     const result = await prisma.mockDraftResult.create({
       data: {
         userId: req.user.id,
-        sportId: golfSport?.id || null,
+        sportId: sportRecord?.id || null,
         draftType: draftType || 'snake',
         teamCount,
         rosterSize,
