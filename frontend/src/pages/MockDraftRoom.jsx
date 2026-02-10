@@ -631,7 +631,7 @@ const MockDraftRoom = () => {
     const fetchPlayers = async () => {
       try {
         if (config.sport === 'nfl') {
-          const data = await api.getNflPlayers({ limit: 300, sortBy: 'fantasyPts', sortOrder: 'desc', scoring: 'half_ppr' })
+          const data = await api.getNflPlayers({ limit: 300, sortBy: 'fantasyPts', sortOrder: 'desc', scoring: config.scoring || 'half_ppr' })
           const players = data?.players
           if (Array.isArray(players) && players.length > 0) {
             setApiPlayers(players.map((p, i) => ({
@@ -1370,7 +1370,7 @@ const MockDraftRoom = () => {
   }
 
   return (
-    <div className="h-screen bg-dark-primary flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-64px)] bg-dark-primary flex flex-col overflow-hidden">
       {/* ===== HEADER BAR ===== */}
       <div className="bg-dark-secondary border-b border-dark-border flex-shrink-0 z-30">
         <div className="px-3 sm:px-4 py-2">
@@ -2307,12 +2307,12 @@ const MockDraftRoom = () => {
                             }, 1000)
                           }
                         }}
-                        className={`relative w-10 h-5 rounded-full transition-colors ${
-                          autoPick ? 'bg-gold' : autoPickCountdown > 0 ? 'bg-yellow-500/50' : 'bg-dark-tertiary'
+                        className={`relative inline-flex items-center w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+                          autoPick ? 'bg-gold' : autoPickCountdown > 0 ? 'bg-yellow-500/50' : 'bg-dark-tertiary border border-dark-border'
                         }`}
                       >
-                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                          autoPick || autoPickCountdown > 0 ? 'translate-x-5' : 'translate-x-0.5'
+                        <span className={`inline-block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform ${
+                          autoPick || autoPickCountdown > 0 ? 'translate-x-[18px]' : 'translate-x-[3px]'
                         }`} />
                       </button>
                     </div>

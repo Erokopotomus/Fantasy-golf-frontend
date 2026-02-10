@@ -21,7 +21,7 @@ const NFL_TEAM_NAMES = [
 
 const SPORT_DEFAULTS = {
   golf: { teamCount: 8, rosterSize: 6, teamCounts: [4, 6, 8, 10, 12], rosterSizes: [4, 5, 6, 8, 10], budget: 100 },
-  nfl:  { teamCount: 10, rosterSize: 15, teamCounts: [8, 10, 12, 14], rosterSizes: [10, 12, 15], budget: 200 },
+  nfl:  { teamCount: 10, rosterSize: 14, teamCounts: [8, 10, 12, 14], rosterSizes: [10, 12, 14], budget: 200 },
 }
 
 const MockDraft = () => {
@@ -38,6 +38,7 @@ const MockDraft = () => {
     teamCount: defaults.teamCount,
     rosterSize: defaults.rosterSize,
     draftType: 'snake',
+    scoring: 'half_ppr',
     pickTimer: 90,
     userPosition: 1,
   })
@@ -219,6 +220,32 @@ const MockDraft = () => {
                 </div>
               </div>
 
+              {/* Scoring Format (NFL only) */}
+              {sport === 'nfl' && (
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-3">Scoring Format</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { key: 'standard', label: 'Standard' },
+                      { key: 'half_ppr', label: 'Half PPR' },
+                      { key: 'ppr', label: 'PPR' },
+                    ].map(fmt => (
+                      <button
+                        key={fmt.key}
+                        onClick={() => setSettings(s => ({ ...s, scoring: fmt.key }))}
+                        className={`py-3 rounded-lg font-semibold transition-all ${
+                          settings.scoring === fmt.key
+                            ? 'bg-gold text-white'
+                            : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                        }`}
+                      >
+                        {fmt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Draft Position (Snake only) */}
               {settings.draftType === 'snake' && (
                 <div>
@@ -296,6 +323,12 @@ const MockDraft = () => {
                 <p className="text-text-muted text-xs">Roster Size</p>
                 <p className="text-white font-medium">{settings.rosterSize} players</p>
               </div>
+              {sport === 'nfl' && (
+                <div>
+                  <p className="text-text-muted text-xs">Scoring</p>
+                  <p className="text-white font-medium">{settings.scoring === 'half_ppr' ? 'Half PPR' : settings.scoring === 'ppr' ? 'PPR' : 'Standard'}</p>
+                </div>
+              )}
               <div>
                 <p className="text-text-muted text-xs">Total Picks</p>
                 <p className="text-white font-medium">{settings.teamCount * settings.rosterSize}</p>
