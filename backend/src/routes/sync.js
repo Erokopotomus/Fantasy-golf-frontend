@@ -10,7 +10,7 @@ const {
   syncFantasyProjections,
   syncTournamentResults,
 } = require('../services/datagolfSync')
-const { syncHoleScores } = require('../services/espnSync')
+const { syncHoleScores, syncEspnIds, syncPlayerBios } = require('../services/espnSync')
 const nflSync = require('../services/nflSync')
 
 const router = express.Router()
@@ -100,6 +100,16 @@ router.post('/tournament/:dgId/finalize', async (req, res) => {
 router.post('/tournament/:tournamentId/espn', async (req, res) => {
   const { tournamentId } = req.params
   await runSync(`espn-${tournamentId}`, () => syncHoleScores(tournamentId, prisma), res)
+})
+
+// POST /api/sync/espn-ids — Match ESPN athlete IDs to our players
+router.post('/espn-ids', async (req, res) => {
+  await runSync('espn-ids', () => syncEspnIds(prisma), res)
+})
+
+// POST /api/sync/espn-bios — Fetch headshots + bio data from ESPN
+router.post('/espn-bios', async (req, res) => {
+  await runSync('espn-bios', () => syncPlayerBios(prisma), res)
 })
 
 // ─── NFL Sync Endpoints ─────────────────────────────────────────────────────
