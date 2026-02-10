@@ -452,13 +452,15 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Performance charts: accuracy rolling average, calls by sport (pie), hot/cold streaks (calendar heatmap)
   - Manager comparison: side-by-side stats with another manager
 
-- [ ] **5B: Clutch Rating System (0-100 Score)**
-  - Single composite score (0-100) representing overall credibility — like a credit score for fantasy analysis
-  - Components (weighted): Accuracy (40%), Consistency (25% — low variance rewarded), Volume (20% — min calls required), Breadth (15% — active across sports/categories)
-  - Rating tiers: 90-100 Elite (top 1%), 80-89 Expert (top 5%), 70-79 Sharp (top 15%), 60-69 Solid (top 30%), 50-59 Average, Below 50 Developing
-  - Display: circular gauge/meter visual, color coded, trend arrow, hover shows component breakdown
-  - Minimum 50 graded calls to receive a Clutch Rating
+- [ ] **5B: Clutch Rating System (Sport-Specific + Global)**
+  - **Sport Rating** (per sport, 0-100): Primary rating computed per sport (NFL, Golf, NBA, MLB). Like a credit score for fantasy analysis per sport.
+  - Components (weighted): Accuracy (40%), Consistency (25% — low variance rewarded), Volume (20% — min calls required), Breadth by category (15%)
+  - Sport rating tiers: Expert (90+), Sharp (80-89), Proven (70-79), Contender (60-69), Rising (<60)
+  - Minimum 30 graded calls per sport to qualify for a sport rating
+  - **Global Clutch Rating** (prestige, 0-100): Secondary rating requiring qualified ratings in 2+ sports. Weighted average of sport ratings + multi-sport breadth bonus.
+  - Display: circular gauge/meter visual, color coded, trend arrow, hover shows sport breakdown + component details
   - Recalculates daily. 90-day recency weighting.
+  - Schema: `clutch_user_sport_ratings` (per-sport), `clutch_user_global_rating` (cross-sport), `clutch_user_sport_tags` (expertise tags for discovery)
 
 - [ ] **5C: Enhanced Prediction Categories**
   - Expand prediction types per sport (golf: tournament winner, top 5/10/20, make/miss cut, head-to-head matchup, round leader)
@@ -482,10 +484,10 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Manager can share directly from profile page
 
 - [ ] **5F: Consensus Engine**
-  - Aggregate top managers' calls weighted by Clutch Rating
+  - Aggregate top managers' calls weighted by their sport-specific Clutch Rating
   - Generate "Clutch Consensus" for each event: "8 of 10 top managers like Scheffler this week"
   - Track consensus accuracy over time (does the crowd beat individuals?)
-  - Premium: see which specific managers agree/disagree, filter by minimum Clutch Rating
+  - Premium: see which specific managers agree/disagree, filter by minimum sport rating tier
 
 ---
 
@@ -792,22 +794,52 @@ CREATE TABLE clutch_scores (
 CREATE INDEX idx_clutch_scores_player ON clutch_scores(clutch_player_id, computed_at DESC);
 ```
 
-#### clutch_manager_ratings (Clutch Rating — 0-100)
+#### clutch_user_sport_ratings (Sport-Specific Clutch Rating — 0-100)
 ```sql
-CREATE TABLE clutch_manager_ratings (
+CREATE TABLE clutch_user_sport_ratings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id),
-  overall_rating INTEGER, -- 0-100
+  sport VARCHAR(20) NOT NULL, -- 'nfl', 'golf', 'nba', 'mlb'
+  rating INTEGER, -- 0-100
   accuracy_component FLOAT,     -- 40% weight
   consistency_component FLOAT,  -- 25% weight
   volume_component FLOAT,       -- 20% weight
-  breadth_component FLOAT,      -- 15% weight
-  tier VARCHAR(20), -- 'elite', 'expert', 'sharp', 'solid', 'average', 'developing'
+  breadth_component FLOAT,      -- 15% weight (breadth by category within sport)
+  tier VARCHAR(20), -- 'expert', 'sharp', 'proven', 'contender', 'rising'
   trend VARCHAR(10), -- 'up', 'down', 'stable'
   total_graded_calls INTEGER DEFAULT 0,
+  qualified BOOLEAN DEFAULT false, -- true when >= 30 graded calls
   updated_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(user_id)
+  UNIQUE(user_id, sport)
 );
+CREATE INDEX idx_sport_ratings_leaderboard ON clutch_user_sport_ratings(sport, rating DESC) WHERE qualified = true;
+```
+
+#### clutch_user_global_rating (Global Prestige Rating)
+```sql
+CREATE TABLE clutch_user_global_rating (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) UNIQUE,
+  global_rating INTEGER, -- 0-100 (weighted avg of sport ratings + breadth bonus)
+  sports_qualified INTEGER DEFAULT 0, -- count of sports with qualified rating
+  breadth_bonus FLOAT DEFAULT 0, -- bonus for multi-sport breadth
+  global_tier VARCHAR(20), -- same tiers as sport: 'expert', 'sharp', 'proven', 'contender', 'rising'
+  trend VARCHAR(10), -- 'up', 'down', 'stable'
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### clutch_user_sport_tags (Expertise Tags for Discovery)
+```sql
+CREATE TABLE clutch_user_sport_tags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  tag VARCHAR(50) NOT NULL, -- e.g., 'NFL Sharp', 'Golf Expert', 'Dynasty Guru'
+  sport VARCHAR(20),
+  earned_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, tag)
+);
+CREATE INDEX idx_sport_tags_discovery ON clutch_user_sport_tags(tag, sport);
 ```
 
 ---
@@ -1065,6 +1097,7 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │       │   ├── managerAnalytics.js, positions.js
 │       │   ├── playerTags.js, rosterSlots.js, sync.js
 │       │   ├── nfl.js           ← NFL-specific routes (scoring, available players)
+│       │   ├── feed.js          ← GET /api/feed/:sport (auto-generated feed cards)
 │       │   └── ...
 │       └── services/            ← Business logic
 │           ├── datagolfClient.js, datagolfSync.js
@@ -1075,15 +1108,17 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │           ├── notificationService.js, webPushService.js
 │           ├── draftGrader.js, fantasyWeekHelper.js
 │           ├── analyticsAggregator.js, viewRefresher.js
+│           ├── feedGenerator.js    ← Auto-generates feed cards from existing data (5 generators)
 │           └── ...
 ├── frontend/
 │   ├── src/
 │   │   ├── App.jsx              ← Routes + layout
 │   │   ├── components/          ← Shared React components
 │   │   │   ├── common/          ← Card, Button, Modal, etc.
-│   │   │   ├── layout/          ← Navbar, Sidebar
+│   │   │   ├── layout/          ← Navbar, MobileNav, Sidebar
 │   │   │   ├── draft/           ← DraftBoard, DraftHeader, PlayerPool, etc.
 │   │   │   ├── nfl/             ← NflWeeklyScoring.jsx (NFL scoring view)
+│   │   │   ├── feed/            ← FeedCard.jsx, FeedList.jsx
 │   │   │   └── dashboard/       ← LeagueCard, etc.
 │   │   ├── pages/               ← Route pages
 │   │   ├── hooks/               ← Custom React hooks
@@ -1098,33 +1133,67 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 
 ## Strategic Architecture Update (Feb 2026)
 
-Read `/docs/CLUTCH_STRATEGY_UPDATE_FEB2026.md` for the Feed + Workspace architecture and revised build priorities.
+> Read `/docs/CLUTCH_STRATEGY_UPDATE_FEB2026.md` for the full Feed + Workspace architecture, seasonal flywheel, and revised build priorities.
 
-### Three Pillars
-- **FEED**: Personalized data stream (why users open the app)
-- **WORKSPACE**: Interactive tools — draft boards, rankings, notes (why users stay)
+### Three Pillars + Foundation
+- **FEED**: Personalized data stream (why users open the app daily)
+- **WORKSPACE**: Interactive tools — draft boards, rankings, notes (where users' work lives)
 - **PROVE IT**: Prediction tracking and reputation (why users come back)
-- **DATA LAYER**: Player pages, team pages, stat leaderboards (foundation everything sits on)
+- **DATA LAYER** (foundation): Player pages, team pages, stat leaderboards, historical data (everything sits on this)
 
 ### Six User Personas
-Every feature should serve a specific persona. See strategy doc for details.
-- **Primary target:** The Informed Fan (plays 1-2 leagues, knows more than average)
-- **Off-season engagement driver:** The Dynasty Nerd (active year-round)
+Every feature should answer: "Which persona is this for?" When in doubt, optimize for The Informed Fan.
 
-### Current Priority
-Data Layer (player pages, team pages, leaderboards) → Feed MVP → Workspace (draft board) → AI Coaching
+| # | Persona | Description | Peak Engagement |
+|---|---------|-------------|-----------------|
+| 1 | **The Informed Fan** (primary target) | Plays 1-2 leagues, watches a lot of football, knows more than average. Wants start/sit help, simple player lookups, bragging rights. | In-season (Sep-Jan), draft prep (Aug) |
+| 2 | **The Grinder** | Plays 3-5+ leagues, knows advanced stats, wants tools not opinions. Raw data access, filterable leaderboards, global competition. | Year-round, daily during season |
+| 3 | **The Content Creator / Analyst** | Has a podcast/YouTube/Twitter following. Wants verified track record, beautiful public profile, discoverability. | Year-round (always making picks) |
+| 4 | **The Bettor** | Primarily interested in player props and game lines. Wants prop projections, value analysis, accuracy tracking. | In-season (Wed-Sun) |
+| 5 | **The Dynasty Nerd** (off-season driver) | Thinks in 3-year windows, plays keeper/dynasty leagues. Wants rookie evaluations, trade values, age curves. **OFFSEASON IS THEIR PEAK (Feb-May). They never stop.** | Year-round, peaks Feb-May |
+| 6 | **The Sports Debater** | Lives for being right and proving others wrong. Wants bold prediction tracking, shareable receipts. | Around prediction windows + results |
+
+### Sport-Specific Clutch Rating System
+
+The Clutch Rating is now **sport-specific primary** with a **global prestige secondary**:
+
+**Sport Rating (per sport, 0-100):**
+- Primary rating, computed per sport (NFL, Golf, NBA, MLB)
+- Components: Accuracy (40%), Consistency (25%), Volume (20%), Breadth by category (15%)
+- Tiers: **Expert** (90+), **Sharp** (80-89), **Proven** (70-79), **Contender** (60-69), **Rising** (<60)
+- Minimum 30 graded calls per sport to qualify
+- Recalculates daily with 90-day recency weighting
+
+**Global Clutch Rating (prestige):**
+- Secondary/prestige rating — requires qualified ratings in 2+ sports
+- Weighted average of sport ratings, bonus for multi-sport breadth
+- Display: circular gauge, color-coded, trend arrow, hover shows sport breakdown
+- This is the "credit score for fantasy analysis" — appears on public profiles
+
+**Schema (replaces single `clutch_manager_ratings`):**
+- `clutch_user_sport_ratings` — per-user per-sport rating (accuracy, consistency, volume, breadth components, tier, trend)
+- `clutch_user_global_rating` — aggregated cross-sport rating (weighted avg, breadth bonus, global tier)
+- `clutch_user_sport_tags` — per-user sport expertise tags for discovery (e.g., "NFL Sharp", "Golf Expert")
+
+### Current Build Priority
+Data Layer (Steps 1-3 done) → Workspace Draft Board (Step 4) → Watch List + Position Rankings (Step 5) → Scouting Notes (Step 6) → AI Coaching
 
 ### Key Principle: Progressive Disclosure
 Default UX is simple and clean (Informed Fan). Depth is always one click away (Grinder, Dynasty Nerd). Never overwhelm, never underserve.
 
+### Seasonal Flywheel
+The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May majors). Dynasty Nerds drive off-season engagement. No dead months. See strategy doc for full month-by-month breakdown.
+
 ### Data Layer Build Progress
-- [x] Player Profile Pages (NFL) — Enhanced profiles with career stats, game logs, advanced metrics, progressive disclosure
-- [ ] Team Pages + Stat Leaderboards
-- [ ] Feed MVP
-- [ ] Workspace — Draft Board
-- [ ] Workspace — Watch List + Position Rankings
-- [ ] Workspace — Scouting Notes
-- [ ] AI Coaching (former Phase 6)
+- [x] Step 1: Player Profile Pages (NFL) — Enhanced profiles with career stats, game logs, advanced metrics, progressive disclosure, public SEO routes
+- [x] Step 2: Team Pages + Stat Leaderboards — Team stats (off/def aggregates, league rankings, top fantasy players), leaderboards (20+ stats, filters, pagination), NflTeams index page (NFC/AFC conference layout)
+- [x] Step 3: Sport Hubs + Feed Cards — `/nfl` and `/golf` hub pages, FeedCard/FeedList components, feedGenerator.js (5 generators from existing data), `/api/feed/:sport` route, Dashboard feed tease, standalone `/feed` page with sport toggle, Feed nav item
+- [ ] Step 4: Workspace — Draft Board (drag-and-drop rankings, notes, tier breaks, divergence alerts, share/export)
+- [ ] Step 5: Workspace — Watch List + Position Rankings
+- [ ] Step 6: Workspace — Scouting Notes
+- [ ] AI Coaching (former Phase 6 — more powerful after Feed + Workspace provide context)
+
+**Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced.
 
 ---
 
@@ -1151,4 +1220,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 9, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-5 complete, Phase 6 partial. Strategic pivot: Data Layer + Feed + Workspace prioritized over AI Coaching. Player Profile Pages (Data Layer Step 1) built with career stats, game logs, advanced metrics, progressive disclosure, SEO-indexable public pages. Next: Team Pages + Stat Leaderboards (Step 2), then Feed MVP (Step 3).*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-6 (partial) complete. Strategic architecture: Three Pillars (Feed + Workspace + Prove It) + Data Layer foundation. Six user personas defined. Clutch Rating updated to sport-specific (primary) + global (prestige). Data Layer Steps 1-3 complete (Player Profiles, Team Pages + Leaderboards, Sport Hubs + Feed Cards). Feed standalone page + nav item live. Next: Workspace Draft Board (Step 4).*
