@@ -417,6 +417,10 @@ class ApiService {
     return this.request(`/tournaments/${tournamentId}/scorecards/${playerId}`)
   }
 
+  async getTournamentWeather(tournamentId) {
+    return this.request(`/tournaments/${tournamentId}/weather`)
+  }
+
   // Matchups
   async getLeagueMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`)

@@ -63,6 +63,16 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
     const course = await prisma.course.findUnique({
       where: { id: req.params.id },
       include: {
+        holes: {
+          orderBy: { number: 'asc' },
+          select: {
+            id: true,
+            number: true,
+            par: true,
+            yardage: true,
+            handicap: true,
+          },
+        },
         tournaments: {
           select: {
             id: true,
@@ -87,6 +97,12 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
             bestFinish: true,
             wins: true,
             top10s: true,
+            cuts: true,
+            cutsMade: true,
+            sgTotal: true,
+            sgPutting: true,
+            sgApproach: true,
+            sgOffTee: true,
             lastPlayed: true,
             player: {
               select: {
@@ -107,6 +123,33 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
 
     if (!course) {
       return res.status(404).json({ error: { message: 'Course not found' } })
+    }
+
+    // Compute course stats from tournament history
+    const completedTournaments = course.tournaments.filter(t => t.status === 'COMPLETED')
+    if (completedTournaments.length > 0) {
+      const tIds = completedTournaments.map(t => t.id)
+      const stats = await prisma.performance.aggregate({
+        where: {
+          tournamentId: { in: tIds },
+          position: 1,
+          totalToPar: { not: null },
+        },
+        _avg: { totalToPar: true },
+      })
+      const cutStats = await prisma.performance.aggregate({
+        where: {
+          tournamentId: { in: tIds },
+          status: 'CUT',
+          totalToPar: { not: null },
+        },
+        _avg: { totalToPar: true },
+      })
+      course.courseStats = {
+        avgWinningScore: stats._avg.totalToPar,
+        avgCutLine: cutStats._avg.totalToPar,
+        tournamentsPlayed: completedTournaments.length,
+      }
     }
 
     res.json({ course })

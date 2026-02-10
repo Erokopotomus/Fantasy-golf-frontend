@@ -261,6 +261,24 @@ router.get('/:id/leaderboard', async (req, res, next) => {
       }
     }
 
+    // For UPCOMING tournaments, fetch course history for field players
+    const tournamentFull = await prisma.tournament.findUnique({
+      where: { id: req.params.id },
+      select: { status: true, courseId: true },
+    })
+    let courseHistoryMap = new Map()
+    if (tournamentFull?.status === 'UPCOMING' && tournamentFull?.courseId && fieldPlayerIds.length > 0) {
+      const histories = await prisma.playerCourseHistory.findMany({
+        where: {
+          playerId: { in: fieldPlayerIds },
+          courseId: tournamentFull.courseId,
+        },
+      })
+      for (const h of histories) {
+        courseHistoryMap.set(h.playerId, h)
+      }
+    }
+
     const leaderboard = performances.map((perf, index) => {
       // Attach round scores for bonus calculation
       const perfWithRounds = { ...perf, roundScores: roundScoresByPlayer[perf.playerId] || [] }
@@ -303,6 +321,21 @@ router.get('/:id/leaderboard', async (req, res, next) => {
           formScore: cs.formScore,
           pressureScore: cs.pressureScore,
           courseFitScore: cs.courseFitScore,
+        }
+      }
+
+      // Include course history for UPCOMING tournaments
+      const ch = courseHistoryMap.get(perf.playerId)
+      if (ch) {
+        entry.courseHistory = {
+          rounds: ch.rounds,
+          avgToPar: ch.avgToPar,
+          bestFinish: ch.bestFinish,
+          wins: ch.wins,
+          top10s: ch.top10s,
+          cuts: ch.cuts,
+          cutsMade: ch.cutsMade,
+          sgTotal: ch.sgTotal,
         }
       }
 
@@ -366,6 +399,20 @@ router.get('/:id/scorecards/:playerId', async (req, res, next) => {
     }
 
     res.json({ scorecards })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/tournaments/:id/weather - Get tournament weather forecast
+router.get('/:id/weather', async (req, res, next) => {
+  try {
+    const weather = await prisma.weather.findMany({
+      where: { tournamentId: req.params.id },
+      orderBy: { round: 'asc' },
+    })
+
+    res.json({ weather })
   } catch (error) {
     next(error)
   }

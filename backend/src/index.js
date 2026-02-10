@@ -553,6 +553,50 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('clutchMetrics-event', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Monday 3:30 AM ET — Rebuild all PlayerCourseHistory (after metrics at 2:30)
+    const courseHistoryAggregator = require('./services/courseHistoryAggregator')
+    cron.schedule('30 3 * * 1', async () => {
+      cronLog('courseHistory', 'Starting full course history rebuild')
+      try {
+        const result = await courseHistoryAggregator.aggregateAllCourseHistory(cronPrisma)
+        cronLog('courseHistory', `Done: ${result.aggregated} records`)
+      } catch (e) { cronLog('courseHistory', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Sunday 11:00 PM ET — Single course history update after tournament finalizes
+    cron.schedule('0 23 * * 0', async () => {
+      const t = await cronPrisma.tournament.findFirst({
+        where: { status: 'COMPLETED' },
+        orderBy: { endDate: 'desc' },
+        select: { courseId: true, name: true },
+      })
+      if (!t?.courseId) return cronLog('courseHistorySingle', 'No recently completed tournament with course')
+      cronLog('courseHistorySingle', `Updating history for ${t.name}`)
+      try {
+        const result = await courseHistoryAggregator.aggregateForCourse(t.courseId, cronPrisma)
+        cronLog('courseHistorySingle', `Done: ${result.aggregated} records`)
+      } catch (e) { cronLog('courseHistorySingle', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Wednesday 9:00 AM ET — Weather forecast for upcoming tournament
+    const { syncTournamentWeather } = require('./services/weatherSync')
+    cron.schedule('0 9 * * 3', async () => {
+      cronLog('weather', 'Syncing weather for upcoming tournaments')
+      try {
+        const result = await syncTournamentWeather(cronPrisma)
+        cronLog('weather', `Done: ${result.synced} tournaments`)
+      } catch (e) { cronLog('weather', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Thu-Sun 6:00 AM ET — Daily weather refresh during tournament week
+    cron.schedule('0 6 * * 4,5,6,0', async () => {
+      cronLog('weather-daily', 'Daily weather refresh')
+      try {
+        const result = await syncTournamentWeather(cronPrisma)
+        cronLog('weather-daily', `Done: ${result.synced} tournaments`)
+      } catch (e) { cronLog('weather-daily', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Sunday 4:00 AM ET — Raw provider data cleanup (> 90 days)
     cron.schedule('0 4 * * 0', async () => {
       cronLog('rawCleanup', 'Cleaning up old raw provider data')

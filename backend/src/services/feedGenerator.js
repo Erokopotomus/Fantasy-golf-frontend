@@ -360,6 +360,109 @@ async function newsCards(sport, limit = 8) {
   })
 }
 
+// ─── Tournament Preview Cards (Golf) ─────────────────────────────────────
+// Intelligence preview for upcoming tournaments with course fit + weather
+async function tournamentPreviewCards() {
+  const upcoming = await prisma.tournament.findMany({
+    where: { status: 'UPCOMING' },
+    orderBy: { startDate: 'asc' },
+    take: 2,
+    include: {
+      course: { select: { id: true, name: true } },
+    },
+  })
+
+  const cards = []
+
+  for (const t of upcoming) {
+    if (!t.courseId) continue
+
+    // Get top 3 course fit players
+    const topFits = await prisma.clutchScore.findMany({
+      where: { tournamentId: t.id, courseFitScore: { not: null } },
+      orderBy: { courseFitScore: 'desc' },
+      take: 3,
+      include: { player: { select: { name: true } } },
+    })
+
+    // Get weather if available
+    const weather = await prisma.weather.findMany({
+      where: { tournamentId: t.id },
+      orderBy: { round: 'asc' },
+      take: 4,
+    })
+
+    const start = new Date(t.startDate)
+    const daysOut = Math.floor((start - new Date()) / 86400000)
+
+    let headline = `${t.name} starts ${daysOut <= 1 ? 'tomorrow' : daysOut <= 7 ? start.toLocaleDateString('en-US', { weekday: 'long' }) : start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+
+    const contextParts = []
+    if (topFits.length > 0) {
+      contextParts.push(`Top fits: ${topFits.map(f => `${f.player.name} (${Math.round(f.courseFitScore)})`).join(', ')}`)
+    }
+    if (weather.length > 0) {
+      const maxWind = Math.max(...weather.map(w => w.windSpeed || 0))
+      if (maxWind >= 15) {
+        contextParts.push(`Wind: ${Math.round(maxWind)}mph gusts expected`)
+      }
+    }
+
+    cards.push({
+      id: `tournament-preview-${t.id}`,
+      type: 'tournament_preview',
+      category: 'Tournament Preview',
+      headline,
+      context: contextParts.join('. ') || `at ${t.course?.name || ''}`,
+      timestamp: new Date().toISOString(),
+      actions: [
+        { label: 'Full Preview', href: `/tournaments/${t.id}` },
+      ],
+      meta: { tournamentId: t.id },
+      priority: daysOut <= 2 ? 1 : 3,
+    })
+  }
+
+  return cards
+}
+
+// ─── Weather Alert Cards (Golf) ──────────────────────────────────────────
+// Alerts when tough weather conditions are forecast for upcoming tournaments
+async function weatherAlertCards() {
+  const weather = await prisma.weather.findMany({
+    where: {
+      tournament: { status: { in: ['UPCOMING', 'IN_PROGRESS'] } },
+      difficultyImpact: { gte: 0.4 },
+    },
+    include: {
+      tournament: { select: { id: true, name: true, startDate: true } },
+    },
+    orderBy: { difficultyImpact: 'desc' },
+    take: 3,
+  })
+
+  return weather.map(w => {
+    const details = []
+    if (w.windSpeed >= 20) details.push(`${Math.round(w.windSpeed)}mph winds`)
+    if (w.windGust >= 30) details.push(`gusts to ${Math.round(w.windGust)}mph`)
+    if (w.precipitation > 0.5) details.push(`${w.precipitation.toFixed(1)}" rain`)
+
+    return {
+      id: `weather-alert-${w.tournamentId}-rd${w.round}`,
+      type: 'weather_alert',
+      category: 'Weather Alert',
+      headline: `Tough conditions at ${w.tournament.name}: Round ${w.round}`,
+      context: details.join(', ') || `Difficulty impact: ${(w.difficultyImpact * 100).toFixed(0)}%`,
+      timestamp: new Date().toISOString(),
+      actions: [
+        { label: 'Tournament', href: `/tournaments/${w.tournament.id}` },
+      ],
+      meta: { tournamentId: w.tournamentId, round: w.round, impact: w.difficultyImpact },
+      priority: 2,
+    }
+  })
+}
+
 // ─── Main Generator ────────────────────────────────────────────────────────
 async function generateFeed(sport, options = {}) {
   const { limit = 8, offset = 0, types } = options
@@ -379,6 +482,8 @@ async function generateFeed(sport, options = {}) {
   } else if (sport === 'golf') {
     const results = await Promise.all([
       tournamentCards().catch(() => []),
+      tournamentPreviewCards().catch(() => []),
+      weatherAlertCards().catch(() => []),
       newsCards('golf').catch(() => []),
     ])
     cards = results.flat()
@@ -390,6 +495,8 @@ async function generateFeed(sport, options = {}) {
       teamTrendCards(season).catch(() => []),
       gameResultCards(season).catch(() => []),
       tournamentCards().catch(() => []),
+      tournamentPreviewCards().catch(() => []),
+      weatherAlertCards().catch(() => []),
       newsCards('all').catch(() => []),
     ])
     cards = results.flat()

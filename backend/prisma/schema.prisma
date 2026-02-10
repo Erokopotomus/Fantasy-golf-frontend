@@ -383,6 +383,10 @@ model Course {
 
   imageUrl String?
 
+  // Coordinates (for weather lookups)
+  latitude  Float?
+  longitude Float?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

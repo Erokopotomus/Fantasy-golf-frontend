@@ -134,6 +134,18 @@ router.post('/nfl/backfill', async (req, res) => {
   await runSync(`nfl-backfill-${season}`, () => nflSync.backfillSeason(prisma, season), res)
 })
 
+// POST /api/sync/course-history — Rebuild PlayerCourseHistory
+const courseHistoryAggregator = require('../services/courseHistoryAggregator')
+router.post('/course-history', async (req, res) => {
+  await runSync('course-history', () => courseHistoryAggregator.aggregateAllCourseHistory(prisma), res)
+})
+
+// POST /api/sync/weather — Sync weather for upcoming tournaments
+const { syncTournamentWeather } = require('../services/weatherSync')
+router.post('/weather', async (req, res) => {
+  await runSync('weather', () => syncTournamentWeather(prisma), res)
+})
+
 // GET /api/sync/status
 router.get('/status', async (req, res) => {
   // Find active tournament

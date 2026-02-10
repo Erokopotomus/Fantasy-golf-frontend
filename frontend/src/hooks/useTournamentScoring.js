@@ -39,12 +39,15 @@ function flattenEntry(entry) {
     teeTimes: entry.teeTimes ?? null,
     // Clutch metrics
     clutchMetrics: entry.clutchMetrics ?? null,
+    // Course history (UPCOMING tournaments)
+    courseHistory: entry.courseHistory ?? null,
   }
 }
 
 export const useTournamentScoring = (tournamentId, leagueId = null) => {
   const [tournament, setTournament] = useState(null)
   const [leaderboard, setLeaderboard] = useState([])
+  const [weather, setWeather] = useState([])
   const [isLive, setIsLive] = useState(false)
   const [myPlayers, setMyPlayers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -88,6 +91,17 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
         }
         setMyPlayers(results[2].teams)
       }
+
+      // For UPCOMING tournaments, also fetch weather
+      if (tournamentData?.status === 'UPCOMING') {
+        try {
+          const weatherData = await api.getTournamentWeather(tournamentId)
+          setWeather(weatherData?.weather || [])
+        } catch {
+          // Weather is optional — don't fail the whole page
+          setWeather([])
+        }
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -115,6 +129,7 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
   return {
     tournament,
     leaderboard,
+    weather,
     isLive,
     myPlayers,
     loading,

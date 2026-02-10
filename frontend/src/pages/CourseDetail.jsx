@@ -134,6 +134,124 @@ const CourseDetail = () => {
         </div>
       </div>
 
+      {/* Hole-by-Hole Scorecard */}
+      {course.holes && course.holes.length > 0 && (
+        <Card padding="none">
+          <div className="p-4 border-b border-dark-border">
+            <h4 className="text-sm font-semibold text-text-muted">Hole-by-Hole Scorecard</h4>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-dark-border text-text-muted">
+                  <th className="px-2 py-2 text-left font-medium">Hole</th>
+                  {course.holes.filter(h => h.number <= 9).map(h => (
+                    <th key={h.number} className="px-2 py-2 text-center font-mono font-medium">{h.number}</th>
+                  ))}
+                  <th className="px-2 py-2 text-center font-mono font-bold text-text-secondary">Out</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-dark-border/50">
+                  <td className="px-2 py-2 text-text-muted font-medium">Par</td>
+                  {course.holes.filter(h => h.number <= 9).map(h => (
+                    <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
+                      h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-white'
+                    }`}>{h.par}</td>
+                  ))}
+                  <td className="px-2 py-2 text-center font-mono font-bold text-white">
+                    {course.holes.filter(h => h.number <= 9).reduce((sum, h) => sum + h.par, 0)}
+                  </td>
+                </tr>
+                {course.holes.some(h => h.yardage) && (
+                  <tr className="border-b border-dark-border/50">
+                    <td className="px-2 py-2 text-text-muted font-medium">Yds</td>
+                    {course.holes.filter(h => h.number <= 9).map(h => (
+                      <td key={h.number} className="px-2 py-2 text-center font-mono text-text-secondary">{h.yardage || '-'}</td>
+                    ))}
+                    <td className="px-2 py-2 text-center font-mono text-text-secondary">
+                      {course.holes.filter(h => h.number <= 9 && h.yardage).reduce((sum, h) => sum + h.yardage, 0) || '-'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Back nine */}
+            {course.holes.filter(h => h.number > 9).length > 0 && (
+              <table className="w-full text-xs mt-0">
+                <thead>
+                  <tr className="border-b border-dark-border text-text-muted">
+                    <th className="px-2 py-2 text-left font-medium">Hole</th>
+                    {course.holes.filter(h => h.number > 9).map(h => (
+                      <th key={h.number} className="px-2 py-2 text-center font-mono font-medium">{h.number}</th>
+                    ))}
+                    <th className="px-2 py-2 text-center font-mono font-bold text-text-secondary">In</th>
+                    <th className="px-2 py-2 text-center font-mono font-bold text-gold">Tot</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-dark-border/50">
+                    <td className="px-2 py-2 text-text-muted font-medium">Par</td>
+                    {course.holes.filter(h => h.number > 9).map(h => (
+                      <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
+                        h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-white'
+                      }`}>{h.par}</td>
+                    ))}
+                    <td className="px-2 py-2 text-center font-mono font-bold text-white">
+                      {course.holes.filter(h => h.number > 9).reduce((sum, h) => sum + h.par, 0)}
+                    </td>
+                    <td className="px-2 py-2 text-center font-mono font-bold text-gold">
+                      {course.holes.reduce((sum, h) => sum + h.par, 0)}
+                    </td>
+                  </tr>
+                  {course.holes.some(h => h.yardage) && (
+                    <tr className="border-b border-dark-border/50">
+                      <td className="px-2 py-2 text-text-muted font-medium">Yds</td>
+                      {course.holes.filter(h => h.number > 9).map(h => (
+                        <td key={h.number} className="px-2 py-2 text-center font-mono text-text-secondary">{h.yardage || '-'}</td>
+                      ))}
+                      <td className="px-2 py-2 text-center font-mono text-text-secondary">
+                        {course.holes.filter(h => h.number > 9 && h.yardage).reduce((sum, h) => sum + h.yardage, 0) || '-'}
+                      </td>
+                      <td className="px-2 py-2 text-center font-mono text-text-secondary">
+                        {course.holes.filter(h => h.yardage).reduce((sum, h) => sum + h.yardage, 0) || '-'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Course Stats Banner */}
+      {course.courseStats && (
+        <div className="grid grid-cols-3 gap-4">
+          {course.courseStats.avgWinningScore != null && (
+            <Card>
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-1">Avg Winning Score</p>
+              <p className={`text-xl font-mono font-bold ${getScoreColor(course.courseStats.avgWinningScore)}`}>
+                {course.courseStats.avgWinningScore > 0 ? '+' : ''}{course.courseStats.avgWinningScore.toFixed(1)}
+              </p>
+            </Card>
+          )}
+          {course.courseStats.avgCutLine != null && (
+            <Card>
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mb-1">Avg Cut Line</p>
+              <p className="text-xl font-mono font-bold text-text-secondary">
+                {course.courseStats.avgCutLine > 0 ? '+' : ''}{course.courseStats.avgCutLine.toFixed(1)}
+              </p>
+            </Card>
+          )}
+          <Card>
+            <p className="text-text-muted text-[10px] uppercase tracking-wider mb-1">Events Played</p>
+            <p className="text-xl font-mono font-bold text-white">{course.courseStats.tournamentsPlayed}</p>
+          </Card>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-1 space-y-6">
@@ -177,38 +295,51 @@ const CourseDetail = () => {
                       <th className="p-3 text-left">Player</th>
                       <th className="p-3 text-center">Rnds</th>
                       <th className="p-3 text-center">Avg</th>
+                      <th className="p-3 text-center hidden sm:table-cell">SG</th>
+                      <th className="p-3 text-center hidden sm:table-cell">Cut%</th>
                       <th className="p-3 text-center">Best</th>
                       <th className="p-3 text-right">W</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {course.playerHistory.map((ph) => (
-                      <tr key={ph.id} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
-                        <td className="p-3">
-                          <Link
-                            to={`/players/${ph.player.id}`}
-                            className="flex items-center gap-2 hover:text-gold transition-colors"
-                          >
-                            {ph.player.countryFlag && (
-                              <span className="text-sm">{ph.player.countryFlag}</span>
+                    {course.playerHistory.map((ph) => {
+                      const cutRate = ph.cuts > 0 ? ((ph.cutsMade / ph.cuts) * 100).toFixed(0) : null
+                      return (
+                        <tr key={ph.id} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
+                          <td className="p-3">
+                            <Link
+                              to={`/players/${ph.player.id}`}
+                              className="flex items-center gap-2 hover:text-gold transition-colors"
+                            >
+                              {ph.player.countryFlag && (
+                                <span className="text-sm">{ph.player.countryFlag}</span>
+                              )}
+                              <span className="text-white font-medium text-xs">{ph.player.name}</span>
+                            </Link>
+                          </td>
+                          <td className="p-3 text-center text-text-secondary font-mono">{ph.rounds}</td>
+                          <td className={`p-3 text-center font-mono font-bold ${getScoreColor(ph.avgToPar)}`}>
+                            {ph.avgToPar != null ? (ph.avgToPar > 0 ? `+${ph.avgToPar.toFixed(1)}` : ph.avgToPar.toFixed(1)) : '-'}
+                          </td>
+                          <td className={`p-3 text-center font-mono text-xs hidden sm:table-cell ${
+                            ph.sgTotal > 0 ? 'text-emerald-400' : ph.sgTotal != null ? 'text-red-400' : 'text-text-muted'
+                          }`}>
+                            {ph.sgTotal != null ? (ph.sgTotal > 0 ? `+${ph.sgTotal.toFixed(1)}` : ph.sgTotal.toFixed(1)) : '-'}
+                          </td>
+                          <td className="p-3 text-center font-mono text-xs text-text-secondary hidden sm:table-cell">
+                            {cutRate != null ? `${cutRate}%` : '-'}
+                          </td>
+                          <td className="p-3 text-center text-gold font-mono">{ph.bestFinish || '-'}</td>
+                          <td className="p-3 text-right">
+                            {ph.wins > 0 ? (
+                              <span className="text-yellow-400 font-mono font-bold">{ph.wins}</span>
+                            ) : (
+                              <span className="text-text-muted">-</span>
                             )}
-                            <span className="text-white font-medium text-xs">{ph.player.name}</span>
-                          </Link>
-                        </td>
-                        <td className="p-3 text-center text-text-secondary font-mono">{ph.rounds}</td>
-                        <td className={`p-3 text-center font-mono font-bold ${getScoreColor(ph.avgToPar)}`}>
-                          {ph.avgToPar != null ? (ph.avgToPar > 0 ? `+${ph.avgToPar.toFixed(1)}` : ph.avgToPar.toFixed(1)) : '-'}
-                        </td>
-                        <td className="p-3 text-center text-gold font-mono">{ph.bestFinish || '-'}</td>
-                        <td className="p-3 text-right">
-                          {ph.wins > 0 ? (
-                            <span className="text-yellow-400 font-mono font-bold">{ph.wins}</span>
-                          ) : (
-                            <span className="text-text-muted">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
