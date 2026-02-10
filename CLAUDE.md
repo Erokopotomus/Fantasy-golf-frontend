@@ -1199,6 +1199,15 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **Schedule Dots Visualization:** 5-dot inline indicator on Players table, TeamRoster, and WaiverWire — each dot = one of the next 5 upcoming events. Green filled = player confirmed in field, dim = field announced but player not in it, hollow outline = field not yet announced (TBD). Tooltip per dot shows tournament name + status.
   - **Startup Field Sync:** Backend syncs field for next upcoming tournament on every server boot (deploy), ensuring schedule dots have data immediately without waiting for Tue/Wed crons.
   - **Goal:** Make Clutch PGA experience superior to Fantrax by solving the #1 pain point — zero visibility into upcoming player schedules. No new files, no schema migrations.
+- [x] Step 3.7: Tournament Preview Page — "This Week in Golf"
+  - **New page:** `/tournaments/:tournamentId/preview` — magazine-style editorial experience auto-generated from existing data
+  - **`storylineGenerator.js`:** Pure utility — `generateCourseNarrative()` (course DNA → prose), `selectPlayersToWatch()` (5-6 players via smart selection: Best Fit, Hot Form, Course History, Under the Radar, Top Ranked), `generateStorylines()` (3-5 narrative cards: Field Strength, Form Watch, Course History, Weather Factor, Sleeper Pick), `generatePlayerNarrative()` (fallback per-player narrative)
+  - **`useTournamentPreview.js`:** Custom hook — parallel fetch (tournament + leaderboard + weather), chained course fetch, `flattenEntry` pattern reuse
+  - **`TournamentPreviewPage.jsx`:** 7 editorial sections — Hero (name/course/dates/purse/badges), The Course (DNA bars + narrative + stat pills), Players to Watch (6-card grid with tags + metrics + narratives), Key Storylines (auto-generated narrative cards), Weather Outlook (4 round cards), Field Snapshot (stat pills + notable names grid), CTA (leaderboard + course links)
+  - **Course-level fallbacks:** When field not yet announced (future events), shows Best Course Fits from `course.topCourseFits` and Course History Leaders from `course.playerHistory` — makes previews weeks out still rich
+  - **Entry points:** Gold "This Week in Golf" banner on GolfHub, gold preview banner on TournamentScoring (UPCOMING), "Preview →" links on Tournaments list
+  - **No new backend work** — all data from existing APIs
+  - **Goal:** Surface Clutch's data as editorial content any golf fan would find valuable, whether they play fantasy or not
 - [ ] Step 4: Workspace — Draft Board (drag-and-drop rankings, notes, tier breaks, divergence alerts, share/export)
 - [ ] Step 5: Workspace — Watch List + Position Rankings
 - [ ] Step 6: Workspace — Scouting Notes
@@ -1230,5 +1239,5 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 
 ---
 
-*Last updated: February 9, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-6 (partial) complete. Strategic architecture: Three Pillars (Feed + Workspace + Prove It) + Data Layer foundation. Six user personas defined. Clutch Rating updated to sport-specific (primary) + global (prestige). Data Layer Steps 1-3.6 complete (Player Profiles, Team Pages + Leaderboards, Sport Hubs + Feed Cards, Live News Pipeline, PGA Hub Enhancement + Schedule Dots). Feed standalone page + nav item live. NFL Mock Draft complete. Next: Workspace Draft Board (Step 4).*
+*Last updated: February 10, 2026*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-6 (partial) complete. Strategic architecture: Three Pillars (Feed + Workspace + Prove It) + Data Layer foundation. Six user personas defined. Clutch Rating updated to sport-specific (primary) + global (prestige). Data Layer Steps 1-3.7 complete (Player Profiles, Team Pages + Leaderboards, Sport Hubs + Feed Cards, Live News Pipeline, PGA Hub Enhancement + Schedule Dots, Tournament Preview Page). Feed standalone page + nav item live. NFL Mock Draft complete. Next: Workspace Draft Board (Step 4).*
