@@ -57,12 +57,36 @@ const CourseDetail = () => {
   }
 
   // Importance weights for Course DNA
+  const getDnaLabel = (val) => {
+    if (val == null) return null
+    if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
+    if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
+    if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-white/30' }
+    return { text: 'Low', color: 'text-text-muted', bar: 'bg-white/10' }
+  }
+
   const dnaCategories = [
     { label: 'Driving', value: course.drivingImportance },
     { label: 'Approach', value: course.approachImportance },
     { label: 'Around Green', value: course.aroundGreenImportance },
     { label: 'Putting', value: course.puttingImportance },
-  ].filter(d => d.value != null)
+  ].filter(d => d.value != null).map(d => ({ ...d, rating: getDnaLabel(d.value) }))
+
+  const premiumSkills = dnaCategories.filter(d => d.value >= 0.27).sort((a, b) => b.value - a.value)
+  const upcomingTournament = course.tournaments?.find(t => t.status === 'UPCOMING')
+
+  // Build narrative about what kind of player wins here
+  const buildNarrative = () => {
+    if (premiumSkills.length === 0) return null
+    const names = premiumSkills.map(s => s.label.toLowerCase())
+    if (premiumSkills.length === 1) {
+      return `This course heavily rewards ${names[0]}. Look for specialists who gain strokes in that area.`
+    }
+    if (premiumSkills.length === 2) {
+      return `Winners here tend to excel at ${names[0]} and ${names[1]}. Players strong in both areas have a significant edge.`
+    }
+    return `A well-rounded course that demands ${names.join(', ')}. Versatile players with no major weaknesses thrive.`
+  }
 
   const getScoreColor = (avgToPar) => {
     if (avgToPar == null) return 'text-text-muted'
@@ -252,36 +276,57 @@ const CourseDetail = () => {
         </div>
       )}
 
+      {/* What Wins Here — Full-width intelligence card */}
+      {dnaCategories.length > 0 && (
+        <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+          <div className="p-4 border-b border-dark-border flex items-center justify-between">
+            <h4 className="text-sm font-bold text-white">What Wins Here</h4>
+            {upcomingTournament && (
+              <Link
+                to={`/tournaments/${upcomingTournament.id}`}
+                className="text-xs text-gold hover:text-gold/80 transition-colors font-medium"
+              >
+                View Field Fit for {upcomingTournament.name} →
+              </Link>
+            )}
+          </div>
+          <div className="p-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+              {dnaCategories.map((cat) => {
+                const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
+                return (
+                  <div key={cat.label} className="rounded-lg bg-dark-primary/60 border border-dark-border/50 p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-text-secondary font-medium">{cat.label}</span>
+                      <span className={`text-[10px] font-mono font-bold ${cat.rating.color}`}>
+                        {cat.rating.text}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-1.5">
+                      <div
+                        className={`h-full rounded-full ${cat.rating.bar} transition-all`}
+                        style={{ width: `${barPct}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-text-muted font-mono">
+                      {(cat.value * 100).toFixed(0)}% weight
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            {buildNarrative() && (
+              <p className="text-sm text-text-secondary leading-relaxed">
+                {buildNarrative()}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Course DNA Card */}
-          {dnaCategories.length > 0 && (
-            <Card padding="none">
-              <div className="p-4 border-b border-dark-border">
-                <h4 className="text-sm font-semibold text-text-muted">Course DNA</h4>
-              </div>
-              <div className="p-4 space-y-3">
-                {dnaCategories.map((cat) => (
-                  <div key={cat.label}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-text-secondary text-sm">{cat.label}</span>
-                      <span className="text-white font-mono text-sm font-bold">
-                        {(cat.value * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-gold to-orange-500"
-                        style={{ width: `${Math.min(cat.value * 100 / 40 * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
           {/* Top Performers Card */}
           {course.playerHistory && course.playerHistory.length > 0 && (
             <Card padding="none">
