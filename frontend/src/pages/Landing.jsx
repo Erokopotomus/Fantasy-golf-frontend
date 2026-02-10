@@ -136,25 +136,26 @@ const Landing = () => {
               <p className="text-text-muted text-sm">Golf is live now. NFL predictions launch Spring 2026.</p>
             </div>
 
-            {/* Right: Gauge + Sport Badges */}
-            <div className="flex-shrink-0 flex flex-col items-center justify-center w-full lg:w-auto">
-              <p className="text-gold text-base font-display font-bold uppercase tracking-widest mb-6">Your Clutch Rating</p>
-              <div className="scale-150 mb-12">
+            {/* Right: Gauge + Sport Badges side by side */}
+            <div className="flex-shrink-0 flex items-center gap-8 lg:gap-10">
+              {/* Gauge */}
+              <div className="flex flex-col items-center">
                 <ClutchRatingGauge rating={84} size="xl" animated />
               </div>
-              <div className="flex gap-5">
-                <div className="rounded-xl px-6 py-4 border border-gold/30 bg-gold/10 flex items-center gap-3">
-                  <span className="text-3xl">⛳</span>
+              {/* Sport badges stacked */}
+              <div className="flex flex-col gap-4">
+                <div className="rounded-xl px-5 py-3.5 border border-gold/30 bg-gold/10 flex items-center gap-3">
+                  <span className="text-2xl">⛳</span>
                   <div>
-                    <span className="text-white font-display font-bold text-base block">Golf</span>
-                    <span className="text-[11px] font-mono font-bold text-gold uppercase">Live</span>
+                    <span className="text-white font-display font-bold text-sm block">Golf</span>
+                    <span className="text-[10px] font-mono font-bold text-gold uppercase">Live</span>
                   </div>
                 </div>
-                <div className="rounded-xl px-6 py-4 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
-                  <span className="text-3xl">🏈</span>
+                <div className="rounded-xl px-5 py-3.5 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
+                  <span className="text-2xl">🏈</span>
                   <div>
-                    <span className="text-white font-display font-bold text-base block">NFL</span>
-                    <span className="text-[11px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
+                    <span className="text-white font-display font-bold text-sm block">NFL</span>
+                    <span className="text-[10px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
                   </div>
                 </div>
               </div>
