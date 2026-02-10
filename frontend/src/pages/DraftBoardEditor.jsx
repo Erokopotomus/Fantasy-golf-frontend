@@ -70,6 +70,17 @@ export default function DraftBoardEditor() {
 
   const existingPlayerIds = entries.map(e => e.playerId)
 
+  // Compute position rank for each entry (e.g., this is your RB3, WR1, etc.)
+  const positionRankMap = {}
+  const posRankCounter = {}
+  for (const entry of entries) {
+    const pos = entry.player?.position
+    if (pos) {
+      posRankCounter[pos] = (posRankCounter[pos] || 0) + 1
+      positionRankMap[entry.playerId] = posRankCounter[pos]
+    }
+  }
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
       <BoardHeader
@@ -136,6 +147,7 @@ export default function DraftBoardEditor() {
                       entry={entry}
                       index={i}
                       sport={board?.sport}
+                      positionRank={positionRankMap[entry.playerId]}
                       onRemove={removePlayer}
                       onClickNotes={(e) => setNoteEntry(e)}
                     />

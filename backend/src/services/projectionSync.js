@@ -326,7 +326,19 @@ async function computeNflClutchRankings(scoringFormat = 'ppr', season = 2026) {
     }
   }
 
-  // 5. Build ranked list: sort by fantasy PPG (desc)
+  // 5. Build per-position ranked lists, then compute VBD for overall ranking
+  //
+  // VBD (Value Based Drafting): rank each player within their position,
+  // then measure "points above replacement" to produce an overall ranking
+  // that reflects actual draft value — not just raw PPG.
+  //
+  // Replacement level = last starter in a 12-team league:
+  //   QB13 (1 starter + 1 backup), RB25 (2 starters + flex backup),
+  //   WR25 (2-3 starters + flex), TE13 (1 starter + 1 backup),
+  //   K13, DEF13
+
+  const REPLACEMENT_LEVEL = { QB: 13, RB: 25, WR: 25, TE: 13, K: 13, DEF: 13 }
+
   const playerLookup = new Map(clutchPlayers.map(p => [p.id, p]))
   const rankedPlayers = []
   for (const [pid, data] of playerPPG) {
@@ -339,20 +351,48 @@ async function computeNflClutchRankings(scoringFormat = 'ppr', season = 2026) {
       position: player.nflPosition,
     })
   }
-  rankedPlayers.sort((a, b) => b.ppg - a.ppg)
 
-  // Assign PPG rank
-  const ppgRankMap = new Map()
-  rankedPlayers.forEach((p, i) => ppgRankMap.set(p.clutchPlayerId, i + 1))
+  // Group by position and rank within each
+  const byPosition = {}
+  for (const p of rankedPlayers) {
+    if (!byPosition[p.position]) byPosition[p.position] = []
+    byPosition[p.position].push(p)
+  }
+  for (const pos of Object.keys(byPosition)) {
+    byPosition[pos].sort((a, b) => b.ppg - a.ppg)
+  }
 
-  // 6. Blend: 60% PPG rank + 40% ADP rank
+  // Assign position rank and compute replacement-level PPG
+  const positionRankMap = new Map() // clutchPlayerId → posRank (1-indexed)
+  const replacementPPG = {} // position → PPG of the replacement-level player
+  for (const [pos, players] of Object.entries(byPosition)) {
+    players.forEach((p, i) => positionRankMap.set(p.clutchPlayerId, i + 1))
+    const repIdx = (REPLACEMENT_LEVEL[pos] || 13) - 1
+    replacementPPG[pos] = repIdx < players.length ? players[repIdx].ppg : 0
+  }
+
+  console.log(`[projectionSync] Replacement PPG:`, JSON.stringify(replacementPPG))
+
+  // Compute VBD (value over replacement) for each player
+  for (const p of rankedPlayers) {
+    const repPPG = replacementPPG[p.position] || 0
+    p.vbd = p.ppg - repPPG
+    p.positionRank = positionRankMap.get(p.clutchPlayerId) || 999
+  }
+
+  // 6. Blend VBD rank with ADP rank (when available)
+  // Sort by VBD first to get VBD rank
+  const vbdSorted = [...rankedPlayers].sort((a, b) => b.vbd - a.vbd)
+  const vbdRankMap = new Map()
+  vbdSorted.forEach((p, i) => vbdRankMap.set(p.clutchPlayerId, i + 1))
+
   const blendedRankings = rankedPlayers.map(p => {
-    const ppgRank = ppgRankMap.get(p.clutchPlayerId) || 999
-    const adpRank = adpMap.get(p.clutchPlayerId) || ppgRank // fallback to PPG rank if no ADP
+    const vbdRank = vbdRankMap.get(p.clutchPlayerId) || 999
+    const adpRank = adpMap.get(p.clutchPlayerId) || vbdRank
     const hasAdp = adpMap.has(p.clutchPlayerId)
     const blendedScore = hasAdp
-      ? (ppgRank * 0.6) + (adpRank * 0.4)
-      : ppgRank // use PPG rank only if no ADP
+      ? (vbdRank * 0.6) + (adpRank * 0.4)
+      : vbdRank
     return {
       ...p,
       adpRank: hasAdp ? adpRank : null,
@@ -374,7 +414,12 @@ async function computeNflClutchRankings(scoringFormat = 'ppr', season = 2026) {
     adpRank: p.adpRank,
     clutchRank: i + 1,
     position: p.position,
-    metadata: { blendedScore: p.blendedScore, ppg: p.ppg },
+    metadata: {
+      blendedScore: p.blendedScore,
+      ppg: p.ppg,
+      vbd: Math.round(p.vbd * 100) / 100,
+      positionRank: p.positionRank,
+    },
     computedAt: now,
   }))
 
@@ -388,6 +433,13 @@ async function computeNflClutchRankings(scoringFormat = 'ppr', season = 2026) {
   }
 
   console.log(`[projectionSync] Stored ${upsertData.length} NFL Clutch Rankings (${scoringFormat})`)
+  // Log top 10 for verification
+  const top10 = blendedRankings.slice(0, 10)
+  top10.forEach((p, i) => {
+    const pl = playerLookup.get(p.clutchPlayerId)
+    console.log(`  #${i + 1} ${pl?.name} (${p.position}${p.positionRank}) — VBD: ${p.vbd.toFixed(1)}, PPG: ${p.ppg.toFixed(1)}`)
+  })
+
   return { success: true, count: upsertData.length }
 }
 

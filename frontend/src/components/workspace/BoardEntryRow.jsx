@@ -10,7 +10,7 @@ const POSITION_COLORS = {
   DEF: 'bg-yellow-500/20 text-yellow-400',
 }
 
-export default function BoardEntryRow({ entry, index, sport, onRemove, onClickNotes }) {
+export default function BoardEntryRow({ entry, index, sport, positionRank, onRemove, onClickNotes }) {
   const {
     attributes,
     listeners,
@@ -69,7 +69,7 @@ export default function BoardEntryRow({ entry, index, sport, onRemove, onClickNo
         <div className="hidden sm:flex items-center gap-2 shrink-0">
           {player.position && (
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${POSITION_COLORS[player.position] || 'bg-white/10 text-white/60'}`}>
-              {player.position}
+              {player.position}{positionRank || ''}
             </span>
           )}
           {player.team && <span className="text-xs text-white/40">{player.team}</span>}
