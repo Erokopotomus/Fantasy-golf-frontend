@@ -134,6 +134,23 @@ router.post('/nfl/backfill', async (req, res) => {
   await runSync(`nfl-backfill-${season}`, () => nflSync.backfillSeason(prisma, season), res)
 })
 
+// POST /api/sync/clutch-metrics — Compute Clutch metrics for upcoming tournament
+const clutchMetrics = require('../services/clutchMetrics')
+router.post('/clutch-metrics', async (req, res) => {
+  const { tournamentId } = req.body
+  if (!tournamentId) {
+    // Auto-detect next upcoming tournament with a field
+    const next = await prisma.tournament.findFirst({
+      where: { status: 'UPCOMING', performances: { some: {} } },
+      orderBy: { startDate: 'asc' },
+      select: { id: true, name: true },
+    })
+    if (!next) return res.status(404).json({ error: 'No upcoming tournament with field found' })
+    return await runSync('clutch-metrics', () => clutchMetrics.computeForEvent(next.id, prisma), res)
+  }
+  await runSync('clutch-metrics', () => clutchMetrics.computeForEvent(tournamentId, prisma), res)
+})
+
 // POST /api/sync/course-history — Rebuild PlayerCourseHistory
 const courseHistoryAggregator = require('../services/courseHistoryAggregator')
 router.post('/course-history', async (req, res) => {

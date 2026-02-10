@@ -407,10 +407,10 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
     course.puttingImportance,
   ]
 
-  // Dot product
+  // Weighted average of player percentiles by course importance
   const dotProduct = playerProfile.reduce((s, v, i) => s + v * courseProfile[i], 0)
-  const courseSelfDot = courseProfile.reduce((s, v) => s + v * v, 0)
-  const rawFit = courseSelfDot > 0 ? dotProduct / courseSelfDot : 0
+  const weightSum = courseProfile.reduce((s, v) => s + v, 0)
+  const rawFit = weightSum > 0 ? dotProduct / weightSum : 0
 
   // Quality multiplier (elite generalists get a floor)
   const overallPercentile = percentileRank(player.sgTotal, sortedTotal)
@@ -438,6 +438,202 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
       courseName: course.name,
     },
   }
+}
+
+// ─── Profile-Based Computation ────────────────────────────────────────────────
+// Uses Player-level SG skill ratings (already synced) instead of requiring
+// multiple historical Performance records. Transforms raw SG into
+// Clutch-proprietary metrics (CPI, Form Score, Course Fit).
+
+async function computeForEventFromProfiles(tournamentId, prisma, onlyPlayerIds = null) {
+  console.log(`[ClutchMetrics] Computing profile-based metrics for event ${tournamentId}`)
+
+  // Get tournament and course in one query
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    include: { course: true },
+  })
+  if (!tournament) throw new Error(`Tournament ${tournamentId} not found`)
+
+  const course = tournament.course
+  const hasCourseWeights = course &&
+    course.drivingImportance != null && course.approachImportance != null &&
+    course.aroundGreenImportance != null && course.puttingImportance != null
+
+  // Get field players (or subset if onlyPlayerIds provided)
+  const fieldPerfs = await prisma.performance.findMany({
+    where: {
+      tournamentId,
+      ...(onlyPlayerIds ? { playerId: { in: onlyPlayerIds } } : {}),
+    },
+    select: { playerId: true },
+  })
+  const fieldPlayerIds = fieldPerfs.map(p => p.playerId)
+
+  if (fieldPlayerIds.length === 0) {
+    console.log('[ClutchMetrics] No players in field')
+    return { computed: 0, skipped: 0 }
+  }
+
+  // Get field players' SG profiles
+  const fieldPlayers = await prisma.player.findMany({
+    where: { id: { in: fieldPlayerIds } },
+    select: {
+      id: true, sgOffTee: true, sgApproach: true, sgAroundGreen: true,
+      sgPutting: true, sgTotal: true, owgrRank: true,
+    },
+  })
+  const fieldPlayerMap = new Map(fieldPlayers.map(p => [p.id, p]))
+
+  // Get ALL active players with full SG data for percentile reference
+  const allPlayers = await prisma.player.findMany({
+    where: {
+      isActive: true,
+      sgTotal: { not: null },
+      sgOffTee: { not: null },
+      sgApproach: { not: null },
+      sgAroundGreen: { not: null },
+      sgPutting: { not: null },
+    },
+    select: {
+      sgOffTee: true, sgApproach: true, sgAroundGreen: true,
+      sgPutting: true, sgTotal: true, owgrRank: true,
+    },
+  })
+
+  if (allPlayers.length < 10) {
+    console.log('[ClutchMetrics] Not enough players with SG data for percentiles')
+    return { computed: 0, skipped: 0 }
+  }
+
+  // Pre-compute sorted arrays for percentile lookups (do once, use for all players)
+  const sortedOTT = allPlayers.map(p => p.sgOffTee).sort((a, b) => a - b)
+  const sortedAPP = allPlayers.map(p => p.sgApproach).sort((a, b) => a - b)
+  const sortedARG = allPlayers.map(p => p.sgAroundGreen).sort((a, b) => a - b)
+  const sortedPUT = allPlayers.map(p => p.sgPutting).sort((a, b) => a - b)
+  const sortedTotal = allPlayers.map(p => p.sgTotal).sort((a, b) => a - b)
+
+  // Pre-compute CPI reference distribution
+  const allBlended = allPlayers.map(p =>
+    CPI_SG_WEIGHTS.offTee * p.sgOffTee +
+    CPI_SG_WEIGHTS.approach * p.sgApproach +
+    CPI_SG_WEIGHTS.aroundGreen * p.sgAroundGreen +
+    CPI_SG_WEIGHTS.putting * p.sgPutting
+  )
+  const blendedMean = mean(allBlended)
+  const blendedStd = stddev(allBlended)
+
+  // Pre-compute OWGR percentile reference
+  const rankedPlayers = allPlayers.filter(p => p.owgrRank != null && p.owgrRank > 0)
+  const sortedOwgr = rankedPlayers.map(p => p.owgrRank).sort((a, b) => a - b)
+
+  // Course profile (if available)
+  const courseProfile = hasCourseWeights ? [
+    course.drivingImportance, course.approachImportance,
+    course.aroundGreenImportance, course.puttingImportance,
+  ] : null
+  const courseSelfDot = courseProfile ? courseProfile.reduce((s, v) => s + v * v, 0) : 0
+
+  let computed = 0
+  let skipped = 0
+  const operations = []
+
+  for (const playerId of fieldPlayerIds) {
+    const player = fieldPlayerMap.get(playerId)
+    if (!player || player.sgTotal == null || player.sgOffTee == null ||
+        player.sgApproach == null || player.sgAroundGreen == null || player.sgPutting == null) {
+      skipped++
+      continue
+    }
+
+    // --- CPI: Weighted SG blend, z-score normalized ---
+    const blendedSG =
+      CPI_SG_WEIGHTS.offTee * player.sgOffTee +
+      CPI_SG_WEIGHTS.approach * player.sgApproach +
+      CPI_SG_WEIGHTS.aroundGreen * player.sgAroundGreen +
+      CPI_SG_WEIGHTS.putting * player.sgPutting
+    const cpi = blendedStd > 0 ? clamp((blendedSG - blendedMean) / blendedStd, -3.0, 3.0) : 0
+
+    // --- Form Score: SG skill percentile (60%) + OWGR percentile (40%) ---
+    const sgPercentile = percentileRank(player.sgTotal, sortedTotal)
+    let owgrPercentile = 0.5
+    if (player.owgrRank && sortedOwgr.length > 10) {
+      // Lower rank number = better → invert percentile
+      owgrPercentile = 1 - percentileRank(player.owgrRank, sortedOwgr)
+    }
+    const formBlend = sgPercentile * 0.6 + owgrPercentile * 0.4
+    const formScore = clamp(formBlend * 100, 0, 100)
+
+    // --- Course Fit: Player SG percentile profile × course DNA weights ---
+    let courseFitScore = null
+    let fitComponents = null
+    if (courseProfile) {
+      const playerProfile = [
+        percentileRank(player.sgOffTee, sortedOTT),
+        percentileRank(player.sgApproach, sortedAPP),
+        percentileRank(player.sgAroundGreen, sortedARG),
+        percentileRank(player.sgPutting, sortedPUT),
+      ]
+      // Weighted average of player percentiles by course importance
+      const dotProduct = playerProfile.reduce((s, v, i) => s + v * courseProfile[i], 0)
+      const weightSum = courseProfile.reduce((s, v) => s + v, 0)
+      const rawFit = weightSum > 0 ? dotProduct / weightSum : 0
+      const overallPercentile = percentileRank(player.sgTotal, sortedTotal)
+      const qualityMult = 0.7 + 0.3 * overallPercentile
+
+      courseFitScore = clamp(rawFit * 100 * qualityMult, 0, 100)
+      fitComponents = {
+        playerProfile: playerProfile.map(v => Math.round(v * 1000) / 1000),
+        courseProfile,
+        rawFit: Math.round(rawFit * 1000) / 1000,
+        qualityMult: Math.round(qualityMult * 1000) / 1000,
+        courseName: course.name,
+      }
+    }
+
+    const data = {
+      playerId,
+      tournamentId,
+      formulaVersion: FORMULA_VERSION,
+      cpi: Math.round(cpi * 1000) / 1000,
+      cpiComponents: { blendedSG: Math.round(blendedSG * 1000) / 1000, source: 'player_profile' },
+      formScore: Math.round(formScore * 10) / 10,
+      formComponents: {
+        sgPercentile: Math.round(sgPercentile * 1000) / 1000,
+        owgrPercentile: Math.round(owgrPercentile * 1000) / 1000,
+        source: 'player_profile',
+      },
+      pressureScore: null,
+      pressureComponents: null,
+      courseFitScore: courseFitScore != null ? Math.round(courseFitScore * 10) / 10 : null,
+      fitComponents,
+      inputs: { source: 'player_profile_sg', cpiWeights: CPI_SG_WEIGHTS, formBlend: { sg: 0.6, owgr: 0.4 } },
+      computedAt: new Date(),
+    }
+
+    operations.push(
+      prisma.clutchScore.upsert({
+        where: {
+          playerId_tournamentId_formulaVersion: {
+            playerId,
+            tournamentId,
+            formulaVersion: FORMULA_VERSION,
+          },
+        },
+        update: data,
+        create: data,
+      })
+    )
+    computed++
+  }
+
+  // Batch upsert in chunks of 50
+  for (let i = 0; i < operations.length; i += 50) {
+    await prisma.$transaction(operations.slice(i, i + 50))
+  }
+
+  console.log(`[ClutchMetrics] Profile-based done: ${computed} computed, ${skipped} skipped`)
+  return { computed, skipped }
 }
 
 // ─── Batch Computation ────────────────────────────────────────────────────────
@@ -496,21 +692,56 @@ async function computeForEvent(tournamentId, prisma) {
     select: { playerId: true },
   })
 
+  if (fieldPerfs.length === 0) return { computed: 0, skipped: 0, profileFallback: 0 }
+
+  // Quick check: do any field players have 4+ events with SG data?
+  // If not, skip expensive per-player performance lookups entirely
+  const sgCounts = await prisma.performance.groupBy({
+    by: ['playerId'],
+    where: {
+      playerId: { in: fieldPerfs.map(p => p.playerId).slice(0, 20) },
+      sgTotal: { not: null },
+    },
+    _count: true,
+  })
+  const hasEnoughHistory = sgCounts.some(g => g._count >= 4)
+
+  if (!hasEnoughHistory) {
+    console.log('[ClutchMetrics] Insufficient performance history — using profile-based computation')
+    const result = await computeForEventFromProfiles(tournamentId, prisma)
+    return { computed: 0, skipped: 0, profileFallback: result.computed }
+  }
+
+  // Performance-based computation (when we have enough historical data)
   let computed = 0
   let skipped = 0
+  const nullPlayers = []
 
   for (const { playerId } of fieldPerfs) {
     try {
-      await computeAllMetrics(playerId, tournamentId, prisma)
-      computed++
+      const result = await computeAllMetrics(playerId, tournamentId, prisma)
+      if (result.cpi == null && result.formScore == null && result.courseFitScore == null) {
+        nullPlayers.push(playerId)
+      } else {
+        computed++
+      }
     } catch (e) {
       console.warn(`[ClutchMetrics] Skipped player ${playerId}: ${e.message}`)
+      nullPlayers.push(playerId)
       skipped++
     }
   }
 
-  console.log(`[ClutchMetrics] Event done: ${computed} computed, ${skipped} skipped`)
-  return { computed, skipped }
+  // Profile-based fallback for players that got all null metrics
+  let profileFallback = 0
+  if (nullPlayers.length > 0) {
+    console.log(`[ClutchMetrics] ${nullPlayers.length} players with null metrics — running profile fallback`)
+    const result = await computeForEventFromProfiles(tournamentId, prisma, nullPlayers)
+    profileFallback = result.computed
+  }
+
+  console.log(`[ClutchMetrics] Event done: ${computed} performance-based, ${profileFallback} profile-based, ${skipped} errors`)
+  return { computed, skipped, profileFallback }
 }
 
 async function recomputeAll(prisma) {
@@ -545,6 +776,7 @@ module.exports = {
   computePressureScore,
   computeAllMetrics,
   computeForEvent,
+  computeForEventFromProfiles,
   recomputeAll,
   FORMULA_VERSION,
 }

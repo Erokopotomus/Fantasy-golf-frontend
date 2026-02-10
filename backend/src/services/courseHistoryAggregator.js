@@ -8,12 +8,13 @@
 async function aggregateAllCourseHistory(prisma) {
   console.log('[CourseHistory] Starting full aggregation...')
 
-  // Get all (playerId, courseId) pairs with performance records
+  // Get all (playerId, courseId) pairs with actual round data (not just field entries)
   const pairs = await prisma.$queryRaw`
     SELECT DISTINCT p."playerId", t."courseId"
     FROM performances p
     JOIN tournaments t ON t.id = p."tournamentId"
     WHERE t."courseId" IS NOT NULL
+      AND p."round1" IS NOT NULL
   `
 
   if (pairs.length === 0) {
@@ -50,6 +51,7 @@ async function aggregateAllCourseHistory(prisma) {
     FROM performances p
     JOIN tournaments t ON t.id = p."tournamentId"
     WHERE t."courseId" IS NOT NULL
+      AND p."round1" IS NOT NULL
     GROUP BY p."playerId", t."courseId"
   `
 
@@ -135,6 +137,7 @@ async function aggregateForCourse(courseId, prisma) {
     FROM performances p
     JOIN tournaments t ON t.id = p."tournamentId"
     WHERE t."courseId" = ${courseId}
+      AND p."round1" IS NOT NULL
     GROUP BY p."playerId"
   `
 
