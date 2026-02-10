@@ -268,7 +268,7 @@ const GolfHub = () => {
                 {heroIntel.course && (
                   <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-white">Course DNA</h3>
+                      <h3 className="text-sm font-bold text-white">What Wins Here</h3>
                       {heroIntel.course.id && (
                         <Link to={`/courses/${heroIntel.course.id}`} className="text-[10px] text-gold hover:text-gold/80 transition-colors">
                           Course Profile →
@@ -281,26 +281,35 @@ const GolfHub = () => {
                       {heroIntel.course.yardage && ` | ${heroIntel.course.yardage.toLocaleString()} yds`}
                     </p>
                     {(() => {
+                      const getDnaLabel = (val) => {
+                        if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
+                        if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
+                        if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-white/30' }
+                        return { text: 'Low', color: 'text-text-muted', bar: 'bg-white/10' }
+                      }
                       const dna = [
                         { label: 'Driving', value: heroIntel.course.drivingImportance },
                         { label: 'Approach', value: heroIntel.course.approachImportance },
                         { label: 'Around Green', value: heroIntel.course.aroundGreenImportance },
                         { label: 'Putting', value: heroIntel.course.puttingImportance },
-                      ].filter(d => d.value != null)
+                      ].filter(d => d.value != null).map(d => ({ ...d, rating: getDnaLabel(d.value) }))
                       if (dna.length === 0) return <p className="text-xs text-text-muted">Course profile not yet available</p>
                       return (
-                        <div className="space-y-2">
-                          {dna.map(cat => (
-                            <div key={cat.label}>
-                              <div className="flex items-center justify-between mb-0.5">
-                                <span className="text-text-muted text-[10px] uppercase">{cat.label}</span>
-                                <span className="text-white font-mono text-[10px] font-bold">{(cat.value * 100).toFixed(0)}%</span>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                          {dna.map(cat => {
+                            const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
+                            return (
+                              <div key={cat.label}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-text-secondary text-[10px] font-medium">{cat.label}</span>
+                                  <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
+                                </div>
+                                <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                                  <div className={`h-full rounded-full ${cat.rating.bar} transition-all`} style={{ width: `${barPct}%` }} />
+                                </div>
                               </div>
-                              <div className="h-1 bg-dark-tertiary rounded-full overflow-hidden">
-                                <div className="h-full rounded-full bg-gradient-to-r from-gold to-orange-500" style={{ width: `${Math.min(cat.value * 100 / 40 * 100, 100)}%` }} />
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )
                     })()}
