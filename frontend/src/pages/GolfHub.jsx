@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import FeedList from '../components/feed/FeedList'
+import WeatherStrip from '../components/tournament/WeatherStrip'
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
@@ -72,6 +73,7 @@ const GolfHub = () => {
   const [tournamentsLoading, setTournamentsLoading] = useState(true)
   const [leagues, setLeagues] = useState([])
   const [rosterPlayers, setRosterPlayers] = useState([]) // [{id, name, leagueId, teamId}]
+  const [heroIntel, setHeroIntel] = useState(null) // { weather, leaderboard, course }
 
   // Fetch tournaments with fields
   useEffect(() => {
@@ -133,6 +135,22 @@ const GolfHub = () => {
     if (inProgress) return inProgress
     return tournaments.find(t => t.status === 'UPCOMING') || null
   }, [tournaments])
+
+  // Fetch tournament intel (weather + field) for the hero tournament
+  useEffect(() => {
+    if (!heroTournament?.id || heroTournament.status !== 'UPCOMING') return
+    Promise.all([
+      api.getTournamentWeather(heroTournament.id).catch(() => ({ weather: [] })),
+      api.getTournamentLeaderboard(heroTournament.id).catch(() => ({ leaderboard: [] })),
+      api.getTournament(heroTournament.id).catch(() => ({ tournament: null })),
+    ]).then(([weatherData, lbData, tData]) => {
+      setHeroIntel({
+        weather: weatherData?.weather || [],
+        leaderboard: lbData?.leaderboard || [],
+        course: tData?.tournament?.course || null,
+      })
+    })
+  }, [heroTournament?.id, heroTournament?.status])
 
   // Upcoming schedule (exclude the hero)
   const upcomingSchedule = useMemo(() => {
@@ -231,6 +249,139 @@ const GolfHub = () => {
               </div>
             </Link>
           ) : null}
+
+          {/* Section 1B: Tournament Intel Preview */}
+          {heroTournament?.status === 'UPCOMING' && heroIntel && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-display font-bold text-white">Tournament Intel</h2>
+                <Link
+                  to={`/tournaments/${heroTournament.id}`}
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                >
+                  Full Preview →
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Course DNA snapshot */}
+                {heroIntel.course && (
+                  <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-white">Course DNA</h3>
+                      {heroIntel.course.id && (
+                        <Link to={`/courses/${heroIntel.course.id}`} className="text-[10px] text-gold hover:text-gold/80 transition-colors">
+                          Course Profile →
+                        </Link>
+                      )}
+                    </div>
+                    <p className="text-xs text-text-muted mb-3">
+                      {heroIntel.course.name}
+                      {heroIntel.course.par && ` | Par ${heroIntel.course.par}`}
+                      {heroIntel.course.yardage && ` | ${heroIntel.course.yardage.toLocaleString()} yds`}
+                    </p>
+                    {(() => {
+                      const dna = [
+                        { label: 'Driving', value: heroIntel.course.drivingImportance },
+                        { label: 'Approach', value: heroIntel.course.approachImportance },
+                        { label: 'Around Green', value: heroIntel.course.aroundGreenImportance },
+                        { label: 'Putting', value: heroIntel.course.puttingImportance },
+                      ].filter(d => d.value != null)
+                      if (dna.length === 0) return <p className="text-xs text-text-muted">Course profile not yet available</p>
+                      return (
+                        <div className="space-y-2">
+                          {dna.map(cat => (
+                            <div key={cat.label}>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-text-muted text-[10px] uppercase">{cat.label}</span>
+                                <span className="text-white font-mono text-[10px] font-bold">{(cat.value * 100).toFixed(0)}%</span>
+                              </div>
+                              <div className="h-1 bg-dark-tertiary rounded-full overflow-hidden">
+                                <div className="h-full rounded-full bg-gradient-to-r from-gold to-orange-500" style={{ width: `${Math.min(cat.value * 100 / 40 * 100, 100)}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
+
+                {/* Top Course Fits */}
+                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
+                  <h3 className="text-sm font-bold text-white mb-3">Top Course Fits</h3>
+                  {(() => {
+                    const fits = (heroIntel.leaderboard || [])
+                      .filter(e => e.clutchMetrics?.courseFitScore != null)
+                      .sort((a, b) => (b.clutchMetrics.courseFitScore || 0) - (a.clutchMetrics.courseFitScore || 0))
+                      .slice(0, 5)
+                    if (fits.length === 0) return <p className="text-xs text-text-muted">Course fit data not yet available</p>
+                    return (
+                      <div className="space-y-2">
+                        {fits.map((e, i) => {
+                          const p = e.player || e
+                          const score = Math.round(e.clutchMetrics.courseFitScore)
+                          return (
+                            <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-white/[0.04] -mx-1 px-1 py-0.5 rounded transition-colors">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-text-muted w-3">{i + 1}.</span>
+                                <span className="text-xs font-medium text-white">{p.name}</span>
+                              </div>
+                              <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-gold' : score >= 60 ? 'text-yellow-400' : 'text-text-secondary'}`}>
+                                {score}
+                              </span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
+                </div>
+
+                {/* Weather snapshot */}
+                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
+                  <h3 className="text-sm font-bold text-white mb-3">Weather Outlook</h3>
+                  {heroIntel.weather && heroIntel.weather.length > 0 ? (
+                    <div className="space-y-2">
+                      {heroIntel.weather.slice(0, 4).map((day, i) => {
+                        const windColor = (day.windSpeed || 0) >= 20 ? 'text-red-400' : (day.windSpeed || 0) >= 15 ? 'text-orange-400' : 'text-text-secondary'
+                        return (
+                          <div key={i} className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono text-text-muted uppercase">Rd {day.round || i + 1}</span>
+                            <div className="flex items-center gap-3">
+                              {day.temperature != null && (
+                                <span className="text-xs font-mono text-white">{Math.round(day.temperature)}°</span>
+                              )}
+                              {day.windSpeed != null && (
+                                <span className={`text-xs font-mono ${windColor}`}>{Math.round(day.windSpeed)} mph</span>
+                              )}
+                              {day.difficultyImpact != null && (
+                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full border ${
+                                  day.difficultyImpact >= 0.6 ? 'text-red-400 bg-red-500/15 border-red-500/25' :
+                                  day.difficultyImpact >= 0.4 ? 'text-orange-400 bg-orange-500/15 border-orange-500/25' :
+                                  day.difficultyImpact >= 0.2 ? 'text-yellow-400 bg-yellow-500/15 border-yellow-500/25' :
+                                  'text-emerald-400 bg-emerald-500/15 border-emerald-500/25'
+                                }`}>
+                                  {day.difficultyImpact >= 0.6 ? 'Brutal' : day.difficultyImpact >= 0.4 ? 'Windy' : day.difficultyImpact >= 0.2 ? 'Breezy' : 'Calm'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-muted">
+                      {heroTournament?.startDate ? (() => {
+                        const daysOut = Math.ceil((new Date(heroTournament.startDate) - new Date()) / 86400000)
+                        return daysOut > 16 ? `Forecast available ~${daysOut - 14} days before` : 'No weather data yet'
+                      })() : 'No weather data yet'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Section 2: Quick Links */}
           <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-8">
