@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import TournamentHeader from '../components/tournament/TournamentHeader'
 import TournamentLeaderboard from '../components/tournament/TournamentLeaderboard'
 import TournamentPreview from '../components/tournament/TournamentPreview'
@@ -164,6 +164,22 @@ const TournamentScoring = () => {
     return (
       <div className="space-y-4">
         <TournamentHeader tournament={tournament} leaderboard={leaderboard} />
+
+        {/* Preview banner */}
+        <Link
+          to={`/tournaments/${tournamentId}/preview`}
+          className="block rounded-xl border border-gold/20 bg-gradient-to-r from-gold/[0.06] to-transparent p-4 hover:border-gold/40 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-gold">Tournament Preview</p>
+              <p className="text-xs text-text-muted mt-0.5">The full story of this week's event — course DNA, players to watch, key storylines</p>
+            </div>
+            <span className="text-xs text-gold group-hover:text-gold/80 transition-colors font-medium shrink-0 ml-4">
+              Read →
+            </span>
+          </div>
+        </Link>
 
         {hasField ? (
           <TournamentPreview

@@ -255,12 +255,20 @@ const GolfHub = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-display font-bold text-white">Tournament Intel</h2>
-                <Link
-                  to={`/tournaments/${heroTournament.id}`}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
-                >
-                  Full Preview →
-                </Link>
+                <div className="flex items-center gap-4">
+                  <Link
+                    to={`/tournaments/${heroTournament.id}/preview`}
+                    className="text-xs text-gold hover:text-gold/80 transition-colors font-medium"
+                  >
+                    Read Preview →
+                  </Link>
+                  <Link
+                    to={`/tournaments/${heroTournament.id}`}
+                    className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                  >
+                    Full Field →
+                  </Link>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

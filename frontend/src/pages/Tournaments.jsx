@@ -181,9 +181,18 @@ const Tournaments = () => {
                       <span className="text-xs font-mono text-text-muted shrink-0">{formatPurse(t.purse)}</span>
                     )}
                   </div>
-                  <p className="text-xs text-text-muted mt-2 font-mono">
-                    {formatDateRange(t.startDate, t.endDate)}
-                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs text-text-muted font-mono">
+                      {formatDateRange(t.startDate, t.endDate)}
+                    </p>
+                    <Link
+                      to={`/tournaments/${t.id}/preview`}
+                      className="text-[10px] font-medium text-gold hover:text-gold/80 transition-colors"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      Preview →
+                    </Link>
+                  </div>
                 </Card>
               </Link>
             ))}
