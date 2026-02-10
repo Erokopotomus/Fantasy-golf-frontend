@@ -137,29 +137,102 @@ const Landing = () => {
             </div>
 
             {/* Right: Gauge + Sport Badges */}
-            <div className="flex-shrink-0 flex flex-col items-center">
-              <p className="text-gold text-base font-display font-bold uppercase tracking-widest mb-4">Your Clutch Rating</p>
-              <div className="scale-125 mb-8">
+            <div className="flex-shrink-0 flex flex-col items-center justify-center w-full lg:w-auto">
+              <p className="text-gold text-base font-display font-bold uppercase tracking-widest mb-6">Your Clutch Rating</p>
+              <div className="scale-150 mb-12">
                 <ClutchRatingGauge rating={84} size="xl" animated />
               </div>
-              <div className="flex gap-4">
-                <div className="rounded-xl px-5 py-3 border border-gold/30 bg-gold/10 flex items-center gap-3">
-                  <span className="text-2xl">⛳</span>
+              <div className="flex gap-5">
+                <div className="rounded-xl px-6 py-4 border border-gold/30 bg-gold/10 flex items-center gap-3">
+                  <span className="text-3xl">⛳</span>
                   <div>
-                    <span className="text-white font-display font-bold text-sm block">Golf</span>
-                    <span className="text-[10px] font-mono font-bold text-gold uppercase">Live</span>
+                    <span className="text-white font-display font-bold text-base block">Golf</span>
+                    <span className="text-[11px] font-mono font-bold text-gold uppercase">Live</span>
                   </div>
                 </div>
-                <div className="rounded-xl px-5 py-3 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
-                  <span className="text-2xl">🏈</span>
+                <div className="rounded-xl px-6 py-4 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
+                  <span className="text-3xl">🏈</span>
                   <div>
-                    <span className="text-white font-display font-bold text-sm block">NFL</span>
-                    <span className="text-[10px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
+                    <span className="text-white font-display font-bold text-base block">NFL</span>
+                    <span className="text-[11px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ══════════ THE CLUTCH RATING ══════════ */}
+      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+              One number for everything you know.
+            </h2>
+            <p className="text-text-secondary max-w-xl mx-auto leading-relaxed">
+              Your Clutch Rating is the single score that captures it all — league performance, prediction accuracy,
+              draft intelligence, consistency across sports. Like a credit score for sports knowledge.
+            </p>
+          </div>
+
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            {/* Gauge */}
+            <div className="flex-shrink-0">
+              <ClutchRatingGauge rating={84} size="xl" animated />
+            </div>
+
+            {/* Components + Tiers */}
+            <div className="flex-1 space-y-8">
+              {/* Components */}
+              <div>
+                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-4">What builds your score</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Prediction Accuracy', pct: 82, color: 'bg-emerald-500' },
+                    { label: 'Pick Record', pct: 76, color: 'bg-gold' },
+                    { label: 'Draft Intelligence', pct: 70, color: 'bg-orange' },
+                    { label: 'Consistency', pct: 88, color: 'bg-blue-500' },
+                    { label: 'Bold Calls Rewarded', pct: 65, color: 'bg-purple-500' },
+                  ].map(c => (
+                    <div key={c.label}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-text-secondary">{c.label}</span>
+                        <span className="text-white font-mono font-medium">{c.pct}%</span>
+                      </div>
+                      <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${c.color}`} style={{ width: `${c.pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tiers */}
+              <div>
+                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">Score Tiers</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {[
+                    { range: '90-100', label: 'Elite', color: 'text-amber-400 bg-amber-400/10 border-amber-400/20' },
+                    { range: '80-89', label: 'Expert', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
+                    { range: '70-79', label: 'Sharp', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
+                    { range: '60-69', label: 'Solid', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+                    { range: '<60', label: 'Developing', color: 'text-gray-400 bg-gray-400/10 border-gray-400/20' },
+                  ].map(t => (
+                    <div key={t.label} className={`text-center px-2 py-2 rounded-lg border text-xs font-mono ${t.color}`}>
+                      <div className="font-bold">{t.range}</div>
+                      <div className="opacity-80">{t.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-text-secondary mt-12 max-w-lg mx-auto leading-relaxed">
+            Every league you play, every projection you make, every bold call that hits — it all feeds your rating.
+            Put it in your bio. Link your profile from your podcast. It's the number that proves you're not just talking.
+          </p>
         </div>
       </section>
 
@@ -351,79 +424,6 @@ const Landing = () => {
 
           <p className="text-center text-text-muted text-sm mt-8">
             The longer you're on Clutch, the more valuable it gets. That's the point.
-          </p>
-        </div>
-      </section>
-
-      {/* ══════════ THE CLUTCH RATING ══════════ */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
-              One number for everything you know.
-            </h2>
-            <p className="text-text-secondary max-w-xl mx-auto leading-relaxed">
-              Your Clutch Rating is the single score that captures it all — league performance, prediction accuracy,
-              draft intelligence, consistency across sports. Like a credit score for sports knowledge.
-            </p>
-          </div>
-
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            {/* Gauge */}
-            <div className="flex-shrink-0">
-              <ClutchRatingGauge rating={84} size="xl" animated />
-            </div>
-
-            {/* Components + Tiers */}
-            <div className="flex-1 space-y-8">
-              {/* Components */}
-              <div>
-                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-4">What builds your score</h3>
-                <div className="space-y-3">
-                  {[
-                    { label: 'Prediction Accuracy', pct: 82, color: 'bg-emerald-500' },
-                    { label: 'Pick Record', pct: 76, color: 'bg-gold' },
-                    { label: 'Draft Intelligence', pct: 70, color: 'bg-orange' },
-                    { label: 'Consistency', pct: 88, color: 'bg-blue-500' },
-                    { label: 'Bold Calls Rewarded', pct: 65, color: 'bg-purple-500' },
-                  ].map(c => (
-                    <div key={c.label}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-text-secondary">{c.label}</span>
-                        <span className="text-white font-mono font-medium">{c.pct}%</span>
-                      </div>
-                      <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${c.color}`} style={{ width: `${c.pct}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tiers */}
-              <div>
-                <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">Score Tiers</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {[
-                    { range: '90-100', label: 'Elite', color: 'text-amber-400 bg-amber-400/10 border-amber-400/20' },
-                    { range: '80-89', label: 'Expert', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
-                    { range: '70-79', label: 'Sharp', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
-                    { range: '60-69', label: 'Solid', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
-                    { range: '<60', label: 'Developing', color: 'text-gray-400 bg-gray-400/10 border-gray-400/20' },
-                  ].map(t => (
-                    <div key={t.label} className={`text-center px-2 py-2 rounded-lg border text-xs font-mono ${t.color}`}>
-                      <div className="font-bold">{t.range}</div>
-                      <div className="opacity-80">{t.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center text-text-secondary mt-12 max-w-lg mx-auto leading-relaxed">
-            Every league you play, every projection you make, every bold call that hits — it all feeds your rating.
-            Put it in your bio. Link your profile from your podcast. It's the number that proves you're not just talking.
           </p>
         </div>
       </section>
