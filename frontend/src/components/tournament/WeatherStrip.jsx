@@ -225,8 +225,8 @@ function HourlyDetail({ hourlyData, roundLabel }) {
               })}
             </tr>
 
-            {/* Rainfall amount row */}
-            <tr>
+            {/* Rainfall amount row — only if any hour has rain */}
+            {hourlyData.some(h => h.precip > 0) && <tr>
               <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-2 text-xs font-mono text-text-muted z-10">Rain</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
@@ -250,7 +250,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                   </td>
                 )
               })}
-            </tr>
+            </tr>}
           </tbody>
         </table>
       </div>
