@@ -67,6 +67,8 @@ import GamedayPortal from './pages/GamedayPortal'
 // Workspace
 import DraftBoards from './pages/DraftBoards'
 import DraftBoardEditor from './pages/DraftBoardEditor'
+import WatchList from './pages/WatchList'
+import DecisionJournal from './pages/DecisionJournal'
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -318,6 +320,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <DraftBoards />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/workspace/watch-list"
+            element={
+              <ProtectedRoute>
+                <WatchList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/workspace/journal"
+            element={
+              <ProtectedRoute>
+                <DecisionJournal />
               </ProtectedRoute>
             }
           />

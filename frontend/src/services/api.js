@@ -1012,6 +1012,56 @@ class ApiService {
     })
   }
 
+  // ─── Workspace: Board Activities ─────────────────────────────────────────
+
+  async logBoardActivity(boardId, data) {
+    return this.request(`/draft-boards/${boardId}/activities`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getBoardActivities(boardId) {
+    return this.request(`/draft-boards/${boardId}/activities`)
+  }
+
+  async getDecisionJournal({ sport, limit } = {}) {
+    const params = new URLSearchParams()
+    if (sport) params.set('sport', sport)
+    if (limit) params.set('limit', limit)
+    const qs = params.toString()
+    return this.request(`/draft-boards/journal/all${qs ? '?' + qs : ''}`)
+  }
+
+  // ─── Workspace: Watch List ─────────────────────────────────────────────
+
+  async getWatchList(sport) {
+    const qs = sport ? `?sport=${sport}` : ''
+    return this.request(`/watch-list${qs}`)
+  }
+
+  async getWatchListIds() {
+    return this.request('/watch-list/ids')
+  }
+
+  async addToWatchList(playerId, sport, note) {
+    return this.request('/watch-list', {
+      method: 'POST',
+      body: JSON.stringify({ playerId, sport, note }),
+    })
+  }
+
+  async removeFromWatchList(playerId) {
+    return this.request(`/watch-list/${playerId}`, { method: 'DELETE' })
+  }
+
+  async updateWatchListNote(playerId, note) {
+    return this.request(`/watch-list/${playerId}/note`, {
+      method: 'PATCH',
+      body: JSON.stringify({ note }),
+    })
+  }
+
   // ─── Workspace: Clutch Rankings / Projections ────────────────────────────
 
   async getClutchRankings(sport, format, { season = 2026, limit = 300 } = {}) {

@@ -56,6 +56,7 @@ export default function useDraftBoardEditor(boardId) {
           notes: e.notes ?? null,
           tags: e.tags ?? null,
           reasonChips: e.reasonChips ?? null,
+          baselineRank: e.baselineRank ?? null,
         }))
         await api.saveDraftBoardEntries(boardId, payload)
         setLastSaved(new Date())
@@ -109,6 +110,16 @@ export default function useDraftBoardEditor(boardId) {
       movedDismissTimer.current = setTimeout(() => {
         setMovedEntry(null)
       }, 5000)
+      // Log activity (fire and forget)
+      api.logBoardActivity(boardId, {
+        action: 'player_moved',
+        playerId: movedPlayer.playerId,
+        playerName: movedPlayer.player?.name,
+        fromRank: fromIndex + 1,
+        toRank: toIndex + 1,
+        tags: movedPlayer.tags,
+        reasonChips: movedPlayer.reasonChips,
+      }).catch(() => {})
     }
     scheduleSave()
   }, [scheduleSave])
@@ -153,11 +164,19 @@ export default function useDraftBoardEditor(boardId) {
   }, [boardId])
 
   const updateTags = useCallback((playerId, tags) => {
+    const entry = entriesRef.current.find(e => e.playerId === playerId)
     setEntries(prev => prev.map(e =>
       e.playerId === playerId ? { ...e, tags } : e
     ))
     scheduleSave()
-  }, [scheduleSave])
+    // Log activity
+    api.logBoardActivity(boardId, {
+      action: 'player_tagged',
+      playerId,
+      playerName: entry?.player?.name,
+      tags,
+    }).catch(() => {})
+  }, [scheduleSave, boardId])
 
   const updateReasonChips = useCallback((playerId, chips) => {
     setEntries(prev => prev.map(e =>

@@ -7,6 +7,15 @@ const router = express.Router()
 // All draft board routes require authentication
 router.use(authenticate)
 
+// GET /api/draft-boards/journal/all — user's full decision journal (MUST be before /:id)
+router.get('/journal/all', async (req, res, next) => {
+  try {
+    const { sport, limit } = req.query
+    const activities = await svc.getUserJournal(req.user.id, { sport, limit: limit ? parseInt(limit) : 100 })
+    res.json({ activities })
+  } catch (err) { next(err) }
+})
+
 // GET /api/draft-boards — list user's boards
 router.get('/', async (req, res, next) => {
   try {
@@ -91,6 +100,27 @@ router.patch('/:id/entries/:playerId/notes', async (req, res, next) => {
     const { notes } = req.body
     const result = await svc.updateEntryNotes(req.params.id, req.user.id, req.params.playerId, notes ?? null)
     res.json(result)
+  } catch (err) { next(err) }
+})
+
+// POST /api/draft-boards/:id/activities — log a board activity (move, tag, etc.)
+router.post('/:id/activities', async (req, res, next) => {
+  try {
+    const { action, playerId, playerName, fromRank, toRank, tags, reasonChips } = req.body
+    if (action === 'player_moved') {
+      await svc.logMoveActivity(req.params.id, req.user.id, playerId, playerName, fromRank, toRank, tags, reasonChips)
+    } else if (action === 'player_tagged') {
+      await svc.logTagActivity(req.params.id, req.user.id, playerId, playerName, tags)
+    }
+    res.json({ success: true })
+  } catch (err) { next(err) }
+})
+
+// GET /api/draft-boards/:id/activities — get board activity log
+router.get('/:id/activities', async (req, res, next) => {
+  try {
+    const activities = await svc.getBoardActivities(req.params.id, req.user.id)
+    res.json({ activities })
   } catch (err) { next(err) }
 })
 

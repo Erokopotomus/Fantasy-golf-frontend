@@ -56,7 +56,9 @@ model User {
   oauthTokens         UserOAuthToken[]
 
   // Workspace
-  draftBoards   DraftBoard[]
+  draftBoards      DraftBoard[]
+  watchListEntries WatchListEntry[]
+  boardActivities  BoardActivity[]
 
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
@@ -348,6 +350,7 @@ model Player {
   propLines          PropLine[]
   draftBoardEntries  DraftBoardEntry[]
   clutchProjections  ClutchProjection[]
+  watchListEntries   WatchListEntry[]
 
   @@index([owgrRank])
   @@index([name])
@@ -2630,6 +2633,7 @@ model DraftBoard {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   entries        DraftBoardEntry[]
+  activities     BoardActivity[]
 
   @@index([userId])
   @@index([userId, sport])
@@ -2642,13 +2646,14 @@ model DraftBoardEntry {
   board     DraftBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
   playerId  String
   player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  rank        Int
-  tier        Int?
-  notes       String?    @db.Text
-  tags        Json?
-  reasonChips Json?      @map("reason_chips")
-  createdAt   DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  rank         Int
+  tier         Int?
+  notes        String?    @db.Text
+  tags         Json?
+  reasonChips  Json?      @map("reason_chips")
+  baselineRank Int?       @map("baseline_rank")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@unique([boardId, playerId])
   @@index([boardId])
@@ -2677,4 +2682,39 @@ model ClutchProjection {
   @@unique([sport, scoringFormat, season, week, playerId])
   @@index([sport, scoringFormat, season, clutchRank])
   @@map("clutch_projections")
+}
+
+// ============ WORKSPACE — WATCH LIST ============
+
+model WatchListEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  sport     String
+  note      String?  @db.VarChar(280)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, playerId])
+  @@index([userId, sport])
+  @@map("clutch_watch_list")
+}
+
+// ============ WORKSPACE — BOARD ACTIVITY LOG (Decision Journal) ============
+
+model BoardActivity {
+  id        String     @id @default(cuid())
+  boardId   String
+  board     DraftBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerId  String?
+  action    String     // board_created, player_moved, player_tagged, note_added, player_added, player_removed
+  details   Json?      // { playerName, from, to, delta, tags, reasonChips, note }
+  createdAt DateTime   @default(now())
+
+  @@index([boardId, createdAt])
+  @@index([userId, createdAt])
+  @@map("clutch_board_activities")
 }

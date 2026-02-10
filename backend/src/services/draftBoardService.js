@@ -84,6 +84,19 @@ async function assertOwnership(boardId, userId) {
   return board
 }
 
+// ── Activity Logging ─────────────────────────────────────────────────────────
+
+async function logActivity(boardId, userId, action, playerId, details) {
+  try {
+    await prisma.boardActivity.create({
+      data: { boardId, userId, action, playerId, details },
+    })
+  } catch (err) {
+    // Non-fatal — don't break board ops for logging failures
+    console.error('[logActivity] Failed:', err.message)
+  }
+}
+
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
 async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr', boardType = 'overall', season = 2026, startFrom = 'scratch' }) {
@@ -91,6 +104,9 @@ async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr',
   const board = await prisma.draftBoard.create({
     data: { userId, name, sport, scoringFormat, boardType, season },
   })
+
+  // Log board creation
+  logActivity(board.id, userId, 'board_created', null, { name, sport, scoringFormat, startFrom })
 
   // Pre-populate entries based on startFrom option
   if (startFrom === 'clutch' || startFrom === 'adp') {
@@ -127,6 +143,7 @@ async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr',
               playerId: r.playerId,
               rank: i + j + 1,
               tier: Math.floor((i + j) / tierSize) + 1,
+              baselineRank: i + j + 1, // Baseline = starting rank from projections
             })),
           })
         }
@@ -158,6 +175,7 @@ async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr',
               notes: e.notes,
               tags: e.tags,
               reasonChips: e.reasonChips,
+              baselineRank: e.baselineRank,
             })),
           })
         }
@@ -221,6 +239,7 @@ async function getBoard(boardId, userId) {
     notes: e.notes,
     tags: e.tags,
     reasonChips: e.reasonChips,
+    baselineRank: e.baselineRank,
     player: enrichPlayer(playerMap.get(e.playerId), board.sport, extrasMap.get(e.playerId) || {}),
   }))
 
@@ -259,7 +278,6 @@ async function deleteBoard(boardId, userId) {
 // ── Entries ──────────────────────────────────────────────────────────────────
 
 async function saveEntries(boardId, userId, entries) {
-  // entries: [{ playerId, rank, tier, notes }]
   await assertOwnership(boardId, userId)
 
   await prisma.$transaction([
@@ -274,6 +292,7 @@ async function saveEntries(boardId, userId, entries) {
           notes: e.notes ?? null,
           tags: e.tags ?? null,
           reasonChips: e.reasonChips ?? null,
+          baselineRank: e.baselineRank ?? null,
         },
       })
     ),
@@ -310,11 +329,22 @@ async function addEntry(boardId, userId, playerId) {
     },
   })
 
+  // Log activity
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { name: true } })
+  logActivity(boardId, userId, 'player_added', playerId, { playerName: player?.name, rank: nextRank })
+
   return getBoard(boardId, userId)
 }
 
 async function removeEntry(boardId, userId, playerId) {
   await assertOwnership(boardId, userId)
+
+  // Get entry info before deleting for activity log
+  const entry = await prisma.draftBoardEntry.findFirst({
+    where: { boardId, playerId },
+    select: { rank: true },
+  })
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { name: true } })
 
   await prisma.draftBoardEntry.deleteMany({
     where: { boardId, playerId },
@@ -328,14 +358,16 @@ async function removeEntry(boardId, userId, playerId) {
 
   if (remaining.length > 0) {
     await prisma.$transaction(
-      remaining.map((entry, i) =>
+      remaining.map((e, i) =>
         prisma.draftBoardEntry.update({
-          where: { id: entry.id },
+          where: { id: e.id },
           data: { rank: i + 1 },
         })
       )
     )
   }
+
+  logActivity(boardId, userId, 'player_removed', playerId, { playerName: player?.name, rank: entry?.rank })
 
   return getBoard(boardId, userId)
 }
@@ -353,7 +385,61 @@ async function updateEntryNotes(boardId, userId, playerId, notes) {
     data: { notes },
   })
 
+  // Log activity
+  const player = await prisma.player.findUnique({ where: { id: playerId }, select: { name: true } })
+  logActivity(boardId, userId, 'note_added', playerId, { playerName: player?.name, note: notes?.substring(0, 100) })
+
   return { success: true }
+}
+
+// ── Activity Log + Journal ──────────────────────────────────────────────────
+
+async function logMoveActivity(boardId, userId, playerId, playerName, fromRank, toRank, tags, reasonChips) {
+  const delta = fromRank - toRank
+  logActivity(boardId, userId, 'player_moved', playerId, {
+    playerName,
+    from: fromRank,
+    to: toRank,
+    delta,
+    tags: tags || [],
+    reasonChips: reasonChips || [],
+  })
+}
+
+async function logTagActivity(boardId, userId, playerId, playerName, tags) {
+  logActivity(boardId, userId, 'player_tagged', playerId, {
+    playerName,
+    tags,
+  })
+}
+
+async function getBoardActivities(boardId, userId) {
+  await assertOwnership(boardId, userId)
+  return prisma.boardActivity.findMany({
+    where: { boardId },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  })
+}
+
+async function getUserJournal(userId, { sport, limit = 100 } = {}) {
+  const where = { userId }
+  if (sport) {
+    const boards = await prisma.draftBoard.findMany({
+      where: { userId, sport },
+      select: { id: true },
+    })
+    where.boardId = { in: boards.map(b => b.id) }
+  }
+  const activities = await prisma.boardActivity.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: {
+      board: { select: { name: true, sport: true } },
+    },
+  })
+  return activities
 }
 
 module.exports = {
@@ -366,4 +452,8 @@ module.exports = {
   addEntry,
   removeEntry,
   updateEntryNotes,
+  logMoveActivity,
+  logTagActivity,
+  getBoardActivities,
+  getUserJournal,
 }

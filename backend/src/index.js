@@ -36,6 +36,7 @@ const newsRoutes = require('./routes/news')
 const yahooAuthRoutes = require('./routes/yahooAuth')
 const draftDollarsRouter = require('./routes/draftDollars')
 const draftBoardRoutes = require('./routes/draftBoards')
+const watchListRoutes = require('./routes/watchList')
 const projectionRoutes = require('./routes/projections')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
@@ -132,6 +133,7 @@ app.use('/api/news', newsRoutes)
 app.use('/api/auth', yahooAuthRoutes)
 app.use('/api/leagues', draftDollarsRouter)
 app.use('/api/draft-boards', draftBoardRoutes)
+app.use('/api/watch-list', watchListRoutes)
 app.use('/api/projections', projectionRoutes)
 
 // Health check
