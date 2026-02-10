@@ -279,7 +279,7 @@ const TournamentPreviewPage = () => {
         )}
 
         {/* ── 3. PLAYERS TO WATCH ──────────────────────────────────── */}
-        {playersToWatch.length > 0 && (
+        {playersToWatch.length > 0 ? (
           <section>
             <SectionHeader subtitle="Smart picks across course fit, form, history, and value">
               Players to Watch
@@ -356,6 +356,78 @@ const TournamentPreviewPage = () => {
                         {player.narrative}
                       </p>
                     )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : course?.topCourseFits?.length > 0 && (
+          /* Fallback: no field yet — show course-level best fits */
+          <section>
+            <SectionHeader subtitle="Players whose skill profiles best match this course — field not yet announced">
+              Best Course Fits
+            </SectionHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {course.topCourseFits.slice(0, 6).map((p, i) => (
+                <Link
+                  key={p.id}
+                  to={`/players/${p.id}`}
+                  className="group rounded-xl border border-dark-border bg-dark-secondary hover:border-gold/30 transition-all overflow-hidden"
+                >
+                  <div className="p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      {p.headshotUrl ? (
+                        <img src={p.headshotUrl} alt="" className="w-12 h-12 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-dark-tertiary flex items-center justify-center text-xl flex-shrink-0">
+                          {p.countryFlag || '?'}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-text-muted">{i + 1}.</span>
+                          <p className="text-sm font-semibold text-white group-hover:text-gold transition-colors truncate">
+                            {p.name}
+                          </p>
+                        </div>
+                        {p.owgr && (
+                          <p className="text-[10px] text-text-muted font-mono">OWGR #{p.owgr}</p>
+                        )}
+                        <span className="inline-block mt-1 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border bg-gold/20 text-gold border-gold/30">
+                          Best Fit
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="text-[9px] text-text-muted uppercase">Fit</p>
+                        <p className={`text-xs font-mono font-bold ${
+                          p.courseFitScore >= 80 ? 'text-gold' : p.courseFitScore >= 60 ? 'text-yellow-400' : 'text-text-secondary'
+                        }`}>
+                          {Math.round(p.courseFitScore)}
+                        </p>
+                      </div>
+                      {p.formScore != null && (
+                        <div>
+                          <p className="text-[9px] text-text-muted uppercase">Form</p>
+                          <p className={`text-xs font-mono font-bold ${
+                            p.formScore >= 80 ? 'text-emerald-400' : p.formScore >= 60 ? 'text-green-400' : 'text-text-secondary'
+                          }`}>
+                            {Math.round(p.formScore)}
+                          </p>
+                        </div>
+                      )}
+                      {p.cpi != null && (
+                        <div>
+                          <p className="text-[9px] text-text-muted uppercase">CPI</p>
+                          <p className={`text-xs font-mono font-bold ${
+                            p.cpi > 1 ? 'text-emerald-400' : p.cpi > 0 ? 'text-green-400' : 'text-text-secondary'
+                          }`}>
+                            {p.cpi > 0 ? `+${p.cpi.toFixed(1)}` : p.cpi.toFixed(1)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -467,6 +539,61 @@ const TournamentPreviewPage = () => {
                 ))}
               </div>
             )}
+          </section>
+        ) : course?.playerHistory?.length > 0 ? (
+          /* Fallback: no field — show course history leaders */
+          <section>
+            <SectionHeader subtitle="Best historical performers at this venue — field not yet announced">
+              Course History Leaders
+            </SectionHeader>
+            <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-dark-tertiary">
+                    <tr className="text-xs text-text-muted">
+                      <th className="p-3 text-left">Player</th>
+                      <th className="p-3 text-center">Rounds</th>
+                      <th className="p-3 text-center">Avg Score</th>
+                      <th className="p-3 text-center hidden sm:table-cell">SG Total</th>
+                      <th className="p-3 text-center">Best</th>
+                      <th className="p-3 text-right">Wins</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {course.playerHistory.slice(0, 10).map((ph) => {
+                      const avgColor = ph.avgToPar != null ? (ph.avgToPar <= -2 ? 'text-gold' : ph.avgToPar <= 0 ? 'text-green-400' : ph.avgToPar <= 1 ? 'text-yellow-400' : 'text-red-400') : 'text-text-muted'
+                      return (
+                        <tr key={ph.id} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
+                          <td className="p-3">
+                            <Link to={`/players/${ph.player.id}`} className="flex items-center gap-2 hover:text-gold transition-colors">
+                              {ph.player.countryFlag && <span className="text-sm">{ph.player.countryFlag}</span>}
+                              <span className="text-white font-medium text-xs">{ph.player.name}</span>
+                            </Link>
+                          </td>
+                          <td className="p-3 text-center text-text-secondary font-mono">{ph.rounds}</td>
+                          <td className={`p-3 text-center font-mono font-bold ${avgColor}`}>
+                            {ph.avgToPar != null ? (ph.avgToPar > 0 ? `+${ph.avgToPar.toFixed(1)}` : ph.avgToPar.toFixed(1)) : '-'}
+                          </td>
+                          <td className={`p-3 text-center font-mono text-xs hidden sm:table-cell ${
+                            ph.sgTotal > 0 ? 'text-emerald-400' : ph.sgTotal != null ? 'text-red-400' : 'text-text-muted'
+                          }`}>
+                            {ph.sgTotal != null ? (ph.sgTotal > 0 ? `+${ph.sgTotal.toFixed(1)}` : ph.sgTotal.toFixed(1)) : '-'}
+                          </td>
+                          <td className="p-3 text-center text-gold font-mono">{ph.bestFinish || '-'}</td>
+                          <td className="p-3 text-right">
+                            {ph.wins > 0 ? (
+                              <span className="text-yellow-400 font-mono font-bold">{ph.wins}</span>
+                            ) : (
+                              <span className="text-text-muted">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </section>
         ) : (
           <section>
