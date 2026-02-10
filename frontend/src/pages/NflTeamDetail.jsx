@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
 const StatBar = ({ label, value, rank, suffix = '', of = 32, invert = false }) => {
@@ -21,6 +21,7 @@ const StatBar = ({ label, value, rank, suffix = '', of = 32, invert = false }) =
 
 export default function NflTeamDetail() {
   const { abbr } = useParams()
+  const navigate = useNavigate()
   const [team, setTeam] = useState(null)
   const [roster, setRoster] = useState([])
   const [schedule, setSchedule] = useState([])
@@ -76,7 +77,7 @@ export default function NflTeamDetail() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
-      <Link to="/nfl/players" className="text-white/40 hover:text-white/60 text-sm mb-4 inline-block">&larr; Back</Link>
+      <button onClick={() => navigate(-1)} className="text-white/40 hover:text-white/60 text-sm mb-4 inline-flex items-center gap-1">&larr; Back</button>
 
       {/* Team header */}
       <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6">

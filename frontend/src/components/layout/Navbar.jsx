@@ -153,7 +153,7 @@ const Navbar = () => {
                           </div>
                         </Link>
                         <Link
-                          to="/nfl/teams/ARI"
+                          to="/nfl/teams"
                           className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >

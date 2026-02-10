@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
 export default function NflSchedule() {
+  const navigate = useNavigate()
   const [games, setGames] = useState([])
   const [byWeek, setByWeek] = useState({})
   const [loading, setLoading] = useState(true)
@@ -33,6 +34,9 @@ export default function NflSchedule() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
+      <button onClick={() => navigate(-1)} className="text-white/40 hover:text-white/60 text-sm mb-4 inline-flex items-center gap-1">
+        &larr; Back
+      </button>
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">{'\uD83C\uDFC8'}</span>
         <h1 className="text-2xl font-display font-bold text-white">NFL Schedule</h1>
