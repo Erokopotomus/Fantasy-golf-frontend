@@ -106,11 +106,26 @@ const ScoringSettings = ({ settings, onChange }) => {
             )
           })}
         </div>
+        {!isCustom && (
+          <button
+            onClick={() => handlePresetSelect('custom')}
+            className="mt-3 w-full py-2 px-4 rounded-lg border border-dashed border-gold/40 text-gold text-sm font-mono hover:bg-gold/10 hover:border-gold/60 transition-all"
+          >
+            Customize from {PRESETS.find(p => p.key === config.preset)?.name || 'preset'} →
+          </button>
+        )}
       </Card>
 
       {/* Position Points */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-1">Position Points</h3>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold font-display text-white">Position Points</h3>
+          {!isCustom && (
+            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+              {config.preset?.toUpperCase()} PRESET
+            </span>
+          )}
+        </div>
         <p className="text-text-muted text-xs mb-4">Points awarded based on final tournament placement</p>
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
           {Object.entries(POSITION_LABELS).map(([key, label]) => (
@@ -133,7 +148,14 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Hole Scoring */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-1">Hole Scoring</h3>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold font-display text-white">Hole Scoring</h3>
+          {!isCustom && (
+            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+              {config.preset?.toUpperCase()} PRESET
+            </span>
+          )}
+        </div>
         <p className="text-text-muted text-xs mb-4">Points per individual hole result (accumulated across all rounds)</p>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           {Object.entries(HOLE_SCORING_LABELS).map(([key, label]) => (
@@ -156,7 +178,14 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Bonuses */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-1">Bonuses</h3>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold font-display text-white">Bonuses</h3>
+          {!isCustom && (
+            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+              {config.preset?.toUpperCase()} PRESET
+            </span>
+          )}
+        </div>
         <p className="text-text-muted text-xs mb-4">Extra points for exceptional round performance</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Object.entries(BONUS_LABELS).map(([key, label]) => (
@@ -179,7 +208,14 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Strokes Gained */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-1">Strokes Gained</h3>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold font-display text-white">Strokes Gained</h3>
+          {!isCustom && (
+            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+              {config.preset?.toUpperCase()} PRESET
+            </span>
+          )}
+        </div>
         <p className="text-text-muted text-xs mb-4">Award points based on strokes gained metrics</p>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 cursor-pointer">

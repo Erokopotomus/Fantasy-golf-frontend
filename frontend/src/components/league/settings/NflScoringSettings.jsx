@@ -310,9 +310,13 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
           })}
         </div>
         {!isCustom && (
-          <p className="text-text-muted text-xs mt-3">
-            Select "Custom" to modify individual stat values
-          </p>
+          <button
+            type="button"
+            onClick={() => handlePresetSelect('custom')}
+            className="mt-3 w-full py-2 px-4 rounded-lg border border-dashed border-gold/40 text-gold text-sm font-mono hover:bg-gold/10 hover:border-gold/60 transition-all"
+          >
+            Customize from {PRESETS.find(p => p.key === preset)?.name || 'preset'} →
+          </button>
         )}
       </Card>
 
