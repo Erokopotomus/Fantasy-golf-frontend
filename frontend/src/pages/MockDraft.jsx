@@ -21,7 +21,7 @@ const NFL_TEAM_NAMES = [
 
 const SPORT_DEFAULTS = {
   golf: { teamCount: 8, rosterSize: 6, teamCounts: [4, 6, 8, 10, 12], rosterSizes: [4, 5, 6, 8, 10], budget: 100 },
-  nfl:  { teamCount: 10, rosterSize: 14, teamCounts: [8, 10, 12, 14], rosterSizes: [10, 12, 14], budget: 200 },
+  nfl:  { teamCount: 10, rosterSize: 15, teamCounts: [8, 10, 12, 14], rosterSizes: [10, 12, 14, 15, 16], budget: 200 },
 }
 
 const MockDraft = () => {
