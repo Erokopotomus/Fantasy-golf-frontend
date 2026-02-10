@@ -1,5 +1,30 @@
 import Button from '../common/Button'
 
+const ScheduleDots = ({ playerId, tournaments = [] }) => {
+  if (!tournaments || tournaments.length === 0) return <span className="text-text-muted/30 text-xs">—</span>
+  return (
+    <div className="flex gap-1 justify-center items-center" title={tournaments.map(t => `${t.shortName || t.name}: ${t.field?.some(f => f.playerId === playerId) ? 'In Field' : t.fieldSize > 0 || t.field?.length > 0 ? 'Not in Field' : 'TBD'}`).join('\n')}>
+      {tournaments.slice(0, 5).map((t, i) => {
+        const inField = t.field?.some(f => f.playerId === playerId)
+        const fieldAnnounced = t.fieldSize > 0 || t.field?.length > 0
+        return (
+          <div
+            key={t.id || i}
+            className={`w-2.5 h-2.5 rounded-full ${
+              inField
+                ? 'bg-emerald-500'
+                : fieldAnnounced
+                ? 'bg-white/10'
+                : 'border border-white/20 bg-transparent'
+            }`}
+            title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 const PlayerTable = ({
   players,
   sortBy,
@@ -10,6 +35,7 @@ const PlayerTable = ({
   canSelect,
   compareMode,
   onViewPlayer,
+  upcomingTournaments = [],
 }) => {
   const SortHeader = ({ field, children, className = '' }) => (
     <th className={`p-3 ${className}`}>
@@ -42,7 +68,7 @@ const PlayerTable = ({
             <SortHeader field="sgOffTee" className="text-center">SG OTT</SortHeader>
             <SortHeader field="sgApproach" className="text-center">SG APP</SortHeader>
             <SortHeader field="sgPutting" className="text-center">SG Putt</SortHeader>
-            <th className="p-3 text-text-muted text-center">Form</th>
+            <th className="p-3 text-text-muted text-center">Schedule</th>
             <th className="p-3 w-20"></th>
           </tr>
         </thead>
@@ -122,27 +148,7 @@ const PlayerTable = ({
                   {player.stats?.sgPutting?.toFixed(2) || '—'}
                 </td>
                 <td className="p-3 text-center">
-                  <div className="flex gap-1 justify-center">
-                    {player.recentForm?.slice(0, 5).map((result, i) => {
-                      const pos = parseInt(result.replace('T', ''))
-                      return (
-                        <span
-                          key={i}
-                          className={`px-1.5 py-0.5 rounded text-xs ${
-                            result === '1' ? 'bg-yellow-500/20 text-yellow-400' :
-                            result === 'CUT' ? 'bg-red-500/15 text-red-400' :
-                            result === 'WD' ? 'bg-dark-tertiary text-text-muted' :
-                            pos <= 5 ? 'bg-gold/20 text-gold' :
-                            pos <= 10 ? 'bg-emerald-500/10 text-emerald-400/70' :
-                            pos <= 25 ? 'bg-dark-tertiary text-text-secondary' :
-                            'bg-dark-tertiary text-text-muted'
-                          }`}
-                        >
-                          {result === 'CUT' || result === 'WD' ? result : result === '1' ? '1st' : result}
-                        </span>
-                      )
-                    })}
-                  </div>
+                  <ScheduleDots playerId={player.id} tournaments={upcomingTournaments} />
                 </td>
                 <td className="p-3">
                   <Button

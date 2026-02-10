@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { usePlayerComparison } from '../hooks/usePlayerComparison'
@@ -8,6 +8,7 @@ import PlayerSearch from '../components/players/PlayerSearch'
 import PlayerFilters from '../components/players/PlayerFilters'
 import PlayerTable from '../components/players/PlayerTable'
 import PlayerComparison from '../components/players/PlayerComparison'
+import api from '../services/api'
 
 const Players = () => {
   const navigate = useNavigate()
@@ -35,6 +36,14 @@ const Players = () => {
     canAddMore,
     canCompare,
   } = usePlayerComparison(3)
+
+  // Fetch upcoming tournaments for schedule dots
+  const [upcomingTournaments, setUpcomingTournaments] = useState([])
+  useEffect(() => {
+    api.getUpcomingTournamentsWithFields()
+      .then(data => setUpcomingTournaments(data.tournaments || []))
+      .catch(() => setUpcomingTournaments([]))
+  }, [])
 
   const handleSort = (field) => {
     if (params.sortBy === field) {
@@ -193,6 +202,7 @@ const Players = () => {
                       canSelect={canAddMore}
                       compareMode={compareMode}
                       onViewPlayer={(player) => navigate(`/players/${player.id}`)}
+                      upcomingTournaments={upcomingTournaments}
                     />
 
                     {/* Pagination */}

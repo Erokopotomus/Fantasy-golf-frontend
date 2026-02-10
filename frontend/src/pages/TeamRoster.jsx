@@ -220,27 +220,10 @@ const TeamRoster = () => {
     }
   }, [teamId, refetch])
 
-  // Compute schedule badge for each golf roster player
+  // Compute schedule dots for each golf roster player (next 5 events)
   const getScheduleBadge = (playerId) => {
     if (isNflLeague || !scheduleData || scheduleData.length === 0) return null
-    // First tournament = this week (in-progress or nearest upcoming)
-    const thisWeek = scheduleData[0]
-    const nextWeek = scheduleData[1]
-    const thisWeekFieldIds = new Set((thisWeek?.field || []).map(p => p.playerId))
-    const nextWeekFieldIds = nextWeek ? new Set((nextWeek?.field || []).map(p => p.playerId)) : new Set()
-    const thisWeekAnnounced = thisWeek && (thisWeek.fieldSize > 0 || thisWeek.field?.length > 0)
-    const nextWeekAnnounced = nextWeek && (nextWeek.fieldSize > 0 || nextWeek.field?.length > 0)
-
-    if (thisWeekFieldIds.has(playerId)) {
-      return { label: 'IN FIELD', color: 'text-emerald-400 bg-emerald-500/10', tournament: thisWeek }
-    }
-    if (thisWeekAnnounced && nextWeekFieldIds.has(playerId)) {
-      return { label: 'NEXT WEEK', color: 'text-yellow-400 bg-yellow-500/10', tournament: nextWeek }
-    }
-    if (!thisWeekAnnounced) {
-      return { label: 'TBD', color: 'text-text-muted bg-white/[0.06]', tournament: thisWeek }
-    }
-    return { label: 'NOT IN FIELD', color: 'text-text-muted/60 bg-white/[0.04]', tournament: thisWeek }
+    return { tournaments: scheduleData.slice(0, 5), playerId }
   }
 
   // Schedule summary for header
@@ -448,7 +431,7 @@ const TeamRoster = () => {
           <div>
             <p className="text-red-400 font-semibold text-sm">Lineups Locked</p>
             <p className="text-red-400/70 text-xs">
-              {lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} has started. Lineup changes are locked until this {isNflLeague ? 'week' : 'event'} ends.
+              {scheduleData?.[0]?.name || lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} has started. Lineup changes are locked until this {isNflLeague ? 'week' : 'event'} ends.
             </p>
           </div>
         </div>
@@ -463,7 +446,7 @@ const TeamRoster = () => {
               Lineups lock in {countdown}
             </p>
             <p className="text-yellow-400/70 text-xs">
-              {lockInfo.tournament?.name || lockInfo.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {new Date(lockInfo.lockTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+              {scheduleData?.[0]?.name || lockInfo.tournament?.name || lockInfo.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {new Date(lockInfo.lockTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
             </p>
           </div>
           <span className="font-mono text-yellow-400 text-lg font-bold">{countdown}</span>
@@ -785,10 +768,22 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
               K{player.keeperCost != null ? ` $${player.keeperCost}` : ''}{player.keeperYearsKept > 1 ? ` Yr ${player.keeperYearsKept}` : ''}
             </span>
           )}
-          {scheduleBadge && !isEditing && (
-            <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded ${scheduleBadge.color}`} title={scheduleBadge.tournament?.name}>
-              {scheduleBadge.label}
-            </span>
+          {scheduleBadge && !isEditing && scheduleBadge.tournaments && (
+            <div className="flex gap-0.5 items-center ml-1">
+              {scheduleBadge.tournaments.map((t, i) => {
+                const inField = t.field?.some(f => f.playerId === scheduleBadge.playerId)
+                const fieldAnnounced = t.fieldSize > 0 || t.field?.length > 0
+                return (
+                  <div
+                    key={t.id || i}
+                    className={`w-2 h-2 rounded-full ${
+                      inField ? 'bg-emerald-500' : fieldAnnounced ? 'bg-white/10' : 'border border-white/20 bg-transparent'
+                    }`}
+                    title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
+                  />
+                )
+              })}
+            </div>
           )}
         </div>
         <div className="flex items-center gap-3 text-xs text-text-muted">
