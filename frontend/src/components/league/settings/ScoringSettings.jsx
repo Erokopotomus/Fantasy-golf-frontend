@@ -116,6 +116,36 @@ const ScoringSettings = ({ settings, onChange }) => {
         )}
       </Card>
 
+      {/* Live Preview */}
+      <Card className="border-gold/30">
+        <h3 className="text-lg font-semibold font-display text-white mb-1">Live Preview</h3>
+        <p className="text-text-muted text-xs mb-4">
+          Example: 5th place finish, 22 birdies, 2 eagles, 38 pars, 8 bogeys, 1 double, 1 bogey-free round, 1 birdie streak
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="bg-dark-primary rounded-lg p-3 text-center">
+            <p className="text-text-muted text-xs mb-1">Position</p>
+            <p className="text-xl font-bold font-display text-gold">{preview.position}</p>
+          </div>
+          <div className="bg-dark-primary rounded-lg p-3 text-center">
+            <p className="text-text-muted text-xs mb-1">Holes</p>
+            <p className="text-xl font-bold font-display text-blue-400">{preview.holes}</p>
+          </div>
+          <div className="bg-dark-primary rounded-lg p-3 text-center">
+            <p className="text-text-muted text-xs mb-1">Bonuses</p>
+            <p className="text-xl font-bold font-display text-purple-400">{preview.bonuses}</p>
+          </div>
+          <div className="bg-dark-primary rounded-lg p-3 text-center">
+            <p className="text-text-muted text-xs mb-1">SG</p>
+            <p className="text-xl font-bold font-display text-yellow-400">{preview.strokesGained}</p>
+          </div>
+          <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 text-center">
+            <p className="text-text-muted text-xs mb-1">Total</p>
+            <p className="text-2xl font-bold font-display text-gold">{preview.total}</p>
+          </div>
+        </div>
+      </Card>
+
       {/* Position Points */}
       <Card>
         <div className="flex items-center justify-between mb-1">
@@ -247,35 +277,6 @@ const ScoringSettings = ({ settings, onChange }) => {
         </div>
       </Card>
 
-      {/* Live Preview */}
-      <Card className="border-gold/30">
-        <h3 className="text-lg font-semibold font-display text-white mb-1">Live Preview</h3>
-        <p className="text-text-muted text-xs mb-4">
-          Example: 5th place finish, 22 birdies, 2 eagles, 38 pars, 8 bogeys, 1 double, 1 bogey-free round, 1 birdie streak
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
-            <p className="text-text-muted text-xs mb-1">Position</p>
-            <p className="text-xl font-bold font-display text-gold">{preview.position}</p>
-          </div>
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
-            <p className="text-text-muted text-xs mb-1">Holes</p>
-            <p className="text-xl font-bold font-display text-blue-400">{preview.holes}</p>
-          </div>
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
-            <p className="text-text-muted text-xs mb-1">Bonuses</p>
-            <p className="text-xl font-bold font-display text-purple-400">{preview.bonuses}</p>
-          </div>
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
-            <p className="text-text-muted text-xs mb-1">SG</p>
-            <p className="text-xl font-bold font-display text-yellow-400">{preview.strokesGained}</p>
-          </div>
-          <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 text-center">
-            <p className="text-text-muted text-xs mb-1">Total</p>
-            <p className="text-2xl font-bold font-display text-gold">{preview.total}</p>
-          </div>
-        </div>
-      </Card>
     </div>
   )
 }
