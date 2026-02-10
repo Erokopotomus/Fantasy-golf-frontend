@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useWaivers } from '../hooks/useWaivers'
 import { useRoster } from '../hooks/useRoster'
@@ -8,6 +8,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 import { track, Events } from '../services/analytics'
+import api from '../services/api'
 
 const WaiverWire = () => {
   const { leagueId } = useParams()
@@ -41,6 +42,15 @@ const WaiverWire = () => {
   const [bidAmount, setBidAmount] = useState(0)
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [activeTab, setActiveTab] = useState('players') // players | claims | results
+
+  // Fetch upcoming tournaments for schedule dots (golf only)
+  const [upcomingTournaments, setUpcomingTournaments] = useState([])
+  useEffect(() => {
+    if (isNfl) return
+    api.getUpcomingTournamentsWithFields()
+      .then(data => setUpcomingTournaments(data.tournaments || []))
+      .catch(() => setUpcomingTournaments([]))
+  }, [isNfl])
 
   const rosterSize = league?.settings?.rosterSize || 6
   const isRosterFull = roster.length >= rosterSize
@@ -232,7 +242,7 @@ const WaiverWire = () => {
 
           {/* Player list */}
           <div className={`rounded-xl border border-dark-border bg-dark-secondary overflow-hidden ${isDraftLocked ? 'opacity-50 pointer-events-none' : ''}`}>
-            <div className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_72px]'} gap-2 px-4 py-2.5 bg-dark-tertiary/80 text-[11px] text-text-muted uppercase tracking-wider font-medium`}>
+            <div className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_auto_72px]'} gap-2 px-4 py-2.5 bg-dark-tertiary/80 text-[11px] text-text-muted uppercase tracking-wider font-medium`}>
               <div>Player</div>
               {isNfl ? (
                 <>
@@ -243,6 +253,7 @@ const WaiverWire = () => {
                 <>
                   <div className="text-center">Rank</div>
                   <div className="text-center">SG Total</div>
+                  <div className="text-center">Schedule</div>
                 </>
               )}
               <div></div>
@@ -252,7 +263,7 @@ const WaiverWire = () => {
               {availablePlayers.map(player => (
                 <div
                   key={player.id}
-                  className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_72px]'} gap-2 items-center px-4 py-3 hover:bg-dark-tertiary/40 transition-colors cursor-pointer`}
+                  className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_auto_72px]'} gap-2 items-center px-4 py-3 hover:bg-dark-tertiary/40 transition-colors cursor-pointer`}
                   onClick={() => setDrawerPlayerId(player.id)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -289,6 +300,25 @@ const WaiverWire = () => {
                       </div>
                       <div className="text-center text-sm text-text-secondary">
                         {player.sgTotal != null ? player.sgTotal.toFixed(1) : '\u2014'}
+                      </div>
+                      <div className="flex gap-1 justify-center items-center" title={upcomingTournaments.map(t => `${t.shortName || t.name}: ${t.field?.some(f => f.playerId === player.id) ? 'In Field' : (t.fieldSize > 0 || t.field?.length > 0) ? 'Not in Field' : 'TBD'}`).join('\n')}>
+                        {upcomingTournaments.length > 0 ? upcomingTournaments.slice(0, 5).map((t, i) => {
+                          const inField = t.field?.some(f => f.playerId === player.id)
+                          const fieldAnnounced = t.fieldSize > 0 || t.field?.length > 0
+                          return (
+                            <div
+                              key={t.id || i}
+                              className={`w-2.5 h-2.5 rounded-full ${
+                                inField
+                                  ? 'bg-emerald-500'
+                                  : fieldAnnounced
+                                  ? 'bg-white/10'
+                                  : 'border border-white/20 bg-transparent'
+                              }`}
+                              title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
+                            />
+                          )
+                        }) : <span className="text-text-muted/30 text-xs">—</span>}
                       </div>
                     </>
                   )}

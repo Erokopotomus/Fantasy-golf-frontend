@@ -247,6 +247,26 @@ httpServer.listen(PORT, () => {
       console.log(`[Cron:${job}] ${new Date().toISOString()} — ${msg}`)
     }
 
+    // ─── Startup: sync field for next upcoming tournament so schedule dots have data ───
+    ;(async () => {
+      try {
+        const t = await cronPrisma.tournament.findFirst({
+          where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+          orderBy: { startDate: 'asc' },
+          select: { datagolfId: true, status: true, name: true },
+        })
+        if (t?.datagolfId) {
+          cronLog('startup-field', `Syncing field for ${t.name} (${t.datagolfId})`)
+          const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
+          cronLog('startup-field', `Done: ${result.playersInField} players in field`)
+        } else {
+          cronLog('startup-field', 'No upcoming tournament with datagolfId found')
+        }
+      } catch (e) {
+        cronLog('startup-field', `Error: ${e.message}`)
+      }
+    })()
+
     // Daily 6:00 AM ET — Sync player rankings
     cron.schedule('0 6 * * *', async () => {
       cronLog('players', 'Starting player sync')
