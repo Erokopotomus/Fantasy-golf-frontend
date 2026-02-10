@@ -798,6 +798,10 @@ class ApiService {
     return this.request(`/nfl/players/${id}${qs ? '?' + qs : ''}`)
   }
 
+  async getNflPlayerProfile(id) {
+    return this.request(`/nfl/players/${id}/profile`)
+  }
+
   async getNflTeams() {
     return this.request('/nfl/teams')
   }

@@ -1096,6 +1096,36 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 
 ---
 
+## Strategic Architecture Update (Feb 2026)
+
+Read `/docs/CLUTCH_STRATEGY_UPDATE_FEB2026.md` for the Feed + Workspace architecture and revised build priorities.
+
+### Three Pillars
+- **FEED**: Personalized data stream (why users open the app)
+- **WORKSPACE**: Interactive tools — draft boards, rankings, notes (why users stay)
+- **PROVE IT**: Prediction tracking and reputation (why users come back)
+- **DATA LAYER**: Player pages, team pages, stat leaderboards (foundation everything sits on)
+
+### Six User Personas
+Every feature should serve a specific persona. See strategy doc for details.
+- **Primary target:** The Informed Fan (plays 1-2 leagues, knows more than average)
+- **Off-season engagement driver:** The Dynasty Nerd (active year-round)
+
+### Current Priority
+Data Layer (player pages, team pages, leaderboards) → Feed MVP → Workspace (draft board) → AI Coaching
+
+### Key Principle: Progressive Disclosure
+Default UX is simple and clean (Informed Fan). Depth is always one click away (Grinder, Dynasty Nerd). Never overwhelm, never underserve.
+
+### Data Layer Build Progress
+- [x] Player Profile Pages (NFL) — Enhanced profiles with career stats, game logs, advanced metrics, progressive disclosure
+- [ ] Team Pages + Stat Leaderboards
+- [ ] Feed MVP
+- [ ] Workspace — Draft Board
+- [ ] Workspace — Watch List + Position Rankings
+- [ ] Workspace — Scouting Notes
+- [ ] AI Coaching (former Phase 6)
+
 ---
 
 ## REFERENCE DOCS (in repo)
@@ -1104,12 +1134,13 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 
 | Doc | What It Contains |
 |-----|-----------------|
+| `docs/CLUTCH_STRATEGY_UPDATE_FEB2026.md` | **Feed + Workspace architecture**: three pillars, six user personas, seasonal flywheel, player page progressive disclosure, Feed spec, Workspace tools (draft board, watch list, rankings, scouting notes), revised build priority |
 | `docs/nfl-expansion.md` | Complete NFL expansion plan: vision, data sources, pick types, metrics philosophy, schema, build phases (with completion status), dual-track pick system, projection contest, draft cheat sheets, self-scouting AI, monetization, competitive moat |
 | `docs/entry-points-addendum.md` | Revised participation tiers (5 levels from weekly picks to full projections), drag-and-drop ranking interface, quick-tap reason chips, "Start From" expert templates, expert following as content engine |
 | `docs/data-strategy.md` | Data ownership framework (3 tiers), golf free data sources, DataGolf transformation strategy, NFL data sources (nflfastR/nflverse), AI engines roadmap, 4-layer database architecture, modular provider design |
 | `docs/build-specs.md` | Manager stats page spec (A1-A6), AI engines spec (B1-B5), database architecture (C1-C3), data transformation layer (D1-D2), original build priority queue |
 | `docs/brand-system.md` | Full Aurora Ember brand system: colors, typography, glassmorphism, logo SVG, component code, anti-Sleeper rules |
-| `docs/nfl-gameday-ux.md` | NFL gameday UX spec (v1.2): two-layer platform architecture, weekly manager flow, 9 page wireframes, reward engine (I Told You So, delta cards, Decision DNA), golf parity, data deps, mobile layouts, notifications, onboarding, 7 implementation phases |
+| `docs/nfl-gameday-ux.md` | NFL gameday UX spec (v1.4): two-layer platform architecture, weekly manager flow, 9 page wireframes, reward engine (I Told You So, delta cards, Decision DNA), golf parity, data deps, mobile layouts, notifications, onboarding, 7 implementation phases |
 
 **Desktop docs (not in repo, for reference):**
 - `CLUTCH_ARCHITECTURE.md` — Original architecture doc (superseded by this CLAUDE.md)
@@ -1120,4 +1151,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 9, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-5 complete, Phase 6 partial. Phase 5 adds: shareable moment cards (html2canvas, 5 card types), head-to-head comparison (vs consensus + vs any user), pinned badges (up to 3, displayed on profile + leaderboard), Compare tab on Prove It page, ShareButtons throughout ManagerProfile and Track Record. Next: UX doc Phase 6 remainder (AI Coaching), Phase 7 (Preseason Experience).*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-5 complete, Phase 6 partial. Strategic pivot: Data Layer + Feed + Workspace prioritized over AI Coaching. Player Profile Pages (Data Layer Step 1) built with career stats, game logs, advanced metrics, progressive disclosure, SEO-indexable public pages. Next: Team Pages + Stat Leaderboards (Step 2), then Feed MVP (Step 3).*

@@ -325,6 +325,206 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
   }
 })
 
+// GET /api/nfl/players/:id/profile — Full career profile (all seasons, advanced metrics)
+router.get('/players/:id/profile', optionalAuth, async (req, res, next) => {
+  try {
+    const player = await prisma.player.findUnique({
+      where: { id: req.params.id },
+      include: {
+        nflPlayerGames: {
+          include: {
+            game: {
+              include: {
+                homeTeam: { select: { abbreviation: true, name: true } },
+                awayTeam: { select: { abbreviation: true, name: true } },
+              },
+            },
+          },
+          orderBy: { game: { kickoff: 'asc' } },
+        },
+      },
+    })
+
+    if (!player || !player.nflPosition) {
+      return res.status(404).json({ error: { message: 'NFL player not found' } })
+    }
+
+    // Group games by season
+    const gamesBySeason = {}
+    for (const pg of player.nflPlayerGames) {
+      const season = pg.game.season
+      if (!gamesBySeason[season]) gamesBySeason[season] = []
+      gamesBySeason[season].push(pg)
+    }
+
+    const seasons = Object.keys(gamesBySeason)
+      .map(Number)
+      .sort((a, b) => b - a)
+
+    // Build per-season summaries
+    const seasonSummaries = seasons.map(season => {
+      const games = gamesBySeason[season]
+      const gp = games.length
+
+      // Basic totals
+      const totals = {
+        gamesPlayed: gp,
+        passAttempts: games.reduce((s, g) => s + (g.passAttempts || 0), 0),
+        passCompletions: games.reduce((s, g) => s + (g.passCompletions || 0), 0),
+        passYards: games.reduce((s, g) => s + (g.passYards || 0), 0),
+        passTds: games.reduce((s, g) => s + (g.passTds || 0), 0),
+        interceptions: games.reduce((s, g) => s + (g.interceptions || 0), 0),
+        sacked: games.reduce((s, g) => s + (g.sacked || 0), 0),
+        rushAttempts: games.reduce((s, g) => s + (g.rushAttempts || 0), 0),
+        rushYards: games.reduce((s, g) => s + (g.rushYards || 0), 0),
+        rushTds: games.reduce((s, g) => s + (g.rushTds || 0), 0),
+        targets: games.reduce((s, g) => s + (g.targets || 0), 0),
+        receptions: games.reduce((s, g) => s + (g.receptions || 0), 0),
+        recYards: games.reduce((s, g) => s + (g.recYards || 0), 0),
+        recTds: games.reduce((s, g) => s + (g.recTds || 0), 0),
+        fumbles: games.reduce((s, g) => s + (g.fumbles || 0), 0),
+        fumblesLost: games.reduce((s, g) => s + (g.fumblesLost || 0), 0),
+        fgMade: games.reduce((s, g) => s + (g.fgMade || 0), 0),
+        fgAttempts: games.reduce((s, g) => s + (g.fgAttempts || 0), 0),
+        xpMade: games.reduce((s, g) => s + (g.xpMade || 0), 0),
+        xpAttempts: games.reduce((s, g) => s + (g.xpAttempts || 0), 0),
+        sacks: games.reduce((s, g) => s + (g.sacks || 0), 0),
+        defInterceptions: games.reduce((s, g) => s + (g.defInterceptions || 0), 0),
+        fumblesRecovered: games.reduce((s, g) => s + (g.fumblesRecovered || 0), 0),
+        fumblesForced: games.reduce((s, g) => s + (g.fumblesForced || 0), 0),
+        defTds: games.reduce((s, g) => s + (g.defTds || 0), 0),
+      }
+
+      // Fantasy points by format
+      const fantasyPts = {
+        standard: Math.round(games.reduce((s, g) => s + (g.fantasyPtsStd || 0), 0) * 100) / 100,
+        ppr: Math.round(games.reduce((s, g) => s + (g.fantasyPtsPpr || 0), 0) * 100) / 100,
+        half_ppr: Math.round(games.reduce((s, g) => s + (g.fantasyPtsHalf || 0), 0) * 100) / 100,
+      }
+
+      // Per-game averages for fantasy
+      const fantasyPtsPerGame = {
+        standard: gp > 0 ? Math.round((fantasyPts.standard / gp) * 100) / 100 : 0,
+        ppr: gp > 0 ? Math.round((fantasyPts.ppr / gp) * 100) / 100 : 0,
+        half_ppr: gp > 0 ? Math.round((fantasyPts.half_ppr / gp) * 100) / 100 : 0,
+      }
+
+      // Advanced metrics (averages from games that have them)
+      const gamesWithEpa = games.filter(g => g.epa != null)
+      const gamesWithCpoe = games.filter(g => g.cpoe != null)
+      const gamesWithSuccessRate = games.filter(g => g.successRate != null)
+      const gamesWithTargetShare = games.filter(g => g.targetShare != null)
+      const gamesWithSnapPct = games.filter(g => g.snapPct != null)
+      const gamesWithRushShare = games.filter(g => g.rushShare != null)
+
+      const advanced = {
+        epaTotal: gamesWithEpa.length > 0
+          ? Math.round(gamesWithEpa.reduce((s, g) => s + g.epa, 0) * 100) / 100
+          : null,
+        epaPerGame: gamesWithEpa.length > 0
+          ? Math.round((gamesWithEpa.reduce((s, g) => s + g.epa, 0) / gamesWithEpa.length) * 100) / 100
+          : null,
+        cpoe: gamesWithCpoe.length > 0
+          ? Math.round((gamesWithCpoe.reduce((s, g) => s + g.cpoe, 0) / gamesWithCpoe.length) * 100) / 100
+          : null,
+        successRate: gamesWithSuccessRate.length > 0
+          ? Math.round((gamesWithSuccessRate.reduce((s, g) => s + g.successRate, 0) / gamesWithSuccessRate.length) * 1000) / 10
+          : null,
+        targetShare: gamesWithTargetShare.length > 0
+          ? Math.round((gamesWithTargetShare.reduce((s, g) => s + g.targetShare, 0) / gamesWithTargetShare.length) * 1000) / 10
+          : null,
+        snapPct: gamesWithSnapPct.length > 0
+          ? Math.round((gamesWithSnapPct.reduce((s, g) => s + g.snapPct, 0) / gamesWithSnapPct.length) * 10) / 10
+          : null,
+        rushShare: gamesWithRushShare.length > 0
+          ? Math.round((gamesWithRushShare.reduce((s, g) => s + g.rushShare, 0) / gamesWithRushShare.length) * 1000) / 10
+          : null,
+      }
+
+      // Team played for that season (most common)
+      const teamCounts = {}
+      for (const g of games) {
+        teamCounts[g.teamAbbr] = (teamCounts[g.teamAbbr] || 0) + 1
+      }
+      const teamAbbr = Object.entries(teamCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null
+
+      return { season, teamAbbr, totals, fantasyPts, fantasyPtsPerGame, advanced }
+    })
+
+    // Build game log for all seasons
+    const gameLog = player.nflPlayerGames.map(pg => {
+      const game = pg.game
+      const isHome = pg.teamAbbr === game.homeTeam?.abbreviation
+      const opponent = isHome ? game.awayTeam : game.homeTeam
+
+      return {
+        week: game.week,
+        season: game.season,
+        gameId: game.id,
+        opponent: opponent?.abbreviation || '???',
+        isHome,
+        result: game.status === 'FINAL'
+          ? `${game.homeScore}-${game.awayScore}`
+          : game.status,
+        stats: {
+          passAttempts: pg.passAttempts, passCompletions: pg.passCompletions,
+          passYards: pg.passYards, passTds: pg.passTds, interceptions: pg.interceptions,
+          rushAttempts: pg.rushAttempts, rushYards: pg.rushYards, rushTds: pg.rushTds,
+          targets: pg.targets, receptions: pg.receptions, recYards: pg.recYards, recTds: pg.recTds,
+          fumblesLost: pg.fumblesLost,
+          fgMade: pg.fgMade, fgAttempts: pg.fgAttempts, xpMade: pg.xpMade,
+          sacks: pg.sacks, defInterceptions: pg.defInterceptions,
+          fumblesRecovered: pg.fumblesRecovered, fumblesForced: pg.fumblesForced, defTds: pg.defTds,
+          // Advanced per-game
+          epa: pg.epa != null ? Math.round(pg.epa * 100) / 100 : null,
+          cpoe: pg.cpoe != null ? Math.round(pg.cpoe * 100) / 100 : null,
+          successRate: pg.successRate != null ? Math.round(pg.successRate * 1000) / 10 : null,
+          targetShare: pg.targetShare != null ? Math.round(pg.targetShare * 1000) / 10 : null,
+          snapPct: pg.snapPct != null ? Math.round(pg.snapPct * 10) / 10 : null,
+        },
+        fantasyPts: {
+          standard: pg.fantasyPtsStd,
+          ppr: pg.fantasyPtsPpr,
+          half_ppr: pg.fantasyPtsHalf,
+        },
+      }
+    })
+
+    // Career totals
+    const allGames = player.nflPlayerGames
+    const careerTotals = {
+      gamesPlayed: allGames.length,
+      seasons: seasons.length,
+      passYards: allGames.reduce((s, g) => s + (g.passYards || 0), 0),
+      passTds: allGames.reduce((s, g) => s + (g.passTds || 0), 0),
+      interceptions: allGames.reduce((s, g) => s + (g.interceptions || 0), 0),
+      rushYards: allGames.reduce((s, g) => s + (g.rushYards || 0), 0),
+      rushTds: allGames.reduce((s, g) => s + (g.rushTds || 0), 0),
+      receptions: allGames.reduce((s, g) => s + (g.receptions || 0), 0),
+      recYards: allGames.reduce((s, g) => s + (g.recYards || 0), 0),
+      recTds: allGames.reduce((s, g) => s + (g.recTds || 0), 0),
+      totalTds: allGames.reduce((s, g) => s + (g.passTds || 0) + (g.rushTds || 0) + (g.recTds || 0), 0),
+      fantasyPts: {
+        standard: Math.round(allGames.reduce((s, g) => s + (g.fantasyPtsStd || 0), 0) * 100) / 100,
+        ppr: Math.round(allGames.reduce((s, g) => s + (g.fantasyPtsPpr || 0), 0) * 100) / 100,
+        half_ppr: Math.round(allGames.reduce((s, g) => s + (g.fantasyPtsHalf || 0), 0) * 100) / 100,
+      },
+    }
+
+    const { nflPlayerGames, ...playerData } = player
+
+    res.json({
+      player: playerData,
+      seasonSummaries,
+      gameLog,
+      careerTotals,
+      availableSeasons: seasons,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // ─── NFL Teams ──────────────────────────────────────────────────────────────
 
 // GET /api/nfl/teams — All 32 NFL teams

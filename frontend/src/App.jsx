@@ -362,8 +362,8 @@ function App() {
             }
           />
           {/* NFL routes */}
-          <Route path="/nfl/players" element={<ProtectedRoute><NflPlayers /></ProtectedRoute>} />
-          <Route path="/nfl/players/:playerId" element={<ProtectedRoute><NflPlayerDetail /></ProtectedRoute>} />
+          <Route path="/nfl/players" element={<NflPlayers />} />
+          <Route path="/nfl/players/:playerId" element={<NflPlayerDetail />} />
           <Route path="/nfl/compare" element={<ProtectedRoute><NflCompare /></ProtectedRoute>} />
           <Route path="/nfl/schedule" element={<ProtectedRoute><NflSchedule /></ProtectedRoute>} />
           <Route path="/nfl/teams/:abbr" element={<ProtectedRoute><NflTeamDetail /></ProtectedRoute>} />
