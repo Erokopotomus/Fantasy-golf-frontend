@@ -347,6 +347,7 @@ model Player {
   nflPlayerGames     NflPlayerGame[]
   propLines          PropLine[]
   draftBoardEntries  DraftBoardEntry[]
+  clutchProjections  ClutchProjection[]
 
   @@index([owgrRank])
   @@index([name])
@@ -2648,4 +2649,27 @@ model DraftBoardEntry {
   @@index([boardId])
   @@index([boardId, rank])
   @@map("clutch_draft_board_entries")
+}
+
+// ============ WORKSPACE — CLUTCH PROJECTIONS (Pre-loaded Rankings) ============
+
+model ClutchProjection {
+  id             String   @id @default(cuid())
+  sport          String   // nfl, golf
+  scoringFormat  String   // ppr, half_ppr, standard (nfl); overall (golf)
+  season         Int
+  week           Int?     // null = season-long
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  projectedPts   Float?
+  adpRank        Int?
+  clutchRank     Int
+  tradeValue     Int?
+  position       String?  // QB, RB, WR, TE, K, DEF (cached for filtering)
+  metadata       Json?    // raw inputs for transparency
+  computedAt     DateTime @default(now())
+
+  @@unique([sport, scoringFormat, season, week, playerId])
+  @@index([sport, scoringFormat, season, clutchRank])
+  @@map("clutch_projections")
 }

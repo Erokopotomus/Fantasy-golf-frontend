@@ -1208,12 +1208,76 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **Entry points:** Gold "This Week in Golf" banner on GolfHub, gold preview banner on TournamentScoring (UPCOMING), "Preview →" links on Tournaments list
   - **No new backend work** — all data from existing APIs
   - **Goal:** Surface Clutch's data as editorial content any golf fan would find valuable, whether they play fantasy or not
-- [ ] Step 4: Workspace — Draft Board (drag-and-drop rankings, notes, tier breaks, divergence alerts, share/export)
+- [x] Step 3.8: Workspace Integration — "Connect the Pillars"
+  - **AddToBoardModal.jsx:** Reusable modal for adding any player to any board from anywhere in the app. Fetches user's boards, checks for duplicates, supports "Create + Add" flow.
+  - **Backend enrichment:** `draftBoardService.js` — golf boards enriched with ClutchScore (CPI, formScore, pressureScore) via batch load. NFL boards enriched with fantasy PPG/total from NflPlayerGame aggregation using `nflScoringService.calculateFantasyPoints()`.
+  - **BoardEntryRow.jsx:** Golf rows show CPI pill (color-coded) + Form score + OWGR + SG. NFL rows show position badge + team + fantasy PPG + total pts.
+  - **PlayerProfile.jsx + NflPlayerDetail.jsx:** "Add to Board" gold button, gated by auth.
+  - **MockDraftRecap.jsx:** "Import to Board" creates new board from mock draft results (auto-names, detects sport, ranks by pick order).
+  - **Dashboard.jsx:** "My Boards" widget (3 recent boards, sport badges, player counts, "View All →", empty state CTA). "My Workspace" Quick Action added.
+  - **MobileNav.jsx:** "Boards" tab replaces Prove It, links to `/workspace`.
+- [x] Step 4A: Workspace — "Start From" Board Creation (see `docs/workspace-master-plan.md`)
+  - **Backend:** `projectionSync.js` — fetches Sleeper players (ID linking), uses NflPlayerGame PPG as primary signal (offseason), Sleeper ADP as secondary, blends 60/40 into "Clutch Rankings". Golf: DataGolf + ClutchScore (CPI/Form). Stores in `ClutchProjection` model.
+  - **ClutchProjection Prisma model** + migration `19_clutch_projections`: sport, scoringFormat, season, week, playerId, projectedPts, adpRank, clutchRank, position, metadata, computedAt.
+  - **Projections API:** `GET /api/projections/:sport/:format` (ranked list), `POST /api/projections/sync` (admin trigger). Cron: daily 6 AM ET.
+  - **Enhanced `createBoard()`:** `startFrom` param: `clutch` (pre-loads 200 ranked players with auto-tiers), `adp` (ADP-ordered), `previous` (copies most recent board with entries), `scratch` (empty).
+  - **DraftBoards.jsx** upgraded: 2-step create modal (Name+Sport+Scoring → Start From options with radio cards). Auto-navigates to board editor on create.
+  - **Data:** 465 NFL players ranked (PPR/Half/Std), 250 golf players ranked. 868 Sleeper IDs linked.
+- [ ] Step 4 continued: Full Board Editor + Tags + Divergence
+  - **Step 4B:** Tags system (Target/Sleeper/Avoid) + reason chips from `entry-points-addendum.md`. Structured tags on DraftBoardEntry, chip row on player move, tag filter bar.
+  - **Step 4C:** Divergence tracking — baseline rank stored at creation, divergence indicator on each row, "Your Biggest Bets" summary card.
 - [ ] Step 5: Workspace — Watch List + Position Rankings
-- [ ] Step 6: Workspace — Scouting Notes
+  - WatchListEntry model, star icon platform-wide, `/workspace/watch-list` page, position tab navigation on board editor.
+- [ ] Step 6: Workspace — Scouting Notes + Decision Journal
+  - Enhanced note editor with markdown + source tags, decision journal page at `/workspace/journal`.
+- [ ] Step 7: Board ↔ Draft Room integration — board as live cheat sheet, tier depletion alerts, post-draft grade.
 - [ ] AI Coaching (former Phase 6 — more powerful after Feed + Workspace provide context)
 
 **Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced.
+
+---
+
+## WORKSPACE DATA SOURCES (Free APIs for "Start From" Boards)
+
+> **Full plan:** `docs/workspace-master-plan.md` — competitive research, data strategy, feature spec, build order
+
+The Workspace "Start From" system pre-loads boards with projections so users customize rather than build from scratch. All data sources are free and legally safe for commercial use.
+
+| Data Need | Source | Cost | Notes |
+|-----------|--------|------|-------|
+| NFL Projections | Sleeper API | Free | No auth. `GET /projections/nfl/{season}/{week}`. Cache daily. Stay under 1K calls/min. |
+| NFL ADP | Fantasy Football Calculator API | Free | Commercial use OK with attribution. JSON REST. |
+| NFL Trade Values | FantasyCalc API | Free | `GET /values/current?isDynasty=false&ppr=1`. Public endpoint. |
+| NFL Historical Stats | nflverse | Free | Open source. Already synced via nfl_data_py. |
+| NFL Expected Fantasy Pts | ffopportunity (nflverse) | Free | Pre-computed XGBoost model outputs. |
+| NFL Trending Players | Sleeper API | Free | `GET /v1/players/nfl/trending/add`. |
+| Golf Projections + Rankings | DataGolf API | Existing sub | Already integrated — DG rankings, skill estimates, course fit. |
+| Expert Consensus (future premium) | FantasyPros Partners HQ | Paid license | Contact `partners@fantasypros.com`. Best-in-class ECR from 100+ experts. |
+
+**"Clutch Rankings" formula (the default board baseline):**
+- NFL: 60% Sleeper projected fantasy pts rank + 40% FFC ADP rank (blended, branded as Clutch's own)
+- Golf: DataGolf skill estimates weighted by CPI + Form Score from `clutchMetrics.js`
+- **Transformation Rule:** Never expose "Sleeper projections" or "FFC ADP" to users. Always label as "Clutch Rankings."
+
+### Workspace Infrastructure (Already Built)
+
+| Component | What It Does |
+|-----------|-------------|
+| `DraftBoard` + `DraftBoardEntry` Prisma models | Board + entries with rank, tier, notes. `boardType` (overall/qb/rb/wr/te), `scoringFormat`, `sport`, `isPublished`. |
+| `draftBoardService.js` | CRUD, bulk save, player enrichment (ClutchScore for golf, fantasy PPG for NFL). Batch loading to avoid N+1. |
+| `draftBoards.js` routes | 8 REST endpoints: list, create, get, update, delete, bulk save entries, add entry, remove entry, update notes. |
+| `useDraftBoardEditor.js` hook | Load board, debounced auto-save (1.5s), moveEntry, addPlayer, removePlayer, updateNotes, insertTierBreak, removeTierBreak. |
+| `useDraftBoards.js` hook | List all user boards. |
+| Workspace components | BoardHeader, BoardEntryRow (enriched), TierBreak, PlayerSearchPanel, PlayerNoteEditor, AddToBoardModal. |
+
+### Competitive Positioning
+
+| Competitor | Workspace Tools | Our Advantage |
+|------------|----------------|---------------|
+| **Sleeper** | No custom rankings, no cheat sheet, no workspace at all | We have the full workspace — Sleeper users need Chrome extensions for what we offer natively |
+| **FantasyPros** | Best-in-class Cheat Sheet Creator, but always a layer on top of ESPN/Yahoo/Sleeper | We ARE the league host + the workspace. No sync required. |
+| **PFF** | Rankings Builder from PFF projections, $80/yr paywall | We offer "Start From" for free with comparable UX |
+| **ESPN/Yahoo** | Terrible or nonexistent custom ranking tools | Modern drag-and-drop with tiers, tags, notes, reason chips |
 
 ---
 
@@ -1230,6 +1294,7 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 | `docs/build-specs.md` | Manager stats page spec (A1-A6), AI engines spec (B1-B5), database architecture (C1-C3), data transformation layer (D1-D2), original build priority queue |
 | `docs/brand-system.md` | Full Aurora Ember brand system: colors, typography, glassmorphism, logo SVG, component code, anti-Sleeper rules |
 | `docs/nfl-gameday-ux.md` | NFL gameday UX spec (v1.4): two-layer platform architecture, weekly manager flow, 9 page wireframes, reward engine (I Told You So, delta cards, Decision DNA), golf parity, data deps, mobile layouts, notifications, onboarding, 7 implementation phases |
+| `docs/workspace-master-plan.md` | **Workspace master plan**: competitive research (Sleeper/FantasyPros/PFF/ESPN/Yahoo + 10 more), data source strategy (Sleeper API/FFC ADP/FantasyCalc/nflverse), "Start From" pre-loaded board system, full feature spec (board editor, tags, reason chips, divergence tracking, watch list, scouting notes, decision journal), draft room integration, Feed↔Workspace↔Prove It connections, 7-step build order with file-level specs |
 
 **Desktop docs (not in repo, for reference):**
 - `CLUTCH_ARCHITECTURE.md` — Original architecture doc (superseded by this CLAUDE.md)
@@ -1240,4 +1305,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 10, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-6 (partial) complete. Strategic architecture: Three Pillars (Feed + Workspace + Prove It) + Data Layer foundation. Six user personas defined. Clutch Rating updated to sport-specific (primary) + global (prestige). Data Layer Steps 1-3.7 complete (Player Profiles, Team Pages + Leaderboards, Sport Hubs + Feed Cards, Live News Pipeline, PGA Hub Enhancement + Schedule Dots, Tournament Preview Page). Feed standalone page + nav item live. NFL Mock Draft complete. Next: Workspace Draft Board (Step 4).*
+*Phases 1-3 complete. Phase 4 in progress. Data Layer Steps 1-3.8 + Step 4A complete. Step 4A: "Start From" Board Creation — `projectionSync.js` (Sleeper API + NflPlayerGame PPG blended rankings), `ClutchProjection` model, enhanced `createBoard()` with startFrom (clutch/adp/previous/scratch), 2-step create modal in DraftBoards.jsx, projections API + daily cron. 465 NFL players + 250 golf players ranked. Next: Step 4B (Tags + Reason Chips) → Step 4C (Divergence Tracking).*

@@ -21,8 +21,8 @@ export default function useDraftBoards() {
 
   useEffect(() => { fetchBoards() }, [fetchBoards])
 
-  const createBoard = useCallback(async ({ name, sport, scoringFormat, boardType }) => {
-    const data = await api.createDraftBoard({ name, sport, scoringFormat, boardType })
+  const createBoard = useCallback(async ({ name, sport, scoringFormat, boardType, startFrom }) => {
+    const data = await api.createDraftBoard({ name, sport, scoringFormat, boardType, startFrom })
     await fetchBoards()
     return data.board
   }, [fetchBoards])

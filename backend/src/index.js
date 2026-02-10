@@ -36,6 +36,7 @@ const newsRoutes = require('./routes/news')
 const yahooAuthRoutes = require('./routes/yahooAuth')
 const draftDollarsRouter = require('./routes/draftDollars')
 const draftBoardRoutes = require('./routes/draftBoards')
+const projectionRoutes = require('./routes/projections')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -131,6 +132,7 @@ app.use('/api/news', newsRoutes)
 app.use('/api/auth', yahooAuthRoutes)
 app.use('/api/leagues', draftDollarsRouter)
 app.use('/api/draft-boards', draftBoardRoutes)
+app.use('/api/projections', projectionRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -787,6 +789,24 @@ httpServer.listen(PORT, () => {
     }, { timezone: 'America/New_York' })
 
     console.log('[Cron] News sync jobs scheduled (every 2 hours)')
+  }
+
+  // ── Projection Sync (Clutch Rankings) ──
+  {
+    const { syncAllProjections } = require('./services/projectionSync')
+
+    // Daily at 6 AM ET — sync projections from Sleeper + FFC ADP
+    cron.schedule('0 6 * * *', async () => {
+      console.log(`[Cron:projections] ${new Date().toISOString()} — Starting projection sync`)
+      try {
+        const results = await syncAllProjections(2026)
+        console.log(`[Cron:projections] Complete:`, JSON.stringify(results))
+      } catch (err) {
+        console.error(`[Cron:projections] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] Projection sync scheduled (daily 6 AM ET)')
   }
 
   // Trade review processor — runs every 15 minutes

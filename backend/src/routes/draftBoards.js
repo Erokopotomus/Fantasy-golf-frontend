@@ -18,11 +18,13 @@ router.get('/', async (req, res, next) => {
 // POST /api/draft-boards — create board
 router.post('/', async (req, res, next) => {
   try {
-    const { name, sport, scoringFormat, boardType, season } = req.body
+    const { name, sport, scoringFormat, boardType, season, startFrom } = req.body
     if (!name || !name.trim()) {
       return res.status(400).json({ error: { message: 'Board name is required' } })
     }
-    const board = await svc.createBoard(req.user.id, { name: name.trim(), sport, scoringFormat, boardType, season })
+    const validStartFrom = ['scratch', 'clutch', 'adp', 'previous']
+    const sf = validStartFrom.includes(startFrom) ? startFrom : 'scratch'
+    const board = await svc.createBoard(req.user.id, { name: name.trim(), sport, scoringFormat, boardType, season, startFrom: sf })
     res.status(201).json({ board })
   } catch (err) { next(err) }
 })

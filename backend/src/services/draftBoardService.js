@@ -86,10 +86,87 @@ async function assertOwnership(boardId, userId) {
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
-async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr', boardType = 'overall', season = 2026 }) {
-  return prisma.draftBoard.create({
+async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr', boardType = 'overall', season = 2026, startFrom = 'scratch' }) {
+  // Create the board first
+  const board = await prisma.draftBoard.create({
     data: { userId, name, sport, scoringFormat, boardType, season },
   })
+
+  // Pre-populate entries based on startFrom option
+  if (startFrom === 'clutch' || startFrom === 'adp') {
+    try {
+      const format = sport === 'golf' ? 'overall' : scoringFormat
+      const rankings = await prisma.clutchProjection.findMany({
+        where: { sport, scoringFormat: format, season, week: null },
+        orderBy: startFrom === 'adp' && sport === 'nfl'
+          ? { adpRank: 'asc' }
+          : { clutchRank: 'asc' },
+        take: boardType === 'overall' ? 200 : 60,
+      })
+
+      // Filter by position if board is position-specific
+      let filtered = rankings
+      if (boardType !== 'overall' && sport === 'nfl') {
+        const posMap = { qb: 'QB', rb: 'RB', wr: 'WR', te: 'TE', k: 'K', def: 'DEF' }
+        const posFilter = posMap[boardType]
+        if (posFilter) {
+          filtered = rankings.filter(r => r.position === posFilter)
+        }
+      }
+
+      // Auto-assign tiers: every ~12 players in a new tier for overall boards
+      const tierSize = boardType === 'overall' ? 12 : 8
+
+      if (filtered.length > 0) {
+        const batchSize = 50
+        for (let i = 0; i < filtered.length; i += batchSize) {
+          const batch = filtered.slice(i, i + batchSize)
+          await prisma.draftBoardEntry.createMany({
+            data: batch.map((r, j) => ({
+              boardId: board.id,
+              playerId: r.playerId,
+              rank: i + j + 1,
+              tier: Math.floor((i + j) / tierSize) + 1,
+            })),
+          })
+        }
+      }
+    } catch (err) {
+      // Non-fatal — board was created, just empty
+      console.error('[createBoard] Failed to pre-populate from projections:', err.message)
+    }
+  } else if (startFrom === 'previous') {
+    try {
+      // Copy entries from user's most recent board in this sport (that has entries)
+      const prevBoard = await prisma.draftBoard.findFirst({
+        where: { userId, sport, id: { not: board.id }, entries: { some: {} } },
+        orderBy: { updatedAt: 'desc' },
+        select: { id: true },
+      })
+      if (prevBoard) {
+        const prevEntries = await prisma.draftBoardEntry.findMany({
+          where: { boardId: prevBoard.id },
+          orderBy: { rank: 'asc' },
+        })
+        if (prevEntries.length > 0) {
+          await prisma.draftBoardEntry.createMany({
+            data: prevEntries.map((e, i) => ({
+              boardId: board.id,
+              playerId: e.playerId,
+              rank: i + 1,
+              tier: e.tier,
+              notes: e.notes,
+            })),
+          })
+        }
+      }
+    } catch (err) {
+      console.error('[createBoard] Failed to copy from previous board:', err.message)
+    }
+  }
+  // startFrom === 'scratch' — no entries, board is empty (default behavior)
+
+  return board
 }
 
 async function listBoards(userId) {

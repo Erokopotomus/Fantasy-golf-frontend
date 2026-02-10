@@ -1012,6 +1012,19 @@ class ApiService {
     })
   }
 
+  // ─── Workspace: Clutch Rankings / Projections ────────────────────────────
+
+  async getClutchRankings(sport, format, { season = 2026, limit = 300 } = {}) {
+    return this.request(`/projections/${sport}/${format}?season=${season}&limit=${limit}`)
+  }
+
+  async triggerProjectionSync(season = 2026) {
+    return this.request('/projections/sync', {
+      method: 'POST',
+      body: JSON.stringify({ season }),
+    })
+  }
+
   // Phase 5: Compare + Pinned Badges
   async comparePredictions(targetUserId, options = {}) {
     const params = new URLSearchParams(options).toString()
