@@ -9,6 +9,27 @@ const SPORTS = [
   { key: 'golf', label: 'Golf', color: 'emerald-400' },
 ]
 
+const QUICK_NAV = {
+  all: [
+    { label: 'NFL Hub', href: '/nfl' },
+    { label: 'Golf Hub', href: '/golf' },
+    { label: 'News', href: '/news' },
+  ],
+  nfl: [
+    { label: 'Hub', href: '/nfl' },
+    { label: 'Teams', href: '/nfl/teams' },
+    { label: 'Players', href: '/nfl/players' },
+    { label: 'Leaderboards', href: '/nfl/leaderboards' },
+    { label: 'News', href: '/news' },
+  ],
+  golf: [
+    { label: 'Hub', href: '/golf' },
+    { label: 'Players', href: '/players' },
+    { label: 'Tournaments', href: '/tournaments' },
+    { label: 'News', href: '/news' },
+  ],
+}
+
 const Feed = () => {
   const [sport, setSport] = useState('all')
   const [cards, setCards] = useState([])
@@ -27,6 +48,8 @@ const Feed = () => {
       .finally(() => setLoading(false))
   }, [sport, limit])
 
+  const quickLinks = QUICK_NAV[sport] || QUICK_NAV.all
+
   return (
     <div className="min-h-screen bg-dark-primary">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
@@ -43,21 +66,37 @@ const Feed = () => {
             </div>
           </div>
 
-          {/* Sport Toggle */}
-          <div className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.08] rounded-xl p-1 mb-6 w-fit">
-            {SPORTS.map(s => (
-              <button
-                key={s.key}
-                onClick={() => setSport(s.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                  sport === s.key
-                    ? 'bg-gold/20 text-gold'
-                    : 'text-white/30 hover:text-white/60'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
+          {/* Sport Toggle + Quick Nav */}
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            {/* Sport pills */}
+            <div className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.08] rounded-xl p-1">
+              {SPORTS.map(s => (
+                <button
+                  key={s.key}
+                  onClick={() => setSport(s.key)}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                    sport === s.key
+                      ? 'bg-gold/20 text-gold'
+                      : 'text-white/30 hover:text-white/60'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Contextual quick nav */}
+            <div className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.08] rounded-xl p-1">
+              {quickLinks.map(link => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="px-3 py-2 rounded-lg text-xs font-semibold text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Cards */}
@@ -93,22 +132,6 @@ const Feed = () => {
               <p className="text-white/20 text-xs">Feed cards are generated from game results, stat leaders, and tournament data.</p>
             </div>
           )}
-
-          {/* Footer links to hubs */}
-          <div className="mt-8 flex items-center justify-center gap-6">
-            <Link to="/nfl" className="text-orange text-xs font-semibold hover:text-orange/80 transition-colors flex items-center gap-1">
-              NFL Hub
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link to="/golf" className="text-emerald-400 text-xs font-semibold hover:text-emerald-400/80 transition-colors flex items-center gap-1">
-              Golf Hub
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
         </div>
       </main>
     </div>
