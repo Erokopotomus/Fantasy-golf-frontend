@@ -1196,6 +1196,8 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **TournamentScoring.jsx:** UPCOMING tournament field view — confirmed field table sorted by OWGR (Player/OWGR/SG Total/Tour columns), roster players highlighted in gold with star, "Field Not Yet Announced" empty state. Replaces empty leaderboard for upcoming events.
   - **PlayerProfile.jsx:** "Upcoming Schedule" section — lists next tournaments with CONFIRMED/TBD/NOT IN FIELD/LIVE badges, course names, dates, major/signature badges.
   - **api.js:** `getUpcomingTournamentsWithFields()`, `getPlayerSchedule(playerId)`.
+  - **Schedule Dots Visualization:** 5-dot inline indicator on Players table, TeamRoster, and WaiverWire — each dot = one of the next 5 upcoming events. Green filled = player confirmed in field, dim = field announced but player not in it, hollow outline = field not yet announced (TBD). Tooltip per dot shows tournament name + status.
+  - **Startup Field Sync:** Backend syncs field for next upcoming tournament on every server boot (deploy), ensuring schedule dots have data immediately without waiting for Tue/Wed crons.
   - **Goal:** Make Clutch PGA experience superior to Fantrax by solving the #1 pain point — zero visibility into upcoming player schedules. No new files, no schema migrations.
 - [ ] Step 4: Workspace — Draft Board (drag-and-drop rankings, notes, tier breaks, divergence alerts, share/export)
 - [ ] Step 5: Workspace — Watch List + Position Rankings
@@ -1229,4 +1231,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 9, 2026*
-*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-6 (partial) complete. Strategic architecture: Three Pillars (Feed + Workspace + Prove It) + Data Layer foundation. Six user personas defined. Clutch Rating updated to sport-specific (primary) + global (prestige). Data Layer Steps 1-3.6 complete (Player Profiles, Team Pages + Leaderboards, Sport Hubs + Feed Cards, Live News Pipeline, PGA Hub Enhancement). Feed standalone page + nav item live. NFL Mock Draft complete. Next: Workspace Draft Board (Step 4).*
+*Phases 1-3 complete. Phase 4 in progress. NFL expansion: NFL-1 thru NFL-3 complete. UX doc Phases 1-6 (partial) complete. Strategic architecture: Three Pillars (Feed + Workspace + Prove It) + Data Layer foundation. Six user personas defined. Clutch Rating updated to sport-specific (primary) + global (prestige). Data Layer Steps 1-3.6 complete (Player Profiles, Team Pages + Leaderboards, Sport Hubs + Feed Cards, Live News Pipeline, PGA Hub Enhancement + Schedule Dots). Feed standalone page + nav item live. NFL Mock Draft complete. Next: Workspace Draft Board (Step 4).*
