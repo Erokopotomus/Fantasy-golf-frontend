@@ -152,6 +152,75 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       }
     }
 
+    // ── Active/upcoming tournament enrichment ──────────────────────────────
+    const activeTournament = course.tournaments.find(
+      t => t.status === 'IN_PROGRESS' || t.status === 'UPCOMING'
+    )
+
+    if (activeTournament) {
+      // Top 10 course fits from ClutchScore
+      const topFits = await prisma.clutchScore.findMany({
+        where: { tournamentId: activeTournament.id, courseFitScore: { not: null } },
+        orderBy: { courseFitScore: 'desc' },
+        take: 10,
+        select: {
+          courseFitScore: true,
+          cpi: true,
+          formScore: true,
+          player: {
+            select: {
+              id: true,
+              name: true,
+              headshotUrl: true,
+              countryFlag: true,
+              sgTotal: true,
+              owgr: true,
+            },
+          },
+        },
+      })
+      course.topCourseFits = topFits.map(cs => ({
+        ...cs.player,
+        courseFitScore: cs.courseFitScore,
+        cpi: cs.cpi,
+        formScore: cs.formScore,
+      }))
+
+      // Weather forecast
+      const weather = await prisma.weather.findMany({
+        where: { tournamentId: activeTournament.id },
+        orderBy: { round: 'asc' },
+      })
+      course.weather = weather
+      course.activeTournamentId = activeTournament.id
+    }
+
+    // ── Related news ─────────────────────────────────────────────────────
+    const searchTerms = [course.nickname || course.name]
+    if (activeTournament) searchTerms.push(activeTournament.name)
+
+    let news = await prisma.newsArticle.findMany({
+      where: {
+        sport: 'golf',
+        OR: searchTerms.flatMap(term => [
+          { headline: { contains: term, mode: 'insensitive' } },
+          { description: { contains: term, mode: 'insensitive' } },
+        ]),
+      },
+      orderBy: { published: 'desc' },
+      take: 6,
+    })
+
+    // Fallback to recent golf news if nothing matched
+    if (news.length < 2) {
+      news = await prisma.newsArticle.findMany({
+        where: { sport: 'golf' },
+        orderBy: [{ priority: 'asc' }, { published: 'desc' }],
+        take: 6,
+      })
+    }
+    course.news = news
+
     res.json({ course })
   } catch (error) {
     next(error)

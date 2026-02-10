@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import useCourse from '../hooks/useCourse'
 import Card from '../components/common/Card'
+import WeatherStrip from '../components/tournament/WeatherStrip'
 
 const CourseDetail = () => {
   const { courseId } = useParams()
@@ -324,14 +325,145 @@ const CourseDetail = () => {
         </div>
       )}
 
+      {/* ── Best Course Fits ─────────────────────────────────────────────── */}
+      {course.topCourseFits && course.topCourseFits.length > 0 && (
+        <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+          <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-bold text-white">Best Course Fits</h4>
+              <p className="text-[10px] text-text-muted mt-0.5">Players whose skills best match this course's DNA</p>
+            </div>
+            {upcomingTournament && (
+              <Link
+                to={`/tournaments/${upcomingTournament.id}`}
+                className="text-xs text-gold hover:text-gold/80 transition-colors font-medium"
+              >
+                Full Field →
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-dark-border">
+            {course.topCourseFits.map((p, i) => (
+              <Link
+                key={p.id}
+                to={`/players/${p.id}`}
+                className="bg-dark-secondary p-3 hover:bg-dark-tertiary/50 transition-colors group"
+              >
+                <div className="flex items-center gap-2.5 mb-2">
+                  <span className="text-xs font-mono text-text-muted w-4 flex-shrink-0">
+                    {i + 1}.
+                  </span>
+                  {p.headshotUrl ? (
+                    <img src={p.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-base flex-shrink-0">
+                      {p.countryFlag || '?'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-white group-hover:text-gold transition-colors truncate">
+                      {p.name}
+                    </p>
+                    {p.owgr && (
+                      <p className="text-[10px] text-text-muted font-mono">OWGR #{p.owgr}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 ml-6">
+                  <div>
+                    <p className="text-[9px] text-text-muted uppercase">Fit</p>
+                    <p className={`text-xs font-mono font-bold ${
+                      p.courseFitScore >= 80 ? 'text-gold' : p.courseFitScore >= 60 ? 'text-yellow-400' : 'text-text-secondary'
+                    }`}>
+                      {Math.round(p.courseFitScore)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-text-muted uppercase">CPI</p>
+                    <p className={`text-xs font-mono font-bold ${
+                      p.cpi > 1 ? 'text-emerald-400' : p.cpi > 0 ? 'text-green-400' : 'text-text-secondary'
+                    }`}>
+                      {p.cpi != null ? (p.cpi > 0 ? `+${p.cpi.toFixed(1)}` : p.cpi.toFixed(1)) : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-text-muted uppercase">Form</p>
+                    <p className={`text-xs font-mono font-bold ${
+                      p.formScore >= 80 ? 'text-emerald-400' : p.formScore >= 60 ? 'text-green-400' : 'text-text-secondary'
+                    }`}>
+                      {p.formScore != null ? Math.round(p.formScore) : '-'}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Weather + News side by side ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Weather */}
+        <WeatherStrip
+          weather={course.weather || []}
+          tournamentStart={upcomingTournament?.startDate}
+        />
+
+        {/* News */}
+        <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+          <div className="px-4 py-3 border-b border-dark-border">
+            <h4 className="text-sm font-semibold text-text-muted">Latest News</h4>
+          </div>
+          {course.news && course.news.length > 0 ? (
+            <div className="divide-y divide-dark-border/30">
+              {course.news.map((article) => (
+                <a
+                  key={article.id}
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex gap-3 p-3 hover:bg-dark-tertiary/50 transition-colors group"
+                >
+                  {article.imageUrl && (
+                    <img
+                      src={article.imageUrl}
+                      alt=""
+                      className="w-16 h-12 rounded object-cover bg-dark-tertiary flex-shrink-0"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-white group-hover:text-gold transition-colors line-clamp-2 leading-snug">
+                      {article.headline}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {article.byline && (
+                        <span className="text-[10px] text-text-muted truncate">{article.byline}</span>
+                      )}
+                      <span className="text-[10px] text-text-muted">
+                        {new Date(article.published).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="p-6 text-center text-text-muted text-xs">
+              No recent news for this event.
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-1 space-y-6">
-          {/* Top Performers Card */}
+          {/* Top Historical Performers Card */}
           {course.playerHistory && course.playerHistory.length > 0 && (
             <Card padding="none">
               <div className="p-4 border-b border-dark-border">
-                <h4 className="text-sm font-semibold text-text-muted">Top Performers</h4>
+                <h4 className="text-sm font-semibold text-text-muted">Course History Leaders</h4>
+                <p className="text-[10px] text-text-muted mt-0.5">Best historical performers (min 4 rounds)</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
