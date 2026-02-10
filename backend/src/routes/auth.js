@@ -12,7 +12,9 @@ const prisma = new PrismaClient()
 const validateSignup = [
   body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-  body('name').trim().notEmpty().withMessage('Name is required')
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('username').trim().isLength({ min: 3, max: 30 }).withMessage('Username must be 3-30 characters')
+    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username: letters, numbers, and underscores only')
 ]
 
 const validateLogin = [
@@ -35,12 +37,18 @@ router.post('/signup', validateSignup, async (req, res, next) => {
       return res.status(400).json({ error: { message: errors.array()[0].msg } })
     }
 
-    const { email, password, name } = req.body
+    const { email, password, name, username } = req.body
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
       return res.status(400).json({ error: { message: 'Email already in use' } })
+    }
+
+    // Check if username is taken
+    const existingUsername = await prisma.user.findUnique({ where: { username } })
+    if (existingUsername) {
+      return res.status(400).json({ error: { message: 'Username already taken' } })
     }
 
     // Hash password
@@ -52,12 +60,14 @@ router.post('/signup', validateSignup, async (req, res, next) => {
         email,
         password: hashedPassword,
         name,
+        username,
         avatar: name.charAt(0).toUpperCase()
       },
       select: {
         id: true,
         email: true,
         name: true,
+        username: true,
         avatar: true,
         role: true,
         createdAt: true

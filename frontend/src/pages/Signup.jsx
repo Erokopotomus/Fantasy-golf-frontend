@@ -8,6 +8,7 @@ import ClutchLogo from '../components/common/ClutchLogo'
 
 const Signup = () => {
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -37,9 +38,14 @@ const Signup = () => {
       return
     }
 
+    if (!username || username.length < 3) {
+      setError('Username must be at least 3 characters')
+      return
+    }
+
     setLoading(true)
 
-    const result = await signup(name, email, password)
+    const result = await signup(name, username, email, password)
 
     if (result.success) {
       navigate('/dashboard', { replace: true })
@@ -91,15 +97,30 @@ const Signup = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
-              label="Display Name"
+              label="Name"
               type="text"
-              placeholder="e.g. BigCatGolf, JohnD23"
+              placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               icon={
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              }
+            />
+
+            <Input
+              label="Username"
+              type="text"
+              placeholder="e.g. BigCatGolf, JohnD23"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 30))}
+              required
+              helperText="Letters, numbers, and underscores only"
+              icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                 </svg>
               }
             />

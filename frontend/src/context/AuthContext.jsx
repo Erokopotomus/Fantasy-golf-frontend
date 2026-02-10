@@ -55,9 +55,9 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const signup = async (name, email, password) => {
+  const signup = async (name, username, email, password) => {
     try {
-      const data = await api.signup(name, email, password)
+      const data = await api.signup(name, username, email, password)
 
       localStorage.setItem('clutch_token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
