@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
+import AddToBoardModal from '../components/workspace/AddToBoardModal'
 import NewsCard from '../components/news/NewsCard'
 
 const SCORING_LABELS = { standard: 'STD', ppr: 'PPR', half_ppr: 'Half' }
 
 export default function NflPlayerDetail() {
   const { playerId } = useParams()
+  const { user } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [scoringView, setScoringView] = useState('half_ppr')
@@ -15,6 +18,7 @@ export default function NflPlayerDetail() {
   const [expandedSections, setExpandedSections] = useState({})
   const [playerNews, setPlayerNews] = useState([])
   const [newsLoading, setNewsLoading] = useState(false)
+  const [showAddToBoard, setShowAddToBoard] = useState(false)
 
   const loadProfile = useCallback(async () => {
     setLoading(true)
@@ -166,6 +170,21 @@ export default function NflPlayerDetail() {
             )}
           </div>
         </div>
+
+        {/* Add to Board */}
+        {user && (
+          <div className="mt-4 pt-4 border-t border-white/5">
+            <button
+              onClick={() => setShowAddToBoard(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gold/40 rounded-lg text-gold text-sm font-semibold hover:bg-gold/10 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              Add to Board
+            </button>
+          </div>
+        )}
 
         {/* Quick season stats (default view for Informed Fan) */}
         {latestSeason && latestSeason.totals.gamesPlayed > 0 && (
@@ -694,6 +713,15 @@ export default function NflPlayerDetail() {
       <div className="mt-8 text-center text-white/15 text-xs font-mono">
         Data via <a href="https://github.com/nflverse" target="_blank" rel="noopener noreferrer" className="hover:text-white/30 underline">nflverse</a>
       </div>
+
+      {showAddToBoard && (
+        <AddToBoardModal
+          playerId={playerId}
+          playerName={player.name}
+          sport="nfl"
+          onClose={() => setShowAddToBoard(false)}
+        />
+      )}
     </div>
   )
 }

@@ -1,9 +1,10 @@
 const { PrismaClient } = require('@prisma/client')
+const { calculateFantasyPoints } = require('./nflScoringService')
 const prisma = new PrismaClient()
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function enrichPlayer(player, sport) {
+function enrichPlayer(player, sport, extras = {}) {
   if (!player) return null
   if (sport === 'nfl') {
     return {
@@ -12,6 +13,9 @@ function enrichPlayer(player, sport) {
       headshotUrl: player.headshotUrl,
       position: player.nflPosition,
       team: player.nflTeamAbbr,
+      fantasyPts: extras.fantasyPts ?? null,
+      gamesPlayed: extras.gamesPlayed ?? null,
+      fantasyPtsPerGame: extras.fantasyPtsPerGame ?? null,
     }
   }
   // golf
@@ -22,7 +26,55 @@ function enrichPlayer(player, sport) {
     owgrRank: player.owgrRank,
     sgTotal: player.sgTotal,
     fedexRank: player.fedexRank,
+    cpi: extras.cpi ?? null,
+    formScore: extras.formScore ?? null,
+    pressureScore: extras.pressureScore ?? null,
   }
+}
+
+// Batch-load ClutchScore weekly snapshots for golf players
+async function batchLoadClutchScores(playerIds) {
+  if (playerIds.length === 0) return new Map()
+  const scores = await prisma.clutchScore.findMany({
+    where: { playerId: { in: playerIds }, tournamentId: null },
+    orderBy: { computedAt: 'desc' },
+    distinct: ['playerId'],
+    select: { playerId: true, cpi: true, formScore: true, pressureScore: true },
+  })
+  return new Map(scores.map(s => [s.playerId, s]))
+}
+
+// Batch-load NFL fantasy stats for a season + scoring format
+async function batchLoadNflFantasyStats(playerIds, scoringFormat) {
+  if (playerIds.length === 0) return new Map()
+  const games = await prisma.nflPlayerGame.findMany({
+    where: { playerId: { in: playerIds } },
+    include: { game: { select: { season: true } } },
+  })
+  // Group by player, filter to most recent season
+  const byPlayer = new Map()
+  for (const g of games) {
+    if (!byPlayer.has(g.playerId)) byPlayer.set(g.playerId, [])
+    byPlayer.get(g.playerId).push(g)
+  }
+  const result = new Map()
+  for (const [pid, playerGames] of byPlayer) {
+    // Use the latest season available
+    const maxSeason = Math.max(...playerGames.map(g => g.game.season))
+    const seasonGames = playerGames.filter(g => g.game.season === maxSeason)
+    let totalPts = 0
+    for (const g of seasonGames) {
+      const { total } = calculateFantasyPoints(g, scoringFormat || 'half_ppr')
+      totalPts += total
+    }
+    const gp = seasonGames.length
+    result.set(pid, {
+      fantasyPts: Math.round(totalPts * 10) / 10,
+      gamesPlayed: gp,
+      fantasyPtsPerGame: gp > 0 ? Math.round((totalPts / gp) * 10) / 10 : 0,
+    })
+  }
+  return result
 }
 
 async function assertOwnership(boardId, userId) {
@@ -75,12 +127,20 @@ async function getBoard(boardId, userId) {
     : []
   const playerMap = new Map(players.map(p => [p.id, p]))
 
+  // Batch-load enrichment data based on sport
+  let extrasMap = new Map()
+  if (board.sport === 'golf' && playerIds.length > 0) {
+    extrasMap = await batchLoadClutchScores(playerIds)
+  } else if (board.sport === 'nfl' && playerIds.length > 0) {
+    extrasMap = await batchLoadNflFantasyStats(playerIds, board.scoringFormat)
+  }
+
   const enrichedEntries = entries.map(e => ({
     playerId: e.playerId,
     rank: e.rank,
     tier: e.tier,
     notes: e.notes,
-    player: enrichPlayer(playerMap.get(e.playerId), board.sport),
+    player: enrichPlayer(playerMap.get(e.playerId), board.sport, extrasMap.get(e.playerId) || {}),
   }))
 
   return {

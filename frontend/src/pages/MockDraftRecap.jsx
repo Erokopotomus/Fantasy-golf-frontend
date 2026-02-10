@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import { useMockDraftRecap } from '../hooks/useDraftHistory'
+import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 
 const gradeColors = {
   'A+': 'text-green-400', A: 'text-green-400', 'A-': 'text-green-400',
@@ -31,7 +34,11 @@ const NFL_POS_COLORS = {
 const MockDraftRecap = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { result, loading, error } = useMockDraftRecap(id)
+  const [importing, setImporting] = useState(false)
+  const [importSuccess, setImportSuccess] = useState(null) // board id on success
+  const [importError, setImportError] = useState(null)
 
   if (loading) {
     return (
@@ -59,6 +66,35 @@ const MockDraftRecap = () => {
 
   // Detect sport from saved data (sport record or pick data)
   const sport = result?.sport?.slug || (result?.picks?.[0]?.playerPosition ? 'nfl' : 'golf')
+
+  const handleImportToBoard = async () => {
+    if (!userPicks.length) return
+    setImporting(true)
+    setImportError(null)
+    try {
+      const boardName = `Mock Draft – ${new Date(result.completedAt).toLocaleDateString()}`
+      const boardSport = result?.sport?.slug || (result?.picks?.[0]?.playerPosition ? 'nfl' : 'golf')
+      const data = await api.createDraftBoard({
+        name: boardName,
+        sport: boardSport,
+        scoringFormat: boardSport === 'nfl' ? 'ppr' : 'standard',
+        boardType: 'overall',
+      })
+      const board = data.board
+      const entries = userPicks.map((pick, i) => ({
+        playerId: pick.playerId,
+        rank: i + 1,
+        tier: null,
+        notes: null,
+      }))
+      await api.saveDraftBoardEntries(board.id, entries)
+      setImportSuccess(board.id)
+    } catch (err) {
+      setImportError(err.message || 'Failed to import')
+    } finally {
+      setImporting(false)
+    }
+  }
 
   const handleDraftAgain = () => {
     sessionStorage.setItem('mockDraftConfig', JSON.stringify({
@@ -266,13 +302,42 @@ const MockDraftRecap = () => {
           )}
 
           {/* Actions */}
-          <div className="flex gap-4">
-            <Button variant="outline" fullWidth onClick={handleDraftAgain}>
-              Draft Again
-            </Button>
-            <Link to="/draft/history" className="flex-1">
-              <Button fullWidth>Back to History</Button>
-            </Link>
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-4">
+              <Button variant="outline" fullWidth onClick={handleDraftAgain}>
+                Draft Again
+              </Button>
+              <Link to="/draft/history" className="flex-1">
+                <Button fullWidth>Back to History</Button>
+              </Link>
+            </div>
+            {user && userPicks.length > 0 && (
+              <div>
+                {importSuccess ? (
+                  <Link
+                    to={`/workspace/${importSuccess}`}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/15 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm font-semibold hover:bg-emerald-500/25 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Board created — View Board
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleImportToBoard}
+                    disabled={importing}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gold/30 rounded-lg text-gold text-sm font-semibold hover:bg-gold/10 transition-colors disabled:opacity-50"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    {importing ? 'Importing...' : 'Import to Board'}
+                  </button>
+                )}
+                {importError && <p className="text-red-400 text-xs mt-1 text-center">{importError}</p>}
+              </div>
+            )}
           </div>
         </div>
       </main>

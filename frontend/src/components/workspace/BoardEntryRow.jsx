@@ -73,9 +73,23 @@ export default function BoardEntryRow({ entry, index, sport, onRemove, onClickNo
             </span>
           )}
           {player.team && <span className="text-xs text-white/40">{player.team}</span>}
+          {player.fantasyPtsPerGame != null && (
+            <span className="text-xs font-mono text-gold">{player.fantasyPtsPerGame} ppg</span>
+          )}
+          {player.fantasyPts != null && (
+            <span className="text-[10px] font-mono text-white/30">{player.fantasyPts} tot</span>
+          )}
         </div>
       ) : (
         <div className="hidden sm:flex items-center gap-2 shrink-0">
+          {player.cpi != null && (
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+              CPI {player.cpi > 0 ? '+' : ''}{player.cpi.toFixed(1)}
+            </span>
+          )}
+          {player.formScore != null && (
+            <span className="text-xs font-mono text-white/50">Form {Math.round(player.formScore)}</span>
+          )}
           {player.owgrRank && <span className="text-xs text-white/40">#{player.owgrRank}</span>}
           {player.sgTotal != null && (
             <span className={`text-xs ${player.sgTotal > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
