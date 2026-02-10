@@ -1,4 +1,4 @@
-import { useState, Fragment, useCallback } from 'react'
+import { useState, Fragment, useCallback, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -10,17 +10,160 @@ import TierBreak from '../components/workspace/TierBreak'
 import PlayerSearchPanel from '../components/workspace/PlayerSearchPanel'
 import PlayerNoteEditor from '../components/workspace/PlayerNoteEditor'
 
+// ── Reason Chip Definitions ──────────────────────────────────────────────────
+
+const REASON_CHIPS = [
+  // Positive
+  { id: 'schedule_upgrade', label: 'Schedule \u2191', category: 'positive' },
+  { id: 'volume_increase', label: 'Volume \u2191', category: 'positive' },
+  { id: 'less_competition', label: 'Less Competition', category: 'positive' },
+  { id: 'contract_year', label: 'Contract Year', category: 'positive' },
+  { id: 'oline_upgrade', label: 'O-Line \u2191', category: 'positive' },
+  { id: 'target_share_up', label: 'Target Share \u2191', category: 'positive' },
+  { id: 'breakout', label: 'Breakout', category: 'positive' },
+  { id: 'game_script_up', label: 'Game Script \u2191', category: 'positive' },
+  // Negative
+  { id: 'age_decline', label: 'Age Decline', category: 'negative' },
+  { id: 'injury_risk', label: 'Injury Risk', category: 'negative' },
+  { id: 'more_competition', label: 'More Competition', category: 'negative' },
+  { id: 'schedule_downgrade', label: 'Schedule \u2193', category: 'negative' },
+  { id: 'oline_downgrade', label: 'O-Line \u2193', category: 'negative' },
+  { id: 'regression', label: 'Regression', category: 'negative' },
+  { id: 'scheme_downgrade', label: 'Scheme \u2193', category: 'negative' },
+  // Source
+  { id: 'gut_feel', label: 'Gut Feel', category: 'source' },
+  { id: 'podcast_show', label: 'Podcast/Show', category: 'source' },
+  { id: 'article', label: 'Article', category: 'source' },
+  { id: 'game_film', label: 'Game Film', category: 'source' },
+  { id: 'stat_model', label: 'Stat Model', category: 'source' },
+]
+
+const CHIP_STYLES = {
+  positive: { active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40', inactive: 'border-emerald-500/20 text-emerald-500/40 hover:border-emerald-500/40 hover:text-emerald-400' },
+  negative: { active: 'bg-red-500/20 text-red-400 border-red-500/40', inactive: 'border-red-500/20 text-red-500/40 hover:border-red-500/40 hover:text-red-400' },
+  source:   { active: 'bg-white/15 text-white/80 border-white/30', inactive: 'border-white/10 text-white/30 hover:border-white/25 hover:text-white/50' },
+}
+
+// ── Tag Filter Bar ───────────────────────────────────────────────────────────
+
+function TagFilterBar({ entries, activeFilter, onFilterChange }) {
+  const counts = { target: 0, sleeper: 0, avoid: 0, untagged: 0 }
+  for (const e of entries) {
+    const tags = e.tags || []
+    if (tags.includes('target')) counts.target++
+    else if (tags.includes('sleeper')) counts.sleeper++
+    else if (tags.includes('avoid')) counts.avoid++
+    else counts.untagged++
+  }
+
+  const filters = [
+    { key: 'all', label: 'All', count: entries.length, style: 'text-white/60 border-white/10 hover:border-white/25' },
+    { key: 'target', label: 'Targets', count: counts.target, style: 'text-emerald-400/70 border-emerald-500/20 hover:border-emerald-500/40' },
+    { key: 'sleeper', label: 'Sleepers', count: counts.sleeper, style: 'text-gold/70 border-gold/20 hover:border-gold/40' },
+    { key: 'avoid', label: 'Avoids', count: counts.avoid, style: 'text-red-400/70 border-red-500/20 hover:border-red-500/40' },
+    { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-white/40 border-white/10 hover:border-white/20' },
+  ]
+
+  const activeStyles = {
+    all: 'bg-white/10 text-white border-white/25',
+    target: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40',
+    sleeper: 'bg-gold/15 text-gold border-gold/40',
+    avoid: 'bg-red-500/15 text-red-400 border-red-500/40',
+    untagged: 'bg-white/10 text-white/60 border-white/20',
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/[0.06] overflow-x-auto">
+      {filters.map(f => (
+        <button
+          key={f.key}
+          onClick={() => onFilterChange(f.key)}
+          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border transition-all whitespace-nowrap
+            ${activeFilter === f.key ? activeStyles[f.key] : f.style}`}
+        >
+          {f.label} ({f.count})
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── Reason Chip Row ──────────────────────────────────────────────────────────
+
+function ReasonChipRow({ movedEntry, existingChips, onUpdateChips, onDismiss }) {
+  const dismissTimer = useRef(null)
+  const [selectedChips, setSelectedChips] = useState(existingChips || [])
+
+  // Start auto-dismiss timer
+  useEffect(() => {
+    dismissTimer.current = setTimeout(() => {
+      onDismiss()
+    }, 5000)
+    return () => {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    }
+  }, [onDismiss])
+
+  const handleChipToggle = (chipId) => {
+    // Reset dismiss timer on interaction
+    if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    dismissTimer.current = setTimeout(() => onDismiss(), 5000)
+
+    setSelectedChips(prev => {
+      const next = prev.includes(chipId)
+        ? prev.filter(c => c !== chipId)
+        : [...prev, chipId]
+      onUpdateChips(movedEntry.playerId, next)
+      return next
+    })
+  }
+
+  const delta = movedEntry.delta
+  const direction = delta > 0 ? `\u2191${delta}` : `\u2193${Math.abs(delta)}`
+
+  return (
+    <div className="px-3 py-2.5 bg-dark-primary/60 border-b border-white/[0.06]">
+      <p className="text-[11px] text-white/50 mb-2">
+        Moved <span className="text-white font-medium">{movedEntry.playerName}</span>{' '}
+        <span className={delta > 0 ? 'text-emerald-400' : 'text-red-400'}>{direction} spots</span>.{' '}
+        Why? <span className="text-white/25">(optional)</span>
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {REASON_CHIPS.map(chip => {
+          const isActive = selectedChips.includes(chip.id)
+          const styles = CHIP_STYLES[chip.category]
+          return (
+            <button
+              key={chip.id}
+              onClick={() => handleChipToggle(chip.id)}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border transition-all
+                ${isActive ? styles.active : styles.inactive}`}
+            >
+              {chip.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Main Editor ──────────────────────────────────────────────────────────────
+
 export default function DraftBoardEditor() {
   const { boardId } = useParams()
   const {
     board, entries, loading, error,
     moveEntry, addPlayer, removePlayer,
-    updateNotes, insertTierBreak, removeTierBreak,
+    updateNotes, updateTags, updateReasonChips,
+    insertTierBreak, removeTierBreak,
     updateBoardMeta, isSaving, lastSaved,
+    movedEntry, clearMovedEntry,
   } = useDraftBoardEditor(boardId)
 
   const [noteEntry, setNoteEntry] = useState(null)
   const [mobileTab, setMobileTab] = useState('rankings') // rankings | search
+  const [tagFilter, setTagFilter] = useState('all')
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -81,6 +224,15 @@ export default function DraftBoardEditor() {
     }
   }
 
+  // Filter entries by tag
+  const filteredEntries = tagFilter === 'all'
+    ? entries
+    : entries.filter(e => {
+        const tags = e.tags || []
+        if (tagFilter === 'untagged') return tags.length === 0
+        return tags.includes(tagFilter)
+      })
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
       <BoardHeader
@@ -116,6 +268,11 @@ export default function DraftBoardEditor() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Rankings */}
         <div className={`flex-1 md:w-[60%] md:block overflow-y-auto ${mobileTab !== 'rankings' ? 'hidden' : ''}`}>
+          {/* Tag filter bar */}
+          {entries.length > 0 && (
+            <TagFilterBar entries={entries} activeFilter={tagFilter} onFilterChange={setTagFilter} />
+          )}
+
           {entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <svg className="w-12 h-12 text-white/10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,40 +287,67 @@ export default function DraftBoardEditor() {
                 Add Players
               </button>
             </div>
+          ) : filteredEntries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+              <p className="text-sm text-white/40 mb-1">No players match this filter</p>
+              <button
+                onClick={() => setTagFilter('all')}
+                className="mt-2 text-xs text-gold hover:underline"
+              >
+                Show all players
+              </button>
+            </div>
           ) : (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext items={entries.map(e => e.playerId)} strategy={verticalListSortingStrategy}>
-                {entries.map((entry, i) => (
-                  <Fragment key={entry.playerId}>
-                    {/* Tier break */}
-                    {i > 0 && entry.tier != null && entries[i - 1].tier != null && entry.tier !== entries[i - 1].tier && (
-                      <TierBreak tier={entry.tier} onRemove={() => removeTierBreak(i)} />
-                    )}
-                    <BoardEntryRow
-                      entry={entry}
-                      index={i}
-                      sport={board?.sport}
-                      positionRank={positionRankMap[entry.playerId]}
-                      onRemove={removePlayer}
-                      onClickNotes={(e) => setNoteEntry(e)}
-                    />
-                    {/* Insert tier break button — shows on hover between rows */}
-                    {i < entries.length - 1 && (
-                      <div className="relative h-0 group/tier">
-                        <button
-                          onClick={() => insertTierBreak(i)}
-                          className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold/0 bg-gold/0 rounded-full border border-gold/0 transition-all group-hover/tier:text-gold/70 group-hover/tier:bg-gold/10 group-hover/tier:border-gold/20"
-                        >
-                          + Tier
-                        </button>
-                      </div>
-                    )}
-                  </Fragment>
-                ))}
+              <SortableContext items={filteredEntries.map(e => e.playerId)} strategy={verticalListSortingStrategy}>
+                {filteredEntries.map((entry, i) => {
+                  // Use original index for tier break logic
+                  const originalIndex = entries.findIndex(e => e.playerId === entry.playerId)
+                  const prevOriginal = originalIndex > 0 ? entries[originalIndex - 1] : null
+                  const showTierBreak = tagFilter === 'all' && originalIndex > 0 && entry.tier != null && prevOriginal?.tier != null && entry.tier !== prevOriginal.tier
+
+                  return (
+                    <Fragment key={entry.playerId}>
+                      {/* Tier break */}
+                      {showTierBreak && (
+                        <TierBreak tier={entry.tier} onRemove={() => removeTierBreak(originalIndex)} />
+                      )}
+                      <BoardEntryRow
+                        entry={entry}
+                        index={originalIndex}
+                        sport={board?.sport}
+                        positionRank={positionRankMap[entry.playerId]}
+                        onRemove={removePlayer}
+                        onClickNotes={(e) => setNoteEntry(e)}
+                        onUpdateTags={updateTags}
+                      />
+                      {/* Reason chip row — appears after the moved player */}
+                      {movedEntry && movedEntry.playerId === entry.playerId && movedEntry.delta !== 0 && (
+                        <ReasonChipRow
+                          movedEntry={movedEntry}
+                          existingChips={entry.reasonChips || []}
+                          onUpdateChips={updateReasonChips}
+                          onDismiss={clearMovedEntry}
+                        />
+                      )}
+                      {/* Insert tier break button — shows on hover between rows */}
+                      {tagFilter === 'all' && i < filteredEntries.length - 1 && (
+                        <div className="relative h-0 group/tier">
+                          <button
+                            onClick={() => insertTierBreak(originalIndex)}
+                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold/0 bg-gold/0 rounded-full border border-gold/0 transition-all group-hover/tier:text-gold/70 group-hover/tier:bg-gold/10 group-hover/tier:border-gold/20"
+                          >
+                            + Tier
+                          </button>
+                        </div>
+                      )}
+                    </Fragment>
+                  )
+                })}
               </SortableContext>
             </DndContext>
           )}

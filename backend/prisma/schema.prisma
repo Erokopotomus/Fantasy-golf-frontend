@@ -2642,10 +2642,12 @@ model DraftBoardEntry {
   board     DraftBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
   playerId  String
   player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  rank      Int
-  tier      Int?
-  notes     String?    @db.Text
-  createdAt DateTime   @default(now())
+  rank        Int
+  tier        Int?
+  notes       String?    @db.Text
+  tags        Json?
+  reasonChips Json?      @map("reason_chips")
+  createdAt   DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
   @@unique([boardId, playerId])

@@ -8,8 +8,11 @@ export default function useDraftBoardEditor(boardId) {
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
+  const [movedEntry, setMovedEntry] = useState(null) // { playerId, playerName, delta }
   const saveTimer = useRef(null)
   const entriesRef = useRef(entries)
+  const initialRanks = useRef({}) // { [playerId]: rank } — snapshot on load
+  const movedDismissTimer = useRef(null)
   entriesRef.current = entries
 
   // Load board
@@ -22,7 +25,12 @@ export default function useDraftBoardEditor(boardId) {
       .then(data => {
         if (cancelled) return
         setBoard(data.board)
-        setEntries(data.board.entries || [])
+        const loadedEntries = data.board.entries || []
+        setEntries(loadedEntries)
+        // Snapshot initial ranks for move-delta tracking
+        const ranks = {}
+        loadedEntries.forEach(e => { ranks[e.playerId] = e.rank })
+        initialRanks.current = ranks
         setLoading(false)
       })
       .catch(err => {
@@ -46,6 +54,8 @@ export default function useDraftBoardEditor(boardId) {
           rank: i + 1,
           tier: e.tier ?? null,
           notes: e.notes ?? null,
+          tags: e.tags ?? null,
+          reasonChips: e.reasonChips ?? null,
         }))
         await api.saveDraftBoardEntries(boardId, payload)
         setLastSaved(new Date())
@@ -57,25 +67,56 @@ export default function useDraftBoardEditor(boardId) {
     }, 1500)
   }, [boardId, board])
 
-  // Cleanup timer on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current)
+      if (movedDismissTimer.current) clearTimeout(movedDismissTimer.current)
     }
+  }, [])
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  const getMoveDelta = useCallback((playerId) => {
+    const initial = initialRanks.current[playerId]
+    if (initial == null) return 0
+    const current = entriesRef.current.findIndex(e => e.playerId === playerId) + 1
+    return initial - current // positive = moved up
   }, [])
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
   const moveEntry = useCallback((fromIndex, toIndex) => {
+    let movedPlayer = null
     setEntries(prev => {
       const next = [...prev]
       const [moved] = next.splice(fromIndex, 1)
       next.splice(toIndex, 0, moved)
       // Re-number ranks
-      return next.map((e, i) => ({ ...e, rank: i + 1 }))
+      const reranked = next.map((e, i) => ({ ...e, rank: i + 1 }))
+      movedPlayer = moved
+      return reranked
     })
+    // Compute delta and show moved entry notification
+    if (movedPlayer) {
+      const delta = fromIndex - toIndex // positive = moved up
+      if (movedDismissTimer.current) clearTimeout(movedDismissTimer.current)
+      setMovedEntry({
+        playerId: movedPlayer.playerId,
+        playerName: movedPlayer.player?.name || 'Player',
+        delta,
+      })
+      movedDismissTimer.current = setTimeout(() => {
+        setMovedEntry(null)
+      }, 5000)
+    }
     scheduleSave()
   }, [scheduleSave])
+
+  const clearMovedEntry = useCallback(() => {
+    if (movedDismissTimer.current) clearTimeout(movedDismissTimer.current)
+    setMovedEntry(null)
+  }, [])
 
   const addPlayer = useCallback(async (playerId) => {
     try {
@@ -110,6 +151,20 @@ export default function useDraftBoardEditor(boardId) {
       console.error('Update notes failed:', err)
     }
   }, [boardId])
+
+  const updateTags = useCallback((playerId, tags) => {
+    setEntries(prev => prev.map(e =>
+      e.playerId === playerId ? { ...e, tags } : e
+    ))
+    scheduleSave()
+  }, [scheduleSave])
+
+  const updateReasonChips = useCallback((playerId, chips) => {
+    setEntries(prev => prev.map(e =>
+      e.playerId === playerId ? { ...e, reasonChips: chips } : e
+    ))
+    scheduleSave()
+  }, [scheduleSave])
 
   const insertTierBreak = useCallback((afterIndex) => {
     setEntries(prev => {
@@ -156,10 +211,15 @@ export default function useDraftBoardEditor(boardId) {
     addPlayer,
     removePlayer,
     updateNotes,
+    updateTags,
+    updateReasonChips,
     insertTierBreak,
     removeTierBreak,
     updateBoardMeta,
     isSaving,
     lastSaved,
+    movedEntry,
+    clearMovedEntry,
+    getMoveDelta,
   }
 }

@@ -1233,7 +1233,7 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
 - [ ] Step 7: Board ↔ Draft Room integration — board as live cheat sheet, tier depletion alerts, post-draft grade.
 - [ ] AI Coaching (former Phase 6 — more powerful after Feed + Workspace provide context)
 
-**Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced.
+**Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced. **NFL game weather:** Same Open-Meteo hourly pipeline used for golf tournament rounds, keyed to NFL game venue coordinates + kickoff time windows. Wind/rain/temp affect kickers, deep-ball QBs/WRs, and overall game script. Need venue-to-coordinates mapping for all 32 stadiums (flag dome/retractable roof). Show on game preview pages + factor into fantasy projections.
 
 ---
 

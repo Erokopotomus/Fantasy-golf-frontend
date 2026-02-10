@@ -10,7 +10,13 @@ const POSITION_COLORS = {
   DEF: 'bg-yellow-500/20 text-yellow-400',
 }
 
-export default function BoardEntryRow({ entry, index, sport, positionRank, onRemove, onClickNotes }) {
+const TAG_CONFIG = {
+  target:  { label: 'TGT', active: 'bg-emerald-500/25 text-emerald-400 border-emerald-500/40', inactive: 'border-emerald-500/15 text-emerald-500/30 hover:text-emerald-400/60 hover:border-emerald-500/30' },
+  sleeper: { label: 'SLP', active: 'bg-gold/25 text-gold border-gold/40', inactive: 'border-gold/15 text-gold/30 hover:text-gold/60 hover:border-gold/30' },
+  avoid:   { label: 'AVD', active: 'bg-red-500/25 text-red-400 border-red-500/40', inactive: 'border-red-500/15 text-red-500/30 hover:text-red-400/60 hover:border-red-500/30' },
+}
+
+export default function BoardEntryRow({ entry, index, sport, positionRank, onRemove, onClickNotes, onUpdateTags }) {
   const {
     attributes,
     listeners,
@@ -28,6 +34,17 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
   }
 
   const player = entry.player || {}
+  const activeTags = entry.tags || []
+
+  const handleTagToggle = (tagName) => {
+    if (!onUpdateTags) return
+    // Mutually exclusive: if already active, remove it; otherwise set only this one
+    if (activeTags.includes(tagName)) {
+      onUpdateTags(entry.playerId, [])
+    } else {
+      onUpdateTags(entry.playerId, [tagName])
+    }
+  }
 
   return (
     <div
@@ -63,6 +80,23 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
 
       {/* Name */}
       <span className="text-sm text-white font-medium truncate min-w-0 flex-1">{player.name || 'Unknown'}</span>
+
+      {/* Tag pills */}
+      <div className="hidden sm:flex items-center gap-1 shrink-0">
+        {Object.entries(TAG_CONFIG).map(([key, cfg]) => {
+          const isActive = activeTags.includes(key)
+          return (
+            <button
+              key={key}
+              onClick={() => handleTagToggle(key)}
+              className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all
+                ${isActive ? cfg.active : `${cfg.inactive} opacity-0 group-hover:opacity-100`}`}
+            >
+              {cfg.label}
+            </button>
+          )
+        })}
+      </div>
 
       {/* Sport-specific stats */}
       {sport === 'nfl' ? (

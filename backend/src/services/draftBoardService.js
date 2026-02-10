@@ -156,6 +156,8 @@ async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr',
               rank: i + 1,
               tier: e.tier,
               notes: e.notes,
+              tags: e.tags,
+              reasonChips: e.reasonChips,
             })),
           })
         }
@@ -217,6 +219,8 @@ async function getBoard(boardId, userId) {
     rank: e.rank,
     tier: e.tier,
     notes: e.notes,
+    tags: e.tags,
+    reasonChips: e.reasonChips,
     player: enrichPlayer(playerMap.get(e.playerId), board.sport, extrasMap.get(e.playerId) || {}),
   }))
 
@@ -268,6 +272,8 @@ async function saveEntries(boardId, userId, entries) {
           rank: e.rank,
           tier: e.tier ?? null,
           notes: e.notes ?? null,
+          tags: e.tags ?? null,
+          reasonChips: e.reasonChips ?? null,
         },
       })
     ),
