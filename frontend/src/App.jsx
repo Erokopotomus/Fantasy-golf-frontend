@@ -246,14 +246,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/news"
-            element={
-              <ProtectedRoute>
-                <News />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/news" element={<News />} />
           {/* Import & League Vault */}
           <Route
             path="/import"

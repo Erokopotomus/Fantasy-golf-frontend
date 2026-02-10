@@ -54,8 +54,36 @@ const NewsCard = ({ item, compact = false }) => {
         border: 'border-yellow-500/30',
         text: 'text-yellow-400',
       },
+      transaction: {
+        icon: '📋',
+        label: 'Transaction',
+        bg: 'bg-purple-500/20',
+        border: 'border-purple-500/30',
+        text: 'text-purple-400',
+      },
+      breaking: {
+        icon: '🚨',
+        label: 'Breaking',
+        bg: 'bg-red-600/20',
+        border: 'border-red-600/30',
+        text: 'text-red-400',
+      },
+      analysis: {
+        icon: '📊',
+        label: 'Analysis',
+        bg: 'bg-indigo-500/20',
+        border: 'border-indigo-500/30',
+        text: 'text-indigo-400',
+      },
+      news: {
+        icon: '📰',
+        label: 'News',
+        bg: 'bg-blue-500/20',
+        border: 'border-blue-500/30',
+        text: 'text-blue-400',
+      },
     }
-    return configs[type] || configs.trending
+    return configs[type] || configs.news
   }
 
   const getImpactStyle = (impact) => {
@@ -65,8 +93,8 @@ const NewsCard = ({ item, compact = false }) => {
   }
 
   const getPriorityIndicator = (priority) => {
-    if (priority === 'high') return 'border-l-4 border-l-red-500'
-    if (priority === 'medium') return 'border-l-4 border-l-yellow-500'
+    if (priority === 'high' || priority === 1) return 'border-l-4 border-l-red-500'
+    if (priority === 'medium' || priority === 2) return 'border-l-4 border-l-yellow-500'
     return 'border-l-4 border-l-dark-border'
   }
 
@@ -83,11 +111,13 @@ const NewsCard = ({ item, compact = false }) => {
     return `${diffDays}d ago`
   }
 
-  const config = getTypeConfig(item.type)
+  const config = getTypeConfig(item.type || item.category)
 
   const handlePlayerClick = () => {
     if (item.playerId) {
       navigate(`/players/${item.playerId}`)
+    } else if (item.playerIds?.length === 1) {
+      navigate(`/nfl/players/${item.playerIds[0]}`)
     }
   }
 
@@ -107,7 +137,7 @@ const NewsCard = ({ item, compact = false }) => {
             <p className="text-sm text-white font-medium line-clamp-2">{item.headline}</p>
             <div className="flex items-center gap-2 mt-1 text-xs text-text-muted">
               {item.playerFlag && <span>{item.playerFlag}</span>}
-              <span>{formatTimeAgo(item.timestamp)}</span>
+              <span>{formatTimeAgo(item.timestamp || item.published)}</span>
             </div>
           </div>
         </div>
@@ -123,6 +153,18 @@ const NewsCard = ({ item, compact = false }) => {
         hover:bg-dark-tertiary transition-colors
       `}
     >
+      {/* Header image */}
+      {item.imageUrl && (
+        <div className="mb-3 -mx-4 -mt-4 overflow-hidden rounded-t-lg">
+          <img
+            src={item.imageUrl}
+            alt=""
+            className="w-full h-40 object-cover"
+            loading="lazy"
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
@@ -133,14 +175,14 @@ const NewsCard = ({ item, compact = false }) => {
             <span>{config.icon}</span>
             <span>{config.label}</span>
           </span>
-          {item.priority === 'high' && (
+          {(item.priority === 'high' || item.priority === 1) && (
             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
               Important
             </span>
           )}
         </div>
         <span className="text-xs text-text-muted whitespace-nowrap">
-          {formatTimeAgo(item.timestamp)}
+          {formatTimeAgo(item.timestamp || item.published)}
         </span>
       </div>
 
@@ -157,18 +199,34 @@ const NewsCard = ({ item, compact = false }) => {
 
       {/* Content */}
       <h4 className="text-white font-semibold mb-2">{item.headline}</h4>
-      <p className="text-sm text-text-secondary mb-3">{item.summary}</p>
+      {(item.summary || item.description) && (
+        <p className="text-sm text-text-secondary mb-3 line-clamp-3">{item.summary || item.description}</p>
+      )}
 
       {/* Footer */}
       <div className="flex items-center justify-between text-xs">
-        <span className="text-text-muted">Source: {item.source}</span>
-        {item.impact && (
-          <span className={`font-medium ${getImpactStyle(item.impact)}`}>
-            {item.impact === 'positive' && '↑ Positive'}
-            {item.impact === 'negative' && '↓ Negative'}
-            {item.impact === 'neutral' && '→ Neutral'}
-          </span>
-        )}
+        <span className="text-text-muted">
+          {item.byline ? `via ${item.byline}` : item.source ? `Source: ${item.source}` : item.provider ? `via ${item.provider.toUpperCase()}` : ''}
+        </span>
+        <div className="flex items-center gap-3">
+          {item.url && (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold hover:text-gold/80 font-medium transition-colors"
+            >
+              Read More →
+            </a>
+          )}
+          {item.impact && (
+            <span className={`font-medium ${getImpactStyle(item.impact)}`}>
+              {item.impact === 'positive' && '↑ Positive'}
+              {item.impact === 'negative' && '↓ Negative'}
+              {item.impact === 'neutral' && '→ Neutral'}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

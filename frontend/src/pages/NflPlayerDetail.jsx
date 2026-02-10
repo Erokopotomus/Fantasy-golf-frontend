@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
+import NewsCard from '../components/news/NewsCard'
 
 const SCORING_LABELS = { standard: 'STD', ppr: 'PPR', half_ppr: 'Half' }
 
@@ -12,6 +13,8 @@ export default function NflPlayerDetail() {
   const [activeTab, setActiveTab] = useState('career')
   const [gameLogSeason, setGameLogSeason] = useState(null)
   const [expandedSections, setExpandedSections] = useState({})
+  const [playerNews, setPlayerNews] = useState([])
+  const [newsLoading, setNewsLoading] = useState(false)
 
   const loadProfile = useCallback(async () => {
     setLoading(true)
@@ -81,10 +84,21 @@ export default function NflPlayerDetail() {
   const isDst = player.nflPosition === 'DST' || player.nflPosition === 'DEF'
   const isSkillPos = ['RB', 'WR', 'TE'].includes(player.nflPosition)
 
+  // Lazy-load news on tab select
+  useEffect(() => {
+    if (activeTab !== 'news' || playerNews.length > 0) return
+    setNewsLoading(true)
+    api.getPlayerNews(playerId, { limit: 10 })
+      .then(data => setPlayerNews(data.articles || []))
+      .catch(() => setPlayerNews([]))
+      .finally(() => setNewsLoading(false))
+  }, [activeTab, playerId])
+
   const TABS = [
     { key: 'career', label: 'Career Stats' },
     { key: 'gamelog', label: 'Game Log' },
     { key: 'fantasy', label: 'Fantasy' },
+    { key: 'news', label: 'News' },
   ]
 
   return (
@@ -650,6 +664,28 @@ export default function NflPlayerDetail() {
                 })}
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── News Tab ─── */}
+      {activeTab === 'news' && (
+        <div className="space-y-4">
+          {newsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="animate-pulse h-28 bg-white/5 rounded-lg" />
+              ))}
+            </div>
+          ) : playerNews.length === 0 ? (
+            <div className="text-center py-12 text-white/30">
+              <p className="text-4xl mb-3">📰</p>
+              <p>No recent news for {player.name}</p>
+            </div>
+          ) : (
+            playerNews.map(article => (
+              <NewsCard key={article.id} item={article} />
+            ))
           )}
         </div>
       )}

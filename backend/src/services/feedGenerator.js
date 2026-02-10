@@ -308,6 +308,58 @@ async function tournamentCards() {
   })
 }
 
+// ─── News Cards ──────────────────────────────────────────────────────────
+// Recent news articles from ESPN (synced via newsSync.js)
+async function newsCards(sport, limit = 8) {
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+  const where = { published: { gte: sevenDaysAgo } }
+  if (sport && sport !== 'all') where.sport = sport
+
+  const articles = await prisma.newsArticle.findMany({
+    where,
+    orderBy: [{ priority: 'asc' }, { published: 'desc' }],
+    take: limit,
+  })
+
+  const CATEGORY_MAP = {
+    transaction: { label: 'Transaction', color: '#8B5CF6' },
+    injury: { label: 'Injury Report', color: '#F59E0B' },
+    analysis: { label: 'Analysis', color: '#6366F1' },
+    news: { label: 'Breaking News', color: '#DC2626' },
+  }
+
+  return articles.map(a => {
+    const catConfig = CATEGORY_MAP[a.category] || CATEGORY_MAP.news
+    const actions = []
+    if (a.url) actions.push({ label: 'Read More', href: a.url, external: true })
+    if (a.teamAbbrs?.length === 1) {
+      actions.push({ label: 'Team Page', href: `/nfl/teams/${a.teamAbbrs[0]}` })
+    }
+    if (a.playerIds?.length === 1) {
+      actions.push({ label: 'Player Profile', href: `/nfl/players/${a.playerIds[0]}` })
+    }
+
+    return {
+      id: `news-${a.id}`,
+      type: 'news',
+      category: catConfig.label,
+      headline: a.headline,
+      context: a.description || '',
+      timestamp: a.published.toISOString(),
+      actions,
+      meta: {
+        imageUrl: a.imageUrl,
+        byline: a.byline,
+        newsCategory: a.category,
+        sport: a.sport,
+      },
+      priority: a.priority,
+    }
+  })
+}
+
 // ─── Main Generator ────────────────────────────────────────────────────────
 async function generateFeed(sport, options = {}) {
   const { limit = 8, offset = 0, types } = options
@@ -321,10 +373,15 @@ async function generateFeed(sport, options = {}) {
       bigPerformanceCards(season).catch(() => []),
       teamTrendCards(season).catch(() => []),
       gameResultCards(season).catch(() => []),
+      newsCards('nfl').catch(() => []),
     ])
     cards = results.flat()
   } else if (sport === 'golf') {
-    cards = await tournamentCards().catch(() => [])
+    const results = await Promise.all([
+      tournamentCards().catch(() => []),
+      newsCards('golf').catch(() => []),
+    ])
+    cards = results.flat()
   } else {
     // Both sports
     const results = await Promise.all([
@@ -333,6 +390,7 @@ async function generateFeed(sport, options = {}) {
       teamTrendCards(season).catch(() => []),
       gameResultCards(season).catch(() => []),
       tournamentCards().catch(() => []),
+      newsCards('all').catch(() => []),
     ])
     cards = results.flat()
   }

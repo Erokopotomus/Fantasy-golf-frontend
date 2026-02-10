@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import NewsCard from '../components/news/NewsCard'
 
 const StatBar = ({ label, value, rank, suffix = '', of = 32, invert = false }) => {
   // invert: lower rank is better (e.g., points allowed)
@@ -28,6 +29,8 @@ export default function NflTeamDetail() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('roster')
+  const [teamNews, setTeamNews] = useState([])
+  const [newsLoading, setNewsLoading] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -73,7 +76,17 @@ export default function NflTeamDetail() {
     return acc
   }, { wins: 0, losses: 0, ties: 0 })
 
-  const tabs = ['roster', 'schedule', ...(stats ? ['stats'] : [])]
+  // Lazy-load news on tab select
+  useEffect(() => {
+    if (tab !== 'news' || teamNews.length > 0) return
+    setNewsLoading(true)
+    api.getTeamNews(abbr, { limit: 15 })
+      .then(data => setTeamNews(data.articles || []))
+      .catch(() => setTeamNews([]))
+      .finally(() => setNewsLoading(false))
+  }, [tab, abbr])
+
+  const tabs = ['roster', 'schedule', ...(stats ? ['stats'] : []), 'news']
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
@@ -315,6 +328,28 @@ export default function NflTeamDetail() {
           )}
 
           <p className="text-center text-white/20 text-xs font-mono">Data via nflverse | {stats.season} season</p>
+        </div>
+      )}
+
+      {/* ─── News Tab ─── */}
+      {tab === 'news' && (
+        <div className="space-y-4">
+          {newsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="animate-pulse h-28 bg-white/5 rounded-lg" />
+              ))}
+            </div>
+          ) : teamNews.length === 0 ? (
+            <div className="text-center py-12 text-white/30">
+              <p className="text-4xl mb-3">📰</p>
+              <p>No recent news for {team.name}</p>
+            </div>
+          ) : (
+            teamNews.map(article => (
+              <NewsCard key={article.id} item={article} />
+            ))
+          )}
         </div>
       )}
     </div>

@@ -32,6 +32,7 @@ const courseRoutes = require('./routes/courses')
 const waitlistRoutes = require('./routes/waitlist')
 const nflRoutes = require('./routes/nfl')
 const feedRoutes = require('./routes/feed')
+const newsRoutes = require('./routes/news')
 const yahooAuthRoutes = require('./routes/yahooAuth')
 const draftDollarsRouter = require('./routes/draftDollars')
 
@@ -125,6 +126,7 @@ app.use('/api/courses', courseRoutes)
 app.use('/api/waitlist', waitlistRoutes)
 app.use('/api/nfl', nflRoutes)
 app.use('/api/feed', feedRoutes)
+app.use('/api/news', newsRoutes)
 app.use('/api/auth', yahooAuthRoutes)
 app.use('/api/leagues', draftDollarsRouter)
 
@@ -663,6 +665,32 @@ httpServer.listen(PORT, () => {
     console.log('[Cron] NFL sync + scoring jobs scheduled (NFL_SYNC_ENABLED=true)')
   } else {
     console.log('[Cron] NFL sync jobs disabled (set NFL_SYNC_ENABLED=true to enable)')
+  }
+
+  // ─── News Sync Cron Jobs ─────────────────────────────────────────────────
+  {
+    const { PrismaClient: NewsPrismaClient } = require('@prisma/client')
+    const newsCronPrisma = new NewsPrismaClient()
+    const newsSync = require('./services/newsSync')
+
+    function cronLog(job, msg) {
+      console.log(`[Cron:${job}] ${new Date().toISOString()} — ${msg}`)
+    }
+
+    // Every 2 hours — Sync NFL + Golf news from ESPN
+    cron.schedule('0 */2 * * *', async () => {
+      cronLog('news', 'Starting news sync')
+      try {
+        const result = await newsSync.syncNflNews(newsCronPrisma)
+        cronLog('news', `NFL: ${result.new} new, ${result.updated} updated`)
+      } catch (e) { cronLog('news', `NFL error: ${e.message}`) }
+      try {
+        const golfResult = await newsSync.syncGolfNews(newsCronPrisma)
+        cronLog('news', `Golf: ${golfResult.new} new, ${golfResult.updated} updated`)
+      } catch (e) { cronLog('news', `Golf error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] News sync jobs scheduled (every 2 hours)')
   }
 
   // Trade review processor — runs every 15 minutes

@@ -2535,6 +2535,31 @@ model NflPlayerGame {
   @@map("nfl_player_games")
 }
 
+// ============ NEWS ARTICLES ============
+
+model NewsArticle {
+  id              String    @id @default(cuid())
+  externalId      String    @unique          // ESPN article ID — dedup key
+  provider        String    @default("espn") // "espn", "nfl_rss", etc.
+  sport           String    @default("nfl")  // "nfl", "golf", "nba"
+  type            String                     // "news", "transaction", "injury", "analysis"
+  headline        String
+  description     String?
+  url             String?                    // Link to original article
+  imageUrl        String?                    // Header image from ESPN CDN
+  byline          String?                    // Reporter name
+  published       DateTime
+  teamAbbrs       String[]  @default([])     // Matched NflTeam abbreviations
+  playerIds       String[]  @default([])     // Matched Player cuid IDs
+  category        String?                    // "breaking", "transaction", "injury", "analysis"
+  priority        Int       @default(3)      // 1=breaking, 2=high, 3=normal
+  createdAt       DateTime  @default(now())
+
+  @@index([sport, published(sort: Desc)])
+  @@index([category, published(sort: Desc)])
+  @@map("news_articles")
+}
+
 // ============ PROVE IT — WEEKLY PROP LINES ============
 
 model PropLine {

@@ -780,6 +780,34 @@ class ApiService {
     return this.request(`/feed/${sport}${qs ? '?' + qs : ''}`)
   }
 
+  // ─── News ─────────────────────────────────────────────────────────────────
+
+  async getNews(options = {}) {
+    const params = new URLSearchParams()
+    if (options.sport) params.set('sport', options.sport)
+    if (options.limit) params.set('limit', options.limit)
+    if (options.offset) params.set('offset', options.offset)
+    if (options.category) params.set('category', options.category)
+    const qs = params.toString()
+    return this.request(`/news${qs ? '?' + qs : ''}`)
+  }
+
+  async getTeamNews(abbr, options = {}) {
+    const params = new URLSearchParams()
+    if (options.limit) params.set('limit', options.limit)
+    if (options.offset) params.set('offset', options.offset)
+    const qs = params.toString()
+    return this.request(`/news/team/${encodeURIComponent(abbr)}${qs ? '?' + qs : ''}`)
+  }
+
+  async getPlayerNews(playerId, options = {}) {
+    const params = new URLSearchParams()
+    if (options.limit) params.set('limit', options.limit)
+    if (options.offset) params.set('offset', options.offset)
+    const qs = params.toString()
+    return this.request(`/news/player/${encodeURIComponent(playerId)}${qs ? '?' + qs : ''}`)
+  }
+
   // ─── NFL ──────────────────────────────────────────────────────────────────
 
   async getNflPlayers(options = {}) {

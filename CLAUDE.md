@@ -1188,6 +1188,7 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
 - [x] Step 1: Player Profile Pages (NFL) — Enhanced profiles with career stats, game logs, advanced metrics, progressive disclosure, public SEO routes
 - [x] Step 2: Team Pages + Stat Leaderboards — Team stats (off/def aggregates, league rankings, top fantasy players), leaderboards (20+ stats, filters, pagination), NflTeams index page (NFC/AFC conference layout)
 - [x] Step 3: Sport Hubs + Feed Cards — `/nfl` and `/golf` hub pages, FeedCard/FeedList components, feedGenerator.js (5 generators from existing data), `/api/feed/:sport` route, Dashboard feed tease, standalone `/feed` page with sport toggle, Feed nav item
+- [x] Step 3.5: Live News Pipeline — ESPN NFL+Golf news API polling (`newsSync.js`), `NewsArticle` Prisma model, 3 news API endpoints (`/api/news`, `/api/news/team/:abbr`, `/api/news/player/:id`), `newsCards()` feed generator, enhanced FeedCard (images, external links, bylines), rewritten multi-sport News.jsx page (public), NewsCard NFL type configs, News tabs on NflTeamDetail + NflPlayerDetail, NflHub News link, 2-hour cron job, 75 initial articles synced
 - [ ] Step 4: Workspace — Draft Board (drag-and-drop rankings, notes, tier breaks, divergence alerts, share/export)
 - [ ] Step 5: Workspace — Watch List + Position Rankings
 - [ ] Step 6: Workspace — Scouting Notes
