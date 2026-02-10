@@ -97,7 +97,7 @@ const Landing = () => {
         </div>
 
         <div className="max-w-7xl mx-auto relative">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+          <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-12 lg:gap-16">
             {/* Left: Copy + CTAs */}
             <div className="flex-1 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-8">
@@ -136,26 +136,31 @@ const Landing = () => {
               <p className="text-text-muted text-sm">Golf is live now. NFL predictions launch Spring 2026.</p>
             </div>
 
-            {/* Right: Gauge + Sport Badges side by side */}
-            <div className="flex-shrink-0 flex items-center gap-8 lg:gap-10">
-              {/* Gauge */}
-              <div className="flex flex-col items-center">
-                <ClutchRatingGauge rating={84} size="xl" animated />
-              </div>
-              {/* Sport badges stacked */}
-              <div className="flex flex-col gap-4">
-                <div className="rounded-xl px-5 py-3.5 border border-gold/30 bg-gold/10 flex items-center gap-3">
-                  <span className="text-2xl">⛳</span>
-                  <div>
-                    <span className="text-white font-display font-bold text-sm block">Golf</span>
-                    <span className="text-[10px] font-mono font-bold text-gold uppercase">Live</span>
+            {/* Right: Gauge + Sport Badges — fills same height as left column */}
+            <div className="flex-1 flex items-center justify-center gap-8 lg:gap-10">
+              {/* Gauge — scaled up inside a container that reserves the space */}
+              <div className="flex-shrink-0 flex flex-col items-center">
+                <p className="text-gold text-sm font-display font-bold uppercase tracking-widest mb-4">Your Clutch Rating</p>
+                <div style={{ width: 280, height: 280 }}>
+                  <div className="origin-top-left scale-[1.4]">
+                    <ClutchRatingGauge rating={84} size="xl" animated />
                   </div>
                 </div>
-                <div className="rounded-xl px-5 py-3.5 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
-                  <span className="text-2xl">🏈</span>
+              </div>
+              {/* Sport badges stacked */}
+              <div className="flex flex-col gap-5">
+                <div className="rounded-xl px-6 py-4 border border-gold/30 bg-gold/10 flex items-center gap-3">
+                  <span className="text-3xl">⛳</span>
                   <div>
-                    <span className="text-white font-display font-bold text-sm block">NFL</span>
-                    <span className="text-[10px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
+                    <span className="text-white font-display font-bold text-base block">Golf</span>
+                    <span className="text-[11px] font-mono font-bold text-gold uppercase">Live</span>
+                  </div>
+                </div>
+                <div className="rounded-xl px-6 py-4 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
+                  <span className="text-3xl">🏈</span>
+                  <div>
+                    <span className="text-white font-display font-bold text-base block">NFL</span>
+                    <span className="text-[11px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
                   </div>
                 </div>
               </div>
