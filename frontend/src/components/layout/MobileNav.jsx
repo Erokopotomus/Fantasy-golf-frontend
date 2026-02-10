@@ -12,8 +12,9 @@ const MobileNav = () => {
       return location.pathname === '/dashboard'
     }
     // Research tab covers all sport-specific browse pages
-    if (path === '/nfl/players') {
-      return location.pathname.startsWith('/nfl/') ||
+    if (path === '/nfl') {
+      return location.pathname === '/nfl' || location.pathname === '/golf' ||
+        location.pathname.startsWith('/nfl/') ||
         location.pathname === '/players' ||
         location.pathname.startsWith('/tournaments') ||
         location.pathname.startsWith('/courses')
@@ -41,7 +42,7 @@ const MobileNav = () => {
       ),
     },
     {
-      path: '/nfl/players',
+      path: '/nfl',
       label: 'Research',
       icon: (
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

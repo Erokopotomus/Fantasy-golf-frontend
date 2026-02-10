@@ -86,7 +86,7 @@ const Navbar = () => {
                     }}
                     className={`
                       px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1
-                      ${location.pathname.startsWith('/nfl/') || location.pathname.startsWith('/players') || location.pathname.startsWith('/tournaments') || location.pathname.startsWith('/courses')
+                      ${location.pathname === '/nfl' || location.pathname === '/golf' || location.pathname.startsWith('/nfl/') || location.pathname.startsWith('/players') || location.pathname.startsWith('/tournaments') || location.pathname.startsWith('/courses')
                         ? 'text-gold bg-surface-bright'
                         : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
                       }
@@ -103,9 +103,13 @@ const Navbar = () => {
                       <div className="fixed inset-0 z-10" onClick={() => setResearchOpen(false)} />
                       <div className="absolute left-0 mt-2 w-56 backdrop-blur-xl bg-dark-secondary/90 border border-white/[0.08] rounded-card shadow-lg z-20 py-2">
                         {/* NFL Section */}
-                        <div className="px-3 py-1.5">
-                          <span className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-widest">NFL</span>
-                        </div>
+                        <Link
+                          to="/nfl"
+                          className="block px-3 py-1.5 hover:bg-surface-hover transition-colors"
+                          onClick={() => setResearchOpen(false)}
+                        >
+                          <span className="text-[10px] font-mono font-bold text-white/30 hover:text-orange uppercase tracking-widest">NFL</span>
+                        </Link>
                         <Link
                           to="/nfl/players"
                           className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
@@ -158,9 +162,13 @@ const Navbar = () => {
                         <div className="border-t border-white/[0.06] my-2" />
 
                         {/* Golf Section */}
-                        <div className="px-3 py-1.5">
-                          <span className="text-[10px] font-mono font-bold text-white/30 uppercase tracking-widest">Golf</span>
-                        </div>
+                        <Link
+                          to="/golf"
+                          className="block px-3 py-1.5 hover:bg-surface-hover transition-colors"
+                          onClick={() => setResearchOpen(false)}
+                        >
+                          <span className="text-[10px] font-mono font-bold text-white/30 hover:text-emerald-400 uppercase tracking-widest">Golf</span>
+                        </Link>
                         <Link
                           to="/players"
                           className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
@@ -460,9 +468,9 @@ const Navbar = () => {
                   <span className="text-[10px] font-mono font-bold text-white/25 uppercase tracking-widest">Research</span>
                 </div>
                 <div className="pl-2 space-y-1">
-                  <div className="px-3 py-1">
-                    <span className="text-[10px] font-mono text-white/20 uppercase tracking-wider">NFL</span>
-                  </div>
+                  <Link to="/nfl" className="block px-3 py-1" onClick={() => setMobileMenuOpen(false)}>
+                    <span className="text-[10px] font-mono text-white/20 hover:text-orange uppercase tracking-wider">NFL</span>
+                  </Link>
                   <Link to="/nfl/players" className={mobileNavLinkStyles('/nfl/players')} onClick={() => setMobileMenuOpen(false)}>
                     NFL Players
                   </Link>
@@ -472,9 +480,9 @@ const Navbar = () => {
                   <Link to="/nfl/schedule" className={mobileNavLinkStyles('/nfl/schedule')} onClick={() => setMobileMenuOpen(false)}>
                     NFL Schedule
                   </Link>
-                  <div className="px-3 py-1 pt-2">
-                    <span className="text-[10px] font-mono text-white/20 uppercase tracking-wider">Golf</span>
-                  </div>
+                  <Link to="/golf" className="block px-3 py-1 pt-2" onClick={() => setMobileMenuOpen(false)}>
+                    <span className="text-[10px] font-mono text-white/20 hover:text-emerald-400 uppercase tracking-wider">Golf</span>
+                  </Link>
                   <Link to="/players" className={mobileNavLinkStyles('/players')} onClick={() => setMobileMenuOpen(false)}>
                     Golf Players
                   </Link>

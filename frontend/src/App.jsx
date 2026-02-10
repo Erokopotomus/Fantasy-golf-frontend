@@ -49,6 +49,9 @@ import SeasonRecap from './pages/SeasonRecap'
 import DraftDollars from './pages/DraftDollars'
 import PublicProfile from './pages/PublicProfile'
 import CourseDetail from './pages/CourseDetail'
+// Sport Hubs
+import NflHub from './pages/NflHub'
+import GolfHub from './pages/GolfHub'
 // NFL pages
 import NflPlayers from './pages/NflPlayers'
 import NflPlayerDetail from './pages/NflPlayerDetail'
@@ -362,6 +365,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Sport Hub routes */}
+          <Route path="/nfl" element={<NflHub />} />
+          <Route path="/golf" element={<GolfHub />} />
           {/* NFL routes */}
           <Route path="/nfl/players" element={<NflPlayers />} />
           <Route path="/nfl/players/:playerId" element={<NflPlayerDetail />} />

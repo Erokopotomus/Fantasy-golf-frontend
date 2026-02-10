@@ -768,6 +768,18 @@ class ApiService {
       headers: { 'X-Sync-Secret': adminSecret },
     })
   }
+  // ─── Feed ─────────────────────────────────────────────────────────────────
+
+  async getFeed(sport = 'all', options = {}) {
+    const params = new URLSearchParams()
+    if (options.limit) params.set('limit', options.limit)
+    if (options.offset) params.set('offset', options.offset)
+    if (options.types) params.set('types', options.types)
+    if (options.season) params.set('season', options.season)
+    const qs = params.toString()
+    return this.request(`/feed/${sport}${qs ? '?' + qs : ''}`)
+  }
+
   // ─── NFL ──────────────────────────────────────────────────────────────────
 
   async getNflPlayers(options = {}) {
