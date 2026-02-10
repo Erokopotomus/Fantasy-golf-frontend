@@ -250,25 +250,45 @@ const GolfHub = () => {
             </Link>
           ) : null}
 
+          {/* Tournament Preview Banner */}
+          {heroTournament?.status === 'UPCOMING' && (
+            <Link
+              to={`/tournaments/${heroTournament.id}/preview`}
+              className="block mb-8 rounded-xl border border-gold/20 bg-gradient-to-r from-gold/[0.08] via-gold/[0.03] to-transparent p-5 hover:border-gold/40 hover:from-gold/[0.12] transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-gold/15 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-base font-display font-bold text-gold">This Week in Golf</p>
+                    <p className="text-xs text-text-muted mt-0.5">Course DNA, players to watch, key storylines, weather outlook</p>
+                  </div>
+                </div>
+                <span className="text-sm text-gold group-hover:text-gold/80 transition-colors font-semibold shrink-0 ml-4 flex items-center gap-1">
+                  Read Preview
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </Link>
+          )}
+
           {/* Section 1B: Tournament Intel Preview */}
           {heroTournament?.status === 'UPCOMING' && heroIntel && (
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-display font-bold text-white">Tournament Intel</h2>
-                <div className="flex items-center gap-4">
-                  <Link
-                    to={`/tournaments/${heroTournament.id}/preview`}
-                    className="text-xs text-gold hover:text-gold/80 transition-colors font-medium"
-                  >
-                    Read Preview →
-                  </Link>
-                  <Link
-                    to={`/tournaments/${heroTournament.id}`}
-                    className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
-                  >
-                    Full Field →
-                  </Link>
-                </div>
+                <Link
+                  to={`/tournaments/${heroTournament.id}`}
+                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                >
+                  Full Field →
+                </Link>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
