@@ -9,6 +9,7 @@ const ACTION_CONFIG = {
   note_added:     { icon: '\uD83D\uDCDD', label: 'Note added', color: 'text-gold' },
   player_added:   { icon: '\u2B06', label: 'Added', color: 'text-emerald-400' },
   player_removed: { icon: '\u2B07', label: 'Removed', color: 'text-red-400' },
+  manual_entry:   { icon: '\uD83D\uDCD3', label: 'Journal Entry', color: 'text-purple-400' },
 }
 
 const TAG_LABELS = {
@@ -42,13 +43,45 @@ export default function DecisionJournal() {
   const [activities, setActivities] = useState([])
   const [loading, setLoading] = useState(true)
   const [sportFilter, setSportFilter] = useState(null)
+  const [showNewEntry, setShowNewEntry] = useState(false)
+  const [entryContent, setEntryContent] = useState('')
+  const [entryBoardId, setEntryBoardId] = useState('')
+  const [entryPlayerName, setEntryPlayerName] = useState('')
+  const [boards, setBoards] = useState([])
+  const [submitting, setSubmitting] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  useEffect(() => {
+    api.getDraftBoards().then(data => setBoards(data.boards || [])).catch(() => {})
+  }, [])
 
   useEffect(() => {
     setLoading(true)
     api.getDecisionJournal({ sport: sportFilter, limit: 200 })
       .then(data => { setActivities(data.activities || []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [sportFilter])
+  }, [sportFilter, refreshKey])
+
+  const handleSubmitEntry = async () => {
+    if (!entryContent.trim() || submitting) return
+    setSubmitting(true)
+    try {
+      await api.createJournalEntry({
+        content: entryContent.trim(),
+        boardId: entryBoardId || undefined,
+        playerName: entryPlayerName.trim() || undefined,
+      })
+      setEntryContent('')
+      setEntryBoardId('')
+      setEntryPlayerName('')
+      setShowNewEntry(false)
+      setRefreshKey(k => k + 1)
+    } catch (err) {
+      console.error('Failed to create journal entry:', err)
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   // Group by date
   const grouped = {}
@@ -65,8 +98,65 @@ export default function DecisionJournal() {
           <h1 className="text-xl font-bold text-white">Decision Journal</h1>
           <p className="text-xs text-white/40 mt-0.5">Your board activity history</p>
         </div>
-        <Link to="/lab" className="text-xs text-gold hover:underline">The Lab</Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowNewEntry(prev => !prev)}
+            className="px-3 py-1.5 text-xs font-semibold bg-gold/15 text-gold border border-gold/30 rounded-lg hover:bg-gold/25 transition-colors flex items-center gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Entry
+          </button>
+          <Link to="/lab" className="text-xs text-gold hover:underline">The Lab</Link>
+        </div>
       </div>
+
+      {/* New Entry Form */}
+      {showNewEntry && (
+        <div className="mb-4 p-4 bg-dark-secondary/60 border border-purple-500/20 rounded-xl">
+          <textarea
+            autoFocus
+            value={entryContent}
+            onChange={e => setEntryContent(e.target.value)}
+            placeholder="What's your take? A draft strategy thought, trade idea, player insight..."
+            rows={3}
+            className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50 resize-none"
+          />
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <select
+              value={entryBoardId}
+              onChange={e => setEntryBoardId(e.target.value)}
+              className="px-2 py-1.5 text-xs bg-dark-primary border border-white/[0.08] rounded-lg text-white/60 outline-none focus:border-gold/50"
+            >
+              <option value="">No board (general)</option>
+              {boards.map(b => (
+                <option key={b.id} value={b.id}>{b.name} ({b.sport})</option>
+              ))}
+            </select>
+            <input
+              value={entryPlayerName}
+              onChange={e => setEntryPlayerName(e.target.value)}
+              placeholder="Player name (optional)"
+              className="px-2 py-1.5 text-xs bg-dark-primary border border-white/[0.08] rounded-lg text-white/60 placeholder-white/20 outline-none focus:border-gold/50 w-40"
+            />
+            <div className="flex-1" />
+            <button
+              onClick={() => { setShowNewEntry(false); setEntryContent(''); setEntryBoardId(''); setEntryPlayerName('') }}
+              className="px-3 py-1.5 text-xs text-white/40 hover:text-white/60 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmitEntry}
+              disabled={!entryContent.trim() || submitting}
+              className="px-4 py-1.5 text-xs font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Saving...' : 'Save Entry'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Sport filter */}
       <div className="flex gap-2 mb-4">
@@ -144,6 +234,12 @@ export default function DecisionJournal() {
                           )}
                           {a.action === 'player_removed' && (
                             <>Removed <span className="text-white font-medium">{details.playerName}</span> from #{details.rank}</>
+                          )}
+                          {a.action === 'manual_entry' && (
+                            <>
+                              {details.playerName && <><span className="text-white font-medium">{details.playerName}</span> — </>}
+                              <span className="text-white/60">{details.content}</span>
+                            </>
                           )}
                         </p>
                         {/* Reason chips inline */}

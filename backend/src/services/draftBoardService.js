@@ -458,7 +458,11 @@ async function getUserJournal(userId, { sport, limit = 100 } = {}) {
       where: { userId, sport },
       select: { id: true },
     })
-    where.boardId = { in: boards.map(b => b.id) }
+    // Include sport-filtered boards + unlinked manual entries (boardId null)
+    where.OR = [
+      { boardId: { in: boards.map(b => b.id) } },
+      { boardId: null },
+    ]
   }
   const activities = await prisma.boardActivity.findMany({
     where,
@@ -583,6 +587,21 @@ async function getBoardTimeline(boardId, userId) {
   return timeline
 }
 
+async function createJournalEntry(userId, { boardId, content, playerName }) {
+  return prisma.boardActivity.create({
+    data: {
+      userId,
+      boardId: boardId || null,
+      action: 'manual_entry',
+      playerId: null,
+      details: { content, playerName: playerName || null },
+    },
+    include: {
+      board: { select: { name: true, sport: true } },
+    },
+  })
+}
+
 module.exports = {
   createBoard,
   listBoards,
@@ -599,4 +618,5 @@ module.exports = {
   getUserJournal,
   getBoardReadiness,
   getBoardTimeline,
+  createJournalEntry,
 }

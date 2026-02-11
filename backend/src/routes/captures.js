@@ -45,6 +45,15 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// GET /api/lab/captures/player/:playerId — captures tagged to a specific player
+router.get('/player/:playerId', async (req, res, next) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit) : 10
+    const captures = await captureService.getCapturesByPlayer(req.user.id, req.params.playerId, limit)
+    res.json({ captures })
+  } catch (err) { next(err) }
+})
+
 // DELETE /api/lab/captures/:id
 router.delete('/:id', async (req, res, next) => {
   try {

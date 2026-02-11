@@ -1075,6 +1075,15 @@ class ApiService {
     })
   }
 
+  // ─── Workspace: Journal ─────────────────────────────────────────────
+
+  async createJournalEntry(data) {
+    return this.request('/draft-boards/journal/entry', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
   // ─── The Lab: Captures ───────────────────────────────────────────────
 
   async createCapture(data) {
@@ -1101,6 +1110,10 @@ class ApiService {
 
   async deleteCapture(id) {
     return this.request(`/lab/captures/${id}`, { method: 'DELETE' })
+  }
+
+  async getPlayerCaptures(playerId, limit = 10) {
+    return this.request(`/lab/captures/player/${encodeURIComponent(playerId)}?limit=${limit}`)
   }
 
   // ─── The Lab: Insights ─────────────────────────────────────────────────

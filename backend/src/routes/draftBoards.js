@@ -7,6 +7,22 @@ const router = express.Router()
 // All draft board routes require authentication
 router.use(authenticate)
 
+// POST /api/draft-boards/journal/entry — create manual journal entry
+router.post('/journal/entry', async (req, res, next) => {
+  try {
+    const { boardId, content, playerName } = req.body
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: { message: 'Content is required' } })
+    }
+    const activity = await svc.createJournalEntry(req.user.id, {
+      boardId,
+      content: content.trim(),
+      playerName: playerName?.trim() || null,
+    })
+    res.status(201).json({ activity })
+  } catch (err) { next(err) }
+})
+
 // GET /api/draft-boards/journal/all — user's full decision journal (MUST be before /:id)
 router.get('/journal/all', async (req, res, next) => {
   try {

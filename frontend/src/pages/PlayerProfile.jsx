@@ -10,6 +10,7 @@ import PlayerFormChart from '../components/player/PlayerFormChart'
 import PlayerCourseHistory from '../components/player/PlayerCourseHistory'
 import PlayerBenchmarkCard from '../components/predictions/PlayerBenchmarkCard'
 import AddToBoardModal from '../components/workspace/AddToBoardModal'
+import CaptureFormModal from '../components/lab/CaptureFormModal'
 import usePlayerProfile from '../hooks/usePlayerProfile'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
@@ -20,6 +21,9 @@ const PlayerProfile = () => {
   const [currentEventId, setCurrentEventId] = useState(null)
   const [tournamentStatus, setTournamentStatus] = useState(null)
   const [showAddToBoard, setShowAddToBoard] = useState(false)
+  const [playerCaptures, setPlayerCaptures] = useState([])
+  const [capturesLoading, setCapturesLoading] = useState(false)
+  const [showCaptureForm, setShowCaptureForm] = useState(false)
   const { isWatched, toggleWatch } = useWatchList()
   const {
     player,
@@ -44,6 +48,16 @@ const PlayerProfile = () => {
       })
       .catch(() => {})
   }, [])
+
+  // Fetch player captures
+  useEffect(() => {
+    if (!playerId || !user) return
+    setCapturesLoading(true)
+    api.getPlayerCaptures(playerId, 5)
+      .then(data => setPlayerCaptures(data.captures || []))
+      .catch(() => setPlayerCaptures([]))
+      .finally(() => setCapturesLoading(false))
+  }, [playerId, user])
 
   // Fetch upcoming schedule for this player
   useEffect(() => {
@@ -164,6 +178,74 @@ const PlayerProfile = () => {
             tournamentHistory={tournamentHistory}
           />
           <PlayerCourseHistory courseHistory={courseHistory} />
+
+          {/* Your Notes (Captures) */}
+          {user && (
+            <div className="bg-dark-secondary border border-dark-border rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between">
+                <h3 className="text-sm font-display font-bold text-white">Your Notes</h3>
+                <button
+                  onClick={() => setShowCaptureForm(true)}
+                  className="text-xs text-gold hover:text-gold/80 transition-colors flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Note
+                </button>
+              </div>
+              <div className="p-4">
+                {capturesLoading ? (
+                  <div className="text-xs text-white/20 text-center py-4">Loading...</div>
+                ) : playerCaptures.length === 0 ? (
+                  <p className="text-xs text-white/30 text-center py-4">
+                    No notes yet.{' '}
+                    <button onClick={() => setShowCaptureForm(true)} className="text-gold hover:underline">Add Note</button>
+                  </p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {playerCaptures.map(c => (
+                      <div key={c.id} className="px-3 py-2 bg-dark-primary/50 rounded-lg border border-white/[0.04]">
+                        <p className="text-xs text-white/70 line-clamp-3">{c.content}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          {c.sourceType && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.06] text-white/30">{c.sourceType}</span>
+                          )}
+                          {c.sentiment && (
+                            <span className={`text-[10px] font-medium ${
+                              c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-white/30'
+                            }`}>
+                              {c.sentiment === 'bullish' ? '↑' : c.sentiment === 'bearish' ? '↓' : '–'} {c.sentiment}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-white/15">
+                            {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {playerCaptures.length >= 5 && (
+                      <Link to="/lab/captures" className="block text-center text-xs text-gold hover:underline pt-1">
+                        View all in Lab
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {showCaptureForm && (
+            <CaptureFormModal
+              initialPlayerTags={[{ id: playerId, name: player.name, autoDetected: false }]}
+              onClose={() => setShowCaptureForm(false)}
+              onSuccess={() => {
+                api.getPlayerCaptures(playerId, 5)
+                  .then(data => setPlayerCaptures(data.captures || []))
+                  .catch(() => {})
+              }}
+            />
+          )}
 
           {/* Upcoming Schedule */}
           {playerSchedule.length > 0 && (

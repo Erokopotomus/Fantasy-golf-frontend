@@ -17,12 +17,12 @@ const SENTIMENTS = [
   { value: 'neutral', label: 'Neutral', icon: '–', color: 'white' },
 ]
 
-export default function CaptureFormModal({ onClose, onSuccess }) {
+export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags }) {
   const [content, setContent] = useState('')
   const [sourceType, setSourceType] = useState(null)
   const [sourceName, setSourceName] = useState('')
   const [sentiment, setSentiment] = useState(null)
-  const [playerTags, setPlayerTags] = useState([]) // [{ id, name, autoDetected }]
+  const [playerTags, setPlayerTags] = useState(initialPlayerTags || []) // [{ id, name, autoDetected }]
   const [saving, setSaving] = useState(false)
 
   // Player cache for detection

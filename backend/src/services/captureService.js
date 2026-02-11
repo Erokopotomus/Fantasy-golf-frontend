@@ -105,9 +105,34 @@ async function deleteCapture(userId, captureId) {
   return { success: true }
 }
 
+async function getCapturesByPlayer(userId, playerId, limit = 10) {
+  const links = await prisma.labCapturePlayer.findMany({
+    where: {
+      playerId,
+      capture: { userId },
+    },
+    select: { captureId: true },
+    distinct: ['captureId'],
+    take: parseInt(limit),
+  })
+
+  if (links.length === 0) return []
+
+  return prisma.labCapture.findMany({
+    where: { id: { in: links.map(l => l.captureId) } },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      players: {
+        include: { player: { select: { id: true, name: true, headshotUrl: true, nflPosition: true, nflTeamAbbr: true } } },
+      },
+    },
+  })
+}
+
 module.exports = {
   createCapture,
   listCaptures,
   getRecentCaptures,
   deleteCapture,
+  getCapturesByPlayer,
 }

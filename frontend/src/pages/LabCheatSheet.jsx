@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
 
@@ -35,6 +35,9 @@ export default function LabCheatSheet() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [editMode, setEditMode] = useState(false)
+  const [editedRankings, setEditedRankings] = useState(null)
+  const [editedSettings, setEditedSettings] = useState(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -52,6 +55,56 @@ export default function LabCheatSheet() {
       console.error('Publish failed:', err)
     }
   }
+
+  const enterEdit = () => {
+    const content = sheet.contentJson || {}
+    setEditedRankings([...(content.overallRankings || [])])
+    setEditedSettings({ ...(sheet.formatSettings || { showADP: true, showNotes: true, showTierBreaks: true }) })
+    setEditMode(true)
+  }
+
+  const cancelEdit = () => {
+    setEditedRankings(null)
+    setEditedSettings(null)
+    setEditMode(false)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      // Re-number ranks sequentially
+      const renumbered = editedRankings.map((r, i) => ({ ...r, rank: i + 1 }))
+      const updatedContent = { ...sheet.contentJson, overallRankings: renumbered }
+      await api.updateCheatSheet(id, { contentJson: updatedContent, formatSettings: editedSettings })
+      setSheet(prev => ({ ...prev, contentJson: updatedContent, formatSettings: editedSettings }))
+      setEditMode(false)
+      setEditedRankings(null)
+      setEditedSettings(null)
+    } catch (err) {
+      console.error('Save failed:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const moveRow = (index, direction) => {
+    const target = index + direction
+    if (target < 0 || target >= editedRankings.length) return
+    const next = [...editedRankings]
+    ;[next[index], next[target]] = [next[target], next[index]]
+    setEditedRankings(next)
+  }
+
+  const updateNote = (index, note) => {
+    const next = [...editedRankings]
+    next[index] = { ...next[index], note }
+    setEditedRankings(next)
+  }
+
+  const hasChanges = editMode && editedRankings && (
+    JSON.stringify(editedRankings) !== JSON.stringify(sheet.contentJson?.overallRankings || []) ||
+    JSON.stringify(editedSettings) !== JSON.stringify(sheet.formatSettings || { showADP: true, showNotes: true, showTierBreaks: true })
+  )
 
   if (loading) {
     return (
@@ -110,22 +163,52 @@ export default function LabCheatSheet() {
 
         {/* Action bar */}
         <div className="flex items-center gap-2 print:hidden">
-          <button
-            onClick={() => window.print()}
-            className="px-3 py-1.5 text-sm text-white/50 border border-white/10 rounded-lg hover:text-white/70 hover:border-white/20 transition-colors"
-          >
-            Export PDF
-          </button>
-          {!sheet.publishedAt && (
-            <button
-              onClick={handlePublish}
-              className="px-3 py-1.5 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors"
-            >
-              Publish to Prove It
-            </button>
-          )}
-          {sheet.publishedAt && (
-            <span className="px-3 py-1.5 text-sm text-emerald-400 border border-emerald-500/20 rounded-lg">Published</span>
+          {editMode ? (
+            <>
+              <button
+                onClick={cancelEdit}
+                className="px-3 py-1.5 text-sm text-white/50 border border-white/10 rounded-lg hover:text-white/70 hover:border-white/20 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!hasChanges || saving}
+                className="px-3 py-1.5 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {saving && <div className="w-3.5 h-3.5 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />}
+                Save
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={enterEdit}
+                className="px-3 py-1.5 text-sm text-white/50 border border-white/10 rounded-lg hover:text-white/70 hover:border-white/20 transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-3 py-1.5 text-sm text-white/50 border border-white/10 rounded-lg hover:text-white/70 hover:border-white/20 transition-colors"
+              >
+                Export PDF
+              </button>
+              {!sheet.publishedAt && (
+                <button
+                  onClick={handlePublish}
+                  className="px-3 py-1.5 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors"
+                >
+                  Publish to Prove It
+                </button>
+              )}
+              {sheet.publishedAt && (
+                <span className="px-3 py-1.5 text-sm text-emerald-400 border border-emerald-500/20 rounded-lg">Published</span>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -179,50 +262,120 @@ export default function LabCheatSheet() {
         </div>
       )}
 
+      {/* Column Toggles (edit mode only) */}
+      {editMode && editedSettings && (
+        <div className="flex items-center gap-4 mb-3 px-1">
+          <span className="text-xs font-bold text-white/30 uppercase tracking-wider">Show columns:</span>
+          {[
+            { key: 'showADP', label: 'ADP' },
+            { key: 'showNotes', label: 'Notes' },
+            { key: 'showTierBreaks', label: 'Tier Breaks' },
+          ].map(col => (
+            <label key={col.key} className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editedSettings[col.key] ?? true}
+                onChange={e => setEditedSettings(prev => ({ ...prev, [col.key]: e.target.checked }))}
+                className="w-3.5 h-3.5 rounded border-white/20 bg-dark-secondary text-gold focus:ring-gold/30"
+              />
+              <span className="text-xs text-white/50">{col.label}</span>
+            </label>
+          ))}
+        </div>
+      )}
+
       {/* Overall Rankings Table */}
-      <div className="bg-dark-secondary/60 border border-white/[0.06] rounded-xl overflow-hidden print:border-gray-200 mb-6">
-        <div className="p-4 border-b border-white/[0.06] print:border-gray-200">
-          <h3 className="text-sm font-bold text-white print:text-black">Overall Rankings</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-white/30 print:text-gray-500 border-b border-white/[0.06]">
-                <th className="px-4 py-2 w-12">#</th>
-                <th className="px-4 py-2">Player</th>
-                <th className="px-4 py-2 w-16">Pos</th>
-                <th className="px-4 py-2 w-16">Team</th>
-                {settings.showADP && <th className="px-4 py-2 w-16 text-right">ADP</th>}
-                <th className="px-4 py-2 w-16 text-right">Gap</th>
-                {settings.showNotes && <th className="px-4 py-2">Note</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {overallRankings.map((r, i) => (
-                <>
-                  {settings.showTierBreaks && i > 0 && tierBreakRanks.has(overallRankings[i - 1].rank) && (
-                    <tr key={`tier-${r.rank}`}>
-                      <td colSpan={settings.showNotes ? 7 : 6} className="px-4 py-1">
-                        <div className="border-t-2 border-gold/20 print:border-gold" />
-                        <span className="text-[9px] font-bold uppercase text-gold/40 print:text-gold">Tier {r.tier}</span>
-                      </td>
-                    </tr>
-                  )}
-                  <tr key={r.playerId} className="border-b border-white/[0.03] hover:bg-white/[0.02] print:border-gray-100">
-                    <td className="px-4 py-2 text-white/30 print:text-gray-400 font-mono">{r.rank}</td>
-                    <td className="px-4 py-2 text-white print:text-black font-medium">{r.name}</td>
-                    <td className="px-4 py-2"><PosBadge pos={r.position} /></td>
-                    <td className="px-4 py-2 text-white/40 print:text-gray-500">{r.team || ''}</td>
-                    {settings.showADP && <td className="px-4 py-2 text-right text-white/30 print:text-gray-400">{r.adp || '—'}</td>}
-                    <td className="px-4 py-2 text-right"><GapBadge gap={r.gap} /></td>
-                    {settings.showNotes && <td className="px-4 py-2 text-white/25 print:text-gray-400 text-xs truncate max-w-[200px]">{r.note || ''}</td>}
+      {(() => {
+        const displayRankings = editMode && editedRankings ? editedRankings : overallRankings
+        const displaySettings = editMode && editedSettings ? editedSettings : settings
+        const colCount = 4 + (displaySettings.showADP ? 1 : 0) + 1 + (displaySettings.showNotes ? 1 : 0) + (editMode ? 1 : 0)
+        return (
+          <div className="bg-dark-secondary/60 border border-white/[0.06] rounded-xl overflow-hidden print:border-gray-200 mb-6">
+            <div className="p-4 border-b border-white/[0.06] print:border-gray-200">
+              <h3 className="text-sm font-bold text-white print:text-black">Overall Rankings</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-white/30 print:text-gray-500 border-b border-white/[0.06]">
+                    <th className="px-4 py-2 w-12">#</th>
+                    <th className="px-4 py-2">Player</th>
+                    <th className="px-4 py-2 w-16">Pos</th>
+                    <th className="px-4 py-2 w-16">Team</th>
+                    {displaySettings.showADP && <th className="px-4 py-2 w-16 text-right">ADP</th>}
+                    <th className="px-4 py-2 w-16 text-right">Gap</th>
+                    {displaySettings.showNotes && <th className="px-4 py-2">Note</th>}
+                    {editMode && <th className="px-4 py-2 w-20"></th>}
                   </tr>
-                </>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody>
+                  {displayRankings.map((r, i) => (
+                    <React.Fragment key={r.playerId}>
+                      {displaySettings.showTierBreaks && i > 0 && tierBreakRanks.has(displayRankings[i - 1].rank) && (
+                        <tr>
+                          <td colSpan={colCount} className="px-4 py-1">
+                            <div className="border-t-2 border-gold/20 print:border-gold" />
+                            <span className="text-[9px] font-bold uppercase text-gold/40 print:text-gold">Tier {r.tier}</span>
+                          </td>
+                        </tr>
+                      )}
+                      <tr className="border-b border-white/[0.03] hover:bg-white/[0.02] print:border-gray-100">
+                        <td className="px-4 py-2 text-white/30 print:text-gray-400 font-mono">{i + 1}</td>
+                        <td className="px-4 py-2 text-white print:text-black font-medium">{r.name}</td>
+                        <td className="px-4 py-2"><PosBadge pos={r.position} /></td>
+                        <td className="px-4 py-2 text-white/40 print:text-gray-500">{r.team || ''}</td>
+                        {displaySettings.showADP && <td className="px-4 py-2 text-right text-white/30 print:text-gray-400">{r.adp || '—'}</td>}
+                        <td className="px-4 py-2 text-right"><GapBadge gap={r.gap} /></td>
+                        {displaySettings.showNotes && (
+                          <td className="px-4 py-2 text-white/25 print:text-gray-400 text-xs max-w-[200px]">
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={r.note || ''}
+                                onChange={e => updateNote(i, e.target.value)}
+                                placeholder="Add note..."
+                                className="w-full bg-transparent border-b border-white/10 focus:border-gold/40 text-white/60 text-xs outline-none py-0.5 placeholder-white/15"
+                              />
+                            ) : (
+                              <span className="truncate block">{r.note || ''}</span>
+                            )}
+                          </td>
+                        )}
+                        {editMode && (
+                          <td className="px-2 py-2">
+                            <div className="flex items-center gap-0.5">
+                              <button
+                                onClick={() => moveRow(i, -1)}
+                                disabled={i === 0}
+                                className="p-1 text-white/30 hover:text-white/70 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                                title="Move up"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => moveRow(i, 1)}
+                                disabled={i === displayRankings.length - 1}
+                                className="p-1 text-white/30 hover:text-white/70 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                                title="Move down"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Position Tiers Quick Reference */}
       {Object.keys(positionTiers).length > 0 && (
