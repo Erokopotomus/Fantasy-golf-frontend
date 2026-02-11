@@ -22,7 +22,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
 
   const handleDelete = async () => {
     await onDelete()
-    navigate('/workspace')
+    navigate('/lab')
   }
 
   const sportBadge = board?.sport === 'nfl'
@@ -38,7 +38,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-white/[0.06] bg-dark-secondary/60">
       <div className="flex items-center gap-3 min-w-0">
-        <button onClick={() => navigate('/workspace')} className="text-white/40 hover:text-white transition-colors shrink-0">
+        <button onClick={() => navigate('/lab')} className="text-white/40 hover:text-white transition-colors shrink-0">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>

@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useDraftBoards from '../hooks/useDraftBoards'
+import api from '../services/api'
+
+// ── Constants ──────────────────────────────────────────────────────────────────
 
 const SPORT_OPTIONS = [
   { value: 'nfl', label: 'NFL', icon: '🏈' },
@@ -11,6 +14,21 @@ const SCORING_OPTIONS = [
   { value: 'ppr', label: 'PPR' },
   { value: 'half_ppr', label: 'Half PPR' },
   { value: 'standard', label: 'Standard' },
+]
+
+const LEAGUE_TYPE_OPTIONS = [
+  { value: 'redraft', label: 'Redraft' },
+  { value: 'keeper', label: 'Keeper' },
+  { value: 'dynasty', label: 'Dynasty' },
+  { value: 'bestball', label: 'Best Ball' },
+]
+
+const TEAM_COUNT_OPTIONS = [8, 10, 12, 14]
+
+const DRAFT_TYPE_OPTIONS = [
+  { value: 'snake', label: 'Snake' },
+  { value: 'auction', label: 'Auction' },
+  { value: 'linear', label: 'Linear' },
 ]
 
 const START_FROM_OPTIONS = {
@@ -57,16 +75,96 @@ const START_FROM_OPTIONS = {
   ],
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function relativeTime(dateStr) {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diff = Math.max(0, now - then)
+  const seconds = Math.floor(diff / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function boardStatusCTA(board) {
+  if (board.isPublished) return { label: 'Locked', color: 'text-white/30', dot: 'bg-white/20' }
+  if (board.playerCount === 0) return { label: 'Start Ranking →', color: 'text-gold', dot: null }
+  if (board.sport === 'nfl' && board.positionCoverage && board.positionCoverage.covered >= board.positionCoverage.total) {
+    return { label: 'Ready', color: 'text-emerald-400', dot: 'bg-emerald-400' }
+  }
+  return { label: 'Continue', color: 'text-gold/70', dot: 'bg-gold/50' }
+}
+
+function scoringLabel(fmt) {
+  if (fmt === 'ppr') return 'PPR'
+  if (fmt === 'half_ppr') return 'Half PPR'
+  if (fmt === 'standard') return 'Std'
+  return fmt
+}
+
+// ── Action Description for Journal ───────────────────────────────────────────
+
+function activityDescription(a) {
+  const name = a.details?.playerName || 'Player'
+  switch (a.action) {
+    case 'player_moved': {
+      const delta = a.details?.delta
+      return `Moved ${name} ${delta > 0 ? `up ${delta}` : `down ${Math.abs(delta)}`}`
+    }
+    case 'player_added': return `Added ${name}`
+    case 'player_removed': return `Removed ${name}`
+    case 'player_tagged': return `Tagged ${name}`
+    case 'note_added': return `Note on ${name}`
+    case 'board_created': return `Created board`
+    default: return a.action
+  }
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
 export default function DraftBoards() {
   const { boards, loading, error, createBoard, deleteBoard } = useDraftBoards()
   const navigate = useNavigate()
+
+  // Hub data
+  const [journalEntries, setJournalEntries] = useState([])
+  const [watchListEntries, setWatchListEntries] = useState([])
+  const [hubLoading, setHubLoading] = useState(true)
+
+  // Create modal state
   const [showCreate, setShowCreate] = useState(false)
-  const [step, setStep] = useState(1) // 1: name+sport, 2: start from
+  const [step, setStep] = useState(1) // 1: name+sport+scoring, 2: league context, 3: start from
   const [newName, setNewName] = useState('')
   const [newSport, setNewSport] = useState('nfl')
   const [newScoring, setNewScoring] = useState('ppr')
+  const [leagueType, setLeagueType] = useState(null)
+  const [teamCount, setTeamCount] = useState(null)
+  const [draftType, setDraftType] = useState(null)
   const [startFrom, setStartFrom] = useState('clutch')
   const [creating, setCreating] = useState(false)
+
+  // Fetch hub data once boards are loaded
+  useEffect(() => {
+    if (loading) return
+    if (boards.length === 0) { setHubLoading(false); return }
+    let cancelled = false
+    Promise.all([
+      api.getDecisionJournal({ limit: 5 }).catch(() => ({ activities: [] })),
+      api.getWatchList().catch(() => ({ entries: [] })),
+    ]).then(([journal, watchList]) => {
+      if (cancelled) return
+      setJournalEntries(journal.activities || [])
+      setWatchListEntries(watchList.entries || [])
+      setHubLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [loading, boards.length])
 
   const openCreateModal = () => {
     setShowCreate(true)
@@ -74,6 +172,9 @@ export default function DraftBoards() {
     setNewName('')
     setNewSport('nfl')
     setNewScoring('ppr')
+    setLeagueType(null)
+    setTeamCount(null)
+    setDraftType(null)
     setStartFrom('clutch')
   }
 
@@ -92,10 +193,12 @@ export default function DraftBoards() {
         sport: newSport,
         scoringFormat: newSport === 'nfl' ? newScoring : 'overall',
         startFrom,
+        leagueType: leagueType || undefined,
+        teamCount: teamCount || undefined,
+        draftType: draftType || undefined,
       })
       setShowCreate(false)
-      // Navigate to the new board
-      if (board?.id) navigate(`/workspace/${board.id}`)
+      if (board?.id) navigate(`/lab/${board.id}`)
     } catch (err) {
       console.error('Create board failed:', err)
     } finally {
@@ -103,54 +206,70 @@ export default function DraftBoards() {
     }
   }
 
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-
   const startFromOptions = START_FROM_OPTIONS[newSport] || START_FROM_OPTIONS.nfl
 
+  // ── Empty State ──────────────────────────────────────────────────────────
+  if (!loading && !error && boards.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="text-center py-20">
+          {/* Lab flask icon */}
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-gold/20 to-orange/10 flex items-center justify-center">
+            <svg className="w-10 h-10 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-display font-bold text-white mb-2">Welcome to The Lab</h1>
+          <p className="text-sm text-white/40 max-w-md mx-auto mb-8">
+            Build custom draft boards, rank players your way, track your decisions, and develop a draft thesis that gives you an edge.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={openCreateModal}
+              className="px-6 py-3 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Your First Board
+            </button>
+            <Link
+              to="/mock-draft"
+              className="px-6 py-3 border border-white/10 text-white/50 text-sm font-medium rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
+            >
+              Or start with a Mock Draft
+            </Link>
+          </div>
+        </div>
+
+        {/* Create modal */}
+        {showCreate && <CreateModal {...createModalProps()} />}
+      </div>
+    )
+  }
+
+  // Helper to build create modal props
+  function createModalProps() {
+    return {
+      step, setStep, newName, setNewName, newSport, setNewSport, newScoring, setNewScoring,
+      leagueType, setLeagueType, teamCount, setTeamCount, draftType, setDraftType,
+      startFrom, setStartFrom, startFromOptions, creating,
+      onClose: () => setShowCreate(false), onNext: handleNext, onCreate: handleCreate,
+    }
+  }
+
+  // ── AI Insight computation ─────────────────────────────────────────────
+  const nflBoards = boards.filter(b => b.sport === 'nfl')
+  const missingTE = nflBoards.filter(b => b.positionCoverage && b.positionCoverage.positions.TE === 0).length
+  const missingQB = nflBoards.filter(b => b.positionCoverage && b.positionCoverage.positions.QB === 0).length
+  let insightText = null
+  if (missingTE > 0) insightText = `${missingTE} board${missingTE > 1 ? 's' : ''} missing TE coverage`
+  else if (missingQB > 0) insightText = `${missingQB} board${missingQB > 1 ? 's' : ''} missing QB coverage`
+  else if (nflBoards.length > 0) insightText = `${nflBoards.length} NFL board${nflBoards.length > 1 ? 's' : ''} tracked — keep refining your thesis`
+
+  // ── Full Hub Layout ──────────────────────────────────────────────────────
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-white">My Workspace</h1>
-          <p className="text-sm text-white/40 mt-1">Personal draft boards, rankings & scouting notes</p>
-        </div>
-        <button
-          onClick={openCreateModal}
-          className="px-4 py-2 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Board
-        </button>
-      </div>
-
-      {/* Quick links */}
-      <div className="flex gap-3 mb-6">
-        <Link
-          to="/workspace/watch-list"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-semibold text-white/50 hover:border-gold/30 hover:text-gold transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-          </svg>
-          Watch List
-        </Link>
-        <Link
-          to="/workspace/journal"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-semibold text-white/50 hover:border-gold/30 hover:text-gold transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          Decision Journal
-        </Link>
-      </div>
-
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-16">
@@ -163,230 +282,513 @@ export default function DraftBoards() {
         <div className="text-center py-8 text-red-400 text-sm">{error}</div>
       )}
 
-      {/* Empty state */}
-      {!loading && !error && boards.length === 0 && (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/10 flex items-center justify-center">
-            <svg className="w-8 h-8 text-gold/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-          <h2 className="text-lg font-semibold text-white mb-2">No boards yet</h2>
-          <p className="text-sm text-white/40 mb-6 max-w-sm mx-auto">
-            Create your first draft board to start ranking players, adding notes, and building your strategy.
-          </p>
-          <button
-            onClick={openCreateModal}
-            className="px-5 py-2.5 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors"
-          >
-            Create Your First Board
-          </button>
-        </div>
-      )}
-
-      {/* Board grid */}
-      {!loading && boards.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {boards.map(board => (
-            <Link
-              key={board.id}
-              to={`/workspace/${board.id}`}
-              className="block p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl hover:border-gold/30 hover:bg-dark-secondary/80 transition-all group"
+      {!loading && !error && (
+        <>
+          {/* 1. Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-display font-bold text-white tracking-wide">THE LAB</h1>
+              <p className="text-sm text-white/40 mt-0.5">Where your draft thesis takes shape.</p>
+            </div>
+            <button
+              onClick={openCreateModal}
+              className="px-4 py-2 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
             >
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="text-base font-semibold text-white group-hover:text-gold transition-colors truncate">
-                  {board.name}
-                </h3>
-                {board.sport === 'nfl' ? (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-orange/20 text-orange shrink-0 ml-2">NFL</span>
-                ) : (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-400 shrink-0 ml-2">Golf</span>
-                )}
-              </div>
-              <div className="flex items-center gap-3 text-xs text-white/40">
-                {board.sport === 'nfl' && (
-                  <span className="px-1.5 py-0.5 bg-white/[0.04] rounded">
-                    {board.scoringFormat === 'ppr' ? 'PPR' : board.scoringFormat === 'half_ppr' ? 'Half PPR' : 'Standard'}
-                  </span>
-                )}
-                <span>{board.playerCount} player{board.playerCount !== 1 ? 's' : ''}</span>
-                <span className="ml-auto">{formatDate(board.updatedAt)}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Board
+            </button>
+          </div>
 
-      {/* Create modal */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowCreate(false)}>
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div
-            className="relative w-full max-w-lg bg-dark-secondary border border-white/[0.08] rounded-xl shadow-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="p-5 border-b border-white/[0.06] flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  {step === 1 ? 'New Draft Board' : 'Choose Starting Point'}
-                </h2>
-                {step === 2 && (
-                  <p className="text-xs text-white/40 mt-0.5">You'll customize from here — this is just your starting position</p>
-                )}
+          {/* 2. AI Insight Bar (placeholder) */}
+          {insightText && (
+            <div className="mb-6 p-3.5 bg-gradient-to-r from-gold/[0.07] to-orange/[0.04] border border-gold/15 rounded-xl flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center shrink-0">
+                <svg className="w-4.5 h-4.5 text-gold" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-gold' : 'bg-white/10'}`} />
-                <div className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-gold' : 'bg-white/10'}`} />
+              <p className="text-sm text-white/60 flex-1">{insightText}</p>
+              <span className="px-2 py-0.5 text-[9px] font-bold uppercase bg-gold/20 text-gold/60 rounded">Soon</span>
+            </div>
+          )}
+
+          {/* 3. Two-column: Readiness Tracker + Recent Captures */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Draft Readiness Tracker */}
+            <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white/30 mb-3">Draft Readiness</h3>
+              <div className="space-y-2">
+                {boards.slice(0, 5).map(board => {
+                  const status = boardStatusCTA(board)
+                  return (
+                    <Link
+                      key={board.id}
+                      to={`/lab/${board.id}`}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] transition-colors group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${status.dot || 'bg-transparent'}`} />
+                        <span className="text-sm text-white truncate group-hover:text-gold transition-colors">{board.name}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                          board.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
+                        }`}>
+                          {board.sport}
+                        </span>
+                      </div>
+                      <span className={`text-[11px] font-medium ${status.color}`}>{status.label}</span>
+                    </Link>
+                  )
+                })}
               </div>
             </div>
 
-            {/* Step 1: Name + Sport + Scoring */}
-            {step === 1 && (
-              <form onSubmit={handleNext} className="p-5 space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-white/50 mb-1.5">Board Name</label>
-                  <input
-                    autoFocus
-                    value={newName}
-                    onChange={e => setNewName(e.target.value)}
-                    placeholder="e.g., 2026 NFL Big Board"
-                    className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50"
-                  />
+            {/* Recent Captures (Journal) */}
+            <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Recent Captures</h3>
+                <Link to="/lab/journal" className="text-[10px] text-gold hover:underline">View All</Link>
+              </div>
+              {hubLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => <div key={i} className="h-7 bg-white/[0.03] rounded animate-pulse" />)}
                 </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-white/50 mb-1.5">Sport</label>
-                  <div className="flex gap-2">
-                    {SPORT_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => {
-                          setNewSport(opt.value)
-                          setStartFrom('clutch') // reset startFrom when sport changes
-                        }}
-                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
-                          newSport === opt.value
-                            ? 'border-gold/50 bg-gold/10 text-gold'
-                            : 'border-white/[0.08] bg-dark-primary text-white/50 hover:text-white/70'
-                        }`}
-                      >
-                        <span>{opt.icon}</span>
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {newSport === 'nfl' && (
-                  <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Scoring Format</label>
-                    <select
-                      value={newScoring}
-                      onChange={e => setNewScoring(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white outline-none focus:border-gold/50 cursor-pointer"
-                    >
-                      {SCORING_OPTIONS.map(o => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreate(false)}
-                    className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!newName.trim()}
-                    className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                  >
-                    Next
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* Step 2: Start From */}
-            {step === 2 && (
-              <div className="p-5">
-                <div className="space-y-2 mb-5">
-                  {startFromOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setStartFrom(opt.value)}
-                      className={`w-full text-left p-3.5 rounded-lg border transition-all ${
-                        startFrom === opt.value
-                          ? 'border-gold/50 bg-gold/[0.07]'
-                          : 'border-white/[0.06] bg-dark-primary/50 hover:border-white/[0.12]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                          startFrom === opt.value ? 'border-gold' : 'border-white/20'
-                        }`}>
-                          {startFrom === opt.value && (
-                            <div className="w-2 h-2 rounded-full bg-gold" />
-                          )}
-                        </div>
-                        <span className={`text-sm font-semibold ${startFrom === opt.value ? 'text-gold' : 'text-white'}`}>
-                          {opt.label}
-                        </span>
-                        {opt.recommended && (
-                          <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-gold/20 text-gold rounded">
-                            Recommended
-                          </span>
-                        )}
+              ) : journalEntries.length === 0 ? (
+                <p className="text-xs text-white/25 py-3">No activity yet — start ranking players to build your journal.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {journalEntries.slice(0, 5).map((a, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs py-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-white/50 truncate">{activityDescription(a)}</span>
+                        {a.board && <span className="text-white/20 truncate">· {a.board.name}</span>}
                       </div>
-                      <p className="text-xs text-white/40 ml-6">{opt.description}</p>
-                    </button>
+                      <span className="text-white/20 shrink-0 ml-2">{relativeTime(a.createdAt)}</span>
+                    </div>
                   ))}
                 </div>
+              )}
+            </div>
+          </div>
 
-                <div className="flex justify-between pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors flex items-center gap-1.5"
+          {/* 4. My Boards — Enhanced Cards */}
+          <div className="mb-6">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-white/30 mb-3">My Boards</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {boards.map(board => {
+                const status = boardStatusCTA(board)
+                return (
+                  <Link
+                    key={board.id}
+                    to={`/lab/${board.id}`}
+                    className="block p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl hover:border-gold/30 hover:bg-dark-secondary/80 transition-all group"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back
-                  </button>
-                  <button
-                    onClick={handleCreate}
-                    disabled={creating}
-                    className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
-                  >
-                    {creating ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Creating...
+                    {/* Top row: Name + sport badge */}
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-base font-semibold text-white group-hover:text-gold transition-colors truncate">
+                        {board.name}
+                      </h3>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ml-2 ${
+                        board.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
+                      }`}>
+                        {board.sport}
                       </span>
-                    ) : (
-                      'Create Board'
+                    </div>
+
+                    {/* League context pills */}
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {board.sport === 'nfl' && (
+                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40">
+                          {scoringLabel(board.scoringFormat)}
+                        </span>
+                      )}
+                      {board.leagueType && (
+                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40 capitalize">
+                          {board.leagueType}
+                        </span>
+                      )}
+                      {board.teamCount && (
+                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40">
+                          {board.teamCount}-team
+                        </span>
+                      )}
+                      {board.draftType && (
+                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40 capitalize">
+                          {board.draftType}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Position coverage for NFL */}
+                    {board.sport === 'nfl' && board.positionCoverage && (
+                      <div className="flex gap-1.5 mb-3">
+                        {['QB', 'RB', 'WR', 'TE'].map(pos => {
+                          const count = board.positionCoverage.positions[pos] || 0
+                          return (
+                            <span
+                              key={pos}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                count > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-white/[0.03] text-white/20'
+                              }`}
+                            >
+                              {pos} {count}
+                            </span>
+                          )
+                        })}
+                      </div>
                     )}
-                  </button>
-                </div>
+
+                    {/* Bottom row: count + time + status */}
+                    <div className="flex items-center justify-between text-[11px]">
+                      <div className="flex items-center gap-2 text-white/30">
+                        <span>{board.playerCount} player{board.playerCount !== 1 ? 's' : ''}</span>
+                        <span>·</span>
+                        <span>{relativeTime(board.updatedAt)}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {status.dot && <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />}
+                        <span className={`font-medium ${status.color}`}>{status.label}</span>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* 5. Watch List Summary */}
+          {!hubLoading && watchListEntries.length > 0 && (
+            <div className="mb-6 p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Watch List</h3>
+                <Link to="/lab/watch-list" className="text-[10px] text-gold hover:underline">View All</Link>
               </div>
+              <div className="flex gap-3">
+                {watchListEntries.slice(0, 3).map((e, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] rounded-lg">
+                    {e.player?.headshotUrl && (
+                      <img src={e.player.headshotUrl} alt="" className="w-6 h-6 rounded-full bg-white/5" />
+                    )}
+                    <span className="text-xs text-white/70">{e.player?.name || 'Unknown'}</span>
+                    <span className={`px-1 py-0.5 rounded text-[9px] font-bold uppercase ${
+                      e.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
+                    }`}>
+                      {e.sport}
+                    </span>
+                  </div>
+                ))}
+                {watchListEntries.length > 3 && (
+                  <Link to="/lab/watch-list" className="flex items-center px-3 py-2 text-xs text-white/30 hover:text-gold transition-colors">
+                    +{watchListEntries.length - 3} more
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 6. Decision Journal Summary */}
+          {!hubLoading && journalEntries.length > 0 && (
+            <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Decision Journal</h3>
+                <Link to="/lab/journal" className="text-[10px] text-gold hover:underline">View All</Link>
+              </div>
+              <div className="space-y-1.5">
+                {journalEntries.slice(0, 3).map((a, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs py-1">
+                    <span className="text-white/50">{activityDescription(a)}</span>
+                    <span className="text-white/20 shrink-0 ml-2">{relativeTime(a.createdAt)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Create modal */}
+      {showCreate && <CreateModal {...createModalProps()} />}
+    </div>
+  )
+}
+
+// ── Create Modal Component ───────────────────────────────────────────────────
+
+function CreateModal({
+  step, setStep, newName, setNewName, newSport, setNewSport, newScoring, setNewScoring,
+  leagueType, setLeagueType, teamCount, setTeamCount, draftType, setDraftType,
+  startFrom, setStartFrom, startFromOptions, creating,
+  onClose, onNext, onCreate,
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-lg bg-dark-secondary border border-white/[0.08] rounded-xl shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-5 border-b border-white/[0.06] flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-white">
+              {step === 1 ? 'New Draft Board' : step === 2 ? 'League Context' : 'Choose Starting Point'}
+            </h2>
+            {step === 2 && (
+              <p className="text-xs text-white/40 mt-0.5">Optional — helps tailor your board experience</p>
+            )}
+            {step === 3 && (
+              <p className="text-xs text-white/40 mt-0.5">You'll customize from here — this is just your starting position</p>
             )}
           </div>
+          <div className="flex items-center gap-1.5">
+            <div className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-gold' : 'bg-white/10'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-gold' : 'bg-white/10'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 3 ? 'bg-gold' : 'bg-white/10'}`} />
+          </div>
         </div>
-      )}
+
+        {/* Step 1: Name + Sport + Scoring */}
+        {step === 1 && (
+          <form onSubmit={onNext} className="p-5 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-white/50 mb-1.5">Board Name</label>
+              <input
+                autoFocus
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                placeholder="e.g., 2026 NFL Big Board"
+                className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-white/50 mb-1.5">Sport</label>
+              <div className="flex gap-2">
+                {SPORT_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setNewSport(opt.value)
+                      setStartFrom('clutch')
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
+                      newSport === opt.value
+                        ? 'border-gold/50 bg-gold/10 text-gold'
+                        : 'border-white/[0.08] bg-dark-primary text-white/50 hover:text-white/70'
+                    }`}
+                  >
+                    <span>{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {newSport === 'nfl' && (
+              <div>
+                <label className="block text-xs font-medium text-white/50 mb-1.5">Scoring Format</label>
+                <select
+                  value={newScoring}
+                  onChange={e => setNewScoring(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white outline-none focus:border-gold/50 cursor-pointer"
+                >
+                  {SCORING_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!newName.trim()}
+                className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                Next
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Step 2: League Context (NEW) */}
+        {step === 2 && (
+          <div className="p-5 space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-white/50 mb-2">League Type</label>
+              <div className="flex flex-wrap gap-2">
+                {LEAGUE_TYPE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setLeagueType(leagueType === opt.value ? null : opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                      leagueType === opt.value
+                        ? 'border-gold/50 bg-gold/10 text-gold'
+                        : 'border-white/[0.08] bg-dark-primary text-white/40 hover:text-white/60'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-white/50 mb-2">Team Count</label>
+              <div className="flex gap-2">
+                {TEAM_COUNT_OPTIONS.map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setTeamCount(teamCount === n ? null : n)}
+                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                      teamCount === n
+                        ? 'border-gold/50 bg-gold/10 text-gold'
+                        : 'border-white/[0.08] bg-dark-primary text-white/40 hover:text-white/60'
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-white/50 mb-2">Draft Type</label>
+              <div className="flex gap-2">
+                {DRAFT_TYPE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setDraftType(draftType === opt.value ? null : opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                      draftType === opt.value
+                        ? 'border-gold/50 bg-gold/10 text-gold'
+                        : 'border-white/[0.08] bg-dark-primary text-white/40 hover:text-white/60'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
+                  className="px-4 py-2 text-sm text-white/40 hover:text-white/60 transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
+                  className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-1.5"
+                >
+                  Next
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Start From */}
+        {step === 3 && (
+          <div className="p-5">
+            <div className="space-y-2 mb-5">
+              {startFromOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setStartFrom(opt.value)}
+                  className={`w-full text-left p-3.5 rounded-lg border transition-all ${
+                    startFrom === opt.value
+                      ? 'border-gold/50 bg-gold/[0.07]'
+                      : 'border-white/[0.06] bg-dark-primary/50 hover:border-white/[0.12]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                      startFrom === opt.value ? 'border-gold' : 'border-white/20'
+                    }`}>
+                      {startFrom === opt.value && (
+                        <div className="w-2 h-2 rounded-full bg-gold" />
+                      )}
+                    </div>
+                    <span className={`text-sm font-semibold ${startFrom === opt.value ? 'text-gold' : 'text-white'}`}>
+                      {opt.label}
+                    </span>
+                    {opt.recommended && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-gold/20 text-gold rounded">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-white/40 ml-6">{opt.description}</p>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-between pt-2">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+              <button
+                onClick={onCreate}
+                disabled={creating}
+                className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
+              >
+                {creating ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Creating...
+                  </span>
+                ) : (
+                  'Create Board'
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

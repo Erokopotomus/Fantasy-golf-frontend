@@ -315,7 +315,7 @@ const MockDraftRecap = () => {
               <div>
                 {importSuccess ? (
                   <Link
-                    to={`/workspace/${importSuccess}`}
+                    to={`/lab/${importSuccess}`}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/15 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm font-semibold hover:bg-emerald-500/25 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

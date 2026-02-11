@@ -311,7 +311,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base sm:text-lg font-semibold font-display text-white">My Boards</h3>
                   {boards.length > 0 && (
-                    <Link to="/workspace" className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors">
+                    <Link to="/lab" className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors">
                       View All &rarr;
                     </Link>
                   )}
@@ -324,7 +324,7 @@ const Dashboard = () => {
                   </div>
                 ) : boards.length === 0 ? (
                   <Link
-                    to="/workspace"
+                    to="/lab"
                     className="block text-center py-4 text-white/30 text-sm hover:text-white/50 transition-colors"
                   >
                     Create your first draft board &rarr;
@@ -334,7 +334,7 @@ const Dashboard = () => {
                     {boards.slice(0, 3).map(board => (
                       <Link
                         key={board.id}
-                        to={`/workspace/${board.id}`}
+                        to={`/lab/${board.id}`}
                         className="flex items-center justify-between px-3 py-2 bg-white/[0.03] border border-white/[0.06] rounded-lg hover:bg-white/[0.06] transition-colors group"
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -416,14 +416,14 @@ const Dashboard = () => {
                     </div>
                   </Link>
 
-                  <Link to="/workspace" className="quick-action-btn group">
+                  <Link to="/lab" className="quick-action-btn group">
                     <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                       <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm">My Workspace</p>
+                      <p className="text-white font-medium text-sm">The Lab</p>
                       <p className="text-text-muted text-xs">Draft boards & rankings</p>
                     </div>
                   </Link>

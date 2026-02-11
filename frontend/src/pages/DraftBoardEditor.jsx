@@ -226,7 +226,7 @@ export default function DraftBoardEditor() {
       <div className="h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-400 text-sm mb-2">{error}</p>
-          <a href="/workspace" className="text-gold text-sm hover:underline">Back to Workspace</a>
+          <a href="/lab" className="text-gold text-sm hover:underline">Back to The Lab</a>
         </div>
       </div>
     )

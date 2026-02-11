@@ -65,7 +65,7 @@ export default function DecisionJournal() {
           <h1 className="text-xl font-bold text-white">Decision Journal</h1>
           <p className="text-xs text-white/40 mt-0.5">Your board activity history</p>
         </div>
-        <Link to="/workspace" className="text-xs text-gold hover:underline">Boards</Link>
+        <Link to="/lab" className="text-xs text-gold hover:underline">The Lab</Link>
       </div>
 
       {/* Sport filter */}
@@ -94,7 +94,7 @@ export default function DecisionJournal() {
         <div className="text-center py-16">
           <p className="text-sm text-white/40">No board activity yet</p>
           <p className="text-xs text-white/25 mt-1">Create a board and start ranking players to build your journal</p>
-          <Link to="/workspace" className="inline-block mt-3 text-xs text-gold hover:underline">Go to Workspace</Link>
+          <Link to="/lab" className="inline-block mt-3 text-xs text-gold hover:underline">Go to The Lab</Link>
         </div>
       ) : (
         <div className="space-y-6">

@@ -2630,6 +2630,10 @@ model DraftBoard {
   boardType      String   @default("overall") // overall, qb, rb, wr, te
   isPublished    Boolean  @default(false)
   publishedAt    DateTime?
+  leagueType     String?  @map("league_type")
+  teamCount      Int?     @map("team_count")
+  draftType      String?  @map("draft_type")
+  rosterConfig   Json?    @map("roster_config")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   entries        DraftBoardEntry[]

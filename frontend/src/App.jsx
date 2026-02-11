@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { AuthProvider } from './context/AuthContext'
@@ -64,11 +64,16 @@ import NflTeamDetail from './pages/NflTeamDetail'
 import NflCompare from './pages/NflCompare'
 import NflLeaderboards from './pages/NflLeaderboards'
 import GamedayPortal from './pages/GamedayPortal'
-// Workspace
+// The Lab (formerly Workspace)
 import DraftBoards from './pages/DraftBoards'
 import DraftBoardEditor from './pages/DraftBoardEditor'
 import WatchList from './pages/WatchList'
 import DecisionJournal from './pages/DecisionJournal'
+
+function WorkspaceRedirect() {
+  const location = useLocation()
+  return <Navigate to={location.pathname.replace(/^\/workspace/, '/lab') + location.search} replace />
+}
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import CategoryStandings from './pages/CategoryStandings'
@@ -314,9 +319,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* Workspace */}
+          {/* The Lab (formerly Workspace) */}
           <Route
-            path="/workspace"
+            path="/lab"
             element={
               <ProtectedRoute>
                 <DraftBoards />
@@ -324,7 +329,7 @@ function App() {
             }
           />
           <Route
-            path="/workspace/watch-list"
+            path="/lab/watch-list"
             element={
               <ProtectedRoute>
                 <WatchList />
@@ -332,7 +337,7 @@ function App() {
             }
           />
           <Route
-            path="/workspace/journal"
+            path="/lab/journal"
             element={
               <ProtectedRoute>
                 <DecisionJournal />
@@ -340,13 +345,15 @@ function App() {
             }
           />
           <Route
-            path="/workspace/:boardId"
+            path="/lab/:boardId"
             element={
               <ProtectedRoute>
                 <DraftBoardEditor />
               </ProtectedRoute>
             }
           />
+          {/* Redirect old /workspace/* URLs to /lab/* */}
+          <Route path="/workspace/*" element={<WorkspaceRedirect />} />
           {/* Admin Dashboard */}
           <Route
             path="/admin"

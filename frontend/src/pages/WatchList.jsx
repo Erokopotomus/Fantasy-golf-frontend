@@ -38,7 +38,7 @@ export default function WatchList() {
           <h1 className="text-xl font-bold text-white">Watch List</h1>
           <p className="text-xs text-white/40 mt-0.5">{entries.length} players tracked</p>
         </div>
-        <Link to="/workspace" className="text-xs text-gold hover:underline">Boards</Link>
+        <Link to="/lab" className="text-xs text-gold hover:underline">The Lab</Link>
       </div>
 
       {/* Sport filter */}

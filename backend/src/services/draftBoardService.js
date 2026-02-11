@@ -99,10 +99,16 @@ async function logActivity(boardId, userId, action, playerId, details) {
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
-async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr', boardType = 'overall', season = 2026, startFrom = 'scratch' }) {
+async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr', boardType = 'overall', season = 2026, startFrom = 'scratch', leagueType, teamCount, draftType, rosterConfig }) {
   // Create the board first
   const board = await prisma.draftBoard.create({
-    data: { userId, name, sport, scoringFormat, boardType, season },
+    data: {
+      userId, name, sport, scoringFormat, boardType, season,
+      ...(leagueType && { leagueType }),
+      ...(teamCount && { teamCount }),
+      ...(draftType && { draftType }),
+      ...(rosterConfig && { rosterConfig }),
+    },
   })
 
   // Log board creation
@@ -193,20 +199,43 @@ async function listBoards(userId) {
   const boards = await prisma.draftBoard.findMany({
     where: { userId },
     orderBy: { updatedAt: 'desc' },
-    include: { _count: { select: { entries: true } } },
+    include: {
+      _count: { select: { entries: true } },
+      entries: {
+        select: { player: { select: { nflPosition: true } } },
+      },
+    },
   })
-  return boards.map(b => ({
-    id: b.id,
-    name: b.name,
-    sport: b.sport,
-    scoringFormat: b.scoringFormat,
-    boardType: b.boardType,
-    season: b.season,
-    isPublished: b.isPublished,
-    playerCount: b._count.entries,
-    createdAt: b.createdAt,
-    updatedAt: b.updatedAt,
-  }))
+  return boards.map(b => {
+    // Compute position coverage for NFL boards
+    let positionCoverage = null
+    if (b.sport === 'nfl' && b.entries.length > 0) {
+      const positions = b.entries.map(e => e.player?.nflPosition).filter(Boolean)
+      const posSet = new Set(positions)
+      const tracked = ['QB', 'RB', 'WR', 'TE']
+      positionCoverage = {
+        covered: tracked.filter(p => posSet.has(p)).length,
+        total: tracked.length,
+        positions: Object.fromEntries(tracked.map(p => [p, positions.filter(pos => pos === p).length])),
+      }
+    }
+    return {
+      id: b.id,
+      name: b.name,
+      sport: b.sport,
+      scoringFormat: b.scoringFormat,
+      boardType: b.boardType,
+      season: b.season,
+      isPublished: b.isPublished,
+      leagueType: b.leagueType,
+      teamCount: b.teamCount,
+      draftType: b.draftType,
+      playerCount: b._count.entries,
+      positionCoverage,
+      createdAt: b.createdAt,
+      updatedAt: b.updatedAt,
+    }
+  })
 }
 
 async function getBoard(boardId, userId) {
@@ -260,7 +289,7 @@ async function getBoard(boardId, userId) {
 
 async function updateBoard(boardId, userId, data) {
   await assertOwnership(boardId, userId)
-  const allowed = ['name', 'scoringFormat', 'boardType', 'isPublished']
+  const allowed = ['name', 'scoringFormat', 'boardType', 'isPublished', 'leagueType', 'teamCount', 'draftType', 'rosterConfig']
   const update = {}
   for (const key of allowed) {
     if (data[key] !== undefined) update[key] = data[key]
