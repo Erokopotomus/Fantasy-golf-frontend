@@ -615,6 +615,11 @@ const MockDraftRoom = () => {
   const [autoPickCountdown, setAutoPickCountdown] = useState(0)
   const autoPickCountdownRef = useRef(null)
 
+  // Board integration
+  const [boardEntries, setBoardEntries] = useState([])
+  const [tierAlert, setTierAlert] = useState(null)
+  const boardQueueInitRef = useRef(false)
+
   // Load config
   useEffect(() => {
     const stored = sessionStorage.getItem('mockDraftConfig')
@@ -624,6 +629,17 @@ const MockDraftRoom = () => {
     }
     setConfig(JSON.parse(stored))
   }, [navigate])
+
+  // Load board entries if boardId is set
+  useEffect(() => {
+    if (!config?.boardId) return
+    api.getDraftBoard(config.boardId)
+      .then(data => {
+        const entries = data.board?.entries || []
+        setBoardEntries(entries.sort((a, b) => a.rank - b.rank))
+      })
+      .catch(() => setBoardEntries([]))
+  }, [config])
 
   // Fetch real player data from API (falls back to MOCK_PLAYERS/MOCK_NFL_PLAYERS if unavailable)
   useEffect(() => {
@@ -729,6 +745,38 @@ const MockDraftRoom = () => {
       return { ...p, sgOTT, sgAPP, sgATG, sgPutt, top10, cutsPct, form, tournaments, headshot: null, wins: winsEst, top5s: top5sEst, top10s: top10sEst, top25s: top25sEst, cutsMade: cutsMadeEst, earnings: 0 }
     })
   }, [apiPlayers, config])
+
+  // Board lookup — maps player IDs and names to board entries
+  const boardLookup = useMemo(() => {
+    const byId = new Map()
+    const byName = new Map()
+    for (const e of boardEntries) {
+      byId.set(e.playerId, e)
+      if (e.player?.name) byName.set(e.player.name.toLowerCase(), e)
+    }
+    return { byId, byName }
+  }, [boardEntries])
+
+  const getBoardEntry = useCallback((player) => {
+    return boardLookup.byId.get(player.id) || boardLookup.byName.get(player.name?.toLowerCase())
+  }, [boardLookup])
+
+  // Pre-populate queue from board entries (once)
+  useEffect(() => {
+    if (boardQueueInitRef.current || boardEntries.length === 0 || allPlayers.length === 0 || isStarted) return
+    boardQueueInitRef.current = true
+    const boardQueue = []
+    for (const entry of boardEntries) {
+      const player = allPlayers.find(p =>
+        p.id === entry.playerId || p.name?.toLowerCase() === entry.player?.name?.toLowerCase()
+      )
+      if (player) boardQueue.push(player)
+    }
+    if (boardQueue.length > 0) {
+      setQueue(boardQueue)
+      queueRef.current = boardQueue
+    }
+  }, [boardEntries, allPlayers, isStarted])
 
   // Keep allPlayers ref in sync for timer/AI callbacks
   allPlayersRef.current = allPlayers
@@ -940,6 +988,34 @@ const MockDraftRoom = () => {
     }
     prevIsCompleteRef.current = isComplete
   }, [isComplete, playDraftComplete, config])
+
+  // Tier depletion alerts — fires when a board tier is nearly or fully depleted
+  const prevPickCountRef = useRef(0)
+  useEffect(() => {
+    if (boardEntries.length === 0 || picks.length === 0 || picks.length === prevPickCountRef.current) return
+    prevPickCountRef.current = picks.length
+    const lastPick = picks[picks.length - 1]
+    const draftedEntry = boardEntries.find(e =>
+      e.playerId === lastPick.playerId ||
+      e.player?.name?.toLowerCase() === lastPick.playerName?.toLowerCase()
+    )
+    if (!draftedEntry?.tier) return
+    const tier = draftedEntry.tier
+    const tierEntries = boardEntries.filter(e => e.tier === tier)
+    if (tierEntries.length <= 1) return // single-player tiers don't alert
+    const draftedSet = new Set(picks.map(p => p.playerId))
+    const draftedNames = new Set(picks.map(p => p.playerName?.toLowerCase()))
+    const availableInTier = tierEntries.filter(e =>
+      !draftedSet.has(e.playerId) && !draftedNames.has(e.player?.name?.toLowerCase())
+    )
+    if (availableInTier.length <= 1 && availableInTier.length < tierEntries.length - 1) {
+      const msg = availableInTier.length === 0
+        ? `Tier ${tier} depleted!`
+        : `Tier ${tier}: only ${availableInTier.length} player left!`
+      setTierAlert(msg)
+      setTimeout(() => setTierAlert(null), 4000)
+    }
+  }, [picks, boardEntries])
 
   // Auto-pick: snake — immediately pick after short delay when it's user's turn
   useEffect(() => {
@@ -2122,7 +2198,20 @@ const MockDraftRoom = () => {
                               <span className="text-sm flex-shrink-0">{player.flag}</span>
                             )
                           )}
-                          <span className="text-white text-sm truncate">{player.name}</span>
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="text-white text-sm truncate">{player.name}</span>
+                            {getBoardEntry(player) && (
+                              <>
+                                <span className="text-[9px] text-gold/50 font-mono shrink-0">B{getBoardEntry(player).rank}</span>
+                                {getBoardEntry(player).tags?.[0] && (
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                    getBoardEntry(player).tags[0] === 'target' ? 'bg-emerald-400' :
+                                    getBoardEntry(player).tags[0] === 'sleeper' ? 'bg-gold' : 'bg-red-400'
+                                  }`} />
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
                         {isNfl ? (
                           <>
@@ -2229,6 +2318,7 @@ const MockDraftRoom = () => {
             <div className="hidden lg:flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
               {[
                 { key: 'queue', label: `Queue (${queue.length})` },
+                ...(boardEntries.length > 0 ? [{ key: 'myboard', label: 'Board' }] : []),
                 { key: 'myteam', label: `My Team (${userPicks.length}/${config.rosterSize})` },
                 { key: 'picks', label: 'Picks' },
                 { key: 'chat', label: 'Chat' },
@@ -2382,6 +2472,62 @@ const MockDraftRoom = () => {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* === BOARD TAB (workspace cheat sheet) === */}
+            {boardEntries.length > 0 && (activeTab === 'board' && bottomTab === 'myboard') && (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto min-h-0 p-3">
+                  <div className="space-y-0.5">
+                    {boardEntries.map((entry, i) => {
+                      const tier = entry.tier
+                      const prevTier = i > 0 ? boardEntries[i - 1].tier : null
+                      const showTierDivider = tier && tier !== prevTier
+                      const isDrafted = picks.some(p =>
+                        p.playerId === entry.playerId ||
+                        p.playerName?.toLowerCase() === entry.player?.name?.toLowerCase()
+                      )
+                      const tag = entry.tags?.[0]
+                      return (
+                        <div key={entry.id}>
+                          {showTierDivider && (
+                            <div className="text-[10px] font-bold uppercase text-white/20 tracking-wider mt-3 mb-1 px-2">
+                              Tier {tier}
+                            </div>
+                          )}
+                          <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
+                            isDrafted ? 'opacity-30' : 'hover:bg-dark-tertiary/30'
+                          }`}>
+                            <span className="text-gold text-xs font-bold w-5 text-center">{entry.rank}</span>
+                            {isNfl && entry.player?.nflPosition && (
+                              <span className={`text-[9px] font-bold px-1 py-0.5 rounded flex-shrink-0 ${NFL_POS_COLORS[entry.player.nflPosition] || ''}`}>
+                                {entry.player.nflPosition}
+                              </span>
+                            )}
+                            <span className={`text-sm flex-1 truncate ${isDrafted ? 'text-text-muted line-through' : 'text-white'}`}>
+                              {entry.player?.name || 'Unknown'}
+                            </span>
+                            {tag && (
+                              <span className={`text-[8px] font-bold uppercase px-1 py-0.5 rounded shrink-0 ${
+                                tag === 'target' ? 'bg-emerald-500/20 text-emerald-400' :
+                                tag === 'sleeper' ? 'bg-gold/20 text-gold' :
+                                'bg-red-500/20 text-red-400'
+                              }`}>
+                                {tag}
+                              </span>
+                            )}
+                            {isDrafted && (
+                              <span className="text-[9px] text-text-muted font-mono shrink-0">
+                                {picks.find(p => p.playerId === entry.playerId || p.playerName?.toLowerCase() === entry.player?.name?.toLowerCase())?.teamName?.split(' ')[0]}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -2554,6 +2700,13 @@ const MockDraftRoom = () => {
           isDrafted={!!selectedPlayer._drafted}
           sport={config?.sport}
         />
+      )}
+
+      {/* Tier depletion alert toast */}
+      {tierAlert && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-orange/90 text-white text-sm font-semibold rounded-lg shadow-lg animate-pulse">
+          {tierAlert}
+        </div>
       )}
     </div>
   )

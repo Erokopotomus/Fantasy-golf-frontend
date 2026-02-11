@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import api from '../services/api'
 
 const GOLF_TEAM_NAMES = [
   'Birdie Brigade', 'Eagle Eyes', 'Fairway Legends', 'The Caddies',
@@ -43,6 +44,15 @@ const MockDraft = () => {
     userPosition: 1,
   })
   const [starting, setStarting] = useState(false)
+  const [boards, setBoards] = useState([])
+  const [selectedBoardId, setSelectedBoardId] = useState(null)
+
+  useEffect(() => {
+    setSelectedBoardId(null)
+    api.getDraftBoards()
+      .then(data => setBoards((data.boards || []).filter(b => b.sport === sport)))
+      .catch(() => setBoards([]))
+  }, [sport])
 
   const handleSportChange = (newSport) => {
     setSport(newSport)
@@ -70,6 +80,7 @@ const MockDraft = () => {
       sport,
       teams,
       isMockDraft: true,
+      boardId: selectedBoardId || null,
     }
 
     sessionStorage.setItem('mockDraftConfig', JSON.stringify(mockConfig))
@@ -246,6 +257,28 @@ const MockDraft = () => {
                 </div>
               )}
 
+              {/* Draft Board (Cheat Sheet) */}
+              {boards.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-3">Draft Board (Cheat Sheet)</label>
+                  <select
+                    value={selectedBoardId || ''}
+                    onChange={(e) => setSelectedBoardId(e.target.value || null)}
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+                  >
+                    <option value="">None — use default rankings</option>
+                    {boards.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.playerCount} players)
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-text-muted text-xs mt-1.5">
+                    Your board will pre-load your queue and show as a live cheat sheet
+                  </p>
+                </div>
+              )}
+
               {/* Draft Position (Snake only) */}
               {settings.draftType === 'snake' && (
                 <div>
@@ -345,6 +378,12 @@ const MockDraft = () => {
                 <p className="text-text-muted text-xs">Pick Timer</p>
                 <p className="text-white font-medium">{settings.pickTimer}s</p>
               </div>
+              {selectedBoardId && (
+                <div>
+                  <p className="text-text-muted text-xs">Board</p>
+                  <p className="text-gold font-medium truncate">{boards.find(b => b.id === selectedBoardId)?.name}</p>
+                </div>
+              )}
             </div>
           </Card>
 

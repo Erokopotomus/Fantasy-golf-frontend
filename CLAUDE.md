@@ -1223,14 +1223,12 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **Enhanced `createBoard()`:** `startFrom` param: `clutch` (pre-loads 200 ranked players with auto-tiers), `adp` (ADP-ordered), `previous` (copies most recent board with entries), `scratch` (empty).
   - **DraftBoards.jsx** upgraded: 2-step create modal (Name+Sport+Scoring → Start From options with radio cards). Auto-navigates to board editor on create.
   - **Data:** 465 NFL players ranked (PPR/Half/Std), 250 golf players ranked. 868 Sleeper IDs linked.
-- [ ] Step 4 continued: Full Board Editor + Tags + Divergence
-  - **Step 4B:** Tags system (Target/Sleeper/Avoid) + reason chips from `entry-points-addendum.md`. Structured tags on DraftBoardEntry, chip row on player move, tag filter bar.
-  - **Step 4C:** Divergence tracking — baseline rank stored at creation, divergence indicator on each row, "Your Biggest Bets" summary card.
-- [ ] Step 5: Workspace — Watch List + Position Rankings
-  - WatchListEntry model, star icon platform-wide, `/workspace/watch-list` page, position tab navigation on board editor.
-- [ ] Step 6: Workspace — Scouting Notes + Decision Journal
-  - Enhanced note editor with markdown + source tags, decision journal page at `/workspace/journal`.
-- [ ] Step 7: Board ↔ Draft Room integration — board as live cheat sheet, tier depletion alerts, post-draft grade.
+- [x] Step 4B+4C: Tags (Target/Sleeper/Avoid) + Reason Chips + Divergence Tracking — migration 21+22, tags/reasonChips/baselineRank on DraftBoardEntry, tag pills on BoardEntryRow, reason chip row on player move, tag filter bar, divergence badge, DivergenceSummary card.
+- [x] Step 5: Watch List + Position Rankings — WatchListEntry model, star icon on boards/profiles, `/workspace/watch-list` page, PositionTabBar for NFL on board editor.
+- [x] Step 6: Decision Journal — BoardActivity model, activity logging on moves/tags/notes/adds/removes, `/workspace/journal` page with chronological grouped feed.
+- [x] Step 7: Board ↔ Draft Room integration — board as live cheat sheet, tier depletion alerts, board-aware auto-pick.
+  - **MockDraft.jsx:** Board selector dropdown on setup page (fetches user's boards filtered by sport, saves boardId to mockConfig).
+  - **MockDraftRoom.jsx:** Board fetch on load, `boardLookup` memo (by ID + name), queue pre-populated from board entries, "Board" tab in side panel (tier dividers, tag badges, strike-through drafted, team name on drafted), board rank badge (`B#N`) + tag dot in player table rows, tier depletion alert toasts (fires when ≤1 player left in a tier), board-aware auto-pick (queue IS board order).
 - [ ] AI Coaching (former Phase 6 — more powerful after Feed + Workspace provide context)
 
 **Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced. **NFL game weather:** Same Open-Meteo hourly pipeline used for golf tournament rounds, keyed to NFL game venue coordinates + kickoff time windows. Wind/rain/temp affect kickers, deep-ball QBs/WRs, and overall game script. Need venue-to-coordinates mapping for all 32 stadiums (flag dome/retractable roof). Show on game preview pages + factor into fantasy projections.
