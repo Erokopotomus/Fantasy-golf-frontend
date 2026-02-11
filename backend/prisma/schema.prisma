@@ -63,6 +63,7 @@ model User {
   labInsight       LabInsightCache?
   labCheatSheets   LabCheatSheet[]
   opinionEvents    PlayerOpinionEvent[]
+  intelligenceProfiles UserIntelligenceProfile[]
 
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
@@ -2855,4 +2856,21 @@ model PlayerOpinionEvent {
 
   @@index([userId, playerId, createdAt])
   @@index([userId, sport, createdAt])
+}
+
+// ============ USER INTELLIGENCE PROFILE (Phase 6B) ============
+
+model UserIntelligenceProfile {
+  id              String   @id @default(cuid())
+  userId          String
+  sport           String
+  profileData     Json
+  dataConfidence  String   // LOW, MEDIUM, HIGH
+  generatedAt     DateTime @default(now())
+  expiresAt       DateTime
+
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, sport])
+  @@index([userId])
 }

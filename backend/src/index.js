@@ -41,6 +41,7 @@ const projectionRoutes = require('./routes/projections')
 const captureRoutes = require('./routes/captures')
 const labInsightRoutes = require('./routes/labInsights')
 const cheatSheetRoutes = require('./routes/cheatSheets')
+const intelligenceRoutes = require('./routes/intelligence')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -141,6 +142,7 @@ app.use('/api/projections', projectionRoutes)
 app.use('/api/lab/captures', captureRoutes)
 app.use('/api/lab', labInsightRoutes)
 app.use('/api/lab/cheatsheet', cheatSheetRoutes)
+app.use('/api/intelligence', intelligenceRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -846,6 +848,44 @@ httpServer.listen(PORT, () => {
     }, { timezone: 'America/New_York' })
 
     console.log('[Cron] Capture outcome linking scheduled (Jan 15 + Nov 1)')
+  }
+
+  // ── Phase 6B: Intelligence Profile Regeneration ──
+  {
+    const patternEngine = require('./services/patternEngine')
+
+    // Weekly Wednesday 4 AM ET — regenerate intelligence profiles for active users
+    cron.schedule('0 4 * * 3', async () => {
+      console.log(`[Cron:intelligence] ${new Date().toISOString()} — Regenerating user intelligence profiles`)
+      try {
+        const activeUsers = await prisma.user.findMany({
+          where: {
+            OR: [
+              { labCaptures: { some: { createdAt: { gte: new Date(Date.now() - 30 * 86400000) } } } },
+              { predictions: { some: { createdAt: { gte: new Date(Date.now() - 30 * 86400000) } } } },
+              { boardActivities: { some: { createdAt: { gte: new Date(Date.now() - 30 * 86400000) } } } },
+            ],
+          },
+          select: { id: true },
+        })
+        let generated = 0
+        for (const user of activeUsers) {
+          for (const sport of ['nfl', 'golf']) {
+            try {
+              await patternEngine.generateUserProfile(user.id, sport)
+              generated++
+            } catch (err) {
+              console.error(`[Cron:intelligence] Failed for user ${user.id}/${sport}:`, err.message)
+            }
+          }
+        }
+        console.log(`[Cron:intelligence] Done: ${generated} profiles regenerated for ${activeUsers.length} users`)
+      } catch (err) {
+        console.error(`[Cron:intelligence] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] Intelligence profile regeneration scheduled (Wed 4 AM)')
   }
 
   // Trade review processor — runs every 15 minutes
