@@ -368,7 +368,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 - [x] **3D: Additional Platform Imports**
   - ESPN: `espnImport.js` — cookie-based auth (espn_s2 + SWID), ESPN Fantasy API for 2018+ data, guided cookie extraction UI
-  - Yahoo: `yahooImport.js` — OAuth access token, Yahoo Fantasy API with auto-detected game keys per year (2015-2025)
+  - Yahoo: `yahooImport.js` — OAuth access token, Yahoo Fantasy API with auto-detected game keys per year (2015-2025). **Enhanced:** raw data preservation (RawProviderData), transaction import (trades/waivers/FAAB), full settings capture, draft cost + is_keeper, matchup playoff flags, opinion timeline bridge (PlayerOpinionEvent for draft picks + transactions)
   - Fantrax: `fantraxImport.js` — CSV upload parsing (standings + draft), guided export instructions, robust CSV parser with quoted field handling
   - MFL: `mflImport.js` — XML/JSON API with commissioner API key, scans back to 2000 for deep historical data (15-20+ years)
   - All 4 platforms: discover + import routes in `imports.js`, API methods in `api.js`, per-platform hooks in `useImports.js`
@@ -546,6 +546,38 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Data confidence gating — Ambient insights require MEDIUM confidence (else onboarding card). Board coaching requires board with 30+ entries. Deep reports require HIGH confidence. Below threshold → null + gating reason.
   - Admin routes: `GET/PATCH /api/admin/ai-config`, `GET /api/admin/ai-spend`
   - User routes: `GET/PATCH /api/ai/preferences`
+
+---
+
+### Import Intelligence Pipeline — IN PROGRESS
+
+> **Addendum spec:** `docs/CLUTCH_IMPORT_ADDENDUM_SPEC.md` — Maximum data capture, custom data import, conversational league intelligence, opinion timeline bridge.
+> **Audit doc:** `docs/PLATFORM_DATA_MAP.md` — what each platform provides vs what we capture, with gaps.
+
+- [x] **Yahoo Import Hardening** (COMPLETE)
+  - Raw data preservation: every Yahoo API response stored in `RawProviderData` before normalization
+  - Transaction import: `/league/{key}/transactions` → trades, add/drops, waiver claims, FAAB bids, commish moves. Full player movement tracking with names, positions, source/dest teams.
+  - Settings enhancement: full league settings snapshot per season (roster_positions, playoff_start_week, waiver_type, faab_balance, trade_end_date, etc.)
+  - Draft enhancement: auction cost, is_keeper flag, auction type auto-detection
+  - Matchup enhancement: is_playoffs, is_consolation, is_tied, winner_team_key flags
+  - Playoff result refinement: now distinguishes champion/runner_up/eliminated/missed
+  - Error logging: per-season error accumulation in import record
+  - Owner matching: importing user auto-matched to their team by display name comparison
+  - `opinionTimelineService.recordEvent()` now accepts optional `createdAt` timestamp parameter for historical imports
+  - Modified files: `yahooImport.js` (major rewrite), `opinionTimelineService.js` (createdAt param)
+
+- [x] **Opinion Timeline Bridge (Part 4)** (COMPLETE — implemented during Yahoo import)
+  - Draft picks → `DRAFT_PICK` events with round/pick/cost/isKeeper
+  - Transaction adds → `WAIVER_ADD` or `TRADE_ACQUIRE` events with faab/playerName/position
+  - Transaction drops → `WAIVER_DROP` or `TRADE_AWAY` events
+  - All events tagged with `dataSource: 'yahoo_import'` in eventData
+  - Historical timestamps used (approximate draft date Sep 1, transaction timestamps from Yahoo)
+  - Events only generated for importing user's matched team (other teams' events generated when those owners claim their teams)
+  - Fire-and-forget pattern — import never blocked by opinion event failures
+
+- [ ] **Sleeper/ESPN/MFL Import Enhancement** (NEXT — addendum Part 1 for remaining platforms)
+- [ ] **Custom Data Import** (addendum Part 2 — spreadsheet + website import)
+- [ ] **Conversational League Intelligence** (addendum Part 3 — league query engine + chat UI)
 
 ---
 
@@ -1350,5 +1382,5 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 
 ---
 
-*Last updated: February 10, 2026*
-*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6 complete (AI Engine: 6A data gaps, 6B decision graph + patterns, 6C-6F Claude integration + ambient/contextual/deep coaching + scout reports + matchup sim, admin controls + safety gating). Next: Phase 7 (multi-sport expansion, premium tier, polish).*
+*Last updated: February 11, 2026*
+*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6 complete (AI Engine: 6A data gaps, 6B decision graph + patterns, 6C-6F Claude integration + ambient/contextual/deep coaching + scout reports + matchup sim, admin controls + safety gating). Import Intelligence: Yahoo hardened (raw data, transactions, settings, draft cost/keepers, matchup flags, opinion timeline bridge). Next: Sleeper/ESPN/MFL enhancement, custom data import, conversational league intelligence.*

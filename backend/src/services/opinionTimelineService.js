@@ -10,13 +10,21 @@ const prisma = new PrismaClient()
 
 /**
  * Record an opinion event. All calls should be fire-and-forget.
+ * @param {string} userId
+ * @param {string} playerId
+ * @param {string} sport
+ * @param {string} eventType
+ * @param {object} eventData
+ * @param {string|null} sourceId
+ * @param {string|null} sourceType
+ * @param {Date|null} createdAt - Optional historical timestamp (for imports)
  */
-async function recordEvent(userId, playerId, sport, eventType, eventData, sourceId, sourceType) {
+async function recordEvent(userId, playerId, sport, eventType, eventData, sourceId, sourceType, createdAt) {
   try {
     // Detect sentiment from event data or type
     let sentiment = eventData.sentiment || null
     if (!sentiment) {
-      if (['WATCH_ADD', 'BOARD_ADD', 'WAIVER_ADD', 'TRADE_ACQUIRE', 'LINEUP_START'].includes(eventType)) {
+      if (['WATCH_ADD', 'BOARD_ADD', 'WAIVER_ADD', 'TRADE_ACQUIRE', 'LINEUP_START', 'DRAFT_PICK'].includes(eventType)) {
         sentiment = 'positive'
       } else if (['WATCH_REMOVE', 'BOARD_REMOVE', 'WAIVER_DROP', 'TRADE_AWAY', 'LINEUP_BENCH'].includes(eventType)) {
         sentiment = 'negative'
@@ -28,18 +36,23 @@ async function recordEvent(userId, playerId, sport, eventType, eventData, source
       }
     }
 
-    await prisma.playerOpinionEvent.create({
-      data: {
-        userId,
-        playerId,
-        sport: sport || 'unknown',
-        eventType,
-        eventData,
-        sentiment,
-        sourceId: sourceId || null,
-        sourceType: sourceType || null,
-      },
-    })
+    const data = {
+      userId,
+      playerId,
+      sport: sport || 'unknown',
+      eventType,
+      eventData,
+      sentiment,
+      sourceId: sourceId || null,
+      sourceType: sourceType || null,
+    }
+
+    // Allow overriding createdAt for historical imports
+    if (createdAt) {
+      data.createdAt = createdAt
+    }
+
+    await prisma.playerOpinionEvent.create({ data })
   } catch (err) {
     // Fire-and-forget — never throw
     console.error(`[OpinionTimeline] Failed to record ${eventType} for player ${playerId}:`, err.message)
