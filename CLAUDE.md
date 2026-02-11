@@ -1119,6 +1119,7 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │   │   │   ├── draft/           ← DraftBoard, DraftHeader, PlayerPool, etc.
 │   │   │   ├── nfl/             ← NflWeeklyScoring.jsx (NFL scoring view)
 │   │   │   ├── feed/            ← FeedCard.jsx, FeedList.jsx
+│   │   │   ├── workspace/       ← The Lab components (BoardHeader, BoardEntryRow, AddToBoardModal, etc.)
 │   │   │   └── dashboard/       ← LeagueCard, etc.
 │   │   ├── pages/               ← Route pages
 │   │   ├── hooks/               ← Custom React hooks
@@ -1133,11 +1134,11 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 
 ## Strategic Architecture Update (Feb 2026)
 
-> Read `/docs/CLUTCH_STRATEGY_UPDATE_FEB2026.md` for the full Feed + Workspace architecture, seasonal flywheel, and revised build priorities.
+> Read `/docs/CLUTCH_STRATEGY_UPDATE_FEB2026.md` for the full Feed + The Lab (formerly Workspace) architecture, seasonal flywheel, and revised build priorities.
 
 ### Three Pillars + Foundation
 - **FEED**: Personalized data stream (why users open the app daily)
-- **WORKSPACE**: Interactive tools — draft boards, rankings, notes (where users' work lives)
+- **THE LAB** (formerly Workspace): Interactive tools — draft boards, rankings, notes, watch list, decision journal (where users' work lives). Routes: `/lab`, `/lab/:boardId`, `/lab/watch-list`, `/lab/journal`.
 - **PROVE IT**: Prediction tracking and reputation (why users come back)
 - **DATA LAYER** (foundation): Player pages, team pages, stat leaderboards, historical data (everything sits on this)
 
@@ -1176,7 +1177,7 @@ The Clutch Rating is now **sport-specific primary** with a **global prestige sec
 - `clutch_user_sport_tags` — per-user sport expertise tags for discovery (e.g., "NFL Sharp", "Golf Expert")
 
 ### Current Build Priority
-Data Layer (Steps 1-3 done) → Workspace Draft Board (Step 4) → Watch List + Position Rankings (Step 5) → Scouting Notes (Step 6) → AI Coaching
+Data Layer Steps 1-7 done → The Lab Phase 1 done (hub redesign) → AI Coaching (next)
 
 ### Key Principle: Progressive Disclosure
 Default UX is simple and clean (Informed Fan). Depth is always one click away (Grinder, Dynasty Nerd). Never overwhelm, never underserve.
@@ -1215,7 +1216,7 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **PlayerProfile.jsx + NflPlayerDetail.jsx:** "Add to Board" gold button, gated by auth.
   - **MockDraftRecap.jsx:** "Import to Board" creates new board from mock draft results (auto-names, detects sport, ranks by pick order).
   - **Dashboard.jsx:** "My Boards" widget (3 recent boards, sport badges, player counts, "View All →", empty state CTA). "My Workspace" Quick Action added.
-  - **MobileNav.jsx:** "Boards" tab replaces Prove It, links to `/workspace`.
+  - **MobileNav.jsx:** "Lab" tab replaces Prove It, links to `/lab`.
 - [x] Step 4A: Workspace — "Start From" Board Creation (see `docs/workspace-master-plan.md`)
   - **Backend:** `projectionSync.js` — fetches Sleeper players (ID linking), uses NflPlayerGame PPG as primary signal (offseason), Sleeper ADP as secondary, blends 60/40 into "Clutch Rankings". Golf: DataGolf + ClutchScore (CPI/Form). Stores in `ClutchProjection` model.
   - **ClutchProjection Prisma model** + migration `19_clutch_projections`: sport, scoringFormat, season, week, playerId, projectedPts, adpRank, clutchRank, position, metadata, computedAt.
@@ -1224,11 +1225,21 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **DraftBoards.jsx** upgraded: 2-step create modal (Name+Sport+Scoring → Start From options with radio cards). Auto-navigates to board editor on create.
   - **Data:** 465 NFL players ranked (PPR/Half/Std), 250 golf players ranked. 868 Sleeper IDs linked.
 - [x] Step 4B+4C: Tags (Target/Sleeper/Avoid) + Reason Chips + Divergence Tracking — migration 21+22, tags/reasonChips/baselineRank on DraftBoardEntry, tag pills on BoardEntryRow, reason chip row on player move, tag filter bar, divergence badge, DivergenceSummary card.
-- [x] Step 5: Watch List + Position Rankings — WatchListEntry model, star icon on boards/profiles, `/workspace/watch-list` page, PositionTabBar for NFL on board editor.
-- [x] Step 6: Decision Journal — BoardActivity model, activity logging on moves/tags/notes/adds/removes, `/workspace/journal` page with chronological grouped feed.
+- [x] Step 5: Watch List + Position Rankings — WatchListEntry model, star icon on boards/profiles, `/lab/watch-list` page, PositionTabBar for NFL on board editor.
+- [x] Step 6: Decision Journal — BoardActivity model, activity logging on moves/tags/notes/adds/removes, `/lab/journal` page with chronological grouped feed.
 - [x] Step 7: Board ↔ Draft Room integration — board as live cheat sheet, tier depletion alerts, board-aware auto-pick.
   - **MockDraft.jsx:** Board selector dropdown on setup page (fetches user's boards filtered by sport, saves boardId to mockConfig).
   - **MockDraftRoom.jsx:** Board fetch on load, `boardLookup` memo (by ID + name), queue pre-populated from board entries, "Board" tab in side panel (tier dividers, tag badges, strike-through drafted, team name on drafted), board rank badge (`B#N`) + tag dot in player table rows, tier depletion alert toasts (fires when ≤1 player left in a tier), board-aware auto-pick (queue IS board order).
+- [x] The Lab Phase 1: Hub Redesign — Renamed "Workspace" → "The Lab" across all surfaces.
+  - **Schema:** Migration `23_lab_board_fields` — adds `leagueType`, `teamCount`, `draftType`, `rosterConfig` (all nullable) to DraftBoard.
+  - **Backend:** `listBoards()` returns `positionCoverage` (NFL: QB/RB/WR/TE counts + covered/total), `leagueType`, `teamCount`, `draftType`. `createBoard()` + `updateBoard()` accept new league context fields. POST route destructures new fields.
+  - **Routes:** All `/workspace` routes changed to `/lab` in App.jsx. `WorkspaceRedirect` component catches `/workspace/*` → redirects to `/lab/*` preserving path + query.
+  - **Navigation:** Desktop Navbar "Workspace" → "The Lab", MobileNav bottom tab "Boards" → "Lab", active checks updated to `/lab`.
+  - **Internal links:** 14 files updated — BoardHeader, DraftBoardEditor, Dashboard, WatchList, DecisionJournal, MockDraftRecap all point to `/lab`. `components/workspace/` directory stays (file-system only, not user-visible).
+  - **DraftBoards.jsx (full rewrite):** Hub layout with 6 sections: (1) Header ("THE LAB" + subtitle + New Board), (2) AI Insight Bar (gold-tinted placeholder, computes TE/QB coverage gaps), (3) Two-column readiness tracker + recent captures (journal), (4) Enhanced board card grid (league context pills, NFL position coverage pills green/dim, relative time, status CTA: Start Ranking/Continue/Ready/Locked), (5) Watch List summary (3 players + count), (6) Decision Journal summary (3 entries + View All).
+  - **3-step creation flow:** Step 1 name+sport+scoring (unchanged), Step 2 league context (type/teams/draft type, all optional with Skip), Step 3 start from options (unchanged logic, renumbered).
+  - **Empty state:** Flask icon, "Welcome to The Lab" heading, dual CTAs (Create Board + Mock Draft link).
+  - **useDraftBoards.js:** Passes `leagueType`, `teamCount`, `draftType` through to createBoard.
 - [ ] AI Coaching (former Phase 6 — more powerful after Feed + Workspace provide context)
 
 **Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced. **NFL game weather:** Same Open-Meteo hourly pipeline used for golf tournament rounds, keyed to NFL game venue coordinates + kickoff time windows. Wind/rain/temp affect kickers, deep-ball QBs/WRs, and overall game script. Need venue-to-coordinates mapping for all 32 stadiums (flag dome/retractable roof). Show on game preview pages + factor into fantasy projections.
@@ -1257,16 +1268,19 @@ The Workspace "Start From" system pre-loads boards with projections so users cus
 - Golf: DataGolf skill estimates weighted by CPI + Form Score from `clutchMetrics.js`
 - **Transformation Rule:** Never expose "Sleeper projections" or "FFC ADP" to users. Always label as "Clutch Rankings."
 
-### Workspace Infrastructure (Already Built)
+### The Lab Infrastructure (Already Built)
+
+> Formerly "Workspace" — renamed to "The Lab" in Phase 1 hub redesign. Routes: `/lab`, `/lab/:boardId`, `/lab/watch-list`, `/lab/journal`. Old `/workspace/*` URLs auto-redirect.
 
 | Component | What It Does |
 |-----------|-------------|
-| `DraftBoard` + `DraftBoardEntry` Prisma models | Board + entries with rank, tier, notes. `boardType` (overall/qb/rb/wr/te), `scoringFormat`, `sport`, `isPublished`. |
-| `draftBoardService.js` | CRUD, bulk save, player enrichment (ClutchScore for golf, fantasy PPG for NFL). Batch loading to avoid N+1. |
-| `draftBoards.js` routes | 8 REST endpoints: list, create, get, update, delete, bulk save entries, add entry, remove entry, update notes. |
+| `DraftBoard` + `DraftBoardEntry` Prisma models | Board + entries with rank, tier, notes, tags, reasonChips, baselineRank. `boardType` (overall/qb/rb/wr/te), `scoringFormat`, `sport`, `isPublished`, `leagueType`, `teamCount`, `draftType`, `rosterConfig`. |
+| `draftBoardService.js` | CRUD, bulk save, player enrichment (ClutchScore for golf, fantasy PPG for NFL). `listBoards` returns `positionCoverage` for NFL. Batch loading to avoid N+1. |
+| `draftBoards.js` routes | 10 REST endpoints: list, create, get, update, delete, bulk save entries, add entry, remove entry, update notes, activity log. |
 | `useDraftBoardEditor.js` hook | Load board, debounced auto-save (1.5s), moveEntry, addPlayer, removePlayer, updateNotes, insertTierBreak, removeTierBreak. |
-| `useDraftBoards.js` hook | List all user boards. |
-| Workspace components | BoardHeader, BoardEntryRow (enriched), TierBreak, PlayerSearchPanel, PlayerNoteEditor, AddToBoardModal. |
+| `useDraftBoards.js` hook | List all user boards, createBoard with league context fields. |
+| `DraftBoards.jsx` (The Lab hub) | Full hub page: readiness tracker, AI insight bar, enhanced board cards (position coverage pills, league context, status CTA), watch list + journal summaries, 3-step creation flow, empty state. |
+| Lab components (`components/workspace/`) | BoardHeader, BoardEntryRow (enriched), TierBreak, PlayerSearchPanel, PlayerNoteEditor, AddToBoardModal, DivergenceSummary. |
 
 ### Competitive Positioning
 
@@ -1303,4 +1317,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 10, 2026*
-*Phases 1-3 complete. Phase 4 in progress. Data Layer Steps 1-3.8 + Step 4A complete. Step 4A: "Start From" Board Creation — `projectionSync.js` (Sleeper API + NflPlayerGame PPG + VBD blended rankings), `ClutchProjection` model, enhanced `createBoard()` with startFrom (clutch/adp/previous/scratch), 2-step create modal in DraftBoards.jsx, projections API + daily cron. 465 NFL players + 250 golf players ranked. VBD (Value Based Drafting) algorithm: per-position ranking → replacement-level PPG → points above replacement → blend with ADP. Position rank badges on board entries (RB3, QB1, etc.). Next: Step 4B (Tags + Reason Chips) → Step 4C (Divergence Tracking).*
+*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phase 1 complete (Workspace → The Lab rename, hub redesign, enhanced board cards, 3-step creation with league context, position coverage, readiness tracker, empty state). NFL Mock Draft complete. Next: AI Coaching.*
