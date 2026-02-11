@@ -1283,6 +1283,46 @@ class ApiService {
   async simulateMatchup(player1Id, player2Id, sport) {
     return this.request('/ai/simulate', { method: 'POST', body: JSON.stringify({ player1Id, player2Id, sport }) })
   }
+
+  // Custom Import (Addendum Part 2)
+  async uploadCustomSpreadsheet(file, leagueId) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('leagueId', leagueId)
+    const token = localStorage.getItem('clutch_token')
+    const response = await fetch(`${this.baseUrl}/import/custom/spreadsheet`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+      cache: 'no-store',
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error?.message || 'Upload failed')
+    return data
+  }
+
+  async importGoogleSheets(url, leagueId) {
+    return this.request('/import/custom/sheets-url', { method: 'POST', body: JSON.stringify({ url, leagueId }) })
+  }
+
+  async importWebsite(url, leagueId) {
+    return this.request('/import/custom/website', { method: 'POST', body: JSON.stringify({ url, leagueId }) })
+  }
+
+  async confirmCustomImport(previewId, overrides = {}, includedUrls = null) {
+    return this.request(`/import/custom/${previewId}/confirm`, {
+      method: 'POST',
+      body: JSON.stringify({ overrides, includedUrls }),
+    })
+  }
+
+  async getCustomLeagueData(leagueId) {
+    return this.request(`/import/custom/league/${leagueId}`)
+  }
+
+  async deleteCustomData(dataId) {
+    return this.request(`/import/custom/${dataId}`, { method: 'DELETE' })
+  }
 }
 
 export const api = new ApiService()

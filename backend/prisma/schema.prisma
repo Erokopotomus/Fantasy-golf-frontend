@@ -68,6 +68,9 @@ model User {
   aiReports            AiReport[]
   aiPreferences        Json     @default("{\"ambient\":true,\"draftCoaching\":true,\"boardCoaching\":true,\"predictionCoaching\":true}")
 
+  // Custom league data imports
+  customLeagueDataImports CustomLeagueData[]
+
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
   bio         String?  @db.Text
@@ -124,6 +127,9 @@ model League {
 
   // Draft dollar tracking
   draftDollarTransactions DraftDollarTransaction[]
+
+  // Custom league data (spreadsheet/website imports)
+  customLeagueData CustomLeagueData[]
 
   @@map("leagues")
 }
@@ -2934,4 +2940,26 @@ model AiEngineConfig {
   totalTokensAllTime  Int      @default(0)
   totalCallsAllTime   Int      @default(0)
   updatedAt           DateTime @default(now()) @updatedAt
+}
+
+// ============ CUSTOM LEAGUE DATA ============
+
+model CustomLeagueData {
+  id             String   @id @default(cuid())
+  leagueId       String
+  importedBy     String
+  sourceType     String   // spreadsheet, website
+  sourceFileName String?
+  dataCategory   String   // standings, records, awards, trophies, draft_history,
+                          // transactions, custom_stats, punishments, nicknames, other
+  seasonYear     Int?
+  data           Json     // Flexible JSON storage — structure varies by category
+  columnMapping  Json?    // AI-generated column mapping used during import
+  createdAt      DateTime @default(now())
+
+  league League @relation(fields: [leagueId], references: [id])
+  user   User   @relation(fields: [importedBy], references: [id])
+
+  @@index([leagueId, dataCategory])
+  @@index([leagueId, seasonYear])
 }

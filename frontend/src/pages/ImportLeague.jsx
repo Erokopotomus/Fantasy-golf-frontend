@@ -210,6 +210,9 @@ const ImportLeague = () => {
             <p className="text-text-secondary">
               Bring your league's history into Clutch. All your seasons, standings, and records preserved forever.
             </p>
+            <Link to="/import/custom" className="inline-flex items-center gap-1.5 mt-3 text-accent-gold text-sm hover:underline">
+              Have custom data? Import spreadsheets or scrape your league website &rarr;
+            </Link>
           </div>
 
           <StepIndicator current={step} total={5} />

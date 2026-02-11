@@ -46,6 +46,7 @@ import NotificationSettings from './components/settings/NotificationSettings'
 import AdminDashboard from './pages/AdminDashboard'
 import ProveIt from './pages/ProveIt'
 import ImportLeague from './pages/ImportLeague'
+import CustomImport from './pages/CustomImport'
 import LeagueVault from './pages/LeagueVault'
 import SeasonRecap from './pages/SeasonRecap'
 import DraftDollars from './pages/DraftDollars'
@@ -289,6 +290,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ImportLeague />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/import/custom"
+            element={
+              <ProtectedRoute>
+                <CustomImport />
               </ProtectedRoute>
             }
           />

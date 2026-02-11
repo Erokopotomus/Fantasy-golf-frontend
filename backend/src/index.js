@@ -43,6 +43,7 @@ const labInsightRoutes = require('./routes/labInsights')
 const cheatSheetRoutes = require('./routes/cheatSheets')
 const intelligenceRoutes = require('./routes/intelligence')
 const aiRoutes = require('./routes/ai')
+const customImportRoutes = require('./routes/customImport')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -145,6 +146,7 @@ app.use('/api/lab', labInsightRoutes)
 app.use('/api/lab/cheatsheet', cheatSheetRoutes)
 app.use('/api/intelligence', intelligenceRoutes)
 app.use('/api/ai', aiRoutes)
+app.use('/api/import/custom', customImportRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

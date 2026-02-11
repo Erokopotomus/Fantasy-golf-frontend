@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory } from '../hooks/useImports'
+import api from '../services/api'
 
 function downloadCSV(filename, rows) {
   const escape = (val) => {
@@ -391,6 +392,186 @@ const DraftHistoryTab = ({ history }) => {
   )
 }
 
+// ─── Custom Data Tab ──────────────────────────────────────────────────────────
+const CATEGORY_LABELS = {
+  standings: { label: 'Standings', color: 'bg-blue-500/20 text-blue-400' },
+  records: { label: 'Records', color: 'bg-accent-gold/20 text-accent-gold' },
+  awards: { label: 'Awards', color: 'bg-purple-500/20 text-purple-400' },
+  trophies: { label: 'Trophies', color: 'bg-yellow-500/20 text-yellow-400' },
+  draft_history: { label: 'Draft History', color: 'bg-green-500/20 text-green-400' },
+  transactions: { label: 'Transactions', color: 'bg-cyan-500/20 text-cyan-400' },
+  custom_stats: { label: 'Custom Stats', color: 'bg-pink-500/20 text-pink-400' },
+  punishments: { label: 'Punishments', color: 'bg-red-500/20 text-red-400' },
+  nicknames: { label: 'Nicknames', color: 'bg-orange-500/20 text-orange-400' },
+  other: { label: 'Other', color: 'bg-gray-500/20 text-gray-400' },
+}
+
+const SOURCE_BADGES = {
+  spreadsheet: 'Custom',
+  google_sheets: 'Sheets',
+  website: 'Website',
+}
+
+const CustomDataTab = ({ leagueId }) => {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [expandedId, setExpandedId] = useState(null)
+
+  useEffect(() => {
+    api.getCustomLeagueData(leagueId)
+      .then(res => setData(res.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [leagueId])
+
+  const handleDelete = async (dataId) => {
+    if (!confirm('Delete this custom data record?')) return
+    try {
+      await api.deleteCustomData(dataId)
+      setData(prev => prev.filter(d => d.id !== dataId))
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  // Group by category
+  const grouped = useMemo(() => {
+    const groups = {}
+    for (const d of data) {
+      if (!groups[d.dataCategory]) groups[d.dataCategory] = []
+      groups[d.dataCategory].push(d)
+    }
+    return groups
+  }, [data])
+
+  if (loading) {
+    return (
+      <Card className="animate-pulse">
+        <div className="h-4 bg-dark-tertiary rounded w-1/3 mb-4" />
+        <div className="h-4 bg-dark-tertiary rounded w-2/3" />
+      </Card>
+    )
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card className="text-center py-12">
+        <div className="text-3xl mb-3">&#128203;</div>
+        <h3 className="font-display font-bold text-white mb-2">No Custom Data Yet</h3>
+        <p className="text-text-secondary text-sm mb-4">
+          Import your league's custom records, awards, punishments, and more.
+        </p>
+        <Link
+          to={`/import/custom?leagueId=${leagueId}`}
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90"
+        >
+          Import Custom Data
+        </Link>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-text-secondary font-mono">
+          {data.length} record{data.length !== 1 ? 's' : ''} across {Object.keys(grouped).length} categor{Object.keys(grouped).length !== 1 ? 'ies' : 'y'}
+        </p>
+        <Link
+          to={`/import/custom?leagueId=${leagueId}`}
+          className="text-accent-gold text-sm hover:underline"
+        >
+          Import More
+        </Link>
+      </div>
+
+      {Object.entries(grouped).map(([category, items]) => {
+        const catInfo = CATEGORY_LABELS[category] || CATEGORY_LABELS.other
+        return (
+          <Card key={category}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`px-2 py-0.5 rounded text-xs font-mono ${catInfo.color}`}>
+                {catInfo.label}
+              </span>
+              <span className="text-xs text-text-secondary font-mono">
+                {items.length} record{items.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {items.map(item => (
+                <div
+                  key={item.id}
+                  className="bg-dark-tertiary/30 rounded-lg p-3"
+                >
+                  <div
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                  >
+                    <div className="flex items-center gap-2">
+                      {item.seasonYear && (
+                        <span className="text-xs font-mono text-accent-gold">{item.seasonYear}</span>
+                      )}
+                      <span className="text-sm text-white font-display">
+                        {item.sourceFileName || item.sourceType}
+                      </span>
+                      <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
+                        {SOURCE_BADGES[item.sourceType] || 'Custom'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-secondary font-mono">
+                        {item.data?.rows?.length || 0} rows
+                      </span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(item.id) }}
+                        className="text-text-secondary hover:text-red-400 text-xs"
+                        title="Delete"
+                      >
+                        &#10005;
+                      </button>
+                    </div>
+                  </div>
+
+                  {expandedId === item.id && item.data?.rows && (
+                    <div className="mt-3 pt-3 border-t border-dark-tertiary overflow-x-auto">
+                      <table className="w-full text-xs font-mono">
+                        <thead>
+                          <tr className="border-b border-dark-tertiary">
+                            {Object.keys(item.data.rows[0] || {}).map(key => (
+                              <th key={key} className="text-left text-text-secondary py-1 pr-3">{key}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {item.data.rows.slice(0, 20).map((row, idx) => (
+                            <tr key={idx} className="border-b border-dark-tertiary/30">
+                              {Object.values(row).map((val, j) => (
+                                <td key={j} className="py-1 pr-3 text-white">
+                                  {val != null ? String(val) : ''}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {item.data.rows.length > 20 && (
+                        <p className="text-xs text-text-secondary mt-2">
+                          Showing 20 of {item.data.rows.length} rows
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── Main LeagueVault Component ────────────────────────────────────────────────
 const LeagueVault = () => {
   const { leagueId } = useParams()
@@ -538,6 +719,7 @@ const LeagueVault = () => {
     { id: 'records', label: 'Records' },
     { id: 'h2h', label: 'H2H' },
     { id: 'drafts', label: 'Drafts' },
+    { id: 'custom', label: 'Custom' },
   ]
 
   return (
@@ -699,6 +881,9 @@ const LeagueVault = () => {
 
           {/* Drafts Tab */}
           {tab === 'drafts' && <DraftHistoryTab history={history} />}
+
+          {/* Custom Data Tab */}
+          {tab === 'custom' && <CustomDataTab leagueId={leagueId} />}
         </div>
       </main>
     </div>
