@@ -1177,7 +1177,7 @@ The Clutch Rating is now **sport-specific primary** with a **global prestige sec
 - `clutch_user_sport_tags` — per-user sport expertise tags for discovery (e.g., "NFL Sharp", "Golf Expert")
 
 ### Current Build Priority
-Data Layer Steps 1-7 done → The Lab Phase 1 done (hub redesign) → AI Coaching (next)
+Data Layer Steps 1-7 done → The Lab Phases 1-5 done (hub redesign, captures, insights, cheat sheets, timeline) → Lab spec gaps closed (cheat sheet edit, manual journal, player captures) → AI Coaching (next)
 
 ### Key Principle: Progressive Disclosure
 Default UX is simple and clean (Informed Fan). Depth is always one click away (Grinder, Dynasty Nerd). Never overwhelm, never underserve.
@@ -1240,6 +1240,12 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **3-step creation flow:** Step 1 name+sport+scoring (unchanged), Step 2 league context (type/teams/draft type, all optional with Skip), Step 3 start from options (unchanged logic, renumbered).
   - **Empty state:** Flask icon, "Welcome to The Lab" heading, dual CTAs (Create Board + Mock Draft link).
   - **useDraftBoards.js:** Passes `leagueType`, `teamCount`, `draftType` through to createBoard.
+- [x] The Lab Phases 2-5: Quick Capture, Readiness & Intelligence, Cheat Sheets, Timeline
+  - **Phase 2 — Quick Capture:** `LabCapture` + `LabCapturePlayer` models (migrations 24-25). `captureService.js` (CRUD + player linking + recent + player-specific query). `/api/lab/captures` routes (create, list, recent, delete, player/:playerId). Client-side player name auto-detection (`playerDetect.js`). `CaptureFormModal` (textarea, source type pills, sentiment, auto-detected + manual player tags, initialPlayerTags prop). `FloatingCaptureButton` site-wide. `/lab/captures` page (LabCaptures.jsx: filters, search, sport toggle, sentiment, paginated feed). Hub captures section on DraftBoards.jsx.
+  - **Phase 3 — Readiness & Intelligence:** `LabInsightCache` model (migration 26). `insightGenerator.js` rule-based engine (10 insight types: missing positions, no notes, no mock draft, stale board, low capture count, no cheat sheet, position imbalance, no watch list, single sport, untagged players). `/api/lab/insight` + `/api/lab/insight/dismiss` routes. `/api/lab/readiness/:boardId` endpoint. Dynamic AI insight bar on hub (gold-tinted, dismiss button, cycles through insights).
+  - **Phase 4 — Cheat Sheet Generation:** `LabCheatSheet` model. `cheatSheetService.js` — ADP divergence analysis, tier break detection, value picks + fades identification, position tier grouping. `/api/lab/cheatsheet/generate` (POST), `/api/lab/cheatsheet/:id` (GET/PUT), `/api/lab/cheatsheet/board/:boardId` (GET), `/api/lab/cheatsheet/:id/publish` (POST). `LabCheatSheet.jsx` page — print-optimized CSS, value targets/fades cards, overall rankings table with tier breaks, position tiers quick reference. Board card CTA "Generate Cheat Sheet →". **Edit mode:** reorder arrows, inline note editing, column toggles (ADP/Notes/Tier Breaks), save/cancel with change detection.
+  - **Phase 5 — Timeline & History:** `getBoardTimeline()` in `draftBoardService.js` (grouped by date, biggest move, activity summary). `BoardTimeline` component (date sections, activity counts, biggest move highlight). Mobile: timeline tab in `DraftBoardEditor`. Desktop: timeline modal triggered from BoardHeader.
+  - **Spec Gap Closures:** (1) Cheat sheet edit mode with reorder/notes/column toggles/save — `LabCheatSheet.jsx`. (2) Manual journal entries via `POST /api/draft-boards/journal/entry` + inline form on `DecisionJournal.jsx` (+ New Entry button, board selector, player name field, `manual_entry` action type). (3) Player captures on profiles — `getCapturesByPlayer()` in captureService, `GET /api/lab/captures/player/:playerId`, "Your Notes" section on `PlayerProfile.jsx` + `NflPlayerDetail.jsx` (capture cards, + Add Note opening CaptureFormModal pre-tagged, "View all in Lab" link).
 - [ ] AI Coaching (former Phase 6 — more powerful after Feed + Workspace provide context)
 
 **Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced. **NFL game weather:** Same Open-Meteo hourly pipeline used for golf tournament rounds, keyed to NFL game venue coordinates + kickoff time windows. Wind/rain/temp affect kickers, deep-ball QBs/WRs, and overall game script. Need venue-to-coordinates mapping for all 32 stadiums (flag dome/retractable roof). Show on game preview pages + factor into fantasy projections.
@@ -1281,6 +1287,14 @@ The Workspace "Start From" system pre-loads boards with projections so users cus
 | `useDraftBoards.js` hook | List all user boards, createBoard with league context fields. |
 | `DraftBoards.jsx` (The Lab hub) | Full hub page: readiness tracker, AI insight bar, enhanced board cards (position coverage pills, league context, status CTA), watch list + journal summaries, 3-step creation flow, empty state. |
 | Lab components (`components/workspace/`) | BoardHeader, BoardEntryRow (enriched), TierBreak, PlayerSearchPanel, PlayerNoteEditor, AddToBoardModal, DivergenceSummary. |
+| `captureService.js` + `captures.js` routes | LabCapture CRUD, player linking, recent captures, per-player query (`getCapturesByPlayer`). |
+| `CaptureFormModal.jsx` | Quick Capture modal: textarea, source pills, sentiment, auto-detected + manual player tags, `initialPlayerTags` prop for pre-tagging from player profiles. |
+| `LabCaptures.jsx` | `/lab/captures` page: filters (sport/sentiment/search), paginated capture feed. |
+| `insightGenerator.js` + insight routes | Rule-based engine (10 insight types), `/api/lab/insight` GET/dismiss, `/api/lab/readiness/:boardId`. |
+| `cheatSheetService.js` + cheatsheet routes | ADP divergence, tier breaks, value picks/fades, position tiers. Generate/GET/PUT/publish endpoints. |
+| `LabCheatSheet.jsx` | Cheat sheet page: print CSS, value targets/fades, rankings table with tier breaks, position tiers. Edit mode: reorder arrows, inline notes, column toggles, save/cancel. |
+| `DecisionJournal.jsx` | `/lab/journal` page: chronological grouped feed, sport filter, manual entry form (+ New Entry, board selector, player name). |
+| `BoardTimeline` component | Timeline grouped by date, activity counts, biggest move highlight. Mobile tab + desktop modal. |
 
 ### Competitive Positioning
 
@@ -1317,4 +1331,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 10, 2026*
-*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phase 1 complete (Workspace → The Lab rename, hub redesign, enhanced board cards, 3-step creation with league context, position coverage, readiness tracker, empty state). NFL Mock Draft complete. Next: AI Coaching.*
+*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete (hub redesign, captures, insights, cheat sheets with edit mode, timeline). Lab spec gaps closed (cheat sheet edit, manual journal entries, player profile captures). NFL Mock Draft complete. Next: AI Coaching.*
