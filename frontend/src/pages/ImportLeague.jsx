@@ -46,6 +46,7 @@ const ImportLeague = () => {
   const [step, setStep] = useState(0)
   const [platform, setPlatform] = useState(null)
   const [showManualToken, setShowManualToken] = useState(false)
+  const [yahooError, setYahooError] = useState(null)
 
   // Handle Yahoo OAuth callback redirect
   useEffect(() => {
@@ -55,14 +56,21 @@ const ImportLeague = () => {
       yahooOAuth.refetch()
       setPlatform(PLATFORMS.find(p => p.id === 'yahoo'))
       setStep(1)
-      // Clean URL
       searchParams.delete('yahoo')
       setSearchParams(searchParams, { replace: true })
     }
     if (errorParam?.startsWith('yahoo_')) {
-      // Clean URL but let user see the platform
       setPlatform(PLATFORMS.find(p => p.id === 'yahoo'))
       setStep(1)
+      const errorMessages = {
+        yahoo_not_configured: 'Yahoo OAuth is not configured yet. The site admin needs to add Yahoo API credentials.',
+        yahoo_denied: 'Yahoo authorization was denied. Please try again.',
+        yahoo_token_failed: 'Failed to exchange Yahoo authorization code. Please try again.',
+        yahoo_callback_error: 'Something went wrong during Yahoo authorization. Please try again.',
+        yahoo_missing_params: 'Yahoo authorization returned incomplete data. Please try again.',
+        yahoo_invalid_state: 'Yahoo authorization session expired. Please try again.',
+      }
+      setYahooError(errorMessages[errorParam] || 'Yahoo connection failed. Please try again.')
       searchParams.delete('error')
       setSearchParams(searchParams, { replace: true })
     }
@@ -401,6 +409,21 @@ const ImportLeague = () => {
               {/* Yahoo */}
               {platform?.id === 'yahoo' && (
                 <div>
+                  {/* Yahoo OAuth Error */}
+                  {yahooError && (
+                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+                      <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm text-red-400">{yahooError}</p>
+                        <button onClick={() => { setYahooError(null); setShowManualToken(true) }} className="text-xs text-text-muted hover:text-text-secondary mt-1">
+                          Try pasting a token manually instead
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Connection Status */}
                   {yahooOAuth.loading ? (
                     <div className="flex items-center gap-2 mb-4 text-text-secondary text-sm">
