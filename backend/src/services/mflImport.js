@@ -1,8 +1,16 @@
 /**
- * MFL (MyFantasyLeague) Import Service
+ * MFL (MyFantasyLeague) Import Service (Enhanced)
  *
  * Imports league history from MFL's XML API.
  * MFL has the deepest historical data of any platform (15-20+ years).
+ *
+ * Enhancements:
+ * - Raw API response storage in RawProviderData
+ * - All-play wins/losses and powerRank in HistoricalSeason data
+ * - Full league settings snapshot per season
+ * - Opinion timeline bridge (DRAFT_PICK events)
+ * - Owner matching by display name comparison
+ * - Per-season error accumulation to import record errorLog
  *
  * MFL API base: https://{host}.myfantasyleague.com/{year}/export
  * API requires: league ID + API key (commissioner credentials)
@@ -19,7 +27,36 @@
  * Default host for API: api.myfantasyleague.com
  */
 
+const { PrismaClient } = require('@prisma/client')
+const opinionTimeline = require('./opinionTimelineService')
+
+const prisma = new PrismaClient()
 const BASE_HOST = 'api.myfantasyleague.com'
+
+// ─── Raw Data Preservation ─────────────────────────────────────────────────
+
+/**
+ * Store raw API response in RawProviderData before normalization.
+ * Fire-and-forget — never blocks the import pipeline.
+ */
+async function storeRawResponse(dataType, leagueId, seasonYear, payload) {
+  try {
+    await prisma.rawProviderData.create({
+      data: {
+        provider: 'mfl',
+        dataType,
+        eventRef: String(leagueId),
+        payload,
+        recordCount: Array.isArray(payload) ? payload.length : null,
+        processedAt: null,
+      },
+    })
+  } catch (err) {
+    console.error(`[MflImport] Failed to store raw ${dataType}:`, err.message)
+  }
+}
+
+// ─── MFL API Fetch ─────────────────────────────────────────────────────────
 
 /**
  * Fetch JSON from MFL API.
@@ -52,6 +89,8 @@ async function mflFetch(year, leagueId, endpoint, apiKey, params = {}) {
   }
 }
 
+// ─── Discovery ─────────────────────────────────────────────────────────────
+
 /**
  * Discovery scan — find all available seasons.
  * MFL keeps each year as a separate league endpoint using the same ID.
@@ -68,8 +107,33 @@ async function discoverLeague(mflLeagueId, apiKey) {
 
       if (!league) continue
 
+      // Store raw league data
+      storeRawResponse('league_settings', mflLeagueId, year, data).catch(() => {})
+
       const franchises = league.franchises?.franchise || []
       const franchiseCount = Array.isArray(franchises) ? franchises.length : 1
+
+      // Extract full settings snapshot
+      const settings = {
+        rosterSize: parseInt(league.rosterSize || 0),
+        startWeek: parseInt(league.startWeek || 1),
+        endWeek: parseInt(league.endWeek || 16),
+        playoffWeeks: league.playoffWeeks || null,
+        numTeams: franchiseCount,
+        scoringType: league.scoringType || null,
+        draftType: league.draftPlayerPool || null,
+        salaryCapAmount: league.salaryCapAmount || null,
+        survivorPool: league.survivorPool || null,
+        standingsLocked: league.standingsLocked === '1',
+        usesContractYear: !!league.usesContractYear,
+        usesSalary: !!league.salaryCapAmount,
+        injuryReserve: league.injuredReserve || null,
+        taxiSquad: league.taxiSquad || null,
+        draftLimitHours: league.draftLimitHours || null,
+        tradeDeadline: league.tradeDeadline || null,
+        seasonYear: year,
+        mflLeagueId: String(mflLeagueId),
+      }
 
       seasons.push({
         year,
@@ -80,6 +144,7 @@ async function discoverLeague(mflLeagueId, apiKey) {
         startWeek: parseInt(league.startWeek || 1),
         endWeek: parseInt(league.endWeek || 16),
         playoffWeeks: league.playoffWeeks || null,
+        settings,
       })
     } catch (err) {
       // 404 or error = league didn't exist that year
@@ -107,6 +172,8 @@ async function discoverLeague(mflLeagueId, apiKey) {
   }
 }
 
+// ─── Import a Single Season ────────────────────────────────────────────────
+
 /**
  * Import a single MFL season.
  */
@@ -124,7 +191,15 @@ async function importSeason(mflLeagueId, year, apiKey) {
   const franchises = leagueData?.league?.franchises?.franchise || []
   const franchiseArr = Array.isArray(franchises) ? franchises : [franchises]
 
-  // Build franchise map (id → info)
+  // Store raw responses (fire-and-forget)
+  if (standingsData) storeRawResponse('standings', mflLeagueId, year, standingsData).catch(() => {})
+  if (rostersData) storeRawResponse('rosters', mflLeagueId, year, rostersData).catch(() => {})
+  if (draftData) storeRawResponse('draft_results', mflLeagueId, year, draftData).catch(() => {})
+  if (scheduleData && Object.keys(scheduleData).length > 0) {
+    storeRawResponse('weekly_results', mflLeagueId, year, scheduleData).catch(() => {})
+  }
+
+  // Build franchise map (id -> info)
   const franchiseMap = {}
   for (const f of franchiseArr) {
     franchiseMap[f.id] = {
@@ -152,7 +227,7 @@ async function importSeason(mflLeagueId, year, apiKey) {
       pointsAgainst: parseFloat(s.pa || s.op || 0),
       allPlayWins: parseInt(s.all_play_w || 0),
       allPlayLosses: parseInt(s.all_play_l || 0),
-      power: parseFloat(s.power_rank || 0),
+      powerRank: parseFloat(s.power_rank || 0),
       rank: idx + 1,
     }
   })
@@ -190,6 +265,10 @@ async function importSeason(mflLeagueId, year, apiKey) {
         comments: p.comments || null,
       })),
     }
+    // Detect auction draft — if any pick has a salary value
+    if (parsedDraft.picks.some(p => p.salary != null && parseFloat(p.salary) > 0)) {
+      parsedDraft.type = 'auction'
+    }
   }
 
   // Determine playoff results from standings
@@ -207,8 +286,11 @@ async function importSeason(mflLeagueId, year, apiKey) {
     draftData: parsedDraft,
     playoffResults,
     rosterDetails,
+    franchiseMap,
   }
 }
+
+// ─── Fetch All Weekly Results ──────────────────────────────────────────────
 
 /**
  * Fetch weekly results for all weeks in a season.
@@ -247,6 +329,8 @@ async function fetchAllWeeklyResults(year, mflLeagueId, apiKey) {
   return allResults
 }
 
+// ─── Build Weekly Scores ───────────────────────────────────────────────────
+
 /**
  * Build weekly scores from MFL matchup data.
  */
@@ -268,11 +352,57 @@ function buildWeeklyScores(matchups, franchiseId) {
   return scores
 }
 
+// ─── Opinion Timeline Bridge ───────────────────────────────────────────────
+
 /**
- * Full import pipeline.
+ * Generate PlayerOpinionEvent records for draft picks.
+ * Fire-and-forget — must never block import processing.
+ *
+ * @param {string} userId - Clutch user ID to attribute events to
+ * @param {object} seasonData - Full season import data
+ * @param {string} franchiseId - MFL franchise ID for this user's team
+ * @param {string} leagueName - League name for context
  */
-async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
-  const importRecord = await prisma.leagueImport.create({
+async function generateOpinionEventsForSeason(userId, seasonData, franchiseId, leagueName) {
+  if (!userId || !franchiseId) return
+
+  const year = seasonData.seasonYear
+
+  // ── Draft Pick Events ──
+  if (seasonData.draftData?.picks) {
+    const teamPicks = seasonData.draftData.picks.filter(p => p.franchiseId === franchiseId)
+    // Approximate draft date: first Saturday of September
+    const draftDate = new Date(`${year}-09-01T12:00:00Z`)
+
+    for (const pick of teamPicks) {
+      if (!pick.playerId) continue
+      opinionTimeline.recordEvent(
+        userId, pick.playerId, 'NFL', 'DRAFT_PICK',
+        {
+          round: pick.round,
+          pick: pick.pick,
+          salary: pick.salary,
+          comments: pick.comments,
+          playerName: pick.playerName,
+          dataSource: 'mfl_import',
+          season: year,
+          leagueName,
+        },
+        null, 'HistoricalDraft', draftDate
+      ).catch(() => {})
+    }
+  }
+}
+
+// ─── Full Import Pipeline ──────────────────────────────────────────────────
+
+/**
+ * Full import pipeline — discovers seasons, imports data, stores in HistoricalSeason.
+ * Now includes raw data preservation, all-play/powerRank, settings, opinion timeline,
+ * owner matching, and per-season error accumulation.
+ */
+async function runFullImport(mflLeagueId, userId, db, apiKey) {
+  const importRecord = await db.leagueImport.create({
     data: {
       userId,
       sourcePlatform: 'mfl',
@@ -284,7 +414,7 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
   try {
     const discovery = await discoverLeague(mflLeagueId, apiKey)
 
-    await prisma.leagueImport.update({
+    await db.leagueImport.update({
       where: { id: importRecord.id },
       data: {
         sourceLeagueName: discovery.name,
@@ -294,7 +424,7 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
       },
     })
 
-    let clutchLeague = await prisma.league.findFirst({
+    let clutchLeague = await db.league.findFirst({
       where: {
         ownerId: userId,
         name: { contains: discovery.name, mode: 'insensitive' },
@@ -302,7 +432,7 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
     })
 
     if (!clutchLeague) {
-      clutchLeague = await prisma.league.create({
+      clutchLeague = await db.league.create({
         data: {
           name: discovery.name || 'Imported from MFL',
           sport: 'NFL',
@@ -316,10 +446,17 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
       })
     }
 
-    await prisma.leagueImport.update({
+    await db.leagueImport.update({
       where: { id: importRecord.id },
       data: { clutchLeagueId: clutchLeague.id },
     })
+
+    // Fetch importing user's display name for owner matching
+    const importingUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { displayName: true, username: true },
+    })
+    const userDisplayName = (importingUser?.displayName || importingUser?.username || '').toLowerCase()
 
     const importedSeasons = []
     for (let i = 0; i < discovery.seasons.length; i++) {
@@ -329,11 +466,39 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
       try {
         const seasonData = await importSeason(mflLeagueId, season.year, apiKey)
 
+        // Try to identify which franchise belongs to the importing user
+        let matchedFranchiseId = null
+        if (userDisplayName) {
+          const matched = seasonData.rosters.find(r =>
+            r.ownerName?.toLowerCase().includes(userDisplayName) ||
+            userDisplayName.includes(r.ownerName?.toLowerCase() || '')
+          )
+          if (matched) matchedFranchiseId = matched.franchiseId
+        }
+
         for (const roster of seasonData.rosters) {
           const standing = seasonData.rosters.indexOf(roster) + 1
           const playoffResult = seasonData.playoffResults[roster.franchiseId] || null
 
-          await prisma.historicalSeason.upsert({
+          // Set ownerUserId if this is the importing user's team
+          const isUsersTeam = roster.franchiseId === matchedFranchiseId
+          const ownerUserId = isUsersTeam ? userId : null
+
+          // Build rosterData JSON with players + all-play + powerRank
+          const rosterDataJson = seasonData.rosterDetails?.[roster.franchiseId]
+            ? {
+                players: seasonData.rosterDetails[roster.franchiseId],
+                allPlayWins: roster.allPlayWins,
+                allPlayLosses: roster.allPlayLosses,
+                powerRank: roster.powerRank,
+              }
+            : {
+                allPlayWins: roster.allPlayWins,
+                allPlayLosses: roster.allPlayLosses,
+                powerRank: roster.powerRank,
+              }
+
+          await db.historicalSeason.upsert({
             where: {
               leagueId_seasonYear_ownerName: {
                 leagueId: clutchLeague.id,
@@ -347,6 +512,7 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
               seasonYear: seasonData.seasonYear,
               teamName: roster.teamName,
               ownerName: roster.ownerName || roster.teamName,
+              ownerUserId,
               finalStanding: standing,
               wins: roster.wins,
               losses: roster.losses,
@@ -355,12 +521,12 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
               pointsAgainst: roster.pointsAgainst,
               playoffResult,
               draftData: seasonData.draftData,
-              rosterData: seasonData.rosterDetails?.[roster.franchiseId]
-                ? { players: seasonData.rosterDetails[roster.franchiseId] }
-                : {},
+              rosterData: rosterDataJson,
               weeklyScores: buildWeeklyScores(seasonData.matchups, roster.franchiseId),
+              settings: season.settings || {},
             },
             update: {
+              ownerUserId: ownerUserId || undefined,
               wins: roster.wins,
               losses: roster.losses,
               ties: roster.ties,
@@ -368,20 +534,37 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
               pointsAgainst: roster.pointsAgainst,
               playoffResult,
               draftData: seasonData.draftData,
-              rosterData: seasonData.rosterDetails?.[roster.franchiseId]
-                ? { players: seasonData.rosterDetails[roster.franchiseId] }
-                : {},
+              rosterData: rosterDataJson,
               weeklyScores: buildWeeklyScores(seasonData.matchups, roster.franchiseId),
+              settings: season.settings || {},
             },
           })
+
+          // Opinion Timeline Bridge — only for importing user's team
+          if (isUsersTeam) {
+            generateOpinionEventsForSeason(
+              userId, seasonData, roster.franchiseId, clutchLeague.name
+            ).catch(() => {})
+          }
         }
 
         importedSeasons.push(seasonData.seasonYear)
       } catch (err) {
-        console.error(`Failed to import MFL season ${season.year}:`, err.message)
+        console.error(`[MflImport] Failed to import season ${season.year}:`, err.message)
+        // Log error to import record's errorLog array
+        const current = await db.leagueImport.findUnique({
+          where: { id: importRecord.id },
+          select: { errorLog: true },
+        })
+        const errors = Array.isArray(current?.errorLog) ? current.errorLog : []
+        errors.push({ message: `Season ${season.year}: ${err.message}`, timestamp: new Date().toISOString() })
+        await db.leagueImport.update({
+          where: { id: importRecord.id },
+          data: { errorLog: errors },
+        }).catch(() => {})
       }
 
-      await prisma.leagueImport.update({
+      await db.leagueImport.update({
         where: { id: importRecord.id },
         data: {
           progressPct: progress,
@@ -390,7 +573,7 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
       })
     }
 
-    await prisma.leagueImport.update({
+    await db.leagueImport.update({
       where: { id: importRecord.id },
       data: {
         status: 'COMPLETE',
@@ -407,7 +590,7 @@ async function runFullImport(mflLeagueId, userId, prisma, apiKey) {
       totalSeasons: discovery.totalSeasons,
     }
   } catch (err) {
-    await prisma.leagueImport.update({
+    await db.leagueImport.update({
       where: { id: importRecord.id },
       data: {
         status: 'FAILED',

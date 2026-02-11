@@ -1,5 +1,5 @@
 /**
- * Fantrax Import Service
+ * Fantrax Import Service (Enhanced)
  *
  * Imports league history from Fantrax via CSV upload.
  * Fantrax has no public API — the primary import mechanism is:
@@ -7,16 +7,39 @@
  *   2. User uploads the CSV to Clutch
  *   3. We parse and import the data
  *
- * Fantrax CSV export paths (from their UI):
- *   - Standings: League > Standings > Export
- *   - Rosters: League > Rosters > Export
- *   - Draft Results: League > Draft > Export
- *   - Transactions: League > Transactions > Export
+ * Enhancements:
+ * - Raw CSV text stored in RawProviderData before normalization
+ *
+ * Note: No opinion timeline bridge for Fantrax — draft data uses player names
+ * not IDs, so we can't reliably link to PlayerOpinionEvent without name resolution.
  *
  * CSV format varies by export type but generally includes:
  *   Standings: Team, W, L, T, PF, PA, GB, Streak
  *   Draft: Round, Pick, Team, Player, Position
  */
+
+const { PrismaClient } = require('@prisma/client')
+const prisma = new PrismaClient()
+
+/**
+ * Store raw CSV data in RawProviderData before normalization.
+ */
+async function storeRawCSV(dataType, leagueName, seasonYear, csvText) {
+  try {
+    await prisma.rawProviderData.create({
+      data: {
+        provider: 'fantrax',
+        dataType,
+        eventRef: leagueName || 'csv-upload',
+        payload: { csvText, charCount: csvText.length },
+        recordCount: csvText.split('\n').length - 1,
+        processedAt: null,
+      },
+    })
+  } catch (err) {
+    console.error(`[FantraxImport] Failed to store raw ${dataType}:`, err.message)
+  }
+}
 
 /**
  * Parse a Fantrax standings CSV string into structured data.
@@ -133,6 +156,9 @@ async function discoverLeague(csvData) {
     throw new Error('Standings CSV is required')
   }
 
+  // Store raw CSV before parsing
+  storeRawCSV('standings', leagueName, seasonYear, standingsCSV).catch(() => {})
+
   const teams = parseStandingsCSV(standingsCSV)
 
   return {
@@ -156,6 +182,12 @@ async function importSeason(csvData) {
   const { standingsCSV, draftCSV, seasonYear } = csvData
 
   const rosters = parseStandingsCSV(standingsCSV)
+
+  // Store raw draft CSV if provided
+  if (draftCSV) {
+    storeRawCSV('draft', csvData.leagueName, seasonYear, draftCSV).catch(() => {})
+  }
+
   const draftData = draftCSV ? parseDraftCSV(draftCSV) : null
 
   // No matchup data available from CSV export — build empty
