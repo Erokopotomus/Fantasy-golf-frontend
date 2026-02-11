@@ -613,8 +613,33 @@ const LeagueVault = () => {
   const { history, loading, error } = useLeagueHistory(leagueId)
   const [tab, setTab] = useState('timeline')
 
-  const allTimeRecords = useMemo(() => {
+  // Sanitize: strip large JSON fields and enforce types to prevent React #310
+  const sanitizedSeasons = useMemo(() => {
     if (!history?.seasons) return null
+    const clean = {}
+    for (const [year, teams] of Object.entries(history.seasons)) {
+      clean[year] = (Array.isArray(teams) ? teams : []).map(t => ({
+        id: t.id,
+        seasonYear: t.seasonYear,
+        teamName: String(t.teamName || ''),
+        ownerName: String(t.ownerName || ''),
+        ownerUserId: t.ownerUserId,
+        finalStanding: Number(t.finalStanding) || 0,
+        wins: Number(t.wins) || 0,
+        losses: Number(t.losses) || 0,
+        ties: Number(t.ties) || 0,
+        pointsFor: Number(t.pointsFor) || 0,
+        pointsAgainst: Number(t.pointsAgainst) || 0,
+        playoffResult: String(t.playoffResult || ''),
+        weeklyScores: Array.isArray(t.weeklyScores) ? t.weeklyScores : [],
+        draftData: t.draftData,
+      }))
+    }
+    return clean
+  }, [history])
+
+  const allTimeRecords = useMemo(() => {
+    if (!sanitizedSeasons) return null
     const records = {
       championships: {},
       totalWins: {},
@@ -627,7 +652,7 @@ const LeagueVault = () => {
       mostChampionships: { name: '', count: 0 },
     }
 
-    for (const [year, teams] of Object.entries(history.seasons)) {
+    for (const [year, teams] of Object.entries(sanitizedSeasons)) {
       for (const t of teams) {
         const name = t.ownerName || t.teamName
         if (!records.championships[name]) records.championships[name] = 0
@@ -691,7 +716,33 @@ const LeagueVault = () => {
     })).sort((a, b) => b.winPct - a.winPct)
 
     return records
-  }, [history])
+  }, [sanitizedSeasons])
+
+  const years = sanitizedSeasons ? Object.keys(sanitizedSeasons).sort((a, b) => b - a) : []
+
+  const handleExport = useCallback(() => {
+    if (!sanitizedSeasons) return
+    const rows = []
+    for (const [year, teams] of Object.entries(sanitizedSeasons)) {
+      for (const t of teams) {
+        rows.push({
+          Season: year,
+          Rank: t.finalStanding || '',
+          Manager: t.ownerName || t.teamName || '',
+          Team: t.teamName || '',
+          Wins: t.wins || 0,
+          Losses: t.losses || 0,
+          Ties: t.ties || 0,
+          PointsFor: t.pointsFor?.toFixed(1) || '0',
+          PointsAgainst: t.pointsAgainst?.toFixed(1) || '0',
+          PlayoffResult: t.playoffResult || '',
+        })
+      }
+    }
+    if (rows.length > 0) {
+      downloadCSV(`league-vault-${leagueId}.csv`, rows)
+    }
+  }, [sanitizedSeasons, leagueId])
 
   if (loading) {
     return (
@@ -722,97 +773,6 @@ const LeagueVault = () => {
       </div>
     )
   }
-
-  // Debug: check data types for every team field to find the #310 object render
-  if (history?.seasons) {
-    for (const [year, teams] of Object.entries(history.seasons)) {
-      for (const t of teams) {
-        for (const [key, val] of Object.entries(t)) {
-          if (val !== null && val !== undefined && typeof val === 'object' && !(val instanceof Array)) {
-            // JSON fields are objects — skip known ones
-            if (!['draftData', 'rosterData', 'weeklyScores', 'transactions', 'awards', 'settings', 'rawProviderData'].includes(key)) {
-              console.error(`[Vault Debug] Team field "${key}" in ${year} is an object:`, val)
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // === TEMP DEBUG: Show data shape to find #310 crash ===
-  if (history?.seasons) {
-    try {
-      const debugYears = Object.keys(history.seasons)
-      const firstYear = debugYears[0]
-      const firstTeam = firstYear ? history.seasons[firstYear]?.[0] : null
-      if (firstTeam) {
-        // Check every field type
-        const fieldTypes = {}
-        for (const [key, val] of Object.entries(firstTeam)) {
-          fieldTypes[key] = val === null ? 'null' : Array.isArray(val) ? 'array' : typeof val
-        }
-        // Render a debug view temporarily
-        return (
-          <div className="min-h-screen bg-dark-primary">
-            <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-              <div className="max-w-4xl mx-auto">
-                <h1 className="text-2xl font-bold text-white mb-4">Vault Debug</h1>
-                <p className="text-green-400 text-sm mb-2">Data loaded: {debugYears.length} seasons</p>
-                <p className="text-text-secondary text-xs mb-4">Years: {debugYears.join(', ')}</p>
-                <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
-                  <h3 className="text-accent-gold text-sm font-bold mb-2">First team field types:</h3>
-                  <pre className="text-xs text-white font-mono whitespace-pre-wrap">{JSON.stringify(fieldTypes, null, 2)}</pre>
-                </div>
-                <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
-                  <h3 className="text-accent-gold text-sm font-bold mb-2">First team data (truncated):</h3>
-                  <pre className="text-xs text-white font-mono whitespace-pre-wrap break-all">{JSON.stringify(firstTeam, (key, val) => {
-                    if (['weeklyScores', 'transactions', 'rosterData', 'draftData', 'rawProviderData'].includes(key) && val) return '[TRUNCATED]'
-                    return val
-                  }, 2)}</pre>
-                </div>
-                <Link to="/leagues" className="text-accent-gold hover:underline">Back to Leagues</Link>
-              </div>
-            </main>
-          </div>
-        )
-      }
-    } catch (debugErr) {
-      return (
-        <div className="min-h-screen bg-dark-primary pt-8 px-4">
-          <div className="max-w-4xl mx-auto">
-            <p className="text-red-400">Debug error: {String(debugErr.message)}</p>
-          </div>
-        </div>
-      )
-    }
-  }
-  // === END TEMP DEBUG ===
-
-  const years = history?.seasons ? Object.keys(history.seasons).sort((a, b) => b - a) : []
-
-  const handleExport = useCallback(() => {
-    if (!history?.seasons) return
-    const rows = []
-    for (const [year, teams] of Object.entries(history.seasons)) {
-      for (const t of teams) {
-        rows.push({
-          Season: year,
-          Rank: t.finalStanding || '',
-          Manager: t.ownerName || t.teamName || '',
-          Team: t.teamName || '',
-          Wins: t.wins || 0,
-          Losses: t.losses || 0,
-          Ties: t.ties || 0,
-          PointsFor: t.pointsFor?.toFixed(1) || '0',
-          PointsAgainst: t.pointsAgainst?.toFixed(1) || '0',
-          PlayoffResult: t.playoffResult || '',
-        })
-      }
-    }
-    if (rows.length > 0) {
-      downloadCSV(`league-vault-${leagueId}.csv`, rows)
-    }
-  }, [history, leagueId])
 
   const TABS = [
     { id: 'timeline', label: 'Timeline' },
@@ -887,7 +847,7 @@ const LeagueVault = () => {
                 </Card>
               ) : (
                 years.map(year => (
-                  <SeasonCard key={year} year={year} teams={history.seasons[year]} />
+                  <SeasonCard key={year} year={year} teams={sanitizedSeasons[year] || []} />
                 ))
               )}
             </div>
@@ -977,10 +937,10 @@ const LeagueVault = () => {
           )}
 
           {/* H2H Tab */}
-          {tab === 'h2h' && <HeadToHeadTab history={history} />}
+          {tab === 'h2h' && <HeadToHeadTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
 
           {/* Drafts Tab */}
-          {tab === 'drafts' && <DraftHistoryTab history={history} />}
+          {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
 
           {/* Custom Data Tab */}
           {tab === 'custom' && <CustomDataTab leagueId={leagueId} />}
