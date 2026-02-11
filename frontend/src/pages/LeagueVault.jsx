@@ -1,9 +1,43 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, Component } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory } from '../hooks/useImports'
 import api from '../services/api'
 import LeagueChat from '../components/ai/LeagueChat'
+
+// Error boundary to catch rendering crashes
+class VaultErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-dark-primary pt-8 px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6">
+              <h2 className="text-red-400 font-bold text-lg mb-2">League Vault Error</h2>
+              <p className="text-red-300 text-sm font-mono whitespace-pre-wrap break-all">
+                {this.state.error?.message || 'Unknown error'}
+              </p>
+              <p className="text-red-300/50 text-xs font-mono mt-2 whitespace-pre-wrap break-all">
+                {this.state.error?.stack?.slice(0, 500)}
+              </p>
+              <Link to="/leagues" className="inline-block mt-4 text-accent-gold hover:underline text-sm">
+                Back to Leagues
+              </Link>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function downloadCSV(filename, rows) {
   const escape = (val) => {
@@ -892,4 +926,12 @@ const LeagueVault = () => {
   )
 }
 
-export default LeagueVault
+function LeagueVaultWithBoundary() {
+  return (
+    <VaultErrorBoundary>
+      <LeagueVault />
+    </VaultErrorBoundary>
+  )
+}
+
+export default LeagueVaultWithBoundary
