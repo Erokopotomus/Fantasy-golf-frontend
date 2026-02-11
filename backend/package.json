@@ -22,6 +22,7 @@
   "license": "ISC",
   "description": "Clutch Fantasy Sports API",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@prisma/client": "^6.19.2",
     "axios": "^1.13.4",
     "bcryptjs": "^3.0.3",

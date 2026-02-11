@@ -34,6 +34,8 @@ router.get('/', optionalAuth, async (req, res, next) => {
           primaryTour: true,
           sgTotal: true,
           wins: true,
+          nflPosition: true,
+          nflTeamAbbr: true,
         },
         orderBy: [{ owgrRank: 'asc' }],
         take: maxResults,
@@ -43,9 +45,13 @@ router.get('/', optionalAuth, async (req, res, next) => {
         id: p.id,
         name: p.name,
         type: 'player',
-        subtitle: `#${p.owgrRank || '?'} OWGR${p.primaryTour ? ` - ${p.primaryTour}` : ''}`,
+        subtitle: p.nflPosition
+          ? `${p.nflPosition} - ${p.nflTeamAbbr || '?'}`
+          : `#${p.owgrRank || '?'} OWGR${p.primaryTour ? ` - ${p.primaryTour}` : ''}`,
         image: p.headshotUrl,
         countryFlag: p.countryFlag,
+        nflPosition: p.nflPosition || null,
+        nflTeam: p.nflTeamAbbr || null,
         url: `/players/${p.id}`,
       }))
     }

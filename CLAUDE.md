@@ -505,26 +505,37 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - 6A-5: Opinion evolution timeline (PlayerOpinionEvent model, hooks in 8 services, "Your History with [Player]")
   - 6A-6: Reasoning fields on roster moves (reasoning on WaiverClaim/Trade, decisionNotes on LineupSnapshot)
 
-- [ ] **6B: Decision Graph + Pattern Engine** (NEXT)
-  - DecisionPatternCache model, patternEngine.js, 12+ pattern detectors
-  - Per-user query patterns stitching together opinion events, captures, board entries, draft picks, predictions
-  - No Claude API — pure deterministic data analysis
+- [x] **6B: Decision Graph + Pattern Engine** (COMPLETE — migration 33)
+  - `decisionGraphService.js` (getPlayerGraph, getSeasonGraph, getDraftGraph, getPredictionGraph, getMultiSeasonGraph)
+  - `patternEngine.js` (detectDraftPatterns, detectPredictionPatterns, detectRosterPatterns, detectCapturePatterns, generateUserProfile)
+  - UserIntelligenceProfile model (cached, weekly Wednesday 4AM cron regen)
+  - `/api/intelligence` routes (profile, regenerate, player graph, predictions)
 
-- [ ] **6C: AI Infrastructure + Mode 1 (Ambient Intelligence)**
-  - Claude API wrapper (claudeService.js), AiInsight model
-  - 7 ambient insight types: decision_pattern, board_gap, capture_callback, prediction_accuracy, draft_tendency, roster_bias, season_narrative
-  - Pre-computed by cron, cached, served from DB
+- [x] **6C: AI Infrastructure + Mode 1 (Ambient Intelligence)** (COMPLETE — migration 34)
+  - `claudeService.js` — Claude API wrapper with retries, rate limiting, token tracking (Sonnet default, Opus for premium)
+  - `aiCoachService.js` — orchestrates all AI coaching (Mode 1-3 + Scout + Sim), pre-computed pattern data in, Claude narrates out
+  - `aiInsightPipeline.js` — daily 5AM cron, up to 3 insights/user/day, 11 insight types, eligibility checks
+  - AiInsight + AiReport models, `/api/ai` routes (insights CRUD, coaching, reports, scout, sim)
+  - Frontend: AI insights on Lab Hub + Dashboard Coaching Corner, FeedCard Clutch Coach category
 
-- [ ] **6D: Mode 2 (Contextual Intelligence)**
-  - Context-aware AI responses triggered by user actions
-  - Player deep dives, board analysis, draft strategy
+- [x] **6D: Mode 2 (Contextual Intelligence)** (COMPLETE)
+  - Draft room nudges (MockDraftRoom: AI coaching card on user's turn, position-aware, board-aware)
+  - Board editor coaching (DraftBoardEditor: coaching card on major moves, auto-dismissing)
+  - Prediction calibration (ProveIt: AI calibration note showing user's track record when browsing props)
 
-- [ ] **6E: Mode 3 (Deep Analysis)**
-  - On-demand premium AI analysis
-  - Decision audit, season review, league dynamics
+- [x] **6E: Mode 3 (Deep Analysis)** (COMPLETE)
+  - 3 report types: Pre-Draft, Mid-Season, Post-Season Retrospective (via `/api/ai/report/*`)
+  - CoachingReport.jsx page at `/coach/:reportId` with collapsible sections, data confidence indicator, shareable card
+  - Lab Hub "Coaching Reports" section with generate buttons + previous reports list
+  - Player AI Brief on PlayerProfile + NflPlayerDetail (collapsible, lazy-load, 24h localStorage cache)
 
-- [ ] **6F: Polish + Integration**
-  - Insight dismissal/feedback, analytics, rate limiting refinement
+- [x] **6F: Scout Reports + Matchup Sim** (COMPLETE)
+  - Golf scout reports (`generateGolfScoutReport`) — field, course fit, value plays, weather
+  - NFL scout reports (`generateNflScoutReport`) — matchup overview, start/sit, sleepers, injury watch
+  - Scout report personalization (board annotation overlay)
+  - ScoutReport.jsx page at `/scout/:sport/:eventId`, linked from GolfHub
+  - ClutchSim.jsx page at `/sim` — head-to-head matchup simulator with player search, AI analysis, key factors, personal notes
+  - 24h report caching in AiReport model
 
 ---
 
@@ -1244,7 +1255,7 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **Spec Gap Closures:** (1) Cheat sheet edit mode with reorder/notes/column toggles/save — `LabCheatSheet.jsx`. (2) Manual journal entries via `POST /api/draft-boards/journal/entry` + inline form on `DecisionJournal.jsx` (+ New Entry button, board selector, player name field, `manual_entry` action type). (3) Player captures on profiles — `getCapturesByPlayer()` in captureService, `GET /api/lab/captures/player/:playerId`, "Your Notes" section on `PlayerProfile.jsx` + `NflPlayerDetail.jsx` (capture cards, + Add Note opening CaptureFormModal pre-tagged, "View all in Lab" link).
 - [x] **Phase 6A — Data Gap Fixes** (6 sub-tasks): Prediction thesis+confidence, draft pick tags+boardRank, board comparison service, capture-to-outcome linking, opinion evolution timeline (PlayerOpinionEvent model + 8 fire-and-forget hooks), reasoning fields on roster moves. Migrations 27-32.
 - [x] **Phase 6B — Decision Graph + Pattern Engine**: `decisionGraphService.js` (getPlayerGraph, getSeasonGraph, getDraftGraph, getPredictionGraph, getMultiSeasonGraph). `patternEngine.js` (detectDraftPatterns, detectPredictionPatterns, detectRosterPatterns, detectCapturePatterns, generateUserProfile). `UserIntelligenceProfile` model (cached, weekly regen). `/api/intelligence` routes. Migration 33.
-- [ ] **Phase 6C — AI Foundation + Ambient Intelligence** (NEXT): Claude API wrapper, aiCoachService, ambient insight pipeline, AiInsight+AiReport models. See `docs/CLUTCH_AI_ENGINE_SPEC.md`.
+- [x] **Phase 6C-6F — AI Engine Complete**: `claudeService.js` (Claude API wrapper, Sonnet/Opus, retries, rate limiting). `aiCoachService.js` (Mode 1 ambient + Mode 2 contextual + Mode 3 deep reports + Scout + Sim). `aiInsightPipeline.js` (daily 5AM cron, 11 insight types, eligibility checks). AiInsight + AiReport models. Migration 34. `/api/ai` routes (15 endpoints). Frontend: AI insights on Lab Hub + Dashboard, draft room nudges, board coaching cards, prediction calibration, coaching reports page, scout report page, Clutch Sim matchup simulator, player AI briefs on profiles. 5 new backend files, 3 new frontend pages, 10+ modified files.
 
 **Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced. **NFL game weather:** Same Open-Meteo hourly pipeline used for golf tournament rounds, keyed to NFL game venue coordinates + kickoff time windows. Wind/rain/temp affect kickers, deep-ball QBs/WRs, and overall game script. Need venue-to-coordinates mapping for all 32 stadiums (flag dome/retractable roof). Show on game preview pages + factor into fantasy projections.
 
@@ -1329,4 +1340,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 10, 2026*
-*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6A complete (data gap fixes). Phase 6B complete (Decision Graph + Pattern Engine). Next: Phase 6C (AI Foundation + Ambient Intelligence).*
+*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6 complete (AI Engine: 6A data gaps, 6B decision graph + patterns, 6C-6F Claude integration + ambient/contextual/deep coaching + scout reports + matchup sim). Next: Phase 7 (multi-sport expansion, premium tier, polish).*

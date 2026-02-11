@@ -26,6 +26,9 @@ const PlayerProfile = () => {
   const [showCaptureForm, setShowCaptureForm] = useState(false)
   const [timeline, setTimeline] = useState([])
   const [showTimeline, setShowTimeline] = useState(false)
+  const [clutchBrief, setClutchBrief] = useState(null)
+  const [briefLoading, setBriefLoading] = useState(false)
+  const [showBrief, setShowBrief] = useState(false)
   const { isWatched, toggleWatch } = useWatchList()
   const {
     player,
@@ -257,6 +260,66 @@ const PlayerProfile = () => {
                   .catch(() => {})
               }}
             />
+          )}
+
+          {/* Clutch Brief (AI Player Analysis) */}
+          {user && (
+            <div className="bg-dark-secondary border border-dark-border rounded-xl overflow-hidden">
+              <button
+                onClick={() => {
+                  setShowBrief(!showBrief)
+                  if (!clutchBrief && !briefLoading) {
+                    setBriefLoading(true)
+                    const cached = localStorage.getItem(`clutch-brief-${playerId}`)
+                    if (cached) {
+                      try {
+                        const parsed = JSON.parse(cached)
+                        if (parsed.expiresAt > Date.now()) { setClutchBrief(parsed.data); setBriefLoading(false); return }
+                      } catch {}
+                    }
+                    api.getPlayerBrief(playerId, 'golf')
+                      .then(res => {
+                        if (res.brief) {
+                          setClutchBrief(res.brief)
+                          localStorage.setItem(`clutch-brief-${playerId}`, JSON.stringify({ data: res.brief, expiresAt: Date.now() + 86400000 }))
+                        }
+                      })
+                      .catch(() => {})
+                      .finally(() => setBriefLoading(false))
+                  }
+                }}
+                className="w-full px-4 py-3 border-b border-dark-border flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <h3 className="text-sm font-display font-bold text-white">Clutch Brief</h3>
+                </div>
+                <svg className={`w-4 h-4 text-white/30 transition-transform ${showBrief ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showBrief && (
+                <div className="p-4">
+                  {briefLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-white/40">
+                      <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
+                      Generating AI brief...
+                    </div>
+                  ) : clutchBrief ? (
+                    <div>
+                      <p className="text-sm text-white/60 leading-relaxed whitespace-pre-line">{clutchBrief.brief}</p>
+                      {clutchBrief.keyInsight && (
+                        <p className="mt-3 text-xs text-gold font-semibold">{clutchBrief.keyInsight}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white/30">Unable to generate brief. Try again later.</p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Your History (Opinion Timeline) */}

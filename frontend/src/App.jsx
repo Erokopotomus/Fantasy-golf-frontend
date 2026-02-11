@@ -64,6 +64,10 @@ import NflTeamDetail from './pages/NflTeamDetail'
 import NflCompare from './pages/NflCompare'
 import NflLeaderboards from './pages/NflLeaderboards'
 import GamedayPortal from './pages/GamedayPortal'
+// AI Coaching + Scout + Sim
+import CoachingReport from './pages/CoachingReport'
+import ScoutReport from './pages/ScoutReport'
+import ClutchSim from './pages/ClutchSim'
 // The Lab (formerly Workspace)
 import DraftBoards from './pages/DraftBoards'
 import DraftBoardEditor from './pages/DraftBoardEditor'
@@ -369,6 +373,31 @@ function App() {
             element={
               <ProtectedRoute>
                 <DraftBoardEditor />
+              </ProtectedRoute>
+            }
+          />
+          {/* AI Coaching + Scout + Sim */}
+          <Route
+            path="/coach/:reportId"
+            element={
+              <ProtectedRoute>
+                <CoachingReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/scout/:sport/:eventId"
+            element={
+              <ProtectedRoute>
+                <ScoutReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sim"
+            element={
+              <ProtectedRoute>
+                <ClutchSim />
               </ProtectedRoute>
             }
           />

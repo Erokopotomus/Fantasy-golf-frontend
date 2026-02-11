@@ -11,6 +11,7 @@ const CATEGORY_COLORS = {
   'Transaction': '#8B5CF6',
   'Injury Report': '#F59E0B',
   'Analysis': '#6366F1',
+  'Clutch Coach': '#F59E0B',
 }
 
 function timeAgo(dateStr) {

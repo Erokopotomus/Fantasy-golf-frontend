@@ -140,9 +140,13 @@ export default function DraftBoards() {
   const [recentCaptures, setRecentCaptures] = useState([])
   const [dynamicInsight, setDynamicInsight] = useState(null)
   const [insightDismissed, setInsightDismissed] = useState(false)
+  const [aiInsights, setAiInsights] = useState([])
+  const [aiDismissed, setAiDismissed] = useState(new Set())
   const [hubLoading, setHubLoading] = useState(true)
   const [showCaptureModal, setShowCaptureModal] = useState(false)
   const [cheatSheetMap, setCheatSheetMap] = useState({}) // boardId → sheetId
+  const [aiReports, setAiReports] = useState([])
+  const [generatingReport, setGeneratingReport] = useState(null)
 
   // Create modal state
   const [showCreate, setShowCreate] = useState(false)
@@ -166,12 +170,16 @@ export default function DraftBoards() {
       api.getWatchList().catch(() => ({ entries: [] })),
       api.getRecentCaptures(5).catch(() => ({ captures: [] })),
       api.getLabInsight().catch(() => ({ insight: null })),
-    ]).then(([journal, watchList, capturesRes, insightRes]) => {
+      api.getAiInsights().catch(() => ({ insights: [] })),
+      api.getAiReports().catch(() => ({ reports: [] })),
+    ]).then(([journal, watchList, capturesRes, insightRes, aiRes, reportsRes]) => {
       if (cancelled) return
       setJournalEntries(journal.activities || [])
       setWatchListEntries(watchList.entries || [])
       setRecentCaptures(capturesRes.captures || [])
       if (insightRes.insight) setDynamicInsight(insightRes.insight)
+      setAiInsights((aiRes.insights || []).slice(0, 3))
+      setAiReports((reportsRes.reports || []).slice(0, 3))
       setHubLoading(false)
     })
     // Check for cheat sheets per board
@@ -341,6 +349,33 @@ export default function DraftBoards() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+          )}
+
+          {/* 2b. AI Coach Insights (from Claude) */}
+          {aiInsights.filter(i => !aiDismissed.has(i.id)).length > 0 && (
+            <div className="mb-6 space-y-2">
+              {aiInsights.filter(i => !aiDismissed.has(i.id)).map(insight => (
+                <div key={insight.id} className="p-3 bg-gradient-to-r from-purple-500/[0.06] to-gold/[0.04] border border-purple-400/15 rounded-xl flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-purple-300/80 mb-0.5">{insight.title}</p>
+                    <p className="text-xs text-white/50 leading-relaxed">{insight.body}</p>
+                  </div>
+                  <button
+                    onClick={() => { setAiDismissed(prev => new Set([...prev, insight.id])); api.dismissAiInsight(insight.id).catch(() => {}) }}
+                    className="text-white/20 hover:text-white/50 transition-colors shrink-0"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
@@ -561,6 +596,77 @@ export default function DraftBoards() {
               </div>
             </div>
           )}
+
+          {/* 7. Coaching Reports */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/[0.04] to-gold/[0.03] border border-purple-400/10 rounded-xl">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300/60">Coaching Reports</h3>
+              </div>
+            </div>
+
+            {/* Generate buttons */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {['pre_draft', 'mid_season', 'post_season'].map(type => {
+                const labels = { pre_draft: 'Pre-Draft', mid_season: 'Mid-Season', post_season: 'Season Retro' }
+                return (
+                  <button
+                    key={type}
+                    disabled={!!generatingReport}
+                    onClick={async () => {
+                      setGeneratingReport(type)
+                      try {
+                        const fn = type === 'pre_draft' ? api.generatePreDraftReport
+                          : type === 'mid_season' ? api.generateMidSeasonReport
+                          : api.generatePostSeasonReport
+                        const res = await fn('nfl')
+                        if (res.report?.id) {
+                          navigate(`/coach/${res.report.id}`)
+                        }
+                      } catch {}
+                      setGeneratingReport(null)
+                    }}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-500/10 text-purple-300 border border-purple-400/20 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
+                  >
+                    {generatingReport === type ? 'Generating...' : `Generate ${labels[type]}`}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Previous reports */}
+            {aiReports.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-white/25 uppercase tracking-wider">Previous Reports</p>
+                {aiReports.map(r => (
+                  <Link
+                    key={r.id}
+                    to={`/coach/${r.id}`}
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] transition-colors group text-xs"
+                  >
+                    <span className="text-white/60 group-hover:text-gold transition-colors">
+                      {r.reportType === 'pre_draft' ? 'Pre-Draft' : r.reportType === 'mid_season' ? 'Mid-Season' : r.reportType === 'post_season' ? 'Season Retro' : 'Scout'}
+                      {r.sport && <span className="text-white/30 ml-1">({r.sport.toUpperCase()})</span>}
+                    </span>
+                    <span className="text-white/20">{new Date(r.generatedAt).toLocaleDateString()}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Sim link */}
+            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+              <Link to="/sim" className="flex items-center gap-2 text-xs text-gold hover:text-gold/80 transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Clutch Sim — Head-to-Head Matchup Simulator
+              </Link>
+            </div>
+          </div>
         </>
       )}
 

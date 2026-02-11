@@ -42,6 +42,7 @@ const captureRoutes = require('./routes/captures')
 const labInsightRoutes = require('./routes/labInsights')
 const cheatSheetRoutes = require('./routes/cheatSheets')
 const intelligenceRoutes = require('./routes/intelligence')
+const aiRoutes = require('./routes/ai')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -143,6 +144,7 @@ app.use('/api/lab/captures', captureRoutes)
 app.use('/api/lab', labInsightRoutes)
 app.use('/api/lab/cheatsheet', cheatSheetRoutes)
 app.use('/api/intelligence', intelligenceRoutes)
+app.use('/api/ai', aiRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -886,6 +888,24 @@ httpServer.listen(PORT, () => {
     }, { timezone: 'America/New_York' })
 
     console.log('[Cron] Intelligence profile regeneration scheduled (Wed 4 AM)')
+  }
+
+  // ── Phase 6C: Daily AI Insight Pipeline ──
+  {
+    const aiInsightPipeline = require('./services/aiInsightPipeline')
+
+    // Daily 5 AM ET — generate ambient insights for active users
+    cron.schedule('0 5 * * *', async () => {
+      console.log(`[Cron:aiInsights] ${new Date().toISOString()} — Running daily insight pipeline`)
+      try {
+        const result = await aiInsightPipeline.runDailyInsightPipeline()
+        console.log(`[Cron:aiInsights] Done: ${result.totalGenerated} insights for ${result.usersProcessed} users (${result.totalSkipped} skipped)`)
+      } catch (err) {
+        console.error(`[Cron:aiInsights] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] AI Insight pipeline scheduled (daily 5 AM)')
   }
 
   // Trade review processor — runs every 15 minutes

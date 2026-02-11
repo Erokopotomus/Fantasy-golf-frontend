@@ -622,6 +622,9 @@ const MockDraftRoom = () => {
   const [tierAlert, setTierAlert] = useState(null)
   const boardQueueInitRef = useRef(false)
 
+  // AI Coach nudge
+  const [draftNudge, setDraftNudge] = useState(null)
+
   // Load config
   useEffect(() => {
     const stored = sessionStorage.getItem('mockDraftConfig')
@@ -1027,6 +1030,26 @@ const MockDraftRoom = () => {
     if (isUserNominator && !prevIsUserNominatorRef.current) playYourTurn()
     prevIsUserNominatorRef.current = isUserNominator
   }, [isUserNominator, playYourTurn])
+
+  // AI Coach nudge — fetch when it's user's turn
+  useEffect(() => {
+    if (!isUserTurn || !isStarted || isComplete) { setDraftNudge(null); return }
+    const userTeamLocal = config?.teams?.find(t => t.isUser)
+    const userPicksLocal = userTeamLocal ? picks.filter(p => p.teamId === userTeamLocal.id) : []
+    const positionsDrafted = {}
+    for (const p of userPicksLocal) {
+      const pos = p.playerPosition || 'UNKNOWN'
+      positionsDrafted[pos] = (positionsDrafted[pos] || 0) + 1
+    }
+    api.getDraftNudge({
+      sport: config?.sport || 'golf',
+      picksSoFar: userPicksLocal.length,
+      positionsDrafted,
+      boardPlayersAvailable: boardEntries.filter(e => !picks.some(p => p.playerId === e.playerId)).length,
+    }).then(res => {
+      if (res.nudge?.nudgeText) setDraftNudge(res.nudge)
+    }).catch(() => {})
+  }, [isUserTurn, isStarted, isComplete, currentPickNumber])
 
   // Sound + tracking: draft complete
   const prevIsCompleteRef = useRef(false)
@@ -2807,6 +2830,26 @@ const MockDraftRoom = () => {
       {tierAlert && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-orange/90 text-white text-sm font-semibold rounded-lg shadow-lg animate-pulse">
           {tierAlert}
+        </div>
+      )}
+
+      {/* AI Coach Nudge */}
+      {draftNudge && isUserTurn && (
+        <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-40 max-w-sm w-full px-4">
+          <div className="bg-purple-500/15 border border-purple-400/30 backdrop-blur-xl rounded-xl px-4 py-3 shadow-lg flex items-start gap-2">
+            <svg className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-purple-300 font-semibold">Clutch Coach</p>
+              <p className="text-xs text-white/70 leading-relaxed">{draftNudge.nudgeText}</p>
+            </div>
+            <button onClick={() => setDraftNudge(null)} className="text-white/30 hover:text-white/60 flex-shrink-0">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
     </div>

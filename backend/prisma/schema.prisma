@@ -64,6 +64,8 @@ model User {
   labCheatSheets   LabCheatSheet[]
   opinionEvents    PlayerOpinionEvent[]
   intelligenceProfiles UserIntelligenceProfile[]
+  aiInsights           AiInsight[]
+  aiReports            AiReport[]
 
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
@@ -2873,4 +2875,44 @@ model UserIntelligenceProfile {
 
   @@unique([userId, sport])
   @@index([userId])
+}
+
+// ============ AI INSIGHTS + REPORTS (Phase 6C) ============
+
+model AiInsight {
+  id              String    @id @default(cuid())
+  userId          String
+  sport           String?
+  insightType     String
+  title           String
+  body            String    @db.Text
+  metadata        Json?
+  priority        Int       @default(5)
+  status          String    @default("active")
+  expiresAt       DateTime?
+  generatedAt     DateTime  @default(now())
+  dismissedAt     DateTime?
+  tokenCount      Int?
+
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, status, priority])
+  @@index([userId, insightType])
+}
+
+model AiReport {
+  id              String    @id @default(cuid())
+  userId          String?
+  sport           String
+  reportType      String
+  subjectId       String?
+  contentJson     Json
+  generatedAt     DateTime  @default(now())
+  expiresAt       DateTime
+  tokenCount      Int?
+
+  user            User?     @relation(fields: [userId], references: [id])
+
+  @@index([sport, reportType, subjectId])
+  @@index([userId, reportType])
 }

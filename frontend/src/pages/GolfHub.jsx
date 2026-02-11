@@ -278,6 +278,27 @@ const GolfHub = () => {
             </Link>
           )}
 
+          {/* AI Scout Report Banner */}
+          {heroTournament && (
+            <Link
+              to={`/scout/golf/${heroTournament.id}`}
+              className="block mb-4 rounded-xl border border-purple-400/20 bg-gradient-to-r from-purple-500/[0.06] to-gold/[0.03] p-4 hover:border-purple-400/30 transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-display font-bold text-purple-300">AI Scout Report</p>
+                    <p className="text-[11px] text-white/40">Field analysis, value plays, course fit — powered by Clutch Scout</p>
+                  </div>
+                </div>
+                <span className="text-xs text-purple-300 group-hover:text-purple-200 transition-colors font-semibold">View &rarr;</span>
+              </div>
+            </Link>
+          )}
+
           {/* Section 1B: Tournament Intel Preview */}
           {heroTournament?.status === 'UPCOMING' && heroIntel && (
             <div className="mb-8">

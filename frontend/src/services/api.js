@@ -1188,6 +1188,73 @@ class ApiService {
       body: JSON.stringify({ pinnedBadges }),
     })
   }
+
+  // ── AI Engine (Phase 6C-6F) ──
+
+  // Insights (Mode 1)
+  async getAiInsights(sport) {
+    const params = sport ? `?sport=${sport}` : ''
+    return this.request(`/ai/insights${params}`)
+  }
+
+  async dismissAiInsight(insightId) {
+    return this.request(`/ai/insights/${insightId}/dismiss`, { method: 'POST' })
+  }
+
+  async markAiInsightActed(insightId) {
+    return this.request(`/ai/insights/${insightId}/acted`, { method: 'POST' })
+  }
+
+  // Contextual Coaching (Mode 2)
+  async getDraftNudge(draftState) {
+    return this.request('/ai/draft-nudge', { method: 'POST', body: JSON.stringify(draftState) })
+  }
+
+  async getBoardCoach(boardId, triggerAction, context) {
+    return this.request('/ai/board-coach', { method: 'POST', body: JSON.stringify({ boardId, triggerAction, context }) })
+  }
+
+  async getPredictionContext(predictionData) {
+    return this.request('/ai/prediction-context', { method: 'POST', body: JSON.stringify(predictionData) })
+  }
+
+  async getPredictionResolution(predictionData) {
+    return this.request('/ai/prediction-resolution', { method: 'POST', body: JSON.stringify(predictionData) })
+  }
+
+  // Deep Reports (Mode 3)
+  async generatePreDraftReport(sport) {
+    return this.request('/ai/report/pre-draft', { method: 'POST', body: JSON.stringify({ sport }) })
+  }
+
+  async generateMidSeasonReport(sport, season) {
+    return this.request('/ai/report/mid-season', { method: 'POST', body: JSON.stringify({ sport, season }) })
+  }
+
+  async generatePostSeasonReport(sport, season) {
+    return this.request('/ai/report/post-season', { method: 'POST', body: JSON.stringify({ sport, season }) })
+  }
+
+  async getAiReports() {
+    return this.request('/ai/reports')
+  }
+
+  async getAiReport(reportId) {
+    return this.request(`/ai/reports/${reportId}`)
+  }
+
+  // Scout + Sim (Phase 6F)
+  async getScoutReport(sport, eventId) {
+    return this.request('/ai/scout-report', { method: 'POST', body: JSON.stringify({ sport, eventId }) })
+  }
+
+  async getPlayerBrief(playerId, sport) {
+    return this.request('/ai/player-brief', { method: 'POST', body: JSON.stringify({ playerId, sport }) })
+  }
+
+  async simulateMatchup(player1Id, player2Id, sport) {
+    return this.request('/ai/simulate', { method: 'POST', body: JSON.stringify({ player1Id, player2Id, sport }) })
+  }
 }
 
 export const api = new ApiService()
