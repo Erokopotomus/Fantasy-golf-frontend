@@ -449,7 +449,7 @@ async function runFullImport(mflLeagueId, userId, db, apiKey) {
     // Ensure importing user is a member of the league
     await db.leagueMember.upsert({
       where: { userId_leagueId: { userId, leagueId: clutchLeague.id } },
-      create: { userId, leagueId: clutchLeague.id, role: 'COMMISSIONER' },
+      create: { userId, leagueId: clutchLeague.id, role: 'OWNER' },
       update: {},
     })
 

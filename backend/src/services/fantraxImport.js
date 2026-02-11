@@ -262,7 +262,7 @@ async function runFullImport(csvData, userId, prisma) {
     // Ensure importing user is a member of the league
     await prisma.leagueMember.upsert({
       where: { userId_leagueId: { userId, leagueId: clutchLeague.id } },
-      create: { userId, leagueId: clutchLeague.id, role: 'COMMISSIONER' },
+      create: { userId, leagueId: clutchLeague.id, role: 'OWNER' },
       update: {},
     })
 

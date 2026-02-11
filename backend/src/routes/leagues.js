@@ -25,7 +25,7 @@ router.get('/', authenticate, async (req, res, next) => {
         data: ownedWithoutMembership.map(l => ({
           userId: req.user.id,
           leagueId: l.id,
-          role: 'COMMISSIONER',
+          role: 'OWNER',
         })),
         skipDuplicates: true,
       })
