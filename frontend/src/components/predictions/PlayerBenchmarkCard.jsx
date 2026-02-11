@@ -13,6 +13,7 @@ export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus,
   const [existingPrediction, setExistingPrediction] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [showThesis, setShowThesis] = useState(false)
   const [error, setError] = useState(null)
 
   const benchmarkValue = player?.sgTotal != null
@@ -64,8 +65,10 @@ export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus,
         isPublic: true,
       })
 
-      setExistingPrediction(prediction.prediction || prediction)
+      const pred = prediction.prediction || prediction
+      setExistingPrediction(pred)
       setShowSuccess(true)
+      setShowThesis(true)
       track(Events.PREDICTION_SUBMITTED, {
         sport: 'golf',
         type: 'player_benchmark',
@@ -164,6 +167,41 @@ export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus,
           >
             {submitting ? '...' : 'Under'}
           </button>
+        </div>
+      )}
+
+      {/* Post-submission thesis prompt */}
+      {showThesis && existingPrediction?.outcome === 'PENDING' && (
+        <div className="mt-3 pt-3 border-t border-white/5">
+          <input
+            type="text"
+            maxLength={280}
+            placeholder="Why do you believe this? (optional)"
+            className="w-full bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-1.5 text-xs text-white/60 placeholder-white/15 focus:outline-none focus:border-gold/30"
+            autoFocus
+            onBlur={e => {
+              if (e.target.value.trim() && existingPrediction?.id) {
+                api.updatePrediction(existingPrediction.id, { thesis: e.target.value.trim() }).catch(() => {})
+              }
+              setShowThesis(false)
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') e.target.blur()
+              if (e.key === 'Escape') setShowThesis(false)
+            }}
+          />
+        </div>
+      )}
+
+      {/* Show thesis on resolved predictions */}
+      {existingPrediction?.thesis && existingPrediction?.outcome !== 'PENDING' && (
+        <div className="mt-2 px-3 py-2 bg-white/[0.03] rounded-lg border border-white/[0.04]">
+          <p className="text-[11px] text-white/30 italic">
+            <svg className="w-3 h-3 inline mr-1 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            "{existingPrediction.thesis}"
+          </p>
         </div>
       )}
 

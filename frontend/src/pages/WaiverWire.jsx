@@ -40,6 +40,7 @@ const WaiverWire = () => {
   const [claimTarget, setClaimTarget] = useState(null)
   const [dropTarget, setDropTarget] = useState(null)
   const [bidAmount, setBidAmount] = useState(0)
+  const [claimReasoning, setClaimReasoning] = useState('')
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [activeTab, setActiveTab] = useState('players') // players | claims | results
 
@@ -60,7 +61,7 @@ const WaiverWire = () => {
     if (!claimTarget) return
     try {
       if (isWaiverMode) {
-        await submitClaim(claimTarget.id, bidAmount, dropTarget?.id || null)
+        await submitClaim(claimTarget.id, bidAmount, dropTarget?.id || null, claimReasoning || null)
         track(Events.WAIVER_CLAIM, { leagueId, playerId: claimTarget.id, playerName: claimTarget.name, bidAmount, waiverType })
       } else {
         await claimPlayer(claimTarget.id, dropTarget?.id || null)
@@ -70,6 +71,7 @@ const WaiverWire = () => {
       setClaimTarget(null)
       setDropTarget(null)
       setBidAmount(0)
+      setClaimReasoning('')
     } catch {
       // handled by hook
     }
@@ -523,11 +525,24 @@ const WaiverWire = () => {
               </div>
             )}
 
+            {/* Optional reasoning */}
+            {isWaiverMode && (
+              <div className="mb-4">
+                <label className="block text-[11px] text-white/30 mb-1">Why this move? <span className="text-white/15">(optional)</span></label>
+                <input
+                  value={claimReasoning}
+                  onChange={e => setClaimReasoning(e.target.value.substring(0, 280))}
+                  placeholder="e.g. Starter went down, volume opportunity"
+                  className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-white/20 outline-none focus:border-gold/50"
+                />
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button
                 variant="secondary"
                 className="flex-1"
-                onClick={() => { setClaimTarget(null); setDropTarget(null); setBidAmount(0) }}
+                onClick={() => { setClaimTarget(null); setDropTarget(null); setBidAmount(0); setClaimReasoning('') }}
               >
                 Cancel
               </Button>

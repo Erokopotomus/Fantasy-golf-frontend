@@ -491,44 +491,40 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ---
 
-### Phase 6: AI Engines
+### Phase 6: AI Engine (Decision Intelligence)
 
-> **Naming convention:** All AI features use "Clutch" prefix. No robot mascots, no cartoon characters. The AI uses the ✦ icon.
+> **Master spec:** `docs/CLUTCH_AI_ENGINE_SPEC.md` — replaces previous Phase 6 plan entirely.
+> **Philosophy:** Decision Loop (THINK → RESEARCH → DECIDE → RECORD → EXECUTE → AUDIT → IMPROVE). AI powers AUDIT and IMPROVE. No chatbot — zero free-form text input.
+> **Three AI Modes:** Mode 1 (Ambient/free), Mode 2 (Contextual/premium), Mode 3 (Deep/premium)
 
-> **Reference docs:** `clutch-build-specs.md` (Section B), `clutch-data-strategy.md` (Part 5)
+- [x] **6A: Data Gap Fixes** (COMPLETE — 6 migrations, 27-32)
+  - 6A-1: Prediction thesis, confidence, key factors (BackYourCall component)
+  - 6A-2: Draft pick tagging (6 tags: STEAL/REACH/PLAN/FALLBACK/VALUE/PANIC)
+  - 6A-3: Board vs Reality comparison (DraftBoardComparison model, auto-generated on draft save)
+  - 6A-4: Capture-to-outcome linking (outcomeLinked/outcomeData on LabCapture, cron Jan 15 + Nov 1)
+  - 6A-5: Opinion evolution timeline (PlayerOpinionEvent model, hooks in 8 services, "Your History with [Player]")
+  - 6A-6: Reasoning fields on roster moves (reasoning on WaiverClaim/Trade, decisionNotes on LineupSnapshot)
 
-- [ ] **6A: Clutch Scout — Pre-Event AI Scouting Reports**
-  - Golf: tournament preview — field analysis, course fit (from 4D metrics), form scores, value calls
-  - NFL: game preview — matchup analysis, key stats, injury impact, fantasy suggestions
-  - Input: Clutch canonical data (Layer 2) + Clutch computed metrics (Layer 3) + field list + course data
-  - Output: AI-written scouting report via Claude API, publishable as content, updated as data changes
-  - Free content drives traffic; premium version goes deeper
+- [ ] **6B: Decision Graph + Pattern Engine** (NEXT)
+  - DecisionPatternCache model, patternEngine.js, 12+ pattern detectors
+  - Per-user query patterns stitching together opinion events, captures, board entries, draft picks, predictions
+  - No Claude API — pure deterministic data analysis
 
-- [ ] **6B: Clutch Edge — Value Detection Engine**
-  - Compare Clutch model probabilities vs market consensus
-  - Flag where consensus is wrong based on proprietary metrics
-  - Backtestable, improvable over time
-  - Premium paywall — crown jewel product
+- [ ] **6C: AI Infrastructure + Mode 1 (Ambient Intelligence)**
+  - Claude API wrapper (claudeService.js), AiInsight model
+  - 7 ambient insight types: decision_pattern, board_gap, capture_callback, prediction_accuracy, draft_tendency, roster_bias, season_narrative
+  - Pre-computed by cron, cached, served from DB
 
-- [ ] **6C: Clutch Advisor — Personalized AI Assistant**
-  - Claude API integration for personalized recommendations
-  - Inputs: user's roster, league scoring, matchup, consensus data, player stats/projections, weather (golf), course history
-  - Output: natural language recommendation with cited reasoning
-  - Learns user preferences over time (favorite sports, call style, league formats)
-  - Premium-only (Clutch Pro / Clutch Elite)
-  - Rate limiting: Free = 3 uses/month, Pro = unlimited, Elite = priority queue
+- [ ] **6D: Mode 2 (Contextual Intelligence)**
+  - Context-aware AI responses triggered by user actions
+  - Player deep dives, board analysis, draft strategy
 
-- [ ] **6D: Clutch Live — Real-Time Analysis**
-  - Live scoring + live metrics + momentum shifts
-  - Real-time AI commentary, in-event value alerts, projected outcomes
-  - Push notifications for key events
-  - Premium feature
+- [ ] **6E: Mode 3 (Deep Analysis)**
+  - On-demand premium AI analysis
+  - Decision audit, season review, league dynamics
 
-- [ ] **6E: Clutch Sim — Matchup Simulator**
-  - Input: any two players/teams + event/venue context
-  - Output: full AI breakdown — who wins, why, key factors, historical data
-  - Content tool + engagement feature
-  - Free (drives engagement) with premium depth
+- [ ] **6F: Polish + Integration**
+  - Insight dismissal/feedback, analytics, rate limiting refinement
 
 ---
 
@@ -1246,7 +1242,8 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
   - **Phase 4 — Cheat Sheet Generation:** `LabCheatSheet` model. `cheatSheetService.js` — ADP divergence analysis, tier break detection, value picks + fades identification, position tier grouping. `/api/lab/cheatsheet/generate` (POST), `/api/lab/cheatsheet/:id` (GET/PUT), `/api/lab/cheatsheet/board/:boardId` (GET), `/api/lab/cheatsheet/:id/publish` (POST). `LabCheatSheet.jsx` page — print-optimized CSS, value targets/fades cards, overall rankings table with tier breaks, position tiers quick reference. Board card CTA "Generate Cheat Sheet →". **Edit mode:** reorder arrows, inline note editing, column toggles (ADP/Notes/Tier Breaks), save/cancel with change detection.
   - **Phase 5 — Timeline & History:** `getBoardTimeline()` in `draftBoardService.js` (grouped by date, biggest move, activity summary). `BoardTimeline` component (date sections, activity counts, biggest move highlight). Mobile: timeline tab in `DraftBoardEditor`. Desktop: timeline modal triggered from BoardHeader.
   - **Spec Gap Closures:** (1) Cheat sheet edit mode with reorder/notes/column toggles/save — `LabCheatSheet.jsx`. (2) Manual journal entries via `POST /api/draft-boards/journal/entry` + inline form on `DecisionJournal.jsx` (+ New Entry button, board selector, player name field, `manual_entry` action type). (3) Player captures on profiles — `getCapturesByPlayer()` in captureService, `GET /api/lab/captures/player/:playerId`, "Your Notes" section on `PlayerProfile.jsx` + `NflPlayerDetail.jsx` (capture cards, + Add Note opening CaptureFormModal pre-tagged, "View all in Lab" link).
-- [ ] AI Coaching (former Phase 6 — more powerful after Feed + Workspace provide context)
+- [x] **Phase 6A — Data Gap Fixes** (6 sub-tasks): Prediction thesis+confidence, draft pick tags+boardRank, board comparison service, capture-to-outcome linking, opinion evolution timeline (PlayerOpinionEvent model + 8 fire-and-forget hooks), reasoning fields on roster moves. Migrations 27-32.
+- [ ] **Phase 6B — Decision Graph + Pattern Engine** (NEXT): Query layer that stitches opinion events, captures, board entries, draft picks, predictions, roster moves into per-user decision graph. Pattern detection engine. See `docs/CLUTCH_AI_ENGINE_SPEC.md`.
 
 **Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced. **NFL game weather:** Same Open-Meteo hourly pipeline used for golf tournament rounds, keyed to NFL game venue coordinates + kickoff time windows. Wind/rain/temp affect kickers, deep-ball QBs/WRs, and overall game script. Need venue-to-coordinates mapping for all 32 stadiums (flag dome/retractable roof). Show on game preview pages + factor into fantasy projections.
 
@@ -1331,4 +1328,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 10, 2026*
-*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete (hub redesign, captures, insights, cheat sheets with edit mode, timeline). Lab spec gaps closed (cheat sheet edit, manual journal entries, player profile captures). NFL Mock Draft complete. Next: AI Coaching.*
+*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6A complete (6 data gap fixes: prediction thesis, pick tags, board comparison, capture outcomes, opinion timeline, roster reasoning). Next: Phase 6B (Decision Graph + Pattern Engine).*

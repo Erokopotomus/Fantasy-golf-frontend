@@ -116,6 +116,7 @@ export const useTradeCenter = (leagueId) => {
         message: tradeData.message,
         senderDollars: tradeData.senderDollars,
         receiverDollars: tradeData.receiverDollars,
+        reasoning: tradeData.reasoning,
       })
       track(Events.TRADE_PROPOSED, { leagueId, playersOffered: tradeData.playersOffered.length, playersRequested: tradeData.playersRequested.length })
       fetchTrades()

@@ -5,6 +5,7 @@ const { recordTransaction } = require('../services/fantasyTracker')
 const { notifyLeague } = require('../services/notificationService')
 const { getCurrentFantasyWeek } = require('../services/fantasyWeekHelper')
 const { validatePositionLimits } = require('../services/positionLimitValidator')
+const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -300,7 +301,7 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
 
     const team = await prisma.team.findUnique({
       where: { id: req.params.id },
-      include: { roster: { where: { isActive: true } }, league: true }
+      include: { roster: { where: { isActive: true } }, league: { include: { sportRef: { select: { slug: true } } } } }
     })
 
     if (!team) {
@@ -353,6 +354,7 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
     }
 
     // Batch update in transaction (write both position + rosterStatus)
+    const previousStatuses = new Map(team.roster.map(e => [e.playerId, e.position]))
     await prisma.$transaction(
       team.roster.map(entry => {
         let status = 'BENCH'
@@ -364,6 +366,22 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
         })
       })
     )
+
+    // Fire-and-forget: opinion timeline for lineup changes
+    const lineupOpinionLog = async () => {
+      const sport = team.league?.sportRef?.slug || team.league?.sport?.slug || 'unknown'
+      for (const pid of activePlayerIds) {
+        if (previousStatuses.get(pid) !== 'ACTIVE') {
+          recordOpinionEvent(req.user.id, pid, sport, 'LINEUP_START', {}, null, 'RosterEntry').catch(() => {})
+        }
+      }
+      for (const [pid, prevStatus] of previousStatuses) {
+        if (prevStatus === 'ACTIVE' && !activePlayerIds.includes(pid)) {
+          recordOpinionEvent(req.user.id, pid, sport, 'LINEUP_BENCH', {}, null, 'RosterEntry').catch(() => {})
+        }
+      }
+    }
+    lineupOpinionLog().catch(() => {})
 
     // Return updated roster
     const updatedTeam = await prisma.team.findUnique({

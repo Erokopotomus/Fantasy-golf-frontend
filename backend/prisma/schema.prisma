@@ -62,6 +62,7 @@ model User {
   labCaptures      LabCapture[]
   labInsight       LabInsightCache?
   labCheatSheets   LabCheatSheet[]
+  opinionEvents    PlayerOpinionEvent[]
 
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
@@ -913,6 +914,11 @@ model DraftPick {
   playerId String
   player   Player @relation(fields: [playerId], references: [id])
 
+  // Decision reasoning (Phase 6A — feeds Decision Graph)
+  pickTag        String?  @db.VarChar(20)  // STEAL, REACH, PLAN, FALLBACK, VALUE, PANIC
+  boardRankAtPick Int?                      // Where this player was on user's board at pick time
+  boardId        String?                    // Which board was active during draft
+
   // Relations
   draftValueTracker DraftValueTracker?
 
@@ -1006,6 +1012,10 @@ model Trade {
 
   // Trade veto voting
   vetoVotes Json @default("[]")
+
+  // Decision reasoning (Phase 6A — feeds Decision Graph)
+  proposerReasoning  String?  @db.VarChar(280)
+  responderReasoning String?  @db.VarChar(280)
 
   // Draft dollar trading
   senderDollars   Json @default("{}") // { current: 0, next: 0 }
@@ -1320,6 +1330,9 @@ model LineupSnapshot {
   activePoints  Float? // Points from active players
   benchPoints   Float? // Points from bench players
   optimalPoints Float? // Best possible arrangement
+
+  // Decision reasoning (Phase 6A — feeds Decision Graph)
+  decisionNotes Json?  // { "benchedPlayers": [{ "playerId": "x", "reason": "matchup" }], "startedPlayers": [...] }
 
   lockedAt  DateTime @default(now())
   createdAt DateTime @default(now())
@@ -1974,6 +1987,9 @@ model WaiverClaim {
   processedAt DateTime?
   notes       String?           // "Outbid by Team X", "Insufficient budget", etc.
 
+  // Decision reasoning (Phase 6A — feeds Decision Graph)
+  reasoning   String?           @db.VarChar(280)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2092,6 +2108,11 @@ model Prediction {
 
   // Prediction content
   predictionData Json // {action, benchmark_value, direction, confidence, reasoning}
+
+  // Decision reasoning (Phase 6A — feeds Decision Graph)
+  thesis          String?  @db.VarChar(280)  // Why the user believes this
+  confidenceLevel Int?                        // 1-5 scale
+  keyFactors      Json?                       // Array of factor tags
 
   // Outcome
   outcome       PredictionOutcome @default(PENDING)
@@ -2670,6 +2691,20 @@ model DraftBoardEntry {
   @@map("clutch_draft_board_entries")
 }
 
+model DraftBoardComparison {
+  id              String   @id @default(cuid())
+  userId          String
+  draftId         String?
+  mockDraftId     String?
+  boardId         String
+  sport           String
+  comparisonData  Json
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@map("draft_board_comparisons")
+}
+
 // ============ WORKSPACE — CLUTCH PROJECTIONS (Pre-loaded Rankings) ============
 
 model ClutchProjection {
@@ -2740,6 +2775,11 @@ model LabCapture {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  // Outcome linking (Phase 6A — feeds Decision Graph)
+  outcomeLinked    Boolean   @default(false)
+  outcomeData      Json?
+  outcomeLinkedAt  DateTime?
+
   user    User              @relation(fields: [userId], references: [id])
   players LabCapturePlayer[]
 
@@ -2795,4 +2835,24 @@ model LabCheatSheet {
   @@index([userId])
   @@index([boardId])
   @@map("clutch_lab_cheatsheets")
+}
+
+// ============ OPINION TIMELINE (Phase 6A-5) ============
+
+model PlayerOpinionEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  playerId      String
+  sport         String
+  eventType     String   // CAPTURE, WATCH_ADD, WATCH_REMOVE, BOARD_ADD, BOARD_MOVE, BOARD_TAG, etc.
+  eventData     Json
+  sentiment     String?  // positive, negative, neutral, mixed
+  sourceId      String?
+  sourceType    String?
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, playerId, createdAt])
+  @@index([userId, sport, createdAt])
 }

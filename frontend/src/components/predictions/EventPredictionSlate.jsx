@@ -11,6 +11,7 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
   const [myPredictions, setMyPredictions] = useState({})
   const [submitting, setSubmitting] = useState(null)
   const [expanded, setExpanded] = useState(false)
+  const [showThesisFor, setShowThesisFor] = useState(null)
 
   // Top players from the leaderboard as prediction targets
   const targets = leaderboard
@@ -60,6 +61,7 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
         isPublic: true,
       })
       setMyPredictions(prev => ({ ...prev, [playerId]: res.prediction || res }))
+      setShowThesisFor(playerId)
       track(Events.PREDICTION_SUBMITTED, {
         sport: 'golf',
         type: 'player_benchmark',
@@ -104,54 +106,79 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
             : 0
 
           return (
-            <div key={player.id} className="flex items-center gap-2 py-1.5">
-              {/* Player info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  {player.headshotUrl && (
-                    <img src={player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
-                  )}
-                  <span className="text-sm text-white truncate">{player.name}</span>
+            <div key={player.id}>
+              <div className="flex items-center gap-2 py-1.5">
+                {/* Player info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    {player.headshotUrl && (
+                      <img src={player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
+                    )}
+                    <span className="text-sm text-white truncate">{player.name}</span>
+                  </div>
                 </div>
+
+                {/* Benchmark */}
+                <span className="text-xs font-mono text-white/50 w-12 text-right">
+                  {benchmarkValue > 0 ? '+' : ''}{benchmarkValue}
+                </span>
+
+                {/* Buttons or status */}
+                {existing ? (
+                  <div className="flex items-center gap-1 w-20 justify-end">
+                    <span className={`text-xs font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {existing.predictionData?.direction?.toUpperCase()}
+                    </span>
+                    {existing.outcome && existing.outcome !== 'PENDING' && (
+                      <span className={`text-xs ${existing.outcome === 'CORRECT' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {existing.outcome === 'CORRECT' ? '✓' : '✗'}
+                      </span>
+                    )}
+                  </div>
+                ) : isLocked ? (
+                  <div className="w-20 text-right">
+                    <span className="text-xs text-white/30">Locked</span>
+                  </div>
+                ) : (
+                  <div className="flex gap-1 w-20 justify-end">
+                    <button
+                      onClick={() => handleSubmit(player.id, player.name, 'over', benchmarkValue)}
+                      disabled={submitting === player.id}
+                      className="px-2 py-1 text-xs rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
+                    >
+                      O
+                    </button>
+                    <button
+                      onClick={() => handleSubmit(player.id, player.name, 'under', benchmarkValue)}
+                      disabled={submitting === player.id}
+                      className="px-2 py-1 text-xs rounded bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-500/30 transition-colors disabled:opacity-50"
+                    >
+                      U
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Benchmark */}
-              <span className="text-xs font-mono text-white/50 w-12 text-right">
-                {benchmarkValue > 0 ? '+' : ''}{benchmarkValue}
-              </span>
-
-              {/* Buttons or status */}
-              {existing ? (
-                <div className="flex items-center gap-1 w-20 justify-end">
-                  <span className={`text-xs font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {existing.predictionData?.direction?.toUpperCase()}
-                  </span>
-                  {existing.outcome && existing.outcome !== 'PENDING' && (
-                    <span className={`text-xs ${existing.outcome === 'CORRECT' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {existing.outcome === 'CORRECT' ? '✓' : '✗'}
-                    </span>
-                  )}
-                </div>
-              ) : isLocked ? (
-                <div className="w-20 text-right">
-                  <span className="text-xs text-white/30">Locked</span>
-                </div>
-              ) : (
-                <div className="flex gap-1 w-20 justify-end">
-                  <button
-                    onClick={() => handleSubmit(player.id, player.name, 'over', benchmarkValue)}
-                    disabled={submitting === player.id}
-                    className="px-2 py-1 text-xs rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
-                  >
-                    O
-                  </button>
-                  <button
-                    onClick={() => handleSubmit(player.id, player.name, 'under', benchmarkValue)}
-                    disabled={submitting === player.id}
-                    className="px-2 py-1 text-xs rounded bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-500/30 transition-colors disabled:opacity-50"
-                  >
-                    U
-                  </button>
+              {/* Quick thesis input after pick */}
+              {showThesisFor === player.id && existing?.outcome === 'PENDING' && (
+                <div className="pb-1">
+                  <input
+                    type="text"
+                    maxLength={280}
+                    placeholder="Quick reason? (optional)"
+                    className="w-full bg-white/[0.04] border border-white/[0.06] rounded px-2 py-1 text-[10px] text-white/60 placeholder-white/15 focus:outline-none focus:border-gold/30"
+                    autoFocus
+                    onBlur={e => {
+                      if (e.target.value.trim() && existing?.id) {
+                        api.updatePrediction(existing.id, { thesis: e.target.value.trim() }).catch(() => {})
+                      }
+                      setShowThesisFor(null)
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') e.target.blur()
+                      if (e.key === 'Escape') { setShowThesisFor(null) }
+                    }}
+                  />
                 </div>
               )}
             </div>

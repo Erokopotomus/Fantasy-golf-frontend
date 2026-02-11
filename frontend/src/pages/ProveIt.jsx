@@ -4,6 +4,7 @@ import { track, Events } from '../services/analytics'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import HeadToHead from '../components/predictions/HeadToHead'
+import BackYourCall from '../components/predictions/BackYourCall'
 import ShareButton from '../components/share/ShareButton'
 import PicksResultCard from '../components/share/cards/PicksResultCard'
 import StreakCard from '../components/share/cards/StreakCard'
@@ -43,6 +44,8 @@ function WeeklySlate({ onPredictionMade }) {
   const [submitting, setSubmitting] = useState(null)
   const [loading, setLoading] = useState(true)
   const [currentTournament, setCurrentTournament] = useState(null)
+  const [showBackingFor, setShowBackingFor] = useState(null)
+  const [backingData, setBackingData] = useState({})
 
   useEffect(() => {
     async function load() {
@@ -111,6 +114,7 @@ function WeeklySlate({ onPredictionMade }) {
         isPublic: true,
       })
       setMyPredictions(prev => ({ ...prev, [player.id]: res.prediction || res }))
+      setShowBackingFor(player.id)
       track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: 'player_benchmark', direction, context: 'prove_it_slate' })
       onPredictionMade?.()
     } catch (err) {
@@ -118,6 +122,17 @@ function WeeklySlate({ onPredictionMade }) {
     } finally {
       setSubmitting(null)
     }
+  }
+
+  const handleBackingUpdate = async (playerId) => {
+    const prediction = myPredictions[playerId]
+    const data = backingData[playerId]
+    if (!prediction?.id || !data) return
+    try {
+      await api.updatePrediction(prediction.id, data)
+    } catch {}
+    setShowBackingFor(null)
+    setBackingData(prev => { const n = { ...prev }; delete n[playerId]; return n })
   }
 
   if (loading) {
@@ -168,60 +183,87 @@ function WeeklySlate({ onPredictionMade }) {
           const benchmarkValue = Math.round(player.sgTotal * 10) / 10
 
           return (
-            <div key={player.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-3 flex items-center gap-3">
-              {/* Player info */}
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                {player.headshotUrl ? (
-                  <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+            <div key={player.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+              <div className="p-3 flex items-center gap-3">
+                {/* Player info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {player.headshotUrl ? (
+                    <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-sm">
+                      {player.name?.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="text-sm text-white font-medium truncate">{player.name}</div>
+                    {player.rank && (
+                      <div className="text-xs text-white/40 font-mono">Rank #{player.rank}</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Benchmark */}
+                <div className="text-center px-2">
+                  <div className="text-xs text-white/40">SG</div>
+                  <div className="text-sm font-mono font-bold text-white">
+                    {benchmarkValue > 0 ? '+' : ''}{benchmarkValue}
+                  </div>
+                </div>
+
+                {/* Buttons or status */}
+                {existing ? (
+                  <div className="flex items-center gap-1.5 w-20 justify-end">
+                    <span className={`text-sm font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {existing.predictionData?.direction?.toUpperCase()}
+                    </span>
+                    {existing.outcome && existing.outcome !== 'PENDING' && (
+                      <span className={`text-sm ${existing.outcome === 'CORRECT' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {existing.outcome === 'CORRECT' ? '✓' : '✗'}
+                      </span>
+                    )}
+                  </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-sm">
-                    {player.name?.charAt(0)}
+                  <div className="flex gap-2 w-20 justify-end">
+                    <button
+                      onClick={() => handleSubmit(player, 'over')}
+                      disabled={submitting === player.id}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
+                    >
+                      O
+                    </button>
+                    <button
+                      onClick={() => handleSubmit(player, 'under')}
+                      disabled={submitting === player.id}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-semibold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
+                    >
+                      U
+                    </button>
                   </div>
                 )}
-                <div className="min-w-0">
-                  <div className="text-sm text-white font-medium truncate">{player.name}</div>
-                  {player.rank && (
-                    <div className="text-xs text-white/40 font-mono">Rank #{player.rank}</div>
-                  )}
-                </div>
               </div>
 
-              {/* Benchmark */}
-              <div className="text-center px-2">
-                <div className="text-xs text-white/40">SG</div>
-                <div className="text-sm font-mono font-bold text-white">
-                  {benchmarkValue > 0 ? '+' : ''}{benchmarkValue}
-                </div>
-              </div>
-
-              {/* Buttons or status */}
-              {existing ? (
-                <div className="flex items-center gap-1.5 w-20 justify-end">
-                  <span className={`text-sm font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {existing.predictionData?.direction?.toUpperCase()}
-                  </span>
-                  {existing.outcome && existing.outcome !== 'PENDING' && (
-                    <span className={`text-sm ${existing.outcome === 'CORRECT' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {existing.outcome === 'CORRECT' ? '✓' : '✗'}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="flex gap-2 w-20 justify-end">
-                  <button
-                    onClick={() => handleSubmit(player, 'over')}
-                    disabled={submitting === player.id}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
-                  >
-                    O
-                  </button>
-                  <button
-                    onClick={() => handleSubmit(player, 'under')}
-                    disabled={submitting === player.id}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-semibold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
-                  >
-                    U
-                  </button>
+              {/* Back your call — appears after submission */}
+              {showBackingFor === player.id && existing?.outcome === 'PENDING' && (
+                <div className="px-3 pb-3">
+                  <BackYourCall
+                    sport="golf"
+                    compact
+                    onChange={data => setBackingData(prev => ({ ...prev, [player.id]: data }))}
+                  />
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      onClick={() => handleBackingUpdate(player.id)}
+                      className="px-3 py-1 rounded text-[10px] font-medium bg-gold/20 text-gold hover:bg-gold/30 transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => { setShowBackingFor(null); setBackingData(prev => { const n = { ...prev }; delete n[player.id]; return n }) }}
+                      className="text-[10px] text-white/30 hover:text-white/50 transition-colors"
+                    >
+                      Skip
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -479,7 +521,17 @@ function TrackRecord() {
                     {sportFilter === 'all' && (
                       <span className="px-1 py-0.5 rounded bg-white/5 text-[10px] uppercase">{p.sport}</span>
                     )}
+                    {p.confidenceLevel && (
+                      <span className="px-1 py-0.5 rounded bg-gold/10 text-gold/60 text-[9px]">
+                        {['', 'Low', 'Lean', 'Conf', 'Strong', 'Lock'][p.confidenceLevel]}
+                      </span>
+                    )}
                   </div>
+                  {p.thesis && (
+                    <p className="text-[11px] text-white/30 italic mt-0.5 line-clamp-2">
+                      "{p.thesis}"
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
@@ -931,12 +983,18 @@ function NflWeeklyProps({ onPredictionMade }) {
     }
   }
 
-  const handleReasonChip = async (propId, chip) => {
+  const handleReasonChip = async (propId, chip, thesis) => {
     try {
       const prop = [...props.playerProps, ...props.gameProps].find(p => p.id === propId)
       const direction = prop?.userPick?.predictionData?.direction
-      if (direction) await api.submitNflPick(propId, direction, chip)
-      setShowReasonFor(null)
+      if (chip && direction) {
+        await api.submitNflPick(propId, direction, chip)
+      }
+      // If thesis provided, update the prediction directly
+      if (thesis && prop?.userPick?.id) {
+        await api.updatePrediction(prop.userPick.id, { thesis })
+      }
+      if (chip) setShowReasonFor(null)
     } catch {}
   }
 
@@ -1121,6 +1179,24 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
                 }`}>{chip}</button>
             ))}
           </div>
+          {/* Thesis input for deeper reasoning */}
+          <input
+            type="text"
+            maxLength={280}
+            placeholder="Quick thesis... (optional)"
+            className="w-full mt-2 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[11px] text-white/70 placeholder-white/15 focus:outline-none focus:border-gold/30"
+            onBlur={e => {
+              if (e.target.value.trim()) {
+                onReasonChip?.(prop.id, null, e.target.value.trim())
+              }
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && e.target.value.trim()) {
+                onReasonChip?.(prop.id, null, e.target.value.trim())
+                e.target.blur()
+              }
+            }}
+          />
         </div>
       )}
     </div>

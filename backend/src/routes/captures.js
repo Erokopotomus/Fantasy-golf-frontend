@@ -1,6 +1,7 @@
 const express = require('express')
 const { authenticate } = require('../middleware/auth')
 const captureService = require('../services/captureService')
+const opinionTimeline = require('../services/opinionTimelineService')
 
 const router = express.Router()
 
@@ -59,6 +60,14 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const result = await captureService.deleteCapture(req.user.id, req.params.id)
     res.json(result)
+  } catch (err) { next(err) }
+})
+
+// GET /api/lab/captures/timeline/:playerId — opinion evolution timeline for a player
+router.get('/timeline/:playerId', async (req, res, next) => {
+  try {
+    const events = await opinionTimeline.getTimeline(req.user.id, req.params.playerId)
+    res.json({ events })
   } catch (err) { next(err) }
 })
 

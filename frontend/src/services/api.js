@@ -573,6 +573,14 @@ class ApiService {
     })
   }
 
+  async getBoardComparison(mockDraftId) {
+    return this.request(`/draft-history/board-comparison/${mockDraftId}`)
+  }
+
+  async getLatestBoardComparison() {
+    return this.request('/draft-history/board-comparison-latest')
+  }
+
   // Predictions
   async submitPrediction(data) {
     return this.request('/predictions', {
@@ -1114,6 +1122,10 @@ class ApiService {
 
   async getPlayerCaptures(playerId, limit = 10) {
     return this.request(`/lab/captures/player/${encodeURIComponent(playerId)}?limit=${limit}`)
+  }
+
+  async getPlayerTimeline(playerId) {
+    return this.request(`/lab/captures/timeline/${encodeURIComponent(playerId)}`)
   }
 
   // ─── The Lab: Insights ─────────────────────────────────────────────────

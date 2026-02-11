@@ -24,6 +24,8 @@ export default function NflPlayerDetail() {
   const [playerCaptures, setPlayerCaptures] = useState([])
   const [capturesLoading, setCapturesLoading] = useState(false)
   const [showCaptureForm, setShowCaptureForm] = useState(false)
+  const [timeline, setTimeline] = useState([])
+  const [showTimeline, setShowTimeline] = useState(false)
   const { isWatched, toggleWatch } = useWatchList()
 
   const loadProfile = useCallback(async () => {
@@ -104,7 +106,7 @@ export default function NflPlayerDetail() {
       .finally(() => setNewsLoading(false))
   }, [activeTab, playerId])
 
-  // Fetch player captures
+  // Fetch player captures + timeline
   useEffect(() => {
     if (!playerId || !user) return
     setCapturesLoading(true)
@@ -112,6 +114,9 @@ export default function NflPlayerDetail() {
       .then(data => setPlayerCaptures(data.captures || []))
       .catch(() => setPlayerCaptures([]))
       .finally(() => setCapturesLoading(false))
+    api.getPlayerTimeline(playerId)
+      .then(data => setTimeline(data.events || []))
+      .catch(() => setTimeline([]))
   }, [playerId, user])
 
   const TABS = [
@@ -760,26 +765,33 @@ export default function NflPlayerDetail() {
               </p>
             ) : (
               <div className="space-y-2.5">
-                {playerCaptures.map(c => (
-                  <div key={c.id} className="px-3 py-2 bg-white/[0.03] rounded-lg border border-white/[0.04]">
-                    <p className="text-xs text-white/70 line-clamp-3">{c.content}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {c.sourceType && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.06] text-white/30">{c.sourceType}</span>
-                      )}
-                      {c.sentiment && (
-                        <span className={`text-[10px] font-medium ${
-                          c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-white/30'
-                        }`}>
-                          {c.sentiment === 'bullish' ? '↑' : c.sentiment === 'bearish' ? '↓' : '–'} {c.sentiment}
+                {playerCaptures.map(c => {
+                  const verdict = c.outcomeLinked && c.outcomeData?.players?.[0]?.verdict
+                  return (
+                    <div key={c.id} className="px-3 py-2 bg-white/[0.03] rounded-lg border border-white/[0.04]">
+                      <p className="text-xs text-white/70 line-clamp-3">{c.content}</p>
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; Called it</span>}
+                        {verdict === 'INCORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed</span>}
+                        {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending</span>}
+                        {(verdict === 'TRENDING_INCORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending</span>}
+                        {c.sourceType && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.06] text-white/30">{c.sourceType}</span>
+                        )}
+                        {c.sentiment && (
+                          <span className={`text-[10px] font-medium ${
+                            c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-white/30'
+                          }`}>
+                            {c.sentiment === 'bullish' ? '↑' : c.sentiment === 'bearish' ? '↓' : '–'} {c.sentiment}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-white/15">
+                          {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
-                      )}
-                      <span className="text-[10px] text-white/15">
-                        {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
                 {playerCaptures.length >= 5 && (
                   <Link to="/lab/captures" className="block text-center text-xs text-gold hover:underline pt-1">
                     View all in Lab
@@ -801,6 +813,51 @@ export default function NflPlayerDetail() {
               .catch(() => {})
           }}
         />
+      )}
+
+      {/* ─── Your History (Opinion Timeline) ─── */}
+      {user && timeline.length > 0 && (
+        <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+          <button
+            onClick={() => setShowTimeline(!showTimeline)}
+            className="w-full px-4 py-3 border-b border-white/10 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+          >
+            <h3 className="text-sm font-display font-bold text-white">Your History with {player.name}</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-white/30">{timeline.length} events</span>
+              <svg className={`w-4 h-4 text-white/30 transition-transform ${showTimeline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </button>
+          {showTimeline && (
+            <div className="p-4 space-y-2">
+              {timeline.map(ev => {
+                const icons = { CAPTURE: '\u270D', WATCH_ADD: '\u2B50', WATCH_REMOVE: '\u2716', BOARD_ADD: '\u2795', BOARD_MOVE: '\u2195', BOARD_TAG: '\uD83C\uDFF7', BOARD_NOTE: '\uD83D\uDCDD', BOARD_REMOVE: '\u2796', DRAFT_PICK: '\uD83C\uDFC8', PREDICTION_MADE: '\uD83D\uDD2E', PREDICTION_RESOLVED: '\u2705', WAIVER_ADD: '\uD83D\uDCE5', TRADE_ACQUIRE: '\uD83E\uDD1D', TRADE_AWAY: '\uD83D\uDCE4', LINEUP_START: '\u25B6', LINEUP_BENCH: '\u23F8' }
+                const icon = icons[ev.eventType] || '\u2022'
+                const label = ev.eventType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+                const detail = ev.eventData?.content?.substring(0, 80) || ev.eventData?.note?.substring(0, 80) || ev.eventData?.tag || ev.eventData?.boardName || ''
+                return (
+                  <div key={ev.id} className="flex items-start gap-2.5">
+                    <span className="text-sm mt-0.5 w-5 text-center shrink-0">{icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-white/70">{label}</span>
+                        {ev.sentiment && (
+                          <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-emerald-400' : ev.sentiment === 'negative' ? 'text-red-400' : 'text-white/30'}`}>{ev.sentiment}</span>
+                        )}
+                      </div>
+                      {detail && <p className="text-[10px] text-white/30 truncate">{detail}</p>}
+                    </div>
+                    <span className="text-[10px] text-white/15 shrink-0">
+                      {new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ─── Source Attribution ─── */}

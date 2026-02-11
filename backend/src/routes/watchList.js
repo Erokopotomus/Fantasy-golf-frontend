@@ -1,6 +1,7 @@
 const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
+const { recordEvent } = require('../services/opinionTimelineService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -79,6 +80,12 @@ router.post('/', authenticate, async (req, res) => {
         note: note || null,
       },
     })
+
+    // Fire-and-forget: opinion timeline
+    recordEvent(req.user.id, playerId, sport, 'WATCH_ADD', {
+      note: note || null,
+    }, entry.id, 'WatchListEntry').catch(() => {})
+
     res.status(201).json({ entry })
   } catch (err) {
     if (err.code === 'P2002') {
@@ -100,6 +107,10 @@ router.delete('/:playerId', authenticate, async (req, res) => {
         },
       },
     })
+
+    // Fire-and-forget: opinion timeline (sport unknown here, use 'unknown')
+    recordEvent(req.user.id, req.params.playerId, 'unknown', 'WATCH_REMOVE', {}, null, 'WatchListEntry').catch(() => {})
+
     res.json({ success: true })
   } catch (err) {
     if (err.code === 'P2025') {

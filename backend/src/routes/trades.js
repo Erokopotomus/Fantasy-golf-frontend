@@ -4,6 +4,7 @@ const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
 const { createNotification } = require('../services/notificationService')
 const { validatePositionLimits } = require('../services/positionLimitValidator')
+const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -75,7 +76,7 @@ router.get('/', authenticate, async (req, res, next) => {
 // POST /api/trades - Propose a trade
 router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { leagueId, receiverId, senderPlayers, receiverPlayers, message, senderDollars, receiverDollars } = req.body
+    const { leagueId, receiverId, senderPlayers, receiverPlayers, message, senderDollars, receiverDollars, reasoning } = req.body
 
     // Check trade deadline
     const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { settings: true } })
@@ -120,6 +121,7 @@ router.post('/', authenticate, async (req, res, next) => {
         senderDollars: senderDollars || {},
         receiverDollars: receiverDollars || {},
         message,
+        proposerReasoning: reasoning ? String(reasoning).substring(0, 280) : null,
         status: 'PENDING'
       },
       include: {
@@ -259,7 +261,10 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
       // Update trade status
       prisma.trade.update({
         where: { id: trade.id },
-        data: { status: 'ACCEPTED' }
+        data: {
+          status: 'ACCEPTED',
+          responderReasoning: req.body.reasoning ? String(req.body.reasoning).substring(0, 280) : null,
+        }
       })
     ])
 
@@ -401,6 +406,30 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
       }
     }
     logTransactions().catch(err => console.error('Trade transaction log failed:', err.message))
+
+    // Fire-and-forget: opinion timeline for both sides of trade
+    const tradeOpinionLog = async () => {
+      const league = await prisma.league.findUnique({ where: { id: trade.leagueId }, include: { sportRef: { select: { slug: true } } } })
+      const sport = league?.sportRef?.slug || 'unknown'
+      const allIds = [...senderPlayerIds, ...receiverPlayerIds]
+      const players = allIds.length > 0 ? await prisma.player.findMany({ where: { id: { in: allIds } }, select: { id: true, name: true } }) : []
+      const nameMap = Object.fromEntries(players.map(p => [p.id, p.name]))
+      // Sender acquires receiverPlayerIds, loses senderPlayerIds
+      for (const pid of receiverPlayerIds) {
+        recordOpinionEvent(trade.senderId, pid, sport, 'TRADE_ACQUIRE', { tradedAway: senderPlayerIds.map(id => nameMap[id] || 'Unknown') }, trade.id, 'Trade').catch(() => {})
+      }
+      for (const pid of senderPlayerIds) {
+        recordOpinionEvent(trade.senderId, pid, sport, 'TRADE_AWAY', { tradedFor: receiverPlayerIds.map(id => nameMap[id] || 'Unknown') }, trade.id, 'Trade').catch(() => {})
+      }
+      // Receiver acquires senderPlayerIds, loses receiverPlayerIds
+      for (const pid of senderPlayerIds) {
+        recordOpinionEvent(trade.receiverId, pid, sport, 'TRADE_ACQUIRE', { tradedAway: receiverPlayerIds.map(id => nameMap[id] || 'Unknown') }, trade.id, 'Trade').catch(() => {})
+      }
+      for (const pid of receiverPlayerIds) {
+        recordOpinionEvent(trade.receiverId, pid, sport, 'TRADE_AWAY', { tradedFor: senderPlayerIds.map(id => nameMap[id] || 'Unknown') }, trade.id, 'Trade').catch(() => {})
+      }
+    }
+    tradeOpinionLog().catch(() => {})
 
     // Notify initiator
     try {

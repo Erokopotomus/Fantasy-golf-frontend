@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client')
 const { calculateFantasyPoints } = require('./nflScoringService')
+const { recordEvent } = require('./opinionTimelineService')
 const prisma = new PrismaClient()
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -362,6 +363,11 @@ async function addEntry(boardId, userId, playerId) {
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { name: true } })
   logActivity(boardId, userId, 'player_added', playerId, { playerName: player?.name, rank: nextRank })
 
+  // Fire-and-forget: opinion timeline
+  recordEvent(userId, playerId, board.sport, 'BOARD_ADD', {
+    rank: nextRank, tier: lastTierEntry?.tier ?? 1, boardName: board.name,
+  }, boardId, 'DraftBoard').catch(() => {})
+
   return getBoard(boardId, userId)
 }
 
@@ -398,6 +404,12 @@ async function removeEntry(boardId, userId, playerId) {
 
   logActivity(boardId, userId, 'player_removed', playerId, { playerName: player?.name, rank: entry?.rank })
 
+  // Fire-and-forget: opinion timeline
+  const boardForRemove = await prisma.draftBoard.findUnique({ where: { id: boardId }, select: { sport: true, name: true } })
+  recordEvent(userId, playerId, boardForRemove?.sport || 'unknown', 'BOARD_REMOVE', {
+    rank: entry?.rank, boardName: boardForRemove?.name,
+  }, boardId, 'DraftBoard').catch(() => {})
+
   return getBoard(boardId, userId)
 }
 
@@ -418,6 +430,12 @@ async function updateEntryNotes(boardId, userId, playerId, notes) {
   const player = await prisma.player.findUnique({ where: { id: playerId }, select: { name: true } })
   logActivity(boardId, userId, 'note_added', playerId, { playerName: player?.name, note: notes?.substring(0, 100) })
 
+  // Fire-and-forget: opinion timeline
+  const boardForNote = await prisma.draftBoard.findUnique({ where: { id: boardId }, select: { sport: true, name: true } })
+  recordEvent(userId, playerId, boardForNote?.sport || 'unknown', 'BOARD_NOTE', {
+    note: notes?.substring(0, 200), boardName: boardForNote?.name,
+  }, boardId, 'DraftBoard').catch(() => {})
+
   return { success: true }
 }
 
@@ -433,6 +451,13 @@ async function logMoveActivity(boardId, userId, playerId, playerName, fromRank, 
     tags: tags || [],
     reasonChips: reasonChips || [],
   })
+
+  // Fire-and-forget: opinion timeline
+  prisma.draftBoard.findUnique({ where: { id: boardId }, select: { sport: true, name: true } })
+    .then(b => recordEvent(userId, playerId, b?.sport || 'unknown', 'BOARD_MOVE', {
+      previousRank: fromRank, newRank: toRank, boardName: b?.name,
+    }, boardId, 'DraftBoard'))
+    .catch(() => {})
 }
 
 async function logTagActivity(boardId, userId, playerId, playerName, tags) {
@@ -440,6 +465,13 @@ async function logTagActivity(boardId, userId, playerId, playerName, tags) {
     playerName,
     tags,
   })
+
+  // Fire-and-forget: opinion timeline
+  prisma.draftBoard.findUnique({ where: { id: boardId }, select: { sport: true, name: true } })
+    .then(b => recordEvent(userId, playerId, b?.sport || 'unknown', 'BOARD_TAG', {
+      tag: Array.isArray(tags) ? tags[0] : tags, boardName: b?.name,
+    }, boardId, 'DraftBoard'))
+    .catch(() => {})
 }
 
 async function getBoardActivities(boardId, userId) {

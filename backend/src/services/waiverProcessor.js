@@ -10,6 +10,7 @@
 const { recordTransaction } = require('./fantasyTracker')
 const { createNotification, notifyLeague } = require('./notificationService')
 const { validatePositionLimits } = require('./positionLimitValidator')
+const { recordEvent: recordOpinionEvent } = require('./opinionTimelineService')
 
 /**
  * Process all pending waiver claims for a single league.
@@ -220,6 +221,13 @@ async function processFaabWaivers(leagueId, prisma) {
         where: { id: claim.id },
         data: { status: 'WON', processedAt: now, notes: claim.bidAmount > 0 ? `Won with $${claim.bidAmount} bid` : 'Claim successful' },
       })
+
+      // Fire-and-forget: opinion timeline
+      prisma.league.findUnique({ where: { id: leagueId }, include: { sportRef: { select: { slug: true } } } })
+        .then(l => recordOpinionEvent(claim.userId, claim.playerId, l?.sportRef?.slug || 'unknown', 'WAIVER_ADD', {
+          faabBid: claim.bidAmount || 0,
+        }, claim.id, 'WaiverClaim'))
+        .catch(() => {})
 
       // Notify claim owner
       try {
@@ -534,6 +542,11 @@ async function processRollingWaivers(leagueId, prisma) {
         where: { id: claim.id },
         data: { status: 'WON', processedAt: now, notes: 'Won via priority' },
       })
+
+      // Fire-and-forget: opinion timeline
+      prisma.league.findUnique({ where: { id: leagueId }, include: { sportRef: { select: { slug: true } } } })
+        .then(l => recordOpinionEvent(claim.userId, claim.playerId, l?.sportRef?.slug || 'unknown', 'WAIVER_ADD', {}, claim.id, 'WaiverClaim'))
+        .catch(() => {})
 
       try {
         await createNotification({

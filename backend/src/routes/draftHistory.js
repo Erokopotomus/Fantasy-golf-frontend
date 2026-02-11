@@ -4,6 +4,7 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { authenticate } = require('../middleware/auth')
 const { gradeLeagueDraft, gradeMockDraft } = require('../services/draftGrader')
+const boardComparisonService = require('../services/boardComparisonService')
 
 // All routes require auth
 router.use(authenticate)
@@ -354,6 +355,9 @@ router.post('/mock-drafts', async (req, res) => {
       },
     })
 
+    // Generate board comparison (fire-and-forget)
+    boardComparisonService.generateMockDraftComparison(req.user.id, result.id).catch(() => {})
+
     res.status(201).json(result)
   } catch (error) {
     console.error('Error saving mock draft:', error)
@@ -378,6 +382,35 @@ router.delete('/mock-drafts/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting mock draft:', error)
     res.status(500).json({ error: { message: 'Failed to delete mock draft' } })
+  }
+})
+
+/**
+ * GET /board-comparison/:mockDraftId — Get board vs reality comparison
+ */
+router.get('/board-comparison/:mockDraftId', async (req, res) => {
+  try {
+    const comparison = await boardComparisonService.getComparison(req.user.id, {
+      mockDraftId: req.params.mockDraftId,
+    })
+    if (!comparison) return res.json({ comparison: null })
+    res.json({ comparison })
+  } catch (error) {
+    console.error('Error fetching board comparison:', error)
+    res.status(500).json({ error: { message: 'Failed to fetch comparison' } })
+  }
+})
+
+/**
+ * GET /board-comparison-latest — Get user's most recent board comparison
+ */
+router.get('/board-comparison-latest', async (req, res) => {
+  try {
+    const comparison = await boardComparisonService.getLatestComparison(req.user.id)
+    if (!comparison) return res.json({ comparison: null })
+    res.json({ comparison })
+  } catch (error) {
+    res.status(500).json({ error: { message: 'Failed to fetch comparison' } })
   }
 })
 

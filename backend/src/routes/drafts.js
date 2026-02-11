@@ -13,6 +13,7 @@ const {
 const { recordTransaction } = require('../services/fantasyTracker')
 const { initializeLeagueSeason } = require('../services/seasonSetup')
 const { createNotification, notifyLeague } = require('../services/notificationService')
+const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -374,7 +375,7 @@ router.post('/:id/start', authenticate, async (req, res, next) => {
 // POST /api/drafts/:id/pick - Make a draft pick
 router.post('/:id/pick', authenticate, async (req, res, next) => {
   try {
-    const { playerId, amount } = req.body
+    const { playerId, amount, pickTag } = req.body
 
     const draft = await prisma.draft.findUnique({
       where: { id: req.params.id },
@@ -433,6 +434,30 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: { message: 'Player already drafted' } })
     }
 
+    // Auto-lookup board rank if user has an active draft board
+    let boardRankAtPick = null
+    let activeBoardId = null
+    try {
+      const sport = draft.league?.sport?.slug || 'golf'
+      const activeBoard = await prisma.draftBoard.findFirst({
+        where: { userId: req.user.id, sport },
+        orderBy: { updatedAt: 'desc' },
+        select: { id: true },
+      })
+      if (activeBoard) {
+        activeBoardId = activeBoard.id
+        const entry = await prisma.draftBoardEntry.findFirst({
+          where: { boardId: activeBoard.id, playerId },
+          select: { rank: true },
+        })
+        if (entry) boardRankAtPick = entry.rank
+      }
+    } catch {}
+
+    // Validate pickTag
+    const validTags = ['STEAL', 'REACH', 'PLAN', 'FALLBACK', 'VALUE', 'PANIC']
+    const safePickTag = pickTag && validTags.includes(pickTag) ? pickTag : null
+
     // Create the pick
     const pick = await prisma.draftPick.create({
       data: {
@@ -441,7 +466,10 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
         playerId,
         pickNumber: draft.currentPick,
         round: draft.currentRound,
-        amount: amount || null
+        amount: amount || null,
+        pickTag: safePickTag,
+        boardRankAtPick,
+        boardId: activeBoardId,
       },
       include: {
         player: {
@@ -529,6 +557,13 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       draftPickNumber: draft.currentPick,
       auctionAmount: amount || null,
     }, prisma).catch(err => console.error('Draft transaction log failed:', err.message))
+
+    // Fire-and-forget: opinion timeline
+    const sport = draft.league?.sport?.slug || 'golf'
+    recordOpinionEvent(req.user.id, playerId, sport, 'DRAFT_PICK', {
+      round: draft.currentRound, pick: draft.currentPick,
+      auctionAmount: amount || null, pickTag: safePickTag, boardRank: boardRankAtPick,
+    }, pick.id, 'DraftPick').catch(() => {})
 
     // Update draft state
     const newPickNumber = draft.currentPick + 1
@@ -637,6 +672,31 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
     })
   } catch (error) {
     next(error)
+  }
+})
+
+// PATCH /api/drafts/picks/:pickId/tag - Tag a draft pick after it's made
+router.patch('/picks/:pickId/tag', authenticate, async (req, res) => {
+  try {
+    const { pickTag } = req.body
+    const validTags = ['STEAL', 'REACH', 'PLAN', 'FALLBACK', 'VALUE', 'PANIC']
+    if (pickTag && !validTags.includes(pickTag)) {
+      return res.status(400).json({ error: { message: 'Invalid pick tag' } })
+    }
+    const pick = await prisma.draftPick.findUnique({
+      where: { id: req.params.pickId },
+      include: { team: { select: { userId: true } } },
+    })
+    if (!pick) return res.status(404).json({ error: { message: 'Pick not found' } })
+    if (pick.team.userId !== req.user.id) return res.status(403).json({ error: { message: 'Not your pick' } })
+
+    const updated = await prisma.draftPick.update({
+      where: { id: req.params.pickId },
+      data: { pickTag: pickTag || null },
+    })
+    res.json({ pick: updated })
+  } catch (error) {
+    res.status(500).json({ error: { message: 'Failed to tag pick' } })
   }
 })
 

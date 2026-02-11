@@ -817,6 +817,37 @@ httpServer.listen(PORT, () => {
     console.log('[Cron] Projection sync scheduled (daily 6 AM ET)')
   }
 
+  // ── Capture-to-Outcome Linking (Phase 6A) ──
+  {
+    const captureService = require('./services/captureService')
+
+    // January 15 at 6 AM ET — post-season capture outcome linking
+    cron.schedule('0 6 15 1 *', async () => {
+      const season = String(new Date().getFullYear() - 1) // Link previous season
+      console.log(`[Cron:captureOutcomes] ${new Date().toISOString()} — Linking captures for season ${season}`)
+      try {
+        const result = await captureService.linkCapturesToOutcomes(season)
+        console.log(`[Cron:captureOutcomes] Done: ${result.linked} captures linked`)
+      } catch (err) {
+        console.error(`[Cron:captureOutcomes] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    // Mid-season (Week 9-ish, ~Nov 1) at 6 AM ET — partial/trending verdicts
+    cron.schedule('0 6 1 11 *', async () => {
+      const season = String(new Date().getFullYear())
+      console.log(`[Cron:captureOutcomes] ${new Date().toISOString()} — Mid-season linking for ${season}`)
+      try {
+        const result = await captureService.linkCapturesToOutcomes(season, { partial: true })
+        console.log(`[Cron:captureOutcomes] Done: ${result.linked} captures linked (partial)`)
+      } catch (err) {
+        console.error(`[Cron:captureOutcomes] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] Capture outcome linking scheduled (Jan 15 + Nov 1)')
+  }
+
   // Trade review processor — runs every 15 minutes
   const { PrismaClient: TradePrismaClient } = require('@prisma/client')
   const tradePrisma = new TradePrismaClient()

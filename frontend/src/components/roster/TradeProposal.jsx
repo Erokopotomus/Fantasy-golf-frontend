@@ -12,6 +12,7 @@ const TradeProposal = ({
   const [selectedTeam, setSelectedTeam] = useState(null)
   const [playersToSend, setPlayersToSend] = useState([])
   const [playersToReceive, setPlayersToReceive] = useState([])
+  const [reasoning, setReasoning] = useState('')
 
   const togglePlayerToSend = (player) => {
     setPlayersToSend(prev =>
@@ -37,6 +38,7 @@ const TradeProposal = ({
       toTeamName: selectedTeam.name,
       playersOffered: playersToSend.map(p => p.id),
       playersRequested: playersToReceive.map(p => p.id),
+      reasoning: reasoning || undefined,
     })
   }
 
@@ -150,6 +152,19 @@ const TradeProposal = ({
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Optional reasoning */}
+        {canPropose && (
+          <div className="mt-4">
+            <label className="block text-[11px] text-white/30 mb-1">Pitch / reasoning <span className="text-white/15">(optional)</span></label>
+            <input
+              value={reasoning}
+              onChange={e => setReasoning(e.target.value.substring(0, 280))}
+              placeholder="e.g. Buying low after a bad week"
+              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-white/20 outline-none focus:border-gold/50"
+            />
           </div>
         )}
 

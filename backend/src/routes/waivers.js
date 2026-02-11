@@ -8,7 +8,7 @@ const prisma = new PrismaClient()
 // POST /api/leagues/:leagueId/waivers/claim - Submit a waiver claim
 router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => {
   try {
-    const { playerId, bidAmount = 0, dropPlayerId, priority = 0 } = req.body
+    const { playerId, bidAmount = 0, dropPlayerId, priority = 0, reasoning } = req.body
     const { leagueId } = req.params
 
     if (!playerId) {
@@ -69,6 +69,7 @@ router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => 
         bidAmount: waiverType === 'faab' ? bidAmount : 0,
         priority,
         status: 'PENDING',
+        reasoning: reasoning ? String(reasoning).substring(0, 280) : null,
       },
       include: {
         player: { select: { id: true, name: true, owgrRank: true, headshotUrl: true } },

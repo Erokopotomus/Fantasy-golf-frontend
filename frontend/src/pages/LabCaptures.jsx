@@ -48,6 +48,20 @@ function sourceBadge(type) {
   return <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.05] text-white/30">{label}</span>
 }
 
+function outcomeBadge(capture) {
+  if (!capture.outcomeLinked || !capture.outcomeData) return null
+  const players = capture.outcomeData.players || []
+  if (players.length === 0) return null
+  // Show verdict of the first player (most captures are single-player)
+  const verdict = players[0].verdict
+  if (verdict === 'CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; You called it</span>
+  if (verdict === 'INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed this one</span>
+  if (verdict === 'TRENDING_CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending right</span>
+  if (verdict === 'TRENDING_INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending wrong</span>
+  if (verdict === 'NOTED') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.06] text-white/30">&#8212; Noted</span>
+  return null
+}
+
 export default function LabCaptures() {
   const [captures, setCaptures] = useState([])
   const [total, setTotal] = useState(0)
@@ -208,7 +222,8 @@ export default function LabCaptures() {
 
               {/* Meta row */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {outcomeBadge(c)}
                   {sourceBadge(c.sourceType)}
                   {c.sourceName && <span className="text-[10px] text-white/20">{c.sourceName}</span>}
                   {sentimentBadge(c.sentiment)}

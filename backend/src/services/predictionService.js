@@ -10,6 +10,8 @@
  *  - "Projections" not "odds"
  */
 
+const { recordEvent } = require('./opinionTimelineService')
+
 const TIERS = ['rookie', 'contender', 'sharp', 'expert', 'elite']
 const TIER_THRESHOLDS = {
   rookie: { minPredictions: 0, minAccuracy: 0 },
@@ -41,6 +43,9 @@ async function submitPrediction(userId, data, prisma) {
     predictionData,
     isPublic = true,
     locksAt,
+    thesis,
+    confidenceLevel,
+    keyFactors,
   } = data
 
   // Validate prediction type
@@ -104,8 +109,19 @@ async function submitPrediction(userId, data, prisma) {
       isPublic,
       locksAt: effectiveLocksAt || null,
       outcome: 'PENDING',
+      thesis: thesis || null,
+      confidenceLevel: confidenceLevel != null ? Math.min(5, Math.max(1, parseInt(confidenceLevel))) : null,
+      keyFactors: Array.isArray(keyFactors) && keyFactors.length > 0 ? keyFactors : null,
     },
   })
+
+  // Fire-and-forget: opinion timeline
+  if (subjectPlayerId) {
+    recordEvent(userId, subjectPlayerId, sport, 'PREDICTION_MADE', {
+      predictionType, thesis: thesis || null,
+      confidence: confidenceLevel || null,
+    }, prediction.id, 'Prediction').catch(() => {})
+  }
 
   return prediction
 }
@@ -130,6 +146,13 @@ async function updatePrediction(predictionId, userId, updates, prisma) {
     data: {
       predictionData: updates.predictionData || prediction.predictionData,
       isPublic: updates.isPublic !== undefined ? updates.isPublic : prediction.isPublic,
+      thesis: updates.thesis !== undefined ? (updates.thesis || null) : prediction.thesis,
+      confidenceLevel: updates.confidenceLevel !== undefined
+        ? (updates.confidenceLevel != null ? Math.min(5, Math.max(1, parseInt(updates.confidenceLevel))) : null)
+        : prediction.confidenceLevel,
+      keyFactors: updates.keyFactors !== undefined
+        ? (Array.isArray(updates.keyFactors) && updates.keyFactors.length > 0 ? updates.keyFactors : null)
+        : prediction.keyFactors,
     },
   })
 }
@@ -171,6 +194,13 @@ async function resolvePrediction(predictionId, outcome, accuracyScore, prisma) {
   // Update user reputation (skip VOIDED and PUSH)
   if (outcome === 'CORRECT' || outcome === 'INCORRECT') {
     await updateReputation(prediction.userId, prediction.sport, prisma)
+  }
+
+  // Fire-and-forget: opinion timeline
+  if (prediction.subjectPlayerId) {
+    recordEvent(prediction.userId, prediction.subjectPlayerId, prediction.sport, 'PREDICTION_RESOLVED', {
+      outcome, accuracy: accuracyScore, thesis: prediction.thesis || null,
+    }, prediction.id, 'Prediction').catch(() => {})
   }
 
   return prediction

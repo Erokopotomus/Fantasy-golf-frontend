@@ -571,6 +571,7 @@ const MockDraftRoom = () => {
   const [isStarted, setIsStarted] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [recentPick, setRecentPick] = useState(null)
+  const [pickTagPrompt, setPickTagPrompt] = useState(null) // { pickId, playerName }
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('board') // board, players, queue, myteam, chat
   const [bottomTab, setBottomTab] = useState('queue') // queue, myteam, picks, chat
@@ -589,6 +590,7 @@ const MockDraftRoom = () => {
   const picksRef = useRef([])
   const queueRef = useRef([])
   const allPlayersRef = useRef([])
+  const boardEntriesRef = useRef([])
   const draftSpeedRef = useRef('fast')
 
   // Auction draft state
@@ -846,6 +848,16 @@ const MockDraftRoom = () => {
       const pickNumber = prev.length
       const info = getPickInfo(pickNumber, config.teamCount)
       const team = config.teams[info.orderIndex]
+      const isUserPick = team.isUser
+
+      // Auto-lookup board rank if user has board entries loaded
+      let boardRank = null
+      if (isUserPick && boardEntriesRef?.current?.length > 0) {
+        const entry = boardEntriesRef.current.find(e =>
+          e.playerId === player.id || (e.playerName || '').toLowerCase() === (player.name || '').toLowerCase()
+        )
+        if (entry) boardRank = entry.rank
+      }
 
       const pick = {
         id: `pick-${pickNumber + 1}`,
@@ -859,10 +871,18 @@ const MockDraftRoom = () => {
         playerRank: player.rank,
         playerPosition: player.position || null,
         playerTeam: player.team || null,
+        pickTag: null,
+        boardRankAtPick: boardRank,
       }
 
       setRecentPick(pick)
       setTimeout(() => setRecentPick(null), SPEED_CONFIG[draftSpeedRef.current].toastDuration)
+
+      // Show pick tag prompt for user picks
+      if (isUserPick) {
+        setPickTagPrompt({ pickId: pick.id, playerName: player.name })
+        setTimeout(() => setPickTagPrompt(prev => prev?.pickId === pick.id ? null : prev), 8000)
+      }
 
       const newPicks = [...prev, pick]
       if (newPicks.length >= config.teamCount * config.rosterSize) {
@@ -874,6 +894,15 @@ const MockDraftRoom = () => {
 
     setQueue(prev => prev.filter(q => q.id !== player.id))
   }, [config, playPick])
+
+  // Handle tagging a draft pick
+  const handlePickTag = useCallback((tag) => {
+    if (!pickTagPrompt) return
+    setPicks(prev => prev.map(p =>
+      p.id === pickTagPrompt.pickId ? { ...p, pickTag: tag } : p
+    ))
+    setPickTagPrompt(null)
+  }, [pickTagPrompt])
 
   // Auction: nominate a player with a starting bid
   const handleNominate = useCallback((player, startBid) => {
@@ -919,6 +948,17 @@ const MockDraftRoom = () => {
     setPicks(prev => {
       const pickNumber = prev.length
       const team = config.teams.find(t => t.id === nom.highBidderTeamId)
+      const isUserWin = team?.isUser
+
+      // Auto-lookup board rank
+      let boardRank = null
+      if (isUserWin && boardEntriesRef?.current?.length > 0) {
+        const entry = boardEntriesRef.current.find(e =>
+          e.playerId === nom.player.id || (e.playerName || '').toLowerCase() === (nom.player.name || '').toLowerCase()
+        )
+        if (entry) boardRank = entry.rank
+      }
+
       const pick = {
         id: `pick-${pickNumber + 1}`,
         pickNumber: pickNumber + 1,
@@ -932,9 +972,17 @@ const MockDraftRoom = () => {
         playerPosition: nom.player.position || null,
         playerTeam: nom.player.team || null,
         amount: nom.currentBid,
+        pickTag: null,
+        boardRankAtPick: boardRank,
       }
       setRecentPick(pick)
       setTimeout(() => setRecentPick(null), SPEED_CONFIG[draftSpeedRef.current].toastDuration)
+
+      // Show pick tag prompt for user picks
+      if (isUserWin) {
+        setPickTagPrompt({ pickId: pick.id, playerName: nom.player.name })
+        setTimeout(() => setPickTagPrompt(prev => prev?.pickId === pick.id ? null : prev), 8000)
+      }
       const newPicks = [...prev, pick]
       if (newPicks.length >= config.teamCount * config.rosterSize) {
         setIsComplete(true)
@@ -958,6 +1006,7 @@ const MockDraftRoom = () => {
   makePickRef.current = handleMakePick
   picksRef.current = picks
   queueRef.current = queue
+  boardEntriesRef.current = boardEntries
   auctionPhaseRef.current = auctionPhase
   currentNomRef.current = currentNom
   budgetsRef.current = budgets
@@ -1390,6 +1439,8 @@ const MockDraftRoom = () => {
       playerFlag: p.playerFlag,
       playerPosition: p.playerPosition || null,
       playerTeam: p.playerTeam || null,
+      pickTag: p.pickTag || null,
+      boardRankAtPick: p.boardRankAtPick || null,
     }))
 
     const teamNamesList = config.teams.map(t => t.name)
@@ -1733,6 +1784,43 @@ const MockDraftRoom = () => {
                 {recentPick.playerPosition && isNfl ? `${recentPick.playerTeam} · ` : ''}
                 {recentPick.amount ? `$${recentPick.amount} · ` : `#${recentPick.pickNumber} · `}{recentPick.teamName}
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pick Tag Prompt — appears after user makes a pick */}
+      {pickTagPrompt && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 animate-fade-in">
+          <div className="bg-dark-secondary/95 backdrop-blur-md border-t border-white/10 px-4 py-3 shadow-lg">
+            <div className="max-w-2xl mx-auto">
+              <p className="text-[11px] text-white/40 mb-2 text-center">
+                How'd that feel? <span className="text-white/60 font-medium">{pickTagPrompt.playerName}</span>
+              </p>
+              <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                {[
+                  { tag: 'STEAL',    label: 'Steal',    color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+                  { tag: 'PLAN',     label: 'The Plan',  color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+                  { tag: 'VALUE',    label: 'Value',    color: 'bg-gold/20 text-gold border-gold/30' },
+                  { tag: 'REACH',    label: 'Reach',    color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
+                  { tag: 'FALLBACK', label: 'Fallback', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
+                  { tag: 'PANIC',    label: 'Panic',    color: 'bg-rose-500/20 text-rose-400 border-rose-500/30' },
+                ].map(({ tag, label, color }) => (
+                  <button
+                    key={tag}
+                    onClick={() => handlePickTag(tag)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:scale-105 ${color}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPickTagPrompt(null)}
+                  className="px-2 py-1.5 text-[10px] text-white/20 hover:text-white/40 transition-colors"
+                >
+                  Skip
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2557,13 +2645,26 @@ const MockDraftRoom = () => {
                             ) : (
                               <span className="text-sm">{pick.playerFlag}</span>
                             )}
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <p className="text-white text-sm font-medium truncate">{pick.playerName}</p>
                               <p className="text-text-muted text-xs">
                                 {isNfl && pick.playerTeam ? `${pick.playerTeam} · ` : ''}
                                 Pick #{pick.pickNumber} · Rank #{pick.playerRank}
                               </p>
                             </div>
+                            {pick.pickTag && (
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                pick.pickTag === 'STEAL' ? 'bg-emerald-500/20 text-emerald-400' :
+                                pick.pickTag === 'PLAN' ? 'bg-blue-500/20 text-blue-400' :
+                                pick.pickTag === 'VALUE' ? 'bg-gold/20 text-gold' :
+                                pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
+                                pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
+                                pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
+                                'bg-white/10 text-white/40'
+                              }`}>
+                                {pick.pickTag}
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}

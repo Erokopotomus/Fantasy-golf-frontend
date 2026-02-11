@@ -6,6 +6,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
   const [myPlayersToSend, setMyPlayersToSend] = useState([])
   const [theirPlayersToReceive, setTheirPlayersToReceive] = useState([])
   const [message, setMessage] = useState('')
+  const [reasoning, setReasoning] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [senderCurrentDollars, setSenderCurrentDollars] = useState(0)
   const [senderNextDollars, setSenderNextDollars] = useState(0)
@@ -46,6 +47,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
         playersOffered: myPlayersToSend,
         playersRequested: theirPlayersToReceive,
         message: message || undefined,
+        reasoning: reasoning || undefined,
       }
       if (dollarsEnabled) {
         tradeData.senderDollars = { current: senderCurrentDollars || 0, next: senderNextDollars || 0 }
@@ -57,6 +59,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
       setMyPlayersToSend([])
       setTheirPlayersToReceive([])
       setMessage('')
+      setReasoning('')
       setSenderCurrentDollars(0)
       setSenderNextDollars(0)
       setReceiverCurrentDollars(0)
@@ -314,6 +317,19 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
             </Card>
           )}
         </div>
+
+        {/* Optional reasoning */}
+        {canSubmit && (
+          <div className="px-4 pb-2">
+            <label className="block text-[11px] text-white/30 mb-1">Pitch / reasoning <span className="text-white/15">(optional, private to you)</span></label>
+            <input
+              value={reasoning}
+              onChange={e => setReasoning(e.target.value.substring(0, 280))}
+              placeholder="e.g. Buying low after a bad week"
+              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-white/20 outline-none focus:border-gold/50"
+            />
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex gap-3 p-4 border-t border-dark-border">
