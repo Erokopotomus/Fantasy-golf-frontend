@@ -1323,6 +1323,22 @@ class ApiService {
   async deleteCustomData(dataId) {
     return this.request(`/import/custom/${dataId}`, { method: 'DELETE' })
   }
+
+  // ── League Intelligence ──
+  async queryLeague(leagueId, question, sessionId) {
+    return this.request('/ai/league-query', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, question, sessionId }),
+    })
+  }
+
+  async getLeagueQuerySessions(leagueId) {
+    return this.request(`/ai/league-query/sessions?leagueId=${leagueId}`)
+  }
+
+  async deleteLeagueQuerySession(sessionId) {
+    return this.request(`/ai/league-query/sessions/${sessionId}`, { method: 'DELETE' })
+  }
 }
 
 export const api = new ApiService()

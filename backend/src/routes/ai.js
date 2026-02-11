@@ -10,6 +10,7 @@ const router = express.Router()
 const { authenticate } = require('../middleware/auth')
 const aiInsightPipeline = require('../services/aiInsightPipeline')
 const aiCoachService = require('../services/aiCoachService')
+const leagueIntelligence = require('../services/leagueIntelligenceService')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
@@ -418,6 +419,85 @@ router.patch('/preferences', authenticate, async (req, res) => {
   } catch (err) {
     console.error('[AI] Preferences update error:', err.message)
     res.status(500).json({ error: 'Failed to update AI preferences' })
+  }
+})
+
+// ═══════════════════════════════════════════════
+//  LEAGUE INTELLIGENCE (Addendum Part 3)
+// ═══════════════════════════════════════════════
+
+// Per-user per-league daily rate limiter for league queries
+const leagueQueryLimits = new Map()
+function checkLeagueQueryLimit(userId, leagueId, maxPerDay) {
+  const key = `${userId}:${leagueId}`
+  const now = Date.now()
+  const dayMs = 86400000
+  if (!leagueQueryLimits.has(key)) leagueQueryLimits.set(key, [])
+  const log = leagueQueryLimits.get(key).filter(t => t > now - dayMs)
+  leagueQueryLimits.set(key, log)
+  if (log.length >= maxPerDay) return false
+  log.push(now)
+  return true
+}
+
+// POST /api/ai/league-query — Ask a question about a league
+router.post('/league-query', authenticate, async (req, res) => {
+  try {
+    const { leagueId, question, sessionId } = req.body
+    if (!leagueId || !question) {
+      return res.status(400).json({ error: 'leagueId and question are required' })
+    }
+    if (question.length > 500) {
+      return res.status(400).json({ error: 'Question too long (max 500 characters)' })
+    }
+
+    // Verify user is a member of this league
+    const member = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId } },
+    })
+    if (!member) {
+      return res.status(403).json({ error: 'You are not a member of this league' })
+    }
+
+    // Rate limit: 10 queries/day per league (free tier)
+    if (!checkLeagueQueryLimit(req.user.id, leagueId, 10)) {
+      return res.status(429).json({ error: 'Daily query limit reached (10/day per league)' })
+    }
+
+    const result = sessionId
+      ? await leagueIntelligence.queryLeagueWithHistory(req.user.id, leagueId, question, sessionId)
+      : await leagueIntelligence.queryLeague(req.user.id, leagueId, question)
+
+    res.json(result)
+  } catch (err) {
+    console.error('[AI] League query error:', err.message)
+    res.status(500).json({ error: 'Failed to query league data' })
+  }
+})
+
+// GET /api/ai/league-query/sessions — Get user's recent query sessions for a league
+router.get('/league-query/sessions', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.query
+    if (!leagueId) return res.status(400).json({ error: 'leagueId is required' })
+
+    const sessions = await leagueIntelligence.getUserSessions(req.user.id, leagueId)
+    res.json({ sessions })
+  } catch (err) {
+    console.error('[AI] Sessions list error:', err.message)
+    res.status(500).json({ error: 'Failed to get sessions' })
+  }
+})
+
+// DELETE /api/ai/league-query/sessions/:id — Delete a query session
+router.delete('/league-query/sessions/:id', authenticate, async (req, res) => {
+  try {
+    const deleted = await leagueIntelligence.deleteSession(req.params.id, req.user.id)
+    if (!deleted) return res.status(404).json({ error: 'Session not found' })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[AI] Session delete error:', err.message)
+    res.status(500).json({ error: 'Failed to delete session' })
   }
 })
 

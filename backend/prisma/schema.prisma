@@ -71,6 +71,9 @@ model User {
   // Custom league data imports
   customLeagueDataImports CustomLeagueData[]
 
+  // League intelligence
+  leagueQuerySessions LeagueQuerySession[]
+
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
   bio         String?  @db.Text
@@ -130,6 +133,10 @@ model League {
 
   // Custom league data (spreadsheet/website imports)
   customLeagueData CustomLeagueData[]
+
+  // League intelligence
+  querySessions   LeagueQuerySession[]
+  statsCache      LeagueStatsCache?
 
   @@map("leagues")
 }
@@ -2962,4 +2969,31 @@ model CustomLeagueData {
 
   @@index([leagueId, dataCategory])
   @@index([leagueId, seasonYear])
+}
+
+// ============ LEAGUE INTELLIGENCE ============
+
+model LeagueQuerySession {
+  id        String   @id @default(cuid())
+  userId    String
+  leagueId  String
+  messages  Json     // Array of { role, content, timestamp }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+
+  user   User   @relation(fields: [userId], references: [id])
+  league League @relation(fields: [leagueId], references: [id])
+
+  @@index([userId, leagueId])
+}
+
+model LeagueStatsCache {
+  id         String   @id @default(cuid())
+  leagueId   String   @unique
+  stats      Json     // Full pre-computed stats object
+  computedAt DateTime @default(now())
+  expiresAt  DateTime
+
+  league League @relation(fields: [leagueId], references: [id])
 }

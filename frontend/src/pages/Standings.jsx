@@ -11,6 +11,7 @@ import RotoStandings from '../components/standings/RotoStandings'
 import SurvivorStandings from '../components/standings/SurvivorStandings'
 import OADStandings from '../components/standings/OADStandings'
 import Card from '../components/common/Card'
+import LeagueChat from '../components/ai/LeagueChat'
 import useStandings from '../hooks/useStandings'
 import useMatchups from '../hooks/useMatchups'
 import useRotoCategories from '../hooks/useRotoCategories'
@@ -253,6 +254,7 @@ const Standings = () => {
           </div>
         </div>
       )}
+      <LeagueChat leagueId={leagueId} pageContext="standings" />
     </div>
   )
 }

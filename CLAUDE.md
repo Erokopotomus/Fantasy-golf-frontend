@@ -549,7 +549,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ---
 
-### Import Intelligence Pipeline — IN PROGRESS
+### Import Intelligence Pipeline — COMPLETE
 
 > **Addendum spec:** `docs/CLUTCH_IMPORT_ADDENDUM_SPEC.md` — Maximum data capture, custom data import, conversational league intelligence, opinion timeline bridge.
 > **Audit doc:** `docs/PLATFORM_DATA_MAP.md` — what each platform provides vs what we capture, with gaps.
@@ -575,9 +575,28 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Events only generated for importing user's matched team (other teams' events generated when those owners claim their teams)
   - Fire-and-forget pattern — import never blocked by opinion event failures
 
-- [ ] **Sleeper/ESPN/MFL Import Enhancement** (NEXT — addendum Part 1 for remaining platforms)
-- [ ] **Custom Data Import** (addendum Part 2 — spreadsheet + website import)
-- [ ] **Conversational League Intelligence** (addendum Part 3 — league query engine + chat UI)
+- [x] **Sleeper/ESPN/MFL/Fantrax Import Enhancement** (COMPLETE — addendum Part 1 for remaining platforms)
+  - Sleeper: raw API responses, full 18-week transaction import, traded picks, ppts (potential points), opinion timeline bridge
+  - ESPN: raw data preservation, draftDayProjectedRank, acquisitionType, streakLength, isPlayoffs/isConsolation, settings snapshot, opinion timeline bridge, owner matching
+  - MFL: raw data preservation, allPlayWins/allPlayLosses, powerRank, draft comments + salary/auction detection, opinion timeline bridge, owner matching
+  - Fantrax: raw CSV preservation in RawProviderData
+  - All platforms: fire-and-forget opinion events, error accumulation, graceful degradation
+
+- [x] **Custom Data Import** (COMPLETE — addendum Part 2)
+  - Migration 36: `CustomLeagueData` model (leagueId, sourceType, dataCategory, seasonYear, data JSON, columnMapping)
+  - `customDataImport.js` service: spreadsheet parsing (xlsx/csv), Google Sheets URL import, website crawling (rate-limited, 20 pages max, same-domain), AI column mapping via Claude, AI website content extraction, preview → confirm two-step flow
+  - `customImport.js` routes: 7 endpoints with multer file upload (10MB limit)
+  - `CustomImport.jsx` frontend: spreadsheet/website tabs, drag-and-drop upload, AI mapping preview with confidence indicators and override dropdowns, website crawl with progress
+  - League Vault: Custom tab with category grouping, expandable rows, source badges, delete capability
+
+- [x] **Conversational League Intelligence** (COMPLETE — addendum Part 3)
+  - Migration 37: `LeagueQuerySession` (conversation history, 24h TTL)
+  - Migration 38: `LeagueStatsCache` (pre-computed league stats, 7-day TTL)
+  - `leagueStatsCache.js`: all-time standings, head-to-head matrix, records (highest/lowest scores, blowouts, streaks), season summaries
+  - `leagueIntelligenceService.js`: query classification (keyword-based to minimize data loading), context builder (assembles from HistoricalSeason + CustomLeagueData + cache), owner identity resolution ("me"/"my" → user's teams), session management, context truncation (~6K token budget)
+  - League query routes added to `/api/ai/league-query` (POST query, GET sessions, DELETE session), 10/day per-league rate limit
+  - `LeagueChat.jsx` reusable component: floating button (bottom-left, purple, avoids FloatingCaptureButton), slide-in drawer (70vh mobile, 400x600 desktop), typing indicator, suggested query chips (context-aware per page), conversation persistence via sessions, suggested follow-ups from AI, source badges
+  - Added to: LeagueHome, LeagueVault, Standings, Matchups pages
 
 ---
 

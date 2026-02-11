@@ -11,6 +11,7 @@ import Button from '../components/common/Button'
 import ChatPanel from '../components/chat/ChatPanel'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import DraftCountdown from '../components/DraftCountdown'
+import LeagueChat from '../components/ai/LeagueChat'
 
 const LeagueHome = () => {
   const { leagueId } = useParams()
@@ -974,6 +975,7 @@ const LeagueHome = () => {
           </div>
         </div>
       </main>
+      <LeagueChat leagueId={leagueId} leagueName={league?.name} pageContext="home" />
     </div>
   )
 }

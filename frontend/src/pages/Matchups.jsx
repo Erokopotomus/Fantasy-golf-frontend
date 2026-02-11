@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useLeague } from '../hooks/useLeague'
 import useMatchups from '../hooks/useMatchups'
 import Card from '../components/common/Card'
+import LeagueChat from '../components/ai/LeagueChat'
 import MatchupCard from '../components/matchups/MatchupCard'
 import MatchupList from '../components/matchups/MatchupList'
 import PlayoffBracket from '../components/matchups/PlayoffBracket'
@@ -272,6 +273,7 @@ const Matchups = () => {
           currentUserId={user?.id}
         />
       )}
+      <LeagueChat leagueId={leagueId} pageContext="home" />
     </div>
   )
 }

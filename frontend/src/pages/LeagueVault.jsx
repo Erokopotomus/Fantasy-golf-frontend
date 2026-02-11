@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory } from '../hooks/useImports'
 import api from '../services/api'
+import LeagueChat from '../components/ai/LeagueChat'
 
 function downloadCSV(filename, rows) {
   const escape = (val) => {
@@ -886,6 +887,7 @@ const LeagueVault = () => {
           {tab === 'custom' && <CustomDataTab leagueId={leagueId} />}
         </div>
       </main>
+      <LeagueChat leagueId={leagueId} pageContext="vault" />
     </div>
   )
 }
