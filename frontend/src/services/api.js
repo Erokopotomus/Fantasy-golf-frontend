@@ -691,18 +691,33 @@ class ApiService {
     })
   }
 
+  // Yahoo OAuth
+  async getYahooStatus() {
+    return this.request('/auth/yahoo/status')
+  }
+
+  async disconnectYahoo() {
+    return this.request('/auth/yahoo', { method: 'DELETE' })
+  }
+
+  getYahooOAuthUrl() {
+    // OAuth initiate is a redirect, not an API call — needs the base URL without /api
+    const base = this.baseUrl.replace(/\/api$/, '')
+    return `${base}/api/auth/yahoo`
+  }
+
   // Yahoo Import
   async discoverYahooLeague(leagueId, accessToken) {
     return this.request('/imports/yahoo/discover', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, accessToken }),
+      body: JSON.stringify({ leagueId, accessToken: accessToken || undefined }),
     })
   }
 
   async importYahooLeague(leagueId, accessToken) {
     return this.request('/imports/yahoo/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, accessToken }),
+      body: JSON.stringify({ leagueId, accessToken: accessToken || undefined }),
     })
   }
 

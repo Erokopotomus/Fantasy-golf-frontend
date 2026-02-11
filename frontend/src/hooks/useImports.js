@@ -122,6 +122,39 @@ export function useESPNImport() {
   return { discovery, discovering, importing, result, error, discover, startImport, reset }
 }
 
+export function useYahooOAuth() {
+  const [status, setStatus] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const checkStatus = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await api.getYahooStatus()
+      setStatus(data)
+    } catch {
+      setStatus({ connected: false })
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { checkStatus() }, [checkStatus])
+
+  const connect = () => {
+    // Redirect to backend OAuth initiate — needs auth token in URL since it's a redirect, not fetch
+    const token = localStorage.getItem('clutch_token')
+    const oauthUrl = api.getYahooOAuthUrl()
+    window.location.href = `${oauthUrl}?token=${encodeURIComponent(token)}`
+  }
+
+  const disconnect = async () => {
+    await api.disconnectYahoo()
+    setStatus({ connected: false })
+  }
+
+  return { status, loading, connect, disconnect, refetch: checkStatus }
+}
+
 export function useYahooImport() {
   const [discovery, setDiscovery] = useState(null)
   const [importing, setImporting] = useState(false)

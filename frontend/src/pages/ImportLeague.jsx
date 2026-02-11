@@ -1,14 +1,14 @@
-import { useState, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
-import { useSleeperImport, useESPNImport, useYahooImport, useFantraxImport, useMFLImport, useImports } from '../hooks/useImports'
+import { useSleeperImport, useESPNImport, useYahooImport, useYahooOAuth, useFantraxImport, useMFLImport, useImports } from '../hooks/useImports'
 import { track, Events } from '../services/analytics'
 
 const PLATFORMS = [
   { id: 'sleeper', name: 'Sleeper', icon: '🌙', available: true, description: 'Public API — just paste your league ID' },
   { id: 'espn', name: 'ESPN', icon: '🔴', available: true, description: 'Cookie-based auth — private league support (2018+)' },
-  { id: 'yahoo', name: 'Yahoo', icon: '🟣', available: true, description: 'OAuth token — full history import' },
+  { id: 'yahoo', name: 'Yahoo', icon: '🟣', available: true, description: 'One-click connect — full history import' },
   { id: 'fantrax', name: 'Fantrax', icon: '🟢', available: true, description: 'CSV export upload — standings & draft data' },
   { id: 'mfl', name: 'MFL', icon: '🔵', available: true, description: 'XML API — deepest historical data (15+ years)' },
 ]
@@ -34,15 +34,39 @@ const StepIndicator = ({ current, total }) => (
 
 const ImportLeague = () => {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const sleeper = useSleeperImport()
   const espn = useESPNImport()
   const yahoo = useYahooImport()
+  const yahooOAuth = useYahooOAuth()
   const fantrax = useFantraxImport()
   const mfl = useMFLImport()
   const { imports, refetch } = useImports()
 
   const [step, setStep] = useState(0)
   const [platform, setPlatform] = useState(null)
+  const [showManualToken, setShowManualToken] = useState(false)
+
+  // Handle Yahoo OAuth callback redirect
+  useEffect(() => {
+    const yahooParam = searchParams.get('yahoo')
+    const errorParam = searchParams.get('error')
+    if (yahooParam === 'connected') {
+      yahooOAuth.refetch()
+      setPlatform(PLATFORMS.find(p => p.id === 'yahoo'))
+      setStep(1)
+      // Clean URL
+      searchParams.delete('yahoo')
+      setSearchParams(searchParams, { replace: true })
+    }
+    if (errorParam?.startsWith('yahoo_')) {
+      // Clean URL but let user see the platform
+      setPlatform(PLATFORMS.find(p => p.id === 'yahoo'))
+      setStep(1)
+      searchParams.delete('error')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [])
 
   // Shared input state
   const [leagueId, setLeagueId] = useState('')
@@ -97,8 +121,9 @@ const ImportLeague = () => {
         data = await espn.discover(leagueId.trim(), espnS2.trim(), espnSwid.trim())
         break
       case 'yahoo':
-        if (!leagueId.trim() || !yahooToken.trim()) return
-        data = await yahoo.discover(leagueId.trim(), yahooToken.trim())
+        if (!leagueId.trim()) return
+        if (!yahooOAuth.status?.connected && !yahooToken.trim()) return
+        data = await yahoo.discover(leagueId.trim(), yahooToken.trim() || undefined)
         break
       case 'fantrax':
         if (!standingsCSV) return
@@ -130,7 +155,7 @@ const ImportLeague = () => {
         data = await espn.startImport(leagueId.trim(), espnS2.trim(), espnSwid.trim())
         break
       case 'yahoo':
-        data = await yahoo.startImport(leagueId.trim(), yahooToken.trim())
+        data = await yahoo.startImport(leagueId.trim(), yahooToken.trim() || undefined)
         break
       case 'fantrax':
         data = await fantrax.startImport({
@@ -182,7 +207,7 @@ const ImportLeague = () => {
     switch (platform?.id) {
       case 'sleeper': return leagueId.trim().length > 0
       case 'espn': return leagueId.trim().length > 0
-      case 'yahoo': return leagueId.trim().length > 0 && yahooToken.trim().length > 0
+      case 'yahoo': return leagueId.trim().length > 0 && (yahooOAuth.status?.connected || yahooToken.trim().length > 0)
       case 'fantrax': return standingsCSV.length > 0
       case 'mfl': return leagueId.trim().length > 0 && mflApiKey.trim().length > 0
       default: return false
@@ -210,8 +235,25 @@ const ImportLeague = () => {
             <p className="text-text-secondary">
               Bring your league's history into Clutch. All your seasons, standings, and records preserved forever.
             </p>
-            <Link to="/import/custom" className="inline-flex items-center gap-1.5 mt-3 text-accent-gold text-sm hover:underline">
-              Have custom data? Import spreadsheets or scrape your league website &rarr;
+          </div>
+
+          {/* Custom Data Import — Featured CTA */}
+          <div className="mb-6 bg-gradient-to-r from-accent-gold/10 to-purple-500/10 border border-accent-gold/30 rounded-xl p-4 hover:border-accent-gold/50 transition-colors">
+            <Link to="/import/custom" className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-accent-gold/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-white">Custom Data Import</p>
+                <p className="text-xs text-text-secondary">
+                  Upload spreadsheets, paste from Google Sheets, or let us scrape your league website. Import trophies, punishments, records — anything your platform doesn't track.
+                </p>
+              </div>
+              <svg className="w-5 h-5 text-accent-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </Link>
           </div>
 
@@ -359,10 +401,58 @@ const ImportLeague = () => {
               {/* Yahoo */}
               {platform?.id === 'yahoo' && (
                 <div>
-                  <p className="text-sm text-text-secondary mb-4">
-                    Yahoo requires OAuth authorization to access your league data.
-                    Enter your league number and Yahoo API access token.
-                  </p>
+                  {/* Connection Status */}
+                  {yahooOAuth.loading ? (
+                    <div className="flex items-center gap-2 mb-4 text-text-secondary text-sm">
+                      <div className="animate-spin w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full" />
+                      Checking Yahoo connection...
+                    </div>
+                  ) : yahooOAuth.status?.connected ? (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-4">
+                        <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
+                          <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">Connected to Yahoo</p>
+                          <p className="text-xs text-text-muted">
+                            {yahooOAuth.status.isExpired
+                              ? 'Token expired — will auto-refresh on import'
+                              : `Last updated ${new Date(yahooOAuth.status.lastUpdated).toLocaleDateString()}`
+                            }
+                          </p>
+                        </div>
+                        <button
+                          onClick={yahooOAuth.disconnect}
+                          className="text-xs text-text-muted hover:text-red-400 transition-colors"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-4">
+                      <p className="text-sm text-text-secondary mb-4">
+                        Connect your Yahoo account to import your league history. You don't need to be commissioner — any league member can import.
+                      </p>
+                      <button
+                        onClick={yahooOAuth.connect}
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors mb-3"
+                      >
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12.572 6.854L8.895 13.5h2.112l-1.253 3.646L14.23 10.5h-2.112l.454-3.646zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+                        </svg>
+                        Connect with Yahoo
+                      </button>
+                      <p className="text-xs text-text-muted text-center">
+                        You'll be redirected to Yahoo to authorize read-only access to your fantasy leagues.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* League ID — always shown */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">League ID (number only)</label>
                     <input
@@ -371,22 +461,36 @@ const ImportLeague = () => {
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 123456"
                       className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      onKeyDown={e => e.key === 'Enter' && canDiscover() && handleDiscover()}
                     />
-                    <p className="text-xs text-text-muted mt-1">Find this in your Yahoo league URL: football.fantasysports.yahoo.com/f1/XXXXXX</p>
+                    <p className="text-xs text-text-muted mt-1">Find this in your Yahoo league URL: football.fantasysports.yahoo.com/f1/<span className="text-accent-gold">XXXXXX</span></p>
                   </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Access Token</label>
-                    <textarea
-                      value={yahooToken}
-                      onChange={e => setYahooToken(e.target.value)}
-                      placeholder="Paste your Yahoo OAuth access token here..."
-                      rows={3}
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors resize-none"
-                    />
-                    <p className="text-xs text-text-muted mt-1">
-                      Get your token from the Yahoo Developer Console or use a Yahoo OAuth tool.
-                    </p>
-                  </div>
+
+                  {/* Manual token fallback */}
+                  {!yahooOAuth.status?.connected && (
+                    <div className="border-t border-dark-border pt-3 mt-3">
+                      <button
+                        onClick={() => setShowManualToken(!showManualToken)}
+                        className="flex items-center gap-2 text-xs text-text-muted hover:text-text-secondary transition-colors"
+                      >
+                        <svg className={`w-3 h-3 transition-transform ${showManualToken ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        Already have an access token? Paste it manually
+                      </button>
+                      {showManualToken && (
+                        <div className="mt-3">
+                          <textarea
+                            value={yahooToken}
+                            onChange={e => setYahooToken(e.target.value)}
+                            placeholder="Paste your Yahoo OAuth access token here..."
+                            rows={3}
+                            className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors resize-none"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

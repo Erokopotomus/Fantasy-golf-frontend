@@ -16,14 +16,19 @@ const YAHOO_AUTH_URL = 'https://api.login.yahoo.com/oauth2/request_auth'
 const YAHOO_TOKEN_URL = 'https://api.login.yahoo.com/oauth2/get_token'
 
 // GET /api/auth/yahoo — Initiate Yahoo OAuth flow
-router.get('/yahoo', authenticate, (req, res) => {
+// Supports JWT via query param (?token=...) since this is a browser redirect, not a fetch call
+router.get('/yahoo', async (req, res, next) => {
+  // Try query param token first (browser redirect), then fall back to header auth
+  if (req.query.token && !req.headers.authorization) {
+    req.headers.authorization = `Bearer ${req.query.token}`
+  }
+  authenticate(req, res, next)
+}, (req, res) => {
   const clientId = process.env.YAHOO_CLIENT_ID
   const redirectUri = process.env.YAHOO_REDIRECT_URI
 
   if (!clientId || !redirectUri) {
-    return res.status(500).json({
-      error: { message: 'Yahoo OAuth not configured. Set YAHOO_CLIENT_ID and YAHOO_REDIRECT_URI.' },
-    })
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/import?error=yahoo_not_configured`)
   }
 
   // Encode userId in state to link callback to the right user
