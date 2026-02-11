@@ -69,6 +69,9 @@ import DraftBoards from './pages/DraftBoards'
 import DraftBoardEditor from './pages/DraftBoardEditor'
 import WatchList from './pages/WatchList'
 import DecisionJournal from './pages/DecisionJournal'
+import LabCaptures from './pages/LabCaptures'
+import LabCheatSheet from './pages/LabCheatSheet'
+import FloatingCaptureButton from './components/lab/FloatingCaptureButton'
 
 function WorkspaceRedirect() {
   const location = useLocation()
@@ -91,6 +94,7 @@ function App() {
           <div className="relative z-10">
           <Navbar />
           <MobileNav />
+          <FloatingCaptureButton />
           <NotificationContainer />
           <OnboardingModal />
           <main className="pb-20 md:pb-0">
@@ -341,6 +345,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <DecisionJournal />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lab/captures"
+            element={
+              <ProtectedRoute>
+                <LabCaptures />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lab/cheatsheet/:id"
+            element={
+              <ProtectedRoute>
+                <LabCheatSheet />
               </ProtectedRoute>
             }
           />

@@ -124,4 +124,12 @@ router.get('/:id/activities', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// GET /api/draft-boards/:id/timeline — board evolution timeline
+router.get('/:id/timeline', async (req, res, next) => {
+  try {
+    const timeline = await svc.getBoardTimeline(req.params.id, req.user.id)
+    res.json({ timeline })
+  } catch (err) { next(err) }
+})
+
 module.exports = router

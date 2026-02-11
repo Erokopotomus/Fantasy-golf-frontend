@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import useDraftBoards from '../hooks/useDraftBoards'
 import api from '../services/api'
+import CaptureFormModal from '../components/lab/CaptureFormModal'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -92,11 +93,12 @@ function relativeTime(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function boardStatusCTA(board) {
-  if (board.isPublished) return { label: 'Locked', color: 'text-white/30', dot: 'bg-white/20' }
+function boardStatusCTA(board, cheatSheetId) {
+  if (board.isPublished) return { label: 'Published', color: 'text-white/30', dot: 'bg-white/20' }
   if (board.playerCount === 0) return { label: 'Start Ranking →', color: 'text-gold', dot: null }
+  if (cheatSheetId) return { label: 'View Cheat Sheet', color: 'text-emerald-400', dot: 'bg-emerald-400', link: `/lab/cheatsheet/${cheatSheetId}` }
   if (board.sport === 'nfl' && board.positionCoverage && board.positionCoverage.covered >= board.positionCoverage.total) {
-    return { label: 'Ready', color: 'text-emerald-400', dot: 'bg-emerald-400' }
+    return { label: 'Generate Cheat Sheet →', color: 'text-gold', dot: 'bg-emerald-400', generateSheet: true }
   }
   return { label: 'Continue', color: 'text-gold/70', dot: 'bg-gold/50' }
 }
@@ -135,7 +137,12 @@ export default function DraftBoards() {
   // Hub data
   const [journalEntries, setJournalEntries] = useState([])
   const [watchListEntries, setWatchListEntries] = useState([])
+  const [recentCaptures, setRecentCaptures] = useState([])
+  const [dynamicInsight, setDynamicInsight] = useState(null)
+  const [insightDismissed, setInsightDismissed] = useState(false)
   const [hubLoading, setHubLoading] = useState(true)
+  const [showCaptureModal, setShowCaptureModal] = useState(false)
+  const [cheatSheetMap, setCheatSheetMap] = useState({}) // boardId → sheetId
 
   // Create modal state
   const [showCreate, setShowCreate] = useState(false)
@@ -157,12 +164,24 @@ export default function DraftBoards() {
     Promise.all([
       api.getDecisionJournal({ limit: 5 }).catch(() => ({ activities: [] })),
       api.getWatchList().catch(() => ({ entries: [] })),
-    ]).then(([journal, watchList]) => {
+      api.getRecentCaptures(5).catch(() => ({ captures: [] })),
+      api.getLabInsight().catch(() => ({ insight: null })),
+    ]).then(([journal, watchList, capturesRes, insightRes]) => {
       if (cancelled) return
       setJournalEntries(journal.activities || [])
       setWatchListEntries(watchList.entries || [])
+      setRecentCaptures(capturesRes.captures || [])
+      if (insightRes.insight) setDynamicInsight(insightRes.insight)
       setHubLoading(false)
     })
+    // Check for cheat sheets per board
+    for (const board of boards) {
+      api.getCheatSheetByBoard(board.id).then(res => {
+        if (res.sheet && !cancelled) {
+          setCheatSheetMap(prev => ({ ...prev, [board.id]: res.sheet.id }))
+        }
+      }).catch(() => {})
+    }
     return () => { cancelled = true }
   }, [loading, boards.length])
 
@@ -258,14 +277,18 @@ export default function DraftBoards() {
     }
   }
 
-  // ── AI Insight computation ─────────────────────────────────────────────
-  const nflBoards = boards.filter(b => b.sport === 'nfl')
-  const missingTE = nflBoards.filter(b => b.positionCoverage && b.positionCoverage.positions.TE === 0).length
-  const missingQB = nflBoards.filter(b => b.positionCoverage && b.positionCoverage.positions.QB === 0).length
-  let insightText = null
-  if (missingTE > 0) insightText = `${missingTE} board${missingTE > 1 ? 's' : ''} missing TE coverage`
-  else if (missingQB > 0) insightText = `${missingQB} board${missingQB > 1 ? 's' : ''} missing QB coverage`
-  else if (nflBoards.length > 0) insightText = `${nflBoards.length} NFL board${nflBoards.length > 1 ? 's' : ''} tracked — keep refining your thesis`
+  // ── Cheat sheet generation handler ──────────────────────────────────────
+  const handleGenerateCheatSheet = async (boardId) => {
+    try {
+      const res = await api.generateCheatSheet(boardId)
+      if (res.sheet?.id) {
+        setCheatSheetMap(prev => ({ ...prev, [boardId]: res.sheet.id }))
+        navigate(`/lab/cheatsheet/${res.sheet.id}`)
+      }
+    } catch (err) {
+      console.error('Generate cheat sheet failed:', err)
+    }
+  }
 
   // ── Full Hub Layout ──────────────────────────────────────────────────────
   return (
@@ -301,16 +324,23 @@ export default function DraftBoards() {
             </button>
           </div>
 
-          {/* 2. AI Insight Bar (placeholder) */}
-          {insightText && (
+          {/* 2. AI Insight Bar (dynamic from backend) */}
+          {dynamicInsight && !insightDismissed && (
             <div className="mb-6 p-3.5 bg-gradient-to-r from-gold/[0.07] to-orange/[0.04] border border-gold/15 rounded-xl flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center shrink-0">
                 <svg className="w-4.5 h-4.5 text-gold" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               </div>
-              <p className="text-sm text-white/60 flex-1">{insightText}</p>
-              <span className="px-2 py-0.5 text-[9px] font-bold uppercase bg-gold/20 text-gold/60 rounded">Soon</span>
+              <p className="text-sm text-white/60 flex-1">{dynamicInsight.text}</p>
+              <button
+                onClick={() => { setInsightDismissed(true); api.dismissLabInsight().catch(() => {}) }}
+                className="text-white/20 hover:text-white/50 transition-colors shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           )}
 
@@ -344,31 +374,49 @@ export default function DraftBoards() {
               </div>
             </div>
 
-            {/* Recent Captures (Journal) */}
+            {/* Recent Captures */}
             <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Recent Captures</h3>
-                <Link to="/lab/journal" className="text-[10px] text-gold hover:underline">View All</Link>
+                <Link to="/lab/captures" className="text-[10px] text-gold hover:underline">View All</Link>
               </div>
               {hubLoading ? (
                 <div className="space-y-2">
                   {[1, 2, 3].map(i => <div key={i} className="h-7 bg-white/[0.03] rounded animate-pulse" />)}
                 </div>
-              ) : journalEntries.length === 0 ? (
-                <p className="text-xs text-white/25 py-3">No activity yet — start ranking players to build your journal.</p>
+              ) : recentCaptures.length === 0 ? (
+                <p className="text-xs text-white/25 py-3">No captures yet — jot down podcast takes and gut feelings.</p>
               ) : (
                 <div className="space-y-1.5">
-                  {journalEntries.slice(0, 5).map((a, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs py-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-white/50 truncate">{activityDescription(a)}</span>
-                        {a.board && <span className="text-white/20 truncate">· {a.board.name}</span>}
+                  {recentCaptures.slice(0, 5).map((c, i) => (
+                    <div key={i} className="flex items-start justify-between text-xs py-1 gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white/50 truncate">{c.content}</p>
+                        {c.players && c.players.length > 0 && (
+                          <div className="flex gap-1 mt-0.5">
+                            {c.players.slice(0, 3).map(lp => (
+                              <span key={lp.id} className="px-1 py-0.5 rounded text-[9px] bg-gold/10 text-gold/60">
+                                {lp.player?.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-white/20 shrink-0 ml-2">{relativeTime(a.createdAt)}</span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {c.sentiment === 'bullish' && <span className="text-emerald-400 text-[10px]">↑</span>}
+                        {c.sentiment === 'bearish' && <span className="text-red-400 text-[10px]">↓</span>}
+                        <span className="text-white/20">{relativeTime(c.createdAt)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
+              <button
+                onClick={() => setShowCaptureModal(true)}
+                className="mt-3 w-full py-1.5 text-xs text-gold/50 hover:text-gold border border-gold/10 hover:border-gold/30 rounded-lg transition-colors"
+              >
+                + Quick Note
+              </button>
             </div>
           </div>
 
@@ -377,11 +425,11 @@ export default function DraftBoards() {
             <h2 className="text-xs font-bold uppercase tracking-wider text-white/30 mb-3">My Boards</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {boards.map(board => {
-                const status = boardStatusCTA(board)
+                const status = boardStatusCTA(board, cheatSheetMap[board.id])
                 return (
                   <Link
                     key={board.id}
-                    to={`/lab/${board.id}`}
+                    to={status.link || `/lab/${board.id}`}
                     className="block p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl hover:border-gold/30 hover:bg-dark-secondary/80 transition-all group"
                   >
                     {/* Top row: Name + sport badge */}
@@ -448,7 +496,16 @@ export default function DraftBoards() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         {status.dot && <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />}
-                        <span className={`font-medium ${status.color}`}>{status.label}</span>
+                        {status.generateSheet ? (
+                          <span
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleGenerateCheatSheet(board.id) }}
+                            className={`font-medium cursor-pointer ${status.color}`}
+                          >
+                            {status.label}
+                          </span>
+                        ) : (
+                          <span className={`font-medium ${status.color}`}>{status.label}</span>
+                        )}
                       </div>
                     </div>
                   </Link>
@@ -509,6 +566,16 @@ export default function DraftBoards() {
 
       {/* Create modal */}
       {showCreate && <CreateModal {...createModalProps()} />}
+
+      {/* Capture modal */}
+      {showCaptureModal && (
+        <CaptureFormModal
+          onClose={() => setShowCaptureModal(false)}
+          onSuccess={() => {
+            api.getRecentCaptures(5).then(res => setRecentCaptures(res.captures || [])).catch(() => {})
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -471,6 +471,118 @@ async function getUserJournal(userId, { sport, limit = 100 } = {}) {
   return activities
 }
 
+// ── Readiness ────────────────────────────────────────────────────────────────
+
+async function getBoardReadiness(boardId, userId) {
+  await assertOwnership(boardId, userId)
+
+  const board = await prisma.draftBoard.findUnique({
+    where: { id: boardId },
+    select: { sport: true },
+  })
+
+  const entries = await prisma.draftBoardEntry.findMany({
+    where: { boardId },
+    include: { player: { select: { nflPosition: true } } },
+  })
+
+  // Position counts
+  const positionsRanked = {}
+  if (board.sport === 'nfl') {
+    for (const pos of ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']) {
+      positionsRanked[pos] = entries.filter(e => e.player?.nflPosition === pos).length
+    }
+  }
+
+  // Notes count
+  const notesCount = entries.filter(e => e.notes && e.notes.trim().length > 0).length
+
+  // Watch list populated
+  const watchListCount = await prisma.watchListEntry.count({ where: { userId } })
+
+  // Captures count
+  const capturesCount = await prisma.labCapture.count({ where: { userId } })
+
+  // Mock draft completed (check if any mock draft result exists for this user)
+  const mockDraftCount = await prisma.mockDraftResult.count({ where: { userId } })
+
+  // Cheat sheet generated
+  const cheatSheetCount = await prisma.labCheatSheet.count({ where: { userId, boardId } })
+
+  return {
+    boardCreated: true,
+    positionsRanked,
+    notesCount,
+    watchListPopulated: watchListCount > 0,
+    capturesCount,
+    mockDraftCompleted: mockDraftCount > 0,
+    cheatSheetGenerated: cheatSheetCount > 0,
+  }
+}
+
+// ── Timeline ─────────────────────────────────────────────────────────────────
+
+async function getBoardTimeline(boardId, userId) {
+  await assertOwnership(boardId, userId)
+
+  const activities = await prisma.boardActivity.findMany({
+    where: { boardId },
+    orderBy: { createdAt: 'asc' },
+    take: 500,
+  })
+
+  // Group by date
+  const grouped = new Map()
+  for (const a of activities) {
+    const dateKey = a.createdAt.toISOString().split('T')[0]
+    if (!grouped.has(dateKey)) grouped.set(dateKey, [])
+    grouped.get(dateKey).push(a)
+  }
+
+  const timeline = []
+  for (const [date, dayActivities] of grouped) {
+    const moves = dayActivities.filter(a => a.action === 'player_moved').length
+    const tags = dayActivities.filter(a => a.action === 'player_tagged').length
+    const notes = dayActivities.filter(a => a.action === 'note_added').length
+    const adds = dayActivities.filter(a => a.action === 'player_added').length
+    const removes = dayActivities.filter(a => a.action === 'player_removed').length
+
+    // Find biggest rank change of the day
+    let biggestMove = null
+    for (const a of dayActivities) {
+      if (a.action === 'player_moved' && a.details?.delta) {
+        if (!biggestMove || Math.abs(a.details.delta) > Math.abs(biggestMove.delta)) {
+          biggestMove = { playerName: a.details.playerName, delta: a.details.delta, from: a.details.from, to: a.details.to }
+        }
+      }
+    }
+
+    const parts = []
+    if (dayActivities.some(a => a.action === 'board_created')) parts.push('Board created')
+    if (moves > 0) parts.push(`${moves} ranking move${moves > 1 ? 's' : ''}`)
+    if (adds > 0) parts.push(`${adds} player${adds > 1 ? 's' : ''} added`)
+    if (removes > 0) parts.push(`${removes} removed`)
+    if (tags > 0) parts.push(`${tags} tag${tags > 1 ? 's' : ''} updated`)
+    if (notes > 0) parts.push(`${notes} note${notes > 1 ? 's' : ''} added`)
+
+    timeline.push({
+      date,
+      summary: parts.join(', ') || 'Activity',
+      biggestMove,
+      activityCount: dayActivities.length,
+      activities: dayActivities.map(a => ({
+        id: a.id,
+        action: a.action,
+        playerId: a.playerId,
+        details: a.details,
+        createdAt: a.createdAt,
+      })),
+    })
+  }
+
+  return timeline
+}
+
 module.exports = {
   createBoard,
   listBoards,
@@ -485,4 +597,6 @@ module.exports = {
   logTagActivity,
   getBoardActivities,
   getUserJournal,
+  getBoardReadiness,
+  getBoardTimeline,
 }

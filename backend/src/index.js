@@ -38,6 +38,9 @@ const draftDollarsRouter = require('./routes/draftDollars')
 const draftBoardRoutes = require('./routes/draftBoards')
 const watchListRoutes = require('./routes/watchList')
 const projectionRoutes = require('./routes/projections')
+const captureRoutes = require('./routes/captures')
+const labInsightRoutes = require('./routes/labInsights')
+const cheatSheetRoutes = require('./routes/cheatSheets')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -135,6 +138,9 @@ app.use('/api/leagues', draftDollarsRouter)
 app.use('/api/draft-boards', draftBoardRoutes)
 app.use('/api/watch-list', watchListRoutes)
 app.use('/api/projections', projectionRoutes)
+app.use('/api/lab/captures', captureRoutes)
+app.use('/api/lab', labInsightRoutes)
+app.use('/api/lab/cheatsheet', cheatSheetRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -55,10 +55,13 @@ model User {
   // OAuth tokens (Yahoo, etc.)
   oauthTokens         UserOAuthToken[]
 
-  // Workspace
+  // Workspace / The Lab
   draftBoards      DraftBoard[]
   watchListEntries WatchListEntry[]
   boardActivities  BoardActivity[]
+  labCaptures      LabCapture[]
+  labInsight       LabInsightCache?
+  labCheatSheets   LabCheatSheet[]
 
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
@@ -351,6 +354,7 @@ model Player {
   draftBoardEntries  DraftBoardEntry[]
   clutchProjections  ClutchProjection[]
   watchListEntries   WatchListEntry[]
+  labCaptureLinks    LabCapturePlayer[]
 
   @@index([owgrRank])
   @@index([name])
@@ -2638,6 +2642,7 @@ model DraftBoard {
   updatedAt      DateTime @updatedAt
   entries        DraftBoardEntry[]
   activities     BoardActivity[]
+  cheatSheets    LabCheatSheet[]
 
   @@index([userId])
   @@index([userId, sport])
@@ -2721,4 +2726,73 @@ model BoardActivity {
   @@index([boardId, createdAt])
   @@index([userId, createdAt])
   @@map("clutch_board_activities")
+}
+
+// ============ THE LAB — CAPTURES ============
+
+model LabCapture {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  content     String
+  sourceType  String?  @map("source_type")
+  sourceName  String?  @map("source_name")
+  sentiment   String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user    User              @relation(fields: [userId], references: [id])
+  players LabCapturePlayer[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("clutch_lab_captures")
+}
+
+model LabCapturePlayer {
+  id           String  @id @default(uuid())
+  captureId    String  @map("capture_id")
+  playerId     String  @map("player_id")
+  autoDetected Boolean @default(false) @map("auto_detected")
+  confirmed    Boolean @default(true)
+
+  capture LabCapture @relation(fields: [captureId], references: [id], onDelete: Cascade)
+  player  Player     @relation(fields: [playerId], references: [id])
+
+  @@index([captureId])
+  @@index([playerId])
+  @@map("clutch_lab_capture_players")
+}
+
+// ============ THE LAB — INSIGHT CACHE ============
+
+model LabInsightCache {
+  userId      String    @id @map("user_id")
+  insightText String    @map("insight_text")
+  insightType String    @map("insight_type")
+  generatedAt DateTime  @default(now()) @map("generated_at")
+  dismissedAt DateTime? @map("dismissed_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("clutch_lab_insights_cache")
+}
+
+// ============ THE LAB — CHEAT SHEETS ============
+
+model LabCheatSheet {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  boardId         String    @map("board_id")
+  title           String
+  contentJson     Json      @map("content_json")
+  formatSettings  Json?     @map("format_settings")
+  generatedAt     DateTime  @default(now()) @map("generated_at")
+  reviewedAt      DateTime? @map("reviewed_at")
+  publishedAt     DateTime? @map("published_at")
+
+  user  User       @relation(fields: [userId], references: [id])
+  board DraftBoard @relation(fields: [boardId], references: [id])
+
+  @@index([userId])
+  @@index([boardId])
+  @@map("clutch_lab_cheatsheets")
 }

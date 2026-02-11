@@ -1075,6 +1075,82 @@ class ApiService {
     })
   }
 
+  // ─── The Lab: Captures ───────────────────────────────────────────────
+
+  async createCapture(data) {
+    return this.request('/lab/captures', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getCaptures(params = {}) {
+    const qs = new URLSearchParams()
+    if (params.sport) qs.set('sport', params.sport)
+    if (params.sentiment) qs.set('sentiment', params.sentiment)
+    if (params.search) qs.set('search', params.search)
+    if (params.limit) qs.set('limit', params.limit)
+    if (params.offset) qs.set('offset', params.offset)
+    const str = qs.toString()
+    return this.request(`/lab/captures${str ? '?' + str : ''}`)
+  }
+
+  async getRecentCaptures(limit = 5) {
+    return this.request(`/lab/captures/recent?limit=${limit}`)
+  }
+
+  async deleteCapture(id) {
+    return this.request(`/lab/captures/${id}`, { method: 'DELETE' })
+  }
+
+  // ─── The Lab: Insights ─────────────────────────────────────────────────
+
+  async getLabInsight() {
+    return this.request('/lab/insight')
+  }
+
+  async dismissLabInsight() {
+    return this.request('/lab/insight/dismiss', { method: 'POST' })
+  }
+
+  async getBoardReadiness(boardId) {
+    return this.request(`/lab/readiness/${boardId}`)
+  }
+
+  // ─── The Lab: Cheat Sheets ─────────────────────────────────────────────
+
+  async generateCheatSheet(boardId) {
+    return this.request('/lab/cheatsheet/generate', {
+      method: 'POST',
+      body: JSON.stringify({ boardId }),
+    })
+  }
+
+  async getCheatSheet(id) {
+    return this.request(`/lab/cheatsheet/${id}`)
+  }
+
+  async getCheatSheetByBoard(boardId) {
+    return this.request(`/lab/cheatsheet/board/${boardId}`)
+  }
+
+  async updateCheatSheet(id, data) {
+    return this.request(`/lab/cheatsheet/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async publishCheatSheet(id) {
+    return this.request(`/lab/cheatsheet/${id}/publish`, { method: 'POST' })
+  }
+
+  // ─── The Lab: Timeline ─────────────────────────────────────────────────
+
+  async getBoardTimeline(boardId) {
+    return this.request(`/draft-boards/${boardId}/timeline`)
+  }
+
   // Phase 5: Compare + Pinned Badges
   async comparePredictions(targetUserId, options = {}) {
     const params = new URLSearchParams(options).toString()

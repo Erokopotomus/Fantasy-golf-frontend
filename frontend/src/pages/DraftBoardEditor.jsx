@@ -11,6 +11,7 @@ import TierBreak from '../components/workspace/TierBreak'
 import PlayerSearchPanel from '../components/workspace/PlayerSearchPanel'
 import PlayerNoteEditor from '../components/workspace/PlayerNoteEditor'
 import DivergenceSummary from '../components/workspace/DivergenceSummary'
+import BoardTimeline from '../components/workspace/BoardTimeline'
 
 // ── Reason Chip Definitions ──────────────────────────────────────────────────
 
@@ -189,6 +190,7 @@ export default function DraftBoardEditor() {
   const [tagFilter, setTagFilter] = useState('all')
   const [posFilter, setPosFilter] = useState('All')
   const [showDivergence, setShowDivergence] = useState(true)
+  const [showTimeline, setShowTimeline] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -289,6 +291,14 @@ export default function DraftBoardEditor() {
           }`}
         >
           Add Players
+        </button>
+        <button
+          onClick={() => setMobileTab('timeline')}
+          className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider text-center transition-colors ${
+            mobileTab === 'timeline' ? 'text-gold border-b-2 border-gold' : 'text-white/40'
+          }`}
+        >
+          Timeline
         </button>
       </div>
 
@@ -396,14 +406,55 @@ export default function DraftBoardEditor() {
         </div>
 
         {/* Right: Player Search */}
-        <div className={`md:w-[40%] md:block md:border-l border-white/[0.06] bg-dark-secondary/30 ${mobileTab !== 'search' ? 'hidden' : 'flex-1'}`}>
+        <div className={`md:w-[40%] md:block md:border-l border-white/[0.06] bg-dark-secondary/30 ${mobileTab === 'search' ? 'flex-1' : mobileTab === 'timeline' ? 'hidden md:block' : 'hidden'}`}>
           <PlayerSearchPanel
             sport={board?.sport || 'nfl'}
             onAdd={handleAddPlayer}
             existingPlayerIds={existingPlayerIds}
           />
         </div>
+
+        {/* Timeline panel (mobile only — on desktop it's a modal/overlay) */}
+        {mobileTab === 'timeline' && (
+          <div className="flex-1 md:hidden overflow-y-auto p-4">
+            <BoardTimeline boardId={boardId} />
+          </div>
+        )}
       </div>
+
+      {/* Desktop Timeline button */}
+      <button
+        onClick={() => setShowTimeline(true)}
+        className="hidden md:flex fixed bottom-6 left-6 z-30 items-center gap-2 px-3 py-2 bg-dark-secondary border border-white/10 rounded-lg text-xs text-white/40 hover:text-gold hover:border-gold/30 transition-colors shadow-lg"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Timeline
+      </button>
+
+      {/* Timeline modal (desktop) */}
+      {showTimeline && (
+        <div className="hidden md:flex fixed inset-0 z-50 items-center justify-center p-4" onClick={() => setShowTimeline(false)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-lg max-h-[80vh] bg-dark-secondary border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white">Board Timeline</h2>
+              <button onClick={() => setShowTimeline(false)} className="text-white/30 hover:text-white/60">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
+              <BoardTimeline boardId={boardId} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notes editor modal */}
       {noteEntry && (
