@@ -444,9 +444,9 @@ async function runFullImport(espnLeagueId, userId, db, cookies = {}) {
     // Fetch importing user's display name for owner matching
     const importingUser = await db.user.findUnique({
       where: { id: userId },
-      select: { displayName: true, username: true },
+      select: { name: true },
     })
-    const userDisplayName = (importingUser?.displayName || importingUser?.username || '').toLowerCase()
+    const userDisplayName = (importingUser?.name || '').toLowerCase()
 
     // Step 3: Import each season
     const importedSeasons = []

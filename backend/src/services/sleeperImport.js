@@ -466,9 +466,9 @@ async function runFullImport(sleeperLeagueId, userId, db) {
     // Fetch importing user's display name for owner matching
     const importingUser = await db.user.findUnique({
       where: { id: userId },
-      select: { displayName: true, username: true },
+      select: { name: true },
     })
-    const userDisplayName = (importingUser?.displayName || importingUser?.username || '').toLowerCase()
+    const userDisplayName = (importingUser?.name || '').toLowerCase()
 
     const importedSeasons = []
     for (let i = 0; i < discovery.seasons.length; i++) {

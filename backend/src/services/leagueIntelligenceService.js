@@ -268,7 +268,7 @@ async function resolveOwnerIdentity(userId, leagueId) {
   const member = await prisma.leagueMember.findUnique({
     where: { userId_leagueId: { userId, leagueId } },
     include: {
-      user: { select: { username: true, displayName: true } },
+      user: { select: { name: true } },
     },
   })
 
@@ -285,7 +285,7 @@ async function resolveOwnerIdentity(userId, leagueId) {
   const teamNames = [...new Set(historicalTeams.map(t => t.teamName).filter(Boolean))]
 
   return {
-    clutchUsername: member?.user?.displayName || member?.user?.username || null,
+    clutchUsername: member?.user?.name || null,
     currentTeamName: team?.name || null,
     historicalOwnerNames: ownerNames,
     historicalTeamNames: teamNames,
