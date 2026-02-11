@@ -34,10 +34,11 @@ router.get('/yahoo', async (req, res, next) => {
   // Encode userId in state to link callback to the right user
   const state = Buffer.from(JSON.stringify({ userId: req.user.id })).toString('base64')
 
-  // Build OAuth URL — Yahoo docs say scope is set at app level, not in the URL
-  const authUrl = `${YAHOO_AUTH_URL}?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${encodeURIComponent(state)}`
+  // Build OAuth URL — send client_id raw (Yahoo doesn't decode %3D in base64 IDs)
+  const trimmedClientId = clientId.trim()
+  const authUrl = `${YAHOO_AUTH_URL}?client_id=${trimmedClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${encodeURIComponent(state)}`
 
-  console.log('[Yahoo OAuth] Redirecting to:', authUrl.replace(clientId, clientId.substring(0, 10) + '...'))
+  console.log('[Yahoo OAuth] Redirecting, client_id length:', trimmedClientId.length)
   res.redirect(authUrl)
 })
 
