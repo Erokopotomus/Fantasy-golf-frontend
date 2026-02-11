@@ -715,13 +715,78 @@ const LeagueVault = () => {
       <div className="min-h-screen bg-dark-primary">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center py-16">
-            <p className="text-red-400 mb-4">{error}</p>
+            <p className="text-red-400 mb-4">{String(error)}</p>
             <Link to="/dashboard" className="text-accent-gold hover:text-accent-gold/80">Back to Dashboard</Link>
           </div>
         </main>
       </div>
     )
   }
+
+  // Debug: check data types for every team field to find the #310 object render
+  if (history?.seasons) {
+    for (const [year, teams] of Object.entries(history.seasons)) {
+      for (const t of teams) {
+        for (const [key, val] of Object.entries(t)) {
+          if (val !== null && val !== undefined && typeof val === 'object' && !(val instanceof Array)) {
+            // JSON fields are objects — skip known ones
+            if (!['draftData', 'rosterData', 'weeklyScores', 'transactions', 'awards', 'settings', 'rawProviderData'].includes(key)) {
+              console.error(`[Vault Debug] Team field "${key}" in ${year} is an object:`, val)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // === TEMP DEBUG: Show data shape to find #310 crash ===
+  if (history?.seasons) {
+    try {
+      const debugYears = Object.keys(history.seasons)
+      const firstYear = debugYears[0]
+      const firstTeam = firstYear ? history.seasons[firstYear]?.[0] : null
+      if (firstTeam) {
+        // Check every field type
+        const fieldTypes = {}
+        for (const [key, val] of Object.entries(firstTeam)) {
+          fieldTypes[key] = val === null ? 'null' : Array.isArray(val) ? 'array' : typeof val
+        }
+        // Render a debug view temporarily
+        return (
+          <div className="min-h-screen bg-dark-primary">
+            <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
+              <div className="max-w-4xl mx-auto">
+                <h1 className="text-2xl font-bold text-white mb-4">Vault Debug</h1>
+                <p className="text-green-400 text-sm mb-2">Data loaded: {debugYears.length} seasons</p>
+                <p className="text-text-secondary text-xs mb-4">Years: {debugYears.join(', ')}</p>
+                <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
+                  <h3 className="text-accent-gold text-sm font-bold mb-2">First team field types:</h3>
+                  <pre className="text-xs text-white font-mono whitespace-pre-wrap">{JSON.stringify(fieldTypes, null, 2)}</pre>
+                </div>
+                <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
+                  <h3 className="text-accent-gold text-sm font-bold mb-2">First team data (truncated):</h3>
+                  <pre className="text-xs text-white font-mono whitespace-pre-wrap break-all">{JSON.stringify(firstTeam, (key, val) => {
+                    if (['weeklyScores', 'transactions', 'rosterData', 'draftData', 'rawProviderData'].includes(key) && val) return '[TRUNCATED]'
+                    return val
+                  }, 2)}</pre>
+                </div>
+                <Link to="/leagues" className="text-accent-gold hover:underline">Back to Leagues</Link>
+              </div>
+            </main>
+          </div>
+        )
+      }
+    } catch (debugErr) {
+      return (
+        <div className="min-h-screen bg-dark-primary pt-8 px-4">
+          <div className="max-w-4xl mx-auto">
+            <p className="text-red-400">Debug error: {String(debugErr.message)}</p>
+          </div>
+        </div>
+      )
+    }
+  }
+  // === END TEMP DEBUG ===
 
   const years = history?.seasons ? Object.keys(history.seasons).sort((a, b) => b - a) : []
 
