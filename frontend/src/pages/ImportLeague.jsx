@@ -13,6 +13,46 @@ const PLATFORMS = [
   { id: 'mfl', name: 'MFL', icon: '🔵', available: true, description: 'XML API — deepest historical data (15+ years)' },
 ]
 
+const HelpGuide = ({ title, steps, tip }) => {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-dark-tertiary/50 border border-dark-border rounded-lg mb-4 overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-dark-tertiary/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm font-medium text-accent-gold">{title}</span>
+        </div>
+        <svg className={`w-4 h-4 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 border-t border-dark-border/50">
+          <ol className="text-xs text-text-secondary space-y-2 mt-3 list-none">
+            {steps.map((step, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="w-5 h-5 bg-accent-gold/20 text-accent-gold rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+          {tip && (
+            <div className="mt-3 flex gap-2 items-start bg-accent-gold/5 rounded-lg p-2.5">
+              <span className="text-accent-gold text-xs font-bold flex-shrink-0">TIP</span>
+              <p className="text-xs text-text-muted">{tip}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const StepIndicator = ({ current, total }) => (
   <div className="flex items-center gap-2 mb-6">
     {Array.from({ length: total }, (_, i) => (
@@ -338,9 +378,19 @@ const ImportLeague = () => {
               {platform?.id === 'sleeper' && (
                 <div>
                   <p className="text-sm text-text-secondary mb-4">
-                    Paste your Sleeper league ID below. You can find it in your Sleeper app under
-                    League Settings, or in the URL when viewing your league on the web.
+                    Sleeper is the easiest import — just paste your league ID and we'll pull everything automatically.
                   </p>
+                  <HelpGuide
+                    title="How do I find my Sleeper league ID?"
+                    steps={[
+                      'Open Sleeper on your phone or go to sleeper.com on desktop',
+                      'Navigate to your league',
+                      <span key="s3"><strong>Mobile:</strong> Tap Settings (gear icon) → scroll down to see your League ID</span>,
+                      <span key="s4"><strong>Desktop:</strong> Look at the URL — it\'s the long number in <span className="font-mono text-accent-gold">sleeper.com/leagues/XXXXXXXXXX</span></span>,
+                      'Copy the number and paste it below',
+                    ]}
+                    tip="Sleeper's API is public — no login or authorization needed. Any league member can import."
+                  />
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">League ID</label>
                     <input
@@ -359,9 +409,18 @@ const ImportLeague = () => {
               {platform?.id === 'espn' && (
                 <div>
                   <p className="text-sm text-text-secondary mb-4">
-                    Enter your ESPN league ID. For private leagues, you'll also need your ESPN cookies.
                     ESPN only stores data from 2018 onwards — Clutch preserves it forever.
                   </p>
+                  <HelpGuide
+                    title="How do I find my ESPN league ID?"
+                    steps={[
+                      <span key="e1">Go to <span className="font-mono text-accent-gold">fantasy.espn.com</span> and log in</span>,
+                      'Click on your league name to open it',
+                      <span key="e3">Look at the URL in your browser — find the number after <span className="font-mono text-accent-gold">leagueId=</span></span>,
+                      <span key="e4">Example: fantasy.espn.com/football/league?leagueId=<span className="text-accent-gold font-bold">12345678</span></span>,
+                    ]}
+                    tip="For public leagues, you just need the ID. Private leagues also need your ESPN cookies (we'll show you how below)."
+                  />
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">League ID</label>
                     <input
@@ -371,37 +430,42 @@ const ImportLeague = () => {
                       placeholder="e.g. 12345678"
                       className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
-                    <p className="text-xs text-text-muted mt-1">Find this in your ESPN league URL: fantasy.espn.com/football/league?leagueId=XXXXXXXX</p>
                   </div>
 
-                  <div className="bg-dark-tertiary/50 rounded-lg p-4 mb-4">
-                    <p className="text-sm font-medium text-white mb-2">Private League? Add your ESPN cookies</p>
-                    <p className="text-xs text-text-muted mb-3">
-                      Open ESPN Fantasy in Chrome, press F12, go to Application &gt; Cookies &gt; espn.com, and copy these values:
-                    </p>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-text-secondary mb-1">espn_s2 cookie</label>
-                        <input
-                          type="text"
-                          value={espnS2}
-                          onChange={e => setEspnS2(e.target.value)}
-                          placeholder="AEB..."
-                          className="w-full px-3 py-2 bg-dark-primary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-text-secondary mb-1">SWID cookie</label>
-                        <input
-                          type="text"
-                          value={espnSwid}
-                          onChange={e => setEspnSwid(e.target.value)}
-                          placeholder="{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}"
-                          className="w-full px-3 py-2 bg-dark-primary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
-                        />
-                      </div>
+                  <HelpGuide
+                    title="Private league? How to get your ESPN cookies"
+                    steps={[
+                      <span key="c1">Open your ESPN league page in <strong>Chrome</strong> (make sure you're logged in)</span>,
+                      <span key="c2">Press <span className="font-mono bg-dark-primary px-1 rounded">F12</span> (or right-click → Inspect) to open Developer Tools</span>,
+                      <span key="c3">Click the <strong>Application</strong> tab at the top (you may need to click <span className="font-mono">&gt;&gt;</span> to find it)</span>,
+                      <span key="c4">In the left sidebar, expand <strong>Cookies</strong> → click <strong>espn.com</strong></span>,
+                      <span key="c5">Find <span className="font-mono text-accent-gold">espn_s2</span> — copy the entire value (it's long)</span>,
+                      <span key="c6">Find <span className="font-mono text-accent-gold">SWID</span> — copy the value (looks like <span className="font-mono">&#123;GUID&#125;</span>)</span>,
+                      'Paste both values below',
+                    ]}
+                    tip="Public leagues don't need cookies — leave these blank and just use your League ID."
+                  />
+                  <div className="space-y-3 mb-4">
+                    <div>
+                      <label className="block text-xs font-medium text-text-secondary mb-1">espn_s2 cookie</label>
+                      <input
+                        type="text"
+                        value={espnS2}
+                        onChange={e => setEspnS2(e.target.value)}
+                        placeholder="AEB... (leave blank for public leagues)"
+                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                      />
                     </div>
-                    <p className="text-xs text-text-muted mt-2">Leave blank for public leagues.</p>
+                    <div>
+                      <label className="block text-xs font-medium text-text-secondary mb-1">SWID cookie</label>
+                      <input
+                        type="text"
+                        value={espnSwid}
+                        onChange={e => setEspnSwid(e.target.value)}
+                        placeholder="{XXXXXXXX-XXXX-...} (leave blank for public leagues)"
+                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -476,6 +540,16 @@ const ImportLeague = () => {
                   )}
 
                   {/* League ID — always shown */}
+                  <HelpGuide
+                    title="How do I find my Yahoo league ID?"
+                    steps={[
+                      <span key="y1">Go to <span className="font-mono text-accent-gold">football.fantasysports.yahoo.com</span> and log in</span>,
+                      'Click on your league name to open it',
+                      <span key="y3">Look at the URL — the number at the end is your league ID</span>,
+                      <span key="y4">Example: football.fantasysports.yahoo.com/f1/<span className="text-accent-gold font-bold">123456</span></span>,
+                    ]}
+                    tip="You don't need to be commissioner — any league member can import. We'll pull all available history automatically."
+                  />
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">League ID (number only)</label>
                     <input
@@ -486,7 +560,6 @@ const ImportLeague = () => {
                       className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       onKeyDown={e => e.key === 'Enter' && canDiscover() && handleDiscover()}
                     />
-                    <p className="text-xs text-text-muted mt-1">Find this in your Yahoo league URL: football.fantasysports.yahoo.com/f1/<span className="text-accent-gold">XXXXXX</span></p>
                   </div>
 
                   {/* Manual token fallback */}
@@ -521,18 +594,20 @@ const ImportLeague = () => {
               {platform?.id === 'fantrax' && (
                 <div>
                   <p className="text-sm text-text-secondary mb-4">
-                    Fantrax doesn't have a public API. Export your league data as CSV from Fantrax and upload it here.
+                    Fantrax doesn't have a public API, so we import via CSV export.
                   </p>
-
-                  <div className="bg-dark-tertiary/50 rounded-lg p-4 mb-4">
-                    <p className="text-sm font-medium text-white mb-2">How to export from Fantrax:</p>
-                    <ol className="text-xs text-text-muted space-y-1 list-decimal list-inside">
-                      <li>Go to your Fantrax league page</li>
-                      <li>Click League &gt; Standings</li>
-                      <li>Click the Export / CSV icon (top right)</li>
-                      <li>Upload the downloaded CSV file below</li>
-                    </ol>
-                  </div>
+                  <HelpGuide
+                    title="How do I export my data from Fantrax?"
+                    steps={[
+                      <span key="f1">Go to <span className="font-mono text-accent-gold">fantrax.com</span> and open your league</span>,
+                      <span key="f2">Click <strong>League</strong> in the top nav → <strong>Standings</strong></span>,
+                      <span key="f3">Look for the <strong>Export / CSV</strong> icon in the top-right corner of the standings table</span>,
+                      'Click it to download the CSV file',
+                      <span key="f5"><strong>Optional:</strong> Go to League → Draft Results and export that too for draft history</span>,
+                      'Upload the file(s) below',
+                    ]}
+                    tip="You'll need to export one season at a time. Run the import multiple times for multiple years of history."
+                  />
 
                   <div className="space-y-4 mb-4">
                     <div>
@@ -611,8 +686,17 @@ const ImportLeague = () => {
                 <div>
                   <p className="text-sm text-text-secondary mb-4">
                     MFL has the deepest historical data of any platform — some leagues go back 15-20+ years.
-                    You'll need your league ID and API key (commissioner credentials).
                   </p>
+                  <HelpGuide
+                    title="How do I find my MFL league ID and API key?"
+                    steps={[
+                      <span key="m1">Go to <span className="font-mono text-accent-gold">myfl.com</span> and log in to your league</span>,
+                      <span key="m2">Your league ID is in the URL: myfl.com/20XX/home/<span className="text-accent-gold font-bold">XXXXX</span></span>,
+                      <span key="m3"><strong>For the API key:</strong> Click <strong>Commissioner</strong> → <strong>My League</strong> → <strong>League Settings</strong></span>,
+                      'Scroll down to find the API Key section and copy the key',
+                    ]}
+                    tip="The API key requires commissioner access. If you're not the commish, ask them to share it with you — it's read-only."
+                  />
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">League ID</label>
                     <input
@@ -622,7 +706,6 @@ const ImportLeague = () => {
                       placeholder="e.g. 12345"
                       className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
-                    <p className="text-xs text-text-muted mt-1">Find this in your MFL league URL</p>
                   </div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">API Key</label>
@@ -633,9 +716,6 @@ const ImportLeague = () => {
                       placeholder="Your MFL API key"
                       className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
-                    <p className="text-xs text-text-muted mt-1">
-                      Commissioner: My League &gt; League Settings &gt; API Key
-                    </p>
                   </div>
                 </div>
               )}
