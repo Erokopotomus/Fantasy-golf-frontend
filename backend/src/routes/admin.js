@@ -2,6 +2,7 @@ const express = require('express')
 const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { requireAdmin } = require('../middleware/requireAdmin')
+const aiConfig = require('../services/aiConfigService')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -160,6 +161,51 @@ router.post('/users/:id/role', async (req, res, next) => {
     })
 
     res.json({ user: updated })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ═══════════════════════════════════════════════
+//  AI ENGINE CONFIG
+// ═══════════════════════════════════════════════
+
+// GET /api/admin/ai-config — Get current AI engine config
+router.get('/ai-config', async (req, res, next) => {
+  try {
+    const config = await aiConfig.getConfig()
+    res.json({ config })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// PATCH /api/admin/ai-config — Update AI engine config
+router.patch('/ai-config', async (req, res, next) => {
+  try {
+    const { enabled, featureToggles, dailyTokenBudget } = req.body
+    const updates = {}
+
+    if (typeof enabled === 'boolean') updates.enabled = enabled
+    if (featureToggles && typeof featureToggles === 'object') updates.featureToggles = featureToggles
+    if (typeof dailyTokenBudget === 'number' && dailyTokenBudget >= 0) updates.dailyTokenBudget = dailyTokenBudget
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: { message: 'No valid fields to update' } })
+    }
+
+    const config = await aiConfig.updateConfig(updates)
+    res.json({ config })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/admin/ai-spend — Get AI spend dashboard
+router.get('/ai-spend', async (req, res, next) => {
+  try {
+    const spend = await aiConfig.getSpendDashboard()
+    res.json({ spend })
   } catch (error) {
     next(error)
   }

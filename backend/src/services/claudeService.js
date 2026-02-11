@@ -3,9 +3,16 @@
  *
  * Wrapper around @anthropic-ai/sdk with retries, rate limiting,
  * token tracking, and graceful degradation.
+ *
+ * All calls go through the AI Engine config gate:
+ *  1. Kill switch must be ON (enabled: true)
+ *  2. Feature-specific toggle must be ON
+ *  3. Daily token budget must not be exceeded
+ * If any gate fails, returns null gracefully.
  */
 
 const Anthropic = require('@anthropic-ai/sdk')
+const aiConfig = require('./aiConfigService')
 
 const client = new Anthropic.default({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -37,11 +44,46 @@ function checkRateLimit() {
 /**
  * Generate a completion from Claude.
  * Returns { text, inputTokens, outputTokens } or null on failure.
+ *
+ * @param {string} systemPrompt
+ * @param {string} userPrompt
+ * @param {object} options
+ * @param {string} options.feature - Feature name for toggle check (ambient, draftNudge, boardCoach, predictionContext, deepReports, scoutReports, sim)
+ * @param {boolean} options.premium - Use Opus model
+ * @param {number} options.maxTokens
+ * @param {number} options.timeout
+ * @param {boolean} options.skipConfigCheck - Skip kill switch / feature check (for admin-triggered calls)
  */
 async function generateCompletion(systemPrompt, userPrompt, options = {}) {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn('[Claude] No ANTHROPIC_API_KEY set — skipping AI call')
     return null
+  }
+
+  // ── AI Engine Config Gate ──
+  if (!options.skipConfigCheck) {
+    // Check kill switch + feature toggle
+    if (options.feature) {
+      const featureEnabled = await aiConfig.isFeatureEnabled(options.feature)
+      if (!featureEnabled) {
+        console.info(`[Claude] Feature "${options.feature}" is disabled — skipping AI call`)
+        return null
+      }
+    } else {
+      // No specific feature — just check kill switch
+      const config = await aiConfig.getConfig()
+      if (!config.enabled) {
+        console.info('[Claude] AI Engine kill switch is OFF — skipping AI call')
+        return null
+      }
+    }
+
+    // Check daily token budget
+    const budgetExceeded = await aiConfig.isBudgetExceeded()
+    if (budgetExceeded) {
+      console.warn('[Claude] Daily token budget exceeded — skipping AI call')
+      return null
+    }
   }
 
   if (!checkRateLimit()) {
@@ -72,10 +114,16 @@ async function generateCompletion(systemPrompt, userPrompt, options = {}) {
         .map(block => block.text)
         .join('')
 
+      const inputTokens = response.usage?.input_tokens || 0
+      const outputTokens = response.usage?.output_tokens || 0
+
+      // Track token usage (fire-and-forget)
+      aiConfig.trackTokenUsage(inputTokens, outputTokens).catch(() => {})
+
       return {
         text,
-        inputTokens: response.usage?.input_tokens || 0,
-        outputTokens: response.usage?.output_tokens || 0,
+        inputTokens,
+        outputTokens,
         model,
       }
     } catch (err) {

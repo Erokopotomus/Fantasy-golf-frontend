@@ -43,7 +43,7 @@ async function generateAmbientInsight(userId, sport, insightType, contextData) {
   const prompt = buildAmbientPrompt(insightType, contextData)
   if (!prompt) return null
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 512 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 512, feature: 'ambient' })
   if (!result) return null
 
   return {
@@ -177,7 +177,7 @@ Return JSON: { "nudgeText": "1-2 sentence nudge (max 120 chars)", "nudgeType": "
 
 Return { "nudgeText": null } if no nudge is warranted.`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 256 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 256, feature: 'draftNudge' })
   if (!result || !result.data?.nudgeText) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
@@ -201,7 +201,7 @@ Return JSON: { "cardTitle": "short title", "cardBody": "2-3 sentences of coachin
 
 Return { "cardTitle": null } if no coaching card is warranted.`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 384 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 384, feature: 'boardCoach' })
   if (!result || !result.data?.cardTitle) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
@@ -226,7 +226,7 @@ Return JSON: { "calibrationNote": "1-2 sentence note about their track record wi
 
 Return { "calibrationNote": null } if not enough data.`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 256 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 256, feature: 'predictionContext' })
   if (!result || !result.data?.calibrationNote) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
@@ -250,7 +250,7 @@ Factor accuracy: ${JSON.stringify(predGraph.accuracyByFactor || {})}
 
 Return JSON: { "insightText": "2-3 sentence reflection", "whatWorked": "what the user got right (or null)", "whatMissed": "what the user missed (or null)", "patternNote": "any pattern observation (or null)" }`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 384 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 384, feature: 'predictionContext' })
   if (!result) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
@@ -284,7 +284,7 @@ Return JSON: {
   "topRecommendation": "single most important action item"
 }`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 1024 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 1024, feature: 'deepReports' })
   if (!result) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
@@ -327,6 +327,7 @@ Return JSON: {
   const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, {
     maxTokens: 2048,
     premium: true,
+    feature: 'deepReports',
   })
   if (!result) return null
 
@@ -370,6 +371,7 @@ Return JSON: {
   const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, {
     maxTokens: 2048,
     premium: true,
+    feature: 'deepReports',
   })
   if (!result) return null
 
@@ -418,6 +420,7 @@ Return JSON: {
   const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, {
     maxTokens: 2048,
     premium: true,
+    feature: 'deepReports',
   })
   if (!result) return null
 
@@ -452,7 +455,7 @@ ${playerGraph.predictions.length > 0 ? 'Latest prediction: ' + playerGraph.predi
 
 Return JSON: { "brief": "2-3 paragraph AI analysis of this player in the context of this user's history and decisions", "keyInsight": "one-line key takeaway" }`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 512 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 512, feature: 'scoutReports' })
   if (!result) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0), playerId, sport }
@@ -503,7 +506,7 @@ Return JSON: {
   "generatedAt": "${new Date().toISOString()}"
 }`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 1024 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 1024, feature: 'scoutReports' })
   if (!result) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
@@ -530,7 +533,7 @@ Return JSON: {
   "generatedAt": "${new Date().toISOString()}"
 }`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 1024 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 1024, feature: 'scoutReports' })
   if (!result) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
@@ -576,7 +579,7 @@ Return JSON: {
   "personalNote": "note for user based on their history (or null if no history)"
 }`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 512 })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 512, feature: 'sim' })
   if (!result) return null
 
   return {

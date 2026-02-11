@@ -66,6 +66,7 @@ model User {
   intelligenceProfiles UserIntelligenceProfile[]
   aiInsights           AiInsight[]
   aiReports            AiReport[]
+  aiPreferences        Json     @default("{\"ambient\":true,\"draftCoaching\":true,\"boardCoaching\":true,\"predictionCoaching\":true}")
 
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
@@ -2915,4 +2916,22 @@ model AiReport {
 
   @@index([sport, reportType, subjectId])
   @@index([userId, reportType])
+}
+
+// ============ AI ENGINE CONFIG (singleton) ============
+
+model AiEngineConfig {
+  id                  String   @id @default("singleton")
+  enabled             Boolean  @default(false)
+  featureToggles      Json     @default("{\"ambient\":false,\"draftNudge\":false,\"boardCoach\":false,\"predictionContext\":false,\"deepReports\":false,\"scoutReports\":false,\"sim\":false}")
+  dailyTokenBudget    Int      @default(100000)
+  tokensUsedToday     Int      @default(0)
+  tokensUsedThisWeek  Int      @default(0)
+  tokensUsedThisMonth Int      @default(0)
+  lastDailyReset      DateTime @default(now())
+  lastWeeklyReset     DateTime @default(now())
+  lastMonthlyReset    DateTime @default(now())
+  totalTokensAllTime  Int      @default(0)
+  totalCallsAllTime   Int      @default(0)
+  updatedAt           DateTime @default(now()) @updatedAt
 }

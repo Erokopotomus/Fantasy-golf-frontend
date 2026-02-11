@@ -486,6 +486,18 @@ class ApiService {
     })
   }
 
+  // AI Coaching Preferences
+  async getAiPreferences() {
+    return this.request('/ai/preferences')
+  }
+
+  async updateAiPreferences(updates) {
+    return this.request('/ai/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    })
+  }
+
   // Search
   async search(query, options = {}) {
     const params = new URLSearchParams({ q: query, ...options }).toString()
@@ -759,6 +771,22 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ role }),
     })
+  }
+
+  // Admin AI Engine Config
+  async getAiConfig() {
+    return this.request('/admin/ai-config')
+  }
+
+  async updateAiConfig(updates) {
+    return this.request('/admin/ai-config', {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    })
+  }
+
+  async getAiSpend() {
+    return this.request('/admin/ai-spend')
   }
 
   // Draft - Undo Pick

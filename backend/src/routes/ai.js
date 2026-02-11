@@ -73,6 +73,10 @@ router.post('/insights/:id/acted', authenticate, async (req, res) => {
 // POST /api/ai/draft-nudge — Get draft room nudge
 router.post('/draft-nudge', authenticate, async (req, res) => {
   try {
+    // Check user preference
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { aiPreferences: true } })
+    if (!(user?.aiPreferences?.draftCoaching ?? true)) return res.json({ nudge: null })
+
     if (!rateLimit(req.user.id, 'draft-nudge', 20)) {
       return res.status(429).json({ error: 'Rate limit exceeded' })
     }
@@ -87,10 +91,22 @@ router.post('/draft-nudge', authenticate, async (req, res) => {
 // POST /api/ai/board-coach — Get board editor coaching card
 router.post('/board-coach', authenticate, async (req, res) => {
   try {
+    // Check user preference
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { aiPreferences: true } })
+    if (!(user?.aiPreferences?.boardCoaching ?? true)) return res.json({ card: null })
+
+    // Data confidence: board must have 30+ entries
+    const { boardId, triggerAction, context } = req.body
+    if (boardId) {
+      const entryCount = await prisma.boardEntry.count({ where: { boardId } })
+      if (entryCount < 30) {
+        return res.json({ card: null, gated: true, reason: `Board needs ${30 - entryCount} more entries to unlock AI coaching` })
+      }
+    }
+
     if (!rateLimit(req.user.id, 'board-coach', 5)) {
       return res.status(429).json({ error: 'Rate limit exceeded' })
     }
-    const { boardId, triggerAction, context } = req.body
     const card = await aiCoachService.generateBoardCoachingCard(req.user.id, boardId, triggerAction, context)
     res.json({ card })
   } catch (err) {
@@ -102,6 +118,10 @@ router.post('/board-coach', authenticate, async (req, res) => {
 // POST /api/ai/prediction-context — Get prediction submission context
 router.post('/prediction-context', authenticate, async (req, res) => {
   try {
+    // Check user preference
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { aiPreferences: true } })
+    if (!(user?.aiPreferences?.predictionCoaching ?? true)) return res.json({ context: null })
+
     if (!rateLimit(req.user.id, 'prediction-context', 10)) {
       return res.status(429).json({ error: 'Rate limit exceeded' })
     }
@@ -116,6 +136,10 @@ router.post('/prediction-context', authenticate, async (req, res) => {
 // POST /api/ai/prediction-resolution — Get prediction resolution insight
 router.post('/prediction-resolution', authenticate, async (req, res) => {
   try {
+    // Check user preference
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { aiPreferences: true } })
+    if (!(user?.aiPreferences?.predictionCoaching ?? true)) return res.json({ insight: null })
+
     if (!rateLimit(req.user.id, 'prediction-context', 10)) {
       return res.status(429).json({ error: 'Rate limit exceeded' })
     }
@@ -134,6 +158,12 @@ router.post('/prediction-resolution', authenticate, async (req, res) => {
 // POST /api/ai/report/pre-draft — Generate pre-draft report
 router.post('/report/pre-draft', authenticate, async (req, res) => {
   try {
+    // Data confidence: deep reports require HIGH confidence
+    const confidence = await aiInsightPipeline.assessUserConfidence(req.user.id)
+    if (confidence.level !== 'HIGH') {
+      return res.json({ report: null, gated: true, reason: 'Deep reports require more data. Complete a draft, make 20+ predictions, and add 10+ captures.' })
+    }
+
     if (!rateLimit(req.user.id, 'reports', 3)) {
       return res.status(429).json({ error: 'Rate limit exceeded (3/day)' })
     }
@@ -162,6 +192,12 @@ router.post('/report/pre-draft', authenticate, async (req, res) => {
 // POST /api/ai/report/mid-season — Generate mid-season report
 router.post('/report/mid-season', authenticate, async (req, res) => {
   try {
+    // Data confidence: deep reports require HIGH confidence
+    const confidence = await aiInsightPipeline.assessUserConfidence(req.user.id)
+    if (confidence.level !== 'HIGH') {
+      return res.json({ report: null, gated: true, reason: 'Deep reports require more data. Complete a draft, make 20+ predictions, and add 10+ captures.' })
+    }
+
     if (!rateLimit(req.user.id, 'reports', 3)) {
       return res.status(429).json({ error: 'Rate limit exceeded (3/day)' })
     }
@@ -189,6 +225,12 @@ router.post('/report/mid-season', authenticate, async (req, res) => {
 // POST /api/ai/report/post-season — Generate post-season report
 router.post('/report/post-season', authenticate, async (req, res) => {
   try {
+    // Data confidence: deep reports require HIGH confidence
+    const confidence = await aiInsightPipeline.assessUserConfidence(req.user.id)
+    if (confidence.level !== 'HIGH') {
+      return res.json({ report: null, gated: true, reason: 'Deep reports require more data. Complete a draft, make 20+ predictions, and add 10+ captures.' })
+    }
+
     if (!rateLimit(req.user.id, 'reports', 3)) {
       return res.status(429).json({ error: 'Rate limit exceeded (3/day)' })
     }
@@ -328,6 +370,54 @@ router.post('/simulate', authenticate, async (req, res) => {
   } catch (err) {
     console.error('[AI] Simulate error:', err.message)
     res.json({ result: null })
+  }
+})
+
+// ═══════════════════════════════════════════════
+//  USER AI PREFERENCES
+// ═══════════════════════════════════════════════
+
+// GET /api/ai/preferences — Get user's AI coaching preferences
+router.get('/preferences', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { aiPreferences: true },
+    })
+    res.json({ preferences: user?.aiPreferences || { ambient: true, draftCoaching: true, boardCoaching: true, predictionCoaching: true } })
+  } catch (err) {
+    console.error('[AI] Preferences get error:', err.message)
+    res.status(500).json({ error: 'Failed to get AI preferences' })
+  }
+})
+
+// PATCH /api/ai/preferences — Update user's AI coaching preferences
+router.patch('/preferences', authenticate, async (req, res) => {
+  try {
+    const current = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { aiPreferences: true },
+    })
+    const currentPrefs = current?.aiPreferences || { ambient: true, draftCoaching: true, boardCoaching: true, predictionCoaching: true }
+    const updated = { ...currentPrefs, ...req.body }
+
+    // Only allow known keys
+    const clean = {
+      ambient: !!updated.ambient,
+      draftCoaching: !!updated.draftCoaching,
+      boardCoaching: !!updated.boardCoaching,
+      predictionCoaching: !!updated.predictionCoaching,
+    }
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { aiPreferences: clean },
+    })
+
+    res.json({ preferences: clean })
+  } catch (err) {
+    console.error('[AI] Preferences update error:', err.message)
+    res.status(500).json({ error: 'Failed to update AI preferences' })
   }
 })
 

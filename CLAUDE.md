@@ -537,6 +537,16 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - ClutchSim.jsx page at `/sim` — head-to-head matchup simulator with player search, AI analysis, key factors, personal notes
   - 24h report caching in AiReport model
 
+- [x] **AI Engine Admin Controls + Safety** (COMPLETE — migration 35)
+  - `AiEngineConfig` singleton model — global kill switch (default OFF), 7 per-feature toggles, daily token budget, spend counters (today/week/month/all-time)
+  - `aiConfigService.js` — cached reads (30s TTL), config updates, token tracking, budget checking, counter resets
+  - `claudeService.js` gating — every API call checks: (1) kill switch ON, (2) feature toggle ON, (3) daily budget not exceeded. If any gate fails → returns null gracefully. Feature name passed via `options.feature` param.
+  - Admin Dashboard "AI Engine" tab — kill switch toggle, 7 feature toggles, budget input with progress bar, spend dashboard (today/week/month/all-time tokens + total calls)
+  - User AI coaching preferences — `aiPreferences` JSON on User model (ambient, draftCoaching, boardCoaching, predictionCoaching, default all ON). Settings UI with purple toggles on Notification Settings page. Pipeline + contextual endpoints check before generating.
+  - Data confidence gating — Ambient insights require MEDIUM confidence (else onboarding card). Board coaching requires board with 30+ entries. Deep reports require HIGH confidence. Below threshold → null + gating reason.
+  - Admin routes: `GET/PATCH /api/admin/ai-config`, `GET /api/admin/ai-spend`
+  - User routes: `GET/PATCH /api/ai/preferences`
+
 ---
 
 ### Phase 7: Multi-Sport Expansion
@@ -1256,6 +1266,7 @@ The Feed auto-adjusts content by sports calendar. Golf fills NFL gaps (Feb-May m
 - [x] **Phase 6A — Data Gap Fixes** (6 sub-tasks): Prediction thesis+confidence, draft pick tags+boardRank, board comparison service, capture-to-outcome linking, opinion evolution timeline (PlayerOpinionEvent model + 8 fire-and-forget hooks), reasoning fields on roster moves. Migrations 27-32.
 - [x] **Phase 6B — Decision Graph + Pattern Engine**: `decisionGraphService.js` (getPlayerGraph, getSeasonGraph, getDraftGraph, getPredictionGraph, getMultiSeasonGraph). `patternEngine.js` (detectDraftPatterns, detectPredictionPatterns, detectRosterPatterns, detectCapturePatterns, generateUserProfile). `UserIntelligenceProfile` model (cached, weekly regen). `/api/intelligence` routes. Migration 33.
 - [x] **Phase 6C-6F — AI Engine Complete**: `claudeService.js` (Claude API wrapper, Sonnet/Opus, retries, rate limiting). `aiCoachService.js` (Mode 1 ambient + Mode 2 contextual + Mode 3 deep reports + Scout + Sim). `aiInsightPipeline.js` (daily 5AM cron, 11 insight types, eligibility checks). AiInsight + AiReport models. Migration 34. `/api/ai` routes (15 endpoints). Frontend: AI insights on Lab Hub + Dashboard, draft room nudges, board coaching cards, prediction calibration, coaching reports page, scout report page, Clutch Sim matchup simulator, player AI briefs on profiles. 5 new backend files, 3 new frontend pages, 10+ modified files.
+- [x] **AI Engine Admin Controls + Safety**: Migration 35. `AiEngineConfig` singleton (kill switch OFF by default, 7 feature toggles, daily token budget, spend counters). `aiConfigService.js` (cached config reads, token tracking, budget checking). `claudeService.js` gating (kill switch + feature toggle + budget check before every API call). Admin Dashboard "AI Engine" tab (kill switch, toggles, budget input, spend dashboard). User AI preferences on Notification Settings page (4 toggles: ambient, draftCoaching, boardCoaching, predictionCoaching). Data confidence gating (MEDIUM for ambient, 30+ entries for board coaching, HIGH for deep reports, onboarding cards for LOW). 3 admin routes + 2 user preference routes.
 
 **Backlog:** NFL team pages need more polish (logos, real records, deeper stats). Kicker stats missing. DST stats missing. NFL 2025 data not synced. **NFL game weather:** Same Open-Meteo hourly pipeline used for golf tournament rounds, keyed to NFL game venue coordinates + kickoff time windows. Wind/rain/temp affect kickers, deep-ball QBs/WRs, and overall game script. Need venue-to-coordinates mapping for all 32 stadiums (flag dome/retractable roof). Show on game preview pages + factor into fantasy projections.
 
@@ -1340,4 +1351,4 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 10, 2026*
-*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6 complete (AI Engine: 6A data gaps, 6B decision graph + patterns, 6C-6F Claude integration + ambient/contextual/deep coaching + scout reports + matchup sim). Next: Phase 7 (multi-sport expansion, premium tier, polish).*
+*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6 complete (AI Engine: 6A data gaps, 6B decision graph + patterns, 6C-6F Claude integration + ambient/contextual/deep coaching + scout reports + matchup sim, admin controls + safety gating). Next: Phase 7 (multi-sport expansion, premium tier, polish).*

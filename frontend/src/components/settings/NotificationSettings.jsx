@@ -12,18 +12,31 @@ const CATEGORY_LABELS = {
   chat: { label: 'Chat', description: 'Chat mentions and direct messages' },
 }
 
+const AI_PREF_LABELS = {
+  ambient: { label: 'Ambient Insights', description: 'AI coaching cards in your feed and Lab hub' },
+  draftCoaching: { label: 'Draft Coaching', description: 'In-draft nudges and suggestions during mock drafts' },
+  boardCoaching: { label: 'Board Coaching', description: 'AI suggestions when editing boards in The Lab' },
+  predictionCoaching: { label: 'Prediction Coaching', description: 'Calibration context on Prove It submissions and resolutions' },
+}
+
 export default function NotificationSettings() {
   const [prefs, setPrefs] = useState(null)
+  const [aiPrefs, setAiPrefs] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [aiSaving, setAiSaving] = useState(false)
   const [error, setError] = useState(null)
   const [pushStatus, setPushStatus] = useState('loading')
   const [pushTokenId, setPushTokenId] = useState(null)
 
   const fetchPrefs = useCallback(async () => {
     try {
-      const data = await api.getNotificationPreferences()
-      setPrefs(data.preferences)
+      const [notifData, aiData] = await Promise.all([
+        api.getNotificationPreferences(),
+        api.getAiPreferences().catch(() => ({ preferences: { ambient: true, draftCoaching: true, boardCoaching: true, predictionCoaching: true } })),
+      ])
+      setPrefs(notifData.preferences)
+      setAiPrefs(aiData.preferences)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -61,6 +74,20 @@ export default function NotificationSettings() {
       setError(err.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const toggleAiPref = async (key) => {
+    if (!aiPrefs) return
+    setAiSaving(true)
+    try {
+      const data = await api.updateAiPreferences({ [key]: !aiPrefs[key] })
+      setAiPrefs(data.preferences)
+      setError(null)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setAiSaving(false)
     }
   }
 
@@ -146,6 +173,38 @@ export default function NotificationSettings() {
             >
               <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full" />
             </button>
+          </div>
+        </div>
+
+        {/* AI Coaching Preferences */}
+        <div className="bg-dark-card border border-dark-border rounded-lg p-4 mb-6">
+          <h2 className="text-lg font-semibold font-display text-white mb-4">AI Coaching Preferences</h2>
+          <p className="text-gray-400 text-sm mb-4">
+            Control which types of AI coaching you receive. Disabling a category stops that type of AI analysis for your account.
+          </p>
+
+          <div className="space-y-1">
+            {Object.entries(AI_PREF_LABELS).map(([key, { label, description }]) => (
+              <div key={key} className="flex items-center justify-between py-3 border-t border-dark-border first:border-t-0">
+                <div>
+                  <p className="text-white font-medium">{label}</p>
+                  <p className="text-gray-400 text-sm">{description}</p>
+                </div>
+                <button
+                  onClick={() => toggleAiPref(key)}
+                  disabled={aiSaving}
+                  className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
+                    aiPrefs?.[key] ? 'bg-purple-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                      aiPrefs?.[key] ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 

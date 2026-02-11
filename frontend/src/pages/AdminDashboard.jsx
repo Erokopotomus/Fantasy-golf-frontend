@@ -1,8 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import api from '../services/api'
+
+const FEATURE_LABELS = {
+  ambient: 'Ambient Insights',
+  draftNudge: 'Draft Nudges',
+  boardCoach: 'Board Coaching',
+  predictionContext: 'Prediction Context',
+  deepReports: 'Deep Reports',
+  scoutReports: 'Scout Reports',
+  sim: 'Sim',
+}
 
 const AdminDashboard = () => {
   const { user } = useAuth()
@@ -24,6 +34,12 @@ const AdminDashboard = () => {
   const [tournamentTotal, setTournamentTotal] = useState(0)
   const [loading, setLoading] = useState(true)
 
+  // AI Engine state
+  const [aiConfig, setAiConfig] = useState(null)
+  const [aiSpend, setAiSpend] = useState(null)
+  const [aiSaving, setAiSaving] = useState(false)
+  const [budgetInput, setBudgetInput] = useState('')
+
   useEffect(() => {
     if (user?.role !== 'admin') {
       navigate('/dashboard')
@@ -43,6 +59,10 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (user?.role === 'admin') loadTournaments()
   }, [tournamentSearch, tournamentFilter, tournamentPage])
+
+  useEffect(() => {
+    if (user?.role === 'admin' && activeTab === 'ai') loadAiConfig()
+  }, [activeTab])
 
   const loadStats = async () => {
     try {
@@ -90,6 +110,20 @@ const AdminDashboard = () => {
     }
   }
 
+  const loadAiConfig = async () => {
+    try {
+      const [configData, spendData] = await Promise.all([
+        api.getAiConfig(),
+        api.getAiSpend(),
+      ])
+      setAiConfig(configData.config)
+      setAiSpend(spendData.spend)
+      setBudgetInput(String(configData.config?.dailyTokenBudget || 100000))
+    } catch (err) {
+      console.error('Failed to load AI config:', err.message)
+    }
+  }
+
   const handleRoleChange = async (userId, newRole) => {
     if (userId === user.id) return
     try {
@@ -99,6 +133,47 @@ const AdminDashboard = () => {
       alert(err.message)
     }
   }
+
+  const toggleKillSwitch = useCallback(async () => {
+    if (!aiConfig) return
+    setAiSaving(true)
+    try {
+      const data = await api.updateAiConfig({ enabled: !aiConfig.enabled })
+      setAiConfig(data.config)
+    } catch (err) {
+      console.error('Failed to toggle kill switch:', err.message)
+    } finally {
+      setAiSaving(false)
+    }
+  }, [aiConfig])
+
+  const toggleFeature = useCallback(async (feature) => {
+    if (!aiConfig) return
+    setAiSaving(true)
+    try {
+      const toggles = { ...aiConfig.featureToggles, [feature]: !aiConfig.featureToggles[feature] }
+      const data = await api.updateAiConfig({ featureToggles: toggles })
+      setAiConfig(data.config)
+    } catch (err) {
+      console.error('Failed to toggle feature:', err.message)
+    } finally {
+      setAiSaving(false)
+    }
+  }, [aiConfig])
+
+  const saveBudget = useCallback(async () => {
+    const budget = parseInt(budgetInput)
+    if (isNaN(budget) || budget < 0) return
+    setAiSaving(true)
+    try {
+      const data = await api.updateAiConfig({ dailyTokenBudget: budget })
+      setAiConfig(data.config)
+    } catch (err) {
+      console.error('Failed to update budget:', err.message)
+    } finally {
+      setAiSaving(false)
+    }
+  }, [budgetInput])
 
   if (user?.role !== 'admin') return null
 
@@ -139,6 +214,27 @@ const AdminDashboard = () => {
     return `$${(purse / 1000).toFixed(0)}K`
   }
 
+  const formatTokens = (n) => {
+    if (!n) return '0'
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
+    return String(n)
+  }
+
+  const Toggle = ({ enabled, onToggle, disabled }) => (
+    <button
+      onClick={onToggle}
+      disabled={disabled}
+      className={`relative w-12 h-6 rounded-full transition-colors ${
+        enabled ? 'bg-emerald-500' : 'bg-gray-600'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+        enabled ? 'translate-x-6' : 'translate-x-0'
+      }`} />
+    </button>
+  )
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="mb-6">
@@ -162,17 +258,17 @@ const AdminDashboard = () => {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {['users', 'leagues', 'tournaments'].map(tab => (
+        {['users', 'leagues', 'tournaments', 'ai'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === tab
                 ? 'bg-gold text-white'
                 : 'bg-dark-tertiary text-text-secondary hover:text-white'
             }`}
           >
-            {tab}
+            {tab === 'ai' ? 'AI Engine' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -389,6 +485,126 @@ const AdminDashboard = () => {
             </div>
           )}
         </Card>
+      )}
+
+      {/* AI Engine Tab */}
+      {activeTab === 'ai' && (
+        <div className="space-y-6">
+          {/* Kill Switch */}
+          <Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-white">AI Engine Kill Switch</h3>
+                <p className="text-text-secondary text-sm mt-1">
+                  {aiConfig?.enabled
+                    ? 'AI Engine is ON. Claude API calls are active.'
+                    : 'AI Engine is OFF. All Claude API calls are blocked platform-wide.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-semibold ${aiConfig?.enabled ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {aiConfig?.enabled ? 'ON' : 'OFF'}
+                </span>
+                <Toggle enabled={!!aiConfig?.enabled} onToggle={toggleKillSwitch} disabled={aiSaving} />
+              </div>
+            </div>
+          </Card>
+
+          {/* Feature Toggles */}
+          <Card>
+            <h3 className="text-lg font-semibold text-white mb-4">Feature Toggles</h3>
+            <p className="text-text-secondary text-sm mb-4">
+              Control which AI features are active. The kill switch must be ON for any feature to work.
+            </p>
+            <div className="space-y-1">
+              {Object.entries(FEATURE_LABELS).map(([key, label]) => (
+                <div key={key} className="flex items-center justify-between py-3 border-t border-dark-border first:border-t-0">
+                  <div>
+                    <p className="text-white font-medium">{label}</p>
+                    <p className="text-text-muted text-xs">{key}</p>
+                  </div>
+                  <Toggle
+                    enabled={!!aiConfig?.featureToggles?.[key]}
+                    onToggle={() => toggleFeature(key)}
+                    disabled={aiSaving || !aiConfig?.enabled}
+                  />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Token Budget */}
+          <Card>
+            <h3 className="text-lg font-semibold text-white mb-4">Daily Token Budget</h3>
+            <p className="text-text-secondary text-sm mb-4">
+              When daily token usage hits this limit, all AI calls are automatically paused until midnight reset.
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                value={budgetInput}
+                onChange={e => setBudgetInput(e.target.value)}
+                className="w-48 px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                min="0"
+              />
+              <span className="text-text-muted text-sm">tokens/day</span>
+              <button
+                onClick={saveBudget}
+                disabled={aiSaving || budgetInput === String(aiConfig?.dailyTokenBudget)}
+                className="px-4 py-2 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 disabled:opacity-50 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+            {aiSpend && (
+              <div className="mt-3">
+                <div className="w-full bg-dark-tertiary rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      aiSpend.dailyBudgetPercent >= 90 ? 'bg-red-500' :
+                      aiSpend.dailyBudgetPercent >= 70 ? 'bg-yellow-500' :
+                      'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min(100, aiSpend.dailyBudgetPercent)}%` }}
+                  />
+                </div>
+                <p className="text-text-muted text-xs mt-1">
+                  {formatTokens(aiSpend.tokensUsedToday)} / {formatTokens(aiConfig?.dailyTokenBudget)} today ({aiSpend.dailyBudgetPercent}%)
+                </p>
+              </div>
+            )}
+          </Card>
+
+          {/* Spend Dashboard */}
+          {aiSpend && (
+            <Card>
+              <h3 className="text-lg font-semibold text-white mb-4">Spend Dashboard</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold font-display text-gold">{formatTokens(aiSpend.tokensUsedToday)}</p>
+                  <p className="text-xs text-text-muted mt-1">Today</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold font-display text-blue-400">{formatTokens(aiSpend.tokensUsedThisWeek)}</p>
+                  <p className="text-xs text-text-muted mt-1">This Week</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold font-display text-purple-400">{formatTokens(aiSpend.tokensUsedThisMonth)}</p>
+                  <p className="text-xs text-text-muted mt-1">This Month</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold font-display text-emerald-400">{formatTokens(aiSpend.totalTokensAllTime)}</p>
+                  <p className="text-xs text-text-muted mt-1">All Time</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-dark-border text-center">
+                <p className="text-text-muted text-sm">
+                  Total API calls: <span className="text-white font-semibold">{aiSpend.totalCallsAllTime?.toLocaleString() || 0}</span>
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
       )}
     </div>
   )

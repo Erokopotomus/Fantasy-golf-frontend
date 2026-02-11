@@ -4,6 +4,10 @@
  * Orchestrator that runs on schedule, determines which insights to
  * generate for each user, calls the pattern engine and AI service,
  * and stores results.
+ *
+ * Includes data confidence gating:
+ * - Ambient insights require MEDIUM confidence
+ * - Below threshold → onboarding card instead of pattern insights
  */
 
 const { PrismaClient } = require('@prisma/client')
@@ -67,6 +71,16 @@ async function runDailyInsightPipeline() {
  * Generate up to 3 insights for a specific user.
  */
 async function generateInsightsForUser(userId, maxInsights = 3) {
+  // Check user's AI preferences — skip if ambient insights disabled
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { aiPreferences: true },
+  })
+  const prefs = user?.aiPreferences || { ambient: true, draftCoaching: true, boardCoaching: true, predictionCoaching: true }
+  if (!prefs.ambient) {
+    return 0 // user opted out of ambient insights
+  }
+
   // Get existing active insights to avoid duplicates
   const existingInsights = await prisma.aiInsight.findMany({
     where: { userId, status: 'active' },
@@ -86,6 +100,19 @@ async function generateInsightsForUser(userId, maxInsights = 3) {
       continue
     }
     if (!profile) continue
+
+    // ── Data Confidence Gating ──
+    // Ambient insights require at least MEDIUM confidence
+    if (profile.dataConfidence === 'LOW') {
+      // Generate onboarding card instead (only once — check for existing)
+      if (!existingTypes.has('ONBOARDING') && generated < maxInsights) {
+        const onboarding = buildOnboardingCard(profile, sport)
+        await storeInsight(userId, onboarding)
+        existingTypes.add('ONBOARDING')
+        generated++
+      }
+      continue // skip pattern-based insights for this sport
+    }
 
     // Determine eligible insight types
     const eligibleTypes = INSIGHT_TYPES.filter(type => {
@@ -113,6 +140,84 @@ async function generateInsightsForUser(userId, maxInsights = 3) {
   }
 
   return generated
+}
+
+/**
+ * Build an onboarding card for users below the confidence threshold.
+ * No AI call — deterministic content.
+ */
+function buildOnboardingCard(profile, sport) {
+  const suggestions = []
+
+  const draftCount = profile.draftPatterns?.draftCount || 0
+  const predCount = profile.predictionPatterns?.totalPredictions || 0
+  const captureCount = profile.capturePatterns?.totalCaptures || 0
+
+  if (draftCount === 0) {
+    suggestions.push('Complete a mock draft to unlock draft coaching')
+  }
+  if (predCount < 20) {
+    suggestions.push(`Make ${20 - predCount} more predictions to unlock prediction insights`)
+  }
+  if (captureCount < 5) {
+    suggestions.push('Add research captures in The Lab to unlock capture analysis')
+  }
+
+  // Check for boards
+  const hasBoard = profile.draftPatterns?.boardAdherence != null
+  if (!hasBoard) {
+    suggestions.push('Create a draft board in The Lab to unlock board coaching')
+  }
+
+  const body = suggestions.length > 0
+    ? `Your AI coaching is warming up! Here's how to unlock personalized insights:\n\n${suggestions.map(s => `- ${s}`).join('\n')}`
+    : 'Keep using Clutch to unlock more personalized AI coaching insights.'
+
+  return {
+    insightType: 'ONBOARDING',
+    sport,
+    title: 'Unlock AI Coaching',
+    body,
+    priority: 2,
+    metadata: { onboarding: true, suggestions },
+  }
+}
+
+/**
+ * Assess data confidence for contextual coaching gating.
+ * Returns { level: 'HIGH'|'MEDIUM'|'LOW', details }
+ */
+async function assessUserConfidence(userId) {
+  const [draftCount, predCount, boardsWithEntries, captureCount, leagueCount] = await Promise.all([
+    prisma.draftPick.count({ where: { team: { userId } } }).then(c => c > 0 ? 1 : 0), // has at least 1 draft
+    prisma.prediction.count({ where: { userId } }),
+    prisma.draftBoard.findMany({
+      where: { userId },
+      select: { id: true, _count: { select: { entries: true } } },
+    }),
+    prisma.labCapture.count({ where: { userId } }),
+    prisma.team.count({ where: { userId } }), // proxy for imported league history
+  ])
+
+  const completedDrafts = draftCount
+  const hasImportedLeague = leagueCount > 0
+  const boardsWith30Plus = boardsWithEntries.filter(b => b._count.entries >= 30)
+
+  // MEDIUM: 1+ completed draft OR 20+ predictions OR imported league history
+  const hasMedium = completedDrafts >= 1 || predCount >= 20 || hasImportedLeague
+
+  // HIGH: 2+ seasons of data (approximated by having drafts + predictions + captures)
+  const hasHigh = completedDrafts >= 1 && predCount >= 20 && captureCount >= 10
+
+  return {
+    level: hasHigh ? 'HIGH' : hasMedium ? 'MEDIUM' : 'LOW',
+    completedDrafts,
+    predictionCount: predCount,
+    captureCount,
+    hasImportedLeague,
+    boardsWith30PlusEntries: boardsWith30Plus.length,
+    boardsWith30PlusIds: boardsWith30Plus.map(b => b.id),
+  }
 }
 
 /**
@@ -199,6 +304,7 @@ async function markActedOn(insightId, userId) {
 module.exports = {
   runDailyInsightPipeline,
   generateInsightsForUser,
+  assessUserConfidence,
   getActiveInsights,
   dismissInsight,
   markActedOn,
