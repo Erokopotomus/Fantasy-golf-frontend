@@ -34,15 +34,11 @@ router.get('/yahoo', async (req, res, next) => {
   // Encode userId in state to link callback to the right user
   const state = Buffer.from(JSON.stringify({ userId: req.user.id })).toString('base64')
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: 'fspt-r', // Fantasy Sports read access
-    state,
-  })
+  // Build OAuth URL — Yahoo docs say scope is set at app level, not in the URL
+  const authUrl = `${YAHOO_AUTH_URL}?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${encodeURIComponent(state)}`
 
-  res.redirect(`${YAHOO_AUTH_URL}?${params.toString()}`)
+  console.log('[Yahoo OAuth] Redirecting to:', authUrl.replace(clientId, clientId.substring(0, 10) + '...'))
+  res.redirect(authUrl)
 })
 
 // GET /api/auth/yahoo/callback — Handle Yahoo OAuth callback
