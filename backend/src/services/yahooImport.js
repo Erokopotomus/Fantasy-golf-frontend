@@ -605,6 +605,13 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken) {
       })
     }
 
+    // Ensure importing user is a member of the league
+    await db.leagueMember.upsert({
+      where: { userId_leagueId: { userId, leagueId: clutchLeague.id } },
+      create: { userId, leagueId: clutchLeague.id, role: 'COMMISSIONER' },
+      update: {},
+    })
+
     await db.leagueImport.update({
       where: { id: importRecord.id },
       data: { clutchLeagueId: clutchLeague.id },

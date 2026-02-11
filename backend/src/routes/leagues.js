@@ -12,6 +12,25 @@ const prisma = new PrismaClient()
 // GET /api/leagues - Get user's leagues
 router.get('/', authenticate, async (req, res, next) => {
   try {
+    // Auto-repair: if user owns leagues but isn't a member, create membership
+    const ownedWithoutMembership = await prisma.league.findMany({
+      where: {
+        ownerId: req.user.id,
+        members: { none: { userId: req.user.id } },
+      },
+      select: { id: true },
+    })
+    if (ownedWithoutMembership.length > 0) {
+      await prisma.leagueMember.createMany({
+        data: ownedWithoutMembership.map(l => ({
+          userId: req.user.id,
+          leagueId: l.id,
+          role: 'COMMISSIONER',
+        })),
+        skipDuplicates: true,
+      })
+    }
+
     const leagues = await prisma.league.findMany({
       where: {
         members: {

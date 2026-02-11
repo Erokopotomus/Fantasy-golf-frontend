@@ -27,10 +27,13 @@ const Leagues = () => {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">My Leagues</h1>
               <p className="text-text-secondary mt-1">
-                Manage your fantasy golf leagues
+                Manage your fantasy leagues
               </p>
             </div>
             <div className="flex gap-3">
+              <Link to="/import">
+                <Button variant="secondary">Import League</Button>
+              </Link>
               <Link to="/leagues/join">
                 <Button variant="secondary">Join League</Button>
               </Link>
@@ -81,39 +84,69 @@ const Leagues = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold font-display text-white">{league.name}</h3>
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          league.status === 'active'
-                            ? 'bg-gold/20 text-gold'
-                            : 'bg-yellow-500/20 text-yellow-400'
-                        }`}>
-                          {league.status === 'active' ? 'Active' : 'Draft Pending'}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-xs bg-dark-tertiary text-text-muted capitalize">
-                          {league.type}
-                        </span>
+                        {league.settings?.importedFrom ? (
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400">
+                            Imported from {league.settings.importedFrom.charAt(0).toUpperCase() + league.settings.importedFrom.slice(1)}
+                          </span>
+                        ) : (
+                          <>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              league.status === 'active'
+                                ? 'bg-gold/20 text-gold'
+                                : 'bg-yellow-500/20 text-yellow-400'
+                            }`}>
+                              {league.status === 'active' ? 'Active' : 'Draft Pending'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-xs bg-dark-tertiary text-text-muted capitalize">
+                              {league.type}
+                            </span>
+                          </>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-text-muted">
-                        <span>{league.memberCount || league._count?.members || 0} / {league.maxMembers || league.maxTeams || 10} members</span>
-                        <span>Roster: {league.settings?.rosterSize || 6} players</span>
-                        {league.userRank && (
-                          <span className="text-gold">
-                            Rank #{league.userRank} • {league.userPoints?.toLocaleString()} pts
-                          </span>
+                        {league.settings?.importedFrom ? (
+                          <>
+                            <span>{league.sport || 'NFL'}</span>
+                            <span>League History & Vault</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>{league.memberCount || league._count?.members || 0} / {league.maxMembers || league.maxTeams || 10} members</span>
+                            <span>Roster: {league.settings?.rosterSize || 6} players</span>
+                            {league.userRank && (
+                              <span className="text-gold">
+                                Rank #{league.userRank} • {league.userPoints?.toLocaleString()} pts
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Link to={`/leagues/${league.id}/roster`}>
-                        <Button variant="secondary" size="sm">Roster</Button>
-                      </Link>
-                      <Link to={`/leagues/${league.id}/draft`}>
-                        <Button variant="secondary" size="sm">Draft</Button>
-                      </Link>
-                      <Link to={`/leagues/${league.id}`}>
-                        <Button size="sm">View</Button>
-                      </Link>
+                      {league.settings?.importedFrom ? (
+                        <>
+                          <Link to={`/leagues/${league.id}/vault`}>
+                            <Button variant="secondary" size="sm">Vault</Button>
+                          </Link>
+                          <Link to={`/leagues/${league.id}`}>
+                            <Button size="sm">View</Button>
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link to={`/leagues/${league.id}/roster`}>
+                            <Button variant="secondary" size="sm">Roster</Button>
+                          </Link>
+                          <Link to={`/leagues/${league.id}/draft`}>
+                            <Button variant="secondary" size="sm">Draft</Button>
+                          </Link>
+                          <Link to={`/leagues/${league.id}`}>
+                            <Button size="sm">View</Button>
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
 

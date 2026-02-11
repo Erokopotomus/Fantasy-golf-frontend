@@ -782,14 +782,23 @@ const ImportLeague = () => {
 
           {/* Step 3: Importing */}
           {step === 3 && (
-            <Card className="text-center py-12">
-              <div className="animate-spin w-12 h-12 border-4 border-accent-gold/20 border-t-accent-gold rounded-full mx-auto mb-4" />
-              <h2 className="text-lg font-display font-bold text-white mb-2">
+            <Card className="text-center py-12 px-6">
+              <div className="relative w-16 h-16 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full border-4 border-accent-gold/20" />
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-accent-gold animate-spin" />
+              </div>
+              <h2 className="text-xl font-display font-bold text-white mb-2">
                 Importing your league history...
               </h2>
-              <p className="text-sm text-text-secondary">
-                Pulling rosters, matchups, drafts, and standings for every season. This may take a minute.
+              <p className="text-sm text-text-secondary mb-6">
+                Pulling rosters, matchups, drafts, and standings for every season.
               </p>
+              <div className="bg-accent-gold/10 border border-accent-gold/20 rounded-lg p-4 max-w-sm mx-auto">
+                <p className="text-sm font-medium text-accent-gold mb-1">Sit tight — this can take a few minutes</p>
+                <p className="text-xs text-text-muted">
+                  We're pulling years of history from the API. Don't close this tab or press back. It's working.
+                </p>
+              </div>
             </Card>
           )}
 
