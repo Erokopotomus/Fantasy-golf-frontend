@@ -59,7 +59,9 @@ function downloadCSV(filename, rows) {
 const PLAYOFF_LABELS = {
   champion: { text: 'Champion', color: 'text-accent-gold bg-accent-gold/20' },
   runner_up: { text: 'Runner-Up', color: 'text-gray-300 bg-gray-500/20' },
+  third_place: { text: '3rd Place', color: 'text-blue-400 bg-blue-500/20' },
   semifinal: { text: 'Semis', color: 'text-blue-400 bg-blue-500/20' },
+  playoffs: { text: 'Playoffs', color: 'text-green-400 bg-green-500/20' },
   eliminated: { text: 'Playoffs', color: 'text-green-400 bg-green-500/20' },
   missed: { text: '', color: '' },
 }

@@ -155,6 +155,18 @@ async function fetchTradedPicks(sleeperLeagueId, seasonYear) {
 
 // ─── Fetch All Matchups ────────────────────────────────────────────────────
 
+async function fetchWinnersBracket(sleeperLeagueId, seasonYear) {
+  try {
+    const bracket = await sleeperFetch(`/league/${sleeperLeagueId}/winners_bracket`)
+    if (bracket && bracket.length > 0) {
+      storeRawResponse('winners_bracket', sleeperLeagueId, parseInt(seasonYear), bracket).catch(() => {})
+    }
+    return bracket || []
+  } catch {
+    return []
+  }
+}
+
 async function fetchAllMatchups(sleeperLeagueId, seasonYear) {
   const allMatchups = {}
   for (let week = 1; week <= 18; week++) {
@@ -179,13 +191,14 @@ async function fetchAllMatchups(sleeperLeagueId, seasonYear) {
 
 async function importSeason(sleeperLeagueId, seasonYear) {
   // Fetch all data in parallel
-  const [rosters, users, matchups, drafts, transactions, tradedPicks] = await Promise.all([
+  const [rosters, users, matchups, drafts, transactions, tradedPicks, winnersBracket] = await Promise.all([
     sleeperFetch(`/league/${sleeperLeagueId}/rosters`).catch(() => []),
     sleeperFetch(`/league/${sleeperLeagueId}/users`).catch(() => []),
     fetchAllMatchups(sleeperLeagueId, seasonYear),
     sleeperFetch(`/league/${sleeperLeagueId}/drafts`).catch(() => []),
     fetchAllTransactions(sleeperLeagueId, seasonYear),
     fetchTradedPicks(sleeperLeagueId, seasonYear),
+    fetchWinnersBracket(sleeperLeagueId, seasonYear),
   ])
 
   // Store raw rosters + users + drafts
@@ -231,8 +244,8 @@ async function importSeason(sleeperLeagueId, seasonYear) {
 
   rosterData.sort((a, b) => b.wins - a.wins || b.pointsFor - a.pointsFor)
 
-  // Determine playoff results
-  const playoffResults = determinePlayoffResults(matchups, rosterData)
+  // Determine playoff results from the actual bracket
+  const playoffResults = determinePlayoffResults(winnersBracket, rosterData)
 
   // Import draft data
   let draftData = null
@@ -276,32 +289,61 @@ async function importSeason(sleeperLeagueId, seasonYear) {
 
 // ─── Determine Playoff Results ─────────────────────────────────────────────
 
-function determinePlayoffResults(matchups, rosters) {
+/**
+ * Determine playoff results from Sleeper's winners_bracket endpoint.
+ *
+ * The bracket is an array of matchup objects:
+ *   { r: round, m: matchup#, t1: rosterId, t2: rosterId, w: winnerId, l: loserId, p?: placement }
+ *
+ * The `p` field indicates which placement a matchup decides:
+ *   p=1 → Championship game (winner = champion, loser = runner-up)
+ *   p=3 → 3rd place game
+ *   p=5 → 5th place game
+ */
+function determinePlayoffResults(bracket, rosters) {
   const results = {}
-  const weekNumbers = Object.keys(matchups).map(Number).sort((a, b) => a - b)
 
-  if (weekNumbers.length >= 14) {
-    const lastWeek = weekNumbers[weekNumbers.length - 1]
-    const lastWeekMatchups = matchups[lastWeek] || []
+  if (!bracket || bracket.length === 0) {
+    return results
+  }
 
-    let maxPoints = 0
-    let champRosterId = null
-    for (const m of lastWeekMatchups) {
-      if (m.points > maxPoints) {
-        maxPoints = m.points
-        champRosterId = m.roster_id
-      }
+  // Championship game: the matchup with p=1 (decides 1st place)
+  // Fallback: if no `p` field exists, use highest round + lowest matchup number
+  const maxRound = Math.max(...bracket.map(m => m.r))
+  const championshipMatch = bracket.find(m => m.p === 1)
+    || bracket.filter(m => m.r === maxRound).sort((a, b) => a.m - b.m)[0]
+  if (championshipMatch) {
+    if (championshipMatch.w) results[championshipMatch.w] = 'champion'
+    if (championshipMatch.l) results[championshipMatch.l] = 'runner_up'
+  }
+
+  // 3rd place game (if exists): the matchup with p=3
+  const thirdPlaceMatch = bracket.find(m => m.p === 3)
+  if (thirdPlaceMatch) {
+    if (thirdPlaceMatch.w && !results[thirdPlaceMatch.w]) {
+      results[thirdPlaceMatch.w] = 'third_place'
     }
+  }
 
-    const playoffTeams = rosters.slice(0, Math.min(6, rosters.length))
-    for (const r of playoffTeams) {
-      if (r.rosterId === champRosterId) {
-        results[r.rosterId] = 'champion'
-      } else {
-        results[r.rosterId] = 'eliminated'
-      }
+  // Collect all roster IDs that appear anywhere in the winners bracket
+  const bracketRosterIds = new Set()
+  for (const match of bracket) {
+    if (typeof match.t1 === 'number') bracketRosterIds.add(match.t1)
+    if (typeof match.t2 === 'number') bracketRosterIds.add(match.t2)
+    if (typeof match.w === 'number') bracketRosterIds.add(match.w)
+    if (typeof match.l === 'number') bracketRosterIds.add(match.l)
+  }
+
+  // Anyone in the bracket not yet assigned = made playoffs but didn't win/place
+  for (const rosterId of bracketRosterIds) {
+    if (!results[rosterId]) {
+      results[rosterId] = 'playoffs'
     }
-    for (const r of rosters.slice(6)) {
+  }
+
+  // Everyone else missed playoffs
+  for (const r of rosters) {
+    if (!results[r.rosterId]) {
       results[r.rosterId] = 'missed'
     }
   }
