@@ -830,21 +830,33 @@ const ImportLeague = () => {
                   })}
                 </div>
 
-                <div className="mb-4 p-3 bg-dark-tertiary/50 rounded-lg">
-                  <label className="block text-xs text-text-secondary font-mono mb-2">Import into:</label>
+                <div className={`mb-4 p-4 rounded-lg border ${targetLeagueId ? 'bg-accent-gold/5 border-accent-gold/30' : 'bg-dark-tertiary/50 border-accent-gold/20'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <label className="text-sm font-display font-bold text-white">Where should this go?</label>
+                  </div>
                   <select
                     value={targetLeagueId}
                     onChange={e => setTargetLeagueId(e.target.value)}
-                    className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+                    className="w-full px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm font-medium focus:outline-none focus:border-accent-gold transition-colors"
                   >
-                    <option value="">Create new league</option>
+                    <option value="">+ Create new league</option>
                     {existingLeagues.map(l => (
                       <option key={l.id} value={l.id}>{l.name}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-text-secondary mt-1.5">
-                    To merge history from multiple platforms, select an existing league.
-                  </p>
+                  {existingLeagues.length > 0 && !targetLeagueId && (
+                    <p className="text-xs text-accent-gold mt-2">
+                      Already imported this league from another platform? Select it above to merge seasons together.
+                    </p>
+                  )}
+                  {targetLeagueId && (
+                    <p className="text-xs text-green-400 mt-2">
+                      Seasons will be added to the existing league vault.
+                    </p>
+                  )}
                 </div>
 
                 {activeHook.error && (
