@@ -68,18 +68,36 @@ const PLAYOFF_LABELS = {
 }
 
 // ─── Season Timeline Card ─────────────────────────────────────────────────────
-const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntry }) => {
+const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries }) => {
   const [expanded, setExpanded] = useState(false)
-  const [deleting, setDeleting] = useState(null)
+  const [selected, setSelected] = useState(new Set())
+  const [deleting, setDeleting] = useState(false)
   const champion = teams.find(t => t.playoffResult === 'champion')
 
-  const handleDelete = async (entry) => {
-    if (!confirm(`Remove "${entry.ownerName || entry.teamName}" from ${year}?`)) return
-    setDeleting(entry.id)
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAll = () => {
+    if (selected.size === teams.length) setSelected(new Set())
+    else setSelected(new Set(teams.map(t => t.id).filter(Boolean)))
+  }
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selected)
+    const count = ids.length
+    if (!confirm(`Are you sure you want to delete ${count} entr${count === 1 ? 'y' : 'ies'} from ${year}? This cannot be undone.`)) return
+    setDeleting(true)
     try {
-      await onDeleteEntry(entry.id)
+      await onDeleteEntries(ids)
+      setSelected(new Set())
     } finally {
-      setDeleting(null)
+      setDeleting(false)
     }
   }
 
@@ -110,10 +128,33 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntry }) => {
 
       {expanded && (
         <div className="mt-4 pt-4 border-t border-dark-tertiary">
+          {/* Bulk delete bar */}
+          {isCommissioner && selected.size > 0 && (
+            <div className="mb-3 flex items-center justify-between bg-rose/10 border border-rose/30 rounded-lg px-3 py-2">
+              <span className="text-sm text-rose font-mono">{selected.size} selected</span>
+              <button
+                onClick={handleBulkDelete}
+                disabled={deleting}
+                className="px-3 py-1.5 bg-rose text-white rounded-lg text-xs font-display font-bold hover:bg-rose/90 disabled:opacity-50 transition-colors"
+              >
+                {deleting ? 'Deleting...' : `Delete ${selected.size} Entr${selected.size === 1 ? 'y' : 'ies'}`}
+              </button>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
+                  {isCommissioner && (
+                    <th className="w-8 pb-2 pl-2">
+                      <input
+                        type="checkbox"
+                        checked={selected.size === teams.length && teams.length > 0}
+                        onChange={toggleAll}
+                        className="accent-[#D4607A]"
+                      />
+                    </th>
+                  )}
                   <th className="text-left pb-2 pl-2">#</th>
                   <th className="text-left pb-2">Team</th>
                   <th className="text-center pb-2">W</th>
@@ -122,18 +163,28 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntry }) => {
                   <th className="text-right pb-2">PF</th>
                   <th className="text-right pb-2">PA</th>
                   <th className="text-right pb-2 pr-2">Result</th>
-                  {isCommissioner && <th className="w-8 pb-2"></th>}
                 </tr>
               </thead>
               <tbody>
                 {teams.map((team, idx) => {
                   const playoff = PLAYOFF_LABELS[team.playoffResult] || {}
                   const isEmpty = !team.wins && !team.losses && !team.pointsFor
+                  const isChecked = selected.has(team.id)
                   return (
                     <tr
                       key={team.id || idx}
-                      className={`border-t border-dark-tertiary/50 hover:bg-dark-tertiary/30 ${isEmpty ? 'opacity-40' : ''}`}
+                      className={`border-t border-dark-tertiary/50 hover:bg-dark-tertiary/30 ${isEmpty ? 'opacity-40' : ''} ${isChecked ? 'bg-rose/5' : ''}`}
                     >
+                      {isCommissioner && (
+                        <td className="py-2 pl-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleSelect(team.id)}
+                            className="accent-[#D4607A]"
+                          />
+                        </td>
+                      )}
                       <td className="py-2 pl-2 font-mono text-text-secondary">{team.finalStanding || idx + 1}</td>
                       <td className="py-2">
                         <p className="text-white font-display font-semibold text-sm">{team.ownerName || team.teamName}</p>
@@ -153,20 +204,6 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntry }) => {
                           </span>
                         )}
                       </td>
-                      {isCommissioner && (
-                        <td className="py-2 text-center">
-                          <button
-                            onClick={() => handleDelete(team)}
-                            disabled={deleting === team.id}
-                            className="text-text-secondary hover:text-red-400 transition-colors disabled:opacity-30"
-                            title="Remove entry"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </td>
-                      )}
                     </tr>
                   )
                 })}
@@ -1217,9 +1254,9 @@ const LeagueVault = () => {
 
   const years = sanitizedSeasons ? Object.keys(sanitizedSeasons).sort((a, b) => b - a) : []
 
-  const handleDeleteEntry = useCallback(async (entryId) => {
+  const handleDeleteEntries = useCallback(async (ids) => {
     try {
-      await api.deleteHistoricalEntry(entryId)
+      await api.deleteHistoricalEntries(ids)
       refetch()
     } catch (err) {
       alert(err.message || 'Failed to delete')
@@ -1375,7 +1412,7 @@ const LeagueVault = () => {
                 </Card>
               ) : (
                 years.map(year => (
-                  <SeasonCard key={year} year={year} teams={sanitizedSeasons[year] || []} isCommissioner={isCommissioner} onDeleteEntry={handleDeleteEntry} />
+                  <SeasonCard key={year} year={year} teams={sanitizedSeasons[year] || []} isCommissioner={isCommissioner} onDeleteEntries={handleDeleteEntries} />
                 ))
               )}
             </div>

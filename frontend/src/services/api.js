@@ -683,8 +683,11 @@ class ApiService {
     })
   }
 
-  async deleteHistoricalEntry(id) {
-    return this.request(`/imports/historical-season/${id}`, { method: 'DELETE' })
+  async deleteHistoricalEntries(ids) {
+    return this.request('/imports/historical-season/bulk-delete', {
+      method: 'POST',
+      body: JSON.stringify({ ids }),
+    })
   }
 
   async getOwnerAliases(leagueId) {

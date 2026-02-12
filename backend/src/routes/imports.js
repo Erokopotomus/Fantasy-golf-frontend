@@ -377,23 +377,33 @@ router.delete('/manual-season/:leagueId/:seasonYear', authenticate, async (req, 
   }
 })
 
-// ─── Delete individual historical season entries ─────────────────────────────
-// DELETE /api/imports/historical-season/:id (commissioner only)
-router.delete('/historical-season/:id', authenticate, async (req, res) => {
+// ─── Delete historical season entries (bulk) ─────────────────────────────────
+// POST /api/imports/historical-season/bulk-delete (commissioner only)
+router.post('/historical-season/bulk-delete', authenticate, async (req, res) => {
   try {
-    const entry = await prisma.historicalSeason.findUnique({
-      where: { id: req.params.id },
-      select: { id: true, leagueId: true, ownerName: true, seasonYear: true },
-    })
-    if (!entry) return res.status(404).json({ error: { message: 'Entry not found' } })
+    const { ids } = req.body
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: { message: 'ids array is required' } })
+    }
 
-    const league = await prisma.league.findUnique({ where: { id: entry.leagueId }, select: { ownerId: true } })
+    // Verify all entries belong to the same league and user is commissioner
+    const entries = await prisma.historicalSeason.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, leagueId: true },
+    })
+    if (entries.length === 0) return res.status(404).json({ error: { message: 'No entries found' } })
+
+    const leagueIds = new Set(entries.map(e => e.leagueId))
+    if (leagueIds.size > 1) return res.status(400).json({ error: { message: 'All entries must belong to the same league' } })
+
+    const leagueId = entries[0].leagueId
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
     if (!league || league.ownerId !== req.user.id) {
       return res.status(403).json({ error: { message: 'Only the commissioner can delete history entries' } })
     }
 
-    await prisma.historicalSeason.delete({ where: { id: req.params.id } })
-    res.json({ success: true })
+    await prisma.historicalSeason.deleteMany({ where: { id: { in: ids } } })
+    res.json({ success: true, deleted: ids.length })
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
   }
