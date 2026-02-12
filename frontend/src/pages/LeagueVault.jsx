@@ -1640,6 +1640,7 @@ const LeagueVault = () => {
   const [showManageOwners, setShowManageOwners] = useState(false)
   const [aliases, setAliases] = useState([])
   const [league, setLeague] = useState(null)
+  const [recordsSort, setRecordsSort] = useState({ key: 'winPct', dir: 'desc' })
 
   // Fetch league info (for commissioner check) and aliases on mount
   useEffect(() => {
@@ -2046,31 +2047,52 @@ const LeagueVault = () => {
                     <thead>
                       <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
                         <th className="text-left pb-2">#</th>
-                        <th className="text-left pb-2">Manager</th>
-                        <th className="text-center pb-2">W</th>
-                        <th className="text-center pb-2">L</th>
-                        <th className="text-center pb-2">Win%</th>
-                        <th className="text-right pb-2">Total PF</th>
-                        <th className="text-center pb-2">Titles</th>
+                        {[
+                          { key: 'name', label: 'Manager', align: 'text-left' },
+                          { key: 'wins', label: 'W', align: 'text-center' },
+                          { key: 'losses', label: 'L', align: 'text-center' },
+                          { key: 'winPct', label: 'Win%', align: 'text-center' },
+                          { key: 'totalPF', label: 'Total PF', align: 'text-right' },
+                          { key: 'championships', label: 'Titles', align: 'text-center' },
+                        ].map(col => (
+                          <th
+                            key={col.key}
+                            className={`${col.align} pb-2 cursor-pointer select-none hover:text-white transition-colors ${recordsSort.key === col.key ? 'text-accent-gold' : ''}`}
+                            onClick={() => setRecordsSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
+                          >
+                            {col.label}
+                            {recordsSort.key === col.key && (
+                              <span className="ml-0.5">{recordsSort.dir === 'desc' ? '▼' : '▲'}</span>
+                            )}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {(showActiveOnly && inactiveOwnerSet.size > 0
-                        ? allTimeRecords.allTime?.filter(o => !inactiveOwnerSet.has(o.name))
-                        : allTimeRecords.allTime
-                      )?.map((owner, idx) => (
-                        <tr key={owner.name} className="border-t border-dark-tertiary/50">
-                          <td className="py-2 font-mono text-text-secondary">{idx + 1}</td>
-                          <td className="py-2 font-display font-semibold text-white">{owner.name}</td>
-                          <td className="py-2 text-center font-mono text-green-400">{owner.wins}</td>
-                          <td className="py-2 text-center font-mono text-red-400">{owner.losses}</td>
-                          <td className="py-2 text-center font-mono text-white">{(owner.winPct * 100).toFixed(1)}%</td>
-                          <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPF.toFixed(1)}</td>
-                          <td className="py-2 text-center font-mono text-accent-gold">
-                            {owner.championships > 0 ? `${owner.championships}x 🏆` : '—'}
-                          </td>
-                        </tr>
-                      ))}
+                      {(() => {
+                        const filtered = showActiveOnly && inactiveOwnerSet.size > 0
+                          ? allTimeRecords.allTime?.filter(o => !inactiveOwnerSet.has(o.name))
+                          : allTimeRecords.allTime
+                        const sorted = filtered ? [...filtered].sort((a, b) => {
+                          const aVal = a[recordsSort.key]
+                          const bVal = b[recordsSort.key]
+                          const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
+                          return recordsSort.dir === 'desc' ? -cmp : cmp
+                        }) : []
+                        return sorted.map((owner, idx) => (
+                          <tr key={owner.name} className="border-t border-dark-tertiary/50">
+                            <td className="py-2 font-mono text-text-secondary">{idx + 1}</td>
+                            <td className="py-2 font-display font-semibold text-white">{owner.name}</td>
+                            <td className="py-2 text-center font-mono text-green-400">{owner.wins}</td>
+                            <td className="py-2 text-center font-mono text-red-400">{owner.losses}</td>
+                            <td className="py-2 text-center font-mono text-white">{(owner.winPct * 100).toFixed(1)}%</td>
+                            <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPF.toFixed(1)}</td>
+                            <td className="py-2 text-center font-mono text-accent-gold">
+                              {owner.championships > 0 ? `${owner.championships}x 🏆` : '—'}
+                            </td>
+                          </tr>
+                        ))
+                      })()}
                     </tbody>
                   </table>
                 </div>
