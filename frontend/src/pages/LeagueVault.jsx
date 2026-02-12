@@ -995,20 +995,37 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
 
-        <div className="p-5 border-t border-dark-tertiary flex items-center justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-4 py-2 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
+        {/* Sticky action bar when names are selected */}
+        {selected.size >= 2 && (
+          <div className="px-5 py-3 border-t border-accent-gold/30 bg-accent-gold/10">
+            <button
+              onClick={handleGroup}
+              className="w-full py-2.5 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 transition-colors"
+            >
+              Group {selected.size} Selected Names
+            </button>
+          </div>
+        )}
+
+        <div className="p-5 border-t border-dark-tertiary bg-dark-secondary/80 flex items-center justify-between">
+          <span className="text-xs text-text-secondary font-mono">
+            {Object.keys(groups).length} group{Object.keys(groups).length !== 1 ? 's' : ''}
+          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-5 py-2.5 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-50 shadow-lg shadow-accent-gold/20"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
