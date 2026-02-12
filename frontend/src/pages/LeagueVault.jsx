@@ -1268,6 +1268,21 @@ const LeagueVault = () => {
       mostChampionships: { name: '', count: 0 },
     }
 
+    // Build matchup lookup: year-week-matchupId → [{ name, points }]
+    const matchupLookup = {}
+    for (const [year, teams] of Object.entries(sanitizedSeasons)) {
+      for (const t of teams) {
+        const name = t.ownerName || t.teamName
+        for (const w of (t.weeklyScores || [])) {
+          if (w.matchupId != null) {
+            const key = `${year}-${w.week}-${w.matchupId}`
+            if (!matchupLookup[key]) matchupLookup[key] = []
+            matchupLookup[key].push({ name, points: w.points })
+          }
+        }
+      }
+    }
+
     for (const [year, teams] of Object.entries(sanitizedSeasons)) {
       for (const t of teams) {
         const name = t.ownerName || t.teamName
@@ -1295,7 +1310,11 @@ const LeagueVault = () => {
           if (margin > records.biggestBlowout.value && w.opponentPoints > 0) {
             const winner = w.points > w.opponentPoints ? name : null
             if (winner) {
-              records.biggestBlowout = { value: margin, name: winner, year: parseInt(year), week: w.week, score: `${w.points.toFixed(1)}-${w.opponentPoints.toFixed(1)}` }
+              // Find opponent name from matchup lookup
+              const key = w.matchupId != null ? `${year}-${w.week}-${w.matchupId}` : null
+              const opponents = key ? matchupLookup[key] : null
+              const loser = opponents?.find(o => o.name !== name)?.name || '?'
+              records.biggestBlowout = { value: margin, winner, loser, year: parseInt(year), week: w.week, score: `${w.points.toFixed(1)}-${w.opponentPoints.toFixed(1)}` }
             }
           }
         }
@@ -1533,8 +1552,11 @@ const LeagueVault = () => {
                 <Card className="text-center">
                   <p className="text-xs text-text-secondary font-mono uppercase mb-1">Biggest Blowout</p>
                   <p className="text-lg font-mono font-bold text-white">{allTimeRecords.biggestBlowout.value?.toFixed(1) || '—'}</p>
-                  {allTimeRecords.biggestBlowout.name && (
-                    <p className="text-xs text-text-secondary truncate">{allTimeRecords.biggestBlowout.name} ({allTimeRecords.biggestBlowout.score})</p>
+                  {allTimeRecords.biggestBlowout.winner && (
+                    <p className="text-xs text-text-secondary truncate">{allTimeRecords.biggestBlowout.winner} over {allTimeRecords.biggestBlowout.loser}</p>
+                  )}
+                  {allTimeRecords.biggestBlowout.score && (
+                    <p className="text-xs text-text-secondary/60 font-mono truncate">{allTimeRecords.biggestBlowout.score}</p>
                   )}
                 </Card>
                 <Card className="text-center">
