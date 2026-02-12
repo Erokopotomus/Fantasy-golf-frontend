@@ -2284,6 +2284,7 @@ model OwnerAlias {
   canonicalName String
   ownerUserId   String?
   ownerUser     User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
 
   @@unique([leagueId, ownerName])

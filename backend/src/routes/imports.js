@@ -445,12 +445,13 @@ router.put('/owner-aliases/:leagueId', authenticate, async (req, res) => {
       await tx.ownerAlias.deleteMany({ where: { leagueId } })
 
       const toCreate = aliases
-        .filter(a => a.ownerName && a.canonicalName && a.ownerName !== a.canonicalName)
+        .filter(a => a.ownerName && a.canonicalName && (a.ownerName !== a.canonicalName || a.isActive === false))
         .map(a => ({
           leagueId,
           ownerName: a.ownerName,
           canonicalName: a.canonicalName,
           ownerUserId: a.ownerUserId || null,
+          isActive: a.isActive !== false,
         }))
 
       if (toCreate.length > 0) {

@@ -879,6 +879,14 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
   const [selected, setSelected] = useState(new Set())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  // Track inactive owners (canonical names that are marked inactive)
+  const [inactiveOwners, setInactiveOwners] = useState(() => {
+    const s = new Set()
+    for (const a of existingAliases) {
+      if (a.isActive === false) s.add(a.canonicalName)
+    }
+    return s
+  })
 
   // Names that are already in a group
   const groupedNames = useMemo(() => {
@@ -893,6 +901,21 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
   const ungrouped = useMemo(() =>
     allRawNames.filter(n => !groupedNames.has(n)).sort()
   , [allRawNames, groupedNames])
+
+  // All resolved owner names (canonical names for groups + ungrouped names)
+  const allResolvedOwners = useMemo(() => {
+    const owners = new Set([...Object.keys(groups), ...ungrouped])
+    return Array.from(owners).sort()
+  }, [groups, ungrouped])
+
+  const toggleActive = (name) => {
+    setInactiveOwners(prev => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+  }
 
   const toggleSelect = (name) => {
     setSelected(prev => {
@@ -955,13 +978,20 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
     setSaving(true)
     setError(null)
     try {
-      // Build aliases array: each ownerName that differs from its canonicalName
+      // Build aliases array: aliased names + inactive owner entries
       const aliases = []
       for (const [canonical, names] of Object.entries(groups)) {
+        const active = !inactiveOwners.has(canonical)
         for (const name of names) {
-          if (name !== canonical) {
-            aliases.push({ ownerName: name, canonicalName: canonical })
+          if (name !== canonical || !active) {
+            aliases.push({ ownerName: name, canonicalName: canonical, isActive: active })
           }
+        }
+      }
+      // Also save inactive status for ungrouped owners
+      for (const name of ungrouped) {
+        if (inactiveOwners.has(name)) {
+          aliases.push({ ownerName: name, canonicalName: name, isActive: false })
         }
       }
       await api.saveOwnerAliases(leagueId, aliases)
@@ -1074,6 +1104,33 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
             )}
           </div>
 
+          {/* Active / Inactive toggles */}
+          <div>
+            <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+              Active Managers ({allResolvedOwners.length - inactiveOwners.size} of {allResolvedOwners.length})
+            </h3>
+            <p className="text-xs text-text-secondary mb-2">Inactive managers are hidden from Records by default.</p>
+            <div className="space-y-1">
+              {allResolvedOwners.map(name => {
+                const active = !inactiveOwners.has(name)
+                return (
+                  <div
+                    key={name}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${active ? 'bg-dark-tertiary/30' : 'bg-dark-tertiary/10 opacity-50'}`}
+                  >
+                    <span className={`text-sm font-display ${active ? 'text-white' : 'text-text-secondary line-through'}`}>{name}</span>
+                    <button
+                      onClick={() => toggleActive(name)}
+                      className={`text-xs font-mono px-2 py-1 rounded transition-colors ${active ? 'text-green-400 bg-green-500/10 hover:bg-green-500/20' : 'text-text-secondary bg-dark-tertiary/30 hover:bg-dark-tertiary/50'}`}
+                    >
+                      {active ? 'Active' : 'Inactive'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
 
@@ -1143,6 +1200,16 @@ const LeagueVault = () => {
   }, [aliases])
 
   const resolveOwner = useCallback((name) => aliasMap[name] || name, [aliasMap])
+
+  // Build set of inactive canonical owner names from aliases
+  const [showActiveOnly, setShowActiveOnly] = useState(true)
+  const inactiveOwnerSet = useMemo(() => {
+    const s = new Set()
+    for (const a of aliases) {
+      if (a.isActive === false) s.add(a.canonicalName)
+    }
+    return s
+  }, [aliases])
 
   // Collect all unique raw owner names (pre-resolution) for the modal
   const allRawNames = useMemo(() => {
@@ -1481,7 +1548,17 @@ const LeagueVault = () => {
 
               {/* All-Time Standings */}
               <Card>
-                <h3 className="font-display font-bold text-white mb-3">All-Time Standings</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-display font-bold text-white">All-Time Standings</h3>
+                  {inactiveOwnerSet.size > 0 && (
+                    <button
+                      onClick={() => setShowActiveOnly(prev => !prev)}
+                      className={`text-xs font-mono px-2.5 py-1 rounded-lg transition-colors ${showActiveOnly ? 'bg-green-500/15 text-green-400' : 'bg-dark-tertiary text-text-secondary'}`}
+                    >
+                      {showActiveOnly ? 'Active Only' : 'All Managers'}
+                    </button>
+                  )}
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -1496,7 +1573,10 @@ const LeagueVault = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {allTimeRecords.allTime?.map((owner, idx) => (
+                      {(showActiveOnly && inactiveOwnerSet.size > 0
+                        ? allTimeRecords.allTime?.filter(o => !inactiveOwnerSet.has(o.name))
+                        : allTimeRecords.allTime
+                      )?.map((owner, idx) => (
                         <tr key={owner.name} className="border-t border-dark-tertiary/50">
                           <td className="py-2 font-mono text-text-secondary">{idx + 1}</td>
                           <td className="py-2 font-display font-semibold text-white">{owner.name}</td>
