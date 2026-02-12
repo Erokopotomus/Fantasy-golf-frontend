@@ -2026,6 +2026,7 @@ const LeagueVault = () => {
       totalWins: {},
       totalLosses: {},
       totalPF: {},
+      totalPA: {},
       highestPF: { value: 0 },
       highestWeek: { value: 0 },
       biggestBlowout: { value: 0 },
@@ -2073,11 +2074,13 @@ const LeagueVault = () => {
         if (!records.totalWins[name]) records.totalWins[name] = 0
         if (!records.totalLosses[name]) records.totalLosses[name] = 0
         if (!records.totalPF[name]) records.totalPF[name] = 0
+        if (!records.totalPA[name]) records.totalPA[name] = 0
 
         if (t.playoffResult === 'champion') records.championships[name]++
         records.totalWins[name] += t.wins || 0
         records.totalLosses[name] += t.losses || 0
         records.totalPF[name] += t.pointsFor || 0
+        records.totalPA[name] += t.pointsAgainst || 0
 
         if (t.pointsFor > records.highestPF.value) {
           records.highestPF = { value: t.pointsFor, name, year: parseInt(year) }
@@ -2128,6 +2131,7 @@ const LeagueVault = () => {
       losses: records.totalLosses[name] || 0,
       championships: records.championships[name] || 0,
       totalPF: records.totalPF[name] || 0,
+      totalPA: records.totalPA[name] || 0,
       winPct: records.totalWins[name] / Math.max(1, records.totalWins[name] + records.totalLosses[name]),
     })).sort((a, b) => b.winPct - a.winPct)
 
@@ -2374,6 +2378,7 @@ const LeagueVault = () => {
                           { key: 'losses', label: 'L', align: 'text-center' },
                           { key: 'winPct', label: 'Win%', align: 'text-center' },
                           { key: 'totalPF', label: 'Total PF', align: 'text-right' },
+                          { key: 'totalPA', label: 'Total PA', align: 'text-right' },
                           { key: 'championships', label: 'Titles', align: 'text-center' },
                         ].map(col => (
                           <th
@@ -2419,6 +2424,7 @@ const LeagueVault = () => {
                             <td className="py-2 text-center font-mono text-red-400">{owner.losses}</td>
                             <td className="py-2 text-center font-mono text-white">{(owner.winPct * 100).toFixed(1)}%</td>
                             <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPF.toFixed(1)}</td>
+                            <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPA.toFixed(1)}</td>
                             <td className="py-2 text-center font-mono text-accent-gold">
                               {owner.championships > 0 ? `${owner.championships}x 🏆` : '—'}
                             </td>
