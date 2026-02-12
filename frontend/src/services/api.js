@@ -683,6 +683,17 @@ class ApiService {
     })
   }
 
+  async getOwnerAliases(leagueId) {
+    return this.request(`/imports/owner-aliases/${leagueId}`)
+  }
+
+  async saveOwnerAliases(leagueId, aliases) {
+    return this.request(`/imports/owner-aliases/${leagueId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ aliases }),
+    })
+  }
+
   // ESPN Import
   async discoverESPNLeague(leagueId, espn_s2 = '', swid = '') {
     return this.request('/imports/espn/discover', {

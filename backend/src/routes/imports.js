@@ -377,4 +377,66 @@ router.delete('/manual-season/:leagueId/:seasonYear', authenticate, async (req, 
   }
 })
 
+// ─── Owner Aliases (commissioner name grouping) ─────────────────────────────
+// GET /api/imports/owner-aliases/:leagueId
+router.get('/owner-aliases/:leagueId', authenticate, async (req, res) => {
+  try {
+    const aliases = await prisma.ownerAlias.findMany({
+      where: { leagueId: req.params.leagueId },
+      orderBy: { createdAt: 'asc' },
+    })
+    res.json({ aliases })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// PUT /api/imports/owner-aliases/:leagueId (commissioner only)
+router.put('/owner-aliases/:leagueId', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.params
+    const { aliases } = req.body
+
+    if (!Array.isArray(aliases)) {
+      return res.status(400).json({ error: { message: 'aliases must be an array' } })
+    }
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can manage owner aliases' } })
+    }
+
+    // Transaction: delete existing + create new
+    await prisma.$transaction(async (tx) => {
+      await tx.ownerAlias.deleteMany({ where: { leagueId } })
+
+      const toCreate = aliases
+        .filter(a => a.ownerName && a.canonicalName && a.ownerName !== a.canonicalName)
+        .map(a => ({
+          leagueId,
+          ownerName: a.ownerName,
+          canonicalName: a.canonicalName,
+          ownerUserId: a.ownerUserId || null,
+        }))
+
+      if (toCreate.length > 0) {
+        await tx.ownerAlias.createMany({ data: toCreate })
+      }
+
+      // Invalidate league stats cache so AI chatbot picks up new aliases
+      await tx.leagueStatsCache.deleteMany({ where: { leagueId } })
+    })
+
+    const updated = await prisma.ownerAlias.findMany({
+      where: { leagueId },
+      orderBy: { createdAt: 'asc' },
+    })
+    res.json({ aliases: updated })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 module.exports = router

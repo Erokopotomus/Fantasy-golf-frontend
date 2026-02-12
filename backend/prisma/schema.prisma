@@ -74,6 +74,9 @@ model User {
   // League intelligence
   leagueQuerySessions LeagueQuerySession[]
 
+  // Owner alias mapping
+  ownerAliases        OwnerAlias[]
+
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
   bio         String?  @db.Text
@@ -137,6 +140,9 @@ model League {
   // League intelligence
   querySessions   LeagueQuerySession[]
   statsCache      LeagueStatsCache?
+
+  // Owner alias mapping (commissioner-managed)
+  ownerAliases    OwnerAlias[]
 
   @@map("leagues")
 }
@@ -2266,6 +2272,23 @@ model HistoricalSeason {
   @@index([leagueId, seasonYear])
   @@index([ownerUserId])
   @@map("historical_seasons")
+}
+
+// ============ OWNER ALIASES (Commissioner name grouping) ============
+
+model OwnerAlias {
+  id            String   @id @default(cuid())
+  leagueId      String
+  league        League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  ownerName     String
+  canonicalName String
+  ownerUserId   String?
+  ownerUser     User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+
+  @@unique([leagueId, ownerName])
+  @@index([leagueId])
+  @@map("owner_aliases")
 }
 
 // ============ DATA ARCHITECTURE (Phase 4) ============

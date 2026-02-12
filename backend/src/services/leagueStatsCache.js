@@ -27,6 +27,14 @@ async function computeLeagueStats(leagueId) {
 
   if (seasons.length === 0) return null
 
+  // Fetch owner aliases and build resolution function
+  const aliases = await prisma.ownerAlias.findMany({ where: { leagueId } })
+  const aliasMap = {}
+  for (const a of aliases) {
+    aliasMap[a.ownerName] = a.canonicalName
+  }
+  const resolve = (name) => aliasMap[name] || name
+
   // Group by season year
   const byYear = {}
   for (const s of seasons) {
@@ -39,7 +47,7 @@ async function computeLeagueStats(leagueId) {
   // ── All-Time Standings ──
   const ownerStats = {}
   for (const season of seasons) {
-    const name = season.ownerName || season.teamName
+    const name = resolve(season.ownerName || season.teamName)
     if (!ownerStats[name]) {
       ownerStats[name] = {
         name,
@@ -75,13 +83,13 @@ async function computeLeagueStats(leagueId) {
   const headToHead = {}
   for (const [year, teams] of Object.entries(byYear)) {
     for (const team of teams) {
-      const name = team.ownerName || team.teamName
+      const name = resolve(team.ownerName || team.teamName)
       const weekly = team.weeklyScores || []
 
       for (const week of weekly) {
         // Find opponent for this week using matchupId
         const opponent = teams.find(t => {
-          if ((t.ownerName || t.teamName) === name) return false
+          if (resolve(t.ownerName || t.teamName) === name) return false
           const oppWeek = (t.weeklyScores || []).find(w =>
             w.week === week.week && w.matchupId === week.matchupId
           )
@@ -89,7 +97,7 @@ async function computeLeagueStats(leagueId) {
         })
 
         if (!opponent) continue
-        const oppName = opponent.ownerName || opponent.teamName
+        const oppName = resolve(opponent.ownerName || opponent.teamName)
 
         const key = [name, oppName].sort().join('|||')
         if (!headToHead[key]) {
@@ -133,7 +141,7 @@ async function computeLeagueStats(leagueId) {
   }
 
   for (const season of seasons) {
-    const name = season.ownerName || season.teamName
+    const name = resolve(season.ownerName || season.teamName)
     const year = season.seasonYear
     const pf = season.pointsFor || 0
     const wins = season.wins || 0
@@ -213,10 +221,10 @@ async function computeLeagueStats(leagueId) {
     const highScorer = [...teams].sort((a, b) => (b.pointsFor || 0) - (a.pointsFor || 0))[0]
 
     seasonSummaries[year] = {
-      champion: champion ? (champion.ownerName || champion.teamName) : null,
-      runnerUp: runnerUp ? (runnerUp.ownerName || runnerUp.teamName) : null,
+      champion: champion ? resolve(champion.ownerName || champion.teamName) : null,
+      runnerUp: runnerUp ? resolve(runnerUp.ownerName || runnerUp.teamName) : null,
       highestScorer: highScorer ? {
-        name: highScorer.ownerName || highScorer.teamName,
+        name: resolve(highScorer.ownerName || highScorer.teamName),
         points: highScorer.pointsFor,
       } : null,
       teamCount: teams.length,

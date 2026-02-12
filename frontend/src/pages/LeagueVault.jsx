@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect, Component } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory } from '../hooks/useImports'
+import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import LeagueChat from '../components/ai/LeagueChat'
 
@@ -776,14 +777,292 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
   )
 }
 
+// ─── Manage Owners Modal ─────────────────────────────────────────────────────
+const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, onSaved }) => {
+  // Reconstruct groups from existing aliases: { canonicalName → [ownerName, ...] }
+  const [groups, setGroups] = useState(() => {
+    const g = {}
+    for (const a of existingAliases) {
+      if (!g[a.canonicalName]) g[a.canonicalName] = new Set()
+      g[a.canonicalName].add(a.ownerName)
+      g[a.canonicalName].add(a.canonicalName)
+    }
+    // Convert sets to arrays
+    const result = {}
+    for (const [canonical, names] of Object.entries(g)) {
+      result[canonical] = Array.from(names)
+    }
+    return result
+  })
+  const [selected, setSelected] = useState(new Set())
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Names that are already in a group
+  const groupedNames = useMemo(() => {
+    const s = new Set()
+    for (const names of Object.values(groups)) {
+      for (const n of names) s.add(n)
+    }
+    return s
+  }, [groups])
+
+  // Ungrouped names
+  const ungrouped = useMemo(() =>
+    allRawNames.filter(n => !groupedNames.has(n)).sort()
+  , [allRawNames, groupedNames])
+
+  const toggleSelect = (name) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+  }
+
+  const handleGroup = () => {
+    if (selected.size < 2) return
+    const names = Array.from(selected)
+    // Default canonical name: longest name (likely most complete)
+    const canonical = names.reduce((a, b) => a.length >= b.length ? a : b)
+    setGroups(prev => ({ ...prev, [canonical]: names }))
+    setSelected(new Set())
+  }
+
+  const handleUngroup = (canonical, nameToRemove) => {
+    setGroups(prev => {
+      const next = { ...prev }
+      const remaining = next[canonical].filter(n => n !== nameToRemove)
+      if (remaining.length < 2) {
+        // If only 1 left, dissolve the group
+        delete next[canonical]
+      } else {
+        next[canonical] = remaining
+        // If we removed the canonical, pick new one
+        if (nameToRemove === canonical) {
+          const newCanonical = remaining[0]
+          next[newCanonical] = remaining
+          delete next[canonical]
+        }
+      }
+      return next
+    })
+  }
+
+  const handleDissolveGroup = (canonical) => {
+    setGroups(prev => {
+      const next = { ...prev }
+      delete next[canonical]
+      return next
+    })
+  }
+
+  const updateCanonical = (oldCanonical, newCanonical) => {
+    if (!newCanonical.trim() || newCanonical === oldCanonical) return
+    setGroups(prev => {
+      const next = { ...prev }
+      const names = next[oldCanonical]
+      delete next[oldCanonical]
+      next[newCanonical.trim()] = names
+      return next
+    })
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      // Build aliases array: each ownerName that differs from its canonicalName
+      const aliases = []
+      for (const [canonical, names] of Object.entries(groups)) {
+        for (const name of names) {
+          if (name !== canonical) {
+            aliases.push({ ownerName: name, canonicalName: canonical })
+          }
+        }
+      }
+      await api.saveOwnerAliases(leagueId, aliases)
+      onSaved()
+      onClose()
+    } catch (err) {
+      setError(err.message || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div
+        className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-display font-bold text-white">Manage Owners</h2>
+            <p className="text-xs text-text-secondary mt-1">Group names that belong to the same person across seasons</p>
+          </div>
+          <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
+        </div>
+
+        <div className="p-5 overflow-y-auto flex-1 space-y-5">
+          {/* Existing groups */}
+          {Object.entries(groups).length > 0 && (
+            <div>
+              <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Grouped</h3>
+              <div className="space-y-2">
+                {Object.entries(groups).map(([canonical, names]) => (
+                  <div key={canonical} className="bg-dark-tertiary/40 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-mono text-text-secondary">Display as:</span>
+                      <input
+                        type="text"
+                        value={canonical}
+                        onChange={e => updateCanonical(canonical, e.target.value)}
+                        className="flex-1 px-2 py-1 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm font-display font-semibold focus:outline-none focus:border-accent-gold"
+                      />
+                      <button
+                        onClick={() => handleDissolveGroup(canonical)}
+                        className="text-xs text-text-secondary hover:text-red-400 font-mono"
+                        title="Dissolve group"
+                      >
+                        Ungroup All
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {names.map(name => (
+                        <span
+                          key={name}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-dark-primary/50 rounded text-xs text-white font-mono"
+                        >
+                          {name}
+                          <button
+                            onClick={() => handleUngroup(canonical, name)}
+                            className="text-text-secondary hover:text-red-400 ml-0.5"
+                            title="Remove from group"
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ungrouped names */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider">
+                Ungrouped ({ungrouped.length})
+              </h3>
+              {selected.size >= 2 && (
+                <button
+                  onClick={handleGroup}
+                  className="px-3 py-1 text-xs font-mono font-bold text-dark-primary bg-accent-gold rounded-lg hover:bg-accent-gold/90 transition-colors"
+                >
+                  Group Selected ({selected.size})
+                </button>
+              )}
+            </div>
+            {ungrouped.length === 0 ? (
+              <p className="text-xs text-text-secondary italic">All names are grouped.</p>
+            ) : (
+              <div className="space-y-1">
+                {ungrouped.map(name => (
+                  <label
+                    key={name}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                      selected.has(name) ? 'bg-accent-gold/10 border border-accent-gold/30' : 'bg-dark-tertiary/30 border border-transparent hover:bg-dark-tertiary/50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.has(name)}
+                      onChange={() => toggleSelect(name)}
+                      className="accent-[#E8B84D]"
+                    />
+                    <span className="text-sm text-white font-display">{name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+        </div>
+
+        <div className="p-5 border-t border-dark-tertiary flex items-center justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main LeagueVault Component ────────────────────────────────────────────────
 const LeagueVault = () => {
   const { leagueId } = useParams()
+  const { user } = useAuth()
   const { history, loading, error, refetch } = useLeagueHistory(leagueId)
   const [tab, setTab] = useState('timeline')
   const [showAddSeason, setShowAddSeason] = useState(false)
+  const [showManageOwners, setShowManageOwners] = useState(false)
+  const [aliases, setAliases] = useState([])
+  const [league, setLeague] = useState(null)
 
-  // Sanitize: strip large JSON fields and enforce types to prevent React #310
+  // Fetch league info (for commissioner check) and aliases on mount
+  useEffect(() => {
+    api.getLeague(leagueId).then(l => setLeague(l)).catch(() => {})
+    api.getOwnerAliases(leagueId).then(res => setAliases(res.aliases || [])).catch(() => {})
+  }, [leagueId])
+
+  const isCommissioner = league?.ownerId === user?.id
+
+  // Build alias map: rawName → canonicalName
+  const aliasMap = useMemo(() => {
+    const map = {}
+    for (const a of aliases) {
+      map[a.ownerName] = a.canonicalName
+    }
+    return map
+  }, [aliases])
+
+  const resolveOwner = useCallback((name) => aliasMap[name] || name, [aliasMap])
+
+  // Collect all unique raw owner names (pre-resolution) for the modal
+  const allRawNames = useMemo(() => {
+    if (!history?.seasons) return []
+    const nameSet = new Set()
+    for (const teams of Object.values(history.seasons)) {
+      for (const t of (Array.isArray(teams) ? teams : [])) {
+        const name = t.ownerName || t.teamName
+        if (name) nameSet.add(String(name))
+      }
+    }
+    // Also include canonical names from existing aliases (they may not appear as raw names)
+    for (const a of aliases) {
+      nameSet.add(a.canonicalName)
+    }
+    return Array.from(nameSet)
+  }, [history, aliases])
+
+  // Sanitize: strip large JSON fields, enforce types, and apply alias resolution
   const sanitizedSeasons = useMemo(() => {
     if (!history?.seasons) return null
     const clean = {}
@@ -792,7 +1071,8 @@ const LeagueVault = () => {
         id: t.id,
         seasonYear: t.seasonYear,
         teamName: String(t.teamName || ''),
-        ownerName: String(t.ownerName || ''),
+        ownerName: resolveOwner(String(t.ownerName || '')),
+        rawOwnerName: String(t.ownerName || ''),
         ownerUserId: t.ownerUserId,
         finalStanding: Number(t.finalStanding) || 0,
         wins: Number(t.wins) || 0,
@@ -806,7 +1086,7 @@ const LeagueVault = () => {
       }))
     }
     return clean
-  }, [history])
+  }, [history, resolveOwner])
 
   const allTimeRecords = useMemo(() => {
     if (!sanitizedSeasons) return null
@@ -977,6 +1257,17 @@ const LeagueVault = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {isCommissioner && years.length > 0 && (
+                  <button
+                    onClick={() => setShowManageOwners(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-accent-gold bg-accent-gold/10 border border-accent-gold/30 rounded-lg hover:bg-accent-gold/20 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Manage Owners
+                  </button>
+                )}
                 <button
                   onClick={() => setShowAddSeason(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-accent-gold bg-accent-gold/10 border border-accent-gold/30 rounded-lg hover:bg-accent-gold/20 transition-colors"
@@ -1134,6 +1425,18 @@ const LeagueVault = () => {
           leagueId={leagueId}
           onClose={() => setShowAddSeason(false)}
           onAdded={() => refetch()}
+        />
+      )}
+
+      {showManageOwners && (
+        <ManageOwnersModal
+          leagueId={leagueId}
+          allRawNames={allRawNames}
+          existingAliases={aliases}
+          onClose={() => setShowManageOwners(false)}
+          onSaved={() => {
+            api.getOwnerAliases(leagueId).then(res => setAliases(res.aliases || [])).catch(() => {})
+          }}
         />
       )}
     </div>
