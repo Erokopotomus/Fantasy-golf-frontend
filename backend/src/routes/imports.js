@@ -377,6 +377,28 @@ router.delete('/manual-season/:leagueId/:seasonYear', authenticate, async (req, 
   }
 })
 
+// ─── Delete individual historical season entries ─────────────────────────────
+// DELETE /api/imports/historical-season/:id (commissioner only)
+router.delete('/historical-season/:id', authenticate, async (req, res) => {
+  try {
+    const entry = await prisma.historicalSeason.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, leagueId: true, ownerName: true, seasonYear: true },
+    })
+    if (!entry) return res.status(404).json({ error: { message: 'Entry not found' } })
+
+    const league = await prisma.league.findUnique({ where: { id: entry.leagueId }, select: { ownerId: true } })
+    if (!league || league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can delete history entries' } })
+    }
+
+    await prisma.historicalSeason.delete({ where: { id: req.params.id } })
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 // ─── Owner Aliases (commissioner name grouping) ─────────────────────────────
 // GET /api/imports/owner-aliases/:leagueId
 router.get('/owner-aliases/:leagueId', authenticate, async (req, res) => {
