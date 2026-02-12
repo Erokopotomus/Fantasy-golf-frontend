@@ -802,8 +802,13 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       })
 
       if (myPicks.length > 0) {
-        myPicks.sort((a, b) => a.round - b.round || a.pick - b.pick)
-        draftHistory[s.year] = myPicks
+        myPicks.sort((a, b) => (a.amount != null ? a.amount : a.pick) - (b.amount != null ? b.amount : b.pick))
+        if (draft.type === 'auction') {
+          myPicks.sort((a, b) => (b.amount || b.cost || 0) - (a.amount || a.cost || 0))
+        } else {
+          myPicks.sort((a, b) => a.round - b.round || a.pick - b.pick)
+        }
+        draftHistory[s.year] = { picks: myPicks, type: draft.type || 'snake' }
       }
     }
 
@@ -1106,7 +1111,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
               <div className="space-y-1">
                 {Object.entries(profileData.draftHistory)
                   .sort(([a], [b]) => parseInt(b) - parseInt(a))
-                  .map(([year, picks]) => (
+                  .map(([year, { picks, type: draftType }]) => (
                     <div key={year}>
                       <button
                         onClick={() => setExpandedDraftYear(expandedDraftYear === year ? null : year)}
@@ -1115,6 +1120,9 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                         <div className="flex items-center gap-3">
                           <span className="font-mono font-bold text-accent-gold">{year}</span>
                           <span className="text-xs font-mono text-text-secondary">{picks.length} pick{picks.length !== 1 ? 's' : ''}</span>
+                          {draftType === 'auction' && (
+                            <span className="text-xs font-mono text-orange/80 bg-orange/10 px-1.5 py-0.5 rounded">Auction</span>
+                          )}
                         </div>
                         <svg
                           className={`w-4 h-4 text-text-secondary transition-transform ${expandedDraftYear === year ? 'rotate-180' : ''}`}
@@ -1125,34 +1133,43 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                       </button>
                       {expandedDraftYear === year && (
                         <div className="ml-2 mb-3 border-l-2 border-dark-tertiary pl-3 space-y-0.5">
-                          {picks.map((pick, i) => (
-                            <div
-                              key={i}
-                              className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-text-secondary w-14">
-                                  Rd {pick.round}, #{pick.pick}
-                                </span>
-                                <span className={`font-display font-semibold ${pick.playerName ? 'text-white' : 'text-text-secondary'}`}>
-                                  {pick.playerName || '(Unknown)'}
-                                </span>
-                                {pick.position && (
-                                  <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
-                                    {pick.position}
+                          {picks.map((pick, i) => {
+                            const auctionCost = pick.amount || pick.cost || 0
+                            return (
+                              <div
+                                key={i}
+                                className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {draftType === 'auction' ? (
+                                    <span className="font-mono text-accent-gold font-bold w-10 text-right">
+                                      ${auctionCost}
+                                    </span>
+                                  ) : (
+                                    <span className="font-mono text-text-secondary w-14">
+                                      Rd {pick.round}, #{pick.pick}
+                                    </span>
+                                  )}
+                                  <span className={`font-display font-semibold ${pick.playerName ? 'text-white' : 'text-text-secondary'}`}>
+                                    {pick.playerName || '(Unknown)'}
                                   </span>
-                                )}
+                                  {pick.position && (
+                                    <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
+                                      {pick.position}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {pick.isKeeper && (
+                                    <span className="text-xs font-mono text-accent-gold bg-accent-gold/10 px-1.5 py-0.5 rounded">K</span>
+                                  )}
+                                  {draftType !== 'auction' && auctionCost > 0 && (
+                                    <span className="text-xs font-mono text-accent-gold">${auctionCost}</span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {pick.isKeeper && (
-                                  <span className="text-xs font-mono text-accent-gold bg-accent-gold/10 px-1.5 py-0.5 rounded">K</span>
-                                )}
-                                {pick.cost != null && pick.cost > 0 && (
-                                  <span className="text-xs font-mono text-accent-gold">${pick.cost}</span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
                     </div>
