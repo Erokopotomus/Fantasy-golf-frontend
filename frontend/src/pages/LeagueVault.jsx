@@ -63,7 +63,7 @@ const PLAYOFF_LABELS = {
   third_place: { text: '3rd Place', color: 'text-blue-400 bg-blue-500/20' },
   semifinal: { text: 'Semis', color: 'text-blue-400 bg-blue-500/20' },
   playoffs: { text: 'Playoffs', color: 'text-green-400 bg-green-500/20' },
-  eliminated: { text: 'Playoffs', color: 'text-green-400 bg-green-500/20' },
+  eliminated: { text: '', color: '' },
   missed: { text: '', color: '' },
 }
 
