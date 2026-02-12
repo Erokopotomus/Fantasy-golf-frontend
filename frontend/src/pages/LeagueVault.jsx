@@ -783,120 +783,121 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
 
       {profileData && (
         <>
-          {/* Section 1 — Header Card */}
-          <Card>
-            <div className="flex items-center gap-4 mb-4">
-              {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    setUploading(true)
-                    try {
-                      // Client-side resize to 200x200 JPEG
-                      const img = new Image()
-                      const reader = new FileReader()
-                      const dataUrl = await new Promise((resolve) => {
-                        reader.onload = () => resolve(reader.result)
-                        reader.readAsDataURL(file)
-                      })
-                      await new Promise((resolve) => { img.onload = resolve; img.src = dataUrl })
-                      const canvas = document.createElement('canvas')
-                      canvas.width = 200
-                      canvas.height = 200
-                      const ctx = canvas.getContext('2d')
-                      // Center crop
-                      const size = Math.min(img.width, img.height)
-                      const sx = (img.width - size) / 2
-                      const sy = (img.height - size) / 2
-                      ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200)
-                      const resizedUrl = canvas.toDataURL('image/jpeg', 0.85)
-                      await api.saveOwnerAvatar(leagueId, selectedOwner, resizedUrl)
-                      onAvatarSaved?.(selectedOwner, resizedUrl)
-                    } catch (err) {
-                      console.error('Avatar upload failed:', err)
-                    } finally {
-                      setUploading(false)
-                      e.target.value = ''
-                    }
-                  }}
-                />
-                {avatarMap[selectedOwner] ? (
-                  <img
-                    src={avatarMap[selectedOwner]}
-                    alt={selectedOwner}
-                    className={`w-16 h-16 rounded-full object-cover border-2 border-accent-gold/30 ${isCommissioner ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-                    onClick={() => isCommissioner && fileInputRef.current?.click()}
+          {/* Sections 1+2 — Header + Career Highlights side by side on desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Section 1 — Manager Card */}
+            <Card>
+              <div className="flex items-center gap-4 mb-4">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      setUploading(true)
+                      try {
+                        const img = new Image()
+                        const reader = new FileReader()
+                        const dataUrl = await new Promise((resolve) => {
+                          reader.onload = () => resolve(reader.result)
+                          reader.readAsDataURL(file)
+                        })
+                        await new Promise((resolve) => { img.onload = resolve; img.src = dataUrl })
+                        const canvas = document.createElement('canvas')
+                        canvas.width = 200
+                        canvas.height = 200
+                        const ctx = canvas.getContext('2d')
+                        const size = Math.min(img.width, img.height)
+                        const sx = (img.width - size) / 2
+                        const sy = (img.height - size) / 2
+                        ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200)
+                        const resizedUrl = canvas.toDataURL('image/jpeg', 0.85)
+                        await api.saveOwnerAvatar(leagueId, selectedOwner, resizedUrl)
+                        onAvatarSaved?.(selectedOwner, resizedUrl)
+                      } catch (err) {
+                        console.error('Avatar upload failed:', err)
+                      } finally {
+                        setUploading(false)
+                        e.target.value = ''
+                      }
+                    }}
                   />
-                ) : (
-                  <div
-                    className={`w-16 h-16 rounded-full bg-dark-tertiary flex items-center justify-center text-2xl font-mono font-bold text-text-secondary border-2 border-dark-tertiary ${isCommissioner ? 'cursor-pointer hover:border-accent-gold/30 transition-colors' : ''}`}
-                    onClick={() => isCommissioner && fileInputRef.current?.click()}
-                  >
-                    {(selectedOwner || '?').charAt(0).toUpperCase()}
-                  </div>
-                )}
-                {isCommissioner && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-accent-gold rounded-full flex items-center justify-center shadow-lg pointer-events-none">
-                    <svg className="w-3 h-3 text-dark-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                )}
-                {uploading && (
-                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-accent-gold border-t-transparent rounded-full animate-spin" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-2xl font-display font-bold text-white mb-1 truncate">{selectedOwner}</h2>
-                <p className="text-sm font-mono text-text-secondary">
-                  {profileData.summary.totalW}-{profileData.summary.totalL}{profileData.summary.totalT > 0 ? `-${profileData.summary.totalT}` : ''} ({profileData.summary.winPct}%) · {profileData.summary.seasons} season{profileData.summary.seasons !== 1 ? 's' : ''}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-3 text-center">
-              <div className="bg-dark-tertiary/40 rounded-lg p-3">
-                <p className="text-2xl font-mono font-bold text-accent-gold">{profileData.summary.championships}</p>
-                <p className="text-xs font-mono text-text-secondary mt-1">Titles</p>
-              </div>
-              <div className="bg-dark-tertiary/40 rounded-lg p-3">
-                <p className="text-2xl font-mono font-bold text-white">{profileData.summary.runnerUps}</p>
-                <p className="text-xs font-mono text-text-secondary mt-1">Runner-Up</p>
-              </div>
-              <div className="bg-dark-tertiary/40 rounded-lg p-3">
-                <p className="text-2xl font-mono font-bold text-white">{profileData.summary.thirdPlaces}</p>
-                <p className="text-xs font-mono text-text-secondary mt-1">3rd Place</p>
-              </div>
-              <div className="bg-dark-tertiary/40 rounded-lg p-3">
-                <p className="text-2xl font-mono font-bold text-white">{profileData.summary.playoffApps}</p>
-                <p className="text-xs font-mono text-text-secondary mt-1">Playoffs</p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Section 2 — Career Highlights */}
-          <Card>
-            <h3 className="font-display font-bold text-white mb-3">Career Highlights</h3>
-            <div className="space-y-2">
-              {profileData.highlights.map((h, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-dark-tertiary/20">
-                  <span className="text-sm text-text-secondary">{h.label}</span>
-                  <div className="text-right">
-                    <span className={`text-sm font-mono font-bold ${h.color || 'text-white'}`}>{h.value}</span>
-                    {h.context && <p className="text-xs text-text-secondary">{h.context}</p>}
-                  </div>
+                  {avatarMap[selectedOwner] ? (
+                    <img
+                      src={avatarMap[selectedOwner]}
+                      alt={selectedOwner}
+                      className={`w-16 h-16 rounded-full object-cover border-2 border-accent-gold/30 ${isCommissioner ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                      onClick={() => isCommissioner && fileInputRef.current?.click()}
+                    />
+                  ) : (
+                    <div
+                      className={`w-16 h-16 rounded-full bg-dark-tertiary flex items-center justify-center text-2xl font-mono font-bold text-text-secondary border-2 border-dark-tertiary ${isCommissioner ? 'cursor-pointer hover:border-accent-gold/30 transition-colors' : ''}`}
+                      onClick={() => isCommissioner && fileInputRef.current?.click()}
+                    >
+                      {(selectedOwner || '?').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {isCommissioner && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-accent-gold rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                      <svg className="w-3 h-3 text-dark-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                  )}
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-accent-gold border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          </Card>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-2xl font-display font-bold text-white mb-1 truncate">{selectedOwner}</h2>
+                  <p className="text-sm font-mono text-text-secondary">
+                    {profileData.summary.totalW}-{profileData.summary.totalL}{profileData.summary.totalT > 0 ? `-${profileData.summary.totalT}` : ''} ({profileData.summary.winPct}%) · {profileData.summary.seasons} season{profileData.summary.seasons !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-3 text-center">
+                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                  <p className="text-2xl font-mono font-bold text-accent-gold">{profileData.summary.championships}</p>
+                  <p className="text-xs font-mono text-text-secondary mt-1">Titles</p>
+                </div>
+                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                  <p className="text-2xl font-mono font-bold text-white">{profileData.summary.runnerUps}</p>
+                  <p className="text-xs font-mono text-text-secondary mt-1">Runner-Up</p>
+                </div>
+                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                  <p className="text-2xl font-mono font-bold text-white">{profileData.summary.thirdPlaces}</p>
+                  <p className="text-xs font-mono text-text-secondary mt-1">3rd Place</p>
+                </div>
+                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                  <p className="text-2xl font-mono font-bold text-white">{profileData.summary.playoffApps}</p>
+                  <p className="text-xs font-mono text-text-secondary mt-1">Playoffs</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Section 2 — Career Highlights */}
+            <Card>
+              <h3 className="font-display font-bold text-white mb-3">Career Highlights</h3>
+              <div className="space-y-2">
+                {profileData.highlights.map((h, i) => (
+                  <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-dark-tertiary/20">
+                    <span className="text-sm text-text-secondary">{h.label}</span>
+                    <div className="text-right">
+                      <span className={`text-sm font-mono font-bold ${h.color || 'text-white'}`}>{h.value}</span>
+                      {h.context && <p className="text-xs text-text-secondary">{h.context}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
 
           {/* Section 3 — H2H Records (sortable) */}
           {profileData.h2hRecords.length > 0 && (
@@ -1757,7 +1758,7 @@ const LeagueVault = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
   const { history, loading, error, refetch } = useLeagueHistory(leagueId)
-  const [tab, setTab] = useState('timeline')
+  const [tab, setTab] = useState('records')
   const [showAddSeason, setShowAddSeason] = useState(false)
   const [showManageOwners, setShowManageOwners] = useState(false)
   const [aliases, setAliases] = useState([])
