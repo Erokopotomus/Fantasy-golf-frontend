@@ -70,6 +70,7 @@ const PLAYOFF_LABELS = {
 // ─── Season Timeline Card ─────────────────────────────────────────────────────
 const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries }) => {
   const [expanded, setExpanded] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [selected, setSelected] = useState(new Set())
   const [deleting, setDeleting] = useState(false)
   const champion = teams.find(t => t.playoffResult === 'champion')
@@ -128,8 +129,22 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries }) => {
 
       {expanded && (
         <div className="mt-4 pt-4 border-t border-dark-tertiary">
+          {/* Edit mode toggle */}
+          {isCommissioner && (
+            <div className="mb-2 flex justify-end">
+              <button
+                onClick={() => { setEditing(e => !e); setSelected(new Set()) }}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors ${editing ? 'bg-rose/15 text-rose' : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'}`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                {editing ? 'Cancel' : 'Edit'}
+              </button>
+            </div>
+          )}
           {/* Bulk delete bar */}
-          {isCommissioner && selected.size > 0 && (
+          {editing && selected.size > 0 && (
             <div className="mb-3 flex items-center justify-between bg-rose/10 border border-rose/30 rounded-lg px-3 py-2">
               <span className="text-sm text-rose font-mono">{selected.size} selected</span>
               <button
@@ -145,7 +160,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries }) => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
-                  {isCommissioner && (
+                  {editing && (
                     <th className="w-8 pb-2 pl-2">
                       <input
                         type="checkbox"
@@ -173,9 +188,9 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries }) => {
                   return (
                     <tr
                       key={team.id || idx}
-                      className={`border-t border-dark-tertiary/50 hover:bg-dark-tertiary/30 ${isEmpty ? 'opacity-40' : ''} ${isChecked ? 'bg-rose/5' : ''}`}
+                      className={`border-t border-dark-tertiary/50 hover:bg-dark-tertiary/30 ${isEmpty ? 'opacity-40' : ''} ${editing && isChecked ? 'bg-rose/5' : ''}`}
                     >
-                      {isCommissioner && (
+                      {editing && (
                         <td className="py-2 pl-2">
                           <input
                             type="checkbox"
