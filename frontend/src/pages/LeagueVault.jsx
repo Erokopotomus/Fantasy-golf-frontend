@@ -609,11 +609,179 @@ const CustomDataTab = ({ leagueId }) => {
   )
 }
 
+// ─── Add Season Modal ─────────────────────────────────────────────────────────
+const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
+  const [year, setYear] = useState(new Date().getFullYear() - 1)
+  const [teamCount, setTeamCount] = useState(12)
+  const [teams, setTeams] = useState(() =>
+    Array.from({ length: 12 }, (_, i) => ({
+      ownerName: '', wins: 0, losses: 0, pointsFor: 0, playoffResult: i === 0 ? 'champion' : '',
+    }))
+  )
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  const updateTeamCount = (count) => {
+    const n = Math.max(2, Math.min(20, count))
+    setTeamCount(n)
+    setTeams(prev => {
+      if (n > prev.length) {
+        return [...prev, ...Array.from({ length: n - prev.length }, () => ({
+          ownerName: '', wins: 0, losses: 0, pointsFor: 0, playoffResult: '',
+        }))]
+      }
+      return prev.slice(0, n)
+    })
+  }
+
+  const updateTeam = (idx, field, value) => {
+    setTeams(prev => prev.map((t, i) => i === idx ? { ...t, [field]: value } : t))
+  }
+
+  const handleSave = async () => {
+    const filledTeams = teams.filter(t => t.ownerName.trim())
+    if (filledTeams.length === 0) {
+      setError('Add at least one team with a name')
+      return
+    }
+
+    setSaving(true)
+    setError(null)
+    try {
+      const payload = filledTeams.map((t, i) => ({
+        ownerName: t.ownerName.trim(),
+        teamName: t.ownerName.trim(),
+        finalStanding: i + 1,
+        wins: parseInt(t.wins) || 0,
+        losses: parseInt(t.losses) || 0,
+        pointsFor: parseFloat(t.pointsFor) || 0,
+        playoffResult: t.playoffResult || null,
+      }))
+      await api.addManualSeason(leagueId, year, payload)
+      onAdded()
+      onClose()
+    } catch (err) {
+      setError(err.message || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div
+        className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-display font-bold text-white">Add Season Manually</h2>
+            <p className="text-xs text-text-secondary mt-1">For years before your digital league history</p>
+          </div>
+          <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
+        </div>
+
+        <div className="p-5 overflow-y-auto flex-1 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-text-secondary font-mono mb-1">Season Year</label>
+              <input
+                type="number"
+                value={year}
+                onChange={e => setYear(parseInt(e.target.value) || 2020)}
+                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-text-secondary font-mono mb-1">Number of Teams</label>
+              <input
+                type="number"
+                value={teamCount}
+                onChange={e => updateTeamCount(parseInt(e.target.value) || 12)}
+                min={2}
+                max={20}
+                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-text-secondary font-mono mb-2">
+              Teams (order = final standing, fill in what you know)
+            </label>
+            <div className="space-y-2">
+              {teams.map((team, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="text-xs font-mono text-text-secondary w-5 text-right">{idx + 1}</span>
+                  <input
+                    type="text"
+                    placeholder="Manager name"
+                    value={team.ownerName}
+                    onChange={e => updateTeam(idx, 'ownerName', e.target.value)}
+                    className="flex-1 min-w-0 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm focus:outline-none focus:border-accent-gold"
+                  />
+                  <input
+                    type="number"
+                    placeholder="W"
+                    value={team.wins || ''}
+                    onChange={e => updateTeam(idx, 'wins', e.target.value)}
+                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center focus:outline-none focus:border-accent-gold"
+                  />
+                  <input
+                    type="number"
+                    placeholder="L"
+                    value={team.losses || ''}
+                    onChange={e => updateTeam(idx, 'losses', e.target.value)}
+                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center focus:outline-none focus:border-accent-gold"
+                  />
+                  <select
+                    value={team.playoffResult}
+                    onChange={e => updateTeam(idx, 'playoffResult', e.target.value)}
+                    className="w-28 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm focus:outline-none focus:border-accent-gold"
+                  >
+                    <option value="">—</option>
+                    <option value="champion">Champion</option>
+                    <option value="runner_up">Runner-Up</option>
+                    <option value="third_place">3rd Place</option>
+                    <option value="playoffs">Playoffs</option>
+                    <option value="missed">Missed</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-red-400 text-sm">{error}</p>
+          )}
+        </div>
+
+        <div className="p-5 border-t border-dark-tertiary flex items-center justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Add Season'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main LeagueVault Component ────────────────────────────────────────────────
 const LeagueVault = () => {
   const { leagueId } = useParams()
-  const { history, loading, error } = useLeagueHistory(leagueId)
+  const { history, loading, error, refetch } = useLeagueHistory(leagueId)
   const [tab, setTab] = useState('timeline')
+  const [showAddSeason, setShowAddSeason] = useState(false)
 
   // Sanitize: strip large JSON fields and enforce types to prevent React #310
   const sanitizedSeasons = useMemo(() => {
@@ -808,17 +976,28 @@ const LeagueVault = () => {
                   {history?.totalSeasons || 0} season{(history?.totalSeasons || 0) !== 1 ? 's' : ''} of history
                 </p>
               </div>
-              {years.length > 0 && (
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={handleExport}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-secondary bg-dark-tertiary rounded-lg hover:text-white hover:bg-dark-tertiary/80 transition-colors"
+                  onClick={() => setShowAddSeason(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-accent-gold bg-accent-gold/10 border border-accent-gold/30 rounded-lg hover:bg-accent-gold/20 transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  Export CSV
+                  Add Season
                 </button>
-              )}
+                {years.length > 0 && (
+                  <button
+                    onClick={handleExport}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-secondary bg-dark-tertiary rounded-lg hover:text-white hover:bg-dark-tertiary/80 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Export CSV
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -949,6 +1128,14 @@ const LeagueVault = () => {
         </div>
       </main>
       <LeagueChat leagueId={leagueId} pageContext="vault" />
+
+      {showAddSeason && (
+        <AddSeasonModal
+          leagueId={leagueId}
+          onClose={() => setShowAddSeason(false)}
+          onAdded={() => refetch()}
+        />
+      )}
     </div>
   )
 }

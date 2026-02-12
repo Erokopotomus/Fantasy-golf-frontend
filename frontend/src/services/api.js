@@ -676,6 +676,13 @@ class ApiService {
     return this.request(`/imports/${id}`, { method: 'DELETE' })
   }
 
+  async addManualSeason(leagueId, seasonYear, teams) {
+    return this.request('/imports/manual-season', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, seasonYear, teams }),
+    })
+  }
+
   // ESPN Import
   async discoverESPNLeague(leagueId, espn_s2 = '', swid = '') {
     return this.request('/imports/espn/discover', {

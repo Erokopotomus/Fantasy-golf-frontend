@@ -301,23 +301,20 @@ export function useLeagueHistory(leagueId) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
+  const fetchHistory = useCallback(async () => {
     if (!leagueId) return
-    let cancelled = false
-    const fetch = async () => {
-      try {
-        setLoading(true)
-        const data = await api.getLeagueHistory(leagueId)
-        if (!cancelled) setHistory(data)
-      } catch (err) {
-        if (!cancelled) setError(err.message)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+    try {
+      setLoading(true)
+      const data = await api.getLeagueHistory(leagueId)
+      setHistory(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-    fetch()
-    return () => { cancelled = true }
   }, [leagueId])
 
-  return { history, loading, error }
+  useEffect(() => { fetchHistory() }, [fetchHistory])
+
+  return { history, loading, error, refetch: fetchHistory }
 }

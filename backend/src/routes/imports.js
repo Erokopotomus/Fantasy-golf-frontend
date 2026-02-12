@@ -285,4 +285,87 @@ router.delete('/:id', authenticate, async (req, res) => {
   }
 })
 
+// ─── Add manual season ─────────────────────────────────────────────────────
+// POST /api/imports/manual-season
+// Allows users to add a season with basic info (year, teams, champion) without a platform import
+router.post('/manual-season', authenticate, async (req, res) => {
+  try {
+    const { leagueId, seasonYear, teams } = req.body
+    if (!leagueId || !seasonYear || !teams || !Array.isArray(teams) || teams.length === 0) {
+      return res.status(400).json({ error: { message: 'leagueId, seasonYear, and teams array are required' } })
+    }
+
+    // Verify the user owns or is a member of this league
+    const member = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId } },
+    })
+    if (!member) {
+      return res.status(403).json({ error: { message: 'Not a member of this league' } })
+    }
+
+    const created = []
+    for (const team of teams) {
+      const record = await prisma.historicalSeason.upsert({
+        where: {
+          leagueId_seasonYear_ownerName: {
+            leagueId,
+            seasonYear: parseInt(seasonYear),
+            ownerName: team.ownerName || team.teamName || `Team ${teams.indexOf(team) + 1}`,
+          },
+        },
+        create: {
+          leagueId,
+          seasonYear: parseInt(seasonYear),
+          teamName: team.teamName || team.ownerName || `Team ${teams.indexOf(team) + 1}`,
+          ownerName: team.ownerName || team.teamName || `Team ${teams.indexOf(team) + 1}`,
+          finalStanding: team.finalStanding || teams.indexOf(team) + 1,
+          wins: team.wins || 0,
+          losses: team.losses || 0,
+          ties: team.ties || 0,
+          pointsFor: team.pointsFor || 0,
+          pointsAgainst: team.pointsAgainst || 0,
+          playoffResult: team.playoffResult || null,
+        },
+        update: {
+          teamName: team.teamName || undefined,
+          finalStanding: team.finalStanding || undefined,
+          wins: team.wins || undefined,
+          losses: team.losses || undefined,
+          ties: team.ties || undefined,
+          pointsFor: team.pointsFor || undefined,
+          pointsAgainst: team.pointsAgainst || undefined,
+          playoffResult: team.playoffResult || undefined,
+        },
+      })
+      created.push(record)
+    }
+
+    res.json({ success: true, count: created.length, seasonYear: parseInt(seasonYear) })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── Delete a manual season ────────────────────────────────────────────────
+// DELETE /api/imports/manual-season/:leagueId/:seasonYear
+router.delete('/manual-season/:leagueId/:seasonYear', authenticate, async (req, res) => {
+  try {
+    const { leagueId, seasonYear } = req.params
+    const member = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId } },
+    })
+    if (!member) {
+      return res.status(403).json({ error: { message: 'Not a member of this league' } })
+    }
+
+    const deleted = await prisma.historicalSeason.deleteMany({
+      where: { leagueId, seasonYear: parseInt(seasonYear), importId: null },
+    })
+
+    res.json({ success: true, deleted: deleted.count })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 module.exports = router
