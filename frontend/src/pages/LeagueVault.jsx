@@ -1272,7 +1272,7 @@ const LeagueVault = () => {
   const handleDeleteEntries = useCallback(async (ids) => {
     try {
       await api.deleteHistoricalEntries(ids)
-      refetch()
+      await refetch()
     } catch (err) {
       alert(err.message || 'Failed to delete')
     }
