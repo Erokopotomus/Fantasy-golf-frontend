@@ -144,6 +144,9 @@ model League {
   // Owner alias mapping (commissioner-managed)
   ownerAliases    OwnerAlias[]
 
+  // Owner avatars (League Vault)
+  ownerAvatars    OwnerAvatar[]
+
   @@map("leagues")
 }
 
@@ -2290,6 +2293,21 @@ model OwnerAlias {
   @@unique([leagueId, ownerName])
   @@index([leagueId])
   @@map("owner_aliases")
+}
+
+// ============ OWNER AVATARS (League Vault) ============
+
+model OwnerAvatar {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  ownerName String
+  imageUrl  String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([leagueId, ownerName])
+  @@index([leagueId])
+  @@map("owner_avatars")
 }
 
 // ============ DATA ARCHITECTURE (Phase 4) ============

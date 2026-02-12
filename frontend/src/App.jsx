@@ -48,6 +48,7 @@ import ProveIt from './pages/ProveIt'
 import ImportLeague from './pages/ImportLeague'
 import CustomImport from './pages/CustomImport'
 import LeagueVault from './pages/LeagueVault'
+import VaultLanding from './pages/VaultLanding'
 import SeasonRecap from './pages/SeasonRecap'
 import DraftDollars from './pages/DraftDollars'
 import PublicProfile from './pages/PublicProfile'
@@ -298,6 +299,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CustomImport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vault"
+            element={
+              <ProtectedRoute>
+                <VaultLanding />
               </ProtectedRoute>
             }
           />

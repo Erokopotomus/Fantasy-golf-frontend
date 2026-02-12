@@ -472,4 +472,68 @@ router.put('/owner-aliases/:leagueId', authenticate, async (req, res) => {
   }
 })
 
+// ─── Owner Avatars (League Vault) ────────────────────────────────────────────
+// GET /api/imports/owner-avatars/:leagueId
+router.get('/owner-avatars/:leagueId', authenticate, async (req, res) => {
+  try {
+    const avatars = await prisma.ownerAvatar.findMany({
+      where: { leagueId: req.params.leagueId },
+      orderBy: { createdAt: 'asc' },
+    })
+    res.json({ avatars })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// PUT /api/imports/owner-avatar/:leagueId (commissioner only)
+router.put('/owner-avatar/:leagueId', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.params
+    const { ownerName, imageUrl } = req.body
+
+    if (!ownerName || !imageUrl) {
+      return res.status(400).json({ error: { message: 'ownerName and imageUrl are required' } })
+    }
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can manage owner avatars' } })
+    }
+
+    const avatar = await prisma.ownerAvatar.upsert({
+      where: { leagueId_ownerName: { leagueId, ownerName } },
+      create: { leagueId, ownerName, imageUrl },
+      update: { imageUrl },
+    })
+
+    res.json({ avatar })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// DELETE /api/imports/owner-avatar/:leagueId/:ownerName (commissioner only)
+router.delete('/owner-avatar/:leagueId/:ownerName', authenticate, async (req, res) => {
+  try {
+    const { leagueId, ownerName } = req.params
+
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can manage owner avatars' } })
+    }
+
+    await prisma.ownerAvatar.deleteMany({
+      where: { leagueId, ownerName: decodeURIComponent(ownerName) },
+    })
+
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 module.exports = router

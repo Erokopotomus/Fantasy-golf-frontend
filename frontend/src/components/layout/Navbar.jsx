@@ -376,6 +376,20 @@ const Navbar = () => {
                           </div>
                         </Link>
                         <Link
+                          to="/vault"
+                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          onClick={() => setProfileMenuOpen(false)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth={2} />
+                              <circle cx="12" cy="12" r="3" strokeWidth={2} />
+                              <path strokeLinecap="round" strokeWidth={2} d="M12 9v0M12 15v0M9 12h0M15 12h0" />
+                            </svg>
+                            League Vault
+                          </div>
+                        </Link>
+                        <Link
                           to="/news"
                           className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
                           onClick={() => setProfileMenuOpen(false)}

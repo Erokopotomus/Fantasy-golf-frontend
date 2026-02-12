@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, Component } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, Component } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory } from '../hooks/useImports'
@@ -68,7 +68,7 @@ const PLAYOFF_LABELS = {
 }
 
 // ─── Season Timeline Card ─────────────────────────────────────────────────────
-const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries }) => {
+const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, avatarMap = {} }) => {
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
   const [selected, setSelected] = useState(new Set())
@@ -113,7 +113,15 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries }) => {
           <div>
             {champion && (
               <p className="text-sm text-white font-display font-bold flex items-center gap-1.5">
-                <span className="text-accent-gold">🏆</span> {champion.ownerName || champion.teamName}
+                <span className="text-accent-gold">🏆</span>
+                {avatarMap[champion.ownerName || champion.teamName] ? (
+                  <img src={avatarMap[champion.ownerName || champion.teamName]} alt="" className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <span className="w-6 h-6 rounded-full bg-dark-tertiary flex items-center justify-center text-xs font-mono text-text-secondary">
+                    {(champion.ownerName || champion.teamName || '?').charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {champion.ownerName || champion.teamName}
               </p>
             )}
             <p className="text-xs text-text-secondary font-mono">{teams.length} teams</p>
@@ -513,9 +521,13 @@ const DraftHistoryTab = ({ history }) => {
 }
 
 // ─── Owner Profile Tab ────────────────────────────────────────────────────────
-const OwnerProfileTab = ({ history }) => {
+const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, onAvatarSaved }) => {
   const [selectedOwner, setSelectedOwner] = useState('')
   const [expandedYear, setExpandedYear] = useState(null)
+  const [h2hSort, setH2hSort] = useState({ key: 'w', dir: 'desc' })
+  const [seasonSort, setSeasonSort] = useState({ key: 'year', dir: 'desc' })
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
 
   const owners = useMemo(() => {
     if (!history?.seasons) return []
@@ -773,11 +785,82 @@ const OwnerProfileTab = ({ history }) => {
         <>
           {/* Section 1 — Header Card */}
           <Card>
-            <div className="text-center mb-4">
-              <h2 className="text-2xl font-display font-bold text-white mb-1">{selectedOwner}</h2>
-              <p className="text-sm font-mono text-text-secondary">
-                {profileData.summary.totalW}-{profileData.summary.totalL}{profileData.summary.totalT > 0 ? `-${profileData.summary.totalT}` : ''} ({profileData.summary.winPct}%) · {profileData.summary.seasons} season{profileData.summary.seasons !== 1 ? 's' : ''}
-              </p>
+            <div className="flex items-center gap-4 mb-4">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    setUploading(true)
+                    try {
+                      // Client-side resize to 200x200 JPEG
+                      const img = new Image()
+                      const reader = new FileReader()
+                      const dataUrl = await new Promise((resolve) => {
+                        reader.onload = () => resolve(reader.result)
+                        reader.readAsDataURL(file)
+                      })
+                      await new Promise((resolve) => { img.onload = resolve; img.src = dataUrl })
+                      const canvas = document.createElement('canvas')
+                      canvas.width = 200
+                      canvas.height = 200
+                      const ctx = canvas.getContext('2d')
+                      // Center crop
+                      const size = Math.min(img.width, img.height)
+                      const sx = (img.width - size) / 2
+                      const sy = (img.height - size) / 2
+                      ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200)
+                      const resizedUrl = canvas.toDataURL('image/jpeg', 0.85)
+                      await api.saveOwnerAvatar(leagueId, selectedOwner, resizedUrl)
+                      onAvatarSaved?.(selectedOwner, resizedUrl)
+                    } catch (err) {
+                      console.error('Avatar upload failed:', err)
+                    } finally {
+                      setUploading(false)
+                      e.target.value = ''
+                    }
+                  }}
+                />
+                {avatarMap[selectedOwner] ? (
+                  <img
+                    src={avatarMap[selectedOwner]}
+                    alt={selectedOwner}
+                    className={`w-16 h-16 rounded-full object-cover border-2 border-accent-gold/30 ${isCommissioner ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                    onClick={() => isCommissioner && fileInputRef.current?.click()}
+                  />
+                ) : (
+                  <div
+                    className={`w-16 h-16 rounded-full bg-dark-tertiary flex items-center justify-center text-2xl font-mono font-bold text-text-secondary border-2 border-dark-tertiary ${isCommissioner ? 'cursor-pointer hover:border-accent-gold/30 transition-colors' : ''}`}
+                    onClick={() => isCommissioner && fileInputRef.current?.click()}
+                  >
+                    {(selectedOwner || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {isCommissioner && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-accent-gold rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                    <svg className="w-3 h-3 text-dark-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-accent-gold border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl font-display font-bold text-white mb-1 truncate">{selectedOwner}</h2>
+                <p className="text-sm font-mono text-text-secondary">
+                  {profileData.summary.totalW}-{profileData.summary.totalL}{profileData.summary.totalT > 0 ? `-${profileData.summary.totalT}` : ''} ({profileData.summary.winPct}%) · {profileData.summary.seasons} season{profileData.summary.seasons !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
             <div className="grid grid-cols-4 gap-3 text-center">
               <div className="bg-dark-tertiary/40 rounded-lg p-3">
@@ -815,7 +898,7 @@ const OwnerProfileTab = ({ history }) => {
             </div>
           </Card>
 
-          {/* Section 3 — H2H Records */}
+          {/* Section 3 — H2H Records (sortable) */}
           {profileData.h2hRecords.length > 0 && (
             <Card>
               <h3 className="font-display font-bold text-white mb-3">Head-to-Head Records</h3>
@@ -823,17 +906,35 @@ const OwnerProfileTab = ({ history }) => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
-                      <th className="text-left pb-2">Opponent</th>
-                      <th className="text-center pb-2">W</th>
-                      <th className="text-center pb-2">L</th>
-                      <th className="text-center pb-2">T</th>
-                      <th className="text-right pb-2">PF</th>
-                      <th className="text-right pb-2">PA</th>
-                      <th className="text-right pb-2 pr-2">+/-</th>
+                      {[
+                        { key: 'name', label: 'Opponent', align: 'text-left' },
+                        { key: 'w', label: 'W', align: 'text-center' },
+                        { key: 'l', label: 'L', align: 'text-center' },
+                        { key: 't', label: 'T', align: 'text-center' },
+                        { key: 'pf', label: 'PF', align: 'text-right' },
+                        { key: 'pa', label: 'PA', align: 'text-right' },
+                        { key: 'margin', label: '+/-', align: 'text-right pr-2' },
+                      ].map(col => (
+                        <th
+                          key={col.key}
+                          className={`${col.align} pb-2 cursor-pointer select-none hover:text-white transition-colors ${h2hSort.key === col.key ? 'text-accent-gold' : ''}`}
+                          onClick={() => setH2hSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
+                        >
+                          {col.label}
+                          {h2hSort.key === col.key && (
+                            <span className="ml-0.5">{h2hSort.dir === 'desc' ? '▼' : '▲'}</span>
+                          )}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {profileData.h2hRecords.map(r => (
+                    {[...profileData.h2hRecords].sort((a, b) => {
+                      const aVal = a[h2hSort.key]
+                      const bVal = b[h2hSort.key]
+                      const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
+                      return h2hSort.dir === 'desc' ? -cmp : cmp
+                    }).map(r => (
                       <tr key={r.name} className="border-t border-dark-tertiary/50">
                         <td className="py-2 font-display font-semibold text-white">{r.name}</td>
                         <td className="py-2 text-center font-mono text-green-400">{r.w}</td>
@@ -852,27 +953,48 @@ const OwnerProfileTab = ({ history }) => {
             </Card>
           )}
 
-          {/* Section 4 — Season-by-Season */}
+          {/* Section 4 — Season-by-Season (sortable) */}
           <Card>
             <h3 className="font-display font-bold text-white mb-3">Season-by-Season</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
-                    <th className="text-left pb-2">Year</th>
-                    <th className="text-center pb-2">#</th>
-                    <th className="text-left pb-2">Team</th>
-                    <th className="text-center pb-2">W</th>
-                    <th className="text-center pb-2">L</th>
-                    <th className="text-center pb-2">T</th>
-                    <th className="text-right pb-2">PF</th>
-                    <th className="text-right pb-2">PA</th>
-                    <th className="text-right pb-2">Avg</th>
-                    <th className="text-right pb-2 pr-2">Streak</th>
+                    {[
+                      { key: 'year', label: 'Year', align: 'text-left' },
+                      { key: 'place', label: '#', align: 'text-center' },
+                      { key: 'teamName', label: 'Team', align: 'text-left' },
+                      { key: 'wins', label: 'W', align: 'text-center' },
+                      { key: 'losses', label: 'L', align: 'text-center' },
+                      { key: 'ties', label: 'T', align: 'text-center' },
+                      { key: 'pf', label: 'PF', align: 'text-right' },
+                      { key: 'pa', label: 'PA', align: 'text-right' },
+                      { key: 'pfAvg', label: 'Avg', align: 'text-right' },
+                      { key: 'streak', label: 'Streak', align: 'text-right pr-2' },
+                    ].map(col => (
+                      <th
+                        key={col.key}
+                        className={`${col.align} pb-2 cursor-pointer select-none hover:text-white transition-colors ${seasonSort.key === col.key ? 'text-accent-gold' : ''}`}
+                        onClick={() => setSeasonSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
+                      >
+                        {col.label}
+                        {seasonSort.key === col.key && (
+                          <span className="ml-0.5">{seasonSort.dir === 'desc' ? '▼' : '▲'}</span>
+                        )}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {profileData.seasonTable.map(s => {
+                  {[...profileData.seasonTable].sort((a, b) => {
+                    const aVal = a[seasonSort.key]
+                    const bVal = b[seasonSort.key]
+                    if (aVal == null && bVal == null) return 0
+                    if (aVal == null) return 1
+                    if (bVal == null) return -1
+                    const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
+                    return seasonSort.dir === 'desc' ? -cmp : cmp
+                  }).map(s => {
                     const playoff = PLAYOFF_LABELS[s.playoffResult] || {}
                     return (
                       <tr key={s.year} className="border-t border-dark-tertiary/50 hover:bg-dark-tertiary/20">
@@ -1639,16 +1761,39 @@ const LeagueVault = () => {
   const [showAddSeason, setShowAddSeason] = useState(false)
   const [showManageOwners, setShowManageOwners] = useState(false)
   const [aliases, setAliases] = useState([])
+  const [avatars, setAvatars] = useState([])
   const [league, setLeague] = useState(null)
   const [recordsSort, setRecordsSort] = useState({ key: 'winPct', dir: 'desc' })
 
-  // Fetch league info (for commissioner check) and aliases on mount
+  // Fetch league info (for commissioner check), aliases, and avatars on mount
   useEffect(() => {
     api.getLeague(leagueId).then(res => setLeague(res.league || res)).catch(() => {})
     api.getOwnerAliases(leagueId).then(res => setAliases(res.aliases || [])).catch(() => {})
+    api.getOwnerAvatars(leagueId).then(res => setAvatars(res.avatars || [])).catch(() => {})
   }, [leagueId])
 
   const isCommissioner = league?.ownerId === user?.id
+
+  // Build avatar map: canonicalOwnerName → imageUrl
+  const avatarMap = useMemo(() => {
+    const map = {}
+    for (const a of avatars) {
+      map[a.ownerName] = a.imageUrl
+    }
+    return map
+  }, [avatars])
+
+  const handleAvatarSaved = useCallback((ownerName, imageUrl) => {
+    setAvatars(prev => {
+      const existing = prev.findIndex(a => a.ownerName === ownerName)
+      if (existing >= 0) {
+        const next = [...prev]
+        next[existing] = { ...next[existing], imageUrl }
+        return next
+      }
+      return [...prev, { ownerName, imageUrl }]
+    })
+  }, [])
 
   // Build alias map: rawName → canonicalName
   const aliasMap = useMemo(() => {
@@ -1974,7 +2119,7 @@ const LeagueVault = () => {
                 </Card>
               ) : (
                 years.map(year => (
-                  <SeasonCard key={year} year={year} teams={sanitizedSeasons[year] || []} isCommissioner={isCommissioner} onDeleteEntries={handleDeleteEntries} />
+                  <SeasonCard key={year} year={year} teams={sanitizedSeasons[year] || []} isCommissioner={isCommissioner} onDeleteEntries={handleDeleteEntries} avatarMap={avatarMap} />
                 ))
               )}
             </div>
@@ -2082,7 +2227,18 @@ const LeagueVault = () => {
                         return sorted.map((owner, idx) => (
                           <tr key={owner.name} className="border-t border-dark-tertiary/50">
                             <td className="py-2 font-mono text-text-secondary">{idx + 1}</td>
-                            <td className="py-2 font-display font-semibold text-white">{owner.name}</td>
+                            <td className="py-2">
+                              <div className="flex items-center gap-2">
+                                {avatarMap[owner.name] ? (
+                                  <img src={avatarMap[owner.name]} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                                ) : (
+                                  <span className="w-6 h-6 rounded-full bg-dark-tertiary flex items-center justify-center text-xs font-mono text-text-secondary flex-shrink-0">
+                                    {(owner.name || '?').charAt(0).toUpperCase()}
+                                  </span>
+                                )}
+                                <span className="font-display font-semibold text-white">{owner.name}</span>
+                              </div>
+                            </td>
                             <td className="py-2 text-center font-mono text-green-400">{owner.wins}</td>
                             <td className="py-2 text-center font-mono text-red-400">{owner.losses}</td>
                             <td className="py-2 text-center font-mono text-white">{(owner.winPct * 100).toFixed(1)}%</td>
@@ -2104,7 +2260,7 @@ const LeagueVault = () => {
           {tab === 'h2h' && <HeadToHeadTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
 
           {/* Profiles Tab */}
-          {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
+          {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} avatarMap={avatarMap} isCommissioner={isCommissioner} leagueId={leagueId} onAvatarSaved={handleAvatarSaved} />}
 
           {/* Drafts Tab */}
           {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}

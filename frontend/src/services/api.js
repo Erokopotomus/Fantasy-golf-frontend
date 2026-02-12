@@ -701,6 +701,24 @@ class ApiService {
     })
   }
 
+  // Owner Avatars (League Vault)
+  async getOwnerAvatars(leagueId) {
+    return this.request(`/imports/owner-avatars/${leagueId}`)
+  }
+
+  async saveOwnerAvatar(leagueId, ownerName, imageUrl) {
+    return this.request(`/imports/owner-avatar/${leagueId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ownerName, imageUrl }),
+    })
+  }
+
+  async deleteOwnerAvatar(leagueId, ownerName) {
+    return this.request(`/imports/owner-avatar/${leagueId}/${encodeURIComponent(ownerName)}`, {
+      method: 'DELETE',
+    })
+  }
+
   // ESPN Import
   async discoverESPNLeague(leagueId, espn_s2 = '', swid = '') {
     return this.request('/imports/espn/discover', {
