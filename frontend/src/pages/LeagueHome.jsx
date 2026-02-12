@@ -382,6 +382,13 @@ const LeagueHome = () => {
               <Button
                 variant="secondary"
                 size="sm"
+                onClick={() => navigate(`/leagues/${leagueId}/vault`)}
+              >
+                Vault
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => navigate(`/leagues/${leagueId}/settings`)}
               >
                 Settings

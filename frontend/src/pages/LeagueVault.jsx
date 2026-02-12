@@ -1028,7 +1028,7 @@ const LeagueVault = () => {
 
   // Fetch league info (for commissioner check) and aliases on mount
   useEffect(() => {
-    api.getLeague(leagueId).then(l => setLeague(l)).catch(() => {})
+    api.getLeague(leagueId).then(res => setLeague(res.league || res)).catch(() => {})
     api.getOwnerAliases(leagueId).then(res => setAliases(res.aliases || [])).catch(() => {})
   }, [leagueId])
 
