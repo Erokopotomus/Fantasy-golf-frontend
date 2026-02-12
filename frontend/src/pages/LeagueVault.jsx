@@ -512,6 +512,465 @@ const DraftHistoryTab = ({ history }) => {
   )
 }
 
+// ─── Owner Profile Tab ────────────────────────────────────────────────────────
+const OwnerProfileTab = ({ history }) => {
+  const [selectedOwner, setSelectedOwner] = useState('')
+  const [expandedYear, setExpandedYear] = useState(null)
+
+  const owners = useMemo(() => {
+    if (!history?.seasons) return []
+    const nameSet = new Set()
+    for (const teams of Object.values(history.seasons)) {
+      for (const t of teams) {
+        nameSet.add(t.ownerName || t.teamName)
+      }
+    }
+    return Array.from(nameSet).sort()
+  }, [history])
+
+  const profileData = useMemo(() => {
+    if (!selectedOwner || !history?.seasons) return null
+
+    // a) Matchup lookup: year-week-matchupId → [{ name, points }]
+    const matchupLookup = {}
+    for (const [year, teams] of Object.entries(history.seasons)) {
+      for (const t of teams) {
+        const name = t.ownerName || t.teamName
+        for (const w of (t.weeklyScores || [])) {
+          if (w.matchupId != null) {
+            const key = `${year}-${w.week}-${w.matchupId}`
+            if (!matchupLookup[key]) matchupLookup[key] = []
+            matchupLookup[key].push({ name, points: w.points || 0 })
+          }
+        }
+      }
+    }
+
+    // Collect this owner's seasons
+    const ownerSeasons = []
+    for (const [year, teams] of Object.entries(history.seasons)) {
+      const team = teams.find(t => (t.ownerName || t.teamName) === selectedOwner)
+      if (team) ownerSeasons.push({ year: parseInt(year), ...team })
+    }
+    ownerSeasons.sort((a, b) => b.year - a.year)
+
+    if (ownerSeasons.length === 0) return null
+
+    // b) Career summary
+    let totalW = 0, totalL = 0, totalT = 0, totalPF = 0, totalPA = 0
+    let championships = 0, runnerUps = 0, thirdPlaces = 0, playoffApps = 0, lastPlaces = 0
+
+    for (const s of ownerSeasons) {
+      totalW += s.wins || 0
+      totalL += s.losses || 0
+      totalT += s.ties || 0
+      totalPF += s.pointsFor || 0
+      totalPA += s.pointsAgainst || 0
+      if (s.playoffResult === 'champion') championships++
+      if (s.playoffResult === 'runner_up') runnerUps++
+      if (s.playoffResult === 'third_place') thirdPlaces++
+      if (['champion', 'runner_up', 'third_place', 'semifinal', 'playoffs'].includes(s.playoffResult)) playoffApps++
+      // Last place = highest finalStanding in the season
+      const teamsInYear = history.seasons[String(s.year)] || []
+      const maxStanding = Math.max(...teamsInYear.map(t => t.finalStanding || 0))
+      if (s.finalStanding && s.finalStanding === maxStanding && maxStanding > 1) lastPlaces++
+    }
+
+    const totalGames = totalW + totalL + totalT
+    const winPct = totalGames > 0 ? (totalW / totalGames * 100).toFixed(1) : '0.0'
+
+    // c) Career highlights
+    let bestRecord = null, highestAvg = null, lowestAvg = null
+    let highestWeek = null, lowestWeek = null
+    let biggestWin = null, biggestLoss = null
+
+    for (const s of ownerSeasons) {
+      const games = (s.wins || 0) + (s.losses || 0) + (s.ties || 0)
+      const wp = games > 0 ? (s.wins || 0) / games : 0
+      if (!bestRecord || wp > bestRecord.wp || (wp === bestRecord.wp && (s.wins || 0) > bestRecord.wins)) {
+        bestRecord = { wp, wins: s.wins || 0, losses: s.losses || 0, ties: s.ties || 0, teamName: s.teamName, year: s.year }
+      }
+
+      const weekly = s.weeklyScores || []
+      if (weekly.length > 0) {
+        const weekPts = weekly.map(w => w.points || 0).filter(p => p > 0)
+        if (weekPts.length > 0) {
+          const avg = weekPts.reduce((a, b) => a + b, 0) / weekPts.length
+          if (!highestAvg || avg > highestAvg.avg) {
+            highestAvg = { avg, teamName: s.teamName, year: s.year }
+          }
+          if (!lowestAvg || avg < lowestAvg.avg) {
+            lowestAvg = { avg, teamName: s.teamName, year: s.year }
+          }
+        }
+      }
+
+      for (const w of weekly) {
+        const pts = w.points || 0
+        if (pts > 0 && (!highestWeek || pts > highestWeek.pts)) {
+          highestWeek = { pts, year: s.year, week: w.week }
+        }
+        if (pts > 0 && (!lowestWeek || pts < lowestWeek.pts)) {
+          lowestWeek = { pts, year: s.year, week: w.week }
+        }
+
+        // Find opponent via matchup lookup
+        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
+        const opponents = matchKey ? matchupLookup[matchKey] : null
+        const opp = opponents?.find(o => o.name !== selectedOwner)
+        const oppPts = opp ? opp.points : (w.opponentPoints || 0)
+        const oppName = opp ? opp.name : null
+
+        if (oppPts > 0 || pts > 0) {
+          const margin = pts - oppPts
+          if (margin > 0 && (!biggestWin || margin > biggestWin.margin)) {
+            biggestWin = { margin, opponent: oppName || '?', year: s.year, week: w.week, pf: pts, pa: oppPts }
+          }
+          if (margin < 0 && (!biggestLoss || margin < biggestLoss.margin)) {
+            biggestLoss = { margin, opponent: oppName || '?', year: s.year, week: w.week, pf: pts, pa: oppPts }
+          }
+        }
+      }
+    }
+
+    const highlights = [
+      { label: 'Best Record', value: bestRecord ? `${bestRecord.wins}-${bestRecord.losses}${bestRecord.ties ? `-${bestRecord.ties}` : ''} (${(bestRecord.wp * 100).toFixed(0)}%)` : '—', context: bestRecord ? `${bestRecord.teamName} · ${bestRecord.year}` : '' },
+      { label: 'Highest Season Avg', value: highestAvg ? highestAvg.avg.toFixed(1) : '—', context: highestAvg ? `${highestAvg.teamName} · ${highestAvg.year}` : '' },
+      { label: 'Lowest Season Avg', value: lowestAvg ? lowestAvg.avg.toFixed(1) : '—', context: lowestAvg ? `${lowestAvg.teamName} · ${lowestAvg.year}` : '' },
+      { label: 'Highest Weekly Score', value: highestWeek ? highestWeek.pts.toFixed(1) : '—', context: highestWeek ? `${highestWeek.year} Week ${highestWeek.week}` : '' },
+      { label: 'Lowest Weekly Score', value: lowestWeek ? lowestWeek.pts.toFixed(1) : '—', context: lowestWeek ? `${lowestWeek.year} Week ${lowestWeek.week}` : '' },
+      { label: 'Biggest Win', value: biggestWin ? `+${biggestWin.margin.toFixed(1)}` : '—', context: biggestWin ? `vs ${biggestWin.opponent} · ${biggestWin.year} W${biggestWin.week} (${biggestWin.pf.toFixed(1)}-${biggestWin.pa.toFixed(1)})` : '', color: 'text-green-400' },
+      { label: 'Biggest Loss', value: biggestLoss ? biggestLoss.margin.toFixed(1) : '—', context: biggestLoss ? `vs ${biggestLoss.opponent} · ${biggestLoss.year} W${biggestLoss.week} (${biggestLoss.pf.toFixed(1)}-${biggestLoss.pa.toFixed(1)})` : '', color: 'text-red-400' },
+    ]
+
+    // d) H2H records vs all opponents
+    const h2hMap = {} // opponentName → { w, l, t, pf, pa }
+    for (const s of ownerSeasons) {
+      for (const w of (s.weeklyScores || [])) {
+        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
+        const opponents = matchKey ? matchupLookup[matchKey] : null
+        const opp = opponents?.find(o => o.name !== selectedOwner)
+        if (!opp) continue
+
+        if (!h2hMap[opp.name]) h2hMap[opp.name] = { w: 0, l: 0, t: 0, pf: 0, pa: 0 }
+        const pts = w.points || 0
+        h2hMap[opp.name].pf += pts
+        h2hMap[opp.name].pa += opp.points
+        if (pts > opp.points) h2hMap[opp.name].w++
+        else if (pts < opp.points) h2hMap[opp.name].l++
+        else h2hMap[opp.name].t++
+      }
+    }
+    const h2hRecords = Object.entries(h2hMap)
+      .map(([name, r]) => ({ name, ...r, margin: r.pf - r.pa }))
+      .sort((a, b) => b.w - a.w || a.l - b.l)
+
+    // e) Season-by-season table
+    const seasonTable = ownerSeasons.map(s => {
+      const weekly = (s.weeklyScores || []).filter(w => (w.points || 0) > 0)
+      const pfAvg = weekly.length > 0 ? (weekly.reduce((sum, w) => sum + (w.points || 0), 0) / weekly.length) : 0
+      const paScores = weekly.map(w => {
+        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
+        const opponents = matchKey ? matchupLookup[matchKey] : null
+        const opp = opponents?.find(o => o.name !== selectedOwner)
+        return opp ? opp.points : (w.opponentPoints || 0)
+      }).filter(p => p > 0)
+      const paAvg = paScores.length > 0 ? paScores.reduce((a, b) => a + b, 0) / paScores.length : 0
+
+      // End-of-season streak
+      let streak = 0, streakType = ''
+      for (let i = weekly.length - 1; i >= 0; i--) {
+        const w = weekly[i]
+        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
+        const opponents = matchKey ? matchupLookup[matchKey] : null
+        const opp = opponents?.find(o => o.name !== selectedOwner)
+        const oppPts = opp ? opp.points : (w.opponentPoints || 0)
+        const won = (w.points || 0) > oppPts
+        const lost = (w.points || 0) < oppPts
+        const result = won ? 'W' : lost ? 'L' : 'T'
+        if (streak === 0) { streakType = result; streak = 1 }
+        else if (result === streakType) streak++
+        else break
+      }
+
+      return {
+        year: s.year,
+        place: s.finalStanding,
+        teamName: s.teamName,
+        record: `${s.wins || 0}-${s.losses || 0}${s.ties ? `-${s.ties}` : ''}`,
+        wins: s.wins || 0,
+        losses: s.losses || 0,
+        ties: s.ties || 0,
+        pf: s.pointsFor || 0,
+        pa: s.pointsAgainst || 0,
+        pfAvg,
+        paAvg,
+        streak: streak > 0 ? `${streakType}${streak}` : '—',
+        playoffResult: s.playoffResult,
+      }
+    })
+
+    // f) Weekly matchup log grouped by year
+    const weeklyLog = {}
+    for (const s of ownerSeasons) {
+      const weeks = []
+      for (const w of (s.weeklyScores || [])) {
+        const pts = w.points || 0
+        if (pts === 0) continue
+        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
+        const opponents = matchKey ? matchupLookup[matchKey] : null
+        const opp = opponents?.find(o => o.name !== selectedOwner)
+        const oppPts = opp ? opp.points : (w.opponentPoints || 0)
+        const oppName = opp ? opp.name : '?'
+        const result = pts > oppPts ? 'W' : pts < oppPts ? 'L' : 'T'
+        weeks.push({ week: w.week, result, opponent: oppName, pf: pts, pa: oppPts, margin: pts - oppPts })
+      }
+      if (weeks.length > 0) {
+        weeks.sort((a, b) => a.week - b.week)
+        weeklyLog[s.year] = weeks
+      }
+    }
+
+    return {
+      summary: { totalW, totalL, totalT, winPct, totalPF, totalPA, championships, runnerUps, thirdPlaces, playoffApps, lastPlaces, seasons: ownerSeasons.length },
+      highlights,
+      h2hRecords,
+      seasonTable,
+      weeklyLog,
+    }
+  }, [selectedOwner, history])
+
+  const RESULT_BADGE = {
+    W: 'bg-green-500/20 text-green-400',
+    L: 'bg-red-500/20 text-red-400',
+    T: 'bg-gray-500/20 text-gray-400',
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Owner selector */}
+      <Card>
+        <label className="block text-xs text-text-secondary font-mono mb-1">Select a Manager</label>
+        <select
+          value={selectedOwner}
+          onChange={e => { setSelectedOwner(e.target.value); setExpandedYear(null) }}
+          className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+        >
+          <option value="">Select...</option>
+          {owners.map(o => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+      </Card>
+
+      {!selectedOwner && (
+        <Card className="text-center py-8">
+          <p className="text-text-secondary">Select a manager to view their career profile.</p>
+        </Card>
+      )}
+
+      {profileData && (
+        <>
+          {/* Section 1 — Header Card */}
+          <Card>
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-display font-bold text-white mb-1">{selectedOwner}</h2>
+              <p className="text-sm font-mono text-text-secondary">
+                {profileData.summary.totalW}-{profileData.summary.totalL}{profileData.summary.totalT > 0 ? `-${profileData.summary.totalT}` : ''} ({profileData.summary.winPct}%) · {profileData.summary.seasons} season{profileData.summary.seasons !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="grid grid-cols-4 gap-3 text-center">
+              <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <p className="text-2xl font-mono font-bold text-accent-gold">{profileData.summary.championships}</p>
+                <p className="text-xs font-mono text-text-secondary mt-1">Titles</p>
+              </div>
+              <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <p className="text-2xl font-mono font-bold text-white">{profileData.summary.runnerUps}</p>
+                <p className="text-xs font-mono text-text-secondary mt-1">Runner-Up</p>
+              </div>
+              <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <p className="text-2xl font-mono font-bold text-white">{profileData.summary.thirdPlaces}</p>
+                <p className="text-xs font-mono text-text-secondary mt-1">3rd Place</p>
+              </div>
+              <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <p className="text-2xl font-mono font-bold text-white">{profileData.summary.playoffApps}</p>
+                <p className="text-xs font-mono text-text-secondary mt-1">Playoffs</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Section 2 — Career Highlights */}
+          <Card>
+            <h3 className="font-display font-bold text-white mb-3">Career Highlights</h3>
+            <div className="space-y-2">
+              {profileData.highlights.map((h, i) => (
+                <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-dark-tertiary/20">
+                  <span className="text-sm text-text-secondary">{h.label}</span>
+                  <div className="text-right">
+                    <span className={`text-sm font-mono font-bold ${h.color || 'text-white'}`}>{h.value}</span>
+                    {h.context && <p className="text-xs text-text-secondary">{h.context}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Section 3 — H2H Records */}
+          {profileData.h2hRecords.length > 0 && (
+            <Card>
+              <h3 className="font-display font-bold text-white mb-3">Head-to-Head Records</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
+                      <th className="text-left pb-2">Opponent</th>
+                      <th className="text-center pb-2">W</th>
+                      <th className="text-center pb-2">L</th>
+                      <th className="text-center pb-2">T</th>
+                      <th className="text-right pb-2">PF</th>
+                      <th className="text-right pb-2">PA</th>
+                      <th className="text-right pb-2 pr-2">+/-</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {profileData.h2hRecords.map(r => (
+                      <tr key={r.name} className="border-t border-dark-tertiary/50">
+                        <td className="py-2 font-display font-semibold text-white">{r.name}</td>
+                        <td className="py-2 text-center font-mono text-green-400">{r.w}</td>
+                        <td className="py-2 text-center font-mono text-red-400">{r.l}</td>
+                        <td className="py-2 text-center font-mono text-text-secondary">{r.t || '—'}</td>
+                        <td className="py-2 text-right font-mono text-white">{r.pf.toFixed(1)}</td>
+                        <td className="py-2 text-right font-mono text-text-secondary">{r.pa.toFixed(1)}</td>
+                        <td className={`py-2 text-right pr-2 font-mono font-bold ${r.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {r.margin >= 0 ? '+' : ''}{r.margin.toFixed(1)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+
+          {/* Section 4 — Season-by-Season */}
+          <Card>
+            <h3 className="font-display font-bold text-white mb-3">Season-by-Season</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
+                    <th className="text-left pb-2">Year</th>
+                    <th className="text-center pb-2">#</th>
+                    <th className="text-left pb-2">Team</th>
+                    <th className="text-center pb-2">W</th>
+                    <th className="text-center pb-2">L</th>
+                    <th className="text-center pb-2">T</th>
+                    <th className="text-right pb-2">PF</th>
+                    <th className="text-right pb-2">PA</th>
+                    <th className="text-right pb-2">Avg</th>
+                    <th className="text-right pb-2 pr-2">Streak</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profileData.seasonTable.map(s => {
+                    const playoff = PLAYOFF_LABELS[s.playoffResult] || {}
+                    return (
+                      <tr key={s.year} className="border-t border-dark-tertiary/50 hover:bg-dark-tertiary/20">
+                        <td className="py-2 font-mono font-bold text-accent-gold">{s.year}</td>
+                        <td className="py-2 text-center font-mono text-text-secondary">{s.place || '—'}</td>
+                        <td className="py-2 font-display text-white text-xs">
+                          <span>{s.teamName}</span>
+                          {playoff.text && (
+                            <span className={`ml-1.5 text-xs font-mono px-1 py-0.5 rounded ${playoff.color}`}>{playoff.text}</span>
+                          )}
+                        </td>
+                        <td className="py-2 text-center font-mono text-green-400">{s.wins}</td>
+                        <td className="py-2 text-center font-mono text-red-400">{s.losses}</td>
+                        <td className="py-2 text-center font-mono text-text-secondary">{s.ties || '—'}</td>
+                        <td className="py-2 text-right font-mono text-white">{s.pf.toFixed(1)}</td>
+                        <td className="py-2 text-right font-mono text-text-secondary">{s.pa.toFixed(1)}</td>
+                        <td className="py-2 text-right font-mono text-white">{s.pfAvg > 0 ? s.pfAvg.toFixed(1) : '—'}</td>
+                        <td className="py-2 text-right pr-2 font-mono text-text-secondary">{s.streak}</td>
+                      </tr>
+                    )
+                  })}
+                  {/* Totals row */}
+                  <tr className="border-t-2 border-accent-gold/30">
+                    <td className="py-2 font-mono font-bold text-accent-gold" colSpan={3}>Career Totals</td>
+                    <td className="py-2 text-center font-mono font-bold text-green-400">{profileData.summary.totalW}</td>
+                    <td className="py-2 text-center font-mono font-bold text-red-400">{profileData.summary.totalL}</td>
+                    <td className="py-2 text-center font-mono font-bold text-text-secondary">{profileData.summary.totalT || '—'}</td>
+                    <td className="py-2 text-right font-mono font-bold text-white">{profileData.summary.totalPF.toFixed(1)}</td>
+                    <td className="py-2 text-right font-mono font-bold text-text-secondary">{profileData.summary.totalPA.toFixed(1)}</td>
+                    <td className="py-2 text-right font-mono font-bold text-white">{profileData.summary.winPct}%</td>
+                    <td className="py-2" />
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Section 5 — Weekly Matchup Log */}
+          {Object.keys(profileData.weeklyLog).length > 0 && (
+            <Card>
+              <h3 className="font-display font-bold text-white mb-3">Weekly Matchup Log</h3>
+              <div className="space-y-1">
+                {Object.entries(profileData.weeklyLog)
+                  .sort(([a], [b]) => parseInt(b) - parseInt(a))
+                  .map(([year, weeks]) => (
+                    <div key={year}>
+                      <button
+                        onClick={() => setExpandedYear(expandedYear === year ? null : year)}
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-dark-tertiary/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-bold text-accent-gold">{year}</span>
+                          <span className="text-xs font-mono text-text-secondary">{weeks.length} weeks</span>
+                        </div>
+                        <svg
+                          className={`w-4 h-4 text-text-secondary transition-transform ${expandedYear === year ? 'rotate-180' : ''}`}
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {expandedYear === year && (
+                        <div className="ml-2 mb-3 border-l-2 border-dark-tertiary pl-3 space-y-0.5">
+                          {weeks.map(w => (
+                            <div
+                              key={w.week}
+                              className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-text-secondary w-8">W{w.week}</span>
+                                <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${RESULT_BADGE[w.result]}`}>
+                                  {w.result}
+                                </span>
+                                <span className="text-white text-xs font-display">vs {w.opponent}</span>
+                              </div>
+                              <div className="flex items-center gap-3 font-mono text-xs">
+                                <span className="text-white">{w.pf.toFixed(1)}</span>
+                                <span className="text-text-secondary">-</span>
+                                <span className="text-text-secondary">{w.pa.toFixed(1)}</span>
+                                <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {w.margin >= 0 ? '+' : ''}{w.margin.toFixed(1)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </Card>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── Custom Data Tab ──────────────────────────────────────────────────────────
 const CATEGORY_LABELS = {
   standings: { label: 'Standings', color: 'bg-blue-500/20 text-blue-400' },
@@ -1422,6 +1881,7 @@ const LeagueVault = () => {
     { id: 'timeline', label: 'Timeline' },
     { id: 'records', label: 'Records' },
     { id: 'h2h', label: 'H2H' },
+    { id: 'profiles', label: 'Profiles' },
     { id: 'drafts', label: 'Drafts' },
     { id: 'custom', label: 'Custom' },
   ]
@@ -1620,6 +2080,9 @@ const LeagueVault = () => {
 
           {/* H2H Tab */}
           {tab === 'h2h' && <HeadToHeadTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
+
+          {/* Profiles Tab */}
+          {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
 
           {/* Drafts Tab */}
           {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
