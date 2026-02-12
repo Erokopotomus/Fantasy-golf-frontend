@@ -389,7 +389,7 @@ async function generateOpinionEventsForSeason(userId, seasonData, teamId, league
  * Enhanced with raw data preservation, owner matching, opinion timeline bridge,
  * settings snapshot, and error accumulation.
  */
-async function runFullImport(espnLeagueId, userId, db, cookies = {}) {
+async function runFullImport(espnLeagueId, userId, db, cookies = {}, targetLeagueId) {
   const importRecord = await db.leagueImport.create({
     data: {
       userId,
@@ -414,26 +414,32 @@ async function runFullImport(espnLeagueId, userId, db, cookies = {}) {
     })
 
     // Step 2: Create or find the Clutch league
-    let clutchLeague = await db.league.findFirst({
-      where: {
-        ownerId: userId,
-        name: { contains: discovery.name, mode: 'insensitive' },
-      },
-    })
-
-    if (!clutchLeague) {
-      clutchLeague = await db.league.create({
-        data: {
-          name: discovery.name || 'Imported from ESPN',
-          sport: 'NFL',
+    let clutchLeague
+    if (targetLeagueId) {
+      clutchLeague = await db.league.findUnique({ where: { id: targetLeagueId } })
+      if (!clutchLeague) throw new Error('Target league not found')
+    } else {
+      clutchLeague = await db.league.findFirst({
+        where: {
           ownerId: userId,
-          status: 'ACTIVE',
-          settings: {
-            importedFrom: 'espn',
-            espnLeagueId: String(espnLeagueId),
-          },
+          name: { contains: discovery.name, mode: 'insensitive' },
         },
       })
+
+      if (!clutchLeague) {
+        clutchLeague = await db.league.create({
+          data: {
+            name: discovery.name || 'Imported from ESPN',
+            sport: 'NFL',
+            ownerId: userId,
+            status: 'ACTIVE',
+            settings: {
+              importedFrom: 'espn',
+              espnLeagueId: String(espnLeagueId),
+            },
+          },
+        })
+      }
     }
 
     // Ensure importing user is a member of the league

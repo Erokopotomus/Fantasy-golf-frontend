@@ -559,7 +559,7 @@ async function generateOpinionEventsForSeason(userId, seasonData, teamKey, leagu
  * Full import pipeline — discovers seasons, imports data, stores in HistoricalSeason.
  * Now includes raw data preservation, transactions, and opinion timeline bridge.
  */
-async function runFullImport(yahooLeagueId, userId, db, accessToken) {
+async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagueId) {
   const importRecord = await db.leagueImport.create({
     data: {
       userId,
@@ -583,26 +583,32 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken) {
     })
 
     // Find or create Clutch league
-    let clutchLeague = await db.league.findFirst({
-      where: {
-        ownerId: userId,
-        name: { contains: discovery.name, mode: 'insensitive' },
-      },
-    })
-
-    if (!clutchLeague) {
-      clutchLeague = await db.league.create({
-        data: {
-          name: discovery.name || 'Imported from Yahoo',
-          sport: 'NFL',
+    let clutchLeague
+    if (targetLeagueId) {
+      clutchLeague = await db.league.findUnique({ where: { id: targetLeagueId } })
+      if (!clutchLeague) throw new Error('Target league not found')
+    } else {
+      clutchLeague = await db.league.findFirst({
+        where: {
           ownerId: userId,
-          status: 'ACTIVE',
-          settings: {
-            importedFrom: 'yahoo',
-            yahooLeagueId: String(yahooLeagueId),
-          },
+          name: { contains: discovery.name, mode: 'insensitive' },
         },
       })
+
+      if (!clutchLeague) {
+        clutchLeague = await db.league.create({
+          data: {
+            name: discovery.name || 'Imported from Yahoo',
+            sport: 'NFL',
+            ownerId: userId,
+            status: 'ACTIVE',
+            settings: {
+              importedFrom: 'yahoo',
+              yahooLeagueId: String(yahooLeagueId),
+            },
+          },
+        })
+      }
     }
 
     // Ensure importing user is a member of the league

@@ -51,11 +51,11 @@ export function useSleeperImport() {
     }
   }
 
-  const startImport = async (leagueId) => {
+  const startImport = async (leagueId, targetLeagueId) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importSleeperLeague(leagueId)
+      const data = await api.importSleeperLeague(leagueId, targetLeagueId)
       setResult(data)
       return data
     } catch (err) {
@@ -98,11 +98,11 @@ export function useESPNImport() {
     }
   }
 
-  const startImport = async (leagueId, espn_s2, swid) => {
+  const startImport = async (leagueId, espn_s2, swid, targetLeagueId) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importESPNLeague(leagueId, espn_s2, swid)
+      const data = await api.importESPNLeague(leagueId, espn_s2, swid, targetLeagueId)
       setResult(data)
       return data
     } catch (err) {
@@ -178,11 +178,11 @@ export function useYahooImport() {
     }
   }
 
-  const startImport = async (leagueId, accessToken) => {
+  const startImport = async (leagueId, accessToken, targetLeagueId) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importYahooLeague(leagueId, accessToken)
+      const data = await api.importYahooLeague(leagueId, accessToken, targetLeagueId)
       setResult(data)
       return data
     } catch (err) {
@@ -225,11 +225,11 @@ export function useFantraxImport() {
     }
   }
 
-  const startImport = async (csvData) => {
+  const startImport = async (csvData, targetLeagueId) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importFantraxLeague(csvData)
+      const data = await api.importFantraxLeague({ ...csvData, targetLeagueId })
       setResult(data)
       return data
     } catch (err) {
@@ -272,11 +272,11 @@ export function useMFLImport() {
     }
   }
 
-  const startImport = async (leagueId, apiKey) => {
+  const startImport = async (leagueId, apiKey, targetLeagueId) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importMFLLeague(leagueId, apiKey)
+      const data = await api.importMFLLeague(leagueId, apiKey, targetLeagueId)
       setResult(data)
       return data
     } catch (err) {

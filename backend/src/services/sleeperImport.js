@@ -455,7 +455,7 @@ async function generateOpinionEventsForSeason(userId, seasonData, rosterId, leag
 
 // ─── Full Import Pipeline ──────────────────────────────────────────────────
 
-async function runFullImport(sleeperLeagueId, userId, db) {
+async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId) {
   const importRecord = await db.leagueImport.create({
     data: {
       userId,
@@ -478,26 +478,32 @@ async function runFullImport(sleeperLeagueId, userId, db) {
       },
     })
 
-    let clutchLeague = await db.league.findFirst({
-      where: {
-        ownerId: userId,
-        name: { contains: discovery.name, mode: 'insensitive' },
-      },
-    })
-
-    if (!clutchLeague) {
-      clutchLeague = await db.league.create({
-        data: {
-          name: discovery.name || `Imported from Sleeper`,
-          sport: discovery.sport === 'nfl' ? 'NFL' : 'GOLF',
+    let clutchLeague
+    if (targetLeagueId) {
+      clutchLeague = await db.league.findUnique({ where: { id: targetLeagueId } })
+      if (!clutchLeague) throw new Error('Target league not found')
+    } else {
+      clutchLeague = await db.league.findFirst({
+        where: {
           ownerId: userId,
-          status: 'ACTIVE',
-          settings: {
-            importedFrom: 'sleeper',
-            sleeperLeagueId,
-          },
+          name: { contains: discovery.name, mode: 'insensitive' },
         },
       })
+
+      if (!clutchLeague) {
+        clutchLeague = await db.league.create({
+          data: {
+            name: discovery.name || `Imported from Sleeper`,
+            sport: discovery.sport === 'nfl' ? 'NFL' : 'GOLF',
+            ownerId: userId,
+            status: 'ACTIVE',
+            settings: {
+              importedFrom: 'sleeper',
+              sleeperLeagueId,
+            },
+          },
+        })
+      }
     }
 
     // Ensure importing user is a member of the league

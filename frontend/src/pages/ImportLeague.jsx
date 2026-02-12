@@ -4,6 +4,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import { useSleeperImport, useESPNImport, useYahooImport, useYahooOAuth, useFantraxImport, useMFLImport, useImports } from '../hooks/useImports'
 import { track, Events } from '../services/analytics'
+import api from '../services/api'
 
 const PLATFORMS = [
   { id: 'sleeper', name: 'Sleeper', icon: '🌙', available: true, description: 'Public API — just paste your league ID' },
@@ -116,6 +117,13 @@ const ImportLeague = () => {
     }
   }, [])
 
+  // Fetch existing leagues when step 2 (discovery results) is shown
+  useEffect(() => {
+    if (step === 2) {
+      api.getLeagues().then(data => setExistingLeagues(data.leagues || [])).catch(() => {})
+    }
+  }, [step])
+
   // Shared input state
   const [leagueId, setLeagueId] = useState('')
 
@@ -136,6 +144,10 @@ const ImportLeague = () => {
 
   // MFL-specific
   const [mflApiKey, setMflApiKey] = useState('')
+
+  // Target league for cross-platform merging
+  const [targetLeagueId, setTargetLeagueId] = useState('')
+  const [existingLeagues, setExistingLeagues] = useState([])
 
   // Get the active hook for the selected platform
   const getHook = () => {
@@ -194,16 +206,17 @@ const ImportLeague = () => {
     setStep(3)
     track(Events.IMPORT_STARTED, { source_platform: platform.id })
 
+    const mergeTarget = targetLeagueId || undefined
     let data = null
     switch (platform?.id) {
       case 'sleeper':
-        data = await sleeper.startImport(leagueId.trim())
+        data = await sleeper.startImport(leagueId.trim(), mergeTarget)
         break
       case 'espn':
-        data = await espn.startImport(leagueId.trim(), espnS2.trim(), espnSwid.trim())
+        data = await espn.startImport(leagueId.trim(), espnS2.trim(), espnSwid.trim(), mergeTarget)
         break
       case 'yahoo':
-        data = await yahoo.startImport(leagueId.trim(), yahooToken.trim() || undefined)
+        data = await yahoo.startImport(leagueId.trim(), yahooToken.trim() || undefined, mergeTarget)
         break
       case 'fantrax':
         data = await fantrax.startImport({
@@ -211,10 +224,10 @@ const ImportLeague = () => {
           draftCSV: draftCSV || null,
           seasonYear: parseInt(fantraxYear) || undefined,
           leagueName: fantraxName || undefined,
-        })
+        }, mergeTarget)
         break
       case 'mfl':
-        data = await mfl.startImport(leagueId.trim(), mflApiKey.trim())
+        data = await mfl.startImport(leagueId.trim(), mflApiKey.trim(), mergeTarget)
         break
     }
 
@@ -241,6 +254,7 @@ const ImportLeague = () => {
     setStandingsCSV('')
     setDraftCSV('')
     setMflApiKey('')
+    setTargetLeagueId('')
   }
 
   const handleFileUpload = (e, setter) => {
@@ -764,6 +778,23 @@ const ImportLeague = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                <div className="mb-4 p-3 bg-dark-tertiary/50 rounded-lg">
+                  <label className="block text-xs text-text-secondary font-mono mb-2">Import into:</label>
+                  <select
+                    value={targetLeagueId}
+                    onChange={e => setTargetLeagueId(e.target.value)}
+                    className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+                  >
+                    <option value="">Create new league</option>
+                    {existingLeagues.map(l => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-text-secondary mt-1.5">
+                    To merge history from multiple platforms, select an existing league.
+                  </p>
                 </div>
 
                 {activeHook.error && (

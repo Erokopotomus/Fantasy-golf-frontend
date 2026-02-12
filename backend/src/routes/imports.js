@@ -32,7 +32,8 @@ router.post('/sleeper/discover', authenticate, validateLeagueId, async (req, res
 router.post('/sleeper/import', authenticate, validateLeagueId, async (req, res) => {
   try {
     const leagueId = sanitize(req.body.leagueId)
-    const result = await sleeperImport.runFullImport(leagueId, req.user.id, prisma)
+    const targetLeagueId = req.body.targetLeagueId || undefined
+    const result = await sleeperImport.runFullImport(leagueId, req.user.id, prisma, targetLeagueId)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -63,7 +64,8 @@ router.post('/espn/import', authenticate, validateLeagueId, async (req, res) => 
       espn_s2: req.body.espn_s2 || '',
       swid: req.body.swid || '',
     }
-    const result = await espnImport.runFullImport(leagueId, req.user.id, prisma, cookies)
+    const targetLeagueId = req.body.targetLeagueId || undefined
+    const result = await espnImport.runFullImport(leagueId, req.user.id, prisma, cookies, targetLeagueId)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -117,7 +119,8 @@ router.post('/yahoo/import', authenticate, validateLeagueId, async (req, res) =>
     const leagueId = sanitize(req.body.leagueId)
     const accessToken = await resolveYahooToken(req)
     if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo not connected. Please authorize via Settings or provide an access token.' } })
-    const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken)
+    const targetLeagueId = req.body.targetLeagueId || undefined
+    const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken, targetLeagueId)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -156,7 +159,8 @@ router.post('/fantrax/import', authenticate, async (req, res) => {
     if (!csvData.standingsCSV) {
       return res.status(400).json({ error: { message: 'Standings CSV data is required' } })
     }
-    const result = await fantraxImport.runFullImport(csvData, req.user.id, prisma)
+    const targetLeagueId = req.body.targetLeagueId || undefined
+    const result = await fantraxImport.runFullImport(csvData, req.user.id, prisma, targetLeagueId)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -183,7 +187,8 @@ router.post('/mfl/import', authenticate, validateLeagueId, async (req, res) => {
     const leagueId = sanitize(req.body.leagueId)
     const apiKey = req.body.apiKey
     if (!apiKey) return res.status(400).json({ error: { message: 'MFL API key is required' } })
-    const result = await mflImport.runFullImport(leagueId, req.user.id, prisma, apiKey)
+    const targetLeagueId = req.body.targetLeagueId || undefined
+    const result = await mflImport.runFullImport(leagueId, req.user.id, prisma, apiKey, targetLeagueId)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })

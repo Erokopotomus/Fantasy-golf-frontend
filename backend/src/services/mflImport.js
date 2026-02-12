@@ -401,7 +401,7 @@ async function generateOpinionEventsForSeason(userId, seasonData, franchiseId, l
  * Now includes raw data preservation, all-play/powerRank, settings, opinion timeline,
  * owner matching, and per-season error accumulation.
  */
-async function runFullImport(mflLeagueId, userId, db, apiKey) {
+async function runFullImport(mflLeagueId, userId, db, apiKey, targetLeagueId) {
   const importRecord = await db.leagueImport.create({
     data: {
       userId,
@@ -424,26 +424,32 @@ async function runFullImport(mflLeagueId, userId, db, apiKey) {
       },
     })
 
-    let clutchLeague = await db.league.findFirst({
-      where: {
-        ownerId: userId,
-        name: { contains: discovery.name, mode: 'insensitive' },
-      },
-    })
-
-    if (!clutchLeague) {
-      clutchLeague = await db.league.create({
-        data: {
-          name: discovery.name || 'Imported from MFL',
-          sport: 'NFL',
+    let clutchLeague
+    if (targetLeagueId) {
+      clutchLeague = await db.league.findUnique({ where: { id: targetLeagueId } })
+      if (!clutchLeague) throw new Error('Target league not found')
+    } else {
+      clutchLeague = await db.league.findFirst({
+        where: {
           ownerId: userId,
-          status: 'ACTIVE',
-          settings: {
-            importedFrom: 'mfl',
-            mflLeagueId: String(mflLeagueId),
-          },
+          name: { contains: discovery.name, mode: 'insensitive' },
         },
       })
+
+      if (!clutchLeague) {
+        clutchLeague = await db.league.create({
+          data: {
+            name: discovery.name || 'Imported from MFL',
+            sport: 'NFL',
+            ownerId: userId,
+            status: 'ACTIVE',
+            settings: {
+              importedFrom: 'mfl',
+              mflLeagueId: String(mflLeagueId),
+            },
+          },
+        })
+      }
     }
 
     // Ensure importing user is a member of the league

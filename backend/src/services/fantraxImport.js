@@ -215,7 +215,7 @@ async function importSeason(csvData) {
  * @param {string} userId
  * @param {PrismaClient} prisma
  */
-async function runFullImport(csvData, userId, prisma) {
+async function runFullImport(csvData, userId, prisma, targetLeagueId) {
   const importRecord = await prisma.leagueImport.create({
     data: {
       userId,
@@ -238,25 +238,31 @@ async function runFullImport(csvData, userId, prisma) {
       },
     })
 
-    let clutchLeague = await prisma.league.findFirst({
-      where: {
-        ownerId: userId,
-        name: { contains: discovery.name, mode: 'insensitive' },
-      },
-    })
-
-    if (!clutchLeague) {
-      clutchLeague = await prisma.league.create({
-        data: {
-          name: discovery.name || 'Imported from Fantrax',
-          sport: 'NFL',
+    let clutchLeague
+    if (targetLeagueId) {
+      clutchLeague = await prisma.league.findUnique({ where: { id: targetLeagueId } })
+      if (!clutchLeague) throw new Error('Target league not found')
+    } else {
+      clutchLeague = await prisma.league.findFirst({
+        where: {
           ownerId: userId,
-          status: 'ACTIVE',
-          settings: {
-            importedFrom: 'fantrax',
-          },
+          name: { contains: discovery.name, mode: 'insensitive' },
         },
       })
+
+      if (!clutchLeague) {
+        clutchLeague = await prisma.league.create({
+          data: {
+            name: discovery.name || 'Imported from Fantrax',
+            sport: 'NFL',
+            ownerId: userId,
+            status: 'ACTIVE',
+            settings: {
+              importedFrom: 'fantrax',
+            },
+          },
+        })
+      }
     }
 
     // Ensure importing user is a member of the league

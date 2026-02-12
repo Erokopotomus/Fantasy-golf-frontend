@@ -653,10 +653,10 @@ class ApiService {
     })
   }
 
-  async importSleeperLeague(leagueId) {
+  async importSleeperLeague(leagueId, targetLeagueId) {
     return this.request('/imports/sleeper/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId }),
+      body: JSON.stringify({ leagueId, targetLeagueId }),
     })
   }
 
@@ -691,10 +691,10 @@ class ApiService {
     })
   }
 
-  async importESPNLeague(leagueId, espn_s2 = '', swid = '') {
+  async importESPNLeague(leagueId, espn_s2 = '', swid = '', targetLeagueId) {
     return this.request('/imports/espn/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, espn_s2, swid }),
+      body: JSON.stringify({ leagueId, espn_s2, swid, targetLeagueId }),
     })
   }
 
@@ -721,10 +721,10 @@ class ApiService {
     })
   }
 
-  async importYahooLeague(leagueId, accessToken) {
+  async importYahooLeague(leagueId, accessToken, targetLeagueId) {
     return this.request('/imports/yahoo/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, accessToken: accessToken || undefined }),
+      body: JSON.stringify({ leagueId, accessToken: accessToken || undefined, targetLeagueId }),
     })
   }
 
@@ -736,10 +736,10 @@ class ApiService {
     })
   }
 
-  async importFantraxLeague({ standingsCSV, draftCSV, seasonYear, leagueName }) {
+  async importFantraxLeague({ standingsCSV, draftCSV, seasonYear, leagueName, targetLeagueId }) {
     return this.request('/imports/fantrax/import', {
       method: 'POST',
-      body: JSON.stringify({ standingsCSV, draftCSV, seasonYear, leagueName }),
+      body: JSON.stringify({ standingsCSV, draftCSV, seasonYear, leagueName, targetLeagueId }),
     })
   }
 
@@ -751,10 +751,10 @@ class ApiService {
     })
   }
 
-  async importMFLLeague(leagueId, apiKey) {
+  async importMFLLeague(leagueId, apiKey, targetLeagueId) {
     return this.request('/imports/mfl/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, apiKey }),
+      body: JSON.stringify({ leagueId, apiKey, targetLeagueId }),
     })
   }
 
