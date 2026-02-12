@@ -542,6 +542,16 @@ async function importSeason(leagueKey, year, accessToken) {
     if (parsedDraft.picks.some(p => p.cost != null && p.cost > 0)) {
       parsedDraft.type = 'auction'
     }
+    // Enrich picks with ownerName from roster data
+    const teamKeyToOwner = {}
+    for (const r of rosterData) {
+      if (r.teamKey) teamKeyToOwner[r.teamKey] = r.ownerName || r.teamName
+    }
+    for (const pick of parsedDraft.picks) {
+      if (pick.teamKey && teamKeyToOwner[pick.teamKey]) {
+        pick.ownerName = teamKeyToOwner[pick.teamKey]
+      }
+    }
   }
 
   // ── Determine Playoff Results ──
@@ -573,15 +583,17 @@ async function importSeason(leagueKey, year, accessToken) {
 function buildWeeklyScores(matchups, teamId) {
   const scores = []
   for (const [week, games] of Object.entries(matchups)) {
-    const game = games.find(g =>
+    const gameIdx = games.findIndex(g =>
       String(g.homeTeamId) === String(teamId) || String(g.awayTeamId) === String(teamId)
     )
-    if (game) {
+    if (gameIdx >= 0) {
+      const game = games[gameIdx]
       const isHome = String(game.homeTeamId) === String(teamId)
       scores.push({
         week: parseInt(week),
         points: isHome ? game.homePoints : game.awayPoints,
         opponentPoints: isHome ? game.awayPoints : game.homePoints,
+        matchupId: gameIdx,
         isPlayoffs: game.isPlayoffs || false,
         isConsolation: game.isConsolation || false,
       })

@@ -272,9 +272,20 @@ const HeadToHeadTab = ({ history }) => {
       const scoresA = teamA.weeklyScores || []
       const scoresB = teamB.weeklyScores || []
 
-      // Match by matchupId — if two teams share a matchupId in the same week they played each other
+      // Match by matchupId, or fall back to score-based matching for imports without matchupId
       for (const weekA of scoresA) {
-        const weekB = scoresB.find(w => w.week === weekA.week && w.matchupId === weekA.matchupId)
+        let weekB = null
+        if (weekA.matchupId != null) {
+          weekB = scoresB.find(w => w.week === weekA.week && w.matchupId === weekA.matchupId)
+        }
+        // Fallback: match by reciprocal scores (A's opponent pts = B's pts and vice versa)
+        if (!weekB) {
+          weekB = scoresB.find(w =>
+            w.week === weekA.week &&
+            Math.abs((w.points || 0) - (weekA.opponentPoints || 0)) < 0.01 &&
+            Math.abs((w.opponentPoints || 0) - (weekA.points || 0)) < 0.01
+          )
+        }
         if (!weekB) continue
 
         const ptsA = weekA.points || 0
@@ -524,6 +535,7 @@ const DraftHistoryTab = ({ history }) => {
 const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, onAvatarSaved }) => {
   const [selectedOwner, setSelectedOwner] = useState('')
   const [expandedYear, setExpandedYear] = useState(null)
+  const [expandedDraftYear, setExpandedDraftYear] = useState(null)
   const [h2hSort, setH2hSort] = useState({ key: 'w', dir: 'desc' })
   const [seasonSort, setSeasonSort] = useState({ key: 'year', dir: 'desc' })
   const [uploading, setUploading] = useState(false)
@@ -544,7 +556,9 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
     if (!selectedOwner || !history?.seasons) return null
 
     // a) Matchup lookup: year-week-matchupId → [{ name, points }]
+    // Also build score-based lookup for imports without matchupId (e.g. Yahoo)
     const matchupLookup = {}
+    const scoreLookup = {} // year-week → [{ name, points, opponentPoints }]
     for (const [year, teams] of Object.entries(history.seasons)) {
       for (const t of teams) {
         const name = t.ownerName || t.teamName
@@ -554,8 +568,35 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
             if (!matchupLookup[key]) matchupLookup[key] = []
             matchupLookup[key].push({ name, points: w.points || 0 })
           }
+          // Always build score lookup as fallback
+          const sKey = `${year}-${w.week}`
+          if (!scoreLookup[sKey]) scoreLookup[sKey] = []
+          scoreLookup[sKey].push({ name, points: w.points || 0, opponentPoints: w.opponentPoints || 0 })
         }
       }
+    }
+
+    // Helper: find opponent for a given owner in a given week
+    const findOpponent = (ownerName, year, w) => {
+      // Try matchupId first
+      if (w.matchupId != null) {
+        const key = `${year}-${w.week}-${w.matchupId}`
+        const opponents = matchupLookup[key]
+        const opp = opponents?.find(o => o.name !== ownerName)
+        if (opp) return opp
+      }
+      // Fallback: score-based matching (for Yahoo imports without matchupId)
+      const sKey = `${year}-${w.week}`
+      const weekEntries = scoreLookup[sKey]
+      if (weekEntries) {
+        const opp = weekEntries.find(o =>
+          o.name !== ownerName &&
+          Math.abs((o.points || 0) - (w.opponentPoints || 0)) < 0.01 &&
+          Math.abs((o.opponentPoints || 0) - (w.points || 0)) < 0.01
+        )
+        if (opp) return opp
+      }
+      return null
     }
 
     // Collect this owner's seasons
@@ -626,10 +667,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           lowestWeek = { pts, year: s.year, week: w.week }
         }
 
-        // Find opponent via matchup lookup
-        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
-        const opponents = matchKey ? matchupLookup[matchKey] : null
-        const opp = opponents?.find(o => o.name !== selectedOwner)
+        // Find opponent via matchup lookup (with score-based fallback)
+        const opp = findOpponent(selectedOwner, s.year, w)
         const oppPts = opp ? opp.points : (w.opponentPoints || 0)
         const oppName = opp ? opp.name : null
 
@@ -659,9 +698,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
     const h2hMap = {} // opponentName → { w, l, t, pf, pa }
     for (const s of ownerSeasons) {
       for (const w of (s.weeklyScores || [])) {
-        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
-        const opponents = matchKey ? matchupLookup[matchKey] : null
-        const opp = opponents?.find(o => o.name !== selectedOwner)
+        const opp = findOpponent(selectedOwner, s.year, w)
         if (!opp) continue
 
         if (!h2hMap[opp.name]) h2hMap[opp.name] = { w: 0, l: 0, t: 0, pf: 0, pa: 0 }
@@ -682,9 +719,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       const weekly = (s.weeklyScores || []).filter(w => (w.points || 0) > 0)
       const pfAvg = weekly.length > 0 ? (weekly.reduce((sum, w) => sum + (w.points || 0), 0) / weekly.length) : 0
       const paScores = weekly.map(w => {
-        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
-        const opponents = matchKey ? matchupLookup[matchKey] : null
-        const opp = opponents?.find(o => o.name !== selectedOwner)
+        const opp = findOpponent(selectedOwner, s.year, w)
         return opp ? opp.points : (w.opponentPoints || 0)
       }).filter(p => p > 0)
       const paAvg = paScores.length > 0 ? paScores.reduce((a, b) => a + b, 0) / paScores.length : 0
@@ -693,9 +728,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       let streak = 0, streakType = ''
       for (let i = weekly.length - 1; i >= 0; i--) {
         const w = weekly[i]
-        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
-        const opponents = matchKey ? matchupLookup[matchKey] : null
-        const opp = opponents?.find(o => o.name !== selectedOwner)
+        const opp = findOpponent(selectedOwner, s.year, w)
         const oppPts = opp ? opp.points : (w.opponentPoints || 0)
         const won = (w.points || 0) > oppPts
         const lost = (w.points || 0) < oppPts
@@ -729,9 +762,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       for (const w of (s.weeklyScores || [])) {
         const pts = w.points || 0
         if (pts === 0) continue
-        const matchKey = w.matchupId != null ? `${s.year}-${w.week}-${w.matchupId}` : null
-        const opponents = matchKey ? matchupLookup[matchKey] : null
-        const opp = opponents?.find(o => o.name !== selectedOwner)
+        const opp = findOpponent(selectedOwner, s.year, w)
         const oppPts = opp ? opp.points : (w.opponentPoints || 0)
         const oppName = opp ? opp.name : '?'
         const result = pts > oppPts ? 'W' : pts < oppPts ? 'L' : 'T'
@@ -743,12 +774,42 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       }
     }
 
+    // g) Draft history grouped by year
+    const draftHistory = {}
+    for (const s of ownerSeasons) {
+      const draft = s.draftData
+      if (!draft?.picks?.length) continue
+
+      // Build mapping from drafter ID to owner name
+      const allTeams = history.seasons[String(s.year)] || []
+      const rosterMap = {}
+      // Strategy 1: pick.ownerName is directly available (new imports)
+      // Strategy 2: map rosterId → ownerName by team index (Sleeper)
+      for (let i = 0; i < allTeams.length; i++) {
+        rosterMap[i + 1] = allTeams[i].ownerName || allTeams[i].teamName
+      }
+
+      const myPicks = draft.picks.filter(pick => {
+        // Direct ownerName match (enriched imports)
+        if (pick.ownerName === selectedOwner) return true
+        // rosterId-based matching (Sleeper)
+        if (pick.rosterId != null && rosterMap[pick.rosterId] === selectedOwner) return true
+        return false
+      })
+
+      if (myPicks.length > 0) {
+        myPicks.sort((a, b) => a.round - b.round || a.pick - b.pick)
+        draftHistory[s.year] = myPicks
+      }
+    }
+
     return {
       summary: { totalW, totalL, totalT, winPct, totalPF, totalPA, championships, runnerUps, thirdPlaces, playoffApps, lastPlaces, seasons: ownerSeasons.length },
       highlights,
       h2hRecords,
       seasonTable,
       weeklyLog,
+      draftHistory,
     }
   }, [selectedOwner, history])
 
@@ -765,7 +826,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
         <label className="block text-xs text-text-secondary font-mono mb-1">Select a Manager</label>
         <select
           value={selectedOwner}
-          onChange={e => { setSelectedOwner(e.target.value); setExpandedYear(null) }}
+          onChange={e => { setSelectedOwner(e.target.value); setExpandedYear(null); setExpandedDraftYear(null) }}
           className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
         >
           <option value="">Select...</option>
@@ -1034,6 +1095,69 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           </Card>
 
           {/* Section 5 — Weekly Matchup Log */}
+          {/* Section 6 — Draft History */}
+          {Object.keys(profileData.draftHistory).length > 0 && (
+            <Card>
+              <h3 className="font-display font-bold text-white mb-3">Draft History</h3>
+              <div className="space-y-1">
+                {Object.entries(profileData.draftHistory)
+                  .sort(([a], [b]) => parseInt(b) - parseInt(a))
+                  .map(([year, picks]) => (
+                    <div key={year}>
+                      <button
+                        onClick={() => setExpandedDraftYear(expandedDraftYear === year ? null : year)}
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-dark-tertiary/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-bold text-accent-gold">{year}</span>
+                          <span className="text-xs font-mono text-text-secondary">{picks.length} pick{picks.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <svg
+                          className={`w-4 h-4 text-text-secondary transition-transform ${expandedDraftYear === year ? 'rotate-180' : ''}`}
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {expandedDraftYear === year && (
+                        <div className="ml-2 mb-3 border-l-2 border-dark-tertiary pl-3 space-y-0.5">
+                          {picks.map((pick, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-text-secondary w-14">
+                                  Rd {pick.round}, #{pick.pick}
+                                </span>
+                                <span className="text-white font-display font-semibold">
+                                  {pick.playerName || `Player ${pick.playerId || '?'}`}
+                                </span>
+                                {pick.position && (
+                                  <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
+                                    {pick.position}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {pick.isKeeper && (
+                                  <span className="text-xs font-mono text-accent-gold bg-accent-gold/10 px-1.5 py-0.5 rounded">K</span>
+                                )}
+                                {pick.cost != null && pick.cost > 0 && (
+                                  <span className="text-xs font-mono text-accent-gold">${pick.cost}</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Section 7 — Weekly Matchup Log */}
           {Object.keys(profileData.weeklyLog).length > 0 && (
             <Card>
               <h3 className="font-display font-bold text-white mb-3">Weekly Matchup Log</h3>
@@ -1875,7 +1999,9 @@ const LeagueVault = () => {
     }
 
     // Build matchup lookup: year-week-matchupId → [{ name, points }]
+    // Also build score-based lookup for imports without matchupId
     const matchupLookup = {}
+    const scoreLookup = {}
     for (const [year, teams] of Object.entries(sanitizedSeasons)) {
       for (const t of teams) {
         const name = t.ownerName || t.teamName
@@ -1885,8 +2011,24 @@ const LeagueVault = () => {
             if (!matchupLookup[key]) matchupLookup[key] = []
             matchupLookup[key].push({ name, points: w.points })
           }
+          const sKey = `${year}-${w.week}`
+          if (!scoreLookup[sKey]) scoreLookup[sKey] = []
+          scoreLookup[sKey].push({ name, points: w.points || 0, opponentPoints: w.opponentPoints || 0 })
         }
       }
+    }
+    const findOpp = (ownerName, year, w) => {
+      if (w.matchupId != null) {
+        const key = `${year}-${w.week}-${w.matchupId}`
+        const opp = matchupLookup[key]?.find(o => o.name !== ownerName)
+        if (opp) return opp
+      }
+      const sKey = `${year}-${w.week}`
+      return scoreLookup[sKey]?.find(o =>
+        o.name !== ownerName &&
+        Math.abs((o.points || 0) - (w.opponentPoints || 0)) < 0.01 &&
+        Math.abs((o.opponentPoints || 0) - (w.points || 0)) < 0.01
+      ) || null
     }
 
     for (const [year, teams] of Object.entries(sanitizedSeasons)) {
@@ -1916,10 +2058,8 @@ const LeagueVault = () => {
           if (margin > records.biggestBlowout.value && w.opponentPoints > 0) {
             const winner = w.points > w.opponentPoints ? name : null
             if (winner) {
-              // Find opponent name from matchup lookup
-              const key = w.matchupId != null ? `${year}-${w.week}-${w.matchupId}` : null
-              const opponents = key ? matchupLookup[key] : null
-              const loser = opponents?.find(o => o.name !== name)?.name || '?'
+              // Find opponent name from matchup lookup (with score-based fallback)
+              const loser = findOpp(name, year, w)?.name || '?'
               records.biggestBlowout = { value: margin, winner, loser, year: parseInt(year), week: w.week, score: `${w.points.toFixed(1)}-${w.opponentPoints.toFixed(1)}` }
             }
           }

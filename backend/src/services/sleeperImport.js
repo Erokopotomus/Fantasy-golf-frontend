@@ -255,6 +255,11 @@ async function importSeason(sleeperLeagueId, seasonYear) {
     if (picks.length > 0) {
       storeRawResponse('draft_picks', sleeperLeagueId, parseInt(seasonYear), picks).catch(() => {})
     }
+    // Build rosterId → ownerName map
+    const rosterIdToOwner = {}
+    for (const r of rosterData) {
+      if (r.rosterId != null) rosterIdToOwner[r.rosterId] = r.ownerName
+    }
     draftData = {
       type: drafts[0].type,
       rounds: drafts[0].settings?.rounds,
@@ -269,6 +274,7 @@ async function importSeason(sleeperLeagueId, seasonYear) {
         position: p.metadata?.position,
         amount: p.metadata?.amount ? parseInt(p.metadata.amount) : null,
         isKeeper: p.is_keeper || false,
+        ownerName: rosterIdToOwner[p.roster_id] || null,
         metadata: p.metadata || null,
       })),
     }
