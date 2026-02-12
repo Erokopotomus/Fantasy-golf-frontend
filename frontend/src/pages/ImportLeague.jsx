@@ -588,13 +588,22 @@ const ImportLeague = () => {
                   </div>
 
                   {/* Yahoo per-year ID education note */}
-                  <div className="flex items-start gap-2.5 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3 mb-4">
+                  <div className="flex items-start gap-2.5 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3 mb-3">
                     <svg className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div className="text-xs text-text-secondary">
                       <p className="font-medium text-purple-300 mb-1">Yahoo assigns a new league ID each year</p>
                       <p>When your league renews, Yahoo creates a new numeric ID (e.g. 2019 = #1253891, 2020 = #1090977). We'll auto-discover linked seasons, but if older years are missing, import them separately using that year's ID and merge into the same Clutch league.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3 mb-4">
+                    <svg className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="text-xs text-text-secondary">
+                      <p className="font-medium text-purple-300 mb-1">Yahoo's API can be slow</p>
+                      <p>Yahoo aggressively rate-limits their fantasy API. If you see a rate limit error, that's Yahoo's servers — not us. Wait 30-60 seconds and try again.</p>
                     </div>
                   </div>
 

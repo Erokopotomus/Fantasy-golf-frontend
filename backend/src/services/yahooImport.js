@@ -56,8 +56,8 @@ async function yahooFetch(path, accessToken, onTokenRefresh) {
 
   if (!res.ok) {
     if (res.status === 401) throw new Error('Yahoo authentication expired. Please re-authorize.')
-    if (res.status === 999) throw new Error('Yahoo rate limit exceeded. Please wait a moment.')
-    throw new Error(`Yahoo API error ${res.status}`)
+    if (res.status === 999) throw new Error('Yahoo\'s API is rate limiting requests. This is a Yahoo limitation — please wait 30-60 seconds and try again.')
+    throw new Error(`Yahoo's API returned an error (${res.status}). This is on Yahoo's end — try again in a moment.`)
   }
   return res.json()
 }

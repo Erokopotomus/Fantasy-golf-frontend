@@ -30,10 +30,10 @@ const mutationLimiter = rateLimit({
 // Very strict limiter for import/sync operations
 const heavyLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 5, // 5 operations per 5 minutes
+  max: 10, // 10 operations per 5 minutes
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: { message: 'Import operations are rate limited. Please wait a few minutes.' } },
+  message: { error: { message: 'Too many import requests. Please wait a couple minutes before trying again.' } },
 })
 
 module.exports = {
