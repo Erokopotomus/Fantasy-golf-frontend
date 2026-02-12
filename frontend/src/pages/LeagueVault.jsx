@@ -775,23 +775,27 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
     }
 
     // g) Draft history grouped by year
+    // Build set of all raw names that resolve to selectedOwner (for alias matching)
+    const ownerRawNames = new Set([selectedOwner])
+    for (const s of ownerSeasons) {
+      if (s.rawOwnerName) ownerRawNames.add(s.rawOwnerName)
+    }
+
     const draftHistory = {}
     for (const s of ownerSeasons) {
       const draft = s.draftData
       if (!draft?.picks?.length) continue
 
-      // Build mapping from drafter ID to owner name
+      // Build mapping from drafter ID to owner name (canonical)
       const allTeams = history.seasons[String(s.year)] || []
       const rosterMap = {}
-      // Strategy 1: pick.ownerName is directly available (new imports)
-      // Strategy 2: map rosterId → ownerName by team index (Sleeper)
       for (let i = 0; i < allTeams.length; i++) {
         rosterMap[i + 1] = allTeams[i].ownerName || allTeams[i].teamName
       }
 
       const myPicks = draft.picks.filter(pick => {
-        // Direct ownerName match (enriched imports)
-        if (pick.ownerName === selectedOwner) return true
+        // Direct canonical match or raw alias match
+        if (pick.ownerName && ownerRawNames.has(pick.ownerName)) return true
         // rosterId-based matching (Sleeper)
         if (pick.rosterId != null && rosterMap[pick.rosterId] === selectedOwner) return true
         return false
@@ -1130,8 +1134,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                                 <span className="font-mono text-text-secondary w-14">
                                   Rd {pick.round}, #{pick.pick}
                                 </span>
-                                <span className="text-white font-display font-semibold">
-                                  {pick.playerName || `Player ${pick.playerId || '?'}`}
+                                <span className={`font-display font-semibold ${pick.playerName ? 'text-white' : 'text-text-secondary'}`}>
+                                  {pick.playerName || '(Unknown)'}
                                 </span>
                                 {pick.position && (
                                   <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
@@ -1158,60 +1162,74 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           )}
 
           {/* Section 7 — Weekly Matchup Log */}
-          {Object.keys(profileData.weeklyLog).length > 0 && (
-            <Card>
-              <h3 className="font-display font-bold text-white mb-3">Weekly Matchup Log</h3>
-              <div className="space-y-1">
-                {Object.entries(profileData.weeklyLog)
-                  .sort(([a], [b]) => parseInt(b) - parseInt(a))
-                  .map(([year, weeks]) => (
-                    <div key={year}>
-                      <button
-                        onClick={() => setExpandedYear(expandedYear === year ? null : year)}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-dark-tertiary/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-accent-gold">{year}</span>
-                          <span className="text-xs font-mono text-text-secondary">{weeks.length} weeks</span>
-                        </div>
-                        <svg
-                          className={`w-4 h-4 text-text-secondary transition-transform ${expandedYear === year ? 'rotate-180' : ''}`}
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      {expandedYear === year && (
-                        <div className="ml-2 mb-3 border-l-2 border-dark-tertiary pl-3 space-y-0.5">
-                          {weeks.map(w => (
-                            <div
-                              key={w.week}
-                              className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-text-secondary w-8">W{w.week}</span>
-                                <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${RESULT_BADGE[w.result]}`}>
-                                  {w.result}
-                                </span>
-                                <span className="text-white text-xs font-display">vs {w.opponent}</span>
-                              </div>
-                              <div className="flex items-center gap-3 font-mono text-xs">
-                                <span className="text-white">{w.pf.toFixed(1)}</span>
-                                <span className="text-text-secondary">-</span>
-                                <span className="text-text-secondary">{w.pa.toFixed(1)}</span>
-                                <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                  {w.margin >= 0 ? '+' : ''}{w.margin.toFixed(1)}
-                                </span>
-                              </div>
+          {(() => {
+            const logYears = new Set(Object.keys(profileData.weeklyLog))
+            const allYears = profileData.seasonTable.map(s => String(s.year))
+            const missingYears = allYears.filter(y => !logYears.has(y)).sort()
+            return (
+              <Card>
+                <h3 className="font-display font-bold text-white mb-3">Weekly Matchup Log</h3>
+                {Object.keys(profileData.weeklyLog).length > 0 ? (
+                  <div className="space-y-1">
+                    {Object.entries(profileData.weeklyLog)
+                      .sort(([a], [b]) => parseInt(b) - parseInt(a))
+                      .map(([year, weeks]) => (
+                        <div key={year}>
+                          <button
+                            onClick={() => setExpandedYear(expandedYear === year ? null : year)}
+                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-dark-tertiary/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono font-bold text-accent-gold">{year}</span>
+                              <span className="text-xs font-mono text-text-secondary">{weeks.length} weeks</span>
                             </div>
-                          ))}
+                            <svg
+                              className={`w-4 h-4 text-text-secondary transition-transform ${expandedYear === year ? 'rotate-180' : ''}`}
+                              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          {expandedYear === year && (
+                            <div className="ml-2 mb-3 border-l-2 border-dark-tertiary pl-3 space-y-0.5">
+                              {weeks.map(w => (
+                                <div
+                                  key={w.week}
+                                  className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-text-secondary w-8">W{w.week}</span>
+                                    <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${RESULT_BADGE[w.result]}`}>
+                                      {w.result}
+                                    </span>
+                                    <span className="text-white text-xs font-display">vs {w.opponent}</span>
+                                  </div>
+                                  <div className="flex items-center gap-3 font-mono text-xs">
+                                    <span className="text-white">{w.pf.toFixed(1)}</span>
+                                    <span className="text-text-secondary">-</span>
+                                    <span className="text-text-secondary">{w.pa.toFixed(1)}</span>
+                                    <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {w.margin >= 0 ? '+' : ''}{w.margin.toFixed(1)}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            </Card>
-          )}
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-text-secondary text-sm">No weekly matchup data available.</p>
+                )}
+                {missingYears.length > 0 && (
+                  <p className="text-text-secondary/60 text-xs font-mono mt-3 pt-3 border-t border-dark-tertiary">
+                    Weekly scores not available for {missingYears.join(', ')} (Yahoo). Re-import from Yahoo to fill missing data.
+                  </p>
+                )}
+              </Card>
+            )
+          })()}
         </>
       )}
     </div>

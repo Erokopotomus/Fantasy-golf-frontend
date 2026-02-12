@@ -91,6 +91,49 @@ for (const [year, key] of Object.entries(NFL_GAME_KEYS)) {
   GAME_KEY_TO_YEAR[key] = parseInt(year)
 }
 
+// ─── Yahoo Player Name Resolution (via Sleeper's free API) ──────────────────
+
+let _yahooPlayerNameCache = null
+let _yahooPlayerNameCacheTime = 0
+const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
+
+/**
+ * Fetch Yahoo player ID → name mapping from Sleeper's public API.
+ * Sleeper's player database includes yahoo_id for 6,700+ NFL players.
+ * Cached for 24 hours to avoid repeated fetches during multi-season imports.
+ */
+async function getYahooPlayerNameMap() {
+  if (_yahooPlayerNameCache && Date.now() - _yahooPlayerNameCacheTime < CACHE_TTL) {
+    return _yahooPlayerNameCache
+  }
+  try {
+    const res = await fetch('https://api.sleeper.app/v1/players/nfl')
+    const players = await res.json()
+    const map = {}
+    for (const [, p] of Object.entries(players)) {
+      if (p.yahoo_id && p.full_name) {
+        map[String(p.yahoo_id)] = p.full_name
+      }
+    }
+    _yahooPlayerNameCache = map
+    _yahooPlayerNameCacheTime = Date.now()
+    console.log(`[YahooImport] Built Yahoo player name map: ${Object.keys(map).length} entries`)
+    return map
+  } catch (err) {
+    console.error('[YahooImport] Failed to fetch Sleeper player data:', err.message)
+    return _yahooPlayerNameCache || {}
+  }
+}
+
+/**
+ * Extract the numeric Yahoo player ID from a player key like "406.p.30121" → "30121"
+ */
+function extractYahooPlayerId(playerKey) {
+  if (!playerKey) return null
+  const match = playerKey.match(/\.p\.(\d+)$/)
+  return match ? match[1] : null
+}
+
 /**
  * Parse Yahoo's renew/renewed field into a full league key.
  * Yahoo uses format "gamekey_leagueid" (e.g. "390_643521") — convert to "390.l.643521".
@@ -551,6 +594,20 @@ async function importSeason(leagueKey, year, accessToken) {
       if (pick.teamKey && teamKeyToOwner[pick.teamKey]) {
         pick.ownerName = teamKeyToOwner[pick.teamKey]
       }
+    }
+    // Resolve player names via Sleeper's public API (Yahoo only returns player keys)
+    try {
+      const nameMap = await getYahooPlayerNameMap()
+      for (const pick of parsedDraft.picks) {
+        if (!pick.playerName && pick.playerId) {
+          const yahooId = extractYahooPlayerId(pick.playerId)
+          if (yahooId && nameMap[yahooId]) {
+            pick.playerName = nameMap[yahooId]
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[YahooImport] Player name resolution failed (non-fatal):', err.message)
     }
   }
 
