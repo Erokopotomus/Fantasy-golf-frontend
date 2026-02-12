@@ -455,7 +455,7 @@ async function generateOpinionEventsForSeason(userId, seasonData, rosterId, leag
 
 // ─── Full Import Pipeline ──────────────────────────────────────────────────
 
-async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId) {
+async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId, selectedSeasons) {
   const importRecord = await db.leagueImport.create({
     data: {
       userId,
@@ -525,10 +525,18 @@ async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId) {
     })
     const userDisplayName = (importingUser?.name || '').toLowerCase()
 
+    // Filter seasons if user deselected some
+    let seasonsToImport = discovery.seasons
+    if (selectedSeasons?.length) {
+      seasonsToImport = discovery.seasons.filter(s =>
+        selectedSeasons.includes(parseInt(s.season || s.year))
+      )
+    }
+
     const importedSeasons = []
-    for (let i = 0; i < discovery.seasons.length; i++) {
-      const season = discovery.seasons[i]
-      const progress = 10 + Math.round(((i + 1) / discovery.seasons.length) * 80)
+    for (let i = 0; i < seasonsToImport.length; i++) {
+      const season = seasonsToImport[i]
+      const progress = 10 + Math.round(((i + 1) / seasonsToImport.length) * 80)
 
       try {
         const seasonData = await importSeason(season.sleeperLeagueId, season.season)

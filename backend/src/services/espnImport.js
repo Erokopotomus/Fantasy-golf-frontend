@@ -389,7 +389,7 @@ async function generateOpinionEventsForSeason(userId, seasonData, teamId, league
  * Enhanced with raw data preservation, owner matching, opinion timeline bridge,
  * settings snapshot, and error accumulation.
  */
-async function runFullImport(espnLeagueId, userId, db, cookies = {}, targetLeagueId) {
+async function runFullImport(espnLeagueId, userId, db, cookies = {}, targetLeagueId, selectedSeasons) {
   const importRecord = await db.leagueImport.create({
     data: {
       userId,
@@ -461,11 +461,18 @@ async function runFullImport(espnLeagueId, userId, db, cookies = {}, targetLeagu
     })
     const userDisplayName = (importingUser?.name || '').toLowerCase()
 
-    // Step 3: Import each season
+    // Step 3: Import each season (filter if user deselected some)
+    let seasonsToImport = discovery.seasons
+    if (selectedSeasons?.length) {
+      seasonsToImport = discovery.seasons.filter(s =>
+        selectedSeasons.includes(parseInt(s.season || s.year))
+      )
+    }
+
     const importedSeasons = []
-    for (let i = 0; i < discovery.seasons.length; i++) {
-      const season = discovery.seasons[i]
-      const progress = 10 + Math.round(((i + 1) / discovery.seasons.length) * 80)
+    for (let i = 0; i < seasonsToImport.length; i++) {
+      const season = seasonsToImport[i]
+      const progress = 10 + Math.round(((i + 1) / seasonsToImport.length) * 80)
 
       try {
         const seasonData = await importSeason(espnLeagueId, season.year, cookies)

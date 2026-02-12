@@ -51,11 +51,11 @@ export function useSleeperImport() {
     }
   }
 
-  const startImport = async (leagueId, targetLeagueId) => {
+  const startImport = async (leagueId, targetLeagueId, selectedSeasons) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importSleeperLeague(leagueId, targetLeagueId)
+      const data = await api.importSleeperLeague(leagueId, targetLeagueId, selectedSeasons)
       setResult(data)
       return data
     } catch (err) {
@@ -98,11 +98,11 @@ export function useESPNImport() {
     }
   }
 
-  const startImport = async (leagueId, espn_s2, swid, targetLeagueId) => {
+  const startImport = async (leagueId, espn_s2, swid, targetLeagueId, selectedSeasons) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importESPNLeague(leagueId, espn_s2, swid, targetLeagueId)
+      const data = await api.importESPNLeague(leagueId, espn_s2, swid, targetLeagueId, selectedSeasons)
       setResult(data)
       return data
     } catch (err) {
@@ -178,11 +178,11 @@ export function useYahooImport() {
     }
   }
 
-  const startImport = async (leagueId, accessToken, targetLeagueId) => {
+  const startImport = async (leagueId, accessToken, targetLeagueId, selectedSeasons) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importYahooLeague(leagueId, accessToken, targetLeagueId)
+      const data = await api.importYahooLeague(leagueId, accessToken, targetLeagueId, selectedSeasons)
       setResult(data)
       return data
     } catch (err) {
@@ -272,11 +272,11 @@ export function useMFLImport() {
     }
   }
 
-  const startImport = async (leagueId, apiKey, targetLeagueId) => {
+  const startImport = async (leagueId, apiKey, targetLeagueId, selectedSeasons) => {
     try {
       setImporting(true)
       setError(null)
-      const data = await api.importMFLLeague(leagueId, apiKey, targetLeagueId)
+      const data = await api.importMFLLeague(leagueId, apiKey, targetLeagueId, selectedSeasons)
       setResult(data)
       return data
     } catch (err) {

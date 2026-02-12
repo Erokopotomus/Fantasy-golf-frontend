@@ -33,7 +33,8 @@ router.post('/sleeper/import', authenticate, validateLeagueId, async (req, res) 
   try {
     const leagueId = sanitize(req.body.leagueId)
     const targetLeagueId = req.body.targetLeagueId || undefined
-    const result = await sleeperImport.runFullImport(leagueId, req.user.id, prisma, targetLeagueId)
+    const selectedSeasons = req.body.selectedSeasons || undefined
+    const result = await sleeperImport.runFullImport(leagueId, req.user.id, prisma, targetLeagueId, selectedSeasons)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -65,7 +66,8 @@ router.post('/espn/import', authenticate, validateLeagueId, async (req, res) => 
       swid: req.body.swid || '',
     }
     const targetLeagueId = req.body.targetLeagueId || undefined
-    const result = await espnImport.runFullImport(leagueId, req.user.id, prisma, cookies, targetLeagueId)
+    const selectedSeasons = req.body.selectedSeasons || undefined
+    const result = await espnImport.runFullImport(leagueId, req.user.id, prisma, cookies, targetLeagueId, selectedSeasons)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -120,7 +122,8 @@ router.post('/yahoo/import', authenticate, validateLeagueId, async (req, res) =>
     const accessToken = await resolveYahooToken(req)
     if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo not connected. Please authorize via Settings or provide an access token.' } })
     const targetLeagueId = req.body.targetLeagueId || undefined
-    const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken, targetLeagueId)
+    const selectedSeasons = req.body.selectedSeasons || undefined
+    const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken, targetLeagueId, selectedSeasons)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -188,7 +191,8 @@ router.post('/mfl/import', authenticate, validateLeagueId, async (req, res) => {
     const apiKey = req.body.apiKey
     if (!apiKey) return res.status(400).json({ error: { message: 'MFL API key is required' } })
     const targetLeagueId = req.body.targetLeagueId || undefined
-    const result = await mflImport.runFullImport(leagueId, req.user.id, prisma, apiKey, targetLeagueId)
+    const selectedSeasons = req.body.selectedSeasons || undefined
+    const result = await mflImport.runFullImport(leagueId, req.user.id, prisma, apiKey, targetLeagueId, selectedSeasons)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })

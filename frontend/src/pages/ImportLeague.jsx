@@ -149,6 +149,9 @@ const ImportLeague = () => {
   const [targetLeagueId, setTargetLeagueId] = useState('')
   const [existingLeagues, setExistingLeagues] = useState([])
 
+  // Season selection (checkboxes on Step 2)
+  const [selectedSeasons, setSelectedSeasons] = useState([])
+
   // Get the active hook for the selected platform
   const getHook = () => {
     switch (platform?.id) {
@@ -199,7 +202,11 @@ const ImportLeague = () => {
         data = await mfl.discover(leagueId.trim(), mflApiKey.trim())
         break
     }
-    if (data) setStep(2)
+    if (data) {
+      // Initialize all seasons as selected
+      setSelectedSeasons((data.seasons || []).map(s => parseInt(s.season || s.year)))
+      setStep(2)
+    }
   }
 
   const handleImport = async () => {
@@ -207,16 +214,19 @@ const ImportLeague = () => {
     track(Events.IMPORT_STARTED, { source_platform: platform.id })
 
     const mergeTarget = targetLeagueId || undefined
+    // Only pass selectedSeasons if user deselected something
+    const totalSeasons = activeHook.discovery?.seasons?.length || 0
+    const seasonsArg = selectedSeasons.length < totalSeasons ? selectedSeasons : undefined
     let data = null
     switch (platform?.id) {
       case 'sleeper':
-        data = await sleeper.startImport(leagueId.trim(), mergeTarget)
+        data = await sleeper.startImport(leagueId.trim(), mergeTarget, seasonsArg)
         break
       case 'espn':
-        data = await espn.startImport(leagueId.trim(), espnS2.trim(), espnSwid.trim(), mergeTarget)
+        data = await espn.startImport(leagueId.trim(), espnS2.trim(), espnSwid.trim(), mergeTarget, seasonsArg)
         break
       case 'yahoo':
-        data = await yahoo.startImport(leagueId.trim(), yahooToken.trim() || undefined, mergeTarget)
+        data = await yahoo.startImport(leagueId.trim(), yahooToken.trim() || undefined, mergeTarget, seasonsArg)
         break
       case 'fantrax':
         data = await fantrax.startImport({
@@ -227,7 +237,7 @@ const ImportLeague = () => {
         }, mergeTarget)
         break
       case 'mfl':
-        data = await mfl.startImport(leagueId.trim(), mflApiKey.trim(), mergeTarget)
+        data = await mfl.startImport(leagueId.trim(), mflApiKey.trim(), mergeTarget, seasonsArg)
         break
     }
 
@@ -255,6 +265,7 @@ const ImportLeague = () => {
     setDraftCSV('')
     setMflApiKey('')
     setTargetLeagueId('')
+    setSelectedSeasons([])
   }
 
   const handleFileUpload = (e, setter) => {
@@ -576,6 +587,17 @@ const ImportLeague = () => {
                     />
                   </div>
 
+                  {/* Yahoo per-year ID education note */}
+                  <div className="flex items-start gap-2.5 bg-purple-500/5 border border-purple-500/20 rounded-lg p-3 mb-4">
+                    <svg className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="text-xs text-text-secondary">
+                      <p className="font-medium text-purple-300 mb-1">Yahoo assigns a new league ID each year</p>
+                      <p>When your league renews, Yahoo creates a new numeric ID (e.g. 2019 = #1253891, 2020 = #1090977). We'll auto-discover linked seasons, but if older years are missing, import them separately using that year's ID and merge into the same Clutch league.</p>
+                    </div>
+                  </div>
+
                   {/* Manual token fallback */}
                   {!yahooOAuth.status?.connected && (
                     <div className="border-t border-dark-border pt-3 mt-3">
@@ -762,22 +784,41 @@ const ImportLeague = () => {
                 </p>
 
                 <div className="space-y-2 mb-4">
-                  {activeHook.discovery.seasons?.map((s, idx) => (
-                    <div key={s.leagueKey || s.sleeperLeagueId || s.year || idx} className="flex items-center justify-between py-2 px-3 bg-dark-tertiary/50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono font-bold text-accent-gold">{s.season || s.year}</span>
-                        <span className="text-sm text-white">{s.name}</span>
+                  {activeHook.discovery.seasons?.map((s, idx) => {
+                    const year = parseInt(s.season || s.year)
+                    const isSelected = selectedSeasons.includes(year)
+                    return (
+                      <div
+                        key={s.leagueKey || s.sleeperLeagueId || s.year || idx}
+                        className={`flex items-center justify-between py-2 px-3 bg-dark-tertiary/50 rounded-lg cursor-pointer transition-opacity ${isSelected ? '' : 'opacity-40'}`}
+                        onClick={() => setSelectedSeasons(prev =>
+                          prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}}
+                            className="w-4 h-4 rounded border-dark-border text-accent-gold focus:ring-accent-gold/50 bg-dark-tertiary cursor-pointer"
+                          />
+                          <span className="font-mono font-bold text-accent-gold">{s.season || s.year}</span>
+                          <span className="text-sm text-white">{s.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {platform?.id === 'yahoo' && s.leagueKey && (
+                            <span className="text-xs font-mono text-text-muted">ID: {s.leagueKey.split('.l.')[1] || s.leagueKey}</span>
+                          )}
+                          <span className="text-xs font-mono text-text-secondary">{s.totalRosters || s.teamCount} teams</span>
+                          <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
+                            s.status === 'complete' ? 'bg-green-500/20 text-green-400' : 'bg-accent-gold/20 text-accent-gold'
+                          }`}>
+                            {s.status}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-text-secondary">{s.totalRosters || s.teamCount} teams</span>
-                        <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
-                          s.status === 'complete' ? 'bg-green-500/20 text-green-400' : 'bg-accent-gold/20 text-accent-gold'
-                        }`}>
-                          {s.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
                 <div className="mb-4 p-3 bg-dark-tertiary/50 rounded-lg">
@@ -803,8 +844,13 @@ const ImportLeague = () => {
 
                 <div className="flex gap-3">
                   <Button variant="ghost" onClick={() => { setStep(1); activeHook.reset() }}>Back</Button>
-                  <Button onClick={handleImport}>
-                    Import {activeHook.discovery.totalSeasons} Season{activeHook.discovery.totalSeasons !== 1 ? 's' : ''}
+                  <Button onClick={handleImport} disabled={selectedSeasons.length === 0}>
+                    {selectedSeasons.length === 0
+                      ? 'Select at least 1 season'
+                      : selectedSeasons.length < (activeHook.discovery.totalSeasons || 0)
+                        ? `Import ${selectedSeasons.length} of ${activeHook.discovery.totalSeasons} Seasons`
+                        : `Import ${activeHook.discovery.totalSeasons} Season${activeHook.discovery.totalSeasons !== 1 ? 's' : ''}`
+                    }
                   </Button>
                 </div>
               </Card>

@@ -653,10 +653,10 @@ class ApiService {
     })
   }
 
-  async importSleeperLeague(leagueId, targetLeagueId) {
+  async importSleeperLeague(leagueId, targetLeagueId, selectedSeasons) {
     return this.request('/imports/sleeper/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, targetLeagueId }),
+      body: JSON.stringify({ leagueId, targetLeagueId, selectedSeasons }),
     })
   }
 
@@ -691,10 +691,10 @@ class ApiService {
     })
   }
 
-  async importESPNLeague(leagueId, espn_s2 = '', swid = '', targetLeagueId) {
+  async importESPNLeague(leagueId, espn_s2 = '', swid = '', targetLeagueId, selectedSeasons) {
     return this.request('/imports/espn/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, espn_s2, swid, targetLeagueId }),
+      body: JSON.stringify({ leagueId, espn_s2, swid, targetLeagueId, selectedSeasons }),
     })
   }
 
@@ -721,10 +721,10 @@ class ApiService {
     })
   }
 
-  async importYahooLeague(leagueId, accessToken, targetLeagueId) {
+  async importYahooLeague(leagueId, accessToken, targetLeagueId, selectedSeasons) {
     return this.request('/imports/yahoo/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, accessToken: accessToken || undefined, targetLeagueId }),
+      body: JSON.stringify({ leagueId, accessToken: accessToken || undefined, targetLeagueId, selectedSeasons }),
     })
   }
 
@@ -751,10 +751,10 @@ class ApiService {
     })
   }
 
-  async importMFLLeague(leagueId, apiKey, targetLeagueId) {
+  async importMFLLeague(leagueId, apiKey, targetLeagueId, selectedSeasons) {
     return this.request('/imports/mfl/import', {
       method: 'POST',
-      body: JSON.stringify({ leagueId, apiKey, targetLeagueId }),
+      body: JSON.stringify({ leagueId, apiKey, targetLeagueId, selectedSeasons }),
     })
   }
 
