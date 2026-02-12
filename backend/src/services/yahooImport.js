@@ -85,85 +85,167 @@ async function storeRawResponse(dataType, leagueKey, seasonYear, payload) {
   }
 }
 
+// Reverse lookup: game key → year
+const GAME_KEY_TO_YEAR = {}
+for (const [year, key] of Object.entries(NFL_GAME_KEYS)) {
+  GAME_KEY_TO_YEAR[key] = parseInt(year)
+}
+
+/**
+ * Parse Yahoo's renew/renewed field into a full league key.
+ * Yahoo uses format "gamekey_leagueid" (e.g. "390_643521") — convert to "390.l.643521".
+ */
+function parseRenewalKey(renewal) {
+  if (!renewal) return null
+  // Could be "390_643521" or already "390.l.643521"
+  if (renewal.includes('.l.')) return renewal
+  const parts = renewal.split('_')
+  if (parts.length === 2) return `${parts[0]}.l.${parts[1]}`
+  return null
+}
+
+/**
+ * Extract a season object from a Yahoo league settings API response.
+ */
+function extractSeasonFromResponse(data, leagueKey) {
+  const league = data?.fantasy_content?.league
+  if (!league) return null
+
+  const settings = Array.isArray(league) ? league[1]?.settings : league.settings
+  const meta = Array.isArray(league) ? league[0] : league
+
+  // Determine year from meta.season or from league key's game key
+  const gameKeyFromKey = leagueKey.split('.l.')[0]
+  const year = parseInt(meta.season) || GAME_KEY_TO_YEAR[gameKeyFromKey]
+  if (!year) return null
+
+  const gameKey = gameKeyFromKey
+
+  // Extract full settings — Yahoo nests settings in arrays
+  const fullSettings = {}
+  const settingsArr = Array.isArray(settings) ? settings : [settings]
+  for (const s of settingsArr) {
+    if (s && typeof s === 'object') Object.assign(fullSettings, s)
+  }
+
+  // Extract roster positions from settings
+  let rosterPositions = null
+  if (fullSettings.roster_positions) {
+    const rp = fullSettings.roster_positions
+    rosterPositions = Array.isArray(rp) ? rp : typeof rp === 'object' ? Object.values(rp) : null
+  }
+
+  return {
+    year,
+    gameKey,
+    leagueKey,
+    name: meta.name,
+    teamCount: parseInt(meta.num_teams || 0),
+    status: meta.is_finished === '1' ? 'complete' : 'in_progress',
+    scoringType: meta.scoring_type,
+    draftType: fullSettings.draft_type || 'live',
+    renew: meta.renew || null,
+    renewed: meta.renewed || null,
+    settings: {
+      scoringType: meta.scoring_type,
+      draftType: fullSettings.draft_type,
+      rosterPositions,
+      numTeams: parseInt(meta.num_teams || 0),
+      playoffStartWeek: parseInt(meta.playoff_start_week || 0),
+      usesPlayoffs: fullSettings.uses_playoff === '1' || !!meta.playoff_start_week,
+      usesFAAB: fullSettings.uses_faab === '1',
+      faabBalance: fullSettings.budget ? parseInt(fullSettings.budget) : null,
+      waiverType: fullSettings.waiver_type || null,
+      waiverRule: fullSettings.waiver_rule || null,
+      tradeEndDate: fullSettings.trade_end_date || null,
+      tradeRejectTime: fullSettings.trade_reject_time || null,
+      maxTeams: fullSettings.max_teams || null,
+      seasonYear: year,
+      gameKey,
+      leagueKey,
+    },
+  }
+}
+
 // ─── Discovery ─────────────────────────────────────────────────────────────
 
 /**
  * Discovery scan — find all seasons for a Yahoo league.
- * Yahoo leagues get new game keys each year but the league number stays the same.
- * Now captures full league settings per season.
+ *
+ * IMPORTANT: Yahoo league numeric IDs are NOT unique across years. The same
+ * numeric ID with different game keys can be completely different leagues.
+ * We find the league in ONE year, then follow Yahoo's renew/renewed chain
+ * to discover the actual connected seasons.
  */
 async function discoverLeague(yahooLeagueId, accessToken) {
-  const seasons = []
   const gameKeyEntries = Object.entries(NFL_GAME_KEYS).sort(([a], [b]) => Number(b) - Number(a))
 
+  // Step 1: Find the league — try most recent year first, work backward
+  let anchorSeason = null
   for (const [year, gameKey] of gameKeyEntries) {
     try {
       const leagueKey = `${gameKey}.l.${yahooLeagueId}`
       const data = await yahooFetch(`/league/${leagueKey}/settings`, accessToken)
-
-      // Store raw settings response
       storeRawResponse('league_settings', leagueKey, parseInt(year), data).catch(() => {})
 
-      const league = data?.fantasy_content?.league
-      if (!league) continue
-
-      const settings = Array.isArray(league) ? league[1]?.settings : league.settings
-      const meta = Array.isArray(league) ? league[0] : league
-
-      // Extract full settings — Yahoo nests settings in arrays
-      const fullSettings = {}
-      const settingsArr = Array.isArray(settings) ? settings : [settings]
-      for (const s of settingsArr) {
-        if (s && typeof s === 'object') Object.assign(fullSettings, s)
+      const season = extractSeasonFromResponse(data, leagueKey)
+      if (season) {
+        anchorSeason = season
+        break
       }
-
-      // Extract roster positions from settings
-      let rosterPositions = null
-      if (fullSettings.roster_positions) {
-        const rp = fullSettings.roster_positions
-        rosterPositions = Array.isArray(rp) ? rp : typeof rp === 'object' ? Object.values(rp) : null
-      }
-
-      seasons.push({
-        year: parseInt(year),
-        gameKey,
-        leagueKey,
-        name: meta.name,
-        teamCount: parseInt(meta.num_teams || 0),
-        status: meta.is_finished === '1' ? 'complete' : 'in_progress',
-        scoringType: meta.scoring_type,
-        draftType: fullSettings.draft_type || 'live',
-        // Full settings snapshot for HistoricalSeason.settings
-        settings: {
-          scoringType: meta.scoring_type,
-          draftType: fullSettings.draft_type,
-          rosterPositions,
-          numTeams: parseInt(meta.num_teams || 0),
-          playoffStartWeek: parseInt(meta.playoff_start_week || 0),
-          usesPlayoffs: fullSettings.uses_playoff === '1' || !!meta.playoff_start_week,
-          usesFAAB: fullSettings.uses_faab === '1',
-          faabBalance: fullSettings.budget ? parseInt(fullSettings.budget) : null,
-          waiverType: fullSettings.waiver_type || null,
-          waiverRule: fullSettings.waiver_rule || null,
-          tradeEndDate: fullSettings.trade_end_date || null,
-          tradeRejectTime: fullSettings.trade_reject_time || null,
-          maxTeams: fullSettings.max_teams || null,
-          seasonYear: parseInt(year),
-          gameKey,
-          leagueKey,
-        },
-      })
     } catch {
-      // League didn't exist that year — skip
       continue
     }
   }
 
-  if (seasons.length === 0) {
+  if (!anchorSeason) {
     throw new Error('No Yahoo league data found. Check your league ID and ensure your OAuth token is valid.')
   }
 
-  seasons.sort((a, b) => a.year - b.year)
+  // Step 2: Follow the renew chain BACKWARD to find older seasons
+  const seasonMap = new Map()
+  seasonMap.set(anchorSeason.leagueKey, anchorSeason)
+
+  let current = anchorSeason
+  while (current.renew) {
+    const renewKey = parseRenewalKey(current.renew)
+    if (!renewKey || seasonMap.has(renewKey)) break
+
+    try {
+      const data = await yahooFetch(`/league/${renewKey}/settings`, accessToken)
+      storeRawResponse('league_settings', renewKey, null, data).catch(() => {})
+
+      const season = extractSeasonFromResponse(data, renewKey)
+      if (season) {
+        seasonMap.set(renewKey, season)
+        current = season
+      } else break
+    } catch {
+      break
+    }
+  }
+
+  // Step 3: Follow the renewed chain FORWARD from anchor to find newer seasons
+  current = anchorSeason
+  while (current.renewed) {
+    const renewedKey = parseRenewalKey(current.renewed)
+    if (!renewedKey || seasonMap.has(renewedKey)) break
+
+    try {
+      const data = await yahooFetch(`/league/${renewedKey}/settings`, accessToken)
+      storeRawResponse('league_settings', renewedKey, null, data).catch(() => {})
+
+      const season = extractSeasonFromResponse(data, renewedKey)
+      if (season) {
+        seasonMap.set(renewedKey, season)
+        current = season
+      } else break
+    } catch {
+      break
+    }
+  }
+
+  const seasons = [...seasonMap.values()].sort((a, b) => a.year - b.year)
 
   return {
     name: seasons[seasons.length - 1].name,
