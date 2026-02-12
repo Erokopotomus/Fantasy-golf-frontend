@@ -388,13 +388,35 @@ async function fetchAllMatchups(leagueKey, year, accessToken) {
         const teamArr = Object.values(teams).filter(t => t?.team)
 
         if (teamArr.length >= 2) {
-          const team0 = Array.isArray(teamArr[0].team) ? teamArr[0].team[0] : teamArr[0].team
-          const team1 = Array.isArray(teamArr[1].team) ? teamArr[1].team[0] : teamArr[1].team
+          // Yahoo wraps each team as {"team": [[...meta field objects...], {team_points}, ...]}
+          // Extract team_id and team_points from inside the .team array
+          const extractMatchupTeam = (wrapper) => {
+            const arr = wrapper?.team
+            if (!Array.isArray(arr)) return { teamId: null, points: 0 }
+            // Merge meta fields from arr[0] (array of objects)
+            const meta = {}
+            const fields = Array.isArray(arr[0]) ? arr[0] : [arr[0]]
+            for (const f of fields) {
+              if (f && typeof f === 'object') Object.assign(meta, f)
+            }
+            // Find team_points in remaining elements
+            let points = 0
+            for (let j = 1; j < arr.length; j++) {
+              if (arr[j]?.team_points?.total) {
+                points = parseFloat(arr[j].team_points.total)
+                break
+              }
+            }
+            return { teamId: meta.team_id, points }
+          }
+
+          const t0 = extractMatchupTeam(teamArr[0])
+          const t1 = extractMatchupTeam(teamArr[1])
           weekGames.push({
-            homeTeamId: team0.team_id,
-            homePoints: parseFloat(teamArr[0].team_points?.total || 0),
-            awayTeamId: team1.team_id,
-            awayPoints: parseFloat(teamArr[1].team_points?.total || 0),
+            homeTeamId: t0.teamId,
+            homePoints: t0.points,
+            awayTeamId: t1.teamId,
+            awayPoints: t1.points,
             isPlayoffs: matchup.is_playoffs === '1',
             isConsolation: matchup.is_consolation === '1',
             isTied: matchup.is_tied === '1',
@@ -445,14 +467,32 @@ async function importSeason(leagueKey, year, accessToken) {
   const teamEntries = typeof teams === 'object' ? Object.values(teams) : []
 
   for (const entry of teamEntries) {
-    const team = Array.isArray(entry) ? entry[0] : entry
-    if (!team?.team_key) continue
+    // Yahoo wraps each team as {"team": [[...meta field objects...], {team_points}, {team_standings}]}
+    // We need to unwrap entry.team, then merge the meta field objects from team[0]
+    const teamArr = entry?.team
+    if (!teamArr || !Array.isArray(teamArr)) continue
 
-    const teamMeta = Array.isArray(team) ? team[0] : team
-    const managers = teamMeta?.managers || []
-    const manager = Array.isArray(managers) ? managers[0]?.manager : managers.manager
-    const standings = Array.isArray(entry) ? entry[1]?.team_standings : entry.team_standings
+    // First element is array of metadata field objects — merge into one object
+    const metaFields = Array.isArray(teamArr[0]) ? teamArr[0] : [teamArr[0]]
+    const teamMeta = {}
+    for (const f of metaFields) {
+      if (f && typeof f === 'object') Object.assign(teamMeta, f)
+    }
+
+    if (!teamMeta.team_key) continue
+
+    // Find team_standings in remaining elements (usually teamArr[2])
+    let standings = null
+    for (let j = 1; j < teamArr.length; j++) {
+      if (teamArr[j]?.team_standings) {
+        standings = teamArr[j].team_standings
+        break
+      }
+    }
+
     const outcomes = standings?.outcome_totals
+    const managers = teamMeta.managers || []
+    const manager = Array.isArray(managers) ? managers[0]?.manager : managers.manager
 
     rosterData.push({
       teamId: teamMeta.team_id,
