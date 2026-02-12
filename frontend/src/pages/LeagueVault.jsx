@@ -992,7 +992,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
               {selected.size >= 2 && (
                 <button
                   onClick={handleGroup}
-                  className="px-3 py-1 text-xs font-mono font-bold text-dark-primary bg-accent-gold rounded-lg hover:bg-accent-gold/90 transition-colors"
+                  className="px-3 py-1 text-xs font-mono font-bold text-dark-primary bg-gold rounded-lg hover:bg-gold-bright transition-colors"
                 >
                   Group Selected ({selected.size})
                 </button>
@@ -1006,7 +1006,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
                   <label
                     key={name}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                      selected.has(name) ? 'bg-accent-gold/10 border border-accent-gold/30' : 'bg-dark-tertiary/30 border border-transparent hover:bg-dark-tertiary/50'
+                      selected.has(name) ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary/30 border border-transparent hover:bg-dark-tertiary/50'
                     }`}
                   >
                     <input
@@ -1027,17 +1027,17 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
 
         {/* Sticky action bar when names are selected */}
         {selected.size >= 2 && (
-          <div className="px-5 py-3 border-t border-accent-gold/30 bg-accent-gold/10">
+          <div className="px-5 py-3 border-t border-gold/30 bg-gold/10">
             <button
               onClick={handleGroup}
-              className="w-full py-2.5 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 transition-colors"
+              className="w-full py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright transition-colors"
             >
               Group {selected.size} Selected Names
             </button>
           </div>
         )}
 
-        <div className="p-5 border-t border-dark-tertiary bg-dark-secondary/80 flex items-center justify-between">
+        <div className="p-5 border-t border-dark-tertiary bg-dark-secondary flex items-center justify-between">
           <span className="text-xs text-text-secondary font-mono">
             {Object.keys(groups).length} group{Object.keys(groups).length !== 1 ? 's' : ''}
           </span>
@@ -1051,7 +1051,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-5 py-2.5 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-50 shadow-lg shadow-accent-gold/20"
+              className="px-5 py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright disabled:opacity-50 shadow-lg shadow-gold/30"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
