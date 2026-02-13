@@ -91,6 +91,65 @@ for (const [year, key] of Object.entries(NFL_GAME_KEYS)) {
   GAME_KEY_TO_YEAR[key] = parseInt(year)
 }
 
+// ─── Dynamic Game Key Discovery ──────────────────────────────────────────────
+
+/**
+ * Discover ALL NFL game keys the user has ever played, via Yahoo's user games endpoint.
+ * Returns a merged { year: gameKey } map combining API results + hardcoded fallbacks.
+ * This fixes the pre-2015 gap where hardcoded keys didn't cover older seasons.
+ */
+async function discoverGameKeys(accessToken, onTokenRefresh) {
+  const merged = { ...NFL_GAME_KEYS }
+
+  try {
+    const data = await yahooFetch('/users;use_login=1/games;game_codes=nfl', accessToken, onTokenRefresh)
+
+    const users = data?.fantasy_content?.users
+    if (!users) return merged
+
+    // Yahoo wraps users as { "0": { user: [...] } } or similar
+    const userEntries = typeof users === 'object' ? Object.values(users) : []
+    for (const entry of userEntries) {
+      const userArr = entry?.user
+      if (!Array.isArray(userArr)) continue
+
+      for (const item of userArr) {
+        const games = item?.games
+        if (!games || typeof games !== 'object') continue
+
+        for (const gameEntry of Object.values(games)) {
+          const game = gameEntry?.game
+          if (!game) continue
+
+          // game can be an array of metadata objects or a single object
+          const fields = Array.isArray(game) ? game.flat() : [game]
+          let gameKey = null
+          let season = null
+
+          for (const f of fields) {
+            if (f && typeof f === 'object') {
+              if (f.game_key) gameKey = String(f.game_key)
+              if (f.season) season = parseInt(f.season)
+            }
+          }
+
+          if (gameKey && season && !merged[season]) {
+            merged[season] = gameKey
+            // Also update reverse lookup
+            GAME_KEY_TO_YEAR[gameKey] = season
+          }
+        }
+      }
+    }
+
+    console.log(`[YahooImport] Dynamic game key discovery: ${Object.keys(merged).length} total keys (hardcoded: ${Object.keys(NFL_GAME_KEYS).length})`)
+  } catch (err) {
+    console.error('[YahooImport] Dynamic game key discovery failed (using hardcoded fallback):', err.message)
+  }
+
+  return merged
+}
+
 // ─── Yahoo Player Name Resolution (via Sleeper's free API) ──────────────────
 
 let _yahooPlayerNameCache = null
@@ -221,8 +280,6 @@ function extractSeasonFromResponse(data, leagueKey) {
  * to discover the actual connected seasons.
  */
 async function discoverLeague(yahooLeagueId, accessToken, onTokenRefresh) {
-  const gameKeyEntries = Object.entries(NFL_GAME_KEYS).sort(([a], [b]) => Number(b) - Number(a))
-
   // Track refreshed token so subsequent calls use it
   let currentToken = accessToken
   const wrappedRefresh = onTokenRefresh ? async () => {
@@ -230,6 +287,10 @@ async function discoverLeague(yahooLeagueId, accessToken, onTokenRefresh) {
     currentToken = newToken
     return newToken
   } : undefined
+
+  // Discover all available game keys (dynamic from user's history + hardcoded fallback)
+  const allGameKeys = await discoverGameKeys(currentToken, wrappedRefresh)
+  const gameKeyEntries = Object.entries(allGameKeys).sort(([a], [b]) => Number(b) - Number(a))
 
   // Step 1: Find the league — try most recent year first, work backward
   let anchorSeason = null

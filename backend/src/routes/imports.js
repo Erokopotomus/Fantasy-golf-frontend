@@ -8,6 +8,7 @@ const espnImport = require('../services/espnImport')
 const yahooImport = require('../services/yahooImport')
 const fantraxImport = require('../services/fantraxImport')
 const mflImport = require('../services/mflImport')
+const importHealthService = require('../services/importHealthService')
 
 const prisma = new PrismaClient()
 
@@ -565,6 +566,71 @@ router.delete('/owner-avatar/:leagueId/:ownerName', authenticate, async (req, re
     })
 
     res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── Import Health Check ────────────────────────────────────────────────────
+// GET /api/imports/health/:leagueId
+router.get('/health/:leagueId', authenticate, async (req, res) => {
+  try {
+    // Verify user is a member of the league
+    const member = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId: req.params.leagueId } },
+    })
+    if (!member) {
+      return res.status(403).json({ error: { message: 'Not a member of this league' } })
+    }
+
+    const report = await importHealthService.analyzeLeagueHealth(req.params.leagueId)
+    res.json(report)
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── Edit Historical Season Entry ───────────────────────────────────────────
+// PUT /api/imports/historical-season/:id
+router.put('/historical-season/:id', authenticate, async (req, res) => {
+  try {
+    const entry = await prisma.historicalSeason.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, leagueId: true },
+    })
+    if (!entry) return res.status(404).json({ error: { message: 'Entry not found' } })
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: entry.leagueId }, select: { ownerId: true } })
+    if (!league || league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can edit history entries' } })
+    }
+
+    // Whitelist editable fields
+    const allowed = ['teamName', 'ownerName', 'wins', 'losses', 'ties', 'pointsFor', 'pointsAgainst', 'finalStanding', 'playoffResult']
+    const data = {}
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        if (['wins', 'losses', 'ties', 'finalStanding'].includes(key)) {
+          data[key] = parseInt(req.body[key]) || 0
+        } else if (['pointsFor', 'pointsAgainst'].includes(key)) {
+          data[key] = parseFloat(req.body[key]) || 0
+        } else {
+          data[key] = req.body[key]
+        }
+      }
+    }
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ error: { message: 'No valid fields to update' } })
+    }
+
+    const updated = await prisma.historicalSeason.update({
+      where: { id: req.params.id },
+      data,
+    })
+
+    res.json(updated)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
   }

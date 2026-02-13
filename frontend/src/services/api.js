@@ -690,6 +690,17 @@ class ApiService {
     })
   }
 
+  async getImportHealth(leagueId) {
+    return this.request(`/imports/health/${leagueId}`)
+  }
+
+  async updateHistoricalSeason(id, data) {
+    return this.request(`/imports/historical-season/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
   async getOwnerAliases(leagueId) {
     return this.request(`/imports/owner-aliases/${leagueId}`)
   }

@@ -296,6 +296,28 @@ export function useMFLImport() {
   return { discovery, discovering, importing, result, error, discover, startImport, reset }
 }
 
+export function useImportHealth(leagueId) {
+  const [health, setHealth] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchHealth = useCallback(async () => {
+    if (!leagueId) return
+    try {
+      setLoading(true)
+      const data = await api.getImportHealth(leagueId)
+      setHealth(data)
+    } catch {
+      setHealth(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [leagueId])
+
+  useEffect(() => { fetchHealth() }, [fetchHealth])
+
+  return { health, loading, refetch: fetchHealth }
+}
+
 export function useLeagueHistory(leagueId) {
   const [history, setHistory] = useState(null)
   const [loading, setLoading] = useState(true)

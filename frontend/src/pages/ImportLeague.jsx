@@ -152,6 +152,10 @@ const ImportLeague = () => {
   // Season selection (checkboxes on Step 2)
   const [selectedSeasons, setSelectedSeasons] = useState([])
 
+  // Health check (Step 4)
+  const [health, setHealth] = useState(null)
+  const [healthLoading, setHealthLoading] = useState(false)
+
   // Get the active hook for the selected platform
   const getHook = () => {
     switch (platform?.id) {
@@ -245,6 +249,11 @@ const ImportLeague = () => {
       track(Events.IMPORT_COMPLETED, { source_platform: platform.id, seasons_imported: data.seasonsImported?.length || 0 })
       refetch()
       setStep(4)
+      // Fetch health report in background
+      if (data.leagueId) {
+        setHealthLoading(true)
+        api.getImportHealth(data.leagueId).then(h => setHealth(h)).catch(() => {}).finally(() => setHealthLoading(false))
+      }
     } else {
       track(Events.IMPORT_FAILED, { source_platform: platform.id, error_type: 'import_error' })
       setStep(2)
@@ -266,6 +275,8 @@ const ImportLeague = () => {
     setMflApiKey('')
     setTargetLeagueId('')
     setSelectedSeasons([])
+    setHealth(null)
+    setHealthLoading(false)
   }
 
   const handleFileUpload = (e, setter) => {
@@ -900,30 +911,137 @@ const ImportLeague = () => {
             </Card>
           )}
 
-          {/* Step 4: Complete */}
+          {/* Step 4: Complete + Health Verification */}
           {step === 4 && activeHook.result && (
-            <Card className="text-center py-8">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-display font-bold text-white mb-2">
-                Import Complete!
-              </h2>
-              <p className="text-sm text-text-secondary mb-1">
-                <span className="text-accent-gold font-mono font-bold">{activeHook.result.leagueName}</span>
-              </p>
-              <p className="text-sm text-text-secondary mb-6">
-                {activeHook.result.seasonsImported?.length || 0} season{(activeHook.result.seasonsImported?.length || 0) !== 1 ? 's' : ''} imported successfully
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Button variant="ghost" onClick={handleReset}>Import Another</Button>
-                <Button onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault`)}>
-                  View League Vault
-                </Button>
-              </div>
-            </Card>
+            <div className="space-y-4">
+              <Card className="text-center py-8">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-display font-bold text-white mb-2">
+                  Import Complete!
+                </h2>
+                <p className="text-sm text-text-secondary mb-1">
+                  <span className="text-accent-gold font-mono font-bold">{activeHook.result.leagueName}</span>
+                </p>
+                <p className="text-sm text-text-secondary mb-6">
+                  {activeHook.result.seasonsImported?.length || 0} season{(activeHook.result.seasonsImported?.length || 0) !== 1 ? 's' : ''} imported successfully
+                </p>
+
+                {/* Health Score */}
+                {healthLoading ? (
+                  <div className="flex items-center justify-center gap-2 text-text-secondary text-sm mb-4">
+                    <div className="animate-spin w-4 h-4 border-2 border-accent-gold/30 border-t-accent-gold rounded-full" />
+                    Checking data quality...
+                  </div>
+                ) : health ? (
+                  <div className="mb-4">
+                    {/* Health bar */}
+                    <div className="flex items-center gap-3 max-w-sm mx-auto mb-3">
+                      <span className="text-xs font-mono text-text-secondary whitespace-nowrap">Import Health</span>
+                      <div className="flex-1 h-3 bg-dark-tertiary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            health.overallStatus === 'green' ? 'bg-green-500' :
+                            health.overallStatus === 'yellow' ? 'bg-accent-gold' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${health.overallScore}%` }}
+                        />
+                      </div>
+                      <span className={`text-sm font-mono font-bold ${
+                        health.overallStatus === 'green' ? 'text-green-400' :
+                        health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'
+                      }`}>
+                        {health.overallScore}%
+                      </span>
+                    </div>
+
+                    {health.overallStatus === 'green' ? (
+                      <p className="text-sm text-green-400 flex items-center justify-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        All seasons look healthy
+                      </p>
+                    ) : (
+                      <p className={`text-sm ${health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'}`}>
+                        {health.overallStatus === 'yellow' ? 'Needs Review' : 'Issues Detected'}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
+                <div className="flex gap-3 justify-center">
+                  <Button variant="ghost" onClick={handleReset}>Import Another</Button>
+                  <Button onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault`)}>
+                    View League Vault
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Issue List */}
+              {health && health.issues && health.issues.length > 0 && health.overallStatus !== 'green' && (
+                <Card>
+                  <h3 className="font-display font-bold text-white mb-3 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    {health.issues.filter(i => i.severity !== 'info').length} issue{health.issues.filter(i => i.severity !== 'info').length !== 1 ? 's' : ''} found
+                  </h3>
+
+                  {/* Group missing seasons together */}
+                  {health.missingYears?.length > 0 && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-3">
+                      <p className="text-sm text-white font-medium mb-1">
+                        Missing: {health.missingYears.join(', ')}
+                      </p>
+                      <p className="text-xs text-text-secondary mb-2">
+                        These years were not found in the import. You can add them manually.
+                      </p>
+                      <button
+                        onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault`)}
+                        className="text-xs font-mono text-accent-gold hover:text-accent-gold/80"
+                      >
+                        Add Missing Seasons in Vault &rarr;
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Other issues */}
+                  {health.issues
+                    .filter(i => i.type !== 'MISSING_SEASON' && i.severity !== 'info')
+                    .map((issue, idx) => (
+                      <div key={idx} className={`rounded-lg p-3 mb-2 ${
+                        issue.severity === 'high' ? 'bg-red-500/10 border border-red-500/20' :
+                        issue.severity === 'medium' ? 'bg-accent-gold/10 border border-accent-gold/20' :
+                        'bg-dark-tertiary/50 border border-dark-border'
+                      }`}>
+                        <p className="text-sm text-white">{issue.message}</p>
+                        {issue.repairLabel && (
+                          <button
+                            onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault?editYear=${issue.seasonYear}`)}
+                            className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 mt-1"
+                          >
+                            {issue.repairLabel} &rarr;
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  }
+
+                  {/* Info-only items */}
+                  {health.issues.filter(i => i.severity === 'info').length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-dark-tertiary/50">
+                      {health.issues.filter(i => i.severity === 'info').map((issue, idx) => (
+                        <p key={idx} className="text-xs text-text-secondary py-1">{issue.message}</p>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
+            </div>
           )}
         </div>
       </main>

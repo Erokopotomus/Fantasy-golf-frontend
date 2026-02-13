@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback, useEffect, useRef, Component } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Card from '../components/common/Card'
-import { useLeagueHistory } from '../hooks/useImports'
+import { useLeagueHistory, useImportHealth } from '../hooks/useImports'
+import EditSeasonModal from '../components/vault/EditSeasonModal'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import LeagueChat from '../components/ai/LeagueChat'
@@ -68,7 +69,7 @@ const PLAYOFF_LABELS = {
 }
 
 // ─── Season Timeline Card ─────────────────────────────────────────────────────
-const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, avatarMap = {} }) => {
+const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason, avatarMap = {} }) => {
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState(false)
   const [selected, setSelected] = useState(new Set())
@@ -139,7 +140,18 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, avatarMap = 
         <div className="mt-4 pt-4 border-t border-dark-tertiary">
           {/* Edit mode toggle */}
           {isCommissioner && (
-            <div className="mb-2 flex justify-end">
+            <div className="mb-2 flex justify-end gap-2">
+              {onEditSeason && (
+                <button
+                  onClick={() => onEditSeason(year)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono text-accent-gold hover:bg-accent-gold/10 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit Data
+                </button>
+              )}
               <button
                 onClick={() => { setEditing(e => !e); setSelected(new Set()) }}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors ${editing ? 'bg-rose/15 text-rose' : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'}`}
@@ -147,7 +159,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, avatarMap = 
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                {editing ? 'Cancel' : 'Edit'}
+                {editing ? 'Cancel' : 'Delete'}
               </button>
             </div>
           )}
@@ -1915,10 +1927,15 @@ const LeagueVault = () => {
   const [tab, setTab] = useState('records')
   const [showAddSeason, setShowAddSeason] = useState(false)
   const [showManageOwners, setShowManageOwners] = useState(false)
+  const [editSeasonYear, setEditSeasonYear] = useState(null)
+  const { health, loading: healthLoading, refetch: refetchHealth } = useImportHealth(leagueId)
+  const [healthExpanded, setHealthExpanded] = useState(false)
   const [aliases, setAliases] = useState([])
   const [avatars, setAvatars] = useState([])
   const [league, setLeague] = useState(null)
   const [recordsSort, setRecordsSort] = useState({ key: 'winPct', dir: 'desc' })
+
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Fetch league info (for commissioner check), aliases, and avatars on mount
   useEffect(() => {
@@ -1926,6 +1943,17 @@ const LeagueVault = () => {
     api.getOwnerAliases(leagueId).then(res => setAliases(res.aliases || [])).catch(() => {})
     api.getOwnerAvatars(leagueId).then(res => setAvatars(res.avatars || [])).catch(() => {})
   }, [leagueId])
+
+  // Handle ?editYear=XXXX from post-import verification
+  useEffect(() => {
+    const editYear = searchParams.get('editYear')
+    if (editYear && !loading && sanitizedSeasons) {
+      setEditSeasonYear(parseInt(editYear))
+      setTab('timeline')
+      searchParams.delete('editYear')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, loading, sanitizedSeasons])
 
   const isCommissioner = league?.ownerId === user?.id
 
@@ -2271,6 +2299,127 @@ const LeagueVault = () => {
             </div>
           </div>
 
+          {/* Health Banner */}
+          {!healthLoading && health && health.seasonCount > 0 && (
+            <div className={`mb-4 rounded-xl border p-4 ${
+              health.overallStatus === 'green'
+                ? 'bg-green-500/5 border-green-500/20'
+                : health.overallStatus === 'yellow'
+                  ? 'bg-accent-gold/5 border-accent-gold/20'
+                  : 'bg-red-500/5 border-red-500/20'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {health.overallStatus === 'green' ? (
+                    <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : (
+                    <svg className={`w-5 h-5 flex-shrink-0 ${health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  )}
+                  <div>
+                    <p className={`text-sm font-display font-bold ${
+                      health.overallStatus === 'green' ? 'text-green-400' :
+                      health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'
+                    }`}>
+                      {health.overallStatus === 'green'
+                        ? `${health.seasonCount} seasons — all data looks healthy`
+                        : `${health.issues.filter(i => i.severity !== 'info').length} issue${health.issues.filter(i => i.severity !== 'info').length !== 1 ? 's' : ''} found in your league history`
+                      }
+                    </p>
+                    {health.overallStatus !== 'green' && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-24 h-1.5 bg-dark-tertiary rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              health.overallStatus === 'yellow' ? 'bg-accent-gold' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${health.overallScore}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-mono text-text-secondary">{health.overallScore}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {health.overallStatus !== 'green' && (
+                  <button
+                    onClick={() => setHealthExpanded(e => !e)}
+                    className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 whitespace-nowrap"
+                  >
+                    {healthExpanded ? 'Hide' : 'Review & Fix'}
+                  </button>
+                )}
+              </div>
+
+              {/* Expanded issue list */}
+              {healthExpanded && health.overallStatus !== 'green' && (
+                <div className="mt-4 pt-3 border-t border-dark-tertiary/50 space-y-2">
+                  {health.missingYears?.length > 0 && (
+                    <div className="bg-red-500/10 rounded-lg p-3">
+                      <p className="text-sm text-white font-medium mb-1">Missing: {health.missingYears.join(', ')}</p>
+                      <p className="text-xs text-text-secondary">
+                        Add these years manually or re-import with a different league ID.
+                      </p>
+                    </div>
+                  )}
+                  {health.issues
+                    .filter(i => i.type !== 'MISSING_SEASON' && i.severity !== 'info')
+                    .map((issue, idx) => (
+                      <div key={idx} className={`rounded-lg p-3 ${
+                        issue.severity === 'high' ? 'bg-red-500/10' :
+                        issue.severity === 'medium' ? 'bg-accent-gold/10' :
+                        'bg-dark-tertiary/30'
+                      }`}>
+                        <p className="text-sm text-white">{issue.message}</p>
+                        {issue.repairAction === 'EDIT_SEASON' && issue.seasonYear && (
+                          <button
+                            onClick={() => setEditSeasonYear(issue.seasonYear)}
+                            className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 mt-1"
+                          >
+                            {issue.repairLabel} &rarr;
+                          </button>
+                        )}
+                        {issue.repairAction === 'ADD_SEASON' && (
+                          <button
+                            onClick={() => setShowAddSeason(true)}
+                            className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 mt-1"
+                          >
+                            {issue.repairLabel} &rarr;
+                          </button>
+                        )}
+                        {issue.repairAction === 'DELETE_SEASON' && issue.seasonYear && (
+                          <button
+                            onClick={async () => {
+                              const ids = (sanitizedSeasons?.[issue.seasonYear] || []).map(t => t.id).filter(Boolean)
+                              if (ids.length > 0 && confirm(`Remove all ${issue.seasonYear} data?`)) {
+                                await handleDeleteEntries(ids)
+                                refetchHealth()
+                              }
+                            }}
+                            className="text-xs font-mono text-red-400 hover:text-red-300 mt-1"
+                          >
+                            {issue.repairLabel} &rarr;
+                          </button>
+                        )}
+                        {issue.repairAction === 'MANAGE_OWNERS' && (
+                          <button
+                            onClick={() => setShowManageOwners(true)}
+                            className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 mt-1"
+                          >
+                            {issue.repairLabel} &rarr;
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Tabs */}
           <div className="flex gap-1 mb-6 bg-dark-secondary/50 rounded-lg p-1">
             {TABS.map(t => (
@@ -2298,7 +2447,7 @@ const LeagueVault = () => {
                 </Card>
               ) : (
                 years.map(year => (
-                  <SeasonCard key={year} year={year} teams={sanitizedSeasons[year] || []} isCommissioner={isCommissioner} onDeleteEntries={handleDeleteEntries} avatarMap={avatarMap} />
+                  <SeasonCard key={year} year={year} teams={sanitizedSeasons[year] || []} isCommissioner={isCommissioner} onDeleteEntries={handleDeleteEntries} onEditSeason={isCommissioner ? (y) => setEditSeasonYear(y) : undefined} avatarMap={avatarMap} />
                 ))
               )}
             </div>
@@ -2458,7 +2607,16 @@ const LeagueVault = () => {
         <AddSeasonModal
           leagueId={leagueId}
           onClose={() => setShowAddSeason(false)}
-          onAdded={() => refetch()}
+          onAdded={() => { refetch(); refetchHealth() }}
+        />
+      )}
+
+      {editSeasonYear && sanitizedSeasons?.[editSeasonYear] && (
+        <EditSeasonModal
+          seasonYear={editSeasonYear}
+          existingTeams={sanitizedSeasons[editSeasonYear]}
+          onClose={() => setEditSeasonYear(null)}
+          onSaved={() => { refetch(); refetchHealth() }}
         />
       )}
 
