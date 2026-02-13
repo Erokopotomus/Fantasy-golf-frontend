@@ -344,6 +344,38 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('earlyField', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // ─── Tier 1 Public Data Sources (Phase 4E) ────────────────────────────────
+
+    // Tuesday 5:00 AM ET — ESPN Calendar sync (match events + backfill results)
+    const espnCalendarSync = require('./services/espnCalendarSync')
+    cron.schedule('0 5 * * 2', async () => {
+      cronLog('espnCalendar', 'Starting ESPN calendar sync')
+      try {
+        const result = await espnCalendarSync.syncCalendar(cronPrisma)
+        cronLog('espnCalendar', `Done: ${result.matched} matched, ${result.backfilled || 0} backfilled`)
+      } catch (e) { cronLog('espnCalendar', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Monday 4:00 AM ET — OWGR rankings sync (top 500, after course history at 3:30)
+    const owgrSync = require('./services/owgrSync')
+    cron.schedule('0 4 * * 1', async () => {
+      cronLog('owgr', 'Starting OWGR rankings sync')
+      try {
+        const result = await owgrSync.syncOwgrRankings(cronPrisma)
+        cronLog('owgr', `Done: ${result.fetched} fetched, ${result.matched} matched, ${result.updated} updated`)
+      } catch (e) { cronLog('owgr', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Tuesday 3:30 AM ET — PGA Tour traditional stats
+    const pgaTourSync = require('./services/pgaTourSync')
+    cron.schedule('30 3 * * 2', async () => {
+      cronLog('pgaTourStats', 'Starting PGA Tour stats sync')
+      try {
+        const result = await pgaTourSync.syncPgaTourStats(cronPrisma)
+        cronLog('pgaTourStats', `Done: ${result.statsFetched} stats, ${result.playersUpdated} players updated`)
+      } catch (e) { cronLog('pgaTourStats', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Wed + Thu 6:00 AM ET — Pre-tournament predictions
     cron.schedule('0 6 * * 3,4', async () => {
       const t = await getActiveTournamentDgId()

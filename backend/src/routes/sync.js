@@ -173,6 +173,26 @@ router.post('/weather', async (req, res) => {
   await runSync('weather', () => syncTournamentWeather(prisma), res)
 })
 
+// ─── Tier 1 Public Data Source Endpoints (Phase 4E) ─────────────────────────
+
+// POST /api/sync/espn-calendar — Match ESPN events to tournaments + backfill results
+const espnCalendarSync = require('../services/espnCalendarSync')
+router.post('/espn-calendar', async (req, res) => {
+  await runSync('espn-calendar', () => espnCalendarSync.syncCalendar(prisma), res)
+})
+
+// POST /api/sync/owgr — Sync OWGR rankings (top 500)
+const owgrSync = require('../services/owgrSync')
+router.post('/owgr', async (req, res) => {
+  await runSync('owgr', () => owgrSync.syncOwgrRankings(prisma), res)
+})
+
+// POST /api/sync/pga-tour-stats — Sync traditional stats from pgatour.com
+const pgaTourSync = require('../services/pgaTourSync')
+router.post('/pga-tour-stats', async (req, res) => {
+  await runSync('pga-tour-stats', () => pgaTourSync.syncPgaTourStats(prisma), res)
+})
+
 // GET /api/sync/status
 router.get('/status', async (req, res) => {
   // Find active tournament

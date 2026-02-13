@@ -73,6 +73,51 @@ async function getPlayerBio(espnId) {
 }
 
 /**
+ * Get all events for a given season year.
+ * @param {number} year - Season year (e.g., 2025)
+ * @returns {Array} Array of event objects with id, label, startDate, endDate
+ */
+async function getSeasonEvents(year) {
+  try {
+    const data = await fetchJSON(`${BASE_URL}?dates=${year}`)
+    const events = data?.events || []
+    return events.map((evt) => ({
+      id: evt.id,
+      name: evt.name || evt.shortName,
+      shortName: evt.shortName,
+      date: evt.date,
+      endDate: evt.endDate,
+      status: evt.status?.type?.name, // e.g., STATUS_FINAL, STATUS_SCHEDULED
+      statusDetail: evt.status?.type?.detail,
+      competitions: evt.competitions,
+    }))
+  } catch (e) {
+    console.warn(`[ESPN Client] getSeasonEvents(${year}) failed: ${e.message}`)
+    return []
+  }
+}
+
+/**
+ * Get detailed results for a specific ESPN event (positions, scores, rounds).
+ * @param {string} eventId - ESPN event ID
+ * @returns {{ competitors, status, eventName, purse }}
+ */
+async function getEventResults(eventId) {
+  const data = await fetchJSON(`${BASE_URL}/${eventId}`)
+  const competition = data?.competitions?.[0]
+  if (!competition) return { competitors: [], status: null, eventName: data?.name }
+
+  return {
+    competitors: competition.competitors || [],
+    status: competition.status,
+    eventName: data?.name,
+    purse: competition.purse?.amount || data?.purse?.amount || null,
+    venue: competition.venue || data?.venue || null,
+    raw: data,
+  }
+}
+
+/**
  * Find the ESPN event ID for a tournament by matching name and dates.
  * @param {string} tournamentName - Our tournament name (e.g., "WM Phoenix Open")
  * @param {Date} startDate - Tournament start date
@@ -123,4 +168,6 @@ module.exports = {
   getLeaderboard,
   getPlayerBio,
   findEventId,
+  getSeasonEvents,
+  getEventResults,
 }
