@@ -2025,6 +2025,7 @@ const LeagueVault = () => {
       championships: {},
       totalWins: {},
       totalLosses: {},
+      totalTies: {},
       totalPF: {},
       totalPA: {},
       highestPF: { value: 0 },
@@ -2073,12 +2074,14 @@ const LeagueVault = () => {
         if (!records.championships[name]) records.championships[name] = 0
         if (!records.totalWins[name]) records.totalWins[name] = 0
         if (!records.totalLosses[name]) records.totalLosses[name] = 0
+        if (!records.totalTies[name]) records.totalTies[name] = 0
         if (!records.totalPF[name]) records.totalPF[name] = 0
         if (!records.totalPA[name]) records.totalPA[name] = 0
 
         if (t.playoffResult === 'champion') records.championships[name]++
         records.totalWins[name] += t.wins || 0
         records.totalLosses[name] += t.losses || 0
+        records.totalTies[name] += t.ties || 0
         records.totalPF[name] += t.pointsFor || 0
         records.totalPA[name] += t.pointsAgainst || 0
 
@@ -2129,10 +2132,11 @@ const LeagueVault = () => {
       name,
       wins: records.totalWins[name] || 0,
       losses: records.totalLosses[name] || 0,
+      ties: records.totalTies[name] || 0,
       championships: records.championships[name] || 0,
       totalPF: records.totalPF[name] || 0,
       totalPA: records.totalPA[name] || 0,
-      winPct: records.totalWins[name] / Math.max(1, records.totalWins[name] + records.totalLosses[name]),
+      winPct: records.totalWins[name] / Math.max(1, records.totalWins[name] + records.totalLosses[name] + (records.totalTies[name] || 0)),
     })).sort((a, b) => b.winPct - a.winPct)
 
     return records
@@ -2376,6 +2380,7 @@ const LeagueVault = () => {
                           { key: 'name', label: 'Manager', align: 'text-left' },
                           { key: 'wins', label: 'W', align: 'text-center' },
                           { key: 'losses', label: 'L', align: 'text-center' },
+                          { key: 'ties', label: 'T', align: 'text-center' },
                           { key: 'winPct', label: 'Win%', align: 'text-center' },
                           { key: 'totalPF', label: 'Total PF', align: 'text-right' },
                           { key: 'totalPA', label: 'Total PA', align: 'text-right' },
@@ -2422,6 +2427,7 @@ const LeagueVault = () => {
                             </td>
                             <td className="py-2 text-center font-mono text-green-400">{owner.wins}</td>
                             <td className="py-2 text-center font-mono text-red-400">{owner.losses}</td>
+                            <td className="py-2 text-center font-mono text-text-muted">{owner.ties || 0}</td>
                             <td className="py-2 text-center font-mono text-white">{(owner.winPct * 100).toFixed(1)}%</td>
                             <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPF.toFixed(1)}</td>
                             <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPA.toFixed(1)}</td>
