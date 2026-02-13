@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef, Component } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, Component } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory } from '../hooks/useImports'
@@ -1601,54 +1601,6 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
 }
 
 // ─── Manage Owners Modal ─────────────────────────────────────────────────────
-// Uncontrolled input with ref — bypasses React rendering to prevent focus loss
-const GroupRow = React.memo(({ canonical, names, onUpdateCanonical, onDissolve, onRemove }) => {
-  const inputRef = useRef(null)
-
-  // Sync input value when canonical changes from outside (e.g., after blur commit)
-  useEffect(() => {
-    if (inputRef.current && inputRef.current.value !== canonical) {
-      inputRef.current.value = canonical
-    }
-  }, [canonical])
-
-  const commitName = () => {
-    const val = inputRef.current?.value?.trim()
-    if (val && val !== canonical) {
-      onUpdateCanonical(canonical, val)
-    }
-  }
-
-  return (
-    <div className="bg-dark-tertiary/40 rounded-lg p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-mono text-text-secondary">Display as:</span>
-        <input
-          ref={inputRef}
-          type="text"
-          defaultValue={canonical}
-          onBlur={commitName}
-          onKeyDown={e => e.key === 'Enter' && commitName()}
-          className="flex-1 px-2 py-1 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm font-display font-semibold focus:outline-none focus:border-accent-gold"
-        />
-        <button
-          onClick={() => onDissolve(canonical)}
-          className="text-xs text-text-secondary hover:text-red-400 transition-colors"
-        >
-          Ungroup All
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {names.map(name => (
-          <span key={name} className="inline-flex items-center gap-1 bg-dark-secondary px-2 py-0.5 rounded text-xs font-mono text-white">
-            {name}
-            <button onClick={() => onRemove(canonical, name)} className="text-text-secondary hover:text-red-400">&times;</button>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-})
 
 const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, onSaved }) => {
   // Reconstruct groups from existing aliases: { canonicalName → [ownerName, ...] }
@@ -1669,6 +1621,10 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
   const [selected, setSelected] = useState(new Set())
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  // Click-to-edit: which group canonical is being renamed (null = none)
+  const [editingCanonical, setEditingCanonical] = useState(null)
+  const [editValue, setEditValue] = useState('')
+  const editInputRef = useRef(null)
   // Track inactive owners (canonical names that are marked inactive)
   const [inactiveOwners, setInactiveOwners] = useState(() => {
     const s = new Set()
@@ -1677,6 +1633,14 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
     }
     return s
   })
+
+  // Auto-focus the edit input when editing begins
+  useEffect(() => {
+    if (editingCanonical && editInputRef.current) {
+      editInputRef.current.focus()
+      editInputRef.current.select()
+    }
+  }, [editingCanonical])
 
   // Names that are already in a group
   const groupedNames = useMemo(() => {
@@ -1725,16 +1689,14 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
     setSelected(new Set())
   }
 
-  const handleUngroup = useCallback((canonical, nameToRemove) => {
+  const handleUngroup = (canonical, nameToRemove) => {
     setGroups(prev => {
       const next = { ...prev }
       const remaining = next[canonical].filter(n => n !== nameToRemove)
       if (remaining.length < 2) {
-        // If only 1 left, dissolve the group
         delete next[canonical]
       } else {
         next[canonical] = remaining
-        // If we removed the canonical, pick new one
         if (nameToRemove === canonical) {
           const newCanonical = remaining[0]
           next[newCanonical] = remaining
@@ -1743,26 +1705,41 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
       }
       return next
     })
-  }, [])
+    // If we were editing this group, cancel edit
+    if (editingCanonical === canonical) setEditingCanonical(null)
+  }
 
-  const handleDissolveGroup = useCallback((canonical) => {
+  const handleDissolveGroup = (canonical) => {
     setGroups(prev => {
       const next = { ...prev }
       delete next[canonical]
       return next
     })
-  }, [])
+    if (editingCanonical === canonical) setEditingCanonical(null)
+  }
 
-  const updateCanonical = useCallback((oldCanonical, newCanonical) => {
-    if (!newCanonical.trim() || newCanonical === oldCanonical) return
-    setGroups(prev => {
-      const next = { ...prev }
-      const names = next[oldCanonical]
-      delete next[oldCanonical]
-      next[newCanonical.trim()] = names
-      return next
-    })
-  }, [])
+  const startEditing = (canonical) => {
+    setEditingCanonical(canonical)
+    setEditValue(canonical)
+  }
+
+  const commitEdit = () => {
+    const val = editValue.trim()
+    if (val && val !== editingCanonical) {
+      setGroups(prev => {
+        const next = { ...prev }
+        const names = next[editingCanonical]
+        delete next[editingCanonical]
+        next[val] = names
+        return next
+      })
+    }
+    setEditingCanonical(null)
+  }
+
+  const cancelEdit = () => {
+    setEditingCanonical(null)
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -1815,14 +1792,47 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
               <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Grouped</h3>
               <div className="space-y-2">
                 {Object.entries(groups).map(([canonical, names]) => (
-                  <GroupRow
-                    key={canonical}
-                    canonical={canonical}
-                    names={names}
-                    onUpdateCanonical={updateCanonical}
-                    onDissolve={handleDissolveGroup}
-                    onRemove={handleUngroup}
-                  />
+                  <div key={canonical} className="bg-dark-tertiary/40 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-mono text-text-secondary">Display as:</span>
+                      {editingCanonical === canonical ? (
+                        <input
+                          ref={editInputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={e => setEditValue(e.target.value)}
+                          onBlur={commitEdit}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') commitEdit()
+                            if (e.key === 'Escape') cancelEdit()
+                          }}
+                          className="flex-1 px-2 py-1 bg-dark-tertiary border border-accent-gold rounded text-white text-sm font-display font-semibold focus:outline-none"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => startEditing(canonical)}
+                          className="flex-1 text-left px-2 py-1 text-white text-sm font-display font-semibold hover:bg-dark-tertiary/60 rounded transition-colors"
+                          title="Click to rename"
+                        >
+                          {canonical} <span className="text-text-secondary text-xs ml-1">✎</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDissolveGroup(canonical)}
+                        className="text-xs text-text-secondary hover:text-red-400 transition-colors"
+                      >
+                        Ungroup All
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {names.map(name => (
+                        <span key={name} className="inline-flex items-center gap-1 bg-dark-secondary px-2 py-0.5 rounded text-xs font-mono text-white">
+                          {name}
+                          <button onClick={() => handleUngroup(canonical, name)} className="text-text-secondary hover:text-red-400">&times;</button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
