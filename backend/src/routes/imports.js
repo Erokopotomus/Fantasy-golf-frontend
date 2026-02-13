@@ -253,9 +253,29 @@ router.get('/', authenticate, async (req, res) => {
 // GET /api/imports/history/:leagueId
 router.get('/history/:leagueId', authenticate, async (req, res) => {
   try {
+    // Exclude heavy JSONB fields (transactions, rosterData) to keep payload manageable
     const seasons = await prisma.historicalSeason.findMany({
       where: { leagueId: req.params.leagueId },
       orderBy: { seasonYear: 'desc' },
+      select: {
+        id: true,
+        leagueId: true,
+        importId: true,
+        seasonYear: true,
+        teamName: true,
+        ownerName: true,
+        ownerUserId: true,
+        finalStanding: true,
+        wins: true,
+        losses: true,
+        ties: true,
+        pointsFor: true,
+        pointsAgainst: true,
+        playoffResult: true,
+        draftData: true,
+        weeklyScores: true,
+        awards: true,
+      },
     })
 
     // Group by season year

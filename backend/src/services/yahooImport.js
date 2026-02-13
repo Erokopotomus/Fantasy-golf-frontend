@@ -549,7 +549,7 @@ async function importSeason(leagueKey, year, accessToken, onTokenRefresh) {
       teamId: teamMeta.team_id,
       teamKey: teamMeta.team_key,
       teamName: teamMeta.name,
-      ownerName: manager?.nickname || manager?.guid || `Team ${teamMeta.team_id}`,
+      ownerName: (manager?.nickname && manager.nickname !== '--hidden--') ? manager.nickname : (teamMeta.name || manager?.guid || `Team ${teamMeta.team_id}`),
       ownerId: manager?.guid,
       wins: parseInt(outcomes?.wins || 0),
       losses: parseInt(outcomes?.losses || 0),
