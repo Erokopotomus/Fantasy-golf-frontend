@@ -220,15 +220,23 @@ function extractSeasonFromResponse(data, leagueKey) {
  * We find the league in ONE year, then follow Yahoo's renew/renewed chain
  * to discover the actual connected seasons.
  */
-async function discoverLeague(yahooLeagueId, accessToken) {
+async function discoverLeague(yahooLeagueId, accessToken, onTokenRefresh) {
   const gameKeyEntries = Object.entries(NFL_GAME_KEYS).sort(([a], [b]) => Number(b) - Number(a))
+
+  // Track refreshed token so subsequent calls use it
+  let currentToken = accessToken
+  const wrappedRefresh = onTokenRefresh ? async () => {
+    const newToken = await onTokenRefresh()
+    currentToken = newToken
+    return newToken
+  } : undefined
 
   // Step 1: Find the league — try most recent year first, work backward
   let anchorSeason = null
   for (const [year, gameKey] of gameKeyEntries) {
     try {
       const leagueKey = `${gameKey}.l.${yahooLeagueId}`
-      const data = await yahooFetch(`/league/${leagueKey}/settings`, accessToken)
+      const data = await yahooFetch(`/league/${leagueKey}/settings`, currentToken, wrappedRefresh)
       storeRawResponse('league_settings', leagueKey, parseInt(year), data).catch(() => {})
 
       const season = extractSeasonFromResponse(data, leagueKey)
@@ -255,7 +263,7 @@ async function discoverLeague(yahooLeagueId, accessToken) {
     if (!renewKey || seasonMap.has(renewKey)) break
 
     try {
-      const data = await yahooFetch(`/league/${renewKey}/settings`, accessToken)
+      const data = await yahooFetch(`/league/${renewKey}/settings`, currentToken, wrappedRefresh)
       storeRawResponse('league_settings', renewKey, null, data).catch(() => {})
 
       const season = extractSeasonFromResponse(data, renewKey)
@@ -275,7 +283,7 @@ async function discoverLeague(yahooLeagueId, accessToken) {
     if (!renewedKey || seasonMap.has(renewedKey)) break
 
     try {
-      const data = await yahooFetch(`/league/${renewedKey}/settings`, accessToken)
+      const data = await yahooFetch(`/league/${renewedKey}/settings`, currentToken, wrappedRefresh)
       storeRawResponse('league_settings', renewedKey, null, data).catch(() => {})
 
       const season = extractSeasonFromResponse(data, renewedKey)
@@ -304,9 +312,9 @@ async function discoverLeague(yahooLeagueId, accessToken) {
  * Fetch all transactions for a league season from Yahoo.
  * Captures: trades, add/drops, waivers, FAAB bids, commish moves.
  */
-async function fetchTransactions(leagueKey, year, accessToken) {
+async function fetchTransactions(leagueKey, year, accessToken, onTokenRefresh) {
   try {
-    const data = await yahooFetch(`/league/${leagueKey}/transactions`, accessToken)
+    const data = await yahooFetch(`/league/${leagueKey}/transactions`, accessToken, onTokenRefresh)
     storeRawResponse('transactions', leagueKey, year, data).catch(() => {})
 
     const league = data?.fantasy_content?.league
@@ -407,12 +415,12 @@ async function fetchTransactions(leagueKey, year, accessToken) {
  * Fetch all matchups for a Yahoo season (weeks 1-18).
  * Enhanced: captures playoff flags, matchup IDs, consolation, tied status.
  */
-async function fetchAllMatchups(leagueKey, year, accessToken) {
+async function fetchAllMatchups(leagueKey, year, accessToken, onTokenRefresh) {
   const allMatchups = {}
 
   for (let week = 1; week <= 18; week++) {
     try {
-      const data = await yahooFetch(`/league/${leagueKey}/scoreboard;week=${week}`, accessToken)
+      const data = await yahooFetch(`/league/${leagueKey}/scoreboard;week=${week}`, accessToken, onTokenRefresh)
 
       // Store raw scoreboard for first and last week (bookends)
       if (week === 1) {
@@ -487,13 +495,13 @@ async function fetchAllMatchups(leagueKey, year, accessToken) {
  * Import a single Yahoo season — fetches standings, matchups, draft, and transactions.
  * All raw API responses are stored in RawProviderData before normalization.
  */
-async function importSeason(leagueKey, year, accessToken) {
+async function importSeason(leagueKey, year, accessToken, onTokenRefresh) {
   // Fetch all data in parallel
   const [standingsData, matchupsData, draftData, transactionsData] = await Promise.all([
-    yahooFetch(`/league/${leagueKey}/standings`, accessToken).catch(() => null),
-    fetchAllMatchups(leagueKey, year, accessToken),
-    yahooFetch(`/league/${leagueKey}/draftresults`, accessToken).catch(() => null),
-    fetchTransactions(leagueKey, year, accessToken),
+    yahooFetch(`/league/${leagueKey}/standings`, accessToken, onTokenRefresh).catch(() => null),
+    fetchAllMatchups(leagueKey, year, accessToken, onTokenRefresh),
+    yahooFetch(`/league/${leagueKey}/draftresults`, accessToken, onTokenRefresh).catch(() => null),
+    fetchTransactions(leagueKey, year, accessToken, onTokenRefresh),
   ])
 
   // Store raw responses (standings + draft — transactions + matchups stored in their fetch functions)
@@ -750,7 +758,7 @@ async function generateOpinionEventsForSeason(userId, seasonData, teamKey, leagu
  * Full import pipeline — discovers seasons, imports data, stores in HistoricalSeason.
  * Now includes raw data preservation, transactions, and opinion timeline bridge.
  */
-async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagueId, selectedSeasons) {
+async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagueId, selectedSeasons, onTokenRefresh) {
   const importRecord = await db.leagueImport.create({
     data: {
       userId,
@@ -761,7 +769,15 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
   })
 
   try {
-    const discovery = await discoverLeague(yahooLeagueId, accessToken)
+    // Track refreshed token so subsequent calls use it
+    let currentToken = accessToken
+    const wrappedImportRefresh = onTokenRefresh ? async () => {
+      const newToken = await onTokenRefresh()
+      currentToken = newToken
+      return newToken
+    } : undefined
+
+    const discovery = await discoverLeague(yahooLeagueId, currentToken, wrappedImportRefresh)
 
     await db.leagueImport.update({
       where: { id: importRecord.id },
@@ -835,7 +851,7 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
       const progress = 10 + Math.round(((i + 1) / seasonsToImport.length) * 80)
 
       try {
-        const seasonData = await importSeason(season.leagueKey, season.year, accessToken)
+        const seasonData = await importSeason(season.leagueKey, season.year, currentToken, wrappedImportRefresh)
 
         // Try to identify which team belongs to the importing user
         let matchedTeamKey = null

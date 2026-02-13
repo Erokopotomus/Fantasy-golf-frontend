@@ -95,11 +95,23 @@ async function resolveYahooToken(req) {
       const { refreshYahooToken } = require('./yahooAuth')
       return await refreshYahooToken(req.user.id)
     } catch {
-      return stored.accessToken // Try with existing token anyway
+      // Return expired token — yahooFetch will get a 401 and retry via onTokenRefresh
+      return stored.accessToken
     }
   }
 
   return stored.accessToken
+}
+
+/**
+ * Build an onTokenRefresh callback for Yahoo API calls.
+ * When yahooFetch gets a 401, it calls this to refresh and retry.
+ */
+function buildYahooRefreshCallback(userId) {
+  return async () => {
+    const { refreshYahooToken } = require('./yahooAuth')
+    return await refreshYahooToken(userId)
+  }
 }
 
 // POST /api/imports/yahoo/discover
@@ -108,7 +120,8 @@ router.post('/yahoo/discover', authenticate, validateLeagueId, async (req, res) 
     const leagueId = sanitize(req.body.leagueId)
     const accessToken = await resolveYahooToken(req)
     if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo not connected. Please authorize via Settings or provide an access token.' } })
-    const discovery = await yahooImport.discoverLeague(leagueId, accessToken)
+    const onTokenRefresh = buildYahooRefreshCallback(req.user.id)
+    const discovery = await yahooImport.discoverLeague(leagueId, accessToken, onTokenRefresh)
     res.json(discovery)
   } catch (err) {
     res.status(400).json({ error: { message: err.message } })
@@ -123,7 +136,8 @@ router.post('/yahoo/import', authenticate, validateLeagueId, async (req, res) =>
     if (!accessToken) return res.status(400).json({ error: { message: 'Yahoo not connected. Please authorize via Settings or provide an access token.' } })
     const targetLeagueId = req.body.targetLeagueId || undefined
     const selectedSeasons = req.body.selectedSeasons || undefined
-    const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken, targetLeagueId, selectedSeasons)
+    const onTokenRefresh = buildYahooRefreshCallback(req.user.id)
+    const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken, targetLeagueId, selectedSeasons, onTokenRefresh)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
