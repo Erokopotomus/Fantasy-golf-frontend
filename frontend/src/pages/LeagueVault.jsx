@@ -1641,17 +1641,15 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
       g[a.canonicalName].add(a.ownerName)
       g[a.canonicalName].add(a.canonicalName)
     }
-    // Convert sets to arrays
     const result = {}
     for (const [canonical, names] of Object.entries(g)) {
       result[canonical] = Array.from(names)
     }
     return result
   })
-  const [selected, setSelected] = useState(new Set())
+  const [activeOwner, setActiveOwner] = useState(null) // which owner tab is selected
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
-  // Track inactive owners (canonical names that are marked inactive)
   const [inactiveOwners, setInactiveOwners] = useState(() => {
     const s = new Set()
     for (const a of existingAliases) {
@@ -1660,7 +1658,10 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
     return s
   })
 
-  // Names that are already in a group
+  const ownerNames = Object.keys(groups).sort()
+  const hasOwners = ownerNames.length > 0
+
+  // Names already assigned to any owner
   const groupedNames = useMemo(() => {
     const s = new Set()
     for (const names of Object.values(groups)) {
@@ -1669,78 +1670,67 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
     return s
   }, [groups])
 
-  // Ungrouped names
-  const ungrouped = useMemo(() =>
+  // Unassigned names
+  const unassigned = useMemo(() =>
     allRawNames.filter(n => !groupedNames.has(n)).sort()
   , [allRawNames, groupedNames])
 
-  // All resolved owner names (canonical names for groups + ungrouped names)
-  const allResolvedOwners = useMemo(() => {
-    const owners = new Set([...Object.keys(groups), ...ungrouped])
-    return Array.from(owners).sort()
-  }, [groups, ungrouped])
+  // Year coverage for active owner
+  const activeOwnerYears = useMemo(() => {
+    if (!activeOwner || !groups[activeOwner]) return new Set()
+    const yrs = new Set()
+    for (const n of groups[activeOwner]) {
+      for (const y of (nameToYears[n] || [])) yrs.add(y)
+    }
+    return yrs
+  }, [activeOwner, groups, nameToYears])
 
-  const toggleActive = (name) => {
-    setInactiveOwners(prev => {
-      const next = new Set(prev)
-      if (next.has(name)) next.delete(name)
-      else next.add(name)
-      return next
-    })
+  // Mark a name as an owner
+  const markAsOwner = (name) => {
+    setGroups(prev => ({ ...prev, [name]: [name] }))
+    setActiveOwner(name)
   }
 
-  const toggleSelect = (name) => {
-    setSelected(prev => {
-      const next = new Set(prev)
-      if (next.has(name)) next.delete(name)
-      else next.add(name)
-      return next
-    })
-  }
-
-  const handleGroup = () => {
-    if (selected.size < 1) return
-    const names = Array.from(selected)
-    // Default canonical name: longest name (likely most complete)
-    const canonical = names.reduce((a, b) => a.length >= b.length ? a : b)
-    setGroups(prev => ({ ...prev, [canonical]: names }))
-    setSelected(new Set())
-  }
-
-  const handleAddToGroup = (canonical) => {
-    if (selected.size === 0) return
-    const namesToAdd = Array.from(selected)
+  // Assign an unassigned name to the active owner
+  const assignToActive = (name) => {
+    if (!activeOwner) return
     setGroups(prev => ({
       ...prev,
-      [canonical]: [...(prev[canonical] || []), ...namesToAdd],
+      [activeOwner]: [...(prev[activeOwner] || []), name],
     }))
-    setSelected(new Set())
   }
 
-  const handleUngroup = (canonical, nameToRemove) => {
+  // Remove a name from an owner
+  const unassignFromOwner = (owner, name) => {
     setGroups(prev => {
       const next = { ...prev }
-      const remaining = next[canonical].filter(n => n !== nameToRemove)
-      if (remaining.length < 2) {
-        delete next[canonical]
+      const remaining = next[owner].filter(n => n !== name)
+      if (remaining.length === 0) {
+        delete next[owner]
+        if (activeOwner === owner) setActiveOwner(null)
       } else {
-        next[canonical] = remaining
-        if (nameToRemove === canonical) {
+        // If removing the canonical name, pick a new one
+        if (name === owner) {
           const newCanonical = remaining[0]
           next[newCanonical] = remaining
-          delete next[canonical]
+          delete next[owner]
+          if (activeOwner === owner) setActiveOwner(newCanonical)
+        } else {
+          next[owner] = remaining
         }
       }
       return next
     })
   }
 
-  const handleDissolveGroup = (canonical) => {
+  // Delete an entire owner
+  const removeOwner = (owner) => {
     setGroups(prev => {
       const next = { ...prev }
-      delete next[canonical]
+      delete next[owner]
       return next
     })
+    if (activeOwner === owner) setActiveOwner(null)
   }
 
   const handleRename = (canonical) => {
@@ -1753,6 +1743,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
         next[newName.trim()] = names
         return next
       })
+      if (activeOwner === canonical) setActiveOwner(newName.trim())
     }
   }
 
@@ -1760,7 +1751,6 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
     setSaving(true)
     setError(null)
     try {
-      // Build aliases array: aliased names + inactive owner entries
       const aliases = []
       for (const [canonical, names] of Object.entries(groups)) {
         const active = !inactiveOwners.has(canonical)
@@ -1770,8 +1760,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
           }
         }
       }
-      // Also save inactive status for ungrouped owners
-      for (const name of ungrouped) {
+      for (const name of unassigned) {
         if (inactiveOwners.has(name)) {
           aliases.push({ ownerName: name, canonicalName: name, isActive: false })
         }
@@ -1786,261 +1775,228 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
     }
   }
 
+  // ── Step 1: No owners yet — show flat list to identify people ──
+  if (!hasOwners) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+        <div className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="p-5 border-b border-dark-tertiary">
+            <h2 className="text-lg font-display font-bold text-white">Step 1: Who's in your league?</h2>
+            <p className="text-xs text-text-secondary mt-1">
+              Tap the names of real people. Team names like "SWAMP DONKEYS" can be assigned to people in the next step.
+            </p>
+          </div>
+          <div className="p-4 overflow-y-auto flex-1">
+            <div className="space-y-1">
+              {allRawNames.sort().map(name => (
+                <div key={name} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-dark-tertiary/30 hover:bg-dark-tertiary/50 transition-colors">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm text-white font-display truncate">{name}</span>
+                    {nameToYears[name] && (
+                      <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
+                        {formatYearRanges(nameToYears[name])}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => markAsOwner(name)}
+                    className="flex-shrink-0 px-3 py-1 text-xs font-mono text-accent-gold border border-accent-gold/30 rounded-lg hover:bg-accent-gold/10 transition-colors"
+                  >
+                    This is a person
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="p-4 border-t border-dark-tertiary flex items-center justify-between">
+            <button
+              onClick={() => {
+                const name = window.prompt('Add someone not in this list:')
+                if (name?.trim()) markAsOwner(name.trim())
+              }}
+              className="text-xs font-mono text-text-secondary hover:text-accent-gold"
+            >
+              + Type a name
+            </button>
+            <button onClick={onClose} className="px-4 py-2 text-sm text-text-secondary hover:text-white">Cancel</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Step 2: Owners exist — owner-focused assignment ──
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div
-        className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
+      <div className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        {/* Header */}
         <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
           <div>
             <h2 className="text-lg font-display font-bold text-white">Manage Owners</h2>
-            <p className="text-xs text-text-secondary mt-1">Mark real people, then assign their old team names</p>
+            <p className="text-xs text-text-secondary mt-1">
+              {unassigned.length > 0
+                ? `Select an owner, then tap team names to assign them`
+                : `All names assigned`}
+            </p>
           </div>
           <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
         </div>
 
-        <div className="p-5 overflow-y-auto flex-1 space-y-5">
-          {/* Existing groups */}
-          {Object.entries(groups).length > 0 && (
-            <div>
-              <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Owners ({Object.keys(groups).length})</h3>
-              <div className="space-y-2">
-                {Object.entries(groups).map(([canonical, names]) => {
-                  // Compute combined year coverage for this owner
-                  const allYears = new Set()
-                  for (const n of names) {
-                    for (const y of (nameToYears[n] || [])) allYears.add(y)
-                  }
-                  const sortedYears = [...allYears].sort((a, b) => a - b)
-                  return (
-                    <div key={canonical} className="bg-dark-tertiary/40 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="flex-1 text-white text-sm font-display font-semibold">{canonical}</span>
-                        <button
-                          onClick={() => handleRename(canonical)}
-                          className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 transition-colors"
-                        >
-                          Rename
-                        </button>
-                        <button
-                          onClick={() => handleDissolveGroup(canonical)}
-                          className="text-xs text-text-secondary hover:text-red-400 transition-colors"
-                        >
-                          Ungroup All
-                        </button>
-                      </div>
-                      {sortedYears.length > 0 && (
-                        <p className="text-[10px] font-mono text-text-secondary/60 mb-2">
-                          Covers: {formatYearRanges(sortedYears)} ({sortedYears.length} season{sortedYears.length !== 1 ? 's' : ''})
-                        </p>
-                      )}
-                      <div className="flex flex-wrap gap-1.5">
-                        {names.map(name => (
-                          <span key={name} className="inline-flex items-center gap-1 bg-dark-secondary px-2 py-0.5 rounded text-xs font-mono text-white">
-                            {name}
-                            {nameToYears[name] && (
-                              <span className="text-text-secondary/50 text-[9px]">
-                                {formatYearRanges(nameToYears[name])}
-                              </span>
-                            )}
-                            <button onClick={() => handleUngroup(canonical, name)} className="text-text-secondary hover:text-red-400">&times;</button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+        {/* Owner tabs */}
+        <div className="px-5 pt-4 pb-2 flex flex-wrap gap-1.5 border-b border-dark-tertiary/50">
+          {ownerNames.map(name => {
+            const isActive = activeOwner === name
+            const count = (groups[name] || []).length
+            return (
               <button
-                onClick={() => {
-                  const name = window.prompt('Enter the owner\'s display name:')
-                  if (name && name.trim()) {
-                    const trimmed = name.trim()
-                    if (!groups[trimmed]) setGroups(prev => ({ ...prev, [trimmed]: [trimmed] }))
-                  }
-                }}
-                className="mt-2 text-xs font-mono text-text-secondary hover:text-accent-gold transition-colors"
+                key={name}
+                onClick={() => setActiveOwner(isActive ? null : name)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-display font-bold transition-colors ${
+                  isActive
+                    ? 'bg-accent-gold text-dark-primary'
+                    : 'bg-dark-tertiary text-white hover:bg-dark-tertiary/80'
+                }`}
               >
-                + Add someone not in this list
+                {name}
+                {count > 1 && <span className="ml-1 opacity-70">({count})</span>}
               </button>
+            )
+          })}
+          <button
+            onClick={() => {
+              const name = window.prompt('Add an owner:')
+              if (name?.trim() && !groups[name.trim()]) {
+                setGroups(prev => ({ ...prev, [name.trim()]: [name.trim()] }))
+                setActiveOwner(name.trim())
+              }
+            }}
+            className="px-3 py-1.5 rounded-lg text-xs font-mono text-text-secondary border border-dashed border-dark-tertiary hover:border-accent-gold/40 hover:text-accent-gold transition-colors"
+          >
+            + Add
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {/* Active owner detail */}
+          {activeOwner && groups[activeOwner] && (
+            <div className="px-5 py-3 bg-dark-tertiary/20 border-b border-dark-tertiary/30">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <span className="text-sm font-display font-bold text-white">{activeOwner}</span>
+                  {activeOwnerYears.size > 0 && (
+                    <span className="ml-2 text-[10px] font-mono text-text-secondary/60">
+                      {formatYearRanges([...activeOwnerYears])} ({activeOwnerYears.size} season{activeOwnerYears.size !== 1 ? 's' : ''})
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => handleRename(activeOwner)} className="text-xs font-mono text-accent-gold hover:text-accent-gold/80">Rename</button>
+                  <button
+                    onClick={() => {
+                      const inactive = inactiveOwners.has(activeOwner)
+                      setInactiveOwners(prev => {
+                        const next = new Set(prev)
+                        if (inactive) next.delete(activeOwner); else next.add(activeOwner)
+                        return next
+                      })
+                    }}
+                    className={`text-xs font-mono px-2 py-0.5 rounded ${inactiveOwners.has(activeOwner) ? 'text-text-secondary bg-dark-tertiary/30' : 'text-green-400 bg-green-500/10'}`}
+                  >
+                    {inactiveOwners.has(activeOwner) ? 'Inactive' : 'Active'}
+                  </button>
+                  <button
+                    onClick={() => { if (confirm(`Remove ${activeOwner} and unassign all their names?`)) removeOwner(activeOwner) }}
+                    className="text-xs text-text-secondary hover:text-red-400"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+              {/* Assigned names as pills */}
+              <div className="flex flex-wrap gap-1.5">
+                {groups[activeOwner].map(name => (
+                  <span key={name} className="inline-flex items-center gap-1 bg-accent-gold/15 border border-accent-gold/30 px-2.5 py-1 rounded-lg text-xs font-mono text-accent-gold">
+                    {name}
+                    {nameToYears[name] && <span className="text-accent-gold/50 text-[9px]">{formatYearRanges(nameToYears[name])}</span>}
+                    <button onClick={() => unassignFromOwner(activeOwner, name)} className="text-accent-gold/50 hover:text-red-400 ml-0.5">&times;</button>
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Ungrouped names */}
-          <div>
-            {Object.keys(groups).length === 0 && ungrouped.length > 0 && (
-              <div className="mb-3 p-3 bg-dark-tertiary/30 rounded-lg border border-dark-tertiary/50">
-                <p className="text-xs text-text-secondary leading-relaxed">
-                  <strong className="text-white">Start here:</strong> Find real people (like "Tank" or "Eric") and tap <strong className="text-white">This is a person</strong> next to their name. Then come back and assign their old team names.
-                </p>
-              </div>
-            )}
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider">
-                {Object.keys(groups).length > 0 ? 'Team Names' : 'All Names'} ({ungrouped.length})
-              </h3>
-              {selected.size >= 1 && Object.keys(groups).length === 0 && (
-                <button
-                  onClick={handleGroup}
-                  className="px-3 py-1 text-xs font-mono font-bold text-dark-primary bg-gold rounded-lg hover:bg-gold-bright transition-colors"
-                >
-                  Create as Owner
-                </button>
-              )}
-            </div>
-            {/* Add to existing group buttons */}
-            {selected.size >= 1 && Object.keys(groups).length > 0 && (() => {
-              // Figure out which years the selected names cover
-              const selectedYears = new Set()
-              for (const name of selected) {
-                for (const y of (nameToYears[name] || [])) selectedYears.add(y)
-              }
-              const selectedYearStr = selectedYears.size > 0 ? formatYearRanges([...selectedYears]) : null
-
-              return (
-                <div className="mb-3 p-3 bg-accent-gold/5 border border-accent-gold/20 rounded-lg">
-                  <p className="text-xs text-text-secondary mb-2">
-                    Add {selected.size === 1 ? `"${Array.from(selected)[0]}"` : `${selected.size} selected`}
-                    {selectedYearStr && <span className="text-text-secondary/60"> ({selectedYearStr})</span>}
-                    {' '}to:
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {Object.entries(groups).map(([canonical, names]) => {
-                      // Check if this owner has a gap that matches the selected years
-                      const ownerYears = new Set()
-                      for (const n of names) {
-                        for (const y of (nameToYears[n] || [])) ownerYears.add(y)
-                      }
-                      const hasOverlap = [...selectedYears].some(y => ownerYears.has(y))
-                      const fillsGap = selectedYears.size > 0 && !hasOverlap
-                      return (
-                        <button
-                          key={canonical}
-                          onClick={() => handleAddToGroup(canonical)}
-                          className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-colors ${
-                            fillsGap
-                              ? 'bg-accent-gold/20 border border-accent-gold/40 text-accent-gold hover:bg-accent-gold/30'
-                              : 'bg-dark-tertiary border border-dark-tertiary text-white hover:border-accent-gold hover:text-accent-gold'
-                          }`}
-                        >
-                          + {canonical}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })()}
-            {ungrouped.length === 0 ? (
-              <p className="text-xs text-text-secondary italic">All names are grouped.</p>
+          {/* Unassigned names — tap to assign to active owner */}
+          <div className="px-5 py-3">
+            {unassigned.length === 0 ? (
+              <p className="text-sm text-text-secondary text-center py-6">All names are assigned to owners.</p>
+            ) : !activeOwner ? (
+              <p className="text-sm text-text-secondary text-center py-6">Select an owner above to start assigning team names.</p>
             ) : (
-              <div className="space-y-1">
-                {ungrouped.map(name => (
-                  <div
-                    key={name}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                      selected.has(name) ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary/30 border border-transparent hover:bg-dark-tertiary/50'
-                    }`}
-                  >
-                    <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(name)}
-                        onChange={() => toggleSelect(name)}
-                        className="accent-[#E8B84D] flex-shrink-0"
-                      />
-                      <span className="text-sm text-white font-display truncate">{name}</span>
-                      {nameToYears[name] && (
-                        <span className="text-[10px] font-mono text-text-secondary/60 flex-shrink-0">
-                          {formatYearRanges(nameToYears[name])}
+              <>
+                <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                  Tap to assign to {activeOwner} ({unassigned.length} remaining)
+                </h3>
+                <div className="space-y-1">
+                  {unassigned.map(name => {
+                    const yrs = nameToYears[name] || []
+                    const fillsGap = yrs.length > 0 && !yrs.some(y => activeOwnerYears.has(y))
+                    return (
+                      <button
+                        key={name}
+                        onClick={() => assignToActive(name)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-left ${
+                          fillsGap
+                            ? 'bg-accent-gold/5 border border-accent-gold/20 hover:bg-accent-gold/10'
+                            : 'bg-dark-tertiary/30 border border-transparent hover:bg-dark-tertiary/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm text-white font-display truncate">{name}</span>
+                          {yrs.length > 0 && (
+                            <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
+                              {formatYearRanges(yrs)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs font-mono text-accent-gold/60 flex-shrink-0">
+                          {fillsGap ? '+ assign (fills gap)' : '+ assign'}
                         </span>
-                      )}
-                    </label>
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Mark more people */}
+            {unassigned.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-dark-tertiary/30">
+                <p className="text-[10px] font-mono text-text-secondary/50 mb-2">Not seeing the right owner? Mark more people:</p>
+                <div className="flex flex-wrap gap-1">
+                  {unassigned.slice(0, 20).map(name => (
                     <button
-                      onClick={() => {
-                        setGroups(prev => ({ ...prev, [name]: [name] }))
-                        setSelected(prev => { const next = new Set(prev); next.delete(name); return next })
-                      }}
-                      className="flex-shrink-0 px-2 py-1 text-[10px] font-mono text-text-secondary hover:text-accent-gold border border-transparent hover:border-accent-gold/30 rounded transition-colors"
-                      title={`Mark "${name}" as an owner`}
+                      key={name}
+                      onClick={() => markAsOwner(name)}
+                      className="px-2 py-1 text-[10px] font-mono text-text-secondary/60 bg-dark-tertiary/20 rounded hover:text-accent-gold hover:bg-dark-tertiary/40 transition-colors"
                     >
-                      This is a person
+                      {name}
                     </button>
-                  </div>
-                ))}
+                  ))}
+                  {unassigned.length > 20 && <span className="text-[10px] font-mono text-text-secondary/30 self-center">+{unassigned.length - 20} more</span>}
+                </div>
               </div>
             )}
           </div>
-
-          {/* Active / Inactive toggles */}
-          <div>
-            <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
-              Active Managers ({allResolvedOwners.length - inactiveOwners.size} of {allResolvedOwners.length})
-            </h3>
-            <p className="text-xs text-text-secondary mb-2">Inactive managers are hidden from Records by default.</p>
-            <div className="space-y-1">
-              {allResolvedOwners.map(name => {
-                const active = !inactiveOwners.has(name)
-                return (
-                  <div
-                    key={name}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${active ? 'bg-dark-tertiary/30' : 'bg-dark-tertiary/10 opacity-50'}`}
-                  >
-                    <span className={`text-sm font-display ${active ? 'text-white' : 'text-text-secondary line-through'}`}>{name}</span>
-                    <button
-                      onClick={() => toggleActive(name)}
-                      className={`text-xs font-mono px-2 py-1 rounded transition-colors ${active ? 'text-green-400 bg-green-500/10 hover:bg-green-500/20' : 'text-text-secondary bg-dark-tertiary/30 hover:bg-dark-tertiary/50'}`}
-                    >
-                      {active ? 'Active' : 'Inactive'}
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {error && <p className="text-red-400 text-sm">{error}</p>}
         </div>
 
-        {/* Sticky action bar when names are selected */}
-        {selected.size >= 1 && (
-          <div className="px-5 py-3 border-t border-gold/30 bg-gold/10">
-            {selected.size >= 1 && (
-              <button
-                onClick={handleGroup}
-                className="w-full py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright transition-colors mb-2"
-              >
-                {selected.size === 1 ? 'Create as Owner' : `Create New Group (${selected.size} names)`}
-              </button>
-            )}
-            {Object.keys(groups).length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {Object.keys(groups).map(canonical => (
-                  <button
-                    key={canonical}
-                    onClick={() => handleAddToGroup(canonical)}
-                    className="flex-1 min-w-0 px-3 py-2 text-xs font-mono bg-dark-tertiary border border-dark-tertiary rounded-lg text-white hover:border-accent-gold hover:text-accent-gold transition-colors truncate"
-                  >
-                    + {canonical}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {error && <p className="px-5 py-2 text-red-400 text-sm">{error}</p>}
 
         <div className="p-5 border-t border-dark-tertiary bg-dark-secondary flex items-center justify-between">
           <span className="text-xs text-text-secondary font-mono">
-            {Object.keys(groups).length} group{Object.keys(groups).length !== 1 ? 's' : ''}
+            {ownerNames.length} owner{ownerNames.length !== 1 ? 's' : ''} &middot; {unassigned.length} unassigned
           </span>
           <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
-            >
-              Cancel
-            </button>
+            <button onClick={onClose} className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors">Cancel</button>
             <button
               onClick={handleSave}
               disabled={saving}
