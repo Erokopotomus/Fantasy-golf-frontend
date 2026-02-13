@@ -1601,6 +1601,45 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
 }
 
 // ─── Manage Owners Modal ─────────────────────────────────────────────────────
+// Extracted component to prevent input focus loss when editing display name
+const GroupRow = ({ canonical, names, onUpdateCanonical, onDissolve, onRemove }) => {
+  const [displayName, setDisplayName] = useState(canonical)
+  const commitName = () => {
+    if (displayName.trim() && displayName !== canonical) {
+      onUpdateCanonical(canonical, displayName.trim())
+    }
+  }
+  return (
+    <div className="bg-dark-tertiary/40 rounded-lg p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xs font-mono text-text-secondary">Display as:</span>
+        <input
+          type="text"
+          value={displayName}
+          onChange={e => setDisplayName(e.target.value)}
+          onBlur={commitName}
+          onKeyDown={e => e.key === 'Enter' && commitName()}
+          className="flex-1 px-2 py-1 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm font-display font-semibold focus:outline-none focus:border-accent-gold"
+        />
+        <button
+          onClick={() => onDissolve(canonical)}
+          className="text-xs text-text-secondary hover:text-red-400 transition-colors"
+        >
+          Ungroup All
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {names.map(name => (
+          <span key={name} className="inline-flex items-center gap-1 bg-dark-secondary px-2 py-0.5 rounded text-xs font-mono text-white">
+            {name}
+            <button onClick={() => onRemove(canonical, name)} className="text-text-secondary hover:text-red-400">&times;</button>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, onSaved }) => {
   // Reconstruct groups from existing aliases: { canonicalName → [ownerName, ...] }
   const [groups, setGroups] = useState(() => {
@@ -1766,41 +1805,14 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
               <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Grouped</h3>
               <div className="space-y-2">
                 {Object.entries(groups).map(([canonical, names]) => (
-                  <div key={canonical} className="bg-dark-tertiary/40 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-mono text-text-secondary">Display as:</span>
-                      <input
-                        type="text"
-                        value={canonical}
-                        onChange={e => updateCanonical(canonical, e.target.value)}
-                        className="flex-1 px-2 py-1 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm font-display font-semibold focus:outline-none focus:border-accent-gold"
-                      />
-                      <button
-                        onClick={() => handleDissolveGroup(canonical)}
-                        className="text-xs text-text-secondary hover:text-red-400 font-mono"
-                        title="Dissolve group"
-                      >
-                        Ungroup All
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {names.map(name => (
-                        <span
-                          key={name}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-dark-primary/50 rounded text-xs text-white font-mono"
-                        >
-                          {name}
-                          <button
-                            onClick={() => handleUngroup(canonical, name)}
-                            className="text-text-secondary hover:text-red-400 ml-0.5"
-                            title="Remove from group"
-                          >
-                            &times;
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  <GroupRow
+                    key={canonical}
+                    canonical={canonical}
+                    names={names}
+                    onUpdateCanonical={updateCanonical}
+                    onDissolve={handleDissolveGroup}
+                    onRemove={handleUngroup}
+                  />
                 ))}
               </div>
             </div>
