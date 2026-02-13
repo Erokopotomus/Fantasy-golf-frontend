@@ -1031,16 +1031,48 @@ const ImportLeague = () => {
                     ))
                   }
 
-                  {/* Info-only items */}
-                  {health.issues.filter(i => i.severity === 'info').length > 0 && (
+                  {/* Info-only items (excluding orphan owners — shown separately) */}
+                  {health.issues.filter(i => i.severity === 'info' && i.type !== 'ORPHAN_OWNER').length > 0 && (
                     <div className="mt-2 pt-2 border-t border-dark-tertiary/50">
-                      {health.issues.filter(i => i.severity === 'info').map((issue, idx) => (
+                      {health.issues.filter(i => i.severity === 'info' && i.type !== 'ORPHAN_OWNER').map((issue, idx) => (
                         <p key={idx} className="text-xs text-text-secondary py-1">{issue.message}</p>
                       ))}
                     </div>
                   )}
                 </Card>
               )}
+
+              {/* Owner Mapping Callout — friendly, not scary */}
+              {health && (() => {
+                const orphans = health.issues?.filter(i => i.type === 'ORPHAN_OWNER') || []
+                if (orphans.length === 0) return null
+                return (
+                  <Card>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">👥</span>
+                      <div className="flex-1">
+                        <h3 className="font-display font-bold text-white mb-1">One Quick Step: Map Your Owners</h3>
+                        <p className="text-sm text-text-secondary mb-2">
+                          Yahoo hides manager names on older seasons (pre-2013), so we imported them
+                          using team names instead. This is a Yahoo limitation, not a bug — we pulled
+                          all the data we could.
+                          Just tap <strong className="text-white">Manage Owners</strong> in the Vault to
+                          match team names to real people. Takes about a minute, and you only have to do it once.
+                        </p>
+                        <p className="text-xs text-text-secondary/60 font-mono mb-3">
+                          {orphans.length} team name{orphans.length !== 1 ? 's' : ''} to map
+                        </p>
+                        <button
+                          onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault`)}
+                          className="text-sm font-mono text-accent-gold hover:text-accent-gold/80"
+                        >
+                          Manage Owners in Vault &rarr;
+                        </button>
+                      </div>
+                    </div>
+                  </Card>
+                )
+              })()}
             </div>
           )}
         </div>

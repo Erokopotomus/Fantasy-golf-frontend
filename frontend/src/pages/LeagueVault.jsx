@@ -2325,10 +2325,15 @@ const LeagueVault = () => {
                       health.overallStatus === 'green' ? 'text-green-400' :
                       health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'
                     }`}>
-                      {health.overallStatus === 'green'
-                        ? `${health.seasonCount} seasons — all data looks healthy`
-                        : `${health.issues.filter(i => i.severity !== 'info').length} issue${health.issues.filter(i => i.severity !== 'info').length !== 1 ? 's' : ''} found in your league history`
-                      }
+                      {(() => {
+                        if (health.overallStatus === 'green') return `${health.seasonCount} seasons — all data looks healthy`
+                        const realIssues = health.issues.filter(i => i.severity !== 'info' && i.type !== 'ORPHAN_OWNER')
+                        const orphanCount = health.issues.filter(i => i.type === 'ORPHAN_OWNER').length
+                        const parts = []
+                        if (realIssues.length > 0) parts.push(`${realIssues.length} issue${realIssues.length !== 1 ? 's' : ''} to review`)
+                        if (orphanCount > 0) parts.push(`${orphanCount} owner name${orphanCount !== 1 ? 's' : ''} to map`)
+                        return parts.join(' · ') || 'Review your league history'
+                      })()}
                     </p>
                     {health.overallStatus !== 'green' && (
                       <div className="flex items-center gap-2 mt-1">
@@ -2366,8 +2371,30 @@ const LeagueVault = () => {
                       </p>
                     </div>
                   )}
+                  {/* Orphan owner names — friendly callout */}
+                  {health.issues.some(i => i.type === 'ORPHAN_OWNER') && (
+                    <div className="bg-dark-tertiary/30 rounded-lg p-4 border border-dark-tertiary/50">
+                      <div className="flex items-start gap-3">
+                        <span className="text-lg flex-shrink-0">👤</span>
+                        <div>
+                          <p className="text-sm text-white font-medium">Map Your Owner Names</p>
+                          <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+                            Some team names couldn't be auto-matched to current owners — especially for older Yahoo seasons (pre-2013) where manager names aren't available.
+                            This is normal! Just tap <strong className="text-white">Manage Owners</strong> below to match team names to real people. Takes about a minute.
+                          </p>
+                          <button
+                            onClick={() => setShowManageOwners(true)}
+                            className="mt-2 text-xs font-mono text-accent-gold hover:text-accent-gold/80"
+                          >
+                            Manage Owners &rarr;
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {health.issues
-                    .filter(i => i.type !== 'MISSING_SEASON' && i.severity !== 'info')
+                    .filter(i => i.type !== 'MISSING_SEASON' && i.type !== 'ORPHAN_OWNER' && i.severity !== 'info')
                     .map((issue, idx) => (
                       <div key={idx} className={`rounded-lg p-3 ${
                         issue.severity === 'high' ? 'bg-red-500/10' :
