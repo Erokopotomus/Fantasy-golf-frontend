@@ -12,6 +12,7 @@ import ChatPanel from '../components/chat/ChatPanel'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import DraftCountdown from '../components/DraftCountdown'
 import LeagueChat from '../components/ai/LeagueChat'
+import CommissionerNotes from '../components/league/CommissionerNotes'
 
 const LeagueHome = () => {
   const { leagueId } = useParams()
@@ -299,6 +300,13 @@ const LeagueHome = () => {
                     onClick={() => navigate(`/leagues/${leagueId}/matchups`)}
                   >
                     Matchups
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate(`/leagues/${leagueId}/playoffs`)}
+                  >
+                    Playoffs
                   </Button>
                   {isNflLeague && (
                     <Button
@@ -970,6 +978,13 @@ const LeagueHome = () => {
                   </div>
                 )}
               </Card>
+
+              {/* Commissioner Notes */}
+              <CommissionerNotes
+                leagueId={leagueId}
+                isCommissioner={isCommissioner}
+                leagueName={league.name}
+              />
 
               {/* Chat - compact */}
               <ChatPanel

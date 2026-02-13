@@ -85,6 +85,7 @@ function WorkspaceRedirect() {
 }
 // Format-specific pages
 import Matchups from './pages/Matchups'
+import PlayoffHistory from './pages/PlayoffHistory'
 import CategoryStandings from './pages/CategoryStandings'
 import SurvivorBoard from './pages/SurvivorBoard'
 import PickCenter from './pages/PickCenter'
@@ -517,6 +518,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Matchups />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/playoffs"
+            element={
+              <ProtectedRoute>
+                <PlayoffHistory />
               </ProtectedRoute>
             }
           />
