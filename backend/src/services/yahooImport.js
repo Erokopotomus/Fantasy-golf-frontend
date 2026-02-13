@@ -925,64 +925,71 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
           if (matched) matchedTeamKey = matched.teamKey
         }
 
+        let teamsSaved = 0
         for (const roster of seasonData.rosters) {
-          const standing = seasonData.rosters.indexOf(roster) + 1
-          const playoffResult = seasonData.playoffResults[roster.teamId] || null
+          try {
+            const standing = seasonData.rosters.indexOf(roster) + 1
+            const playoffResult = seasonData.playoffResults[roster.teamId] || null
 
-          // Set ownerUserId if this is the importing user's team
-          const isUsersTeam = roster.teamKey === matchedTeamKey
-          const ownerUserId = isUsersTeam ? userId : null
+            // Set ownerUserId if this is the importing user's team
+            const isUsersTeam = roster.teamKey === matchedTeamKey
+            const ownerUserId = isUsersTeam ? userId : null
 
-          await db.historicalSeason.upsert({
-            where: {
-              leagueId_seasonYear_ownerName: {
-                leagueId: clutchLeague.id,
-                seasonYear: seasonData.seasonYear,
-                ownerName: roster.ownerName || roster.teamName,
+            await db.historicalSeason.upsert({
+              where: {
+                leagueId_seasonYear_ownerName: {
+                  leagueId: clutchLeague.id,
+                  seasonYear: seasonData.seasonYear,
+                  ownerName: roster.ownerName || roster.teamName,
+                },
               },
-            },
-            create: {
-              leagueId: clutchLeague.id,
-              importId: importRecord.id,
-              seasonYear: seasonData.seasonYear,
-              teamName: roster.teamName,
-              ownerName: roster.ownerName || roster.teamName,
-              ownerUserId,
-              finalStanding: standing,
-              wins: roster.wins,
-              losses: roster.losses,
-              ties: roster.ties,
-              pointsFor: roster.pointsFor,
-              pointsAgainst: roster.pointsAgainst,
-              playoffResult,
-              draftData: seasonData.draftData,
-              rosterData: {},
-              weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
-              transactions: seasonData.transactions,
-              settings: season.settings || {},
-            },
-            update: {
-              ownerUserId: ownerUserId || undefined,
-              wins: roster.wins,
-              losses: roster.losses,
-              ties: roster.ties,
-              pointsFor: roster.pointsFor,
-              pointsAgainst: roster.pointsAgainst,
-              playoffResult,
-              draftData: seasonData.draftData,
-              weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
-              transactions: seasonData.transactions,
-              settings: season.settings || {},
-            },
-          })
+              create: {
+                leagueId: clutchLeague.id,
+                importId: importRecord.id,
+                seasonYear: seasonData.seasonYear,
+                teamName: roster.teamName,
+                ownerName: roster.ownerName || roster.teamName,
+                ownerUserId,
+                finalStanding: standing,
+                wins: roster.wins,
+                losses: roster.losses,
+                ties: roster.ties,
+                pointsFor: roster.pointsFor,
+                pointsAgainst: roster.pointsAgainst,
+                playoffResult,
+                draftData: seasonData.draftData,
+                rosterData: {},
+                weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
+                transactions: seasonData.transactions,
+                settings: season.settings || {},
+              },
+              update: {
+                ownerUserId: ownerUserId || undefined,
+                wins: roster.wins,
+                losses: roster.losses,
+                ties: roster.ties,
+                pointsFor: roster.pointsFor,
+                pointsAgainst: roster.pointsAgainst,
+                playoffResult,
+                draftData: seasonData.draftData,
+                weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
+                transactions: seasonData.transactions,
+                settings: season.settings || {},
+              },
+            })
+            teamsSaved++
 
-          // Opinion Timeline Bridge — only for importing user's team
-          if (isUsersTeam) {
-            generateOpinionEventsForSeason(
-              userId, seasonData, roster.teamKey, clutchLeague.name
-            ).catch(() => {})
+            // Opinion Timeline Bridge — only for importing user's team
+            if (isUsersTeam) {
+              generateOpinionEventsForSeason(
+                userId, seasonData, roster.teamKey, clutchLeague.name
+              ).catch(() => {})
+            }
+          } catch (teamErr) {
+            console.error(`[YahooImport] Failed to save team ${roster.ownerName} in ${season.year}:`, teamErr.message)
           }
         }
+        console.log(`[YahooImport] Season ${season.year}: saved ${teamsSaved}/${seasonData.rosters.length} teams`)
 
         importedSeasons.push(seasonData.seasonYear)
       } catch (err) {
@@ -1009,6 +1016,75 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
       })
     }
 
+    // ── Self-Healing Verification ──
+    // Check each season's team count vs expected. If a season has far fewer
+    // teams than expected, re-import it. This catches partial saves from
+    // timeouts or transient errors.
+    const repaired = []
+    for (const season of seasonsToImport) {
+      if (!importedSeasons.includes(season.year)) continue
+      const expectedTeams = season.teamCount || 0
+      if (expectedTeams < 4) continue // Can't verify tiny leagues
+
+      const actualCount = await db.historicalSeason.count({
+        where: { leagueId: clutchLeague.id, seasonYear: season.year },
+      })
+
+      if (actualCount > 0 && actualCount < expectedTeams * 0.5) {
+        // Less than half the expected teams — something went wrong, re-import
+        console.log(`[YahooImport] REPAIR: ${season.year} has ${actualCount}/${expectedTeams} teams — re-importing`)
+        try {
+          // Delete the partial data
+          await db.historicalSeason.deleteMany({
+            where: { leagueId: clutchLeague.id, seasonYear: season.year },
+          })
+
+          // Re-import the season
+          const seasonData = await importSeason(season.leagueKey, season.year, currentToken, wrappedImportRefresh)
+          console.log(`[YahooImport] REPAIR: ${season.year} re-fetched ${seasonData.rosters.length} teams`)
+
+          let repairedCount = 0
+          for (const roster of seasonData.rosters) {
+            try {
+              const standing = seasonData.rosters.indexOf(roster) + 1
+              const playoffResult = seasonData.playoffResults[roster.teamId] || null
+              await db.historicalSeason.create({
+                data: {
+                  leagueId: clutchLeague.id,
+                  importId: importRecord.id,
+                  seasonYear: season.year,
+                  teamName: roster.teamName,
+                  ownerName: roster.ownerName || roster.teamName,
+                  finalStanding: standing,
+                  wins: roster.wins,
+                  losses: roster.losses,
+                  ties: roster.ties,
+                  pointsFor: roster.pointsFor,
+                  pointsAgainst: roster.pointsAgainst,
+                  playoffResult,
+                  draftData: seasonData.draftData,
+                  rosterData: {},
+                  weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
+                  transactions: seasonData.transactions,
+                  settings: season.settings || {},
+                },
+              })
+              repairedCount++
+            } catch (e) {
+              console.error(`[YahooImport] REPAIR: Failed team ${roster.ownerName}:`, e.message)
+            }
+          }
+          console.log(`[YahooImport] REPAIR: ${season.year} saved ${repairedCount} teams`)
+          if (repairedCount > actualCount) repaired.push(season.year)
+        } catch (repairErr) {
+          console.error(`[YahooImport] REPAIR failed for ${season.year}:`, repairErr.message)
+        }
+      }
+    }
+    if (repaired.length > 0) {
+      console.log(`[YahooImport] Self-healed ${repaired.length} season(s): ${repaired.join(', ')}`)
+    }
+
     await db.leagueImport.update({
       where: { id: importRecord.id },
       data: {
@@ -1023,6 +1099,7 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
       leagueId: clutchLeague.id,
       leagueName: discovery.name,
       seasonsImported: importedSeasons,
+      repairedSeasons: repaired.length > 0 ? repaired : undefined,
       totalSeasons: discovery.totalSeasons,
     }
   } catch (err) {
