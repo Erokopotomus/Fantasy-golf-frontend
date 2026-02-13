@@ -354,11 +354,32 @@ async function analyzeLeagueHealth(leagueId) {
     }
   }
 
-  // Overall score = average of per-season scores (only for seasons that exist, plus missing years at 0)
+  // Overall score = average of per-season scores + penalties for systemic/cross-season issues
   const allYearScores = [...yearNums, ...missingYears].map(y => perSeason[y]?.score ?? 100)
-  const overallScore = allYearScores.length > 0
+  let overallScore = allYearScores.length > 0
     ? Math.round(allYearScores.reduce((a, b) => a + b, 0) / allYearScores.length)
     : 100
+
+  // Systemic penalty: if the same issue type appears in 50%+ of seasons, apply extra penalty
+  if (yearNums.length >= 3) {
+    const issueTypeCounts = {}
+    for (const issue of allIssues) {
+      if (issue.seasonYear && issue.severity !== 'info') {
+        issueTypeCounts[issue.type] = (issueTypeCounts[issue.type] || 0) + 1
+      }
+    }
+    for (const [, count] of Object.entries(issueTypeCounts)) {
+      const pct = count / yearNums.length
+      if (pct >= 0.8) overallScore -= 15        // 80%+ of seasons have this issue
+      else if (pct >= 0.5) overallScore -= 10   // 50%+ of seasons
+    }
+  }
+
+  // Cross-season issues (no seasonYear) also penalize
+  const crossSeasonIssues = allIssues.filter(i => !i.seasonYear && i.severity !== 'info')
+  overallScore -= crossSeasonIssues.length * 3
+
+  overallScore = Math.max(0, Math.min(100, overallScore))
 
   return {
     overallScore,
