@@ -1944,17 +1944,6 @@ const LeagueVault = () => {
     api.getOwnerAvatars(leagueId).then(res => setAvatars(res.avatars || [])).catch(() => {})
   }, [leagueId])
 
-  // Handle ?editYear=XXXX from post-import verification
-  useEffect(() => {
-    const editYear = searchParams.get('editYear')
-    if (editYear && !loading && sanitizedSeasons) {
-      setEditSeasonYear(parseInt(editYear))
-      setTab('timeline')
-      searchParams.delete('editYear')
-      setSearchParams(searchParams, { replace: true })
-    }
-  }, [searchParams, loading, sanitizedSeasons])
-
   const isCommissioner = league?.ownerId === user?.id
 
   // Build avatar map: canonicalOwnerName → imageUrl
@@ -2041,6 +2030,17 @@ const LeagueVault = () => {
     }
     return clean
   }, [history, resolveOwner])
+
+  // Handle ?editYear=XXXX from post-import verification (must be after sanitizedSeasons)
+  useEffect(() => {
+    const editYear = searchParams.get('editYear')
+    if (editYear && !loading && sanitizedSeasons) {
+      setEditSeasonYear(parseInt(editYear))
+      setTab('timeline')
+      searchParams.delete('editYear')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, loading, sanitizedSeasons])
 
   const allTimeRecords = useMemo(() => {
     if (!sanitizedSeasons) return null
