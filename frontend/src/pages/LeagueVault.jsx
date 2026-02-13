@@ -1777,30 +1777,12 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
         <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
           <div>
             <h2 className="text-lg font-display font-bold text-white">Manage Owners</h2>
-            <p className="text-xs text-text-secondary mt-1">Group names that belong to the same person across seasons</p>
+            <p className="text-xs text-text-secondary mt-1">Mark real people, then assign their old team names</p>
           </div>
           <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
         </div>
 
         <div className="p-5 overflow-y-auto flex-1 space-y-5">
-          {/* Create New Owner */}
-          <button
-            onClick={() => {
-              const name = window.prompt('Enter the owner\'s display name:')
-              if (name && name.trim()) {
-                const trimmed = name.trim()
-                if (groups[trimmed]) {
-                  alert(`"${trimmed}" already exists as a group.`)
-                } else {
-                  setGroups(prev => ({ ...prev, [trimmed]: [trimmed] }))
-                }
-              }
-            }}
-            className="w-full py-2.5 border border-dashed border-accent-gold/40 rounded-lg text-accent-gold text-sm font-display font-bold hover:bg-accent-gold/5 transition-colors"
-          >
-            + New Owner
-          </button>
-
           {/* Existing groups */}
           {Object.entries(groups).length > 0 && (
             <div>
@@ -1835,6 +1817,18 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
                   </div>
                 ))}
               </div>
+              <button
+                onClick={() => {
+                  const name = window.prompt('Enter the owner\'s display name:')
+                  if (name && name.trim()) {
+                    const trimmed = name.trim()
+                    if (!groups[trimmed]) setGroups(prev => ({ ...prev, [trimmed]: [trimmed] }))
+                  }
+                }}
+                className="mt-2 text-xs font-mono text-text-secondary hover:text-accent-gold transition-colors"
+              >
+                + Add someone not in this list
+              </button>
             </div>
           )}
 
@@ -1875,20 +1869,32 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
             ) : (
               <div className="space-y-1">
                 {ungrouped.map(name => (
-                  <label
+                  <div
                     key={name}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
                       selected.has(name) ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary/30 border border-transparent hover:bg-dark-tertiary/50'
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={selected.has(name)}
-                      onChange={() => toggleSelect(name)}
-                      className="accent-[#E8B84D]"
-                    />
-                    <span className="text-sm text-white font-display">{name}</span>
-                  </label>
+                    <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(name)}
+                        onChange={() => toggleSelect(name)}
+                        className="accent-[#E8B84D] flex-shrink-0"
+                      />
+                      <span className="text-sm text-white font-display truncate">{name}</span>
+                    </label>
+                    <button
+                      onClick={() => {
+                        setGroups(prev => ({ ...prev, [name]: [name] }))
+                        setSelected(prev => { const next = new Set(prev); next.delete(name); return next })
+                      }}
+                      className="flex-shrink-0 px-2 py-1 text-[10px] font-mono text-text-secondary hover:text-accent-gold border border-transparent hover:border-accent-gold/30 rounded transition-colors"
+                      title={`Mark "${name}" as an owner`}
+                    >
+                      This is a person
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
