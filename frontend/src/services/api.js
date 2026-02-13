@@ -1382,6 +1382,43 @@ class ApiService {
     return this.request(`/import/custom/${dataId}`, { method: 'DELETE' })
   }
 
+  // ── Commissioner Posts ──
+  async getLeaguePosts(leagueId, limit = 20, offset = 0) {
+    return this.request(`/leagues/${leagueId}/posts?limit=${limit}&offset=${offset}`)
+  }
+
+  async createLeaguePost(leagueId, data) {
+    return this.request(`/leagues/${leagueId}/posts`, { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  async updateLeaguePost(leagueId, postId, data) {
+    return this.request(`/leagues/${leagueId}/posts/${postId}`, { method: 'PATCH', body: JSON.stringify(data) })
+  }
+
+  async deleteLeaguePost(leagueId, postId) {
+    return this.request(`/leagues/${leagueId}/posts/${postId}`, { method: 'DELETE' })
+  }
+
+  async togglePostReaction(leagueId, postId, emoji) {
+    return this.request(`/leagues/${leagueId}/posts/${postId}/reactions`, { method: 'POST', body: JSON.stringify({ emoji }) })
+  }
+
+  async getPostComments(leagueId, postId) {
+    return this.request(`/leagues/${leagueId}/posts/${postId}/comments`)
+  }
+
+  async addPostComment(leagueId, postId, content) {
+    return this.request(`/leagues/${leagueId}/posts/${postId}/comments`, { method: 'POST', body: JSON.stringify({ content }) })
+  }
+
+  async deletePostComment(leagueId, postId, commentId) {
+    return this.request(`/leagues/${leagueId}/posts/${postId}/comments/${commentId}`, { method: 'DELETE' })
+  }
+
+  async generatePostDraft(leagueId, data) {
+    return this.request(`/leagues/${leagueId}/posts/ai-generate`, { method: 'POST', body: JSON.stringify(data) })
+  }
+
   // ── League Intelligence ──
   async queryLeague(leagueId, question, sessionId) {
     return this.request('/ai/league-query', {

@@ -1669,4 +1669,260 @@ router.get('/:id/recap', authenticate, async (req, res, next) => {
   }
 })
 
+// ============ COMMISSIONER POSTS ============
+
+// GET /api/leagues/:id/posts — List posts (pinned first, then by date desc)
+router.get('/:id/posts', authenticate, async (req, res, next) => {
+  try {
+    const { limit = 20, offset = 0 } = req.query
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true } } },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember && !league.isPublic) return res.status(403).json({ error: { message: 'Not authorized' } })
+
+    const posts = await prisma.leaguePost.findMany({
+      where: { leagueId: req.params.id, isPublished: true },
+      include: {
+        author: { select: { id: true, name: true, avatar: true } },
+        reactions: { select: { id: true, userId: true, emoji: true } },
+        _count: { select: { comments: true } },
+      },
+      orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+      take: parseInt(limit),
+      skip: parseInt(offset),
+    })
+
+    // Shape reaction data: grouped counts + user's own
+    const shaped = posts.map(p => {
+      const reactionMap = {}
+      p.reactions.forEach(r => {
+        if (!reactionMap[r.emoji]) reactionMap[r.emoji] = { count: 0, userReacted: false }
+        reactionMap[r.emoji].count++
+        if (r.userId === req.user.id) reactionMap[r.emoji].userReacted = true
+      })
+      const { reactions, _count, ...rest } = p
+      return { ...rest, reactions: reactionMap, commentCount: _count.comments }
+    })
+
+    res.json({ posts: shaped })
+  } catch (error) { next(error) }
+})
+
+// POST /api/leagues/:id/posts — Create post (commissioner only)
+router.post('/:id/posts', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({ where: { id: req.params.id } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) return res.status(403).json({ error: { message: 'Only the commissioner can create posts' } })
+
+    const { title, content, category, isPinned, aiGenerated } = req.body
+    if (!title || !content) return res.status(400).json({ error: { message: 'Title and content are required' } })
+
+    const post = await prisma.leaguePost.create({
+      data: {
+        leagueId: req.params.id,
+        authorId: req.user.id,
+        title,
+        content,
+        category: category || 'general',
+        isPinned: !!isPinned,
+        aiGenerated: !!aiGenerated,
+      },
+      include: {
+        author: { select: { id: true, name: true, avatar: true } },
+      },
+    })
+
+    res.json({ post: { ...post, reactions: {}, commentCount: 0 } })
+  } catch (error) { next(error) }
+})
+
+// PATCH /api/leagues/:id/posts/:postId — Edit post (commissioner only)
+router.patch('/:id/posts/:postId', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({ where: { id: req.params.id } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) return res.status(403).json({ error: { message: 'Only the commissioner can edit posts' } })
+
+    const { title, content, category, isPinned, isPublished } = req.body
+    const data = {}
+    if (title !== undefined) data.title = title
+    if (content !== undefined) data.content = content
+    if (category !== undefined) data.category = category
+    if (isPinned !== undefined) data.isPinned = isPinned
+    if (isPublished !== undefined) data.isPublished = isPublished
+
+    const post = await prisma.leaguePost.update({
+      where: { id: req.params.postId },
+      data,
+      include: {
+        author: { select: { id: true, name: true, avatar: true } },
+        reactions: { select: { id: true, userId: true, emoji: true } },
+        _count: { select: { comments: true } },
+      },
+    })
+
+    const reactionMap = {}
+    post.reactions.forEach(r => {
+      if (!reactionMap[r.emoji]) reactionMap[r.emoji] = { count: 0, userReacted: false }
+      reactionMap[r.emoji].count++
+      if (r.userId === req.user.id) reactionMap[r.emoji].userReacted = true
+    })
+    const { reactions, _count, ...rest } = post
+    res.json({ post: { ...rest, reactions: reactionMap, commentCount: _count.comments } })
+  } catch (error) { next(error) }
+})
+
+// DELETE /api/leagues/:id/posts/:postId — Delete post (commissioner only)
+router.delete('/:id/posts/:postId', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({ where: { id: req.params.id } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) return res.status(403).json({ error: { message: 'Only the commissioner can delete posts' } })
+
+    await prisma.leaguePost.delete({ where: { id: req.params.postId } })
+    res.json({ success: true })
+  } catch (error) { next(error) }
+})
+
+// POST /api/leagues/:id/posts/:postId/reactions — Toggle reaction
+router.post('/:id/posts/:postId/reactions', authenticate, async (req, res, next) => {
+  try {
+    const { emoji } = req.body
+    if (!emoji) return res.status(400).json({ error: { message: 'Emoji is required' } })
+
+    // Check membership
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true } } },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember) return res.status(403).json({ error: { message: 'Not authorized' } })
+
+    // Toggle: if exists, remove; if not, create
+    const existing = await prisma.leaguePostReaction.findUnique({
+      where: { postId_userId_emoji: { postId: req.params.postId, userId: req.user.id, emoji } },
+    })
+
+    if (existing) {
+      await prisma.leaguePostReaction.delete({ where: { id: existing.id } })
+      res.json({ toggled: 'removed', emoji })
+    } else {
+      await prisma.leaguePostReaction.create({
+        data: { postId: req.params.postId, userId: req.user.id, emoji },
+      })
+      res.json({ toggled: 'added', emoji })
+    }
+  } catch (error) { next(error) }
+})
+
+// GET /api/leagues/:id/posts/:postId/comments — List comments
+router.get('/:id/posts/:postId/comments', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true } } },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember && !league.isPublic) return res.status(403).json({ error: { message: 'Not authorized' } })
+
+    const comments = await prisma.leaguePostComment.findMany({
+      where: { postId: req.params.postId },
+      include: { user: { select: { id: true, name: true, avatar: true } } },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    res.json({ comments })
+  } catch (error) { next(error) }
+})
+
+// POST /api/leagues/:id/posts/:postId/comments — Add comment
+router.post('/:id/posts/:postId/comments', authenticate, async (req, res, next) => {
+  try {
+    const { content } = req.body
+    if (!content || !content.trim()) return res.status(400).json({ error: { message: 'Content is required' } })
+
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true } } },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember) return res.status(403).json({ error: { message: 'Not authorized' } })
+
+    const comment = await prisma.leaguePostComment.create({
+      data: { postId: req.params.postId, userId: req.user.id, content: content.trim() },
+      include: { user: { select: { id: true, name: true, avatar: true } } },
+    })
+
+    res.json({ comment })
+  } catch (error) { next(error) }
+})
+
+// DELETE /api/leagues/:id/posts/:postId/comments/:commentId — Delete comment (own or commissioner)
+router.delete('/:id/posts/:postId/comments/:commentId', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({ where: { id: req.params.id } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+
+    const comment = await prisma.leaguePostComment.findUnique({ where: { id: req.params.commentId } })
+    if (!comment) return res.status(404).json({ error: { message: 'Comment not found' } })
+
+    // Allow own comment deletion or commissioner deletion
+    if (comment.userId !== req.user.id && league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Not authorized to delete this comment' } })
+    }
+
+    await prisma.leaguePostComment.delete({ where: { id: req.params.commentId } })
+    res.json({ success: true })
+  } catch (error) { next(error) }
+})
+
+// POST /api/leagues/:id/posts/ai-generate — AI-assisted draft generation (commissioner only)
+router.post('/:id/posts/ai-generate', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { _count: { select: { members: true } } },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) return res.status(403).json({ error: { message: 'Only the commissioner can generate posts' } })
+
+    const { category, topic, tone } = req.body
+    if (!topic) return res.status(400).json({ error: { message: 'Topic is required' } })
+
+    let claudeService
+    try { claudeService = require('../services/claudeService') } catch (e) {
+      return res.status(501).json({ error: { message: 'AI service not available' } })
+    }
+
+    const systemPrompt = `You are a league commissioner's writing assistant for a fantasy sports league called "${league.name}".
+The league plays ${league.sport || 'fantasy sports'} and has ${league._count.members} members.
+Generate a compelling league post. Write in the commissioner's voice — authoritative but fun.
+Match the requested tone. Keep it concise (2-4 paragraphs max).
+Return JSON: { "title": "post title", "content": "HTML content with <p>, <strong>, <em>, <ul>/<li> tags" }`
+
+    const userPrompt = `Category: ${category || 'general'}
+Topic: ${topic}
+Tone: ${tone || 'professional'}
+Write a league post about this topic.`
+
+    const result = await claudeService.generateJsonCompletion(systemPrompt, userPrompt, {
+      feature: 'commissionerNotes',
+      maxTokens: 1024,
+    })
+
+    if (!result || !result.data) {
+      return res.json({ draft: { title: '', content: '' }, aiDisabled: true })
+    }
+
+    res.json({ draft: { title: result.data.title || '', content: result.data.content || '' } })
+  } catch (error) { next(error) }
+})
+
 module.exports = router

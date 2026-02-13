@@ -77,6 +77,11 @@ model User {
   // Owner alias mapping
   ownerAliases        OwnerAlias[]
 
+  // Commissioner posts
+  leaguePosts        LeaguePost[]        @relation("PostAuthor")
+  postReactions      LeaguePostReaction[] @relation("PostReactor")
+  postComments       LeaguePostComment[]  @relation("PostCommenter")
+
   // Phase 5: Manager profile + Clutch Rating
   username    String?  @unique @db.VarChar(30)
   bio         String?  @db.Text
@@ -146,6 +151,9 @@ model League {
 
   // Owner avatars (League Vault)
   ownerAvatars    OwnerAvatar[]
+
+  // Commissioner posts
+  posts           LeaguePost[]
 
   @@map("leagues")
 }
@@ -3038,4 +3046,56 @@ model LeagueStatsCache {
   expiresAt  DateTime
 
   league League @relation(fields: [leagueId], references: [id])
+}
+
+// ============ COMMISSIONER POSTS ============
+
+model LeaguePost {
+  id          String   @id @default(cuid())
+  leagueId    String
+  league      League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User     @relation("PostAuthor", fields: [authorId], references: [id])
+  title       String
+  content     String   @db.Text
+  category    String   @default("general")
+  isPinned    Boolean  @default(false)
+  isPublished Boolean  @default(true)
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reactions   LeaguePostReaction[]
+  comments    LeaguePostComment[]
+
+  @@index([leagueId, createdAt(sort: Desc)])
+  @@map("league_posts")
+}
+
+model LeaguePostReaction {
+  id        String     @id @default(cuid())
+  postId    String
+  post      LeaguePost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation("PostReactor", fields: [userId], references: [id])
+  emoji     String
+  createdAt DateTime   @default(now())
+
+  @@unique([postId, userId, emoji])
+  @@index([postId])
+  @@map("league_post_reactions")
+}
+
+model LeaguePostComment {
+  id        String     @id @default(cuid())
+  postId    String
+  post      LeaguePost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation("PostCommenter", fields: [userId], references: [id])
+  content   String     @db.Text
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([postId, createdAt])
+  @@map("league_post_comments")
 }
