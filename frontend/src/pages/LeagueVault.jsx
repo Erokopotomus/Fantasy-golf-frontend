@@ -1689,6 +1689,16 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
     setSelected(new Set())
   }
 
+  const handleAddToGroup = (canonical) => {
+    if (selected.size === 0) return
+    const namesToAdd = Array.from(selected)
+    setGroups(prev => ({
+      ...prev,
+      [canonical]: [...(prev[canonical] || []), ...namesToAdd],
+    }))
+    setSelected(new Set())
+  }
+
   const handleUngroup = (canonical, nameToRemove) => {
     setGroups(prev => {
       const next = { ...prev }
@@ -1705,8 +1715,6 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
       }
       return next
     })
-    // If we were editing this group, cancel edit
-    if (editingCanonical === canonical) setEditingCanonical(null)
   }
 
   const handleDissolveGroup = (canonical) => {
@@ -1715,7 +1723,6 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
       delete next[canonical]
       return next
     })
-    if (editingCanonical === canonical) setEditingCanonical(null)
   }
 
   const handleRename = (canonical) => {
@@ -1764,7 +1771,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
-        className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col"
+        className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
@@ -1824,10 +1831,27 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
                   onClick={handleGroup}
                   className="px-3 py-1 text-xs font-mono font-bold text-dark-primary bg-gold rounded-lg hover:bg-gold-bright transition-colors"
                 >
-                  Group Selected ({selected.size})
+                  New Group ({selected.size})
                 </button>
               )}
             </div>
+            {/* Add to existing group buttons */}
+            {selected.size >= 1 && Object.keys(groups).length > 0 && (
+              <div className="mb-3 p-3 bg-accent-gold/5 border border-accent-gold/20 rounded-lg">
+                <p className="text-xs text-text-secondary mb-2">Add {selected.size === 1 ? `"${Array.from(selected)[0]}"` : `${selected.size} selected`} to:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.keys(groups).map(canonical => (
+                    <button
+                      key={canonical}
+                      onClick={() => handleAddToGroup(canonical)}
+                      className="px-3 py-1.5 text-xs font-mono bg-dark-tertiary border border-dark-tertiary rounded-lg text-white hover:border-accent-gold hover:text-accent-gold transition-colors"
+                    >
+                      + {canonical}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {ungrouped.length === 0 ? (
               <p className="text-xs text-text-secondary italic">All names are grouped.</p>
             ) : (
@@ -1883,14 +1907,29 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
         </div>
 
         {/* Sticky action bar when names are selected */}
-        {selected.size >= 2 && (
+        {selected.size >= 1 && (
           <div className="px-5 py-3 border-t border-gold/30 bg-gold/10">
-            <button
-              onClick={handleGroup}
-              className="w-full py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright transition-colors"
-            >
-              Group {selected.size} Selected Names
-            </button>
+            {selected.size >= 2 && (
+              <button
+                onClick={handleGroup}
+                className="w-full py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright transition-colors mb-2"
+              >
+                Create New Group ({selected.size} names)
+              </button>
+            )}
+            {Object.keys(groups).length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {Object.keys(groups).map(canonical => (
+                  <button
+                    key={canonical}
+                    onClick={() => handleAddToGroup(canonical)}
+                    className="flex-1 min-w-0 px-3 py-2 text-xs font-mono bg-dark-tertiary border border-dark-tertiary rounded-lg text-white hover:border-accent-gold hover:text-accent-gold transition-colors truncate"
+                  >
+                    + {canonical}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
