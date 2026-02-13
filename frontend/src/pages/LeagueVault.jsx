@@ -2393,8 +2393,45 @@ const LeagueVault = () => {
                     </div>
                   )}
 
+                  {/* Missing weekly scores — consolidated repair card */}
+                  {health.issues.some(i => i.type === 'MISSING_WEEKLY_SCORES') && (
+                    <div className="bg-accent-gold/5 rounded-lg p-4 border border-accent-gold/20">
+                      <div className="flex items-start gap-3">
+                        <span className="text-lg flex-shrink-0">📊</span>
+                        <div className="flex-1">
+                          <p className="text-sm text-white font-medium">Weekly Score Data Available</p>
+                          <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+                            {health.issues.filter(i => i.type === 'MISSING_WEEKLY_SCORES').length} season{health.issues.filter(i => i.type === 'MISSING_WEEKLY_SCORES').length !== 1 ? 's are' : ' is'} missing
+                            week-by-week scores. Yahoo has this data — tap below to pull it in.
+                            This enables "Best Week" records and matchup history.
+                          </p>
+                          <button
+                            disabled={reimporting === 'weekly'}
+                            onClick={async () => {
+                              setReimporting('weekly')
+                              try {
+                                const result = await api.repairWeeklyScores(leagueId)
+                                const repaired = result.results?.filter(r => r.status === 'repaired') || []
+                                alert(`Updated weekly scores for ${repaired.length} season${repaired.length !== 1 ? 's' : ''}!`)
+                                refetch()
+                                refetchHealth()
+                              } catch (err) {
+                                alert(`Repair failed: ${err.message}`)
+                              } finally {
+                                setReimporting(null)
+                              }
+                            }}
+                            className="mt-2 text-xs font-mono text-accent-gold hover:text-accent-gold/80 disabled:opacity-50"
+                          >
+                            {reimporting === 'weekly' ? 'Pulling weekly scores...' : 'Pull Weekly Scores from Yahoo'} &rarr;
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {health.issues
-                    .filter(i => i.type !== 'MISSING_SEASON' && i.type !== 'ORPHAN_OWNER' && i.severity !== 'info')
+                    .filter(i => i.type !== 'MISSING_SEASON' && i.type !== 'ORPHAN_OWNER' && i.type !== 'MISSING_WEEKLY_SCORES' && i.severity !== 'info')
                     .map((issue, idx) => (
                       <div key={idx} className={`rounded-lg p-3 ${
                         issue.severity === 'high' ? 'bg-red-500/10' :

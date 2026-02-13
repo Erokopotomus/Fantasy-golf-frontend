@@ -715,6 +715,13 @@ class ApiService {
     })
   }
 
+  async repairWeeklyScores(leagueId) {
+    return this.request('/imports/repair-weekly-scores', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId }),
+    })
+  }
+
   async getOwnerAliases(leagueId) {
     return this.request(`/imports/owner-aliases/${leagueId}`)
   }

@@ -496,7 +496,8 @@ async function fetchAllMatchups(leagueKey, year, accessToken, onTokenRefresh) {
       for (const entry of Object.values(matchups)) {
         const matchup = entry?.matchup
         if (!matchup) continue
-        const teams = matchup.teams || {}
+        // Yahoo nests teams at matchup['0'].teams (not matchup.teams)
+        const teams = matchup['0']?.teams || matchup.teams || {}
         const teamArr = Object.values(teams).filter(t => t?.team)
 
         if (teamArr.length >= 2) {
@@ -1118,4 +1119,5 @@ module.exports = {
   discoverLeague,
   importSeason,
   runFullImport,
+  fetchAllMatchups,
 }

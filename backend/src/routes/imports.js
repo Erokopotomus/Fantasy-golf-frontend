@@ -822,6 +822,133 @@ router.post('/reimport-season', authenticate, async (req, res) => {
   }
 })
 
+// POST /api/imports/repair-weekly-scores
+// Re-fetches all matchup data from Yahoo and backfills weeklyScores for every season.
+router.post('/repair-weekly-scores', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.body
+    if (!leagueId) {
+      return res.status(400).json({ error: { message: 'leagueId is required' } })
+    }
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league || league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can repair data' } })
+    }
+
+    // Find all standings raw data to get league keys per year
+    const allStandings = await prisma.rawProviderData.findMany({
+      where: { provider: 'yahoo', dataType: 'standings' },
+      select: { eventRef: true, payload: true },
+    })
+
+    // Map year -> leagueKey from raw standings
+    const yearToKey = {}
+    for (const raw of allStandings) {
+      const payload = typeof raw.payload === 'string' ? JSON.parse(raw.payload) : raw.payload
+      const leagueMeta = payload?.fantasy_content?.league
+      const meta = Array.isArray(leagueMeta) ? leagueMeta[0] : leagueMeta
+      if (meta?.season) {
+        yearToKey[parseInt(meta.season)] = raw.eventRef
+      }
+    }
+
+    // Get all seasons for this league
+    const seasons = await prisma.historicalSeason.findMany({
+      where: { leagueId },
+      select: { id: true, seasonYear: true, teamName: true, ownerName: true, weeklyScores: true },
+    })
+
+    // Group by year
+    const byYear = {}
+    for (const s of seasons) {
+      if (!byYear[s.seasonYear]) byYear[s.seasonYear] = []
+      byYear[s.seasonYear].push(s)
+    }
+
+    // Get Yahoo access token
+    const accessToken = await resolveYahooToken(req)
+    if (!accessToken) {
+      return res.status(400).json({ error: { message: 'Yahoo not connected. Please re-authorize via Settings.' } })
+    }
+    const onTokenRefresh = buildYahooRefreshCallback(req.user.id)
+
+    // For each year, fetch matchups and update weeklyScores
+    const results = []
+    const years = Object.keys(byYear).map(Number).sort()
+    for (const year of years) {
+      const leagueKey = yearToKey[year]
+      if (!leagueKey) {
+        results.push({ year, status: 'skipped', reason: 'No league key found' })
+        continue
+      }
+
+      try {
+        // Fetch all matchup weeks from Yahoo
+        const matchups = await yahooImport.fetchAllMatchups(leagueKey, year, accessToken, onTokenRefresh)
+        const weekCount = Object.keys(matchups).length
+
+        if (weekCount === 0) {
+          results.push({ year, status: 'skipped', reason: 'No matchup data from Yahoo' })
+          continue
+        }
+
+        // Find team IDs — we need to match HistoricalSeason records to Yahoo teamIds
+        // Use the raw standings data to map ownerName/teamName -> teamId
+        const rawStandings = allStandings.find(r => r.eventRef === leagueKey)
+        const standingsPayload = typeof rawStandings?.payload === 'string'
+          ? JSON.parse(rawStandings.payload) : rawStandings?.payload
+        const lgData = standingsPayload?.fantasy_content?.league
+        const standingsArr = Array.isArray(lgData) ? lgData[1]?.standings : lgData?.standings
+        const teamsObj = standingsArr?.[0]?.teams || standingsArr?.teams || {}
+
+        // Build teamName -> teamId map
+        const nameToTeamId = {}
+        for (const entry of Object.values(teamsObj)) {
+          const teamArr = entry?.team
+          if (!teamArr || !Array.isArray(teamArr)) continue
+          const metaFields = Array.isArray(teamArr[0]) ? teamArr[0] : [teamArr[0]]
+          const meta = {}
+          for (const f of metaFields) {
+            if (f && typeof f === 'object') Object.assign(meta, f)
+          }
+          if (meta.team_id && meta.name) {
+            nameToTeamId[meta.name] = meta.team_id
+          }
+        }
+
+        // Update each team's weeklyScores
+        let updatedCount = 0
+        for (const season of byYear[year]) {
+          const teamId = nameToTeamId[season.teamName] || nameToTeamId[season.ownerName]
+          if (!teamId) continue
+
+          const weeklyScores = buildWeeklyScoresForTeam(matchups, teamId)
+          if (weeklyScores.length > 0) {
+            await prisma.historicalSeason.update({
+              where: { id: season.id },
+              data: { weeklyScores },
+            })
+            updatedCount++
+          }
+        }
+
+        results.push({ year, status: 'repaired', weeks: weekCount, teamsUpdated: updatedCount })
+        console.log(`[RepairWeekly] ${year}: ${weekCount} weeks, ${updatedCount} teams updated`)
+      } catch (err) {
+        results.push({ year, status: 'error', reason: err.message })
+        console.error(`[RepairWeekly] ${year} error:`, err.message)
+      }
+    }
+
+    res.json({ success: true, results })
+  } catch (err) {
+    console.error('[RepairWeekly] Error:', err.message)
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 // Helper: build weekly scores for a team from matchup data
 function buildWeeklyScoresForTeam(matchups, teamId) {
   const scores = []
