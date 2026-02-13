@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef, Component } from 'react'
+import React, { useState, useMemo, useCallback, useEffect, useRef, Component } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory } from '../hooks/useImports'
@@ -1601,22 +1601,32 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
 }
 
 // ─── Manage Owners Modal ─────────────────────────────────────────────────────
-// Extracted component to prevent input focus loss when editing display name
-const GroupRow = ({ canonical, names, onUpdateCanonical, onDissolve, onRemove }) => {
-  const [displayName, setDisplayName] = useState(canonical)
+// Uncontrolled input with ref — bypasses React rendering to prevent focus loss
+const GroupRow = React.memo(({ canonical, names, onUpdateCanonical, onDissolve, onRemove }) => {
+  const inputRef = useRef(null)
+
+  // Sync input value when canonical changes from outside (e.g., after blur commit)
+  useEffect(() => {
+    if (inputRef.current && inputRef.current.value !== canonical) {
+      inputRef.current.value = canonical
+    }
+  }, [canonical])
+
   const commitName = () => {
-    if (displayName.trim() && displayName !== canonical) {
-      onUpdateCanonical(canonical, displayName.trim())
+    const val = inputRef.current?.value?.trim()
+    if (val && val !== canonical) {
+      onUpdateCanonical(canonical, val)
     }
   }
+
   return (
     <div className="bg-dark-tertiary/40 rounded-lg p-3">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xs font-mono text-text-secondary">Display as:</span>
         <input
+          ref={inputRef}
           type="text"
-          value={displayName}
-          onChange={e => setDisplayName(e.target.value)}
+          defaultValue={canonical}
           onBlur={commitName}
           onKeyDown={e => e.key === 'Enter' && commitName()}
           className="flex-1 px-2 py-1 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm font-display font-semibold focus:outline-none focus:border-accent-gold"
@@ -1638,7 +1648,7 @@ const GroupRow = ({ canonical, names, onUpdateCanonical, onDissolve, onRemove })
       </div>
     </div>
   )
-}
+})
 
 const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, onSaved }) => {
   // Reconstruct groups from existing aliases: { canonicalName → [ownerName, ...] }
@@ -1715,7 +1725,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
     setSelected(new Set())
   }
 
-  const handleUngroup = (canonical, nameToRemove) => {
+  const handleUngroup = useCallback((canonical, nameToRemove) => {
     setGroups(prev => {
       const next = { ...prev }
       const remaining = next[canonical].filter(n => n !== nameToRemove)
@@ -1733,17 +1743,17 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
       }
       return next
     })
-  }
+  }, [])
 
-  const handleDissolveGroup = (canonical) => {
+  const handleDissolveGroup = useCallback((canonical) => {
     setGroups(prev => {
       const next = { ...prev }
       delete next[canonical]
       return next
     })
-  }
+  }, [])
 
-  const updateCanonical = (oldCanonical, newCanonical) => {
+  const updateCanonical = useCallback((oldCanonical, newCanonical) => {
     if (!newCanonical.trim() || newCanonical === oldCanonical) return
     setGroups(prev => {
       const next = { ...prev }
@@ -1752,7 +1762,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
       next[newCanonical.trim()] = names
       return next
     })
-  }
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)
