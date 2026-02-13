@@ -1681,7 +1681,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
   }
 
   const handleGroup = () => {
-    if (selected.size < 2) return
+    if (selected.size < 1) return
     const names = Array.from(selected)
     // Default canonical name: longest name (likely most complete)
     const canonical = names.reduce((a, b) => a.length >= b.length ? a : b)
@@ -1783,10 +1783,28 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
         </div>
 
         <div className="p-5 overflow-y-auto flex-1 space-y-5">
+          {/* Create New Owner */}
+          <button
+            onClick={() => {
+              const name = window.prompt('Enter the owner\'s display name:')
+              if (name && name.trim()) {
+                const trimmed = name.trim()
+                if (groups[trimmed]) {
+                  alert(`"${trimmed}" already exists as a group.`)
+                } else {
+                  setGroups(prev => ({ ...prev, [trimmed]: [trimmed] }))
+                }
+              }
+            }}
+            className="w-full py-2.5 border border-dashed border-accent-gold/40 rounded-lg text-accent-gold text-sm font-display font-bold hover:bg-accent-gold/5 transition-colors"
+          >
+            + New Owner
+          </button>
+
           {/* Existing groups */}
           {Object.entries(groups).length > 0 && (
             <div>
-              <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Grouped</h3>
+              <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Owners ({Object.keys(groups).length})</h3>
               <div className="space-y-2">
                 {Object.entries(groups).map(([canonical, names]) => (
                   <div key={canonical} className="bg-dark-tertiary/40 rounded-lg p-3">
@@ -1826,12 +1844,12 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
               <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider">
                 Ungrouped ({ungrouped.length})
               </h3>
-              {selected.size >= 2 && (
+              {selected.size >= 1 && Object.keys(groups).length === 0 && (
                 <button
                   onClick={handleGroup}
                   className="px-3 py-1 text-xs font-mono font-bold text-dark-primary bg-gold rounded-lg hover:bg-gold-bright transition-colors"
                 >
-                  New Group ({selected.size})
+                  Create as Owner
                 </button>
               )}
             </div>
@@ -1909,12 +1927,12 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
         {/* Sticky action bar when names are selected */}
         {selected.size >= 1 && (
           <div className="px-5 py-3 border-t border-gold/30 bg-gold/10">
-            {selected.size >= 2 && (
+            {selected.size >= 1 && (
               <button
                 onClick={handleGroup}
                 className="w-full py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright transition-colors mb-2"
               >
-                Create New Group ({selected.size} names)
+                {selected.size === 1 ? 'Create as Owner' : `Create New Group (${selected.size} names)`}
               </button>
             )}
             {Object.keys(groups).length > 0 && (
