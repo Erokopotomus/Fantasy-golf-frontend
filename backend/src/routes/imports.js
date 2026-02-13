@@ -636,4 +636,211 @@ router.put('/historical-season/:id', authenticate, async (req, res) => {
   }
 })
 
+// ─── Create Historical Season Entry (add a team to a season) ────────────────
+// POST /api/imports/historical-season
+router.post('/historical-season', authenticate, async (req, res) => {
+  try {
+    const { leagueId, seasonYear, ownerName, teamName, wins, losses, ties, pointsFor, pointsAgainst, finalStanding, playoffResult } = req.body
+    if (!leagueId || !seasonYear || !ownerName) {
+      return res.status(400).json({ error: { message: 'leagueId, seasonYear, and ownerName are required' } })
+    }
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league || league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can add history entries' } })
+    }
+
+    const record = await prisma.historicalSeason.create({
+      data: {
+        leagueId,
+        seasonYear: parseInt(seasonYear),
+        ownerName,
+        teamName: teamName || ownerName,
+        wins: parseInt(wins) || 0,
+        losses: parseInt(losses) || 0,
+        ties: parseInt(ties) || 0,
+        pointsFor: parseFloat(pointsFor) || 0,
+        pointsAgainst: parseFloat(pointsAgainst) || 0,
+        finalStanding: parseInt(finalStanding) || 0,
+        playoffResult: playoffResult || null,
+      },
+    })
+
+    res.json(record)
+  } catch (err) {
+    if (err.code === 'P2002') {
+      return res.status(400).json({ error: { message: 'A team with that owner name already exists for this season' } })
+    }
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// ─── Re-import a single season from Yahoo ───────────────────────────────────
+// POST /api/imports/reimport-season
+// Deletes existing bad data for a year and re-imports from Yahoo.
+router.post('/reimport-season', authenticate, async (req, res) => {
+  try {
+    const { leagueId, seasonYear } = req.body
+    if (!leagueId || !seasonYear) {
+      return res.status(400).json({ error: { message: 'leagueId and seasonYear are required' } })
+    }
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league || league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can re-import seasons' } })
+    }
+
+    // Find the import record to get the source platform and league key
+    const importRecord = await prisma.leagueImport.findFirst({
+      where: { clutchLeagueId: leagueId, sourcePlatform: 'yahoo', status: 'COMPLETE' },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (!importRecord) {
+      return res.status(400).json({ error: { message: 'No Yahoo import found for this league. Re-import is only available for Yahoo-imported leagues.' } })
+    }
+
+    // Find the league key for this specific year from stored raw data
+    const rawRecord = await prisma.rawProviderData.findFirst({
+      where: {
+        provider: 'yahoo',
+        dataType: 'standings',
+        eventRef: { contains: `.l.` },
+      },
+      select: { eventRef: true, payload: true },
+      orderBy: { ingestedAt: 'desc' },
+    })
+
+    // Search all standings raw data for the one matching this year
+    const allStandings = await prisma.rawProviderData.findMany({
+      where: { provider: 'yahoo', dataType: 'standings' },
+      select: { eventRef: true, payload: true },
+    })
+
+    let leagueKey = null
+    for (const raw of allStandings) {
+      const payload = typeof raw.payload === 'string' ? JSON.parse(raw.payload) : raw.payload
+      const leagueMeta = payload?.fantasy_content?.league
+      const meta = Array.isArray(leagueMeta) ? leagueMeta[0] : leagueMeta
+      if (parseInt(meta?.season) === parseInt(seasonYear)) {
+        leagueKey = raw.eventRef
+        break
+      }
+    }
+
+    if (!leagueKey) {
+      return res.status(400).json({ error: { message: `No stored data found for the ${seasonYear} season. Try a full re-import from Yahoo.` } })
+    }
+
+    // Get Yahoo access token
+    const accessToken = await resolveYahooToken(req)
+    if (!accessToken) {
+      return res.status(400).json({ error: { message: 'Yahoo not connected. Please re-authorize via Settings.' } })
+    }
+    const onTokenRefresh = buildYahooRefreshCallback(req.user.id)
+
+    // Delete existing bad data for this year
+    const deleted = await prisma.historicalSeason.deleteMany({
+      where: { leagueId, seasonYear: parseInt(seasonYear) },
+    })
+    console.log(`[ReimportSeason] Deleted ${deleted.count} existing records for ${seasonYear}`)
+
+    // Re-import the season from Yahoo
+    const seasonData = await yahooImport.importSeason(leagueKey, parseInt(seasonYear), accessToken, onTokenRefresh)
+    console.log(`[ReimportSeason] Got ${seasonData.rosters.length} teams from Yahoo for ${seasonYear}`)
+
+    // Get importing user info for owner matching
+    const importingUser = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { name: true },
+    })
+    const userDisplayName = (importingUser?.name || '').toLowerCase()
+
+    let matchedTeamKey = null
+    if (userDisplayName) {
+      const matched = seasonData.rosters.find(r =>
+        r.ownerName?.toLowerCase().includes(userDisplayName) ||
+        userDisplayName.includes(r.ownerName?.toLowerCase() || '')
+      )
+      if (matched) matchedTeamKey = matched.teamKey
+    }
+
+    // Save all teams — with per-team error handling so one failure doesn't lose everything
+    const saved = []
+    const errors = []
+    for (const roster of seasonData.rosters) {
+      try {
+        const standing = seasonData.rosters.indexOf(roster) + 1
+        const playoffResult = seasonData.playoffResults[roster.teamId] || null
+        const isUsersTeam = roster.teamKey === matchedTeamKey
+        const ownerUserId = isUsersTeam ? req.user.id : null
+        const ownerName = roster.ownerName || roster.teamName
+
+        await prisma.historicalSeason.create({
+          data: {
+            leagueId,
+            importId: importRecord.id,
+            seasonYear: parseInt(seasonYear),
+            teamName: roster.teamName,
+            ownerName,
+            ownerUserId,
+            finalStanding: standing,
+            wins: roster.wins,
+            losses: roster.losses,
+            ties: roster.ties,
+            pointsFor: roster.pointsFor,
+            pointsAgainst: roster.pointsAgainst,
+            playoffResult,
+            draftData: seasonData.draftData,
+            rosterData: {},
+            weeklyScores: seasonData.matchups
+              ? buildWeeklyScoresForTeam(seasonData.matchups, roster.teamId)
+              : [],
+            transactions: seasonData.transactions,
+            settings: {},
+          },
+        })
+        saved.push(ownerName)
+        console.log(`[ReimportSeason] Saved team: ${ownerName} (${roster.wins}-${roster.losses})`)
+      } catch (teamErr) {
+        errors.push({ ownerName: roster.ownerName, error: teamErr.message })
+        console.error(`[ReimportSeason] Failed to save team ${roster.ownerName}:`, teamErr.message)
+      }
+    }
+
+    res.json({
+      success: true,
+      seasonYear: parseInt(seasonYear),
+      teamsImported: saved.length,
+      teamNames: saved,
+      errors: errors.length > 0 ? errors : undefined,
+    })
+  } catch (err) {
+    console.error('[ReimportSeason] Error:', err.message)
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// Helper: build weekly scores for a team from matchup data
+function buildWeeklyScoresForTeam(matchups, teamId) {
+  const scores = []
+  for (const [week, games] of Object.entries(matchups)) {
+    const game = games.find(g =>
+      String(g.homeTeamId) === String(teamId) || String(g.awayTeamId) === String(teamId)
+    )
+    if (game) {
+      const isHome = String(game.homeTeamId) === String(teamId)
+      scores.push({
+        week: parseInt(week),
+        points: isHome ? game.homePoints : game.awayPoints,
+        opponentPoints: isHome ? game.awayPoints : game.homePoints,
+        isPlayoffs: game.isPlayoffs || false,
+        isConsolation: game.isConsolation || false,
+      })
+    }
+  }
+  return scores
+}
+
 module.exports = router

@@ -1930,6 +1930,7 @@ const LeagueVault = () => {
   const [editSeasonYear, setEditSeasonYear] = useState(null)
   const { health, loading: healthLoading, refetch: refetchHealth } = useImportHealth(leagueId)
   const [healthExpanded, setHealthExpanded] = useState(false)
+  const [reimporting, setReimporting] = useState(null) // seasonYear being reimported
   const [aliases, setAliases] = useState([])
   const [avatars, setAvatars] = useState([])
   const [league, setLeague] = useState(null)
@@ -2412,6 +2413,29 @@ const LeagueVault = () => {
                             {issue.repairLabel} &rarr;
                           </button>
                         )}
+                        {/* Re-import button for team count anomalies (Yahoo) */}
+                        {issue.type === 'TEAM_COUNT_ANOMALY' && issue.seasonYear && (
+                          <button
+                            disabled={reimporting === issue.seasonYear}
+                            onClick={async () => {
+                              if (!confirm(`Re-import ${issue.seasonYear} from Yahoo? This will replace the existing data for that year.`)) return
+                              setReimporting(issue.seasonYear)
+                              try {
+                                const result = await api.reimportSeason(leagueId, issue.seasonYear)
+                                alert(`Re-imported ${result.teamsImported} teams for ${issue.seasonYear}!`)
+                                refetch()
+                                refetchHealth()
+                              } catch (err) {
+                                alert(`Re-import failed: ${err.message}`)
+                              } finally {
+                                setReimporting(null)
+                              }
+                            }}
+                            className="text-xs font-mono text-blue-400 hover:text-blue-300 mt-1 ml-3 disabled:opacity-50"
+                          >
+                            {reimporting === issue.seasonYear ? 'Re-importing...' : 'Re-import from Yahoo'} &rarr;
+                          </button>
+                        )}
                       </div>
                     ))
                   }
@@ -2613,6 +2637,7 @@ const LeagueVault = () => {
 
       {editSeasonYear && sanitizedSeasons?.[editSeasonYear] && (
         <EditSeasonModal
+          leagueId={leagueId}
           seasonYear={editSeasonYear}
           existingTeams={sanitizedSeasons[editSeasonYear]}
           onClose={() => setEditSeasonYear(null)}

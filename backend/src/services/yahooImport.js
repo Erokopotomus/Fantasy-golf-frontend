@@ -913,6 +913,7 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
 
       try {
         const seasonData = await importSeason(season.leagueKey, season.year, currentToken, wrappedImportRefresh)
+        console.log(`[YahooImport] Season ${season.year}: ${seasonData.rosters.length} teams parsed`)
 
         // Try to identify which team belongs to the importing user
         let matchedTeamKey = null

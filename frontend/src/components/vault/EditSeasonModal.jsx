@@ -9,7 +9,19 @@ const PLAYOFF_OPTIONS = [
   { value: 'missed', label: 'Missed Playoffs' },
 ]
 
-const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
+const EMPTY_TEAM = {
+  ownerName: '',
+  teamName: '',
+  wins: 0,
+  losses: 0,
+  ties: 0,
+  pointsFor: 0,
+  pointsAgainst: 0,
+  finalStanding: 0,
+  playoffResult: '',
+}
+
+const EditSeasonModal = ({ leagueId, seasonYear, existingTeams, onClose, onSaved }) => {
   const [teams, setTeams] = useState(() =>
     existingTeams.map(t => ({
       id: t.id,
@@ -22,6 +34,7 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
       pointsAgainst: t.pointsAgainst || 0,
       finalStanding: t.finalStanding || 0,
       playoffResult: t.playoffResult || '',
+      _isNew: false,
       _original: {
         ownerName: t.ownerName || t.teamName || '',
         teamName: t.teamName || '',
@@ -43,7 +56,21 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
     setTeams(prev => prev.map((t, i) => i === idx ? { ...t, [field]: value } : t))
   }
 
+  const addTeam = () => {
+    setTeams(prev => [...prev, {
+      ...EMPTY_TEAM,
+      finalStanding: prev.length + 1,
+      _isNew: true,
+      _original: { ...EMPTY_TEAM },
+    }])
+  }
+
+  const removeNewTeam = (idx) => {
+    setTeams(prev => prev.filter((_, i) => i !== idx))
+  }
+
   const hasChanges = (team) => {
+    if (team._isNew) return team.ownerName.trim().length > 0
     const o = team._original
     return (
       team.ownerName !== o.ownerName ||
@@ -59,6 +86,7 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
   }
 
   const changedTeams = teams.filter(hasChanges)
+  const newTeams = teams.filter(t => t._isNew && t.ownerName.trim().length > 0)
 
   const handleSave = async () => {
     if (changedTeams.length === 0) {
@@ -72,17 +100,35 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
 
     try {
       for (const team of changedTeams) {
-        await api.updateHistoricalSeason(team.id, {
-          ownerName: team.ownerName,
-          teamName: team.teamName,
-          wins: parseInt(team.wins) || 0,
-          losses: parseInt(team.losses) || 0,
-          ties: parseInt(team.ties) || 0,
-          pointsFor: parseFloat(team.pointsFor) || 0,
-          pointsAgainst: parseFloat(team.pointsAgainst) || 0,
-          finalStanding: parseInt(team.finalStanding) || 0,
-          playoffResult: team.playoffResult || null,
-        })
+        if (team._isNew) {
+          // Create new team
+          await api.createHistoricalSeason({
+            leagueId,
+            seasonYear,
+            ownerName: team.ownerName,
+            teamName: team.teamName || team.ownerName,
+            wins: parseInt(team.wins) || 0,
+            losses: parseInt(team.losses) || 0,
+            ties: parseInt(team.ties) || 0,
+            pointsFor: parseFloat(team.pointsFor) || 0,
+            pointsAgainst: parseFloat(team.pointsAgainst) || 0,
+            finalStanding: parseInt(team.finalStanding) || 0,
+            playoffResult: team.playoffResult || null,
+          })
+        } else {
+          // Update existing team
+          await api.updateHistoricalSeason(team.id, {
+            ownerName: team.ownerName,
+            teamName: team.teamName,
+            wins: parseInt(team.wins) || 0,
+            losses: parseInt(team.losses) || 0,
+            ties: parseInt(team.ties) || 0,
+            pointsFor: parseFloat(team.pointsFor) || 0,
+            pointsAgainst: parseFloat(team.pointsAgainst) || 0,
+            finalStanding: parseInt(team.finalStanding) || 0,
+            playoffResult: team.playoffResult || null,
+          })
+        }
         setSavedCount(prev => prev + 1)
       }
       onSaved()
@@ -105,6 +151,7 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
             <h2 className="text-lg font-display font-bold text-white">Edit {seasonYear} Season</h2>
             <p className="text-xs text-text-secondary mt-1">
               {teams.length} teams &middot; {changedTeams.length > 0 ? `${changedTeams.length} modified` : 'No changes'}
+              {newTeams.length > 0 && ` (${newTeams.length} new)`}
             </p>
           </div>
           <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
@@ -121,6 +168,7 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
             <span className="w-20 text-center">PF</span>
             <span className="w-20 text-center">PA</span>
             <span className="w-28 text-center">Playoff</span>
+            <span className="w-6"></span>
           </div>
 
           <div className="space-y-1.5">
@@ -128,8 +176,11 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
               const changed = hasChanges(team)
               return (
                 <div
-                  key={team.id || idx}
-                  className={`flex items-center gap-2 rounded-lg px-1 py-1 transition-colors ${changed ? 'bg-accent-gold/5 border border-accent-gold/20' : ''}`}
+                  key={team.id || `new-${idx}`}
+                  className={`flex items-center gap-2 rounded-lg px-1 py-1 transition-colors ${
+                    team._isNew ? 'bg-green-500/5 border border-green-500/20' :
+                    changed ? 'bg-accent-gold/5 border border-accent-gold/20' : ''
+                  }`}
                 >
                   <span className="text-xs font-mono text-text-secondary w-5 text-right flex-shrink-0">
                     {team.finalStanding || idx + 1}
@@ -138,6 +189,7 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
                     type="text"
                     value={team.ownerName}
                     onChange={e => updateTeam(idx, 'ownerName', e.target.value)}
+                    placeholder={team._isNew ? 'Owner name...' : ''}
                     className="flex-1 min-w-0 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm focus:outline-none focus:border-accent-gold"
                   />
                   <input
@@ -181,10 +233,29 @@ const EditSeasonModal = ({ seasonYear, existingTeams, onClose, onSaved }) => {
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
+                  <div className="w-6 flex-shrink-0">
+                    {team._isNew && (
+                      <button
+                        onClick={() => removeNewTeam(idx)}
+                        className="text-red-400 hover:text-red-300 text-sm"
+                        title="Remove"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
                 </div>
               )
             })}
           </div>
+
+          {/* Add Team button */}
+          <button
+            onClick={addTeam}
+            className="mt-3 w-full py-2 border border-dashed border-dark-tertiary rounded-lg text-text-secondary text-sm hover:border-accent-gold/50 hover:text-accent-gold transition-colors"
+          >
+            + Add Team
+          </button>
         </div>
 
         {error && (

@@ -701,6 +701,20 @@ class ApiService {
     })
   }
 
+  async createHistoricalSeason(data) {
+    return this.request('/imports/historical-season', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async reimportSeason(leagueId, seasonYear) {
+    return this.request('/imports/reimport-season', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, seasonYear }),
+    })
+  }
+
   async getOwnerAliases(leagueId) {
     return this.request(`/imports/owner-aliases/${leagueId}`)
   }
