@@ -1614,7 +1614,25 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
 
 // ─── Manage Owners Modal ─────────────────────────────────────────────────────
 
-const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, onSaved }) => {
+// Format years into compact ranges: [2010,2011,2012,2015] → "2010-12, 2015"
+function formatYearRanges(years) {
+  if (!years || years.length === 0) return ''
+  const sorted = [...years].sort((a, b) => a - b)
+  const ranges = []
+  let start = sorted[0], end = sorted[0]
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === end + 1) {
+      end = sorted[i]
+    } else {
+      ranges.push(start === end ? String(start) : `${start}-${String(end).slice(2)}`)
+      start = end = sorted[i]
+    }
+  }
+  ranges.push(start === end ? String(start) : `${start}-${String(end).slice(2)}`)
+  return ranges.join(', ')
+}
+
+const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAliases, onClose, onSaved }) => {
   // Reconstruct groups from existing aliases: { canonicalName → [ownerName, ...] }
   const [groups, setGroups] = useState(() => {
     const g = {}
@@ -1788,34 +1806,51 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
             <div>
               <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Owners ({Object.keys(groups).length})</h3>
               <div className="space-y-2">
-                {Object.entries(groups).map(([canonical, names]) => (
-                  <div key={canonical} className="bg-dark-tertiary/40 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-mono text-text-secondary">Display as:</span>
-                      <span className="flex-1 text-white text-sm font-display font-semibold">{canonical}</span>
-                      <button
-                        onClick={() => handleRename(canonical)}
-                        className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 transition-colors"
-                      >
-                        Rename
-                      </button>
-                      <button
-                        onClick={() => handleDissolveGroup(canonical)}
-                        className="text-xs text-text-secondary hover:text-red-400 transition-colors"
-                      >
-                        Ungroup All
-                      </button>
+                {Object.entries(groups).map(([canonical, names]) => {
+                  // Compute combined year coverage for this owner
+                  const allYears = new Set()
+                  for (const n of names) {
+                    for (const y of (nameToYears[n] || [])) allYears.add(y)
+                  }
+                  const sortedYears = [...allYears].sort((a, b) => a - b)
+                  return (
+                    <div key={canonical} className="bg-dark-tertiary/40 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="flex-1 text-white text-sm font-display font-semibold">{canonical}</span>
+                        <button
+                          onClick={() => handleRename(canonical)}
+                          className="text-xs font-mono text-accent-gold hover:text-accent-gold/80 transition-colors"
+                        >
+                          Rename
+                        </button>
+                        <button
+                          onClick={() => handleDissolveGroup(canonical)}
+                          className="text-xs text-text-secondary hover:text-red-400 transition-colors"
+                        >
+                          Ungroup All
+                        </button>
+                      </div>
+                      {sortedYears.length > 0 && (
+                        <p className="text-[10px] font-mono text-text-secondary/60 mb-2">
+                          Covers: {formatYearRanges(sortedYears)} ({sortedYears.length} season{sortedYears.length !== 1 ? 's' : ''})
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-1.5">
+                        {names.map(name => (
+                          <span key={name} className="inline-flex items-center gap-1 bg-dark-secondary px-2 py-0.5 rounded text-xs font-mono text-white">
+                            {name}
+                            {nameToYears[name] && (
+                              <span className="text-text-secondary/50 text-[9px]">
+                                {formatYearRanges(nameToYears[name])}
+                              </span>
+                            )}
+                            <button onClick={() => handleUngroup(canonical, name)} className="text-text-secondary hover:text-red-400">&times;</button>
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {names.map(name => (
-                        <span key={name} className="inline-flex items-center gap-1 bg-dark-secondary px-2 py-0.5 rounded text-xs font-mono text-white">
-                          {name}
-                          <button onClick={() => handleUngroup(canonical, name)} className="text-text-secondary hover:text-red-400">&times;</button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
               <button
                 onClick={() => {
@@ -1855,22 +1890,48 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
               )}
             </div>
             {/* Add to existing group buttons */}
-            {selected.size >= 1 && Object.keys(groups).length > 0 && (
-              <div className="mb-3 p-3 bg-accent-gold/5 border border-accent-gold/20 rounded-lg">
-                <p className="text-xs text-text-secondary mb-2">Add {selected.size === 1 ? `"${Array.from(selected)[0]}"` : `${selected.size} selected`} to:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.keys(groups).map(canonical => (
-                    <button
-                      key={canonical}
-                      onClick={() => handleAddToGroup(canonical)}
-                      className="px-3 py-1.5 text-xs font-mono bg-dark-tertiary border border-dark-tertiary rounded-lg text-white hover:border-accent-gold hover:text-accent-gold transition-colors"
-                    >
-                      + {canonical}
-                    </button>
-                  ))}
+            {selected.size >= 1 && Object.keys(groups).length > 0 && (() => {
+              // Figure out which years the selected names cover
+              const selectedYears = new Set()
+              for (const name of selected) {
+                for (const y of (nameToYears[name] || [])) selectedYears.add(y)
+              }
+              const selectedYearStr = selectedYears.size > 0 ? formatYearRanges([...selectedYears]) : null
+
+              return (
+                <div className="mb-3 p-3 bg-accent-gold/5 border border-accent-gold/20 rounded-lg">
+                  <p className="text-xs text-text-secondary mb-2">
+                    Add {selected.size === 1 ? `"${Array.from(selected)[0]}"` : `${selected.size} selected`}
+                    {selectedYearStr && <span className="text-text-secondary/60"> ({selectedYearStr})</span>}
+                    {' '}to:
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(groups).map(([canonical, names]) => {
+                      // Check if this owner has a gap that matches the selected years
+                      const ownerYears = new Set()
+                      for (const n of names) {
+                        for (const y of (nameToYears[n] || [])) ownerYears.add(y)
+                      }
+                      const hasOverlap = [...selectedYears].some(y => ownerYears.has(y))
+                      const fillsGap = selectedYears.size > 0 && !hasOverlap
+                      return (
+                        <button
+                          key={canonical}
+                          onClick={() => handleAddToGroup(canonical)}
+                          className={`px-3 py-1.5 text-xs font-mono rounded-lg transition-colors ${
+                            fillsGap
+                              ? 'bg-accent-gold/20 border border-accent-gold/40 text-accent-gold hover:bg-accent-gold/30'
+                              : 'bg-dark-tertiary border border-dark-tertiary text-white hover:border-accent-gold hover:text-accent-gold'
+                          }`}
+                        >
+                          + {canonical}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
             {ungrouped.length === 0 ? (
               <p className="text-xs text-text-secondary italic">All names are grouped.</p>
             ) : (
@@ -1890,6 +1951,11 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
                         className="accent-[#E8B84D] flex-shrink-0"
                       />
                       <span className="text-sm text-white font-display truncate">{name}</span>
+                      {nameToYears[name] && (
+                        <span className="text-[10px] font-mono text-text-secondary/60 flex-shrink-0">
+                          {formatYearRanges(nameToYears[name])}
+                        </span>
+                      )}
                     </label>
                     <button
                       onClick={() => {
@@ -2075,6 +2141,25 @@ const LeagueVault = () => {
     }
     return Array.from(nameSet)
   }, [history, aliases])
+
+  // Map each name to the years it appears in
+  const nameToYears = useMemo(() => {
+    if (!history?.seasons) return {}
+    const map = {}
+    for (const [year, teams] of Object.entries(history.seasons)) {
+      for (const t of (Array.isArray(teams) ? teams : [])) {
+        const name = t.ownerName || t.teamName
+        if (name) {
+          const key = String(name)
+          if (!map[key]) map[key] = []
+          map[key].push(parseInt(year))
+        }
+      }
+    }
+    // Sort years for each name
+    for (const arr of Object.values(map)) arr.sort((a, b) => a - b)
+    return map
+  }, [history])
 
   // Sanitize: strip large JSON fields, enforce types, and apply alias resolution
   const sanitizedSeasons = useMemo(() => {
@@ -2783,6 +2868,7 @@ const LeagueVault = () => {
         <ManageOwnersModal
           leagueId={leagueId}
           allRawNames={allRawNames}
+          nameToYears={nameToYears}
           existingAliases={aliases}
           onClose={() => setShowManageOwners(false)}
           onSaved={() => {
