@@ -1834,9 +1834,16 @@ const ManageOwnersModal = ({ leagueId, allRawNames, existingAliases, onClose, on
 
           {/* Ungrouped names */}
           <div>
+            {Object.keys(groups).length === 0 && ungrouped.length > 0 && (
+              <div className="mb-3 p-3 bg-dark-tertiary/30 rounded-lg border border-dark-tertiary/50">
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  <strong className="text-white">Start here:</strong> Find real people (like "Tank" or "Eric") and tap <strong className="text-white">This is a person</strong> next to their name. Then come back and assign their old team names.
+                </p>
+              </div>
+            )}
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider">
-                Ungrouped ({ungrouped.length})
+                {Object.keys(groups).length > 0 ? 'Team Names' : 'All Names'} ({ungrouped.length})
               </h3>
               {selected.size >= 1 && Object.keys(groups).length === 0 && (
                 <button
