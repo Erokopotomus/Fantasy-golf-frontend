@@ -2,7 +2,7 @@
  * Import Health Service
  *
  * Analyzes imported league history data for completeness, accuracy, and anomalies.
- * Runs 10 checks against HistoricalSeason records and returns a structured health report
+ * Runs checks against HistoricalSeason records and returns a structured health report
  * with per-season scores, issues, and suggested repair actions.
  *
  * No schema changes required — all checks run against existing data.
@@ -16,11 +16,11 @@ const CURRENT_YEAR = new Date().getFullYear()
 // Expected game counts by NFL era (regular season games)
 const NFL_GAMES_BY_ERA = {
   // 2021+ : 17-game season → expect 13–17 total W+L+T
-  2021: { min: 13, max: 17 },
+  2021: { min: 13, max: 17, typical: 14 },
   // 2001-2020: 16-game season → expect 12–16 total
-  2001: { min: 12, max: 16 },
+  2001: { min: 12, max: 16, typical: 13 },
   // pre-2001: varies, be lenient
-  1990: { min: 10, max: 16 },
+  1990: { min: 10, max: 16, typical: 13 },
 }
 
 function getExpectedGameRange(year) {
@@ -48,6 +48,7 @@ async function analyzeLeagueHealth(leagueId) {
       pointsAgainst: true,
       finalStanding: true,
       playoffResult: true,
+      weeklyScores: true,
     },
   })
 
@@ -124,21 +125,29 @@ async function analyzeLeagueHealth(leagueId) {
       }
     }
 
-    // --- Check 3: ZERO_POINTS ---
+    // --- Check 3: ZERO_POINTS (all teams or some teams) ---
     const teamsWithPoints = teams.filter(t => Number(t.pointsFor) > 0)
-    if (teamsWithPoints.length > 0) {
+    if (teamsWithPoints.length === 0 && year < CURRENT_YEAR) {
+      // ALL teams have 0 points — entire season missing point data
+      yearIssues.push({
+        type: 'ZERO_POINTS',
+        severity: 'high',
+        seasonYear: year,
+        message: `${year}: No teams have points scored — season point data is missing.`,
+        repairAction: 'EDIT_SEASON',
+        repairLabel: `Edit ${year} Season`,
+      })
+    } else if (teamsWithPoints.length > 0 && teamsWithPoints.length < teams.length) {
+      // SOME teams have 0 points
       const zeroTeams = teams.filter(t => Number(t.pointsFor) === 0)
-      for (const t of zeroTeams) {
-        yearIssues.push({
-          type: 'ZERO_POINTS',
-          severity: 'medium',
-          seasonYear: year,
-          message: `${year}: ${t.ownerName || t.teamName} has 0 points scored while other teams have data.`,
-          repairAction: 'EDIT_SEASON',
-          repairLabel: `Edit ${year} Season`,
-        })
-        break // Only flag once per season
-      }
+      yearIssues.push({
+        type: 'ZERO_POINTS',
+        severity: 'medium',
+        seasonYear: year,
+        message: `${year}: ${zeroTeams.length} team${zeroTeams.length !== 1 ? 's have' : ' has'} 0 points scored while others have data.`,
+        repairAction: 'EDIT_SEASON',
+        repairLabel: `Edit ${year} Season`,
+      })
     }
 
     // --- Check 4: POINTS_OUTLIER ---
@@ -227,6 +236,42 @@ async function analyzeLeagueHealth(leagueId) {
       })
     }
 
+    // --- Check 11: MISSING_WEEKLY_SCORES ---
+    // If teams have W/L records but no weekly score data, that's a gap
+    const teamsWithGames = teams.filter(t => (t.wins || 0) + (t.losses || 0) > 0)
+    if (teamsWithGames.length > 0 && year < CURRENT_YEAR) {
+      const teamsWithWeekly = teams.filter(t => {
+        const ws = Array.isArray(t.weeklyScores) ? t.weeklyScores : []
+        return ws.length > 0
+      })
+      if (teamsWithWeekly.length === 0) {
+        yearIssues.push({
+          type: 'MISSING_WEEKLY_SCORES',
+          severity: 'medium',
+          seasonYear: year,
+          message: `${year}: No weekly score data — "Best Week" and matchup records can't be computed.`,
+          repairAction: null,
+          repairLabel: null,
+        })
+      }
+    }
+
+    // --- Check 12: ZERO_WINS_AND_LOSSES ---
+    // If a completed season has all teams with 0-0 records, something is wrong
+    if (year < CURRENT_YEAR) {
+      const allZeroRecord = teams.every(t => (t.wins || 0) === 0 && (t.losses || 0) === 0)
+      if (allZeroRecord) {
+        yearIssues.push({
+          type: 'ZERO_RECORDS',
+          severity: 'high',
+          seasonYear: year,
+          message: `${year}: All teams show 0-0 records — W/L data is missing.`,
+          repairAction: 'EDIT_SEASON',
+          repairLabel: `Edit ${year} Season`,
+        })
+      }
+    }
+
     // Compute per-season score
     let seasonScore = 100
     for (const issue of yearIssues) {
@@ -266,6 +311,36 @@ async function analyzeLeagueHealth(leagueId) {
           repairAction: 'MANAGE_OWNERS',
           repairLabel: 'Manage Owners',
         })
+      }
+    }
+  }
+
+  // --- Check 13: LOW_CAREER_GAMES (cross-season consistency) ---
+  // For owners appearing in many seasons, check if their total W+L is reasonable
+  if (yearNums.length >= 5) {
+    const ownerGames = {}
+    for (const year of yearNums) {
+      for (const t of byYear[year]) {
+        const name = t.ownerName || t.teamName
+        if (!ownerGames[name]) ownerGames[name] = { games: 0, seasons: 0 }
+        ownerGames[name].games += (t.wins || 0) + (t.losses || 0) + (t.ties || 0)
+        ownerGames[name].seasons++
+      }
+    }
+    for (const [name, data] of Object.entries(ownerGames)) {
+      if (data.seasons >= 5) {
+        // Expect at least ~10 games per season on average
+        const expectedMin = data.seasons * 10
+        if (data.games < expectedMin) {
+          allIssues.push({
+            type: 'LOW_CAREER_GAMES',
+            severity: 'medium',
+            seasonYear: null,
+            message: `"${name}" has ${data.games} total games across ${data.seasons} seasons (expected ~${data.seasons * 13}+). Some seasons may have missing W/L data.`,
+            repairAction: null,
+            repairLabel: null,
+          })
+        }
       }
     }
   }
