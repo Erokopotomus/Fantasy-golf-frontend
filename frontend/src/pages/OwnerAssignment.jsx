@@ -261,68 +261,110 @@ const Step1IdentifyOwners = ({ wizard }) => {
           </button>
         </form>
 
-        {/* Owner list */}
-        {owners.size > 0 && (
-          <div>
-            <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
-              Owners ({owners.size})
-            </h3>
-            <div className="space-y-1.5">
-              {[...owners].map(([name, data]) => {
-                const years = nameToYears[name] || []
-                return (
-                  <div key={name} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-dark-tertiary/30 border border-dark-border/50">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className="w-3 h-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: data.color }}
-                      />
-                      <span className="text-sm text-white font-display font-bold truncate">{name}</span>
-                      {years.length > 0 && (
-                        <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
-                          {formatYearRanges(years)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => toggleOwnerActive(name)}
-                        className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
-                          data.isActive
-                            ? 'text-accent-green bg-accent-green/10 border border-accent-green/20'
-                            : 'text-text-muted bg-dark-tertiary/30 border border-dark-border'
-                        }`}
-                      >
-                        {data.isActive ? 'ACTIVE' : 'FORMER'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          const newName = window.prompt('Rename owner:', name)
-                          if (newName) renameOwner(name, newName)
-                        }}
-                        className="text-xs text-text-muted hover:text-accent-gold transition-colors"
-                        title="Rename"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => { if (confirm(`Remove ${name}?`)) removeOwner(name) }}
-                        className="text-xs text-text-muted hover:text-red-400 transition-colors"
-                        title="Remove"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
+        {/* Owner lists — Active & Former */}
+        {owners.size > 0 && (() => {
+          const activeOwners = [...owners].filter(([, d]) => d.isActive)
+          const formerOwners = [...owners].filter(([, d]) => !d.isActive)
+
+          const OwnerRow = ({ name, data, index }) => {
+            const years = nameToYears[name] || []
+            return (
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-dark-tertiary/30 border border-dark-border/50">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-xs font-mono text-text-muted/60 w-5 text-right flex-shrink-0">{index}</span>
+                  <span
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: data.color }}
+                  />
+                  <span className="text-sm text-white font-display font-bold truncate">{name}</span>
+                  {years.length > 0 && (
+                    <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
+                      {formatYearRanges(years)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => toggleOwnerActive(name)}
+                    className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
+                      data.isActive
+                        ? 'text-text-muted bg-dark-tertiary/30 border border-dark-border hover:text-text-secondary'
+                        : 'text-accent-green bg-accent-green/10 border border-accent-green/20 hover:bg-accent-green/20'
+                    }`}
+                    title={data.isActive ? 'Mark as former member' : 'Mark as active member'}
+                  >
+                    {data.isActive ? 'MARK FORMER' : 'MARK ACTIVE'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const newName = window.prompt('Rename owner:', name)
+                      if (newName) renameOwner(name, newName)
+                    }}
+                    className="text-xs text-text-muted hover:text-accent-gold transition-colors"
+                    title="Rename"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => { if (confirm(`Remove ${name}?`)) removeOwner(name) }}
+                    className="text-xs text-text-muted hover:text-red-400 transition-colors"
+                    title="Remove"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )
+          }
+
+          return (
+            <div className="space-y-5">
+              {/* Active Owners */}
+              <div className="border border-accent-green/20 rounded-xl overflow-hidden">
+                <div className="px-4 py-2.5 bg-accent-green/5 border-b border-accent-green/20 flex items-center justify-between">
+                  <h3 className="text-xs font-mono text-accent-green uppercase tracking-wider font-bold flex items-center gap-2">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Active Owners
+                  </h3>
+                  <span className="text-sm font-mono font-bold text-accent-green">{activeOwners.length}</span>
+                </div>
+                <div className="p-2 space-y-1.5">
+                  {activeOwners.length > 0 ? activeOwners.map(([name, data], i) => (
+                    <OwnerRow key={name} name={name} data={data} index={i + 1} />
+                  )) : (
+                    <p className="text-xs text-text-muted text-center py-4 font-mono">No active owners yet — add names above</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Former Owners */}
+              {formerOwners.length > 0 && (
+                <div className="border border-dark-border/50 rounded-xl overflow-hidden">
+                  <div className="px-4 py-2.5 bg-dark-tertiary/20 border-b border-dark-border/50 flex items-center justify-between">
+                    <h3 className="text-xs font-mono text-text-muted uppercase tracking-wider font-bold flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Former Owners
+                    </h3>
+                    <span className="text-sm font-mono font-bold text-text-muted">{formerOwners.length}</span>
                   </div>
-                )
-              })}
+                  <div className="p-2 space-y-1.5">
+                    {formerOwners.map(([name, data], i) => (
+                      <OwnerRow key={name} name={name} data={data} index={i + 1} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Continue button */}
         <button
