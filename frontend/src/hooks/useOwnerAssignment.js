@@ -536,47 +536,86 @@ export function useOwnerAssignment(leagueId) {
     }
   }, [assignments, owners, leagueId])
 
-  // ─── Initialize from Existing Aliases ──────────────────────────────────────
+  // ─── Initialize from Existing Aliases OR Auto-detect from Most Recent Season ──
 
   useEffect(() => {
-    if (initialized || loading || !existingAliases || !history) return
-    if (existingAliases.length === 0) {
+    if (initialized || loading || !history) return
+
+    // Case 1: Existing aliases — restore them
+    if (existingAliases && existingAliases.length > 0) {
+      const ownersMap = new Map()
+      const assignMap = new Map()
+      let ci = 0
+
+      for (const alias of existingAliases) {
+        if (!ownersMap.has(alias.canonicalName)) {
+          ownersMap.set(alias.canonicalName, {
+            name: alias.canonicalName,
+            color: OWNER_COLORS[ci % OWNER_COLORS.length],
+            isActive: alias.isActive !== false,
+          })
+          ci++
+        }
+        assignMap.set(alias.ownerName, alias.canonicalName)
+        if (!assignMap.has(alias.canonicalName)) {
+          assignMap.set(alias.canonicalName, alias.canonicalName)
+        }
+      }
+
+      for (const rawName of uniqueRawNames) {
+        if (ownersMap.has(rawName) && !assignMap.has(rawName)) {
+          assignMap.set(rawName, rawName)
+        }
+      }
+
+      setOwners(ownersMap)
+      setAssignments(assignMap)
+      if (ownersMap.size > 0) setStep(2)
       setInitialized(true)
       return
     }
 
-    const ownersMap = new Map()
-    const assignMap = new Map()
-    let ci = 0
+    // Case 2: No existing aliases — auto-detect owners from most recent season
+    // and auto-assign all team-seasons where ownerName matches exactly
+    if (teamEntries.length === 0) {
+      setInitialized(true)
+      return
+    }
 
-    for (const alias of existingAliases) {
-      if (!ownersMap.has(alias.canonicalName)) {
-        ownersMap.set(alias.canonicalName, {
-          name: alias.canonicalName,
+    // Find the most recent year
+    const mostRecentYear = Math.max(...teamEntries.map(e => e.seasonYear))
+    const mostRecentEntries = teamEntries.filter(e => e.seasonYear === mostRecentYear)
+
+    // Create owners from most recent season's owner names
+    const ownersMap = new Map()
+    let ci = 0
+    for (const entry of mostRecentEntries) {
+      const name = entry.rawName
+      if (!ownersMap.has(name)) {
+        ownersMap.set(name, {
+          name,
           color: OWNER_COLORS[ci % OWNER_COLORS.length],
-          isActive: alias.isActive !== false,
+          isActive: true,
         })
         ci++
       }
-      assignMap.set(alias.ownerName, alias.canonicalName)
-      // Also add canonical → canonical if not already (self-mapping)
-      if (!assignMap.has(alias.canonicalName)) {
-        assignMap.set(alias.canonicalName, alias.canonicalName)
-      }
     }
 
-    // Also ensure that rawNames matching a canonical name exactly get assigned
+    // Auto-assign ALL team-seasons where the rawName exactly matches an owner
+    const assignMap = new Map()
     for (const rawName of uniqueRawNames) {
-      if (ownersMap.has(rawName) && !assignMap.has(rawName)) {
+      if (ownersMap.has(rawName)) {
         assignMap.set(rawName, rawName)
       }
     }
 
     setOwners(ownersMap)
     setAssignments(assignMap)
+
+    // Skip to step 2 since we auto-populated owners
     if (ownersMap.size > 0) setStep(2)
     setInitialized(true)
-  }, [existingAliases, loading, history, initialized, uniqueRawNames])
+  }, [existingAliases, loading, history, initialized, uniqueRawNames, teamEntries])
 
   // ─── Return ────────────────────────────────────────────────────────────────
 
