@@ -5,6 +5,8 @@
 
 import Sparkline from './Sparkline'
 import Crown from './Crown'
+import RatingRing from './RatingRing'
+import RatingTrendIndicator from './RatingTrendIndicator'
 
 export default function OwnerRow({
   owner,        // { name, color, isActive, totalWins, totalLosses, totalPF, winPct, titles, seasonCount, bestSeason, winPcts, currentSeason? }
@@ -14,6 +16,7 @@ export default function OwnerRow({
   animate = true,
   animationDelay = 0,
   showCards = true,
+  rating = null, // ClutchRating object or null
 }) {
   const winPctStr = (owner.winPct * 100).toFixed(1)
   const pfStr = owner.totalPF >= 1000
@@ -82,9 +85,9 @@ export default function OwnerRow({
           }}
         />
 
-        {/* Desktop layout: 8-column grid */}
+        {/* Desktop layout: 9-column grid (with rating ring) */}
         <div className="hidden md:grid items-center gap-3 px-5 py-3.5"
-          style={{ gridTemplateColumns: '44px 44px 1fr 120px 80px 70px 56px 56px' }}
+          style={{ gridTemplateColumns: `44px ${rating ? '48px ' : ''}44px 1fr 120px 80px 70px 56px 56px` }}
         >
           {/* Rank */}
           <div className={`text-center font-mono font-bold ${isLeader ? 'text-accent-gold text-lg' : 'text-text-muted text-base'}`}>
@@ -95,6 +98,20 @@ export default function OwnerRow({
               </div>
             ) : rank}
           </div>
+
+          {/* Rating Ring (if available) */}
+          {rating && (
+            <div className="flex justify-center">
+              <RatingRing
+                rating={rating.overall}
+                confidence={rating.confidence}
+                tier={rating.tier}
+                color={owner.color}
+                size="sm"
+                animate={animate}
+              />
+            </div>
+          )}
 
           {/* Avatar */}
           <div className="relative">
@@ -126,6 +143,7 @@ export default function OwnerRow({
               <span className={`text-sm font-display font-bold truncate ${isLeader ? 'text-accent-gold' : 'text-white'}`}>
                 {owner.name}
               </span>
+              {rating && <RatingTrendIndicator trend={rating.trend} />}
               {!owner.isActive && (
                 <span className="text-[9px] font-mono text-text-muted bg-dark-tertiary px-1.5 py-0.5 rounded flex-shrink-0">
                   FORMER

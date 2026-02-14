@@ -517,6 +517,10 @@ class ApiService {
     return this.request(`/managers/${userId}/clutch-rating`)
   }
 
+  async computeClutchRating(userId) {
+    return this.request(`/managers/${userId}/clutch-rating/compute`, { method: 'POST' })
+  }
+
   async getWeightedConsensus(eventId, playerId, type = 'player_benchmark') {
     const params = new URLSearchParams({ eventId, playerId, type }).toString()
     return this.request(`/predictions/consensus-weighted?${params}`)

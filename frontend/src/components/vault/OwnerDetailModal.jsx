@@ -5,8 +5,12 @@
 import Sparkline from './Sparkline'
 import StatGrid from './StatGrid'
 import Crown from './Crown'
+import RatingRing from './RatingRing'
+import RatingBreakdown from './RatingBreakdown'
+import RatingTierBadge from './RatingTierBadge'
+import RatingConfidenceIndicator from './RatingConfidenceIndicator'
 
-export default function OwnerDetailModal({ owner, rank, onClose }) {
+export default function OwnerDetailModal({ owner, rank, onClose, rating = null }) {
   if (!owner) return null
 
   const winPctStr = (owner.winPct * 100).toFixed(1)
@@ -104,6 +108,43 @@ export default function OwnerDetailModal({ owner, rank, onClose }) {
                 </svg>
               </button>
             </div>
+
+            {/* Clutch Rating Section */}
+            {rating && rating.overall != null && (
+              <div
+                className="rounded-xl px-5 py-4 mb-6"
+                style={{
+                  background: `${owner.color}06`,
+                  border: `1px solid ${owner.color}15`,
+                }}
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <RatingRing
+                    rating={rating.overall}
+                    confidence={rating.confidence}
+                    tier={rating.tier}
+                    color={owner.color}
+                    size="lg"
+                    animate={true}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-display font-bold text-white">Clutch Rating</span>
+                      <RatingTierBadge tier={rating.tier} size="sm" />
+                    </div>
+                    <RatingConfidenceIndicator
+                      confidence={rating.confidence}
+                      dataSourceSummary={rating.dataSourceSummary}
+                    />
+                  </div>
+                </div>
+                <RatingBreakdown
+                  components={rating.components}
+                  ownerColor={owner.color}
+                  animate={true}
+                />
+              </div>
+            )}
 
             {/* Current season callout */}
             {currentSeason && (

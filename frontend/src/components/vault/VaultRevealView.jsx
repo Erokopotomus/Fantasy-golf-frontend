@@ -2,10 +2,11 @@
 // Shared between the assignment wizard Step 3 and the standalone first-visit vault page.
 // Shows: shimmer title, counting stats, cascading owner rows, detail modal on click.
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import AnimatedNumber from './AnimatedNumber'
 import OwnerRow from './OwnerRow'
 import OwnerDetailModal from './OwnerDetailModal'
+import RatingTierBadge from './RatingTierBadge'
 
 const REVEAL_KEYFRAMES = `
   @keyframes vaultFadeUp {
@@ -24,14 +25,33 @@ export default function VaultRevealView({
   showCards,        // Boolean — true when cards should start animating in
   onOwnerClick,     // (ownerName) => void — optional external handler
   children,         // Slot for bottom CTA area (save button, etc.)
+  ratings = {},     // Map: ownerName → ClutchRating object (optional)
 }) {
   const [selectedOwner, setSelectedOwner] = useState(null)
 
+  // Sort by Clutch Rating when available, fall back to winPct
+  const sortedOwners = useMemo(() => {
+    const hasRatings = Object.keys(ratings).length > 0
+    if (!hasRatings) return ownerStats
+    return [...ownerStats].sort((a, b) => {
+      const rA = ratings[a.name]?.overall ?? -1
+      const rB = ratings[b.name]?.overall ?? -1
+      return rB - rA
+    })
+  }, [ownerStats, ratings])
+
+  // Compute average rating for the league stat bar
+  const avgRating = useMemo(() => {
+    const ratingValues = Object.values(ratings).filter(r => r?.overall != null).map(r => r.overall)
+    if (ratingValues.length === 0) return null
+    return Math.round(ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length)
+  }, [ratings])
+
   const selectedOwnerData = selectedOwner
-    ? ownerStats.find(o => o.name === selectedOwner)
+    ? sortedOwners.find(o => o.name === selectedOwner)
     : null
   const selectedOwnerRank = selectedOwner
-    ? ownerStats.findIndex(o => o.name === selectedOwner) + 1
+    ? sortedOwners.findIndex(o => o.name === selectedOwner) + 1
     : 0
 
   const handleOwnerClick = (name) => {
@@ -51,6 +71,7 @@ export default function VaultRevealView({
           owner={selectedOwnerData}
           rank={selectedOwnerRank}
           onClose={() => setSelectedOwner(null)}
+          rating={ratings[selectedOwnerData.name] || null}
         />
       )}
 
@@ -89,7 +110,7 @@ export default function VaultRevealView({
 
           {/* Big league stats */}
           <div
-            className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 mb-12"
+            className={`grid gap-3 sm:gap-4 mb-12 ${avgRating != null ? 'grid-cols-3 sm:grid-cols-6' : 'grid-cols-3 sm:grid-cols-5'}`}
             style={{ animation: 'vaultFadeUp 0.8s ease 0.6s both' }}
           >
             {[
@@ -98,6 +119,7 @@ export default function VaultRevealView({
               { label: 'Games Played', value: leagueStats.totalGames },
               { label: 'Total Points', value: leagueStats.totalPoints },
               { label: 'Championships', value: leagueStats.totalTitles },
+              ...(avgRating != null ? [{ label: 'Avg Rating', value: avgRating, isRating: true }] : []),
             ].map((stat, i) => (
               <div
                 key={stat.label}
@@ -117,6 +139,29 @@ export default function VaultRevealView({
             ))}
           </div>
 
+          {/* Rating Introduction Card (shown when ratings are available) */}
+          {Object.keys(ratings).length > 0 && (
+            <div
+              className="mb-10 rounded-xl border border-accent-gold/10 overflow-hidden"
+              style={{ animation: 'vaultFadeUp 0.8s ease 0.9s both' }}
+            >
+              <div className="px-5 py-4 bg-accent-gold/[0.03]">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">&#9889;</span>
+                  <span className="text-sm font-display font-bold text-accent-gold">Introducing Clutch Rating</span>
+                </div>
+                <p className="text-xs font-sans text-text-secondary leading-relaxed mb-2">
+                  Every owner now has a Clutch Rating — a composite score from 0 to 100 measuring fantasy skill
+                  across win rate, championships, consistency, and more. Owners are ranked by their rating below.
+                </p>
+                <p className="text-[11px] font-mono text-text-muted">
+                  This is just the beginning. As you use Clutch — drafting, setting lineups, making predictions — your rating
+                  unlocks more dimensions and becomes more accurate.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Section divider */}
           <div
             className="flex items-center gap-3 mb-6"
@@ -124,14 +169,14 @@ export default function VaultRevealView({
           >
             <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, #2A2520)' }} />
             <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.12em] flex-shrink-0">
-              All-Time Owner Rankings
+              {Object.keys(ratings).length > 0 ? 'Clutch Rating Rankings' : 'All-Time Owner Rankings'}
             </span>
             <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, #2A2520, transparent)' }} />
           </div>
 
           {/* Owner rows */}
           <div className="flex flex-col gap-2.5">
-            {ownerStats.map((owner, i) => (
+            {sortedOwners.map((owner, i) => (
               <OwnerRow
                 key={owner.name}
                 owner={owner}
@@ -141,6 +186,7 @@ export default function VaultRevealView({
                 animate={true}
                 animationDelay={1.2 + i * 0.1}
                 showCards={showCards}
+                rating={ratings[owner.name] || null}
               />
             ))}
           </div>

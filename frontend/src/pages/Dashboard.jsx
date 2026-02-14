@@ -13,6 +13,7 @@ import LeagueCard from '../components/dashboard/LeagueCard'
 import TournamentCard from '../components/dashboard/TournamentCard'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import PredictionWidget from '../components/predictions/PredictionWidget'
+import DashboardRatingWidget from '../components/dashboard/DashboardRatingWidget'
 import api from '../services/api'
 
 const LeagueCardSkeleton = () => (
@@ -313,6 +314,9 @@ const Dashboard = () => {
 
               {/* Prove It Widget */}
               <PredictionWidget />
+
+              {/* Clutch Rating Widget */}
+              <DashboardRatingWidget />
 
               {/* Coaching Corner */}
               {coachingInsights.length > 0 && (

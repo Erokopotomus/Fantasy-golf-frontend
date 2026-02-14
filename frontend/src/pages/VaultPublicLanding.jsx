@@ -14,6 +14,8 @@ import StatGrid from '../components/vault/StatGrid'
 import OwnerRow from '../components/vault/OwnerRow'
 import OwnerDetailModal from '../components/vault/OwnerDetailModal'
 import ClaimModal from '../components/vault/ClaimModal'
+import RatingRing from '../components/vault/RatingRing'
+import RatingTierBadge from '../components/vault/RatingTierBadge'
 
 export default function VaultPublicLanding() {
   const { inviteCode } = useParams()
@@ -61,6 +63,9 @@ export default function VaultPublicLanding() {
     if (!leagueData?.seasons) return { ownerStats: [], leagueStats: {} }
     return computeVaultStats(leagueData.seasons, leagueData.aliases)
   }, [leagueData])
+
+  // Ratings map from league data (if computed)
+  const ratings = useMemo(() => leagueData?.ratings || {}, [leagueData])
 
   // Find the personalized member
   const memberOwner = useMemo(() => {
@@ -267,6 +272,26 @@ export default function VaultPublicLanding() {
                   </div>
                 </div>
               )}
+
+              {/* Clutch Rating display */}
+              {ratings[memberOwner.name] && (
+                <div className="flex items-center justify-center gap-3 mt-5 pt-5 border-t border-white/5">
+                  <RatingRing
+                    rating={ratings[memberOwner.name].overall}
+                    confidence={ratings[memberOwner.name].confidence}
+                    tier={ratings[memberOwner.name].tier}
+                    size="md"
+                    animate={false}
+                  />
+                  <div className="text-left">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-lg font-mono font-bold text-white">{ratings[memberOwner.name].overall}</span>
+                      <RatingTierBadge tier={ratings[memberOwner.name].tier} size="sm" />
+                    </div>
+                    <div className="text-[10px] font-mono text-text-muted">Clutch Rating</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -311,6 +336,7 @@ export default function VaultPublicLanding() {
                     onClick={() => setSelectedOwner({ owner, rank: idx + 1 })}
                     animate={false}
                     showCards={true}
+                    rating={ratings[owner.name] || null}
                   />
                   {/* "You" badge for highlighted member */}
                   {isHighlighted && (
@@ -356,7 +382,7 @@ export default function VaultPublicLanding() {
           </div>
         </div>
 
-        <div className="relative mb-10">
+        <div className="relative mb-6">
           <div
             className="rounded-2xl border border-dark-border bg-dark-secondary/30 p-5"
             style={{ filter: 'blur(3px)', opacity: 0.5, pointerEvents: 'none' }}
@@ -376,6 +402,42 @@ export default function VaultPublicLanding() {
             </div>
             <div className="text-[11px] font-mono text-text-muted">
               Claim your spot to unlock
+            </div>
+          </div>
+        </div>
+
+        {/* Clutch Rating blurred teaser */}
+        <div className="relative mb-10">
+          <div
+            className="rounded-2xl border border-dark-border bg-dark-secondary/30 p-5"
+            style={{ filter: 'blur(3px)', opacity: 0.5, pointerEvents: 'none' }}
+          >
+            <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-3">
+              Your Full Rating Breakdown
+            </div>
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-16 h-16 rounded-full bg-dark-tertiary" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-dark-tertiary rounded w-1/2" />
+                <div className="h-2 bg-dark-tertiary rounded w-3/4" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5, 6].map(n => (
+                <div key={n} className="flex items-center gap-2">
+                  <div className="w-16 h-2 bg-dark-tertiary rounded" />
+                  <div className="flex-1 h-2 bg-dark-tertiary rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl">
+            <div className="text-lg mb-1">⚡</div>
+            <div className="text-sm font-display font-semibold text-accent-gold mb-1">
+              Your Clutch Rating Breakdown
+            </div>
+            <div className="text-[11px] font-mono text-text-muted">
+              Claim your spot to see your full rating
             </div>
           </div>
         </div>
@@ -407,6 +469,7 @@ export default function VaultPublicLanding() {
           owner={selectedOwner.owner}
           rank={selectedOwner.rank}
           onClose={() => setSelectedOwner(null)}
+          rating={ratings[selectedOwner.owner.name] || null}
         />
       )}
 

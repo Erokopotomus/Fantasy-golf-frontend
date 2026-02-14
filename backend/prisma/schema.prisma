@@ -89,6 +89,7 @@ model User {
   socialLinks Json     @default("{}") @map("social_links")
   pinnedBadges Json    @default("[]") @map("pinned_badges")
   clutchManagerRating ClutchManagerRating?
+  ratingSnapshots     RatingSnapshot[]
 
   @@map("users")
 }
@@ -2402,10 +2403,35 @@ model ClutchManagerRating {
   userId               String   @unique @map("user_id")
   user                 User     @relation(fields: [userId], references: [id])
   overallRating        Float?   @map("overall_rating")
+
+  // Legacy V1 prediction-only components (kept for backward compat)
   accuracyComponent    Float?   @map("accuracy_component")
   consistencyComponent Float?   @map("consistency_component")
   volumeComponent      Float?   @map("volume_component")
   breadthComponent     Float?   @map("breadth_component")
+
+  // V2 metadata
+  version              Int      @default(1)
+  confidence           Float?   @default(0)
+  dataSourceSummary    String?  @map("data_source_summary")
+  activeSince          DateTime? @map("active_since")
+
+  // V2 component scores (0-100) and confidences (0-100)
+  winRateScore         Float?   @map("win_rate_score")
+  winRateConfidence    Float?   @default(0) @map("win_rate_confidence")
+  draftIqScore         Float?   @map("draft_iq_score")
+  draftIqConfidence    Float?   @default(0) @map("draft_iq_confidence")
+  rosterMgmtScore      Float?   @map("roster_mgmt_score")
+  rosterMgmtConfidence Float?   @default(0) @map("roster_mgmt_confidence")
+  predictionsScore     Float?   @map("predictions_score")
+  predictionsConfidence Float?  @default(0) @map("predictions_confidence")
+  tradeAcumenScore     Float?   @map("trade_acumen_score")
+  tradeAcumenConfidence Float?  @default(0) @map("trade_acumen_confidence")
+  championshipsScore   Float?   @map("championships_score")
+  championshipsConfidence Float? @default(0) @map("championships_confidence")
+  consistencyScore     Float?   @map("consistency_score")
+  consistencyConfidence Float?  @default(0) @map("consistency_confidence")
+
   tier                 String   @default("developing")
   trend                String   @default("stable")
   totalGradedCalls     Int      @default(0) @map("total_graded_calls")
@@ -2415,6 +2441,18 @@ model ClutchManagerRating {
   @@index([tier])
   @@index([overallRating(sort: Desc)])
   @@map("clutch_manager_ratings")
+}
+
+model RatingSnapshot {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  overall      Float
+  components   Json     @default("{}")
+  snapshotDate DateTime @default(now()) @map("snapshot_date")
+
+  @@index([userId, snapshotDate(sort: Desc)])
+  @@map("rating_snapshots")
 }
 
 // ============ OAUTH TOKENS ============

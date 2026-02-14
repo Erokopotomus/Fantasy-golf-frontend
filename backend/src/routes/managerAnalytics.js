@@ -45,35 +45,56 @@ router.get('/:id/profile', optionalAuth, async (req, res, next) => {
 })
 
 // ─── GET /api/managers/:id/clutch-rating ───────────────────────────────────
-// Returns Clutch Rating + component breakdown
+// Returns Clutch Rating V2 — 7-component confidence-weighted rating
 router.get('/:id/clutch-rating', optionalAuth, async (req, res, next) => {
   try {
     const userId = req.params.id
+    const clutchRatingService = require('../services/clutchRatingService')
 
-    const rating = await prisma.clutchManagerRating.findUnique({
-      where: { userId },
-    })
+    // Try to get cached V2 rating first
+    let formatted = await clutchRatingService.getRating(userId, prisma)
 
-    if (!rating) {
+    if (!formatted) {
+      // Fall back to V1 format for backward compatibility
+      const rating = await prisma.clutchManagerRating.findUnique({
+        where: { userId },
+      })
+
+      if (!rating) {
+        return res.json({ clutchRating: null, message: 'No Clutch Rating computed yet' })
+      }
+
+      // Return V1 format
       return res.json({
-        clutchRating: null,
-        message: 'No Clutch Rating computed yet',
+        clutchRating: {
+          overall: rating.overallRating,
+          tier: rating.tier,
+          trend: rating.trend,
+          totalGradedCalls: rating.totalGradedCalls,
+          updatedAt: rating.updatedAt,
+          // V1 legacy fields
+          accuracy: rating.accuracyComponent,
+          consistency: rating.consistencyComponent,
+          volume: rating.volumeComponent,
+          breadth: rating.breadthComponent,
+        },
       })
     }
 
-    res.json({
-      clutchRating: {
-        overall: rating.overallRating,
-        accuracy: rating.accuracyComponent,
-        consistency: rating.consistencyComponent,
-        volume: rating.volumeComponent,
-        breadth: rating.breadthComponent,
-        tier: rating.tier,
-        trend: rating.trend,
-        totalGradedCalls: rating.totalGradedCalls,
-        updatedAt: rating.updatedAt,
-      },
-    })
+    res.json({ clutchRating: formatted })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ─── POST /api/managers/:id/clutch-rating/compute ───────────────────────────
+// On-demand rating computation (e.g., after vault reveal)
+router.post('/:id/clutch-rating/compute', authenticate, async (req, res, next) => {
+  try {
+    const userId = req.params.id
+    const clutchRatingService = require('../services/clutchRatingService')
+    const result = await clutchRatingService.calculateRatingForUser(userId, prisma)
+    res.json({ clutchRating: result })
   } catch (error) {
     next(error)
   }

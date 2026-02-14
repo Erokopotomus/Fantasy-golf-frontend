@@ -4,6 +4,7 @@
 
 import { useState, useCallback } from 'react'
 import api from '../../services/api'
+import RatingTierBadge from './RatingTierBadge'
 
 export default function ShareModal({
   isOpen,
@@ -13,6 +14,7 @@ export default function ShareModal({
   ownerStats = [],
   leagueStats = {},
   leagueId,
+  ratings = {},
 }) {
   const [copiedGeneric, setCopiedGeneric] = useState(false)
   const [copiedOwner, setCopiedOwner] = useState(null) // canonical name of last copied
@@ -213,6 +215,9 @@ export default function ShareModal({
                           <span className="text-xs font-display font-semibold text-text-primary truncate">
                             {owner.name}
                           </span>
+                          {ratings[owner.name]?.tier && (
+                            <RatingTierBadge tier={ratings[owner.name].tier} size="sm" />
+                          )}
                           {isClaimed && (
                             <span className="text-[9px] font-mono text-accent-green bg-accent-green/10 px-1.5 py-0.5 rounded flex-shrink-0">
                               Claimed

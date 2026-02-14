@@ -10,8 +10,16 @@ const yahooImport = require('../services/yahooImport')
 const fantraxImport = require('../services/fantraxImport')
 const mflImport = require('../services/mflImport')
 const importHealthService = require('../services/importHealthService')
+const clutchRatingService = require('../services/clutchRatingService')
 
 const prisma = new PrismaClient()
+
+// Fire-and-forget rating recalc after import completes
+function recalcRatingAfterImport(userId) {
+  clutchRatingService.calculateRatingForUser(userId, prisma).catch(err => {
+    console.error('[ClutchRating] Post-import recalc failed:', err.message)
+  })
+}
 
 const validateLeagueId = validateBody({
   leagueId: { required: true, type: 'string', minLength: 1, maxLength: 100 },
@@ -37,6 +45,7 @@ router.post('/sleeper/import', authenticate, validateLeagueId, async (req, res) 
     const targetLeagueId = req.body.targetLeagueId || undefined
     const selectedSeasons = req.body.selectedSeasons || undefined
     const result = await sleeperImport.runFullImport(leagueId, req.user.id, prisma, targetLeagueId, selectedSeasons)
+    recalcRatingAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -70,6 +79,7 @@ router.post('/espn/import', authenticate, validateLeagueId, async (req, res) => 
     const targetLeagueId = req.body.targetLeagueId || undefined
     const selectedSeasons = req.body.selectedSeasons || undefined
     const result = await espnImport.runFullImport(leagueId, req.user.id, prisma, cookies, targetLeagueId, selectedSeasons)
+    recalcRatingAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -140,6 +150,7 @@ router.post('/yahoo/import', authenticate, validateLeagueId, async (req, res) =>
     const selectedSeasons = req.body.selectedSeasons || undefined
     const onTokenRefresh = buildYahooRefreshCallback(req.user.id)
     const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken, targetLeagueId, selectedSeasons, onTokenRefresh)
+    recalcRatingAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -180,6 +191,7 @@ router.post('/fantrax/import', authenticate, async (req, res) => {
     }
     const targetLeagueId = req.body.targetLeagueId || undefined
     const result = await fantraxImport.runFullImport(csvData, req.user.id, prisma, targetLeagueId)
+    recalcRatingAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -209,6 +221,7 @@ router.post('/mfl/import', authenticate, validateLeagueId, async (req, res) => {
     const targetLeagueId = req.body.targetLeagueId || undefined
     const selectedSeasons = req.body.selectedSeasons || undefined
     const result = await mflImport.runFullImport(leagueId, req.user.id, prisma, apiKey, targetLeagueId, selectedSeasons)
+    recalcRatingAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })

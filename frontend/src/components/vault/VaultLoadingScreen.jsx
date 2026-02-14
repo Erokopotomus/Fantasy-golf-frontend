@@ -40,8 +40,11 @@ export default function VaultLoadingScreen({ seasonCount = 0 }) {
         >
           Building your league history...
         </div>
-        <div className="text-xs font-mono text-text-muted mb-6">
+        <div className="text-xs font-mono text-text-muted mb-1">
           Merging {seasonCount} season{seasonCount !== 1 ? 's' : ''} of data
+        </div>
+        <div className="text-xs font-mono text-text-muted/60 mb-6">
+          Calculating Clutch Ratings...
         </div>
 
         {/* Progress bar */}

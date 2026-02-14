@@ -12,6 +12,7 @@ export default function VaultPersistent({
   leagueStats,     // { totalSeasons, totalOwners, totalGames, totalPoints, totalTitles }
   hasLiveSeason,   // Boolean — whether any owner has a current in-progress season
   onOwnerClick,    // (ownerName) => void — optional external handler
+  ratings = {},     // Map: ownerName → ClutchRating object (optional)
 }) {
   const [selectedOwner, setSelectedOwner] = useState(null)
   const [activeOnly, setActiveOnly] = useState(false)
@@ -72,6 +73,7 @@ export default function VaultPersistent({
           owner={selectedOwnerData}
           rank={selectedOwnerRank}
           onClose={() => setSelectedOwner(null)}
+          rating={ratings[selectedOwnerData.name] || null}
         />
       )}
 
@@ -153,6 +155,7 @@ export default function VaultPersistent({
                 animate={false}
                 animationDelay={0}
                 showCards={true}
+                rating={ratings[owner.name] || null}
               />
             ))}
           </div>
