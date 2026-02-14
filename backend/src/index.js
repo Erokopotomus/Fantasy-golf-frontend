@@ -525,10 +525,25 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('waivers', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
-    // Every 5 min — Fantasy week status transitions (UPCOMING→LOCKED, LOCKED→IN_PROGRESS)
+    // Every 5 min — Tournament + Fantasy week status transitions
     cron.schedule('*/5 * * * *', async () => {
       try {
         const now = new Date()
+
+        // Tournament status: UPCOMING → IN_PROGRESS when startDate has passed
+        const upcomingTournaments = await cronPrisma.tournament.findMany({
+          where: { status: 'UPCOMING', startDate: { lte: now } },
+          select: { id: true, name: true, startDate: true },
+        })
+        for (const t of upcomingTournaments) {
+          const daysSinceStart = Math.floor((now - new Date(t.startDate).getTime()) / 86400000)
+          const currentRound = Math.min(Math.max(daysSinceStart + 1, 1), 4)
+          await cronPrisma.tournament.update({
+            where: { id: t.id },
+            data: { status: 'IN_PROGRESS', currentRound },
+          })
+          cronLog('tournamentTransition', `${t.name}: UPCOMING → IN_PROGRESS (round ${currentRound})`)
+        }
 
         // Transition UPCOMING → LOCKED when tournament starts
         const upcomingWeeks = await cronPrisma.fantasyWeek.findMany({
