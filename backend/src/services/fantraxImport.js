@@ -319,6 +319,38 @@ async function runFullImport(csvData, userId, prisma, targetLeagueId) {
       })
     }
 
+    // ─── Auto-detect settings + active owners from most recent season ─────
+    const settingsMapper = require('./settingsMapper')
+    const mostRecentSeason = discovery.seasons[0]
+    let detectedSettings = null
+    let activeOwners = []
+
+    if (mostRecentSeason) {
+      detectedSettings = settingsMapper.mapSettingsForPlatform('fantrax', mostRecentSeason)
+
+      if (!targetLeagueId && detectedSettings && detectedSettings.maxTeams) {
+        try {
+          await prisma.league.update({
+            where: { id: clutchLeague.id },
+            data: { maxTeams: detectedSettings.maxTeams, settings: { ...(clutchLeague.settings || {}), importedFrom: 'fantrax' } },
+          })
+        } catch (e) { /* non-fatal */ }
+      }
+
+      try {
+        const recentOwners = await prisma.historicalSeason.findMany({
+          where: { leagueId: clutchLeague.id, seasonYear: seasonData.seasonYear },
+          select: { ownerName: true, teamName: true, wins: true, losses: true, ties: true, playoffResult: true, ownerUserId: true },
+          orderBy: { finalStanding: 'asc' },
+        })
+        activeOwners = recentOwners.map(o => ({
+          ownerName: o.ownerName, teamName: o.teamName,
+          record: `${o.wins}-${o.losses}${o.ties > 0 ? `-${o.ties}` : ''}`,
+          playoffResult: o.playoffResult, claimed: !!o.ownerUserId,
+        }))
+      } catch (e) { /* non-fatal */ }
+    }
+
     await prisma.leagueImport.update({
       where: { id: importRecord.id },
       data: {
@@ -335,6 +367,9 @@ async function runFullImport(csvData, userId, prisma, targetLeagueId) {
       leagueName: discovery.name,
       seasonsImported: [seasonData.seasonYear],
       totalSeasons: 1,
+      detectedSettings,
+      activeOwners,
+      settingsApplied: !targetLeagueId,
     }
   } catch (err) {
     await prisma.leagueImport.update({

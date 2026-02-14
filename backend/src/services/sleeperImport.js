@@ -651,6 +651,45 @@ async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId, select
       })
     }
 
+    // ─── Auto-detect settings + active owners from most recent season ─────
+    const settingsMapper = require('./settingsMapper')
+    const sortedDiscovery = [...discovery.seasons].sort((a, b) => parseInt(b.season) - parseInt(a.season))
+    const mostRecentSeason = sortedDiscovery[0]
+    let detectedSettings = null
+    let activeOwners = []
+
+    if (mostRecentSeason) {
+      detectedSettings = settingsMapper.mapSettingsForPlatform('sleeper', mostRecentSeason)
+
+      // Auto-apply settings to new leagues (not merges)
+      if (!targetLeagueId && detectedSettings) {
+        try {
+          const updateData = { settings: { ...(clutchLeague.settings || {}), ...detectedSettings.settings, importedFrom: 'sleeper' } }
+          if (detectedSettings.format) updateData.format = detectedSettings.format
+          if (detectedSettings.draftType) updateData.draftType = detectedSettings.draftType
+          if (detectedSettings.maxTeams) updateData.maxTeams = detectedSettings.maxTeams
+          await db.league.update({ where: { id: clutchLeague.id }, data: updateData })
+        } catch (e) { /* non-fatal */ }
+      }
+
+      // Extract active owners from most recent season
+      const mostRecentYear = parseInt(mostRecentSeason.season)
+      try {
+        const recentOwners = await db.historicalSeason.findMany({
+          where: { leagueId: clutchLeague.id, seasonYear: mostRecentYear },
+          select: { ownerName: true, teamName: true, wins: true, losses: true, ties: true, playoffResult: true, ownerUserId: true },
+          orderBy: { finalStanding: 'asc' },
+        })
+        activeOwners = recentOwners.map(o => ({
+          ownerName: o.ownerName,
+          teamName: o.teamName,
+          record: `${o.wins}-${o.losses}${o.ties > 0 ? `-${o.ties}` : ''}`,
+          playoffResult: o.playoffResult,
+          claimed: !!o.ownerUserId,
+        }))
+      } catch (e) { /* non-fatal */ }
+    }
+
     await db.leagueImport.update({
       where: { id: importRecord.id },
       data: {
@@ -666,6 +705,9 @@ async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId, select
       leagueName: discovery.name,
       seasonsImported: importedSeasons,
       totalSeasons: discovery.totalSeasons,
+      detectedSettings,
+      activeOwners,
+      settingsApplied: !targetLeagueId,
     }
   } catch (err) {
     await db.leagueImport.update({

@@ -774,6 +774,13 @@ class ApiService {
     })
   }
 
+  async confirmImportSettings(leagueId, { format, draftType, maxTeams, settings, applySettings }) {
+    return this.request('/imports/confirm-settings', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, format, draftType, maxTeams, settings, applySettings }),
+    })
+  }
+
   // ESPN Import
   async discoverESPNLeague(leagueId, espn_s2 = '', swid = '') {
     return this.request('/imports/espn/discover', {

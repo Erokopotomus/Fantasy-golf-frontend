@@ -1169,4 +1169,48 @@ router.post('/vault-notify', authenticate, async (req, res) => {
   }
 })
 
+// ─── POST /confirm-settings — Commissioner confirms/edits auto-detected settings ──
+router.post('/confirm-settings', authenticate, async (req, res) => {
+  try {
+    const { leagueId, format, draftType, maxTeams, settings, applySettings } = req.body
+    if (!leagueId) {
+      return res.status(400).json({ error: { message: 'leagueId is required' } })
+    }
+
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { ownerId: true, settings: true },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can confirm settings' } })
+    }
+
+    if (!applySettings) {
+      return res.json({ success: true, skipped: true })
+    }
+
+    const updateData = {}
+    if (format) updateData.format = format
+    if (draftType) updateData.draftType = draftType
+    if (maxTeams) updateData.maxTeams = parseInt(maxTeams) || undefined
+    if (settings && typeof settings === 'object') {
+      updateData.settings = {
+        ...(typeof league.settings === 'object' ? league.settings : {}),
+        ...settings,
+      }
+    }
+
+    const updated = await prisma.league.update({
+      where: { id: leagueId },
+      data: updateData,
+    })
+
+    res.json({ success: true, league: { id: updated.id, format: updated.format, draftType: updated.draftType, maxTeams: updated.maxTeams } })
+  } catch (err) {
+    console.error('Confirm settings error:', err)
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 module.exports = router

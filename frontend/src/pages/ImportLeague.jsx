@@ -152,7 +152,22 @@ const ImportLeague = () => {
   // Season selection (checkboxes on Step 2)
   const [selectedSeasons, setSelectedSeasons] = useState([])
 
-  // Health check (Step 4)
+  // Confirmation step (Step 4) — detected settings + active owners
+  const [detectedSettings, setDetectedSettings] = useState(null)
+  const [activeOwners, setActiveOwners] = useState([])
+  const [editSettings, setEditSettings] = useState({
+    format: '',
+    draftType: '',
+    maxTeams: '',
+    scoringType: '',
+    rosterSize: '',
+    waiverType: '',
+    faabBudget: '',
+    playoffTeams: '',
+  })
+  const [confirmLoading, setConfirmLoading] = useState(false)
+
+  // Health check (Step 5)
   const [health, setHealth] = useState(null)
   const [healthLoading, setHealthLoading] = useState(false)
 
@@ -248,12 +263,27 @@ const ImportLeague = () => {
     if (data) {
       track(Events.IMPORT_COMPLETED, { source_platform: platform.id, seasons_imported: data.seasonsImported?.length || 0 })
       refetch()
-      setStep(4)
-      // Fetch health report in background
-      if (data.leagueId) {
-        setHealthLoading(true)
-        api.getImportHealth(data.leagueId).then(h => setHealth(h)).catch(() => {}).finally(() => setHealthLoading(false))
+
+      // Capture detected settings + active owners for confirmation step
+      if (data.detectedSettings) {
+        setDetectedSettings(data.detectedSettings)
+        const s = data.detectedSettings.settings || {}
+        setEditSettings({
+          format: data.detectedSettings.format || '',
+          draftType: data.detectedSettings.draftType || '',
+          maxTeams: data.detectedSettings.maxTeams?.toString() || '',
+          scoringType: s.scoringType || '',
+          rosterSize: s.rosterSize?.toString() || '',
+          waiverType: s.waiverType || '',
+          faabBudget: s.faabBudget?.toString() || '',
+          playoffTeams: s.playoffTeams?.toString() || '',
+        })
       }
+      if (data.activeOwners) {
+        setActiveOwners(data.activeOwners)
+      }
+
+      setStep(4) // Go to confirmation step
     } else {
       track(Events.IMPORT_FAILED, { source_platform: platform.id, error_type: 'import_error' })
       setStep(2)
@@ -275,8 +305,45 @@ const ImportLeague = () => {
     setMflApiKey('')
     setTargetLeagueId('')
     setSelectedSeasons([])
+    setDetectedSettings(null)
+    setActiveOwners([])
+    setEditSettings({ format: '', draftType: '', maxTeams: '', scoringType: '', rosterSize: '', waiverType: '', faabBudget: '', playoffTeams: '' })
+    setConfirmLoading(false)
     setHealth(null)
     setHealthLoading(false)
+  }
+
+  const handleConfirmSettings = async (apply) => {
+    setConfirmLoading(true)
+    try {
+      const leagueId = activeHook.result?.leagueId
+      if (leagueId && apply) {
+        await api.confirmImportSettings(leagueId, {
+          format: editSettings.format || null,
+          draftType: editSettings.draftType || null,
+          maxTeams: editSettings.maxTeams ? parseInt(editSettings.maxTeams) : null,
+          settings: {
+            scoringType: editSettings.scoringType || null,
+            rosterSize: editSettings.rosterSize ? parseInt(editSettings.rosterSize) : null,
+            waiverType: editSettings.waiverType || null,
+            faabBudget: editSettings.faabBudget ? parseInt(editSettings.faabBudget) : null,
+            playoffTeams: editSettings.playoffTeams ? parseInt(editSettings.playoffTeams) : null,
+          },
+          applySettings: true,
+        })
+      }
+    } catch (err) {
+      console.error('Failed to confirm settings:', err)
+    } finally {
+      setConfirmLoading(false)
+      setStep(5)
+      // Fetch health report in background
+      const leagueId = activeHook.result?.leagueId
+      if (leagueId) {
+        setHealthLoading(true)
+        api.getImportHealth(leagueId).then(h => setHealth(h)).catch(() => {}).finally(() => setHealthLoading(false))
+      }
+    }
   }
 
   const handleFileUpload = (e, setter) => {
@@ -341,7 +408,7 @@ const ImportLeague = () => {
             </Link>
           </div>
 
-          <StepIndicator current={step} total={5} />
+          <StepIndicator current={step} total={6} />
 
           {/* Step 0: Choose Platform */}
           {step === 0 && (
@@ -911,8 +978,224 @@ const ImportLeague = () => {
             </Card>
           )}
 
-          {/* Step 4: Complete + Health Verification */}
+          {/* Step 4: Confirm Your League */}
           {step === 4 && activeHook.result && (
+            <div className="space-y-4">
+              <Card className="py-6 px-5">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 bg-accent-gold/20 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-display font-bold text-white">Confirm Your League</h2>
+                    <p className="text-xs text-text-secondary">We detected these settings from your import. Review and adjust if needed.</p>
+                  </div>
+                </div>
+
+                {/* Detected Settings */}
+                <div className="space-y-3 mb-6">
+                  <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider">League Settings</h3>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Format */}
+                    <div>
+                      <label className="text-xs text-text-muted block mb-1">Format</label>
+                      <select
+                        value={editSettings.format}
+                        onChange={e => setEditSettings(s => ({ ...s, format: e.target.value }))}
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                      >
+                        <option value="">Not detected</option>
+                        <option value="HEAD_TO_HEAD">Head-to-Head</option>
+                        <option value="FULL_LEAGUE">Total Points</option>
+                        <option value="ROTO">Roto</option>
+                        <option value="SURVIVOR">Survivor</option>
+                        <option value="ONE_AND_DONE">One and Done</option>
+                      </select>
+                    </div>
+
+                    {/* Draft Type */}
+                    <div>
+                      <label className="text-xs text-text-muted block mb-1">Draft Type</label>
+                      <select
+                        value={editSettings.draftType}
+                        onChange={e => setEditSettings(s => ({ ...s, draftType: e.target.value }))}
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                      >
+                        <option value="">Not detected</option>
+                        <option value="SNAKE">Snake</option>
+                        <option value="AUCTION">Auction</option>
+                        <option value="NONE">None</option>
+                      </select>
+                    </div>
+
+                    {/* Team Count */}
+                    <div>
+                      <label className="text-xs text-text-muted block mb-1">Teams</label>
+                      <input
+                        type="number"
+                        value={editSettings.maxTeams}
+                        onChange={e => setEditSettings(s => ({ ...s, maxTeams: e.target.value }))}
+                        placeholder="Not detected"
+                        min={2}
+                        max={32}
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Scoring Type */}
+                    <div>
+                      <label className="text-xs text-text-muted block mb-1">Scoring</label>
+                      <select
+                        value={editSettings.scoringType}
+                        onChange={e => setEditSettings(s => ({ ...s, scoringType: e.target.value }))}
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                      >
+                        <option value="">Not detected</option>
+                        <option value="standard">Standard</option>
+                        <option value="ppr">PPR</option>
+                        <option value="half_ppr">Half PPR</option>
+                      </select>
+                    </div>
+
+                    {/* Roster Size */}
+                    <div>
+                      <label className="text-xs text-text-muted block mb-1">Roster Size</label>
+                      <input
+                        type="number"
+                        value={editSettings.rosterSize}
+                        onChange={e => setEditSettings(s => ({ ...s, rosterSize: e.target.value }))}
+                        placeholder="Not detected"
+                        min={5}
+                        max={53}
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Waiver Type */}
+                    <div>
+                      <label className="text-xs text-text-muted block mb-1">Waivers</label>
+                      <select
+                        value={editSettings.waiverType}
+                        onChange={e => setEditSettings(s => ({ ...s, waiverType: e.target.value }))}
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                      >
+                        <option value="">Not detected</option>
+                        <option value="faab">FAAB</option>
+                        <option value="rolling">Rolling Priority</option>
+                      </select>
+                    </div>
+
+                    {/* FAAB Budget — only show if waiver type is FAAB */}
+                    {editSettings.waiverType === 'faab' && (
+                      <div>
+                        <label className="text-xs text-text-muted block mb-1">FAAB Budget</label>
+                        <input
+                          type="number"
+                          value={editSettings.faabBudget}
+                          onChange={e => setEditSettings(s => ({ ...s, faabBudget: e.target.value }))}
+                          placeholder="100"
+                          min={0}
+                          className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {/* Playoff Teams */}
+                    <div>
+                      <label className="text-xs text-text-muted block mb-1">Playoff Teams</label>
+                      <input
+                        type="number"
+                        value={editSettings.playoffTeams}
+                        onChange={e => setEditSettings(s => ({ ...s, playoffTeams: e.target.value }))}
+                        placeholder="Not detected"
+                        min={2}
+                        max={16}
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {platform?.id === 'fantrax' && (
+                    <p className="text-xs text-text-muted mt-2 flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-accent-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Fantrax CSV imports have limited settings data. Fill in what you know — you can always update later.
+                    </p>
+                  )}
+                </div>
+
+                {/* Active Members */}
+                {activeOwners.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-3">
+                      Active Members
+                      <span className="text-xs font-normal text-text-muted ml-2">
+                        from {activeHook.result?.seasonsImported?.[activeHook.result.seasonsImported.length - 1] || 'most recent'} season
+                      </span>
+                    </h3>
+                    <div className="space-y-1.5">
+                      {activeOwners.map((owner, i) => (
+                        <div key={i} className="flex items-center gap-3 bg-dark-tertiary/40 rounded-lg px-3 py-2">
+                          <div className="w-7 h-7 rounded-full bg-accent-gold/20 flex items-center justify-center text-xs font-mono font-bold text-accent-gold">
+                            {i + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white font-medium truncate">{owner.ownerName}</p>
+                            {owner.teamName && owner.teamName !== owner.ownerName && (
+                              <p className="text-xs text-text-muted truncate">{owner.teamName}</p>
+                            )}
+                          </div>
+                          <span className="text-xs font-mono text-text-secondary">{owner.record}</span>
+                          {owner.playoffResult === 'champion' && (
+                            <span className="text-xs bg-accent-gold/20 text-accent-gold px-2 py-0.5 rounded-full font-mono">🏆</span>
+                          )}
+                          {owner.playoffResult === 'runner_up' && (
+                            <span className="text-xs bg-dark-tertiary text-text-muted px-2 py-0.5 rounded-full font-mono">🥈</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-text-muted mt-2">
+                      These owners will be listed as active members. You can manage them in the League Vault after setup.
+                    </p>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleConfirmSettings(false)}
+                    disabled={confirmLoading}
+                    className="flex-1"
+                  >
+                    Skip for Now
+                  </Button>
+                  <Button
+                    onClick={() => handleConfirmSettings(true)}
+                    disabled={confirmLoading}
+                    className="flex-1"
+                  >
+                    {confirmLoading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      'Looks Good'
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 5: Complete + Health Verification */}
+          {step === 5 && activeHook.result && (
             <div className="space-y-4">
               <Card className="text-center py-8">
                 <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
