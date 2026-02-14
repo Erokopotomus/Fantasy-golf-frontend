@@ -195,8 +195,10 @@ const Step1IdentifyOwners = ({ wizard }) => {
           <h2 className="text-xl sm:text-2xl font-display font-bold text-white mb-1">
             Who's in this league?
           </h2>
-          <p className="text-sm text-text-secondary">
-            Build a roster of every person who has ever played in this league — current members and former.
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Your imported history has fantasy team names — not real names. List every person who has
+            ever played in this league so we can connect old team names to real owners and build
+            accurate all-time records.
           </p>
         </div>
 
@@ -403,26 +405,38 @@ const Step2AssignTeams = ({ wizard }) => {
         Back to Identify Owners
       </button>
 
-      {/* Info Banner */}
+      {/* Why This Matters Banner */}
       {!infoBannerDismissed && (
-        <div className="mb-4 bg-dark-tertiary/40 border border-dark-border rounded-xl p-4 flex items-start gap-3">
-          <svg className="w-5 h-5 text-accent-gold flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-display font-bold text-white mb-1">Can't remember who had which team?</p>
-            <p className="text-xs text-text-secondary">
-              League members can check their old Yahoo/ESPN accounts for past team names, then come claim their own teams on Clutch.
-            </p>
-          </div>
-          <button
-            onClick={() => setInfoBannerDismissed(true)}
-            className="text-text-muted hover:text-white flex-shrink-0"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <div className="mb-5 bg-accent-gold/5 border border-accent-gold/20 rounded-xl p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-accent-gold flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-          </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-display font-bold text-white mb-2">Why do I need to do this?</p>
+              <p className="text-xs text-text-secondary leading-relaxed mb-2">
+                Your imported history has <span className="text-white font-bold">fantasy team names</span>, not owner names.
+                Names like "Prestige Worldwide" or "Loud Noises" don't tell us who that person was.
+                Before we can build all-time records, head-to-head history, and championship counts,
+                you need to connect each team name to the person who owned it.
+              </p>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                <span className="text-accent-gold font-bold">How it works:</span> Select an owner above, then tap every team card that belongs to them.
+                Recent seasons are usually auto-assigned — older seasons with creative team names need your help.
+              </p>
+              <p className="text-[11px] text-text-muted mt-2 font-mono">
+                Can't remember who had which team? League members can check their old Yahoo/ESPN accounts for past team names.
+              </p>
+            </div>
+            <button
+              onClick={() => setInfoBannerDismissed(true)}
+              className="text-text-muted hover:text-white flex-shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 
