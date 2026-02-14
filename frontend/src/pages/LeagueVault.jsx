@@ -2447,6 +2447,43 @@ const LeagueVault = () => {
             </div>
           </div>
 
+          {/* Owner Assignment Banner — shows when no aliases exist */}
+          {isCommissioner && aliases.length === 0 && years.length > 0 && (
+            <div className="mb-4 bg-accent-gold/5 border-2 border-accent-gold/30 rounded-xl p-5">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-accent-gold/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-display font-bold text-white mb-1.5">
+                    One more step — assign teams to owners
+                  </p>
+                  <p className="text-sm text-text-secondary leading-relaxed mb-2">
+                    You're seeing <span className="text-white font-bold">{allRawNames.length} team names</span> across {years.length} seasons because
+                    Yahoo's older API doesn't track which manager owned which team each year.
+                    <span className="text-accent-gold font-bold"> The good news:</span> all your data is here — every win,
+                    loss, matchup, and championship is preserved.
+                  </p>
+                  <p className="text-sm text-text-secondary leading-relaxed mb-3">
+                    Just do a quick one-time setup to tell us which team names belong to which person,
+                    and we'll combine everything into clean all-time records.
+                  </p>
+                  <Link
+                    to={`/leagues/${leagueId}/vault/assign-owners`}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-gold to-orange text-dark-primary rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Assign Owners — Takes about 2 minutes
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Health Banner */}
           {!healthLoading && health && health.seasonCount > 0 && (
             <div className={`mb-4 rounded-xl border p-4 ${
