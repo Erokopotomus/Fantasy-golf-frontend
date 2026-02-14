@@ -1,10 +1,9 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { DEFAULT_PREFERENCES } = require('../services/notificationService')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 const ALLOWED_PREF_KEYS = [
   'trades', 'waivers', 'drafts', 'roster_moves',

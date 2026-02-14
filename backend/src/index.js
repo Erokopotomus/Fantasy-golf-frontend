@@ -251,8 +251,7 @@ httpServer.listen(PORT, () => {
 
   // ─── Cron Jobs for DataGolf Sync ────────────────────────────────────────
   if (process.env.DATAGOLF_API_KEY && process.env.DATAGOLF_API_KEY !== 'your_key_here') {
-    const { PrismaClient } = require('@prisma/client')
-    const cronPrisma = new PrismaClient()
+    const cronPrisma = require('./lib/prisma')
     const sync = require('./services/datagolfSync')
 
     /** Find the active or next upcoming tournament datagolfId */
@@ -832,8 +831,7 @@ httpServer.listen(PORT, () => {
 
   // ─── News Sync Cron Jobs ─────────────────────────────────────────────────
   {
-    const { PrismaClient: NewsPrismaClient } = require('@prisma/client')
-    const newsCronPrisma = new NewsPrismaClient()
+    const newsCronPrisma = require('./lib/prisma')
     const newsSync = require('./services/newsSync')
 
     function cronLog(job, msg) {
@@ -962,8 +960,7 @@ httpServer.listen(PORT, () => {
   }
 
   // Trade review processor — runs every 15 minutes
-  const { PrismaClient: TradePrismaClient } = require('@prisma/client')
-  const tradePrisma = new TradePrismaClient()
+  const tradePrisma = require('./lib/prisma')
   const { processExpiredReviews } = require('./services/tradeReviewProcessor')
 
   setInterval(async () => {

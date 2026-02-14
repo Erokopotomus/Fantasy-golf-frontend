@@ -1,9 +1,8 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // POST /api/leagues/:leagueId/waivers/claim - Submit a waiver claim
 router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => {

@@ -8,8 +8,7 @@
  * Used by the Pattern Engine to detect biases, tendencies, and strengths.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 /**
  * Get the full decision graph for a user + specific player.

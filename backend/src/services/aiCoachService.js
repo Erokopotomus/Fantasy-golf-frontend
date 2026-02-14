@@ -11,8 +11,7 @@
 const claude = require('./claudeService')
 const patternEngine = require('./patternEngine')
 const decisionGraph = require('./decisionGraphService')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 const CLUTCH_COACH_SYSTEM_PROMPT = `You are the Clutch Coach — an AI coaching engine embedded in the Clutch Fantasy Sports platform.
 

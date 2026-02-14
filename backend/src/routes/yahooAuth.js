@@ -6,11 +6,10 @@
  */
 
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 const YAHOO_AUTH_URL = 'https://api.login.yahoo.com/oauth2/request_auth'
 const YAHOO_TOKEN_URL = 'https://api.login.yahoo.com/oauth2/get_token'

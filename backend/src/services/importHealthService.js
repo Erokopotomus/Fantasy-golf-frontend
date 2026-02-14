@@ -8,8 +8,7 @@
  * No schema changes required — all checks run against existing data.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 const CURRENT_YEAR = new Date().getFullYear()
 

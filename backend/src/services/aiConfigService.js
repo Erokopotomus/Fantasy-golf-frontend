@@ -6,8 +6,7 @@
  * a short TTL to avoid hitting the DB on every Claude API call.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // In-memory cache for the config (avoids DB read on every AI call)
 let configCache = null

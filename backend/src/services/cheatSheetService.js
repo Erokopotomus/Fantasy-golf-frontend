@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client')
 const { calculateFantasyPoints } = require('./nflScoringService')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 async function generateCheatSheet(userId, boardId) {
   // Verify ownership

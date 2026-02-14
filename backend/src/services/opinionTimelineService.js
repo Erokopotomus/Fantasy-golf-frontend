@@ -5,8 +5,7 @@
  * Fire-and-forget — must NEVER block primary actions.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 /**
  * Record an opinion event. All calls should be fire-and-forget.

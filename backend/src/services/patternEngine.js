@@ -6,8 +6,7 @@
  * The patterns become input for AI narration in Phase 6C+.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const decisionGraph = require('./decisionGraphService')
 
 // ════════════════════════════════════════════════

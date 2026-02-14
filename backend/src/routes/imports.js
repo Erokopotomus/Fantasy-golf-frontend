@@ -1,6 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const { PrismaClient } = require('@prisma/client')
 const { authenticate, optionalAuth } = require('../middleware/auth')
 const { notifyLeague, NOTIFICATION_TYPES } = require('../services/notificationService')
 const { validateBody, sanitize } = require('../middleware/validate')
@@ -12,7 +11,7 @@ const mflImport = require('../services/mflImport')
 const importHealthService = require('../services/importHealthService')
 const clutchRatingService = require('../services/clutchRatingService')
 
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // Fire-and-forget rating recalc after import completes
 function recalcRatingAfterImport(userId) {

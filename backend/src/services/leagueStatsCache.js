@@ -12,8 +12,7 @@
  *  - Active streaks (championship droughts, playoff appearance streaks)
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 /**
  * Compute all league stats from HistoricalSeason + CustomLeagueData.

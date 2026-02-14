@@ -1,9 +1,8 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // GET /api/players/:id/tags - Player's tags
 router.get('/players/:id/tags', authenticate, async (req, res, next) => {

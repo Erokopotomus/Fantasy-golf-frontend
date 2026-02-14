@@ -12,13 +12,12 @@
  */
 
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { optionalAuth, authenticate } = require('../middleware/auth')
 const { calculateFantasyPoints, resolveRules, getScoringSchema, PRESETS } = require('../services/nflScoringService')
 const { scoreNflWeek, computeNflWeeklyResults } = require('../services/nflFantasyTracker')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // ─── NFL Players ────────────────────────────────────────────────────────────
 

@@ -8,8 +8,7 @@
  * NOT a general-purpose chatbot — only answers questions about data it has.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const claudeService = require('./claudeService')
 const { getLeagueStats } = require('./leagueStatsCache')
 

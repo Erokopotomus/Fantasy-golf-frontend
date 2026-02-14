@@ -1,5 +1,4 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const {
   scheduleAutoPick,
@@ -16,7 +15,7 @@ const { createNotification, notifyLeague } = require('../services/notificationSe
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // GET /api/drafts/league/:leagueId - Get the latest draft for a league
 router.get('/league/:leagueId', authenticate, async (req, res, next) => {

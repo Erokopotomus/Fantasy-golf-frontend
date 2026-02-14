@@ -10,8 +10,7 @@
  * - Below threshold → onboarding card instead of pattern insights
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const patternEngine = require('./patternEngine')
 const aiCoachService = require('./aiCoachService')
 

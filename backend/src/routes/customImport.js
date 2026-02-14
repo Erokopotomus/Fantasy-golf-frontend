@@ -121,8 +121,7 @@ router.post('/:previewId/confirm', authenticate, async (req, res) => {
     const { overrides, includedUrls } = req.body
 
     // Detect if this is a spreadsheet or website confirm
-    const { PrismaClient } = require('@prisma/client')
-    const prisma = new PrismaClient()
+    const prisma = require('../lib/prisma.js')
     const preview = await prisma.rawProviderData.findUnique({
       where: { id: previewId },
     })

@@ -18,10 +18,9 @@
  * ESPN Fantasy API base: https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{year}/segments/0/leagues/{leagueId}
  */
 
-const { PrismaClient } = require('@prisma/client')
 const opinionTimeline = require('./opinionTimelineService')
 
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const BASE = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons'
 
 // ─── Raw Data Preservation ─────────────────────────────────────────────────

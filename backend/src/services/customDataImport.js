@@ -12,10 +12,9 @@
  */
 
 const XLSX = require('xlsx')
-const { PrismaClient } = require('@prisma/client')
 const claudeService = require('./claudeService')
 
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // ─── Column Mapping Categories ──────────────────────────────────────────────
 

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const { recordEvent } = require('./opinionTimelineService')
 
 async function createCapture(userId, { content, sourceType, sourceName, sentiment, playerIds }) {

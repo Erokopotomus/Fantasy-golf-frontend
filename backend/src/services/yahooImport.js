@@ -15,10 +15,9 @@
  * Yahoo uses game keys per sport per year — they change every year.
  */
 
-const { PrismaClient } = require('@prisma/client')
 const opinionTimeline = require('./opinionTimelineService')
 
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const BASE = 'https://fantasysports.yahooapis.com/fantasy/v2'
 
 // Known Yahoo NFL game keys (updated annually)

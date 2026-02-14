@@ -1,10 +1,9 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { optionalAuth } = require('../middleware/auth')
 const { calculateFantasyPoints, getDefaultScoringConfig } = require('../services/scoringService')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // GET /api/tournaments - Get all tournaments
 router.get('/', optionalAuth, async (req, res, next) => {

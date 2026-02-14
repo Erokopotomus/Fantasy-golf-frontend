@@ -1,5 +1,4 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { calculateLeagueStandings, calculateTournamentScoring, calculateLiveTournamentScoring } = require('../services/scoringService')
 const { notifyLeague } = require('../services/notificationService')
@@ -7,7 +6,7 @@ const { generatePlayoffBracket, getPlayoffBracket, createCustomPlayoffMatchups }
 const { STANDARD_RULES, getScoringSchema, resolveRules } = require('../services/nflScoringService')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // GET /api/leagues - Get user's leagues
 router.get('/', authenticate, async (req, res, next) => {

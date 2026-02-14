@@ -15,10 +15,9 @@
  * Base URL: https://api.sleeper.app/v1
  */
 
-const { PrismaClient } = require('@prisma/client')
 const opinionTimeline = require('./opinionTimelineService')
 
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const BASE = 'https://api.sleeper.app/v1'
 
 // ─── Sleeper API Fetch ─────────────────────────────────────────────────────

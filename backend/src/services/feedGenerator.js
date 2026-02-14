@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // ─── Stat Leader Cards ─────────────────────────────────────────────────────
 // Top season-total leaders across key stats

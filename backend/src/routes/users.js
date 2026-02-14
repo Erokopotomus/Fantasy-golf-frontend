@@ -1,9 +1,8 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate, optionalAuth } = require('../middleware/auth')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 const USERNAME_REGEX = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/
 const SOCIAL_KEYS = ['twitter', 'youtube', 'podcast', 'website', 'instagram', 'tiktok']

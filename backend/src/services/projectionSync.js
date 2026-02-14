@@ -8,8 +8,7 @@
  * Golf rankings use existing DataGolf + ClutchScore metrics.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 const SLEEPER_BASE = 'https://api.sleeper.app'
 const FFC_BASE = 'https://fantasyfootballcalculator.com/api/v1'

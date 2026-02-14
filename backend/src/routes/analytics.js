@@ -1,10 +1,9 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { refreshAllViews } = require('../services/viewRefresher')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // ─── GET /api/analytics/player/:id/history ──────────────────────────────────
 // Multi-season fantasy performance for a player

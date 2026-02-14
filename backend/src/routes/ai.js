@@ -11,8 +11,7 @@ const { authenticate } = require('../middleware/auth')
 const aiInsightPipeline = require('../services/aiInsightPipeline')
 const aiCoachService = require('../services/aiCoachService')
 const leagueIntelligence = require('../services/leagueIntelligenceService')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // Simple per-user rate limiter
 const rateLimitMap = new Map()

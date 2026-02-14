@@ -1,9 +1,8 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // GET /api/leagues/:id/roster-slots - League's roster construction
 router.get('/leagues/:id/roster-slots', authenticate, async (req, res, next) => {

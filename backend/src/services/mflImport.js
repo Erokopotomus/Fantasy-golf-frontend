@@ -27,10 +27,9 @@
  * Default host for API: api.myfantasyleague.com
  */
 
-const { PrismaClient } = require('@prisma/client')
 const opinionTimeline = require('./opinionTimelineService')
 
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const BASE_HOST = 'api.myfantasyleague.com'
 
 // ─── Raw Data Preservation ─────────────────────────────────────────────────

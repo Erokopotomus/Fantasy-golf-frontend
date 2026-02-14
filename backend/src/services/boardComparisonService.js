@@ -5,8 +5,7 @@
  * to their actual draft picks. Part of Phase 6A (Decision Graph data gaps).
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 /**
  * Generate a comparison between a user's draft board and their mock draft.

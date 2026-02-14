@@ -7,8 +7,7 @@
  * This is Clutch-generated content — our own lines, not sportsbook pass-through.
  */
 
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 const { updateReputation } = require('./predictionService')
 const { computeClutchRating } = require('./clutchRatingEngine')
 

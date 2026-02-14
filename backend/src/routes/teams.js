@@ -1,5 +1,4 @@
 const express = require('express')
-const { PrismaClient } = require('@prisma/client')
 const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
 const { notifyLeague } = require('../services/notificationService')
@@ -8,7 +7,7 @@ const { validatePositionLimits } = require('../services/positionLimitValidator')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
 
 const router = express.Router()
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 // GET /api/teams/:id - Get team details
 router.get('/:id', authenticate, async (req, res, next) => {

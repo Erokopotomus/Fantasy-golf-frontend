@@ -1,11 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const { PrismaClient } = require('@prisma/client')
 const { authenticate, optionalAuth } = require('../middleware/auth')
 const { validateBody } = require('../middleware/validate')
 const predictionService = require('../services/predictionService')
 
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma.js')
 
 const validatePrediction = validateBody({
   sport: { required: true, type: 'string', enum: ['golf', 'nfl', 'nba', 'mlb'] },
