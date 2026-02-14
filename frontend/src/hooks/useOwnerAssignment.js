@@ -570,13 +570,13 @@ export function useOwnerAssignment(leagueId) {
 
       setOwners(ownersMap)
       setAssignments(assignMap)
-      if (ownersMap.size > 0) setStep(2)
+      // Stay on Step 1 so user can review/confirm owners before proceeding
       setInitialized(true)
       return
     }
 
     // Case 2: No existing aliases — auto-detect owners from most recent season
-    // and auto-assign all team-seasons where ownerName matches exactly
+    // Pre-fill the owners list but stay on Step 1 for user confirmation
     if (teamEntries.length === 0) {
       setInitialized(true)
       return
@@ -601,7 +601,7 @@ export function useOwnerAssignment(leagueId) {
       }
     }
 
-    // Auto-assign ALL team-seasons where the rawName exactly matches an owner
+    // Pre-assign team-seasons where the rawName exactly matches an owner
     const assignMap = new Map()
     for (const rawName of uniqueRawNames) {
       if (ownersMap.has(rawName)) {
@@ -612,8 +612,7 @@ export function useOwnerAssignment(leagueId) {
     setOwners(ownersMap)
     setAssignments(assignMap)
 
-    // Skip to step 2 since we auto-populated owners
-    if (ownersMap.size > 0) setStep(2)
+    // Stay on Step 1 so user can review the auto-detected owners
     setInitialized(true)
   }, [existingAliases, loading, history, initialized, uniqueRawNames, teamEntries])
 

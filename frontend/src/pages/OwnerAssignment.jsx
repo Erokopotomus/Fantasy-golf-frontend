@@ -392,6 +392,17 @@ const Step2AssignTeams = ({ wizard }) => {
 
   return (
     <div>
+      {/* Back to Step 1 */}
+      <button
+        onClick={() => setStep(1)}
+        className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-accent-gold font-mono mb-4 transition-colors"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Identify Owners
+      </button>
+
       {/* Info Banner */}
       {!infoBannerDismissed && (
         <div className="mb-4 bg-dark-tertiary/40 border border-dark-border rounded-xl p-4 flex items-start gap-3">
