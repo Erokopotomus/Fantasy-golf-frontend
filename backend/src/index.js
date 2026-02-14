@@ -106,7 +106,10 @@ global.io = io
 // Rate limiting
 app.use('/api/auth', authLimiter)
 app.use('/api/', apiLimiter)
-app.use('/api/imports', heavyLimiter)
+// Heavy limiter only on import mutations (POST/PUT/DELETE), not GET reads (vault page loads)
+app.post('/api/imports/*', heavyLimiter)
+app.put('/api/imports/*', heavyLimiter)
+app.delete('/api/imports/*', heavyLimiter)
 app.use('/api/sync', heavyLimiter)
 
 // Routes
