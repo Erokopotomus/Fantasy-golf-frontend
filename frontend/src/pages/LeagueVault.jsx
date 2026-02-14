@@ -2018,7 +2018,7 @@ const LeagueVault = () => {
   const { history, loading, error, refetch } = useLeagueHistory(leagueId)
   const [tab, setTab] = useState('records')
   const [showAddSeason, setShowAddSeason] = useState(false)
-  const [showManageOwners, setShowManageOwners] = useState(false)
+  // showManageOwners removed — owner assignment is now a full page at /vault/assign-owners
   const [editSeasonYear, setEditSeasonYear] = useState(null)
   const { health, loading: healthLoading, refetch: refetchHealth } = useImportHealth(leagueId)
   const [healthExpanded, setHealthExpanded] = useState(false)
@@ -2377,15 +2377,15 @@ const LeagueVault = () => {
               </div>
               <div className="flex items-center gap-2">
                 {isCommissioner && years.length > 0 && (
-                  <button
-                    onClick={() => setShowManageOwners(true)}
+                  <Link
+                    to={`/leagues/${leagueId}/vault/assign-owners`}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-accent-gold bg-accent-gold/10 border border-accent-gold/30 rounded-lg hover:bg-accent-gold/20 transition-colors"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     Manage Owners
-                  </button>
+                  </Link>
                 )}
                 <button
                   onClick={() => setShowAddSeason(true)}
@@ -2493,12 +2493,12 @@ const LeagueVault = () => {
                             Some team names couldn't be auto-matched to current owners — especially for older Yahoo seasons (pre-2013) where manager names aren't available.
                             This is normal! Just tap <strong className="text-white">Manage Owners</strong> below to match team names to real people. Takes about a minute.
                           </p>
-                          <button
-                            onClick={() => setShowManageOwners(true)}
-                            className="mt-2 text-xs font-mono text-accent-gold hover:text-accent-gold/80"
+                          <Link
+                            to={`/leagues/${leagueId}/vault/assign-owners`}
+                            className="mt-2 inline-block text-xs font-mono text-accent-gold hover:text-accent-gold/80"
                           >
                             Manage Owners &rarr;
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -2820,18 +2820,7 @@ const LeagueVault = () => {
         />
       )}
 
-      {showManageOwners && (
-        <ManageOwnersModal
-          leagueId={leagueId}
-          allRawNames={allRawNames}
-          nameToYears={nameToYears}
-          existingAliases={aliases}
-          onClose={() => setShowManageOwners(false)}
-          onSaved={() => {
-            api.getOwnerAliases(leagueId).then(res => setAliases(res.aliases || [])).catch(() => {})
-          }}
-        />
-      )}
+      {/* Owner assignment moved to /leagues/:leagueId/vault/assign-owners */}
     </div>
   )
 }
