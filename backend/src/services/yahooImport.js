@@ -1103,7 +1103,9 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
           if (detectedSettings.draftType) updateData.draftType = detectedSettings.draftType
           if (detectedSettings.maxTeams) updateData.maxTeams = detectedSettings.maxTeams
           await db.league.update({ where: { id: clutchLeague.id }, data: updateData })
-        } catch (e) { /* non-fatal */ }
+        } catch (e) {
+          console.warn('[YahooImport] Failed to apply detected settings:', e.message)
+        }
       }
 
       const mostRecentYear = parseInt(mostRecentSeason.year)

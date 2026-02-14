@@ -135,9 +135,12 @@ function mapYahooSettings(season) {
   if (scType.includes('ppr') && !scType.includes('half')) scoringType = 'ppr'
   else if (scType.includes('half')) scoringType = 'half_ppr'
 
-  // Roster size
+  // Roster size — sum position counts (not array length)
   const positions = s.rosterPositions || []
-  const rosterSize = positions.length || 17
+  const rosterSize = positions.reduce((sum, p) => {
+    const count = parseInt(p?.roster_position?.count || p?.count || 1)
+    return sum + count
+  }, 0) || 17
 
   // Waiver type
   let waiverType = 'rolling'

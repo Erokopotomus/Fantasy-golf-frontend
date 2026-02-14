@@ -29,6 +29,7 @@ const LeagueHome = () => {
   const [savingDate, setSavingDate] = useState(false)
   const [generatingPlayoffs, setGeneratingPlayoffs] = useState(false)
   const [leagueLeaderboard, setLeagueLeaderboard] = useState([])
+  const [historicalTeams, setHistoricalTeams] = useState(null) // most recent season from import
 
   const loading = leaguesLoading && detailLoading
   const league = detailedLeague || leagues?.find(l => l.id === leagueId)
@@ -121,6 +122,26 @@ const LeagueHome = () => {
       .then(data => setLeagueLeaderboard(data.leaderboard || []))
       .catch(() => {})
   }, [leagueId])
+
+  // For imported leagues with no active teams, fetch most recent historical season
+  const isImportedLeague = !!league?.settings?.importedFrom
+  const hasNoActiveTeams = !league?.teams?.length && !league?.standings?.length
+  useEffect(() => {
+    if (!leagueId || !isImportedLeague || !hasNoActiveTeams) return
+    api.getLeagueHistory(leagueId)
+      .then(data => {
+        const seasons = data.seasons || data
+        if (!seasons || typeof seasons !== 'object') return
+        // Get the most recent year's teams
+        const years = Object.keys(seasons).map(Number).sort((a, b) => b - a)
+        if (years.length > 0) {
+          const recentYear = years[0]
+          const teams = seasons[recentYear] || []
+          setHistoricalTeams({ year: recentYear, teams: teams.sort((a, b) => (a.finalStanding || 99) - (b.finalStanding || 99)) })
+        }
+      })
+      .catch(() => {})
+  }, [leagueId, isImportedLeague, hasNoActiveTeams])
 
   // Derive user position from standings data
   const userTeamStanding = league?.standings?.find(t => t.userId === user?.id)
@@ -887,12 +908,19 @@ const LeagueHome = () => {
               {/* League Members / Teams */}
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold font-display text-white">Teams</h3>
+                  <h3 className="text-lg font-semibold font-display text-white">
+                    {hasNoActiveTeams && historicalTeams ? `${historicalTeams.year} Standings` : 'Teams'}
+                  </h3>
                   <span className="text-text-muted text-sm">
-                    {league.teams?.length || league._count?.teams || 0} / {league.maxTeams || '–'}
+                    {hasNoActiveTeams && historicalTeams
+                      ? `${historicalTeams.teams.length} teams`
+                      : `${league.teams?.length || league._count?.teams || 0} / ${league.maxTeams || '–'}`
+                    }
                   </span>
                 </div>
                 <div className="overflow-x-auto">
+                  {/* Active teams table */}
+                  {!hasNoActiveTeams && (
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-dark-border text-xs text-text-muted">
@@ -954,9 +982,97 @@ const LeagueHome = () => {
                       })}
                     </tbody>
                   </table>
-                  {(!league.standings?.length && !league.teams?.length) && (
+                  )}
+
+                  {/* Historical teams from import (when no active season) */}
+                  {hasNoActiveTeams && historicalTeams && (
+                  <>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-dark-border text-xs text-text-muted">
+                          <th className="pb-2 text-left w-10">#</th>
+                          <th className="pb-2 text-left">Team</th>
+                          <th className="pb-2 text-left">Owner</th>
+                          <th className="pb-2 text-center">W-L</th>
+                          <th className="pb-2 text-right">PF</th>
+                          <th className="pb-2 text-right">Result</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historicalTeams.teams.map((ht, i) => {
+                          const rank = ht.finalStanding || i + 1
+                          const isChamp = ht.playoffResult === 'champion'
+                          return (
+                            <tr
+                              key={ht.id || i}
+                              className={`border-b border-dark-border/30 ${isChamp ? 'bg-yellow-500/5' : ''}`}
+                            >
+                              <td className={`py-3 font-bold ${
+                                rank === 1 ? 'text-yellow-400' :
+                                rank === 2 ? 'text-gray-300' :
+                                rank === 3 ? 'text-amber-500' : 'text-text-muted'
+                              }`}>
+                                {rank}
+                              </td>
+                              <td className="py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 bg-dark-tertiary rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
+                                    {(ht.teamName || '?').charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="font-medium truncate text-white">
+                                    {ht.teamName}
+                                    {isChamp && <span className="ml-1">🏆</span>}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 text-text-secondary truncate max-w-[120px]">
+                                {ht.ownerName}
+                              </td>
+                              <td className="py-3 text-center text-text-secondary">
+                                {ht.wins != null ? `${ht.wins}-${ht.losses || 0}${ht.ties > 0 ? `-${ht.ties}` : ''}` : '–'}
+                              </td>
+                              <td className="py-3 text-right font-mono text-sm text-white">
+                                {ht.pointsFor ? Number(ht.pointsFor).toFixed(1) : '–'}
+                              </td>
+                              <td className="py-3 text-right">
+                                {ht.playoffResult === 'champion' && <span className="text-yellow-400 text-xs font-semibold">Champion</span>}
+                                {ht.playoffResult === 'runner_up' && <span className="text-gray-300 text-xs">Runner-Up</span>}
+                                {ht.playoffResult === 'eliminated' && <span className="text-text-muted text-xs">Playoffs</span>}
+                                {ht.playoffResult === 'missed' && <span className="text-text-muted/50 text-xs">Missed</span>}
+                                {!ht.playoffResult && <span className="text-text-muted/30 text-xs">–</span>}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-xs text-text-muted">
+                        Most recent season from {league.settings.importedFrom === 'yahoo' ? 'Yahoo' :
+                          league.settings.importedFrom === 'sleeper' ? 'Sleeper' :
+                          league.settings.importedFrom === 'espn' ? 'ESPN' :
+                          league.settings.importedFrom === 'mfl' ? 'MFL' :
+                          league.settings.importedFrom || 'import'}
+                      </p>
+                      <Link
+                        to={`/leagues/${leagueId}/vault`}
+                        className="text-xs text-accent-gold hover:text-accent-gold/80 font-medium"
+                      >
+                        View All History →
+                      </Link>
+                    </div>
+                  </>
+                  )}
+
+                  {/* Empty state — no teams and no import history */}
+                  {hasNoActiveTeams && !historicalTeams && !isImportedLeague && (
                     <div className="text-center py-8 text-text-muted text-sm">
                       No teams yet. Invite members to join!
+                    </div>
+                  )}
+                  {hasNoActiveTeams && !historicalTeams && isImportedLeague && (
+                    <div className="text-center py-6 text-text-muted text-sm">
+                      <p>Loading history...</p>
                     </div>
                   )}
                 </div>
