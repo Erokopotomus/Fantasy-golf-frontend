@@ -49,6 +49,8 @@ import ImportLeague from './pages/ImportLeague'
 import CustomImport from './pages/CustomImport'
 import LeagueVault from './pages/LeagueVault'
 import VaultLanding from './pages/VaultLanding'
+import VaultReveal from './pages/VaultReveal'
+import VaultPublicLanding from './pages/VaultPublicLanding'
 import OwnerAssignment from './pages/OwnerAssignment'
 import SeasonRecap from './pages/SeasonRecap'
 import DraftDollars from './pages/DraftDollars'
@@ -321,6 +323,14 @@ function App() {
             }
           />
           <Route
+            path="/leagues/:leagueId/vault/reveal"
+            element={
+              <ProtectedRoute>
+                <VaultReveal />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/leagues/:leagueId/vault/assign-owners"
             element={
               <ProtectedRoute>
@@ -346,6 +356,8 @@ function App() {
           />
           {/* Public Profile (no auth required) */}
           <Route path="/u/:username" element={<PublicProfile />} />
+          {/* Public Vault Invite (no auth required) */}
+          <Route path="/vault/invite/:inviteCode" element={<VaultPublicLanding />} />
           {/* Prove It Hub */}
           <Route
             path="/prove-it"

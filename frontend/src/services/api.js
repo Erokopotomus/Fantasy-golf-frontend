@@ -751,6 +751,25 @@ class ApiService {
     })
   }
 
+  // Vault Sharing (Phase 2C)
+  async getPublicVaultData(inviteCode) {
+    return this.request(`/imports/vault-public/${inviteCode}`)
+  }
+
+  async claimVaultOwner(inviteCode, canonicalName) {
+    return this.request('/imports/vault-claim', {
+      method: 'POST',
+      body: JSON.stringify({ inviteCode, canonicalName }),
+    })
+  }
+
+  async sendVaultNotification(leagueId) {
+    return this.request('/imports/vault-notify', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId }),
+    })
+  }
+
   // ESPN Import
   async discoverESPNLeague(leagueId, espn_s2 = '', swid = '') {
     return this.request('/imports/espn/discover', {

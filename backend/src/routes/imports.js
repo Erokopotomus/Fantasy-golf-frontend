@@ -1,7 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const { PrismaClient } = require('@prisma/client')
-const { authenticate } = require('../middleware/auth')
+const { authenticate, optionalAuth } = require('../middleware/auth')
+const { notifyLeague, NOTIFICATION_TYPES } = require('../services/notificationService')
 const { validateBody, sanitize } = require('../middleware/validate')
 const sleeperImport = require('../services/sleeperImport')
 const espnImport = require('../services/espnImport')
@@ -969,5 +970,190 @@ function buildWeeklyScoresForTeam(matchups, teamId) {
   }
   return scores
 }
+
+// ─── Public Vault Data (for invite landing page) ────────────────────────────
+// GET /api/imports/vault-public/:inviteCode
+// Public endpoint (optionalAuth) — returns lightweight vault data for the landing page
+router.get('/vault-public/:inviteCode', optionalAuth, async (req, res) => {
+  try {
+    const { inviteCode } = req.params
+
+    // Look up league by invite code
+    const league = await prisma.league.findUnique({
+      where: { inviteCode },
+      select: { id: true, name: true, inviteCode: true, ownerId: true },
+    })
+    if (!league) return res.status(404).json({ error: 'League not found' })
+
+    // Fetch lightweight historical seasons (omit heavy JSONB fields)
+    const seasons = await prisma.historicalSeason.findMany({
+      where: { leagueId: league.id },
+      select: {
+        id: true,
+        seasonYear: true,
+        teamName: true,
+        ownerName: true,
+        ownerUserId: true,
+        finalStanding: true,
+        wins: true,
+        losses: true,
+        ties: true,
+        pointsFor: true,
+        pointsAgainst: true,
+        playoffResult: true,
+      },
+      orderBy: { seasonYear: 'asc' },
+    })
+
+    // Fetch owner aliases
+    const aliases = await prisma.ownerAlias.findMany({
+      where: { leagueId: league.id },
+      select: {
+        ownerName: true,
+        canonicalName: true,
+        ownerUserId: true,
+        isActive: true,
+      },
+    })
+
+    // If user is authenticated, check if they've already claimed an owner alias
+    let currentUserClaim = null
+    if (req.user) {
+      const claimedAlias = aliases.find(a => a.ownerUserId === req.user.id)
+      if (claimedAlias) {
+        currentUserClaim = { canonicalName: claimedAlias.canonicalName }
+      }
+    }
+
+    res.json({ league, seasons, aliases, currentUserClaim })
+  } catch (err) {
+    console.error('Vault public data error:', err)
+    res.status(500).json({ error: 'Failed to load vault data' })
+  }
+})
+
+// ─── Claim Owner Identity ────────────────────────────────────────────────────
+// POST /api/imports/vault-claim
+// Authenticated — links a user to an owner identity in the vault
+router.post('/vault-claim', authenticate, async (req, res) => {
+  try {
+    const { inviteCode, canonicalName } = req.body
+    if (!inviteCode || !canonicalName) {
+      return res.status(400).json({ error: 'inviteCode and canonicalName are required' })
+    }
+
+    // Look up league by invite code
+    const league = await prisma.league.findUnique({
+      where: { inviteCode },
+      select: { id: true, name: true },
+    })
+    if (!league) return res.status(404).json({ error: 'League not found' })
+
+    // Verify canonical name exists in aliases
+    const matchingAliases = await prisma.ownerAlias.findMany({
+      where: { leagueId: league.id, canonicalName },
+    })
+    if (matchingAliases.length === 0) {
+      return res.status(404).json({ error: 'Owner not found in this league' })
+    }
+
+    // Check if already claimed by someone else
+    const claimedByOther = matchingAliases.find(a => a.ownerUserId && a.ownerUserId !== req.user.id)
+    if (claimedByOther) {
+      return res.status(409).json({ error: 'This owner has already been claimed by another user' })
+    }
+
+    // Already claimed by this user — idempotent success
+    const alreadyClaimed = matchingAliases.find(a => a.ownerUserId === req.user.id)
+    if (alreadyClaimed) {
+      return res.json({ success: true, leagueId: league.id, canonicalName })
+    }
+
+    // Get all raw names that map to this canonical name
+    const rawNames = matchingAliases.map(a => a.ownerName)
+
+    // Transaction: claim aliases + historical seasons + auto-join league
+    await prisma.$transaction(async (tx) => {
+      // Update all alias rows for this canonical name
+      await tx.ownerAlias.updateMany({
+        where: { leagueId: league.id, canonicalName },
+        data: { ownerUserId: req.user.id },
+      })
+
+      // Update historical seasons for matching raw owner names
+      await tx.historicalSeason.updateMany({
+        where: {
+          leagueId: league.id,
+          ownerName: { in: rawNames },
+        },
+        data: { ownerUserId: req.user.id },
+      })
+
+      // Auto-join league if not already a member
+      const existingMember = await tx.leagueMember.findFirst({
+        where: { leagueId: league.id, userId: req.user.id },
+      })
+      if (!existingMember) {
+        await tx.leagueMember.create({
+          data: {
+            leagueId: league.id,
+            userId: req.user.id,
+            role: 'MEMBER',
+          },
+        })
+      }
+    })
+
+    res.json({ success: true, leagueId: league.id, canonicalName })
+  } catch (err) {
+    console.error('Vault claim error:', err)
+    res.status(500).json({ error: 'Failed to claim owner identity' })
+  }
+})
+
+// ─── Notify League Members About Vault ───────────────────────────────────────
+// POST /api/imports/vault-notify
+// Commissioner-only — sends in-app notification to all league members
+router.post('/vault-notify', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.body
+    if (!leagueId) return res.status(400).json({ error: 'leagueId is required' })
+
+    // Verify user is commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, name: true, ownerId: true },
+    })
+    if (!league) return res.status(404).json({ error: 'League not found' })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: 'Only the commissioner can send vault notifications' })
+    }
+
+    // Get league members (exclude commissioner)
+    const members = await prisma.leagueMember.findMany({
+      where: { leagueId },
+      select: { userId: true },
+    })
+    const memberCount = members.filter(m => m.userId !== req.user.id).length
+
+    if (memberCount === 0) {
+      return res.json({ sent: 0, message: 'No other league members to notify' })
+    }
+
+    // Send notification to all members
+    await notifyLeague(leagueId, {
+      type: NOTIFICATION_TYPES.LEAGUE_INVITE,
+      title: 'League Vault is ready!',
+      message: `${req.user.name} unlocked the ${league.name} League Vault. See your all-time stats and rankings.`,
+      actionUrl: `/leagues/${leagueId}/vault`,
+      data: { leagueId, type: 'vault_share' },
+    }, [req.user.id], prisma)
+
+    res.json({ sent: memberCount })
+  } catch (err) {
+    console.error('Vault notify error:', err)
+    res.status(500).json({ error: 'Failed to send notifications' })
+  }
+})
 
 module.exports = router

@@ -294,6 +294,58 @@ export function useOwnerAssignment(leagueId) {
     return summaries
   }, [owners, ownerClaimedEntries])
 
+  // ─── Derived: Vault Reveal Stats ──────────────────────────────────────────
+
+  // Owner stats for the vault reveal — sorted by all-time win%
+  const vaultOwnerStats = useMemo(() => {
+    return ownerSummaries.map(summary => {
+      const totalGames = summary.totalWins + summary.totalLosses
+      const winPct = totalGames > 0 ? summary.totalWins / totalGames : 0
+
+      // Best season — highest win% among their assigned teams
+      let bestSeason = null
+      if (summary.teams.length > 0) {
+        for (const t of summary.teams) {
+          const [w, l] = t.record.split('-').map(Number)
+          const pct = (w + l) > 0 ? w / (w + l) : 0
+          if (!bestSeason || pct > bestSeason.pct) {
+            bestSeason = { team: t.rawName || t.teamName, season: t.seasonYear, pct }
+          }
+        }
+      }
+
+      // Win% per season (chronological order for sparkline)
+      const winPcts = [...summary.teams]
+        .sort((a, b) => a.seasonYear - b.seasonYear)
+        .map(t => {
+          const [w, l] = t.record.split('-').map(Number)
+          return (w + l) > 0 ? w / (w + l) : 0
+        })
+
+      return {
+        ...summary,
+        winPct,
+        bestSeason,
+        winPcts,
+        titles: summary.championships.length,
+        seasonCount: summary.totalSeasons,
+      }
+    }).sort((a, b) => b.winPct - a.winPct)
+  }, [ownerSummaries])
+
+  // Aggregate league-level stats for the vault reveal header
+  const vaultLeagueStats = useMemo(() => {
+    const totalSeasons = new Set(teamEntries.map(e => e.seasonYear)).size
+    const totalGames = Math.round(
+      ownerSummaries.reduce((s, o) => s + o.totalWins + o.totalLosses, 0) / 2
+    )
+    const totalPoints = Math.round(
+      ownerSummaries.reduce((s, o) => s + o.totalPF, 0)
+    )
+    const totalTitles = ownerSummaries.reduce((s, o) => s + o.championships.length, 0)
+    return { totalSeasons, totalOwners: owners.size, totalGames, totalPoints, totalTitles }
+  }, [ownerSummaries, teamEntries, owners])
+
   // Unassigned entries for Step 3
   const unassignedEntries = useMemo(() => {
     return [...uniqueRawNames]
@@ -531,6 +583,7 @@ export function useOwnerAssignment(leagueId) {
   return {
     // Data
     loading, error, league, history, teamEntries, nameToYears,
+    inviteCode: league?.inviteCode || null,
 
     // Step navigation
     step, setStep,
@@ -553,6 +606,9 @@ export function useOwnerAssignment(leagueId) {
     // Step 3
     ownerSummaries, unassignedEntries,
     saving, saveError, save,
+
+    // Vault reveal
+    vaultOwnerStats, vaultLeagueStats,
 
     // Unsaved changes
     hasChanges,

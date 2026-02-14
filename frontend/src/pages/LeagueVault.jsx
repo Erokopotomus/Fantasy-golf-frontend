@@ -3,7 +3,9 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory, useImportHealth } from '../hooks/useImports'
 import EditSeasonModal from '../components/vault/EditSeasonModal'
+import ShareModal from '../components/vault/ShareModal'
 import { useAuth } from '../context/AuthContext'
+import { computeVaultStats } from '../hooks/useVaultStats'
 import api from '../services/api'
 import LeagueChat from '../components/ai/LeagueChat'
 
@@ -2027,6 +2029,7 @@ const LeagueVault = () => {
   const [avatars, setAvatars] = useState([])
   const [league, setLeague] = useState(null)
   const [recordsSort, setRecordsSort] = useState({ key: 'winPct', dir: 'desc' })
+  const [showShareModal, setShowShareModal] = useState(false)
 
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -2070,6 +2073,17 @@ const LeagueVault = () => {
   }, [aliases])
 
   const resolveOwner = useCallback((name) => aliasMap[name] || name, [aliasMap])
+
+  // Compute vault stats for the share modal (flatten history.seasons map into flat array)
+  const shareVaultData = useMemo(() => {
+    if (!history?.seasons || !aliases?.length) return null
+    const flatSeasons = []
+    for (const [, teams] of Object.entries(history.seasons)) {
+      for (const t of (Array.isArray(teams) ? teams : [])) flatSeasons.push(t)
+    }
+    if (flatSeasons.length === 0) return null
+    return computeVaultStats(flatSeasons, aliases)
+  }, [history, aliases])
 
   // Build set of inactive canonical owner names from aliases
   const [showActiveOnly, setShowActiveOnly] = useState(true)
@@ -2376,6 +2390,17 @@ const LeagueVault = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {years.length > 0 && (
+                  <Link
+                    to={`/leagues/${leagueId}/vault/reveal`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-accent-gold bg-accent-gold/10 border border-accent-gold/30 rounded-lg hover:bg-accent-gold/20 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Owner Rankings
+                  </Link>
+                )}
                 {isCommissioner && years.length > 0 && (
                   <Link
                     to={`/leagues/${leagueId}/vault/assign-owners`}
@@ -2386,6 +2411,17 @@ const LeagueVault = () => {
                     </svg>
                     Manage Owners
                   </Link>
+                )}
+                {isCommissioner && years.length > 0 && league?.inviteCode && (
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-accent-gold bg-accent-gold/10 border border-accent-gold/30 rounded-lg hover:bg-accent-gold/20 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Share Vault
+                  </button>
                 )}
                 <button
                   onClick={() => setShowAddSeason(true)}
@@ -2821,6 +2857,18 @@ const LeagueVault = () => {
       )}
 
       {/* Owner assignment moved to /leagues/:leagueId/vault/assign-owners */}
+
+      {showShareModal && league?.inviteCode && shareVaultData && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          leagueName={league?.name || 'League'}
+          inviteCode={league.inviteCode}
+          ownerStats={shareVaultData.ownerStats}
+          leagueStats={shareVaultData.leagueStats}
+          leagueId={leagueId}
+        />
+      )}
     </div>
   )
 }

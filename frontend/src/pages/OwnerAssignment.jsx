@@ -2,13 +2,16 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useOwnerAssignment, formatYearRanges } from '../hooks/useOwnerAssignment'
+import VaultLoadingScreen from '../components/vault/VaultLoadingScreen'
+import VaultRevealView from '../components/vault/VaultRevealView'
+import ShareModal from '../components/vault/ShareModal'
 
 // ─── Step Indicator ──────────────────────────────────────────────────────────
 
 const STEPS = [
   { num: 1, label: 'Identify Owners' },
   { num: 2, label: 'Assign Teams' },
-  { num: 3, label: 'Confirm & Save' },
+  { num: 3, label: 'League Vault' },
 ]
 
 const StepIndicator = ({ current }) => (
@@ -655,155 +658,94 @@ const Step2AssignTeams = ({ wizard }) => {
   )
 }
 
-// ─── Step 3: Confirm & Merge ─────────────────────────────────────────────────
+// ─── Step 3: Vault Reveal ────────────────────────────────────────────────────
 
-const Step3ConfirmMerge = ({ wizard, onSaveSuccess }) => {
+const Step3VaultReveal = ({ wizard, onSaveSuccess }) => {
   const {
-    ownerSummaries, unassignedEntries, owners,
+    vaultOwnerStats, vaultLeagueStats,
     saving, saveError, save, setStep,
-    progress, nameToYears,
   } = wizard
+
+  const [phase, setPhase] = useState('loading') // loading → reveal
+  const [showCards, setShowCards] = useState(false)
+
+  // Phase transitions: loading → reveal → cards visible
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase('reveal'), 2400)
+    const t2 = setTimeout(() => setShowCards(true), 3800)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
 
   const handleSave = async () => {
     const ok = await save()
     if (ok) onSaveSuccess()
   }
 
+  // ── Loading Phase ──
+  if (phase === 'loading') {
+    return <VaultLoadingScreen seasonCount={vaultLeagueStats.totalSeasons} />
+  }
+
+  // ── Reveal Phase ──
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-xl sm:text-2xl font-display font-bold text-white mb-1">Review & Save</h2>
-        <p className="text-sm text-text-secondary">
-          {progress.claimed} team{progress.claimed !== 1 ? 's' : ''} assigned to {owners.size} owner{owners.size !== 1 ? 's' : ''}.
-          {progress.remaining > 0 && ` ${progress.remaining} team${progress.remaining !== 1 ? 's' : ''} unassigned.`}
-        </p>
-      </div>
-
-      {/* Owner summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        {ownerSummaries.map(summary => (
-          <div
-            key={summary.name}
-            className="bg-dark-tertiary/20 border border-dark-border rounded-xl overflow-hidden"
-          >
-            {/* Header */}
-            <div className="px-4 py-3 flex items-center gap-3" style={{ borderBottom: `2px solid ${summary.color}30` }}>
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-display font-bold text-dark-primary flex-shrink-0"
-                style={{ backgroundColor: summary.color }}
-              >
-                {summary.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-display font-bold text-white truncate">{summary.name}</div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                    summary.isActive
-                      ? 'text-accent-green bg-accent-green/10'
-                      : 'text-text-muted bg-dark-tertiary/30'
-                  }`}>
-                    {summary.isActive ? 'ACTIVE' : 'FORMER'}
-                  </span>
-                  {summary.championships.length > 0 && (
-                    <span className="text-[10px] font-mono text-accent-gold">
-                      &#9733; {summary.championships.length}x Champ
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="px-4 py-2 flex items-center gap-4 border-b border-dark-border/30">
-              <div className="text-center">
-                <div className="text-sm font-mono font-bold text-white">{summary.totalSeasons}</div>
-                <div className="text-[9px] font-mono text-text-muted">Seasons</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm font-mono font-bold text-white">
-                  {summary.totalWins}-{summary.totalLosses}{summary.totalTies ? `-${summary.totalTies}` : ''}
-                </div>
-                <div className="text-[9px] font-mono text-text-muted">Record</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm font-mono font-bold text-white">{summary.totalPF.toFixed(1)}</div>
-                <div className="text-[9px] font-mono text-text-muted">Total PF</div>
-              </div>
-            </div>
-
-            {/* Team list */}
-            <div className="px-4 py-2 max-h-48 overflow-y-auto">
-              {summary.teams.map((t, i) => (
-                <div key={i} className="flex items-center justify-between py-1 text-[11px]">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-mono text-text-muted w-8 flex-shrink-0">{t.seasonYear}</span>
-                    <span className="text-text-secondary font-display truncate">{t.rawName}</span>
-                    {t.playoffResult === 'champion' && (
-                      <span className="text-accent-gold flex-shrink-0">&#9733;</span>
-                    )}
-                  </div>
-                  <span className="font-mono text-text-muted flex-shrink-0 ml-2">{t.record}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
-        {/* Unassigned card */}
-        {unassignedEntries.length > 0 && (
-          <div className="bg-dark-tertiary/10 border-2 border-dashed border-dark-border rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-dark-border/30">
-              <div className="text-sm font-display font-bold text-text-muted">Unassigned</div>
-              <p className="text-[10px] font-mono text-text-muted mt-0.5">
-                These teams won't be merged into any owner's history
-              </p>
-            </div>
-            <div className="px-4 py-2 max-h-48 overflow-y-auto">
-              {unassignedEntries.map(({ rawName, years }) => (
-                <div key={rawName} className="flex items-center justify-between py-1 text-[11px]">
-                  <span className="text-text-muted font-display truncate">{rawName}</span>
-                  <span className="font-mono text-text-muted/50 flex-shrink-0 ml-2">
-                    {formatYearRanges(years)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Error */}
-      {saveError && (
-        <div className="mb-4 flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-          <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-sm text-red-400">{saveError}</p>
-        </div>
-      )}
-
-      {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-dark-secondary/95 backdrop-blur-xl border-t border-dark-border p-3 sm:p-4 flex items-center justify-between z-40 md:relative md:bg-transparent md:backdrop-blur-none md:border-0 md:p-0 md:mt-4">
+    <div className="relative overflow-hidden -mx-4 sm:-mx-6 -mt-6 px-4 sm:px-6">
+      <div className="max-w-[1100px] mx-auto pt-10 pb-24 relative">
+        {/* Back link */}
         <button
           onClick={() => setStep(2)}
-          className="px-4 py-2 text-sm text-text-secondary hover:text-white font-display transition-colors"
+          className="text-xs font-mono text-text-muted hover:text-accent-gold mb-5 flex items-center gap-1.5 transition-colors"
         >
-          &larr; Back to Editing
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Team Assignment
         </button>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-6 py-2.5 bg-gradient-to-r from-gold to-orange text-dark-primary rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/30 disabled:opacity-50 transition-all"
+
+        <VaultRevealView
+          ownerStats={vaultOwnerStats}
+          leagueStats={vaultLeagueStats}
+          showCards={showCards}
         >
-          {saving ? (
-            <span className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />
-              Saving...
-            </span>
-          ) : (
-            'Save & Merge All Data'
+          {/* Save CTA */}
+          <div className="text-xs font-mono text-text-muted mb-4 leading-relaxed">
+            Everything look right? Once saved, your League Vault will be permanently unlocked<br className="hidden sm:block" />
+            with unified all-time stats, head-to-head records, and more.
+          </div>
+
+          {/* Error */}
+          {saveError && (
+            <div className="mb-4 inline-flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">
+              <svg className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-red-400">{saveError}</p>
+            </div>
           )}
-        </button>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-12 py-4 rounded-xl border-none text-base font-display font-bold cursor-pointer tracking-wide transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(135deg, #D4A853 0%, #B8922E 100%)',
+              color: '#0A0908',
+              boxShadow: '0 6px 30px rgba(212,168,83,0.25)',
+            }}
+          >
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />
+                Saving...
+              </span>
+            ) : (
+              'Save & Unlock Your League Vault'
+            )}
+          </button>
+
+          <div className="text-[11px] font-mono text-text-muted/60 mt-2.5">
+            You can always edit assignments later from League Settings
+          </div>
+        </VaultRevealView>
       </div>
     </div>
   )
@@ -819,8 +761,11 @@ const OwnerAssignment = () => {
 
   const {
     loading, error, league, teamEntries,
-    step, hasChanges,
+    step, hasChanges, inviteCode,
+    vaultOwnerStats, vaultLeagueStats,
   } = wizard
+
+  const [showShareModal, setShowShareModal] = useState(false)
 
   const isCommissioner = league?.ownerId === user?.id
 
@@ -863,6 +808,14 @@ const OwnerAssignment = () => {
   }, [hasChanges])
 
   const handleSaveSuccess = () => {
+    // Mark vault reveal as seen so standalone page uses returning mode
+    try { localStorage.setItem(`hasSeenVaultReveal_${leagueId}`, 'true') } catch { /* ignore */ }
+    // Show share modal instead of immediately navigating
+    setShowShareModal(true)
+  }
+
+  const handleShareModalClose = () => {
+    setShowShareModal(false)
     navigate(`/leagues/${leagueId}/vault`, { replace: true })
   }
 
@@ -929,6 +882,27 @@ const OwnerAssignment = () => {
   }
 
   // ─── Main Render ─────────────────────────────────────────────────────────
+
+  // Step 3 (Vault Reveal) has its own fullscreen layout — no page shell needed
+  if (step === 3) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <Step3VaultReveal wizard={wizard} onSaveSuccess={handleSaveSuccess} />
+        {showShareModal && inviteCode && (
+          <ShareModal
+            isOpen={showShareModal}
+            onClose={handleShareModalClose}
+            leagueName={league?.name || 'League'}
+            inviteCode={inviteCode}
+            ownerStats={vaultOwnerStats}
+            leagueStats={vaultLeagueStats}
+            leagueId={leagueId}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-8">
       {/* Back link */}
@@ -953,7 +927,6 @@ const OwnerAssignment = () => {
       {/* Step content */}
       {step === 1 && <Step1IdentifyOwners wizard={wizard} />}
       {step === 2 && <Step2AssignTeams wizard={wizard} />}
-      {step === 3 && <Step3ConfirmMerge wizard={wizard} onSaveSuccess={handleSaveSuccess} />}
     </div>
   )
 }

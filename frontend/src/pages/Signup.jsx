@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
@@ -18,6 +18,8 @@ const Signup = () => {
 
   const { signup } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/dashboard'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -48,7 +50,7 @@ const Signup = () => {
     const result = await signup(name, username, email, password)
 
     if (result.success) {
-      navigate('/dashboard', { replace: true })
+      navigate(from, { replace: true })
     } else {
       setError(result.error)
       setLoading(false)
