@@ -270,7 +270,12 @@ const LeagueHome = () => {
                   </>
                 )}
                 <span className="text-text-muted">•</span>
-                <span className="text-text-secondary">{league.members?.length || league._count?.members || league.memberCount || 0} members</span>
+                <span className="text-text-secondary">
+                  {hasNoActiveTeams && isImportedLeague
+                    ? `${league.maxTeams || historicalTeams?.teams?.length || '–'} teams`
+                    : `${league.members?.length || league._count?.members || league.memberCount || 0} members`
+                  }
+                </span>
                 <span className="text-text-muted">•</span>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                   league.status === 'active' ? 'bg-gold/20 text-gold' :
@@ -719,7 +724,8 @@ const LeagueHome = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Standings & Info */}
             <div className="lg:col-span-1 space-y-6">
-              {/* Your Position */}
+              {/* Your Position — only show if there's an active season with standings */}
+              {!hasNoActiveTeams && (
               <Card className="bg-gradient-to-br from-gold/20 to-dark-secondary border-gold/30">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold font-display text-white">Your Position</h3>
@@ -743,8 +749,10 @@ const LeagueHome = () => {
                   </div>
                 </div>
               </Card>
+              )}
 
-              {/* Standings */}
+              {/* Standings — only show if there's an active season */}
+              {!hasNoActiveTeams && (
               <Card>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold font-display text-white">Standings</h3>
@@ -779,6 +787,7 @@ const LeagueHome = () => {
                   ))}
                 </div>
               </Card>
+              )}
 
               {/* League Info */}
               <Card>
@@ -788,32 +797,50 @@ const LeagueHome = () => {
                     <span className="text-text-muted">Format</span>
                     <span className="text-gold">{format?.name || 'League'}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Teams</span>
+                    <span className="text-white">{league.maxTeams || historicalTeams?.teams?.length || '–'}</span>
+                  </div>
                   {hasDraft && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Draft Type</span>
                       <span className="text-white capitalize">{league.draftType}</span>
                     </div>
                   )}
-                  {!isOneAndDone && (
+                  {!isOneAndDone && league.settings?.rosterSize && (
                     <div className="flex justify-between">
-                      <span className="text-text-muted">Roster Size</span>
-                      <span className="text-white">{league.settings?.rosterSize || 6} players</span>
+                      <span className="text-text-muted">Roster Spots</span>
+                      <span className="text-white">{league.settings.rosterSize}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-text-muted">Scoring</span>
                     <span className="text-white capitalize">{league.settings?.scoringType || 'Standard'}</span>
                   </div>
-                  {league.settings?.budget && (
+                  {league.settings?.waiverType && (
                     <div className="flex justify-between">
-                      <span className="text-text-muted">Budget</span>
-                      <span className="text-white">${league.settings.budget}</span>
+                      <span className="text-text-muted">Waivers</span>
+                      <span className="text-white capitalize">{league.settings.waiverType === 'faab' ? 'FAAB' : league.settings.waiverType}</span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">Current Event</span>
-                    <span className="text-gold">{league.currentRound || 'TBD'}</span>
-                  </div>
+                  {league.settings?.faabBudget && (
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">FAAB Budget</span>
+                      <span className="text-white">${league.settings.faabBudget}</span>
+                    </div>
+                  )}
+                  {league.settings?.tradeDeadline && league.settings?.tradeDeadlineDate && (
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Trade Deadline</span>
+                      <span className="text-white">{new Date(league.settings.tradeDeadlineDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {!isImportedLeague && (
+                    <div className="flex justify-between">
+                      <span className="text-text-muted">Current Event</span>
+                      <span className="text-gold">{league.currentRound || 'TBD'}</span>
+                    </div>
+                  )}
                 </div>
               </Card>
 
