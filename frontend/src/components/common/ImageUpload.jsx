@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import Button from './Button'
+import { uploadImage } from '../../utils/uploadImage'
 
 const ImageUpload = ({
   currentImage,
@@ -13,104 +14,25 @@ const ImageUpload = ({
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef(null)
 
-  const resizeImage = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const img = new Image()
-        img.onload = () => {
-          // Create canvas for resizing
-          const canvas = document.createElement('canvas')
-          canvas.width = size
-          canvas.height = size
-
-          const ctx = canvas.getContext('2d')
-
-          // Calculate crop to make square (center crop)
-          const minDim = Math.min(img.width, img.height)
-          const sx = (img.width - minDim) / 2
-          const sy = (img.height - minDim) / 2
-
-          // Draw resized and cropped image
-          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size)
-
-          // Convert to blob
-          canvas.toBlob((blob) => {
-            resolve(blob)
-          }, 'image/jpeg', 0.85)
-        }
-        img.onerror = reject
-        img.src = e.target.result
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-  }
-
-  const uploadToCloudinary = async (blob) => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
-
-    if (!cloudName || !uploadPreset) {
-      // Fallback: convert to base64 data URL if Cloudinary not configured
-      return new Promise((resolve) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result)
-        reader.readAsDataURL(blob)
-      })
-    }
-
-    const formData = new FormData()
-    formData.append('file', blob)
-    formData.append('upload_preset', uploadPreset)
-    formData.append('folder', 'clutch-avatars')
-
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: 'POST', body: formData }
-    )
-
-    if (!response.ok) {
-      throw new Error('Upload failed')
-    }
-
-    const data = await response.json()
-    return data.secure_url
-  }
-
   const handleFile = async (file) => {
     if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file')
-      return
-    }
-
-    // Validate file size (max 10MB before resize)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Image must be less than 10MB')
-      return
-    }
 
     setError(null)
     setUploading(true)
 
     try {
-      // Resize image
-      const resizedBlob = await resizeImage(file)
+      const imageUrl = await uploadImage(file, {
+        maxWidth: size,
+        maxHeight: size,
+        squareCrop: true,
+        folder: 'clutch-avatars',
+      })
 
-      // Create preview
-      const previewUrl = URL.createObjectURL(resizedBlob)
-      setPreview(previewUrl)
-
-      // Upload
-      const imageUrl = await uploadToCloudinary(resizedBlob)
-
+      setPreview(imageUrl)
       onUpload(imageUrl)
     } catch (err) {
       console.error('Upload error:', err)
-      setError('Failed to upload image. Please try again.')
+      setError(err.message || 'Failed to upload image. Please try again.')
       setPreview(null)
     } finally {
       setUploading(false)

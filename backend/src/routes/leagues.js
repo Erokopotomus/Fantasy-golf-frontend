@@ -1718,8 +1718,11 @@ router.post('/:id/posts', authenticate, async (req, res, next) => {
     if (!league) return res.status(404).json({ error: { message: 'League not found' } })
     if (league.ownerId !== req.user.id) return res.status(403).json({ error: { message: 'Only the commissioner can create posts' } })
 
-    const { title, content, category, isPinned, aiGenerated } = req.body
+    const { title, content, category, isPinned, aiGenerated, coverImage, images, excerpt } = req.body
     if (!title || !content) return res.status(400).json({ error: { message: 'Title and content are required' } })
+
+    // Auto-generate excerpt from HTML content if not provided
+    const autoExcerpt = excerpt || content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 150)
 
     const post = await prisma.leaguePost.create({
       data: {
@@ -1730,6 +1733,9 @@ router.post('/:id/posts', authenticate, async (req, res, next) => {
         category: category || 'general',
         isPinned: !!isPinned,
         aiGenerated: !!aiGenerated,
+        coverImage: coverImage || null,
+        images: images || [],
+        excerpt: autoExcerpt || null,
       },
       include: {
         author: { select: { id: true, name: true, avatar: true } },
@@ -1747,13 +1753,22 @@ router.patch('/:id/posts/:postId', authenticate, async (req, res, next) => {
     if (!league) return res.status(404).json({ error: { message: 'League not found' } })
     if (league.ownerId !== req.user.id) return res.status(403).json({ error: { message: 'Only the commissioner can edit posts' } })
 
-    const { title, content, category, isPinned, isPublished } = req.body
+    const { title, content, category, isPinned, isPublished, coverImage, images, excerpt } = req.body
     const data = {}
     if (title !== undefined) data.title = title
-    if (content !== undefined) data.content = content
+    if (content !== undefined) {
+      data.content = content
+      // Re-generate excerpt if content changed and no explicit excerpt provided
+      if (excerpt === undefined) {
+        data.excerpt = content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 150)
+      }
+    }
     if (category !== undefined) data.category = category
     if (isPinned !== undefined) data.isPinned = isPinned
     if (isPublished !== undefined) data.isPublished = isPublished
+    if (coverImage !== undefined) data.coverImage = coverImage || null
+    if (images !== undefined) data.images = images
+    if (excerpt !== undefined) data.excerpt = excerpt
 
     const post = await prisma.leaguePost.update({
       where: { id: req.params.postId },
@@ -1785,6 +1800,40 @@ router.delete('/:id/posts/:postId', authenticate, async (req, res, next) => {
 
     await prisma.leaguePost.delete({ where: { id: req.params.postId } })
     res.json({ success: true })
+  } catch (error) { next(error) }
+})
+
+// POST /api/leagues/:id/posts/:postId/view — Record unique view
+router.post('/:id/posts/:postId/view', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { members: { select: { userId: true } } },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    const isMember = league.members.some(m => m.userId === req.user.id)
+    if (!isMember) return res.status(403).json({ error: { message: 'Not authorized' } })
+
+    // Upsert — only increment viewCount if this is a new unique view
+    const existing = await prisma.leaguePostView.findUnique({
+      where: { postId_userId: { postId: req.params.postId, userId: req.user.id } },
+    })
+    if (!existing) {
+      await prisma.$transaction([
+        prisma.leaguePostView.create({
+          data: { postId: req.params.postId, userId: req.user.id },
+        }),
+        prisma.leaguePost.update({
+          where: { id: req.params.postId },
+          data: { viewCount: { increment: 1 } },
+        }),
+      ])
+    }
+    const post = await prisma.leaguePost.findUnique({
+      where: { id: req.params.postId },
+      select: { viewCount: true },
+    })
+    res.json({ viewCount: post?.viewCount || 0 })
   } catch (error) { next(error) }
 })
 

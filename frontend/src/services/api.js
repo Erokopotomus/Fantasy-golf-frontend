@@ -1481,6 +1481,10 @@ class ApiService {
     return this.request(`/leagues/${leagueId}/posts/ai-generate`, { method: 'POST', body: JSON.stringify(data) })
   }
 
+  async recordPostView(leagueId, postId) {
+    return this.request(`/leagues/${leagueId}/posts/${postId}/view`, { method: 'POST' })
+  }
+
   // ── League Intelligence ──
   async queryLeague(leagueId, question, sessionId) {
     return this.request('/ai/league-query', {
