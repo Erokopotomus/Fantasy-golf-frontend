@@ -107,9 +107,10 @@ global.io = io
 app.use('/api/auth', authLimiter)
 app.use('/api/', apiLimiter)
 // Heavy limiter only on import mutations (POST/PUT/DELETE), not GET reads (vault page loads)
-app.post('/api/imports/*', heavyLimiter)
-app.put('/api/imports/*', heavyLimiter)
-app.delete('/api/imports/*', heavyLimiter)
+app.use('/api/imports', (req, res, next) => {
+  if (req.method === 'GET') return next()
+  return heavyLimiter(req, res, next)
+})
 app.use('/api/sync', heavyLimiter)
 
 // Routes
