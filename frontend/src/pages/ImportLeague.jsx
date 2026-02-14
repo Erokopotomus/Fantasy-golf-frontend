@@ -957,26 +957,49 @@ const ImportLeague = () => {
           )}
 
           {/* Step 3: Importing */}
-          {step === 3 && (
-            <Card className="text-center py-12 px-6">
-              <div className="relative w-16 h-16 mx-auto mb-6">
-                <div className="absolute inset-0 rounded-full border-4 border-accent-gold/20" />
-                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-accent-gold animate-spin" />
-              </div>
-              <h2 className="text-xl font-display font-bold text-white mb-2">
-                Importing your league history...
-              </h2>
-              <p className="text-sm text-text-secondary mb-6">
-                Pulling rosters, matchups, drafts, and standings for every season.
-              </p>
-              <div className="bg-accent-gold/10 border border-accent-gold/20 rounded-lg p-4 max-w-sm mx-auto">
-                <p className="text-sm font-medium text-accent-gold mb-1">Sit tight — this can take a few minutes</p>
-                <p className="text-xs text-text-muted">
-                  We're pulling years of history from the API. Don't close this tab or press back. It's working.
+          {step === 3 && (() => {
+            const seasonCount = selectedSeasons.length || activeHook.discovery?.totalSeasons || 1
+            const teamCount = activeHook.discovery?.teamCount || 12
+            // Rough estimate: per season — ~17 weeks of matchups, rosters for each team, draft picks, transactions
+            // Each season ≈ (teams × 17 weeks × 2 matchup sides) + (teams × roster) + (teams × draft picks) + transactions
+            const dataPointsPerSeason = (teamCount * 17 * 2) + (teamCount * 15) + (teamCount * 15) + (teamCount * 8)
+            const totalDataPoints = seasonCount * dataPointsPerSeason
+            const formattedDataPoints = totalDataPoints >= 1000
+              ? `${(totalDataPoints / 1000).toFixed(1).replace(/\.0$/, '')}k`
+              : String(totalDataPoints)
+            const timeEstimate = seasonCount <= 3 ? '2–3' : seasonCount <= 8 ? '3–5' : seasonCount <= 15 ? '5–10' : '10–15'
+
+            return (
+              <Card className="text-center py-12 px-6">
+                <div className="relative w-16 h-16 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full border-4 border-accent-gold/20" />
+                  <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-accent-gold animate-spin" />
+                </div>
+                <h2 className="text-xl font-display font-bold text-white mb-2">
+                  Importing {seasonCount} season{seasonCount !== 1 ? 's' : ''} of history...
+                </h2>
+                <p className="text-sm text-text-secondary mb-6">
+                  Pulling rosters, matchups, drafts, standings, and transactions for every season.
                 </p>
-              </div>
-            </Card>
-          )}
+
+                {/* Data volume callout */}
+                <div className="inline-flex items-center gap-3 bg-dark-tertiary/40 border border-dark-border rounded-lg px-4 py-2.5 mb-5">
+                  <span className="text-2xl font-mono font-bold text-accent-gold">{formattedDataPoints}+</span>
+                  <span className="text-xs text-text-secondary text-left leading-tight">
+                    data points across {seasonCount} season{seasonCount !== 1 ? 's' : ''}<br />
+                    <span className="text-text-muted">matchups · rosters · drafts · transactions</span>
+                  </span>
+                </div>
+
+                <div className="bg-accent-gold/10 border border-accent-gold/20 rounded-lg p-4 max-w-sm mx-auto">
+                  <p className="text-sm font-medium text-accent-gold mb-1">This usually takes {timeEstimate} minutes</p>
+                  <p className="text-xs text-text-muted">
+                    We're pulling every detail from the API — one season at a time. Don't close this tab or press back. It's working.
+                  </p>
+                </div>
+              </Card>
+            )
+          })()}
 
           {/* Step 4: Confirm Your League */}
           {step === 4 && activeHook.result && (
@@ -1256,10 +1279,35 @@ const ImportLeague = () => {
                   </div>
                 ) : null}
 
+                {/* Next Steps */}
+                <div className="bg-accent-gold/5 border border-accent-gold/20 rounded-xl p-4 max-w-md mx-auto mb-6 text-left">
+                  <p className="text-sm font-display font-bold text-white mb-3">What's next?</p>
+                  <div className="space-y-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center text-[10px] font-mono font-bold text-accent-gold flex-shrink-0 mt-0.5">1</span>
+                      <div>
+                        <p className="text-xs text-white font-bold">Assign teams to owners</p>
+                        <p className="text-[11px] text-text-muted">
+                          Your history has fantasy team names — connect them to real people so we can build accurate all-time records.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center text-[10px] font-mono font-bold text-accent-gold flex-shrink-0 mt-0.5">2</span>
+                      <div>
+                        <p className="text-xs text-white font-bold">Explore your League Vault</p>
+                        <p className="text-[11px] text-text-muted">
+                          All-time standings, head-to-head records, championship counts, and more — all computed from your imported history.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex gap-3 justify-center">
                   <Button variant="ghost" onClick={handleReset}>Import Another</Button>
                   <Button onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault`)}>
-                    View League Vault
+                    Open League Vault →
                   </Button>
                 </div>
               </Card>
