@@ -166,6 +166,7 @@ const ImportLeague = () => {
     playoffTeams: '',
   })
   const [confirmLoading, setConfirmLoading] = useState(false)
+  const [selectedOwner, setSelectedOwner] = useState(null) // ownerName string or '__none__'
 
   // Health check (Step 5)
   const [health, setHealth] = useState(null)
@@ -281,6 +282,9 @@ const ImportLeague = () => {
       }
       if (data.activeOwners) {
         setActiveOwners(data.activeOwners)
+        // Pre-select the auto-matched owner (the one with claimed: true)
+        const autoMatched = data.activeOwners.find(o => o.claimed)
+        setSelectedOwner(autoMatched?.ownerName || null)
       }
 
       setStep(4) // Go to confirmation step
@@ -308,6 +312,7 @@ const ImportLeague = () => {
     setDetectedSettings(null)
     setActiveOwners([])
     setEditSettings({ format: '', draftType: '', maxTeams: '', scoringType: '', rosterSize: '', waiverType: '', faabBudget: '', playoffTeams: '' })
+    setSelectedOwner(null)
     setConfirmLoading(false)
     setHealth(null)
     setHealthLoading(false)
@@ -330,6 +335,13 @@ const ImportLeague = () => {
             playoffTeams: editSettings.playoffTeams ? parseInt(editSettings.playoffTeams) : null,
           },
           applySettings: true,
+        })
+      }
+      // After settings save, claim owner identity (fire-and-forget)
+      const claimLeagueId = activeHook.result?.leagueId
+      if (claimLeagueId && selectedOwner && selectedOwner !== '__none__') {
+        api.claimImportOwner(claimLeagueId, selectedOwner).catch(err => {
+          console.error('Owner claim failed:', err)
         })
       }
     } catch (err) {
@@ -1151,39 +1163,81 @@ const ImportLeague = () => {
                   )}
                 </div>
 
-                {/* Active Members */}
+                {/* Which Team Is Yours? */}
                 {activeOwners.length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-3">
-                      Active Members
-                      <span className="text-xs font-normal text-text-muted ml-2">
-                        from {activeHook.result?.seasonsImported?.[activeHook.result.seasonsImported.length - 1] || 'most recent'} season
-                      </span>
+                    <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-1">
+                      Which Team Is Yours?
                     </h3>
+                    <p className="text-xs text-text-muted mb-3">
+                      Select your team so we can link your history to your Clutch Rating.
+                    </p>
                     <div className="space-y-1.5">
-                      {activeOwners.map((owner, i) => (
-                        <div key={i} className="flex items-center gap-3 bg-dark-tertiary/40 rounded-lg px-3 py-2">
-                          <div className="w-7 h-7 rounded-full bg-accent-gold/20 flex items-center justify-center text-xs font-mono font-bold text-accent-gold">
-                            {i + 1}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white font-medium truncate">{owner.ownerName}</p>
-                            {owner.teamName && owner.teamName !== owner.ownerName && (
-                              <p className="text-xs text-text-muted truncate">{owner.teamName}</p>
+                      {activeOwners.map((owner, i) => {
+                        const isSelected = selectedOwner === owner.ownerName
+                        const isAutoMatched = owner.claimed
+                        return (
+                          <label
+                            key={i}
+                            className={`flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border border-accent-gold/30 bg-accent-gold/5'
+                                : 'bg-dark-tertiary/40 border border-transparent hover:border-dark-border'
+                            }`}
+                            onClick={() => setSelectedOwner(owner.ownerName)}
+                          >
+                            <input
+                              type="radio"
+                              name="ownerClaim"
+                              checked={isSelected}
+                              onChange={() => setSelectedOwner(owner.ownerName)}
+                              className="w-4 h-4 text-accent-gold border-dark-border focus:ring-accent-gold/50 bg-dark-tertiary"
+                            />
+                            <div className="w-7 h-7 rounded-full bg-accent-gold/20 flex items-center justify-center text-xs font-mono font-bold text-accent-gold flex-shrink-0">
+                              {i + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-white font-medium truncate">{owner.ownerName}</p>
+                                {isAutoMatched && (
+                                  <span className="text-[10px] font-mono text-accent-gold/60 bg-accent-gold/10 px-1.5 py-0.5 rounded">Auto-detected</span>
+                                )}
+                              </div>
+                              {owner.teamName && owner.teamName !== owner.ownerName && (
+                                <p className="text-xs text-text-muted truncate">{owner.teamName}</p>
+                              )}
+                            </div>
+                            <span className="text-xs font-mono text-text-secondary">{owner.record}</span>
+                            {owner.playoffResult === 'champion' && (
+                              <span className="text-xs bg-accent-gold/20 text-accent-gold px-2 py-0.5 rounded-full font-mono">🏆</span>
                             )}
-                          </div>
-                          <span className="text-xs font-mono text-text-secondary">{owner.record}</span>
-                          {owner.playoffResult === 'champion' && (
-                            <span className="text-xs bg-accent-gold/20 text-accent-gold px-2 py-0.5 rounded-full font-mono">🏆</span>
-                          )}
-                          {owner.playoffResult === 'runner_up' && (
-                            <span className="text-xs bg-dark-tertiary text-text-muted px-2 py-0.5 rounded-full font-mono">🥈</span>
-                          )}
-                        </div>
-                      ))}
+                            {owner.playoffResult === 'runner_up' && (
+                              <span className="text-xs bg-dark-tertiary text-text-muted px-2 py-0.5 rounded-full font-mono">🥈</span>
+                            )}
+                          </label>
+                        )
+                      })}
+                      {/* None of these */}
+                      <label
+                        className={`flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-all ${
+                          selectedOwner === '__none__'
+                            ? 'border border-dark-border bg-dark-tertiary/60'
+                            : 'bg-dark-tertiary/20 border border-transparent hover:border-dark-border'
+                        }`}
+                        onClick={() => setSelectedOwner('__none__')}
+                      >
+                        <input
+                          type="radio"
+                          name="ownerClaim"
+                          checked={selectedOwner === '__none__'}
+                          onChange={() => setSelectedOwner('__none__')}
+                          className="w-4 h-4 text-accent-gold border-dark-border focus:ring-accent-gold/50 bg-dark-tertiary"
+                        />
+                        <p className="text-sm text-text-muted">None of these are me</p>
+                      </label>
                     </div>
                     <p className="text-xs text-text-muted mt-2">
-                      These owners will be listed as active members. You can manage them in the League Vault after setup.
+                      You can also claim your team later in the League Vault.
                     </p>
                   </div>
                 )}
@@ -1209,7 +1263,7 @@ const ImportLeague = () => {
                         Saving...
                       </span>
                     ) : (
-                      'Looks Good'
+                      'Confirm & Save'
                     )}
                   </Button>
                 </div>

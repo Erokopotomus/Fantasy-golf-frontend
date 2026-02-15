@@ -1168,6 +1168,58 @@ router.post('/vault-notify', authenticate, async (req, res) => {
   }
 })
 
+// ─── Claim Owner Identity (post-import) ──────────────────────────────────────
+// POST /api/imports/claim-owner
+// Authenticated — links the importing user to an owner name in historical_seasons
+router.post('/claim-owner', authenticate, async (req, res) => {
+  try {
+    const { leagueId, ownerName } = req.body
+    if (!leagueId || !ownerName) {
+      return res.status(400).json({ error: { message: 'leagueId and ownerName are required' } })
+    }
+
+    // Verify league exists
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { id: true } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+
+    // Verify ownerName exists in historical_seasons for this league
+    const matching = await prisma.historicalSeason.findFirst({
+      where: { leagueId, ownerName },
+      select: { id: true, ownerUserId: true },
+    })
+    if (!matching) {
+      return res.status(404).json({ error: { message: 'Owner not found in this league history' } })
+    }
+
+    // Check if already claimed by a different user
+    if (matching.ownerUserId && matching.ownerUserId !== req.user.id) {
+      return res.status(409).json({ error: { message: 'This owner has already been claimed by another user' } })
+    }
+
+    // Atomically: clear stale auto-match for this user in this league, then set new claim
+    await prisma.$transaction(async (tx) => {
+      // Clear any existing claim by this user in this league (remove stale auto-match)
+      await tx.historicalSeason.updateMany({
+        where: { leagueId, ownerUserId: req.user.id },
+        data: { ownerUserId: null },
+      })
+      // Set ownerUserId on all seasons matching the selected ownerName
+      await tx.historicalSeason.updateMany({
+        where: { leagueId, ownerName },
+        data: { ownerUserId: req.user.id },
+      })
+    })
+
+    // Fire-and-forget rating recalc
+    recalcRatingAfterImport(req.user.id)
+
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Claim owner error:', err)
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 // ─── POST /confirm-settings — Commissioner confirms/edits auto-detected settings ──
 router.post('/confirm-settings', authenticate, async (req, res) => {
   try {

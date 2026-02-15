@@ -444,9 +444,38 @@ router.delete('/:id', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Only the commissioner can delete the league' } })
     }
 
-    // Delete league and all related data (cascading deletes handled by schema)
+    // Manually delete dependent records that lack onDelete: Cascade in schema.
+    // Order matters: delete children before parents.
+    const leagueId = req.params.id
+    const teamIds = (await prisma.team.findMany({ where: { leagueId }, select: { id: true } })).map(t => t.id)
+
+    if (teamIds.length > 0) {
+      // Tables referencing Team without cascade
+      await prisma.lineupSnapshot.deleteMany({ where: { teamId: { in: teamIds } } })
+      await prisma.weeklyTeamResult.deleteMany({ where: { team: { leagueId } } })
+      await prisma.waiverClaim.deleteMany({ where: { teamId: { in: teamIds } } })
+      await prisma.draftGrade.deleteMany({ where: { teamId: { in: teamIds } } })
+      await prisma.rosterTransaction.deleteMany({ where: { teamId: { in: teamIds } } })
+      await prisma.trade.deleteMany({ where: { OR: [{ senderTeamId: { in: teamIds } }, { receiverTeamId: { in: teamIds } }] } })
+      await prisma.draftPick.deleteMany({ where: { teamId: { in: teamIds } } })
+    }
+
+    // Tables referencing League directly (without onDelete: Cascade)
+    const draftIds = (await prisma.draft.findMany({ where: { leagueId }, select: { id: true } })).map(d => d.id)
+    if (draftIds.length > 0) {
+      await prisma.draftOrder.deleteMany({ where: { draftId: { in: draftIds } } })
+    }
+    await prisma.matchup.deleteMany({ where: { leagueId } })
+    await prisma.historicalSeason.deleteMany({ where: { leagueId } })
+    await prisma.leagueImport.deleteMany({ where: { clutchLeagueId: leagueId } })
+    await prisma.prediction.deleteMany({ where: { leagueId } })
+    await prisma.customLeagueData.deleteMany({ where: { leagueId } })
+    await prisma.leagueQuerySession.deleteMany({ where: { leagueId } })
+    await prisma.leagueStatsCache.deleteMany({ where: { leagueId } })
+
+    // Now delete the league (remaining cascades handle members, teams, drafts, etc.)
     await prisma.league.delete({
-      where: { id: req.params.id }
+      where: { id: leagueId }
     })
 
     res.json({ message: 'League deleted successfully' })

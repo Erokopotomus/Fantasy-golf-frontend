@@ -774,6 +774,13 @@ class ApiService {
     })
   }
 
+  async claimImportOwner(leagueId, ownerName) {
+    return this.request('/imports/claim-owner', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, ownerName }),
+    })
+  }
+
   async confirmImportSettings(leagueId, { format, draftType, maxTeams, settings, applySettings }) {
     return this.request('/imports/confirm-settings', {
       method: 'POST',
