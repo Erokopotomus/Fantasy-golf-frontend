@@ -25,10 +25,10 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 | Auth | JWT (custom) | Token-based auth with middleware |
 | Payments | Stripe (planned) | Subscriptions + league entry fees (future) |
 | Real-time | Socket.IO | Draft rooms, live scoring, notifications |
-| AI/ML | Claude API (Anthropic) (planned) | AI Caddie feature (premium) |
+| AI/ML | Claude API (Anthropic) | AI Engine live (Phase 6 complete) |
 | Hosting | Vercel (frontend) + Railway (backend/DB) | |
 | Data Feeds | DataGolf API | PGA Tour live scoring, predictions, player data |
-| File Storage | S3 or Cloudflare R2 (planned) | Avatars, league logos |
+| File Storage | Cloudinary (images) + S3/R2 (planned) | Post images, avatars via Cloudinary; bulk storage planned |
 
 ---
 
@@ -54,8 +54,8 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ## DEVELOPMENT PHASES
 
-### Current Status: PHASE 4 — IN PROGRESS
-> Phases 1, 2 & 3 complete. Phase 4A-4D built (migration, metrics engine, course fit, ETL, frontend). Migration 12_data_architecture pending deploy to Railway. Phase 4E (Tier 1 Public Data Sources) not yet started.
+### Current Status: PHASE 5 — IN PROGRESS
+> Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 (owner assignment, reveal, sharing) built. Commissioner blog system built. Prisma singleton + connection pooling deployed. Next: finish Phase 5 remaining items, deploy migrations 43-44 to Railway.
 
 ### Phase 1: Core Platform — COMPLETE ✓
 
@@ -150,6 +150,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ### Remaining Phase 1 items:
 - [x] Playoff bracket generation, seeding, and auto-advancement — playoffService.js (generate, advance, getBracket), commissioner endpoint, auto-advance from fantasyTracker
+- [x] Playoff History page — `PlayoffHistory.jsx` at `/leagues/:leagueId/playoffs`, cross-season record cards (most championships, most appearances, most runner-ups, best win %), owner playoff stats table, per-season standings with champion highlight + playoff badges, current year bracket integration. Nav button on LeagueHome for H2H leagues.
 - [x] IR slot management — backend lineup endpoint supports irPlayerIds, frontend IR zone in TeamRoster, irSlots setting in LeagueSettings
 - [x] Auction draft room — BidPanel, nomination, bidding, socket events all wired
 - [ ] PWA configuration (installable, offline-capable shell) — low priority, nice-to-have
@@ -374,15 +375,52 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - All 4 platforms: discover + import routes in `imports.js`, API methods in `api.js`, per-platform hooks in `useImports.js`
   - `ImportLeague.jsx` updated: all 5 platforms available, per-platform connect UI (cookie inputs, OAuth token, CSV upload, API key)
 
+- [x] **3F: League Vault V2 — Owner Assignment, Reveal & Sharing**
+  - **Owner Assignment Wizard:** `OwnerAssignment.jsx` — full-page 3-step wizard at `/leagues/:leagueId/vault/assign-owners`
+    - Step 1: Auto-detect owner names from imported data using `commonNames.js` (400+ census names), manual consolidation of aliases
+    - Step 2: Assign historical teams to canonical owners with undo stack, sort/filter, animated claiming
+    - Step 3: Review & save assignments
+    - `useOwnerAssignment.js` hook (654 lines) — state management, detection, assignment logic, save
+    - `useVaultStats.js` hook — computes owner stats + league stats from raw history, decoupled for reuse
+    - Active/Former owner sections with numbered rows and counts
+    - Owner assignment banner on League Vault for unassigned imports
+  - **Vault Reveal Experience:** `VaultRevealView.jsx` — cinematic first-visit animated reveal
+    - Loading transition (2.4s), staggered stat count-up animations, owner cards cascade in
+    - Crown SVG animation for #1 ranked owner
+    - `AnimatedNumber.jsx`, `Sparkline.jsx` (win% by season SVG), `StatGrid.jsx`
+    - Dual-mode: `VaultPersistent.jsx` for returning visits (instant load, no animations)
+    - Mode detection via localStorage `hasSeenVaultReveal_{leagueId}`
+    - `VaultReveal.jsx` page at `/leagues/:leagueId/vault/reveal`
+  - **Vault Components:** `OwnerRow.jsx` (rank, avatar, name, sparkline, record, win%, trophies), `OwnerDetailModal.jsx` (enlarged stats, season-by-season table), `ShareModal.jsx` (league invite sharing), `ClaimModal.jsx` (claim historical team as yours)
+  - **Public Vault Landing:** `VaultPublicLanding.jsx` at `/vault/invite/:inviteCode` — no-auth league stats + standings with personalized hero via `?member=OwnerName`
+  - **Settings Mapper:** `settingsMapper.js` — auto-detects league settings from imported data per platform (Sleeper/ESPN/Yahoo/Fantrax/MFL format, draft type, scoring, roster, waivers)
+  - **Import UX Improvements:**
+    - Data volume callout + time estimate on import wizard
+    - "Import League" CTA on Create League page
+    - Auto-detect league settings & active members on import
+    - Import into existing league (cross-platform merging) supported by all 5 platforms via `targetLeagueId`
+  - **LeagueHome for Imported Leagues:** Hides empty cards (no active teams/drafts), shows most recent season standings with champion highlight, League Vault CTA card, settings display from mapper
+  - **Design docs:** `docs/phase-2-vault-and-sharing.md`, `docs/claim-mode-v2.jsx`, `docs/league-reveal.jsx`, `docs/vault-dual-mode.jsx`, `docs/share-experience.jsx`
+
+- [x] **3G: Commissioner Blog System** (migration 44)
+  - Upgraded Commissioner Notes to full blog with TipTap rich text editor
+  - `PostEditor.jsx` — categories (general/rule_change/trade_analysis/draft_recap/reminder/weekly_update), tones, TipTap with StarterKit + Image + TextAlign + Underline + Link extensions
+  - Cover image support via Cloudinary (`uploadImage.js` utility — resize + square crop + upload)
+  - `ImageUpload.jsx` — reusable drag-and-drop avatar/image component with preview
+  - Emoji reactions (6 types), comment system (lazy-load, Enter-to-send), view tracking
+  - `CommissionerNotes.jsx` rewritten — smart truncation, relative timestamps, pinned posts
+  - Migration 44: `cover_image`, `images` JSONB, `view_count`, `excerpt` on league_posts; `league_post_views` table
+  - **MIGRATION 44 NOT YET DEPLOYED TO RAILWAY**
+
 ### Backlog (Low Priority — Build When Needed)
-- League Vault v2: Head-to-head historical records, draft history browser, transaction log, "On This Day" feature, PDF export
+- League Vault v3: Head-to-head historical records, transaction log, "On This Day" feature, PDF export
 - Trading keeper rights between teams (keeper designation transfers as part of trades)
 - **NFL live scoring frequency review**: Current nflSync crons run weekly (Tuesdays). During active NFL game windows (Sun 1pm-midnight, Mon/Thu night), need near-real-time stat updates (every 1-2 minutes minimum) for live fantasy point tracking. Evaluate: nflverse update latency during games, alternative live data sources (ESPN live endpoints, NFL API), WebSocket push vs polling, caching strategy for high-frequency reads. Users expect up-to-the-minute fantasy point updates during games — 30-min intervals are far too slow for game day.
 - **Cleanup NFL test data**: `node backend/prisma/seedNflTestLeague.js cleanup` removes all `[TEST]`-prefixed data (league, teams, users, scores, matchups) and restores 2025 as current NFL season. Manifest file at `backend/prisma/nfl-test-manifest.json` tracks all created IDs. Also delete any orphaned 2024 NFL FantasyScores if needed. **Run this before any production deploy.**
 
 ---
 
-### Phase 4: Data Architecture & Proprietary Metrics — IN PROGRESS
+### Phase 4: Data Architecture & Proprietary Metrics — COMPLETE ✓ (4E deferred)
 
 > **Philosophy:** Build on data you own, transform everything, license only what you can't replicate, architect for AI from day one. The 4-layer data system ensures no provider dependency — if DataGolf disappears tomorrow, nothing breaks except one ETL script.
 
@@ -394,7 +432,6 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Raw staging: `stageRaw()` calls in all 7 datagolfSync functions capture full API responses
   - ClutchScore model: per-player per-tournament computed metrics with formula versioning + input snapshots
   - ClutchFormulaLog: audit trail for formula versions with activation/deactivation dates
-  - **NOT YET APPLIED:** Migration needs `prisma migrate deploy` on Railway
 
 - [x] **4B: Rosetta Stone — Player & Event ID Mapping**
   - Existing Player model serves as player Rosetta Stone (11 cross-reference ID columns already present)
@@ -435,9 +472,10 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ---
 
-### Phase 5: Manager Analytics & Clutch Rating
+### Phase 5: Manager Analytics & Clutch Rating — IN PROGRESS
 
 > **Reference doc:** `clutch-build-specs.md` (Sections A1-A6, adapted to fantasy-first language)
+> **Rating architecture:** `docs/clutch-rating-system-architecture.md` — full V2 component design
 
 > **Note:** All prediction/performance tracking uses the existing non-gambling language: "Performance Calls", "Benchmarks", "Projections", "Insights". No odds, units, ROI, or sportsbook terminology.
 
@@ -452,15 +490,25 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Performance charts: accuracy rolling average, calls by sport (pie), hot/cold streaks (calendar heatmap)
   - Manager comparison: side-by-side stats with another manager
 
-- [ ] **5B: Clutch Rating System (Sport-Specific + Global)**
-  - **Sport Rating** (per sport, 0-100): Primary rating computed per sport (NFL, Golf, NBA, MLB). Like a credit score for fantasy analysis per sport.
-  - Components (weighted): Accuracy (40%), Consistency (25% — low variance rewarded), Volume (20% — min calls required), Breadth by category (15%)
-  - Sport rating tiers: Expert (90+), Sharp (80-89), Proven (70-79), Contender (60-69), Rising (<60)
-  - Minimum 30 graded calls per sport to qualify for a sport rating
-  - **Global Clutch Rating** (prestige, 0-100): Secondary rating requiring qualified ratings in 2+ sports. Weighted average of sport ratings + multi-sport breadth bonus.
-  - Display: circular gauge/meter visual, color coded, trend arrow, hover shows sport breakdown + component details
-  - Recalculates daily. 90-day recency weighting.
-  - Schema: `clutch_user_sport_ratings` (per-sport), `clutch_user_global_rating` (cross-sport), `clutch_user_sport_tags` (expertise tags for discovery)
+- [x] **5B: Clutch Rating V2 System** (COMPLETE — migration 43, backend + frontend)
+  - **Architecture:** Confidence-weighted composite score (0-100) like a credit score for fantasy managers
+  - **7 Components (weighted):**
+    - Win Rate Intelligence (20%) — career + recent win%, PF vs league avg, playoff rate
+    - Draft IQ (18%) — draft grades, early-round hit rate, late-round steals
+    - Roster Management (18%) — optimal lineup %, bench efficiency, engagement
+    - Predictions (15%) — recency-weighted accuracy with 90-day decay
+    - Trade Acumen (12%) — deferred V2 (placeholder, always 0 for now)
+    - Championships (10%) — title rate, playoff win%, runner-up bonus
+    - Consistency (7%) — low variance, no losing streaks, improvement trend
+  - **Confidence curve:** `confidence ^ 0.6` power function; 1 season = 25%, 3 = 55%, 5 = 75%, 12+ = 98%
+  - **Tier system:** ELITE (90+), VETERAN (80+), COMPETITOR (70+), CONTENDER (60+), DEVELOPING (50+), ROOKIE (40+), UNRANKED (<40)
+  - **Trend tracking:** Compares to 30-day-old snapshot (threshold 3 pts), up/down/stable/new
+  - **Data source summary:** Auto-generated text ("Based on 5 seasons + 3 drafts + 120 predictions")
+  - **Backend:** `clutchRatingService.js` (833 lines) — `calculateRatingForUser()`, `recomputeAllV2()`, `getRating()`, `formatRatingResponse()`. `GET /api/managers/:id/clutch-rating` serves V2 with V1 fallback.
+  - **Migration 43:** `rating_snapshots` table, 14 component score/confidence columns on `clutch_manager_ratings`, `version`, `confidence`, `data_source_summary`, `active_since` fields
+  - **Frontend:** `useClutchRating.js` hook (single + batch), `DashboardRatingWidget.jsx` (progressive unlock: Locked → Activating → Active states with component tracker), vault rating components (`RatingRing`, `RatingBreakdown`, `RatingConfidenceIndicator`, `RatingTierBadge`, `RatingTrendIndicator`)
+  - **Post-import trigger:** Clutch Rating auto-recalculates after league import completes
+  - **MIGRATION 43 NOT YET DEPLOYED TO RAILWAY**
 
 - [ ] **5C: Enhanced Prediction Categories**
   - Expand prediction types per sport (golf: tournament winner, top 5/10/20, make/miss cut, head-to-head matchup, round leader)
@@ -1143,58 +1191,84 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 ```
 /Users/EricSaylor/Desktop/Golf/
 ├── CLAUDE.md                    ← THIS FILE
-├── CLUTCH_BRAND_SYSTEM.md       ← Brand system spec (copy from Desktop if needed)
+├── PROJECT_STATUS.md            ← Current status report
+├── CLUTCH_BRAND_SYSTEM.md       ← Brand system spec
 ├── backend/
 │   ├── prisma/
-│   │   ├── schema.prisma        ← Database schema
-│   │   ├── migrations/          ← Numbered migrations (1-9 applied)
+│   │   ├── schema.prisma        ← Database schema (~2,800 lines, 91+ models)
+│   │   ├── migrations/          ← Numbered migrations (0-44, most applied)
 │   │   ├── seedStatsDb.js       ← Sport/Season/FantasyWeek seed
 │   │   ├── seedPlayerProfile.js ← Position/Tag/Profile seed
-│   │   └── seedAchievements.js  ← Achievement definitions seed
-│   ├── prisma/
+│   │   ├── seedAchievements.js  ← Achievement definitions seed
 │   │   ├── seedNflTestLeague.js ← NFL test league seeder (8 teams, 4 weeks scored)
 │   │   └── nfl-test-manifest.json ← Tracks test data IDs for cleanup
 │   └── src/
 │       ├── index.js             ← Express app + cron jobs + Socket.IO
+│       ├── lib/
+│       │   └── prisma.js        ← Shared Prisma singleton (20 connections, 30s timeout)
 │       ├── middleware/           ← auth.js, requireAdmin.js
-│       ├── routes/              ← All API routes
+│       ├── routes/              ← All API routes (35 route files)
 │       │   ├── auth.js, admin.js, leagues.js, teams.js
 │       │   ├── drafts.js, trades.js, waivers.js
 │       │   ├── players.js, tournaments.js, search.js
 │       │   ├── notifications.js, draftHistory.js
 │       │   ├── managerAnalytics.js, positions.js
 │       │   ├── playerTags.js, rosterSlots.js, sync.js
-│       │   ├── nfl.js           ← NFL-specific routes (scoring, available players)
-│       │   ├── feed.js          ← GET /api/feed/:sport (auto-generated feed cards)
+│       │   ├── imports.js       ← League import (5 platforms + management)
+│       │   ├── nfl.js           ← NFL-specific routes
+│       │   ├── feed.js, news.js ← Content routes
+│       │   ├── ai.js            ← AI coaching + league intelligence
 │       │   └── ...
-│       └── services/            ← Business logic
+│       └── services/            ← Business logic (25+ service files)
 │           ├── datagolfClient.js, datagolfSync.js
 │           ├── scoringService.js, fantasyTracker.js
-│           ├── nflFantasyTracker.js ← NFL scoring pipeline
-│           ├── nflScoringService.js ← NFL scoring calculator
+│           ├── nflFantasyTracker.js, nflScoringService.js
+│           ├── clutchRatingService.js  ← Clutch Rating V2 (7 components, 833 lines)
+│           ├── settingsMapper.js       ← Import settings auto-detection
+│           ├── clutchMetrics.js        ← CPI, Form, Pressure, Course Fit
+│           ├── claudeService.js, aiCoachService.js, aiInsightPipeline.js
+│           ├── sleeperImport.js, espnImport.js, yahooImport.js, fantraxImport.js, mflImport.js
 │           ├── seasonSetup.js, waiverProcessor.js
-│           ├── notificationService.js, webPushService.js
-│           ├── draftGrader.js, fantasyWeekHelper.js
-│           ├── analyticsAggregator.js, viewRefresher.js
-│           ├── feedGenerator.js    ← Auto-generates feed cards from existing data (5 generators)
+│           ├── feedGenerator.js, storylineGenerator.js
 │           └── ...
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx              ← Routes + layout
-│   │   ├── components/          ← Shared React components
-│   │   │   ├── common/          ← Card, Button, Modal, etc.
+│   │   ├── App.jsx              ← Routes + layout (60+ routes)
+│   │   ├── components/
+│   │   │   ├── common/          ← Card, Button, Modal, ImageUpload, etc.
 │   │   │   ├── layout/          ← Navbar, MobileNav, Sidebar
 │   │   │   ├── draft/           ← DraftBoard, DraftHeader, PlayerPool, etc.
-│   │   │   ├── nfl/             ← NflWeeklyScoring.jsx (NFL scoring view)
+│   │   │   ├── nfl/             ← NflWeeklyScoring.jsx
 │   │   │   ├── feed/            ← FeedCard.jsx, FeedList.jsx
-│   │   │   ├── workspace/       ← The Lab components (BoardHeader, BoardEntryRow, AddToBoardModal, etc.)
-│   │   │   └── dashboard/       ← LeagueCard, etc.
+│   │   │   ├── workspace/       ← The Lab components (BoardHeader, BoardEntryRow, etc.)
+│   │   │   ├── vault/           ← VaultRevealView, VaultPersistent, OwnerRow, OwnerDetailModal,
+│   │   │   │                       RatingRing, RatingBreakdown, ShareModal, ClaimModal, Sparkline, etc.
+│   │   │   ├── dashboard/       ← LeagueCard, DashboardRatingWidget
+│   │   │   └── league/          ← CommissionerNotes (blog), PostEditor (TipTap)
 │   │   ├── pages/               ← Route pages
-│   │   ├── hooks/               ← Custom React hooks
+│   │   │   ├── OwnerAssignment.jsx  ← 3-step owner assignment wizard
+│   │   │   ├── VaultReveal.jsx      ← Dual-mode vault (animated/instant)
+│   │   │   ├── VaultPublicLanding.jsx ← Public vault invite page
+│   │   │   └── ...
+│   │   ├── hooks/
+│   │   │   ├── useClutchRating.js    ← Single + batch rating hooks
+│   │   │   ├── useOwnerAssignment.js ← Assignment wizard state (654 lines)
+│   │   │   ├── useVaultStats.js      ← Vault stats computation
+│   │   │   └── ...
+│   │   ├── utils/
+│   │   │   ├── commonNames.js   ← 400+ census names for owner detection
+│   │   │   └── uploadImage.js   ← Cloudinary resize + upload pipeline
 │   │   ├── context/             ← AuthContext
 │   │   └── services/            ← api.js, socket.js, analytics.js, webPush.js
 │   └── public/
 │       └── service-worker.js
+├── docs/                        ← Spec documents (version-controlled)
+│   ├── clutch-rating-system-architecture.md  ← Rating V2 design
+│   ├── phase-2-vault-and-sharing.md          ← Vault reveal + sharing spec
+│   ├── clutch-rating-implementation-brief.md ← Rating implementation guide
+│   ├── claim-mode-v2.jsx, league-reveal.jsx  ← UI prototypes
+│   ├── vault-dual-mode.jsx, share-experience.jsx
+│   └── ... (strategy, NFL, workspace, AI specs)
 └── ...
 ```
 
@@ -1245,7 +1319,7 @@ The Clutch Rating is now **sport-specific primary** with a **global prestige sec
 - `clutch_user_sport_tags` — per-user sport expertise tags for discovery (e.g., "NFL Sharp", "Golf Expert")
 
 ### Current Build Priority
-Data Layer Steps 1-7 done → The Lab Phases 1-5 done (hub redesign, captures, insights, cheat sheets, timeline) → Lab spec gaps closed (cheat sheet edit, manual journal, player captures) → AI Coaching (next)
+Data Layer Steps 1-7 done → The Lab Phases 1-5 done → Lab spec gaps closed → Phase 6 AI Engine done → Import Intelligence Pipeline done → League Vault V2 (owner assignment, reveal, sharing) done → Clutch Rating V2 done → Commissioner blog done → **Next: Deploy migrations 43-44, finish Phase 5 (enhanced manager profile, leaderboards, badges v2), Phase 4E public data sources**
 
 ### Key Principle: Progressive Disclosure
 Default UX is simple and clean (Informed Fan). Depth is always one click away (Grinder, Dynasty Nerd). Never overwhelm, never underserve.
@@ -1385,6 +1459,9 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 | Doc | What It Contains |
 |-----|-----------------|
 | `docs/CLUTCH_STRATEGY_UPDATE_FEB2026.md` | **Feed + Workspace architecture**: three pillars, six user personas, seasonal flywheel, player page progressive disclosure, Feed spec, Workspace tools (draft board, watch list, rankings, scouting notes), revised build priority |
+| `docs/clutch-rating-system-architecture.md` | **Clutch Rating V2**: confidence-weighted composite score design, 7 components with weights, confidence curves, tier system, trend tracking, data source blending |
+| `docs/clutch-rating-implementation-brief.md` | Rating V2 implementation guide and technical decisions |
+| `docs/phase-2-vault-and-sharing.md` | **League Vault V2**: cinematic reveal spec, dual-mode vault, share & invite funnel, owner assignment UX |
 | `docs/nfl-expansion.md` | Complete NFL expansion plan: vision, data sources, pick types, metrics philosophy, schema, build phases (with completion status), dual-track pick system, projection contest, draft cheat sheets, self-scouting AI, monetization, competitive moat |
 | `docs/entry-points-addendum.md` | Revised participation tiers (5 levels from weekly picks to full projections), drag-and-drop ranking interface, quick-tap reason chips, "Start From" expert templates, expert following as content engine |
 | `docs/data-strategy.md` | Data ownership framework (3 tiers), golf free data sources, DataGolf transformation strategy, NFL data sources (nflfastR/nflverse), AI engines roadmap, 4-layer database architecture, modular provider design |
@@ -1401,5 +1478,9 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 
 ---
 
-*Last updated: February 11, 2026*
-*Phases 1-3 complete. Phase 4 in progress (4E not started). Data Layer Steps 1-7 complete. The Lab Phases 1-5 complete. Lab spec gaps closed. NFL Mock Draft complete. Phase 6 complete (AI Engine). Import Intelligence Pipeline complete (all 4 parts). League Vault: fixed React crash (hooks after conditional returns), fixed Sleeper champion detection (now uses winners_bracket API with p=1 placement field), added manual season entry, added cross-platform league merging (import into existing league). All 5 import services support targetLeagueId for merging. Next: deploy backend to Railway, test Yahoo import of old B Squad Bros seasons (ID# 643521) into existing Sleeper-imported league.*
+*Last updated: February 14, 2026*
+*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine). Import Intelligence Pipeline complete. League Vault V2 complete (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing). Commissioner blog system complete (TipTap, reactions, comments, cover images). Prisma singleton + connection pooling deployed (fixed pool exhaustion). All route files use shared client. Automatic tournament status transition added. 330+ commits. 91+ database models. 150+ API endpoints. 65+ frontend pages. 33 cron jobs. 25+ backend services. 44 migrations. 2 sports live.*
+
+**Pending deployment:** Migrations 43 (Clutch Rating V2) and 44 (League Posts blog upgrade) need `prisma migrate deploy` on Railway.
+
+**Infrastructure fix (Feb 2026):** All backend route files now import from `src/lib/prisma.js` singleton instead of creating individual PrismaClient instances. This fixed connection pool exhaustion (was creating 56+ separate clients). Pool: 20 connections, 30s timeout.

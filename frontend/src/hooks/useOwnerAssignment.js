@@ -562,6 +562,24 @@ export function useOwnerAssignment(leagueId) {
         }
       }
 
+      // Supplement with any most-recent-season names missing from saved aliases
+      // The most recent season is the best indicator of who's currently active
+      if (teamEntries.length > 0) {
+        const mostRecentYear = Math.max(...teamEntries.map(e => e.seasonYear))
+        const mostRecentEntries = teamEntries.filter(e => e.seasonYear === mostRecentYear)
+        for (const entry of mostRecentEntries) {
+          const name = entry.rawName
+          if (!ownersMap.has(name)) {
+            ownersMap.set(name, {
+              name,
+              color: OWNER_COLORS[ci % OWNER_COLORS.length],
+              isActive: true,
+            })
+            ci++
+          }
+        }
+      }
+
       for (const rawName of uniqueRawNames) {
         if (ownersMap.has(rawName) && !assignMap.has(rawName)) {
           assignMap.set(rawName, rawName)

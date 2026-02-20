@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import useDraftBoards from '../hooks/useDraftBoards'
 import api from '../services/api'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
+import LabRatingCard from '../components/lab/LabRatingCard'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -379,6 +380,11 @@ export default function DraftBoards() {
             </div>
           )}
 
+          {/* 2c. Lab ↔ Rating Bridge Card */}
+          <div className="mb-6">
+            <LabRatingCard />
+          </div>
+
           {/* 3. Two-column: Readiness Tracker + Recent Captures */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {/* Draft Readiness Tracker */}
@@ -521,6 +527,16 @@ export default function DraftBoards() {
                         })}
                       </div>
                     )}
+
+                    {/* Rating connection badge */}
+                    <div className="mb-2">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-purple-500/10 text-purple-300/60 border border-purple-400/10">
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Feeds Draft IQ
+                      </span>
+                    </div>
 
                     {/* Bottom row: count + time + status */}
                     <div className="flex items-center justify-between text-[11px]">

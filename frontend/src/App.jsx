@@ -73,6 +73,8 @@ import GamedayPortal from './pages/GamedayPortal'
 import CoachingReport from './pages/CoachingReport'
 import ScoutReport from './pages/ScoutReport'
 import ClutchSim from './pages/ClutchSim'
+// Clutch Rating
+import ClutchRatingPage from './pages/ClutchRatingPage'
 // The Lab (formerly Workspace)
 import DraftBoards from './pages/DraftBoards'
 import DraftBoardEditor from './pages/DraftBoardEditor'
@@ -364,6 +366,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProveIt />
+              </ProtectedRoute>
+            }
+          />
+          {/* Clutch Rating */}
+          <Route
+            path="/my-rating"
+            element={
+              <ProtectedRoute>
+                <ClutchRatingPage />
               </ProtectedRoute>
             }
           />

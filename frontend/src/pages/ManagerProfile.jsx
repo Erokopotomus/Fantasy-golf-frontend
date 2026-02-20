@@ -4,6 +4,11 @@ import { useAuth } from '../context/AuthContext'
 import useManagerProfile from '../hooks/useManagerProfile'
 import Card from '../components/common/Card'
 import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
+import RatingRing from '../components/vault/RatingRing'
+import RatingBreakdown from '../components/vault/RatingBreakdown'
+import RatingTierBadge from '../components/vault/RatingTierBadge'
+import RatingTrendIndicator from '../components/vault/RatingTrendIndicator'
+import RatingConfidenceIndicator from '../components/vault/RatingConfidenceIndicator'
 import api from '../services/api'
 import ShareButton from '../components/share/ShareButton'
 import RatingCard from '../components/share/cards/RatingCard'
@@ -211,10 +216,40 @@ const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
   )
 }
 
+// Normalize rating shape — handles both V1 (flat fields) and V2 (components object)
+function normalizeRating(raw) {
+  if (!raw) return null
+  // V2 format: has .overall and .components
+  if (raw.overall != null && raw.components) return raw
+  // V1 format: has .overallRating and flat component fields
+  if (raw.overallRating != null) {
+    return {
+      overall: raw.overallRating,
+      tier: raw.tier || 'UNRANKED',
+      trend: raw.trend || 'stable',
+      confidence: raw.confidence || 0,
+      dataSourceSummary: raw.dataSourceSummary || null,
+      activeSince: raw.activeSince || null,
+      updatedAt: raw.updatedAt || null,
+      components: {
+        winRate: { score: raw.accuracyComponent || 0, confidence: 50, active: raw.accuracyComponent > 0 },
+        draftIQ: { score: raw.consistencyComponent || 0, confidence: 50, active: raw.consistencyComponent > 0 },
+        rosterMgmt: { score: raw.volumeComponent || 0, confidence: 50, active: raw.volumeComponent > 0 },
+        predictions: { score: raw.breadthComponent || 0, confidence: 50, active: raw.breadthComponent > 0 },
+        tradeAcumen: { score: 0, confidence: 0, active: false },
+        championships: { score: 0, confidence: 0, active: false },
+        consistency: { score: 0, confidence: 0, active: false },
+      },
+    }
+  }
+  return null
+}
+
 const ManagerProfile = () => {
   const { userId } = useParams()
   const { user: currentUser } = useAuth()
-  const { user, profile, bySport, achievements, achievementStats, reputation, clutchRating, loading, error, refetch } = useManagerProfile(userId)
+  const { user, profile, bySport, achievements, achievementStats, reputation, clutchRating: rawClutchRating, loading, error, refetch } = useManagerProfile(userId)
+  const clutchRating = normalizeRating(rawClutchRating)
 
   // Edit mode state
   const [editing, setEditing] = useState(false)
@@ -388,19 +423,14 @@ const ManagerProfile = () => {
                     </svg>
                   </button>
                 )}
-                {clutchRating && clutchRating.overallRating != null && !editing && (
+                {clutchRating && clutchRating.overall != null && !editing && (
                   <ShareButton
                     CardComponent={RatingCard}
                     cardProps={{
-                      rating: clutchRating.overallRating,
+                      rating: clutchRating.overall,
                       tier: clutchRating.tier,
                       trend: clutchRating.trend,
-                      components: {
-                        accuracy: clutchRating.accuracyComponent,
-                        consistency: clutchRating.consistencyComponent,
-                        volume: clutchRating.volumeComponent,
-                        breadth: clutchRating.breadthComponent,
-                      },
+                      components: clutchRating.components || {},
                       userName: user?.name,
                       username: user?.username,
                     }}
@@ -460,14 +490,16 @@ const ManagerProfile = () => {
               )}
             </div>
 
-            {/* Clutch Rating Gauge */}
-            {clutchRating && clutchRating.overallRating != null && (
-              <ClutchRatingGauge
-                rating={clutchRating.overallRating}
-                tier={clutchRating.tier}
-                trend={clutchRating.trend}
-                size="lg"
-              />
+            {/* Clutch Rating Ring */}
+            {clutchRating && clutchRating.overall != null && (
+              <Link to="/my-rating" className="shrink-0 hover:opacity-80 transition-opacity" title="View full rating">
+                <RatingRing
+                  rating={clutchRating.overall}
+                  confidence={clutchRating.confidence || 0}
+                  tier={clutchRating.tier || 'UNRANKED'}
+                  size="md"
+                />
+              </Link>
             )}
           </div>
 
@@ -559,39 +591,50 @@ const ManagerProfile = () => {
           </div>
         </Card>
 
-        {/* Clutch Rating Breakdown */}
-        {clutchRating && clutchRating.overallRating != null && (
+        {/* Clutch Rating Breakdown — V2 7-component view */}
+        {clutchRating && clutchRating.overall != null && (
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold font-display text-white">Clutch Rating Breakdown</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold font-display text-white">Clutch Rating</h2>
+                <RatingTierBadge tier={clutchRating.tier || 'UNRANKED'} size="sm" />
+                <RatingTrendIndicator trend={clutchRating.trend || 'stable'} />
+              </div>
               <ShareButton
                 CardComponent={RatingCard}
                 cardProps={{
-                  rating: clutchRating.overallRating,
+                  rating: clutchRating.overall,
                   tier: clutchRating.tier,
                   trend: clutchRating.trend,
-                  components: {
-                    accuracy: clutchRating.accuracyComponent,
-                    consistency: clutchRating.consistencyComponent,
-                    volume: clutchRating.volumeComponent,
-                    breadth: clutchRating.breadthComponent,
-                  },
+                  components: clutchRating.components || {},
                   userName: user?.name,
                   username: user?.username,
                 }}
                 label="Share"
               />
             </div>
-            <div className="space-y-3">
-              <ComponentBar label="Accuracy (40%)" value={clutchRating.accuracyComponent} />
-              <ComponentBar label="Consistency (25%)" value={clutchRating.consistencyComponent} />
-              <ComponentBar label="Volume (20%)" value={clutchRating.volumeComponent} />
-              <ComponentBar label="Breadth (15%)" value={clutchRating.breadthComponent} />
+            <div className="flex items-center gap-4 mb-4">
+              <RatingRing
+                rating={clutchRating.overall}
+                confidence={clutchRating.confidence || 0}
+                tier={clutchRating.tier || 'UNRANKED'}
+                size="md"
+              />
+              <div className="flex-1">
+                <div className="text-2xl font-mono font-bold text-white mb-1">{clutchRating.overall}</div>
+                <RatingConfidenceIndicator
+                  confidence={clutchRating.confidence || 0}
+                  dataSourceSummary={clutchRating.dataSourceSummary}
+                />
+              </div>
             </div>
-            <p className="text-xs text-text-muted mt-3 font-mono">
-              Based on {clutchRating.totalGradedCalls || 0} graded calls
-              {clutchRating.updatedAt && ` · Updated ${new Date(clutchRating.updatedAt).toLocaleDateString()}`}
-            </p>
+            <RatingBreakdown components={clutchRating.components} animate={false} />
+            <Link
+              to="/my-rating"
+              className="block mt-4 text-center py-2 rounded-lg border border-accent-gold/15 text-[11px] font-mono text-accent-gold hover:bg-accent-gold/5 transition-colors"
+            >
+              View full rating deep-dive &rarr;
+            </Link>
           </Card>
         )}
 

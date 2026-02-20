@@ -84,6 +84,12 @@ export default function DashboardRatingWidget() {
               </div>
             </div>
             <RatingBreakdown components={rating.components} animate={false} />
+            <Link
+              to="/my-rating"
+              className="block mt-3 text-center text-[11px] font-mono text-accent-gold hover:text-accent-gold/80 transition-colors"
+            >
+              View full rating breakdown &rarr;
+            </Link>
           </>
         )}
 
@@ -115,6 +121,12 @@ export default function DashboardRatingWidget() {
               </div>
             </div>
             <RatingBreakdown components={components} animate={false} />
+            <Link
+              to="/my-rating"
+              className="block mt-3 text-center text-[11px] font-mono text-accent-gold hover:text-accent-gold/80 transition-colors"
+            >
+              View full rating breakdown &rarr;
+            </Link>
           </>
         )}
 
@@ -156,6 +168,12 @@ export default function DashboardRatingWidget() {
                 </div>
               ))}
             </div>
+            <Link
+              to="/my-rating"
+              className="block mt-3 text-center text-[11px] font-mono text-accent-gold hover:text-accent-gold/80 transition-colors"
+            >
+              View full rating breakdown &rarr;
+            </Link>
           </>
         )}
 
