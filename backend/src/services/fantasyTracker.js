@@ -34,10 +34,15 @@ async function recordWeeklyScores(fantasyWeekId, prisma) {
   // Get all performances for this tournament
   const performances = await prisma.performance.findMany({
     where: { tournamentId: fantasyWeek.tournamentId },
-    include: {
-      roundScores: true,
-    },
   })
+  const allRoundScores = await prisma.roundScore.findMany({
+    where: { tournamentId: fantasyWeek.tournamentId },
+  })
+  const rsByPlayer = {}
+  for (const rs of allRoundScores) {
+    if (!rsByPlayer[rs.playerId]) rsByPlayer[rs.playerId] = []
+    rsByPlayer[rs.playerId].push(rs)
+  }
 
   let scored = 0
 
@@ -47,7 +52,7 @@ async function recordWeeklyScores(fantasyWeekId, prisma) {
     // Compute scores + ranks for all players
     const playerScores = performances.map((perf) => {
       const { total, breakdown } = calculateFantasyPoints(
-        { ...perf, roundScores: perf.roundScores },
+        { ...perf, roundScores: rsByPlayer[perf.playerId] || [] },
         scoringConfig
       )
       return { perf, total, breakdown }

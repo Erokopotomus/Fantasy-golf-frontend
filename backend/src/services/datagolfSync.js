@@ -867,13 +867,21 @@ async function syncTournamentResults(tournamentDgId, prisma) {
   // Calculate fantasy points for all performances
   const performances = await prisma.performance.findMany({
     where: { tournamentId: tournament.id },
-    include: { roundScores: true },
   })
+  const allRoundScores = await prisma.roundScore.findMany({
+    where: { tournamentId: tournament.id },
+  })
+  const rsByPlayer = {}
+  for (const rs of allRoundScores) {
+    if (!rsByPlayer[rs.playerId]) rsByPlayer[rs.playerId] = []
+    rsByPlayer[rs.playerId].push(rs)
+  }
 
   const scoringConfig = getDefaultScoringConfig('standard')
   const fpOps = []
   for (const perf of performances) {
-    const { total } = calculateFantasyPoints(perf, scoringConfig)
+    const perfWithRounds = { ...perf, roundScores: rsByPlayer[perf.playerId] || [] }
+    const { total } = calculateFantasyPoints(perfWithRounds, scoringConfig)
     fpOps.push(prisma.performance.update({ where: { id: perf.id }, data: { fantasyPoints: total } }))
   }
   await batchTransaction(prisma, fpOps)
