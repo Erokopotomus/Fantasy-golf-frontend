@@ -20,6 +20,7 @@
   --nav-bg: #1E2A3A;
   --card-border: rgba(0,0,0,0.06);
   --card-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 12px 40px rgba(0,0,0,0.07);
   --gauge-bg: #E0DBD2;
 
   /* RGB channels for Tailwind opacity modifier support */
@@ -82,6 +83,7 @@
   --nav-bg: #111318;
   --card-border: rgba(255,255,255,0.06);
   --card-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  --card-shadow-hover: 0 12px 40px rgba(0,0,0,0.3);
   --gauge-bg: rgba(255,255,255,0.08);
 
   /* RGB channels */
@@ -99,12 +101,12 @@
   --glass-hover: rgba(255,255,255,0.09);
   --glass-bright: rgba(255,255,255,0.12);
 
-  /* Dark mode tints */
-  --tint-golf: #1A1D26;
-  --tint-nfl: #1A1D26;
-  --tint-news: #1A1D26;
-  --tint-rating: #1A1D26;
-  --tint-ai: #1A1D26;
+  /* Dark mode tints — subtle accent overlays on surface */
+  --tint-golf: #1B2024;
+  --tint-nfl: #1D1C22;
+  --tint-news: #1B1D24;
+  --tint-rating: #1D1C20;
+  --tint-ai: #1B1E28;
 }
 
 /* Theme transition */
@@ -183,20 +185,25 @@ body {
   }
 
   .card {
-    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
-    background: var(--glass);
+    @apply rounded-card border;
+    background: var(--surface);
     border-color: var(--card-border);
+    box-shadow: var(--card-shadow);
   }
 
   .card-hover {
-    @apply hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300;
+    @apply hover:shadow-card-hover transition-all duration-300;
     &:hover {
-      background: var(--glass-hover);
+      transform: translateY(-3px);
+      border-color: var(--card-border);
     }
   }
 
   .card-interactive {
-    @apply shadow-card hover:shadow-card-hover hover:scale-[1.02] hover:border-gold/30 transition-all duration-300 cursor-pointer;
+    @apply shadow-card hover:shadow-card-hover transition-all duration-300 cursor-pointer;
+    &:hover {
+      transform: translateY(-3px);
+    }
   }
 
   .btn-press {
@@ -209,15 +216,17 @@ body {
    ============================================ */
 @layer components {
   .glass-card {
-    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
-    background: var(--glass);
+    @apply rounded-card border;
+    background: var(--surface);
     border-color: var(--card-border);
+    box-shadow: var(--card-shadow);
   }
 
   .glass-card--highlighted {
-    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
-    background: var(--glass-hover);
+    @apply rounded-card border;
+    background: var(--surface-alt);
     border-color: rgb(var(--crown-rgb) / 0.2);
+    box-shadow: var(--card-shadow);
   }
 }
 
@@ -297,11 +306,13 @@ body {
   }
 
   .feature-card {
-    @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border p-6
-           hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02]
+    @apply rounded-card border p-6 hover:shadow-card-hover
            transition-all duration-300 cursor-pointer;
-    background: var(--glass);
+    background: var(--surface);
     border-color: var(--card-border);
+    &:hover {
+      transform: translateY(-3px);
+    }
   }
 
   .quick-action-btn {

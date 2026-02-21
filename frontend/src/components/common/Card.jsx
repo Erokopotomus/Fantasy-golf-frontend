@@ -16,12 +16,19 @@ const Card = ({
   return (
     <div
       className={`
-        backdrop-blur-xl backdrop-saturate-150 bg-[#1F1B17] rounded-card border border-[#3A342D]
+        rounded-card border
         ${shadow ? 'shadow-card' : ''}
-        ${hover ? 'hover:bg-[#26211C] hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 cursor-pointer' : 'transition-colors duration-300'}
+        ${hover ? 'hover:shadow-card-hover transition-all duration-300 cursor-pointer' : 'transition-colors duration-300'}
         ${paddings[padding]}
         ${className}
       `}
+      style={{
+        background: 'var(--surface)',
+        borderColor: 'var(--card-border)',
+        ...(hover ? {} : {}),
+      }}
+      onMouseEnter={hover ? (e) => { e.currentTarget.style.transform = 'translateY(-3px)' } : undefined}
+      onMouseLeave={hover ? (e) => { e.currentTarget.style.transform = 'translateY(0)' } : undefined}
       {...props}
     >
       {children}
