@@ -3,10 +3,9 @@ import { useState, useEffect, useRef } from 'react'
 /**
  * ClutchRatingGauge — SVG circular arc gauge for Clutch Rating
  *
- * Color coded: gold (90+), green (70-89), amber (50-69), gray (<50)
- * Number in center (JetBrains Mono)
- * Tier label below
- * Trend arrow (up/down/stable)
+ * 3-layer SVG: glow layer (blur) + track + gradient fill
+ * Crown colors for rating context
+ * Bricolage Grotesque 800 for center number
  * Size variants: sm (leaderboard rows), md (cards), lg (profile header), xl (landing hero)
  * animated: scroll-triggered count-up animation (for landing page)
  */
@@ -14,17 +13,16 @@ import { useState, useEffect, useRef } from 'react'
 const SIZES = {
   sm: { width: 48, strokeWidth: 4, fontSize: 14, tierSize: 8, showTier: false },
   md: { width: 80, strokeWidth: 5, fontSize: 22, tierSize: 10, showTier: true },
-  lg: { width: 120, strokeWidth: 6, fontSize: 34, tierSize: 12, showTier: true },
-  xl: { width: 200, strokeWidth: 10, fontSize: 56, tierSize: 14, showTier: true },
+  lg: { width: 120, strokeWidth: 7, fontSize: 38, tierSize: 12, showTier: true },
+  xl: { width: 200, strokeWidth: 10, fontSize: 64, tierSize: 14, showTier: true },
 }
 
 function getColor(rating) {
-  if (rating == null) return { stroke: '#4B5563', text: 'text-gray-500', label: 'gray' }
-  // Always gold/crown — the Clutch brand color
-  if (rating >= 90) return { stroke: '#D4930D', text: 'text-[#D4930D]', label: 'gold' }
-  if (rating >= 70) return { stroke: '#D4930D', text: 'text-[#D4930D]', label: 'gold' }
-  if (rating >= 50) return { stroke: '#F0B429', text: 'text-[#F0B429]', label: 'gold' }
-  return { stroke: '#6B7280', text: 'text-gray-400', label: 'gray' }
+  if (rating == null) return { c1: '#4B5563', c2: '#6B7280', c3: '#4B5563', text: '#6B7280' }
+  if (rating >= 90) return { c1: '#D4930D', c2: '#F0B429', c3: '#D4930D', text: '#D4930D' }
+  if (rating >= 70) return { c1: '#D4930D', c2: '#F0B429', c3: '#D4930D', text: '#D4930D' }
+  if (rating >= 50) return { c1: '#D4930D', c2: '#F0B429', c3: '#D4930D', text: '#F0B429' }
+  return { c1: '#6B7280', c2: '#9CA3AF', c3: '#6B7280', text: '#6B7280' }
 }
 
 function getTierLabel(tier, rating) {
@@ -39,7 +37,6 @@ function getTierLabel(tier, rating) {
     }
     return labels[tier] || tier
   }
-  // Derive from rating
   if (rating == null) return 'Unrated'
   if (rating >= 90) return 'Elite'
   if (rating >= 80) return 'Expert'
@@ -67,7 +64,7 @@ const TrendArrow = ({ trend, size }) => {
   )
 }
 
-export default function ClutchRatingGauge({ rating, tier, trend, size = 'md', animated = false, className = '' }) {
+export default function ClutchRatingGauge({ rating, tier, trend, size = 'md', animated = false, darkBg = false, className = '' }) {
   const config = SIZES[size] || SIZES.md
   const { width, strokeWidth, fontSize, tierSize, showTier } = config
   const [displayRating, setDisplayRating] = useState(animated ? null : rating)
@@ -76,14 +73,16 @@ export default function ClutchRatingGauge({ rating, tier, trend, size = 'md', an
 
   const color = getColor(displayRating ?? rating)
 
-  const radius = (width - strokeWidth * 2) / 2
+  const radius = width * 0.4
   const center = width / 2
   const circumference = 2 * Math.PI * radius
-  const arcLength = (270 / 360) * circumference
   const effectiveRating = displayRating ?? rating
-  const progress = effectiveRating != null ? (Math.min(100, Math.max(0, effectiveRating)) / 100) * arcLength : 0
-  const dashOffset = arcLength - progress
-  const startAngle = 135
+  const progress = effectiveRating != null ? (Math.min(100, Math.max(0, effectiveRating)) / 100) * circumference : 0
+  const dashOffset = circumference - progress
+
+  // Unique gradient ID per instance
+  const gradId = `gauge-grad-${width}-${size}`
+  const blurId = `gauge-blur-${width}-${size}`
 
   // Scroll-triggered animation
   useEffect(() => {
@@ -122,45 +121,73 @@ export default function ClutchRatingGauge({ rating, tier, trend, size = 'md', an
   return (
     <div ref={ref} className={`inline-flex flex-col items-center ${className}`}>
       <div className="relative" style={{ width, height: width }}>
-        <svg width={width} height={width} viewBox={`0 0 ${width} ${width}`}>
-          {/* Background track */}
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke="var(--gauge-bg)"
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${arcLength} ${circumference}`}
-            strokeDashoffset={0}
-            strokeLinecap="round"
-            transform={`rotate(${startAngle} ${center} ${center})`}
-          />
-          {/* Progress arc */}
+        <svg width={width} height={width} viewBox={`0 0 ${width} ${width}`} style={{ transform: 'rotate(-90deg)' }}>
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={color.c1} />
+              <stop offset="50%" stopColor={color.c2} />
+              <stop offset="100%" stopColor={color.c3} />
+            </linearGradient>
+            <filter id={blurId}>
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+          </defs>
+
+          {/* Layer 1: Glow (blur behind fill) */}
           {effectiveRating != null && (
             <circle
               cx={center}
               cy={center}
               r={radius}
               fill="none"
-              stroke={color.stroke}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${arcLength} ${circumference}`}
-              strokeDashoffset={dashOffset}
+              stroke={color.c1}
+              strokeWidth={strokeWidth + 5}
               strokeLinecap="round"
-              transform={`rotate(${startAngle} ${center} ${center})`}
+              strokeDasharray={circumference}
+              strokeDashoffset={dashOffset}
+              opacity={0.08}
+              filter={`url(#${blurId})`}
+            />
+          )}
+
+          {/* Layer 2: Track */}
+          <circle
+            cx={center}
+            cy={center}
+            r={radius}
+            fill="none"
+            stroke={darkBg ? 'rgba(255,255,255,0.08)' : 'var(--gauge-bg)'}
+            strokeWidth={strokeWidth}
+          />
+
+          {/* Layer 3: Fill (gradient) */}
+          {effectiveRating != null && (
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              fill="none"
+              stroke={`url(#${gradId})`}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={dashOffset}
               style={{
                 transition: animated ? 'none' : 'stroke-dashoffset 0.8s ease-out',
-                filter: `drop-shadow(0 0 6px ${color.stroke}40)`,
+                filter: `drop-shadow(0 0 8px ${color.c1}30)`,
               }}
             />
           )}
         </svg>
-        {/* Center number */}
+
+        {/* Center number — Bricolage Grotesque 800 */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
-            className={`font-mono font-bold leading-none ${color.text}`}
-            style={{ fontSize }}
+            className="font-display font-extrabold leading-none"
+            style={{
+              fontSize: width * 0.32,
+              color: darkBg ? '#F0EBE0' : 'var(--text-1)',
+            }}
           >
             {effectiveRating != null ? Math.round(effectiveRating) : '—'}
           </span>
@@ -172,8 +199,8 @@ export default function ClutchRatingGauge({ rating, tier, trend, size = 'md', an
       {/* Tier label */}
       {showTier && (
         <span
-          className={`font-mono font-semibold uppercase tracking-wider mt-1 ${color.text}`}
-          style={{ fontSize: tierSize }}
+          className="font-mono font-semibold uppercase tracking-wider mt-1"
+          style={{ fontSize: tierSize, color: color.text }}
         >
           {getTierLabel(tier, effectiveRating)}
         </span>

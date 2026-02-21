@@ -19,8 +19,8 @@ const Button = ({
   `
 
   const variants = {
-    primary: 'bg-[#F06820] text-white font-display hover:bg-[#D45A10] focus:ring-[#F06820] shadow-button hover:shadow-lg',
-    secondary: 'bg-transparent border border-[var(--stone)] text-[var(--text-1)] hover:bg-[var(--glass-hover)] hover:border-[var(--text-3)] focus:ring-[var(--stone)]',
+    primary: 'text-white font-display focus:ring-[#F06820] hover:brightness-110',
+    secondary: 'bg-[#1E2A3A] text-white font-display focus:ring-[#1E2A3A] hover:brightness-110',
     outline: 'bg-transparent text-[var(--text-1)] border border-[var(--stone)] hover:border-[var(--text-3)] focus:ring-[var(--stone)] hover:bg-[var(--glass-hover)]',
     ghost: 'bg-transparent hover:bg-[var(--glass-hover)] text-[var(--text-2)] hover:text-[var(--text-1)]',
   }
@@ -31,6 +31,13 @@ const Button = ({
     lg: 'px-6 py-3 text-base',
     xl: 'px-8 py-4 text-lg',
   }
+
+  // Primary & secondary buttons get gradient/solid bg via inline style
+  const inlineStyle = variant === 'primary'
+    ? { background: 'linear-gradient(135deg, #F06820, #FF8828)', boxShadow: '0 4px 16px rgba(240,104,32,0.16)' }
+    : variant === 'secondary'
+      ? { boxShadow: '0 4px 16px rgba(30,42,58,0.19)' }
+      : {}
 
   return (
     <button
@@ -43,12 +50,13 @@ const Button = ({
         ${loading ? 'cursor-wait' : ''}
         ${className}
       `}
+      style={inlineStyle}
       disabled={disabled || loading}
       onClick={onClick}
       {...props}
     >
       {loading && (
-        <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin mr-2" />
+        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
       )}
       {children}
     </button>

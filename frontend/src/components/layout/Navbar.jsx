@@ -76,7 +76,7 @@ const Navbar = () => {
   `
 
   return (
-    <nav className="bg-[#1E2A3A] border-b border-white/10 sticky top-0 z-50">
+    <nav className="bg-[var(--nav-bg)] border-b border-white/10 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -134,7 +134,7 @@ const Navbar = () => {
                   </button>
 
                   {researchOpen && (
-                      <div className="absolute left-0 mt-2 w-56 bg-[#1E2A3A] border border-white/10 rounded-card shadow-lg z-20 py-2">
+                      <div className="absolute left-0 mt-2 w-56 bg-[var(--nav-bg)] border border-white/10 rounded-card shadow-lg z-20 py-2">
                         {/* NFL Hub */}
                         <Link
                           to="/nfl"
@@ -353,7 +353,7 @@ const Navbar = () => {
 
                   {/* Profile Dropdown */}
                   {profileMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-52 bg-[#1E2A3A] border border-white/10 rounded-card shadow-lg z-20 py-1">
+                      <div className="absolute right-0 mt-2 w-52 bg-[var(--nav-bg)] border border-white/10 rounded-card shadow-lg z-20 py-1">
                         <div className="px-4 py-2 border-b border-white/10">
                           <p className="text-sm font-medium text-white truncate">{user.name || 'User'}</p>
                           <p className="text-xs text-white/50 truncate">{user.email}</p>
@@ -522,7 +522,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#1E2A3A] border-t border-white/10 animate-slide-down">
+        <div className="md:hidden bg-[var(--nav-bg)] border-t border-white/10 animate-slide-down">
           <div className="px-4 py-4 space-y-2">
             {user ? (
               <>
