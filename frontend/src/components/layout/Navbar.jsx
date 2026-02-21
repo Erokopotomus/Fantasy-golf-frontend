@@ -62,27 +62,27 @@ const Navbar = () => {
   const navLinkStyles = (path) => `
     px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
     ${isActive(path)
-      ? 'text-gold bg-surface-bright'
-      : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+      ? 'text-white bg-white/15'
+      : 'text-white/60 hover:text-white hover:bg-white/10'
     }
   `
 
   const mobileNavLinkStyles = (path) => `
     block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300
     ${isActive(path)
-      ? 'text-gold bg-surface-bright'
-      : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+      ? 'text-white bg-white/15'
+      : 'text-white/60 hover:text-white hover:bg-white/10'
     }
   `
 
   return (
-    <nav className="backdrop-blur-xl backdrop-saturate-150 bg-dark-secondary/80 border-b border-[var(--card-border)] sticky top-0 z-50">
+    <nav className="bg-[#1E2A3A] border-b border-white/10 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5">
             <ClutchLogo size={32} className="rounded-lg" />
-            <span className="text-xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
+            <span className="text-xl font-display font-extrabold text-[#F06820] tracking-tight">CLUTCH</span>
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -98,8 +98,8 @@ const Navbar = () => {
                 <Link to="/lab" className={`
                   px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
                   ${location.pathname.startsWith('/lab')
-                    ? 'text-gold bg-surface-bright'
-                    : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                    ? 'text-white bg-white/15'
+                    : 'text-white/60 hover:text-white hover:bg-white/10'
                   }
                 `}>
                   The Lab
@@ -122,8 +122,8 @@ const Navbar = () => {
                     className={`
                       px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1
                       ${location.pathname === '/nfl' || location.pathname === '/golf' || location.pathname.startsWith('/nfl/') || location.pathname.startsWith('/players') || location.pathname.startsWith('/tournaments') || location.pathname.startsWith('/courses')
-                        ? 'text-gold bg-surface-bright'
-                        : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'
+                        ? 'text-white bg-white/15'
+                        : 'text-white/60 hover:text-white hover:bg-white/10'
                       }
                     `}
                   >
@@ -134,7 +134,7 @@ const Navbar = () => {
                   </button>
 
                   {researchOpen && (
-                      <div className="absolute left-0 mt-2 w-56 backdrop-blur-xl bg-dark-secondary/90 border border-[var(--card-border)] rounded-card shadow-lg z-20 py-2">
+                      <div className="absolute left-0 mt-2 w-56 bg-[#1E2A3A] border border-white/10 rounded-card shadow-lg z-20 py-2">
                         {/* NFL Hub */}
                         <Link
                           to="/nfl"
@@ -148,11 +148,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/nfl/players"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
                           <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                             Players
@@ -160,11 +160,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/nfl/schedule"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
                           <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             Schedule
@@ -172,11 +172,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/nfl/leaderboards"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
                           <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                             Leaderboards
@@ -184,18 +184,18 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/nfl/teams"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
                           <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             Teams
                           </div>
                         </Link>
 
-                        <div className="border-t border-[var(--card-border)] my-2" />
+                        <div className="border-t border-white/10 my-2" />
 
                         {/* Golf Hub */}
                         <Link
@@ -210,11 +210,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/players"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
                           <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                             Players
@@ -222,11 +222,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/tournaments"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
                           <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             Tournaments
@@ -234,11 +234,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/courses"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setResearchOpen(false)}
                         >
                           <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
@@ -253,10 +253,10 @@ const Navbar = () => {
                   className={`
                     px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
                     ${isLiveTournament
-                      ? 'text-gold bg-surface-bright'
+                      ? 'text-white bg-white/15'
                       : isTournamentActive
-                        ? 'text-gold bg-surface-bright'
-                        : 'text-text-muted hover:text-text-primary hover:bg-surface-hover'}
+                        ? 'text-white bg-white/15'
+                        : 'text-white/60 hover:text-white hover:bg-white/10'}
                   `}
                 >
                   {isLiveTournament && (
@@ -288,7 +288,7 @@ const Navbar = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-text-muted hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'light' ? (
@@ -311,7 +311,7 @@ const Navbar = () => {
                       setNotifOpen(!notifOpen)
                       setProfileMenuOpen(false)
                     }}
-                    className="relative p-2 text-text-muted hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
+                    className="relative p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -340,7 +340,7 @@ const Navbar = () => {
                       setProfileMenuOpen(!profileMenuOpen)
                       setNotifOpen(false)
                     }}
-                    className="hidden sm:flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors p-1 rounded-lg hover:bg-surface-hover"
+                    className="hidden sm:flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-gold to-orange rounded-full flex items-center justify-center text-slate font-semibold shadow-button">
                       {user.name?.charAt(0).toUpperCase() || 'U'}
@@ -353,14 +353,14 @@ const Navbar = () => {
 
                   {/* Profile Dropdown */}
                   {profileMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-52 backdrop-blur-xl bg-dark-secondary/90 border border-[var(--card-border)] rounded-card shadow-lg z-20 py-1">
-                        <div className="px-4 py-2 border-b border-[var(--card-border)]">
-                          <p className="text-sm font-medium text-text-primary truncate">{user.name || 'User'}</p>
-                          <p className="text-xs text-text-muted truncate">{user.email}</p>
+                      <div className="absolute right-0 mt-2 w-52 bg-[#1E2A3A] border border-white/10 rounded-card shadow-lg z-20 py-1">
+                        <div className="px-4 py-2 border-b border-white/10">
+                          <p className="text-sm font-medium text-white truncate">{user.name || 'User'}</p>
+                          <p className="text-xs text-white/50 truncate">{user.email}</p>
                         </div>
                         <Link
                           to="/profile"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -372,7 +372,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to={`/manager/${user.id}`}
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/my-rating"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -396,7 +396,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/leagues"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/vault"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -422,7 +422,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/news"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -432,10 +432,10 @@ const Navbar = () => {
                             Player News
                           </div>
                         </Link>
-                        <div className="border-t border-[var(--card-border)] my-1" />
+                        <div className="border-t border-white/10 my-1" />
                         <Link
                           to="/settings/notifications"
-                          className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                           onClick={() => setProfileMenuOpen(false)}
                         >
                           <div className="flex items-center gap-2">
@@ -447,10 +447,10 @@ const Navbar = () => {
                         </Link>
                         {user?.role === 'admin' && (
                           <>
-                            <div className="border-t border-[var(--card-border)] my-1" />
+                            <div className="border-t border-white/10 my-1" />
                             <Link
                               to="/admin"
-                              className="block px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                              className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
                               onClick={() => setProfileMenuOpen(false)}
                             >
                               <div className="flex items-center gap-2">
@@ -463,7 +463,7 @@ const Navbar = () => {
                             </Link>
                           </>
                         )}
-                        <div className="border-t border-[var(--card-border)] my-1" />
+                        <div className="border-t border-white/10 my-1" />
                         <button
                           onClick={() => {
                             setProfileMenuOpen(false)
@@ -503,7 +503,7 @@ const Navbar = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-surface-hover text-text-muted hover:text-text-primary transition-all duration-300"
+              className="md:hidden p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all duration-300"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -522,7 +522,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden backdrop-blur-xl bg-dark-secondary/90 border-t border-[var(--card-border)] animate-slide-down">
+        <div className="md:hidden bg-[#1E2A3A] border-t border-white/10 animate-slide-down">
           <div className="px-4 py-4 space-y-2">
             {user ? (
               <>
@@ -564,7 +564,7 @@ const Navbar = () => {
 
                 {/* Research section */}
                 <div className="pt-2 pb-1 px-4">
-                  <span className="text-[10px] font-mono font-bold text-text-primary/25 uppercase tracking-widest">Research</span>
+                  <span className="text-[10px] font-mono font-bold text-white/25 uppercase tracking-widest">Research</span>
                 </div>
                 <div className="pl-2 space-y-1">
                   <Link to="/nfl" className={mobileNavLinkStyles('/nfl')} onClick={() => setMobileMenuOpen(false)}>
@@ -612,7 +612,7 @@ const Navbar = () => {
                   className={`
                     flex items-center gap-2
                     ${isTournamentActive
-                      ? 'block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 text-gold bg-surface-bright'
+                      ? 'block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 text-white bg-white/15'
                       : mobileNavLinkStyles('')}
                   `}
                   onClick={() => setMobileMenuOpen(false)}

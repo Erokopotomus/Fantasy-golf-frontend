@@ -20,9 +20,10 @@ const SIZES = {
 
 function getColor(rating) {
   if (rating == null) return { stroke: '#4B5563', text: 'text-gray-500', label: 'gray' }
-  if (rating >= 90) return { stroke: '#E8B84D', text: 'text-amber-400', label: 'gold' }
-  if (rating >= 70) return { stroke: '#6ABF8A', text: 'text-emerald-400', label: 'green' }
-  if (rating >= 50) return { stroke: '#F59E0B', text: 'text-amber-500', label: 'amber' }
+  // Always gold/crown — the Clutch brand color
+  if (rating >= 90) return { stroke: '#D4930D', text: 'text-[#D4930D]', label: 'gold' }
+  if (rating >= 70) return { stroke: '#D4930D', text: 'text-[#D4930D]', label: 'gold' }
+  if (rating >= 50) return { stroke: '#F0B429', text: 'text-[#F0B429]', label: 'gold' }
   return { stroke: '#6B7280', text: 'text-gray-400', label: 'gray' }
 }
 
@@ -128,7 +129,7 @@ export default function ClutchRatingGauge({ rating, tier, trend, size = 'md', an
             cy={center}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.08)"
+            stroke="var(--gauge-bg)"
             strokeWidth={strokeWidth}
             strokeDasharray={`${arcLength} ${circumference}`}
             strokeDashoffset={0}

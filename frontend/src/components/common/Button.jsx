@@ -19,10 +19,10 @@ const Button = ({
   `
 
   const variants = {
-    primary: 'bg-gradient-to-r from-gold to-orange text-slate font-display hover:shadow-glow-gold focus:ring-gold shadow-button',
-    secondary: 'bg-transparent border border-gold/20 text-gold backdrop-blur-sm hover:bg-surface-hover hover:border-gold/40 focus:ring-gold',
-    outline: 'bg-transparent hover:bg-dark-tertiary text-text-primary border border-dark-border hover:border-gold/30 focus:ring-dark-border hover:shadow-card',
-    ghost: 'bg-transparent hover:bg-dark-tertiary text-text-secondary hover:text-text-primary',
+    primary: 'bg-[#F06820] text-white font-display hover:bg-[#D45A10] focus:ring-[#F06820] shadow-button hover:shadow-lg',
+    secondary: 'bg-transparent border border-[var(--stone)] text-[var(--text-1)] hover:bg-[var(--glass-hover)] hover:border-[var(--text-3)] focus:ring-[var(--stone)]',
+    outline: 'bg-transparent text-[var(--text-1)] border border-[var(--stone)] hover:border-[var(--text-3)] focus:ring-[var(--stone)] hover:bg-[var(--glass-hover)]',
+    ghost: 'bg-transparent hover:bg-[var(--glass-hover)] text-[var(--text-2)] hover:text-[var(--text-1)]',
   }
 
   const sizes = {

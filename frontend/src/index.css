@@ -227,17 +227,26 @@ body {
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center font-semibold font-display rounded-button
-           bg-gradient-to-r from-gold to-orange text-slate
-           shadow-button hover:shadow-glow-gold
+           text-white shadow-button
            active:scale-[0.98] transition-all duration-300
            disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: #F06820;
+  }
+  .btn-primary:hover {
+    background-color: #D45A10;
+    box-shadow: 0 4px 12px rgba(240, 104, 32, 0.3);
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center font-semibold rounded-button
-           bg-transparent border border-gold/20 text-gold backdrop-blur-sm
-           hover:bg-surface-hover hover:border-gold/40
+           bg-transparent backdrop-blur-sm
            active:scale-[0.98] transition-all duration-300;
+    border: 1px solid var(--stone);
+    color: var(--text-1);
+  }
+  .btn-secondary:hover {
+    background: var(--glass-hover);
+    border-color: var(--text-3);
   }
 
   .btn-tertiary {
@@ -295,9 +304,13 @@ body {
   }
 
   .quick-action-btn {
-    @apply w-full flex items-center gap-3 p-3 rounded-lg bg-dark-tertiary
-           hover:bg-dark-border hover:shadow-card transition-all duration-300
+    @apply w-full flex items-center gap-3 p-3 rounded-lg
+           hover:shadow-card transition-all duration-300
            text-left active:scale-[0.98];
+    background: var(--glass);
+  }
+  .quick-action-btn:hover {
+    background: var(--glass-hover);
   }
 
   /* Loading spinner */
@@ -307,7 +320,8 @@ body {
 
   /* Skeleton loading */
   .skeleton {
-    @apply bg-dark-tertiary animate-pulse rounded;
+    @apply animate-pulse rounded;
+    background: var(--glass-bright);
   }
 
   /* Fade in animation */
@@ -511,7 +525,7 @@ body {
     position: sticky;
     left: 0;
     z-index: 1;
-    @apply bg-dark-secondary;
+    background: var(--bg-alt);
   }
 }
 
@@ -553,7 +567,8 @@ body {
 
 /* Swipe indicator for bottom sheets */
 .swipe-indicator {
-  @apply w-10 h-1 bg-dark-border rounded-full mx-auto mb-4;
+  @apply w-10 h-1 rounded-full mx-auto mb-4;
+  background: var(--stone);
 }
 
 /* Pull to refresh indicator */
