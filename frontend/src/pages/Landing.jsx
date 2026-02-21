@@ -1,11 +1,9 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import Footer from '../components/layout/Footer'
 import ClutchLogo from '../components/common/ClutchLogo'
 import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
 import Button from '../components/common/Button'
-import api from '../services/api'
 
 // ─── Brand Colors ────────────────────────────────────────────
 const BZ = '#F06820', BZ_H = '#FF8828', BZ_D = '#D45A10'
@@ -66,52 +64,6 @@ const SectionLabel = ({ children, color = SL_L }) => (
     <span className="text-[11px] font-mono font-semibold uppercase tracking-[0.15em]" style={{ color }}>{children}</span>
   </div>
 )
-
-// ─── Waitlist Form ──────────────────────────────────────────
-
-const WaitlistForm = ({ variant = 'default' }) => {
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('idle')
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!email.trim()) return
-    setStatus('loading')
-    try {
-      await api.request('/waitlist', { method: 'POST', body: JSON.stringify({ email, sport: 'nfl' }), headers: { 'Content-Type': 'application/json' } })
-      setStatus('success')
-    } catch {
-      setStatus('success')
-    }
-  }
-
-  if (status === 'success') {
-    return (
-      <div className={`flex items-center gap-2 ${variant === 'inline' ? '' : 'justify-center'}`}>
-        <svg className="w-5 h-5 text-[#0D9668]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        <span className="text-[#0D9668] font-medium text-sm">You're on the list. We'll be in touch.</span>
-      </div>
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className={`flex gap-2 ${variant === 'inline' ? '' : 'justify-center'} max-w-md ${variant === 'inline' ? '' : 'mx-auto'}`}>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="your@email.com"
-        required
-        className="flex-1 px-4 py-2.5 rounded-button bg-[var(--surface)] border border-[var(--stone)] text-[var(--text-1)] placeholder-[var(--text-3)] text-sm focus:outline-none focus:ring-2 focus:ring-[#F06820]/50 focus:border-[#F06820]/50"
-      />
-      <Button type="submit" variant="outline" size="md" loading={status === 'loading'}>
-        Get Early Access
-      </Button>
-    </form>
-  )
-}
 
 // ─── Landing Page ───────────────────────────────────────────
 
@@ -515,15 +467,6 @@ const Landing = () => {
                 Play Fantasy Golf Now
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              size="lg"
-              fullWidth
-              className="sm:w-auto"
-              onClick={() => document.getElementById('nfl-2026')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Join the NFL 2026 Waitlist
-            </Button>
           </div>
         </div>
       </section>
@@ -797,85 +740,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ══════════ NFL 2026 ══════════ */}
-      <section
-        id="nfl-2026"
-        className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8"
-        style={{
-          background: `
-            radial-gradient(ellipse 35% 25% at 30% 40%, ${BZ}${isLight ? '04' : '06'}, transparent),
-            var(--bg)
-          `,
-        }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{ background: `${BZ}${isLight ? '0C' : '18'}`, border: `1px solid ${BZ}${isLight ? '18' : '28'}` }}
-            >
-              <span className="text-sm font-medium" style={{ color: BZ }}>Coming Spring 2026</span>
-            </div>
-            <h2
-              className="font-display font-extrabold text-[var(--text-1)] mb-4 leading-tight"
-              style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em' }}
-            >
-              NFL 2026 — Prove You Know Football
-            </h2>
-            <p className="text-[var(--text-2)] max-w-2xl mx-auto leading-relaxed">
-              Enter your projections. Get a draft cheat sheet built from YOUR research.
-              Compete all season. See if you actually know football — or if you just think you do.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6 mb-10">
-            {[
-              { emoji: '📊', title: 'Project', desc: "Project every QB's passing yards. Every RB's rushing TDs. Every team's win total. Your reasoning is logged — this becomes your football journal." },
-              { emoji: '🎯', title: 'Draft & Compete', desc: 'Your projections auto-generate a personalized cheat sheet with tier breaks, value targets, and auction dollar values. Then pick weekly props against real frozen lines.' },
-              { emoji: '🏆', title: 'Get Scored', desc: 'Projections scored all season by accuracy. Picks graded automatically after every game. Bold calls that hit get bonus credit. Your Clutch Rating updates weekly.' },
-            ].map(card => (
-              <div key={card.title} className="bg-[var(--surface)] rounded-[14px] p-6 border border-[var(--card-border)] text-center" style={{ boxShadow: 'var(--card-shadow)' }}>
-                <div className="text-2xl mb-3">{card.emoji}</div>
-                <h3 className="font-display text-[15px] font-bold text-[var(--text-1)] mb-2">{card.title}</h3>
-                <p className="text-[var(--text-2)] text-[13px] leading-relaxed">{card.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4 mb-10">
-            {[
-              { icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', title: 'Tiered Entry', desc: "Don't have time for 200 projections? Just project your favorite team — 15 minutes, you're on the leaderboard." },
-              { icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', title: 'AI Self-Scouting', desc: 'After a season, Clutch AI shows patterns: "You overestimate aging RBs by 18%."' },
-              { icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', title: 'Real Stats, Real Names', desc: 'EPA is EPA. CPOE is CPOE. Full player pages with advanced analytics and game logs.' },
-              { icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', title: 'Season-Long Leagues Too', desc: 'Full fantasy league platform with snake/auction drafts, trades, waivers, and chat.' },
-            ].map(card => (
-              <div key={card.title} className="bg-[var(--surface)] rounded-[14px] p-5 border border-[var(--card-border)] flex gap-4" style={{ boxShadow: 'var(--card-shadow)' }}>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${BZ}15` }}>
-                  <svg className="w-5 h-5" style={{ color: BZ }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="font-display text-sm font-bold text-[var(--text-1)] mb-1">{card.title}</h4>
-                  <p className="text-[var(--text-2)] text-xs leading-relaxed">{card.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-[var(--surface)] rounded-[14px] p-6 border text-center mb-8" style={{ borderColor: `${BZ}33`, boxShadow: 'var(--card-shadow)' }}>
-            <p className="text-[var(--text-2)] text-sm leading-relaxed">
-              Prediction contest opens after the NFL Draft. Draft tools ready for your August drafts.
-              Golf fills the gap April through August — your Clutch Rating spans every sport.
-            </p>
-          </div>
-
-          <div className="text-center">
-            <h3 className="font-display text-lg font-semibold text-[var(--text-1)] mb-4">Get Early Access to NFL 2026</h3>
-            <WaitlistForm />
-          </div>
-        </div>
-      </section>
 
       {/* ══════════ THE LEADERBOARD ══════════ */}
       <section
