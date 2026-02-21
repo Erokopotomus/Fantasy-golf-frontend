@@ -37,9 +37,39 @@ function computeSegments(weeks, segmentCount) {
   return segments
 }
 
+// Detect if a tournament is the TOUR Championship (final playoff event)
+function isTourChampionship(week) {
+  const name = (week.tournament?.name || week.name || '').toLowerCase()
+  return name.includes('tour championship')
+}
+
+// Detect if a tournament is the Wyndham Championship (last pre-playoff regular season)
+function isWyndham(week) {
+  const name = (week.tournament?.name || week.name || '').toLowerCase()
+  return name.includes('wyndham')
+}
+
+// Detect if a week is a fall/next-season event (after TOUR Championship)
+function classifyWeek(week, tourChampIdx, weekIdx) {
+  if (tourChampIdx >= 0 && weekIdx > tourChampIdx) return 'fall'
+  if (week.tournament?.isPlayoff) return 'playoff'
+  return 'regular'
+}
+
 const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChange }) => {
+  // Find key landmark indexes
+  const tourChampIdx = useMemo(() => {
+    if (!weeks) return -1
+    return weeks.findIndex(w => isTourChampionship(w))
+  }, [weeks])
+
+  const wyndhamIdx = useMemo(() => {
+    if (!weeks) return -1
+    return weeks.findIndex(w => isWyndham(w))
+  }, [weeks])
+
   // Build option label for a week
-  const optionLabel = (week) => {
+  const optionLabel = (week, idx) => {
     const name = week.tournament?.shortName || week.tournament?.name || week.name
     const date = formatDate(week.tournament?.startDate)
     const parts = [name]
@@ -53,13 +83,49 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
     return parts.join('')
   }
 
+  // Build "Season Ends" options with groups and recommendations
+  const endOptions = useMemo(() => {
+    if (!weeks) return []
+    const options = []
+    let lastGroup = null
+
+    weeks.forEach((w, idx) => {
+      const group = classifyWeek(w, tourChampIdx, idx)
+
+      // Insert optgroup separators
+      if (group !== lastGroup) {
+        if (group === 'playoff') {
+          options.push({ type: 'divider', label: '\u2500\u2500\u2500 FedEx Cup Playoffs \u2500\u2500\u2500' })
+        } else if (group === 'fall') {
+          options.push({ type: 'divider', label: '\u2500\u2500\u2500 Fall Schedule (Next Season) \u2500\u2500\u2500' })
+        }
+        lastGroup = group
+      }
+
+      // Mark recommendations
+      let rec = null
+      if (isTourChampionship(w)) rec = 'Recommended'
+      else if (isWyndham(w)) rec = 'Pre-Playoff'
+
+      options.push({
+        type: 'option',
+        week: w,
+        idx,
+        group,
+        recommendation: rec,
+      })
+    })
+
+    return options
+  }, [weeks, tourChampIdx])
+
   // Filter weeks between start and end
   const filteredWeeks = useMemo(() => {
     if (!weeks || weeks.length === 0) return []
-    const startIdx = startWeekId ? weeks.findIndex(w => w.id === startWeekId) : 0
-    const endIdx = endWeekId ? weeks.findIndex(w => w.id === endWeekId) : weeks.length - 1
-    if (startIdx < 0 || endIdx < 0 || startIdx > endIdx) return weeks
-    return weeks.slice(startIdx, endIdx + 1)
+    const startI = startWeekId ? weeks.findIndex(w => w.id === startWeekId) : 0
+    const endI = endWeekId ? weeks.findIndex(w => w.id === endWeekId) : weeks.length - 1
+    if (startI < 0 || endI < 0 || startI > endI) return weeks
+    return weeks.slice(startI, endI + 1)
   }, [weeks, startWeekId, endWeekId])
 
   // Compute segment preview
@@ -68,9 +134,9 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
   }, [filteredWeeks, segments])
 
   // Validation
-  const startIdx = startWeekId ? weeks?.findIndex(w => w.id === startWeekId) ?? -1 : -1
-  const endIdx = endWeekId ? weeks?.findIndex(w => w.id === endWeekId) ?? -1 : -1
-  const isValid = !startWeekId || !endWeekId || startIdx <= endIdx
+  const startI = startWeekId ? weeks?.findIndex(w => w.id === startWeekId) ?? -1 : -1
+  const endI = endWeekId ? weeks?.findIndex(w => w.id === endWeekId) ?? -1 : -1
+  const isValid = !startWeekId || !endWeekId || startI <= endI
   const hasMinWeeks = filteredWeeks.length >= segments
 
   if (!weeks || weeks.length === 0) {
@@ -104,7 +170,7 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
             className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none text-sm"
           >
             <option value="">First tournament of season</option>
-            {weeks.map(w => (
+            {weeks.map((w) => (
               <option key={w.id} value={w.id}>
                 {optionLabel(w)}
               </option>
@@ -132,13 +198,31 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
             className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none text-sm"
           >
             <option value="">Last tournament of season</option>
-            {weeks.map(w => (
-              <option key={w.id} value={w.id}>
-                {optionLabel(w)}
-              </option>
-            ))}
+            {endOptions.map((opt, i) => {
+              if (opt.type === 'divider') {
+                return (
+                  <option key={`div-${i}`} disabled className="text-text-muted bg-dark-primary">
+                    {opt.label}
+                  </option>
+                )
+              }
+              const label = optionLabel(opt.week, opt.idx)
+              const suffix = opt.recommendation ? ` \u2605 ${opt.recommendation}` : ''
+              return (
+                <option key={opt.week.id} value={opt.week.id}>
+                  {label}{suffix}
+                </option>
+              )
+            })}
           </select>
         </div>
+      </div>
+
+      {/* Recommendation hint */}
+      <div className="text-xs text-text-muted">
+        <span className="text-gold">{'\u2605'}</span> Most leagues end at the <strong className="text-text-secondary">TOUR Championship</strong> (includes playoffs)
+        or the <strong className="text-text-secondary">Wyndham Championship</strong> (regular season only).
+        Fall events are considered next season.
       </div>
 
       {/* Validation messages */}
