@@ -49,7 +49,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Regular Season</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Regular Season</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -58,7 +58,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
             <select
               value={localSettings.regularSeasonWeeks}
               onChange={(e) => handleChange('regularSeasonWeeks', parseInt(e.target.value))}
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
             >
               {[8, 10, 12, 14, 16, 18].map(weeks => (
                 <option key={weeks} value={weeks}>{weeks} Weeks</option>
@@ -74,7 +74,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
       {/* Divisions */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold font-display text-white">Divisions</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Divisions</h3>
           <button
             type="button"
             onClick={() => {
@@ -93,7 +93,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`inline-block h-4 w-4 transform rounded-full bg-dark-tertiary transition-transform ${
                 localSettings.divisionsEnabled ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -126,7 +126,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                         setLocalSettings(updated)
                         onChange?.({ ...updated, divisionsEnabled: undefined })
                       }}
-                      className="flex-1 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                      className="flex-1 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     />
                     {localSettings.divisions.length > 2 && (
                       <button
@@ -162,7 +162,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                     setLocalSettings(updated)
                     onChange?.({ ...updated, divisionsEnabled: undefined })
                   }}
-                  className="mt-2 px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-white hover:border-gold transition-colors"
+                  className="mt-2 px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-text-primary hover:border-gold transition-colors"
                 >
                   + Add Division
                 </button>
@@ -178,7 +178,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 <div className="space-y-2">
                   {teams.map(team => (
                     <div key={team.id} className="flex items-center gap-3 p-2 bg-dark-tertiary rounded-lg">
-                      <span className="text-white text-sm flex-1 truncate">{team.name || team.user?.name || 'Unknown'}</span>
+                      <span className="text-text-primary text-sm flex-1 truncate">{team.name || team.user?.name || 'Unknown'}</span>
                       <select
                         value={localSettings.divisionAssignments[team.id] || ''}
                         onChange={(e) => {
@@ -192,7 +192,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                           setLocalSettings(updated)
                           onChange?.({ ...updated, divisionsEnabled: undefined })
                         }}
-                        className="p-1 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-gold focus:outline-none"
+                        className="p-1 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-gold focus:outline-none"
                       >
                         <option value="">Unassigned</option>
                         {localSettings.divisions.map(div => (
@@ -209,7 +209,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Playoff Settings</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Playoff Settings</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -223,7 +223,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   onClick={() => handleChange('playoffTeams', num)}
                   className={`p-3 rounded-lg border-2 font-semibold transition-all ${
                     localSettings.playoffTeams === num
-                      ? 'border-gold bg-gold/10 text-white'
+                      ? 'border-gold bg-gold/10 text-text-primary'
                       : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
                   }`}
                 >
@@ -258,7 +258,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Single Elimination</p>
+                  <p className="text-text-primary font-medium">Single Elimination</p>
                   <p className="text-text-muted text-xs">One loss and you're out</p>
                 </div>
               </label>
@@ -272,7 +272,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Two-Week Matchups</p>
+                  <p className="text-text-primary font-medium">Two-Week Matchups</p>
                   <p className="text-text-muted text-xs">Combined points across two tournaments</p>
                 </div>
               </label>
@@ -294,7 +294,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">One Week Per Round</p>
+                  <p className="text-text-primary font-medium">One Week Per Round</p>
                   <p className="text-text-muted text-xs">Each playoff round is a single tournament</p>
                 </div>
               </label>
@@ -308,7 +308,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Two-Week Championship Only</p>
+                  <p className="text-text-primary font-medium">Two-Week Championship Only</p>
                   <p className="text-text-muted text-xs">Only the finals span two tournaments</p>
                 </div>
               </label>
@@ -322,7 +322,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Two Weeks Per Round</p>
+                  <p className="text-text-primary font-medium">Two Weeks Per Round</p>
                   <p className="text-text-muted text-xs">Every playoff round spans two tournaments</p>
                 </div>
               </label>
@@ -344,7 +344,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Fixed Bracket</p>
+                  <p className="text-text-primary font-medium">Fixed Bracket</p>
                   <p className="text-text-muted text-xs">Seeding locked after regular season (1v8, 2v7, etc.)</p>
                 </div>
               </label>
@@ -358,7 +358,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Re-seed Each Round</p>
+                  <p className="text-text-primary font-medium">Re-seed Each Round</p>
                   <p className="text-text-muted text-xs">Remaining teams re-seeded after each round</p>
                 </div>
               </label>
@@ -372,7 +372,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Commissioner's Choice</p>
+                  <p className="text-text-primary font-medium">Commissioner's Choice</p>
                   <p className="text-text-muted text-xs">Commissioner assigns matchups manually before each round starts</p>
                 </div>
               </label>
@@ -394,7 +394,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">None</p>
+                  <p className="text-text-primary font-medium">None</p>
                   <p className="text-text-muted text-xs">Eliminated teams are done</p>
                 </div>
               </label>
@@ -408,7 +408,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Consolation Bracket</p>
+                  <p className="text-text-primary font-medium">Consolation Bracket</p>
                   <p className="text-text-muted text-xs">Non-playoff teams play for pride</p>
                 </div>
               </label>
@@ -422,7 +422,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className="text-gold"
                 />
                 <div>
-                  <p className="text-white font-medium">Toilet Bowl</p>
+                  <p className="text-text-primary font-medium">Toilet Bowl</p>
                   <p className="text-text-muted text-xs">Bottom teams play to avoid last place</p>
                 </div>
               </label>
@@ -432,7 +432,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Tiebreakers</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Tiebreakers</h3>
         <p className="text-sm text-text-muted mb-4">
           Select and order tiebreakers for determining playoff seeding
         </p>
@@ -442,12 +442,12 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
             return (
               <div key={tb} className="flex items-center gap-2 p-3 bg-dark-tertiary rounded-lg">
                 <span className="text-gold font-semibold w-6">{index + 1}.</span>
-                <span className="text-white flex-1">{option?.label}</span>
+                <span className="text-text-primary flex-1">{option?.label}</span>
                 <button
                   type="button"
                   onClick={() => moveTiebreaker(index, -1)}
                   disabled={index === 0}
-                  className="p-1 text-text-muted hover:text-white disabled:opacity-30"
+                  className="p-1 text-text-muted hover:text-text-primary disabled:opacity-30"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -457,7 +457,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   type="button"
                   onClick={() => moveTiebreaker(index, 1)}
                   disabled={index === localSettings.tiebreakers.length - 1}
-                  className="p-1 text-text-muted hover:text-white disabled:opacity-30"
+                  className="p-1 text-text-muted hover:text-text-primary disabled:opacity-30"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -484,7 +484,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 key={opt.id}
                 type="button"
                 onClick={() => toggleTiebreaker(opt.id)}
-                className="px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-white hover:border-gold transition-colors"
+                className="px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-text-primary hover:border-gold transition-colors"
               >
                 + {opt.label}
               </button>

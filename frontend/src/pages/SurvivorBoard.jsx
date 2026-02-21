@@ -52,7 +52,7 @@ const SurvivorBoardPage = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold font-display text-white mb-2">Not a Survivor League</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Not a Survivor League</h2>
           <p className="text-text-secondary mb-6">
             The Survivor Board is only available for Survivor format leagues.
           </p>
@@ -97,14 +97,14 @@ const SurvivorBoardPage = () => {
       <div className="mb-6">
         <Link
           to={`/leagues/${leagueId}`}
-          className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+          className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to {league.name}
         </Link>
-        <h1 className="text-2xl font-bold font-display text-white">Survivor Board</h1>
+        <h1 className="text-2xl font-bold font-display text-text-primary">Survivor Board</h1>
         <p className="text-text-secondary">Last team standing wins!</p>
       </div>
 
@@ -123,7 +123,7 @@ const SurvivorBoardPage = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Current Week</p>
-          <p className="text-2xl font-bold font-display text-white">{survivorData?.currentWeek || 1}</p>
+          <p className="text-2xl font-bold font-display text-text-primary">{survivorData?.currentWeek || 1}</p>
         </Card>
 
         <Card>
@@ -150,7 +150,7 @@ const SurvivorBoardPage = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-white font-medium">You've been eliminated</p>
+                <p className="text-text-primary font-medium">You've been eliminated</p>
                 <p className="text-sm text-text-muted">
                   Eliminated in Week {userTeam?.eliminatedWeek}
                 </p>
@@ -159,7 +159,7 @@ const SurvivorBoardPage = () => {
             {userCanBuyBack && (
               <button
                 onClick={() => setShowBuyBackModal(true)}
-                className="px-4 py-2 bg-yellow-500 text-dark-primary font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
+                className="px-4 py-2 bg-yellow-500 text-slate font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
               >
                 Use Buy-Back
               </button>
@@ -176,8 +176,8 @@ const SurvivorBoardPage = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-gold text-white'
-                : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                ? 'bg-gold text-text-primary'
+                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -207,7 +207,7 @@ const SurvivorBoardPage = () => {
       {/* History Tab */}
       {activeTab === 'history' && (
         <Card>
-          <h3 className="text-lg font-semibold font-display text-white mb-4">Elimination Timeline</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Elimination Timeline</h3>
           {survivorData?.eliminations?.length > 0 ? (
             <div className="relative">
               <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-dark-border"></div>
@@ -219,7 +219,7 @@ const SurvivorBoardPage = () => {
                       <div className="absolute left-2 w-4 h-4 rounded-full bg-red-400 border-4 border-dark-secondary"></div>
                       <div className="bg-dark-tertiary rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-white">Week {elimination.week}</span>
+                          <span className="text-sm font-medium text-text-primary">Week {elimination.week}</span>
                           <span className="text-xs text-text-muted">{elimination.points} pts</span>
                         </div>
                         <p className="text-text-secondary">

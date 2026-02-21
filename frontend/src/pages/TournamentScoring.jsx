@@ -29,7 +29,7 @@ const PlayerOddsCard = ({ player, onClose }) => {
       <div className="space-y-1">
         <div className="flex justify-between text-xs">
           <span className="text-text-muted">{label}</span>
-          <span className="text-white font-semibold">{pct.toFixed(1)}%</span>
+          <span className="text-text-primary font-semibold">{pct.toFixed(1)}%</span>
         </div>
         <div className="h-1.5 bg-dark-primary rounded-full overflow-hidden">
           <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${Math.min(pct, 100)}%` }} />
@@ -51,18 +51,18 @@ const PlayerOddsCard = ({ player, onClose }) => {
             </div>
           )}
           <div>
-            <p className="font-semibold text-sm text-white">{player.name}</p>
+            <p className="font-semibold text-sm text-text-primary">{player.name}</p>
             <div className="flex items-center gap-2 text-[11px] text-text-muted">
               <span>{player.position}</span>
               <span>|</span>
-              <span className={`font-semibold ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-white'}`}>
+              <span className={`font-semibold ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
                 {formatScore(player.score)}
               </span>
               {player.thru && <span>| Thru {player.thru === 'F' || player.thru === 18 ? 'F' : player.thru}</span>}
             </div>
           </div>
         </div>
-        <button onClick={onClose} className="text-text-muted hover:text-white transition-colors p-1">
+        <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors p-1">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -88,7 +88,7 @@ const PlayerOddsCard = ({ player, onClose }) => {
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-px bg-dark-border border-t border-dark-border">
         <div className="bg-dark-secondary px-3 py-2 text-center">
-          <p className="text-xs font-semibold text-white">{player.eagles || 0}</p>
+          <p className="text-xs font-semibold text-text-primary">{player.eagles || 0}</p>
           <p className="text-[10px] text-text-muted">Eagles</p>
         </div>
         <div className="bg-dark-secondary px-3 py-2 text-center">
@@ -147,7 +147,7 @@ const TournamentScoring = () => {
           <p className="text-red-400 mb-4">{error}</p>
           <button
             onClick={refetch}
-            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            className="px-4 py-2 bg-emerald-500 text-text-primary rounded-lg hover:bg-emerald-600 transition-colors"
           >
             Try Again
           </button>
@@ -195,7 +195,7 @@ const TournamentScoring = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-lg font-display font-bold text-white mb-2">Field Not Yet Announced</h2>
+            <h2 className="text-lg font-display font-bold text-text-primary mb-2">Field Not Yet Announced</h2>
             <p className="text-text-muted text-sm max-w-md mx-auto">
               PGA Tour fields are typically published Tuesday evening. Check back soon for the confirmed player list.
             </p>
@@ -286,7 +286,7 @@ const TournamentScoring = () => {
             {/* Header with league selector */}
             <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-dark-secondary border-b border-dark-border">
               <div className="flex items-center gap-2 min-w-0">
-                <h3 className="text-base font-bold text-white whitespace-nowrap">My Team</h3>
+                <h3 className="text-base font-bold text-text-primary whitespace-nowrap">My Team</h3>
                 {leagues && leagues.length > 0 && (
                   <select
                     value={leagueId || ''}
@@ -327,7 +327,7 @@ const TournamentScoring = () => {
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold text-sm text-white">{player.name}</p>
+                        <p className="font-semibold text-sm text-text-primary">{player.name}</p>
                         <div className="flex items-center gap-2 text-[11px] text-text-muted">
                           <span>{player.position}</span>
                           <span className="text-text-muted/50">|</span>
@@ -336,7 +336,7 @@ const TournamentScoring = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold text-sm ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-white'}`}>
+                      <p className={`font-bold text-sm ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
                         {player.score != null ? (parseInt(player.score) > 0 ? `+${player.score}` : parseInt(player.score) === 0 ? 'E' : player.score) : '–'}
                       </p>
                       <p className="text-[11px] text-emerald-400 font-medium">

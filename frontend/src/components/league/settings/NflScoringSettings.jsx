@@ -268,7 +268,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
           <p className="text-text-muted text-sm">{error}</p>
           <button
             onClick={loadSchema}
-            className="mt-4 px-4 py-2 bg-dark-tertiary text-white rounded-lg hover:bg-dark-border transition-colors"
+            className="mt-4 px-4 py-2 bg-dark-tertiary text-text-primary rounded-lg hover:bg-dark-border transition-colors"
           >
             Retry
           </button>
@@ -287,7 +287,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
     <div className="space-y-6">
       {/* Preset Selector */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Scoring Preset</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Scoring Preset</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {PRESETS.map(p => {
             const active = preset === p.key
@@ -303,7 +303,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
                     : 'border-dark-border bg-dark-tertiary hover:border-dark-border/80'
                 }`}
               >
-                <p className={`font-semibold ${active ? c.text : 'text-white'}`}>{p.name}</p>
+                <p className={`font-semibold ${active ? c.text : 'text-text-primary'}`}>{p.name}</p>
                 <p className="text-text-muted text-xs mt-1">{p.desc}</p>
               </button>
             )
@@ -323,7 +323,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
       {/* Live Preview */}
       <Card className="border-gold/30">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold font-display text-white">Live Preview</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Live Preview</h3>
           <div className="flex gap-1">
             {Object.keys(POSITION_PREVIEWS).map(pos => (
               <button
@@ -332,8 +332,8 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
                 onClick={() => setPreviewPos(pos)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   previewPos === pos
-                    ? 'bg-gold text-white'
-                    : 'bg-dark-tertiary text-text-muted hover:text-white hover:bg-dark-border'
+                    ? 'bg-gold text-text-primary'
+                    : 'bg-dark-tertiary text-text-muted hover:text-text-primary hover:bg-dark-border'
                 }`}
               >
                 {pos}
@@ -363,7 +363,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
         const stats = schema[cat]
         if (!stats || stats.length === 0) return null
 
-        const meta = CATEGORY_META[cat] || { label: cat, color: 'text-white' }
+        const meta = CATEGORY_META[cat] || { label: cat, color: 'text-text-primary' }
         const isExpanded = expanded[cat] !== undefined ? expanded[cat] : (cat !== 'idp')
         const isIdp = cat === 'idp'
 
@@ -408,7 +408,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
                         value={rules[stat.key] ?? stat.default ?? 0}
                         onChange={(e) => handleRuleChange(stat.key, e.target.value)}
                         disabled={!isCustom || isIdp}
-                        className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
+                        className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                           (!isCustom || isIdp) ? 'opacity-60 cursor-not-allowed' : ''
                         }`}
                       />
@@ -431,7 +431,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-3 bg-gold text-white font-semibold rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50"
+            className="px-6 py-3 bg-gold text-text-primary font-semibold rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Scoring Settings'}
           </button>

@@ -17,7 +17,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
   const getStatColor = (value) => {
     if (value === undefined || value === null) return 'text-text-muted'
     if (value > 0.5) return 'text-gold'
-    if (value > 0) return 'text-white'
+    if (value > 0) return 'text-text-primary'
     if (value > -0.5) return 'text-yellow-400'
     return 'text-red-400'
   }
@@ -62,7 +62,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               {player.countryFlag}
             </div>
             <div>
-              <h2 className="text-2xl font-bold font-display text-white">{player.name}</h2>
+              <h2 className="text-2xl font-bold font-display text-text-primary">{player.name}</h2>
               <div className="flex items-center gap-3 mt-1">
                 <span className="text-text-secondary">#{player.rank} World Ranking</span>
                 <span className="text-text-muted">•</span>
@@ -80,7 +80,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-white hover:bg-dark-tertiary rounded-lg transition-colors"
+            className="p-2 text-text-muted hover:text-text-primary hover:bg-dark-tertiary rounded-lg transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -97,7 +97,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'text-gold border-b-2 border-gold bg-dark-tertiary/30'
-                  : 'text-text-secondary hover:text-white hover:bg-dark-tertiary/30'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-dark-tertiary/30'
               }`}
             >
               {tab.label}
@@ -119,19 +119,19 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                   <p className="text-text-muted text-sm mt-1">SG: Total</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold font-display text-white">
+                  <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.drivingDistance?.toFixed(0) || '—'}
                   </p>
                   <p className="text-text-muted text-sm mt-1">Driving (yds)</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold font-display text-white">
+                  <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.gir?.toFixed(1) || '—'}%
                   </p>
                   <p className="text-text-muted text-sm mt-1">GIR %</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold font-display text-white">
+                  <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.scoringAvg?.toFixed(1) || '—'}
                   </p>
                   <p className="text-text-muted text-sm mt-1">Scoring Avg</p>
@@ -140,7 +140,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
 
               {/* Recent Form */}
               <div>
-                <h3 className="text-lg font-semibold font-display text-white mb-3">Recent Form</h3>
+                <h3 className="text-lg font-semibold font-display text-text-primary mb-3">Recent Form</h3>
                 <div className="flex flex-wrap gap-2">
                   {player.recentForm?.map((result, idx) => (
                     <div
@@ -161,7 +161,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               {/* Current Tournament Status */}
               {player.tournamentStatus && (
                 <div>
-                  <h3 className="text-lg font-semibold font-display text-white mb-3">Current Tournament</h3>
+                  <h3 className="text-lg font-semibold font-display text-text-primary mb-3">Current Tournament</h3>
                   <Card className="bg-dark-primary">
                     <div className="flex items-center justify-between">
                       <div>
@@ -169,7 +169,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                         <p className={`text-2xl font-bold ${
                           player.tournamentStatus.position === '1st' ? 'text-yellow-400' :
                           player.tournamentStatus.position.startsWith('T') && parseInt(player.tournamentStatus.position.slice(1)) <= 10 ? 'text-gold' :
-                          'text-white'
+                          'text-text-primary'
                         }`}>
                           {player.tournamentStatus.position}
                         </p>
@@ -178,14 +178,14 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                         <p className="text-text-muted text-sm">Score</p>
                         <p className={`text-2xl font-bold ${
                           player.tournamentStatus.score < 0 ? 'text-gold' :
-                          player.tournamentStatus.score > 0 ? 'text-red-400' : 'text-white'
+                          player.tournamentStatus.score > 0 ? 'text-red-400' : 'text-text-primary'
                         }`}>
                           {player.tournamentStatus.score > 0 ? '+' : ''}{player.tournamentStatus.score}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-text-muted text-sm">Thru</p>
-                        <p className="text-2xl font-bold font-display text-white">{player.tournamentStatus.thru}</p>
+                        <p className="text-2xl font-bold font-display text-text-primary">{player.tournamentStatus.thru}</p>
                       </div>
                     </div>
                   </Card>
@@ -195,7 +195,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               {/* Basic Stats */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold font-display text-white">Performance Stats</h3>
+                  <h3 className="text-lg font-semibold font-display text-text-primary">Performance Stats</h3>
                   <button
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     className="text-gold text-sm hover:underline"
@@ -205,29 +205,29 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div className="bg-dark-primary rounded-lg p-3">
-                    <p className="text-white font-medium">{player.stats?.drivingDistance?.toFixed(1)}</p>
+                    <p className="text-text-primary font-medium">{player.stats?.drivingDistance?.toFixed(1)}</p>
                     <p className="text-text-muted text-xs">Driving Distance</p>
                   </div>
                   <div className="bg-dark-primary rounded-lg p-3">
-                    <p className="text-white font-medium">{player.stats?.drivingAccuracy?.toFixed(1)}%</p>
+                    <p className="text-text-primary font-medium">{player.stats?.drivingAccuracy?.toFixed(1)}%</p>
                     <p className="text-text-muted text-xs">Driving Accuracy</p>
                   </div>
                   <div className="bg-dark-primary rounded-lg p-3">
-                    <p className="text-white font-medium">{player.stats?.gir?.toFixed(1)}%</p>
+                    <p className="text-text-primary font-medium">{player.stats?.gir?.toFixed(1)}%</p>
                     <p className="text-text-muted text-xs">Greens in Regulation</p>
                   </div>
                   {showAdvanced && (
                     <>
                       <div className="bg-dark-primary rounded-lg p-3">
-                        <p className="text-white font-medium">{player.stats?.scoringAvg?.toFixed(2)}</p>
+                        <p className="text-text-primary font-medium">{player.stats?.scoringAvg?.toFixed(2)}</p>
                         <p className="text-text-muted text-xs">Scoring Average</p>
                       </div>
                       <div className="bg-dark-primary rounded-lg p-3">
-                        <p className="text-white font-medium">68.2%</p>
+                        <p className="text-text-primary font-medium">68.2%</p>
                         <p className="text-text-muted text-xs">Sand Save %</p>
                       </div>
                       <div className="bg-dark-primary rounded-lg p-3">
-                        <p className="text-white font-medium">1.72</p>
+                        <p className="text-text-primary font-medium">1.72</p>
                         <p className="text-text-muted text-xs">Putts per GIR</p>
                       </div>
                     </>
@@ -257,7 +257,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                   <div key={idx} className="bg-dark-primary rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <p className="text-white font-medium">{stat.label}</p>
+                        <p className="text-text-primary font-medium">{stat.label}</p>
                         <p className="text-text-muted text-xs">{stat.desc}</p>
                       </div>
                       <p className={`text-2xl font-bold ${getStatColor(stat.value)}`}>
@@ -284,7 +284,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               <Card className="bg-dark-primary">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white font-medium">SG: Tee-to-Green</p>
+                    <p className="text-text-primary font-medium">SG: Tee-to-Green</p>
                     <p className="text-text-muted text-xs">Combined non-putting performance</p>
                   </div>
                   <p className={`text-2xl font-bold ${getStatColor(
@@ -304,18 +304,18 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
           {activeTab === 'history' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold font-display text-white mb-3">Course History</h3>
+                <h3 className="text-lg font-semibold font-display text-text-primary mb-3">Course History</h3>
                 <div className="space-y-3">
                   {courseHistory.map((course, idx) => (
                     <div key={idx} className="bg-dark-primary rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-white font-medium">{course.course}</p>
+                        <p className="text-text-primary font-medium">{course.course}</p>
                         <span className="text-text-muted text-xs">{course.events} events</span>
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-text-muted">Avg Finish</p>
-                          <p className="text-white font-medium">{course.avgFinish}</p>
+                          <p className="text-text-primary font-medium">{course.avgFinish}</p>
                         </div>
                         <div>
                           <p className="text-text-muted">Best Finish</p>
@@ -327,7 +327,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                         </div>
                         <div>
                           <p className="text-text-muted">Avg Score</p>
-                          <p className="text-white font-medium">{course.avgScore}</p>
+                          <p className="text-text-primary font-medium">{course.avgScore}</p>
                         </div>
                       </div>
                     </div>
@@ -337,7 +337,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
 
               {/* Tournament Results */}
               <div>
-                <h3 className="text-lg font-semibold font-display text-white mb-3">Recent Tournament Results</h3>
+                <h3 className="text-lg font-semibold font-display text-text-primary mb-3">Recent Tournament Results</h3>
                 <div className="space-y-2">
                   {[
                     { name: 'Arnold Palmer Invitational', finish: player.recentForm?.[0] || 'T12', purse: '+$250,000' },
@@ -352,7 +352,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                         <span className={`font-medium ${
                           tournament.finish === '1st' ? 'text-yellow-400' :
                           tournament.finish.startsWith('T') && parseInt(tournament.finish.slice(1)) <= 10 ? 'text-gold' :
-                          'text-white'
+                          'text-text-primary'
                         }`}>
                           {tournament.finish}
                         </span>
@@ -375,7 +375,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold font-display text-white">AI Analysis</h3>
+                  <h3 className="text-lg font-semibold font-display text-text-primary">AI Analysis</h3>
                   <p className="text-text-muted text-xs">Powered by predictive analytics</p>
                 </div>
               </div>
@@ -433,7 +433,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium">Recommendation</p>
+                    <p className="text-text-primary font-medium">Recommendation</p>
                     <p className="text-gold text-sm">
                       {player.stats?.sgTotal > 1 ? 'Strong start candidate for upcoming events' :
                        player.stats?.sgTotal > 0 ? 'Solid roster option with consistent performance' :

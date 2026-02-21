@@ -74,7 +74,7 @@ const WaitlistForm = ({ variant = 'default' }) => {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="your@email.com"
         required
-        className="flex-1 px-4 py-2.5 rounded-button bg-dark-tertiary border border-dark-border text-white placeholder-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50"
+        className="flex-1 px-4 py-2.5 rounded-button bg-dark-tertiary border border-dark-border text-text-primary placeholder-text-muted text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/50"
       />
       <Button type="submit" variant="outline" size="md" loading={status === 'loading'}>
         Get Early Access
@@ -152,14 +152,14 @@ const Landing = () => {
                 <div className="rounded-xl px-6 py-4 border border-gold/30 bg-gold/10 flex items-center gap-3">
                   <span className="text-3xl">⛳</span>
                   <div>
-                    <span className="text-white font-display font-bold text-base block">Golf</span>
+                    <span className="text-text-primary font-display font-bold text-base block">Golf</span>
                     <span className="text-[11px] font-mono font-bold text-gold uppercase">Live</span>
                   </div>
                 </div>
                 <div className="rounded-xl px-6 py-4 border border-orange-500/30 bg-orange-500/5 flex items-center gap-3">
                   <span className="text-3xl">🏈</span>
                   <div>
-                    <span className="text-white font-display font-bold text-base block">NFL</span>
+                    <span className="text-text-primary font-display font-bold text-base block">NFL</span>
                     <span className="text-[11px] font-mono font-bold text-orange-400 uppercase">Spring 2026</span>
                   </div>
                 </div>
@@ -173,7 +173,7 @@ const Landing = () => {
       <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-text-primary mb-4 leading-tight">
               One number for everything you know.
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto leading-relaxed">
@@ -204,9 +204,9 @@ const Landing = () => {
                     <div key={c.label}>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-text-secondary">{c.label}</span>
-                        <span className="text-white font-mono font-medium">{c.pct}%</span>
+                        <span className="text-text-primary font-mono font-medium">{c.pct}%</span>
                       </div>
-                      <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-dark-tertiary/[0.06] rounded-full overflow-hidden">
                         <div className={`h-full rounded-full ${c.color}`} style={{ width: `${c.pct}%` }} />
                       </div>
                     </div>
@@ -246,17 +246,17 @@ const Landing = () => {
       <section id="how-it-works" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-dark-secondary border-y border-dark-border">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-text-primary mb-4 leading-tight">
               How It Works
             </h2>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 lg:gap-10">
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-dark-primary shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-slate shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 1
               </div>
-              <h3 className="text-xl font-semibold font-display text-white mb-3">Play</h3>
+              <h3 className="text-xl font-semibold font-display text-text-primary mb-3">Play</h3>
               <p className="text-text-secondary leading-relaxed">
                 Run your season-long league on the most modern fantasy platform built. Snake or auction drafts,
                 trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, or Fantrax.
@@ -264,10 +264,10 @@ const Landing = () => {
             </div>
 
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-dark-primary shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-slate shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 2
               </div>
-              <h3 className="text-xl font-semibold font-display text-white mb-3">Track</h3>
+              <h3 className="text-xl font-semibold font-display text-text-primary mb-3">Track</h3>
               <p className="text-text-secondary leading-relaxed">
                 Lock in projections and weekly picks. Everything gets logged — your reasoning, your accuracy,
                 your draft decisions. Over time, Clutch becomes your sports brain.
@@ -275,10 +275,10 @@ const Landing = () => {
             </div>
 
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-dark-primary shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold font-display text-slate shadow-glow-gold group-hover:scale-110 transition-transform duration-300">
                 3
               </div>
-              <h3 className="text-xl font-semibold font-display text-white mb-3">Prove</h3>
+              <h3 className="text-xl font-semibold font-display text-text-primary mb-3">Prove</h3>
               <p className="text-text-secondary leading-relaxed">
                 Your Clutch Rating builds from everything you do — league results, prediction accuracy, bold calls,
                 draft intelligence. Share your profile. This is your sports resume.
@@ -312,7 +312,7 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center mb-16">
             {/* Left — copy */}
             <div className="text-center lg:text-left">
-              <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-4xl font-bold font-display text-text-primary mb-4 leading-tight">
                 Year one, you have a record.
                 <span className="block bg-gradient-to-r from-gold to-orange bg-clip-text text-transparent">Year three, you have a database.</span>
               </h2>
@@ -402,7 +402,7 @@ const Landing = () => {
           <div className="grid sm:grid-cols-3 gap-6">
             <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
               <div className="text-3xl font-bold font-mono text-gold mb-2">1</div>
-              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Sports Journal</h3>
+              <h3 className="text-sm font-semibold font-display text-text-primary mb-2 uppercase tracking-wider">Your Sports Journal</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
                 Projections with reasoning notes. Draft cheat sheets built from your research.
                 Weekly picks with timestamps. Nothing lost, nothing forgotten.
@@ -411,7 +411,7 @@ const Landing = () => {
 
             <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
               <div className="text-3xl font-bold font-mono text-gold mb-2">2</div>
-              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Self-Scouting Report</h3>
+              <h3 className="text-sm font-semibold font-display text-text-primary mb-2 uppercase tracking-wider">Your Self-Scouting Report</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
                 AI surfaces patterns you can't see yourself: positional biases, accuracy trends, draft tendencies.
                 Evaluate your own thinking over time. Get better every season.
@@ -420,7 +420,7 @@ const Landing = () => {
 
             <div className="bg-dark-primary rounded-xl p-6 border border-dark-border">
               <div className="text-3xl font-bold font-mono text-gold mb-2">3</div>
-              <h3 className="text-sm font-semibold font-display text-white mb-2 uppercase tracking-wider">Your Public Resume</h3>
+              <h3 className="text-sm font-semibold font-display text-text-primary mb-2 uppercase tracking-wider">Your Public Resume</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
                 A shareable profile with your verified Clutch Rating, accuracy stats, badges, and bold calls
                 that hit. Link it from your Twitter, your podcast, your league group chat.
@@ -438,7 +438,7 @@ const Landing = () => {
       <section id="features" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-6">
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-text-primary mb-4 leading-tight">
               Fantasy Golf — Live Now
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -463,7 +463,7 @@ const Landing = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={f.icon} />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold font-display text-white mb-2">{f.title}</h3>
+                <h3 className="text-lg font-semibold font-display text-text-primary mb-2">{f.title}</h3>
                 <p className="text-text-secondary text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -471,7 +471,7 @@ const Landing = () => {
 
           {/* Dashboard Preview */}
           <Link to="/signup" className="block max-w-5xl mx-auto group">
-            <div className="backdrop-blur-xl bg-white/[0.04] rounded-2xl border border-white/[0.08] overflow-hidden shadow-card hover:shadow-card-hover hover:border-gold/50 transition-all duration-300 relative">
+            <div className="backdrop-blur-xl bg-dark-tertiary/[0.04] rounded-2xl border border-[var(--card-border)] overflow-hidden shadow-card hover:shadow-card-hover hover:border-gold/50 transition-all duration-300 relative">
               <div className="absolute inset-0 bg-gold/0 group-hover:bg-gold/5 transition-colors duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100">
                 <div className="bg-dark-primary/90 px-4 py-2 rounded-lg border border-gold/50">
                   <span className="text-gold font-medium">Click to Get Started</span>
@@ -497,10 +497,10 @@ const Landing = () => {
                       <div key={league.id} className="bg-dark-tertiary rounded-lg p-3">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 ${league.color} rounded-lg flex items-center justify-center`}>
-                            <span className="text-white font-bold text-sm">{league.name.charAt(0)}</span>
+                            <span className="text-text-primary font-bold text-sm">{league.name.charAt(0)}</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white font-medium text-sm truncate">{league.name}</p>
+                            <p className="text-text-primary font-medium text-sm truncate">{league.name}</p>
                             <p className="text-text-muted text-xs">{league.format} · {league.members} teams</p>
                           </div>
                           <div className="text-right">
@@ -514,7 +514,7 @@ const Landing = () => {
                         <span className="text-xs text-gold font-medium">LIVE NOW</span>
                         <span className="text-xs text-text-muted">Round 2</span>
                       </div>
-                      <p className="text-white font-semibold text-sm">The Players Championship</p>
+                      <p className="text-text-primary font-semibold text-sm">The Players Championship</p>
                       <p className="text-text-muted text-xs">TPC Sawgrass · -12 leads</p>
                     </div>
                   </div>
@@ -527,10 +527,10 @@ const Landing = () => {
                           <span className={`font-bold w-5 text-center ${team.rank === 1 ? 'text-yellow-400' : team.rank === 2 ? 'text-gray-300' : team.rank === 3 ? 'text-amber-600' : 'text-text-muted'}`}>
                             {team.rank}
                           </span>
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${team.isUser ? 'bg-gold text-white' : 'bg-dark-primary text-text-secondary'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${team.isUser ? 'bg-gold text-text-primary' : 'bg-dark-primary text-text-secondary'}`}>
                             {team.avatar}
                           </div>
-                          <span className={`flex-1 text-sm ${team.isUser ? 'text-gold font-semibold' : 'text-white'}`}>{team.name}</span>
+                          <span className={`flex-1 text-sm ${team.isUser ? 'text-gold font-semibold' : 'text-text-primary'}`}>{team.name}</span>
                           <span className="text-text-secondary text-sm font-medium">{team.points.toLocaleString()}</span>
                         </div>
                       ))}
@@ -553,7 +553,7 @@ const Landing = () => {
                               {item.type === 'score' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-white text-xs truncate">{item.text}</p>
+                              <p className="text-text-primary text-xs truncate">{item.text}</p>
                               <p className="text-text-muted text-xs">{item.time}</p>
                             </div>
                           </div>
@@ -581,7 +581,7 @@ const Landing = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-6">
               <span className="text-orange-400 text-sm font-medium">Coming Spring 2026</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-text-primary mb-4 leading-tight">
               NFL 2026 — Prove You Know Football
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -594,7 +594,7 @@ const Landing = () => {
           <div className="grid sm:grid-cols-3 gap-6 mb-10">
             <div className="bg-dark-primary rounded-xl p-6 border border-dark-border text-center">
               <div className="text-2xl mb-3">📊</div>
-              <h3 className="text-lg font-semibold font-display text-white mb-2">Project</h3>
+              <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Project</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
                 Project every QB's passing yards. Every RB's rushing TDs. Every team's win total.
                 Your reasoning is logged — this becomes your football journal.
@@ -603,7 +603,7 @@ const Landing = () => {
 
             <div className="bg-dark-primary rounded-xl p-6 border border-dark-border text-center">
               <div className="text-2xl mb-3">🎯</div>
-              <h3 className="text-lg font-semibold font-display text-white mb-2">Draft & Compete</h3>
+              <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Draft & Compete</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
                 Your projections auto-generate a personalized cheat sheet with tier breaks, value
                 targets, and auction dollar values. Then pick weekly props against real frozen lines.
@@ -612,7 +612,7 @@ const Landing = () => {
 
             <div className="bg-dark-primary rounded-xl p-6 border border-dark-border text-center">
               <div className="text-2xl mb-3">🏆</div>
-              <h3 className="text-lg font-semibold font-display text-white mb-2">Get Scored</h3>
+              <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Get Scored</h3>
               <p className="text-text-secondary text-sm leading-relaxed">
                 Projections scored all season by accuracy. Picks graded automatically after every game.
                 Bold calls that hit get bonus credit. Your Clutch Rating updates weekly.
@@ -629,7 +629,7 @@ const Landing = () => {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-semibold font-display text-white mb-1">Tiered Entry</h4>
+                <h4 className="text-sm font-semibold font-display text-text-primary mb-1">Tiered Entry</h4>
                 <p className="text-text-secondary text-xs leading-relaxed">
                   Don't have time for 200 projections? Just project your favorite team — 15 minutes, you're on the leaderboard. Go deeper when you're ready.
                 </p>
@@ -643,7 +643,7 @@ const Landing = () => {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-semibold font-display text-white mb-1">AI Self-Scouting</h4>
+                <h4 className="text-sm font-semibold font-display text-text-primary mb-1">AI Self-Scouting</h4>
                 <p className="text-text-secondary text-xs leading-relaxed">
                   After a season, Clutch AI shows patterns: "You overestimate aging RBs by 18%." "Your WR accuracy is 93rd percentile — spend more there at auction."
                 </p>
@@ -657,7 +657,7 @@ const Landing = () => {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-semibold font-display text-white mb-1">Real Stats, Real Names</h4>
+                <h4 className="text-sm font-semibold font-display text-text-primary mb-1">Real Stats, Real Names</h4>
                 <p className="text-text-secondary text-xs leading-relaxed">
                   EPA is EPA. CPOE is CPOE. Full player pages with advanced analytics, game logs, and situational splits — organized better than ESPN.
                 </p>
@@ -671,7 +671,7 @@ const Landing = () => {
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-semibold font-display text-white mb-1">Season-Long Leagues Too</h4>
+                <h4 className="text-sm font-semibold font-display text-text-primary mb-1">Season-Long Leagues Too</h4>
                 <p className="text-text-secondary text-xs leading-relaxed">
                   Full fantasy league platform with snake/auction drafts, trades, waivers, and chat. Import your history from Sleeper, ESPN, Yahoo, or Fantrax.
                 </p>
@@ -687,7 +687,7 @@ const Landing = () => {
           </div>
 
           <div className="text-center">
-            <h3 className="text-lg font-display font-semibold text-white mb-4">Get Early Access to NFL 2026</h3>
+            <h3 className="text-lg font-display font-semibold text-text-primary mb-4">Get Early Access to NFL 2026</h3>
             <WaitlistForm />
           </div>
         </div>
@@ -697,7 +697,7 @@ const Landing = () => {
       <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-text-primary mb-4 leading-tight">
               Who actually knows sports?
             </h2>
             <p className="text-text-secondary max-w-xl mx-auto">
@@ -707,9 +707,9 @@ const Landing = () => {
           </div>
 
           {/* Mock Leaderboard */}
-          <div className="backdrop-blur-xl bg-white/[0.04] rounded-xl border border-white/[0.08] overflow-hidden shadow-card">
+          <div className="backdrop-blur-xl bg-dark-tertiary/[0.04] rounded-xl border border-[var(--card-border)] overflow-hidden shadow-card">
             <div className="bg-dark-primary/50 px-4 py-3 border-b border-dark-border flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white">Overall Leaderboard</h3>
+              <h3 className="text-sm font-semibold text-text-primary">Overall Leaderboard</h3>
               <span className="text-xs text-text-muted font-mono">PREVIEW</span>
             </div>
 
@@ -733,7 +733,7 @@ const Landing = () => {
                   <div className="w-7 h-7 rounded-full bg-dark-tertiary flex items-center justify-center text-[10px] font-bold text-text-secondary flex-shrink-0">
                     {p.name.charAt(0)}
                   </div>
-                  <span className="text-white text-sm font-medium truncate">{p.name}</span>
+                  <span className="text-text-primary text-sm font-medium truncate">{p.name}</span>
                 </div>
                 <div className="text-center">
                   <span className={`text-sm font-mono font-bold ${p.rating >= 90 ? 'text-amber-400' : p.rating >= 70 ? 'text-emerald-400' : 'text-amber-500'}`}>
@@ -757,7 +757,7 @@ const Landing = () => {
       <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <ClutchLogo size={64} className="mx-auto mb-6 rounded-xl" />
-          <h2 className="text-2xl sm:text-4xl font-bold font-display text-white mb-4 leading-tight">
+          <h2 className="text-2xl sm:text-4xl font-bold font-display text-text-primary mb-4 leading-tight">
             Stop claiming. Start proving.
           </h2>
           <p className="text-lg text-text-secondary mb-10">

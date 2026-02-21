@@ -162,7 +162,7 @@ const GamedayPortal = () => {
       {/* Back link */}
       <Link
         to={`/leagues/${leagueId}`}
-        className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-3 text-sm"
+        className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-3 text-sm"
       >
         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -238,7 +238,7 @@ const GamedayPortal = () => {
             <Card>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold font-display text-emerald-400 uppercase tracking-wider">Your Players</h3>
-                <span className="text-lg font-bold font-mono text-white">
+                <span className="text-lg font-bold font-mono text-text-primary">
                   {(userTeamScores?.totalPoints || userScore || 0).toFixed(1)}
                 </span>
               </div>
@@ -260,11 +260,11 @@ const GamedayPortal = () => {
                           </span>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{p.playerName}</p>
+                          <p className="text-sm font-medium text-text-primary truncate">{p.playerName}</p>
                         </div>
                         <span className={`text-sm font-bold font-mono w-12 text-right ${
                           p.points > 15 ? 'text-emerald-400' :
-                          p.points > 5 ? 'text-white' : 'text-text-muted'
+                          p.points > 5 ? 'text-text-primary' : 'text-text-muted'
                         }`}>
                           {(p.points || 0).toFixed(1)}
                         </span>
@@ -284,7 +284,7 @@ const GamedayPortal = () => {
             <Card>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold font-display text-red-400/80 uppercase tracking-wider">Their Players</h3>
-                <span className="text-lg font-bold font-mono text-white">
+                <span className="text-lg font-bold font-mono text-text-primary">
                   {(opponentTeamScores?.totalPoints || opponentScore || 0).toFixed(1)}
                 </span>
               </div>
@@ -306,11 +306,11 @@ const GamedayPortal = () => {
                           </span>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{p.playerName}</p>
+                          <p className="text-sm font-medium text-text-primary truncate">{p.playerName}</p>
                         </div>
                         <span className={`text-sm font-bold font-mono w-12 text-right ${
                           p.points > 15 ? 'text-red-400' :
-                          p.points > 5 ? 'text-white' : 'text-text-muted'
+                          p.points > 5 ? 'text-text-primary' : 'text-text-muted'
                         }`}>
                           {(p.points || 0).toFixed(1)}
                         </span>
@@ -333,7 +333,7 @@ const GamedayPortal = () => {
 
           {/* LEAGUE SCOREBOARD */}
           <Card>
-            <h3 className="text-sm font-bold font-display text-white uppercase tracking-wider mb-3">League Scoreboard</h3>
+            <h3 className="text-sm font-bold font-display text-text-primary uppercase tracking-wider mb-3">League Scoreboard</h3>
             <div className="space-y-2">
               {currentWeekSchedule?.matchups?.map((m, i) => {
                 const homeTeam = teamLookup[m.home]
@@ -351,11 +351,11 @@ const GamedayPortal = () => {
                   >
                     {/* Home team row */}
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs truncate flex-1 mr-2 ${homeWon ? 'text-emerald-400 font-semibold' : 'text-white'}`}>
+                      <span className={`text-xs truncate flex-1 mr-2 ${homeWon ? 'text-emerald-400 font-semibold' : 'text-text-primary'}`}>
                         {homeWon && <span className="text-emerald-400 mr-1">W</span>}
                         {homeTeam?.teamName || homeTeam?.name || 'Home'}
                       </span>
-                      <span className={`font-mono text-xs font-bold ${homeWon ? 'text-emerald-400' : 'text-white'}`}>
+                      <span className={`font-mono text-xs font-bold ${homeWon ? 'text-emerald-400' : 'text-text-primary'}`}>
                         {(m.homeScore || 0).toFixed(1)}
                       </span>
                     </div>
@@ -380,7 +380,7 @@ const GamedayPortal = () => {
 
           {/* SCORING FEED */}
           <Card>
-            <h3 className="text-sm font-bold font-display text-white uppercase tracking-wider mb-3">
+            <h3 className="text-sm font-bold font-display text-text-primary uppercase tracking-wider mb-3">
               {isLive ? 'Live Feed' : 'Scoring Feed'}
             </h3>
             <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
@@ -392,7 +392,7 @@ const GamedayPortal = () => {
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                     entry.side === 'you' ? 'bg-emerald-400' : 'bg-red-400'
                   }`} />
-                  <span className="text-white flex-1 truncate">
+                  <span className="text-text-primary flex-1 truncate">
                     {entry.playerName}
                     {entry.isBench && <span className="text-text-muted text-xs ml-1">(bench)</span>}
                   </span>
@@ -418,7 +418,7 @@ const GamedayPortal = () => {
 
           {/* Week navigation */}
           <Card>
-            <h3 className="text-sm font-bold font-display text-white uppercase tracking-wider mb-3">Week Scores</h3>
+            <h3 className="text-sm font-bold font-display text-text-primary uppercase tracking-wider mb-3">Week Scores</h3>
             <div className="flex flex-wrap gap-1.5">
               {schedule?.map(w => {
                 const isActive = w.week === currentWeekNum
@@ -429,9 +429,9 @@ const GamedayPortal = () => {
                     to={`/leagues/${leagueId}/scoring`}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                       isActive
-                        ? 'bg-emerald-500 text-white'
+                        ? 'bg-emerald-500 text-text-primary'
                         : isScored
-                        ? 'bg-dark-tertiary text-text-secondary hover:text-white'
+                        ? 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
                         : 'bg-dark-tertiary/50 text-text-muted'
                     }`}
                   >

@@ -50,7 +50,7 @@ const DraftHistory = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Draft History</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary">Draft History</h1>
               <p className="text-text-secondary mt-1">Review past drafts and grades</p>
             </div>
             <Link to="/draft">
@@ -63,7 +63,7 @@ const DraftHistory = () => {
             <button
               onClick={() => setTab('league')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                tab === 'league' ? 'bg-gold text-dark-primary' : 'text-text-secondary hover:text-white'
+                tab === 'league' ? 'bg-gold text-slate' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               League Drafts ({leagueDrafts.length})
@@ -71,7 +71,7 @@ const DraftHistory = () => {
             <button
               onClick={() => setTab('mock')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                tab === 'mock' ? 'bg-gold text-dark-primary' : 'text-text-secondary hover:text-white'
+                tab === 'mock' ? 'bg-gold text-slate' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               Mock Drafts ({mockDraftTotal})
@@ -88,7 +88,7 @@ const DraftHistory = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-medium text-white mb-2">No Completed Drafts</h3>
+                  <h3 className="text-lg font-medium text-text-primary mb-2">No Completed Drafts</h3>
                   <p className="text-text-secondary mb-4">Your league draft results will appear here after completion.</p>
                   <Link to="/draft"><Button>Go to Draft Center</Button></Link>
                 </Card>
@@ -105,7 +105,7 @@ const DraftHistory = () => {
                         </div>
                         {/* Details */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-white font-semibold truncate">{draft.leagueName}</h3>
+                          <h3 className="text-text-primary font-semibold truncate">{draft.leagueName}</h3>
                           <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted mt-1">
                             <span className="px-2 py-0.5 bg-dark-tertiary rounded text-xs">{draft.draftType} Draft</span>
                             <span>{draft.teamCount} teams</span>
@@ -142,7 +142,7 @@ const DraftHistory = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-medium text-white mb-2">No Mock Drafts Yet</h3>
+                  <h3 className="text-lg font-medium text-text-primary mb-2">No Mock Drafts Yet</h3>
                   <p className="text-text-secondary mb-4">Complete a mock draft to see your grades here.</p>
                   <Link to="/mock-draft"><Button>Start Mock Draft</Button></Link>
                 </Card>
@@ -159,7 +159,7 @@ const DraftHistory = () => {
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <h3 className="text-white font-semibold">Mock Draft</h3>
+                            <h3 className="text-text-primary font-semibold">Mock Draft</h3>
                             <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted mt-1">
                               <span className="px-2 py-0.5 bg-dark-tertiary rounded text-xs capitalize">{draft.draftType}</span>
                               <span>{draft.teamCount} teams</span>

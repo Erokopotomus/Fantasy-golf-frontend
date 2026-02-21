@@ -130,7 +130,7 @@ export default function ShareModal({
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-text-muted hover:text-white p-1 transition-colors"
+              className="absolute top-4 right-4 text-text-muted hover:text-text-primary p-1 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -159,7 +159,7 @@ export default function ShareModal({
                 {typeof navigator.share === 'function' && (
                   <button
                     onClick={handleNativeShare}
-                    className="px-3 py-2.5 rounded-lg bg-dark-tertiary text-text-muted hover:text-white transition-colors flex-shrink-0"
+                    className="px-3 py-2.5 rounded-lg bg-dark-tertiary text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
                     title="Share"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

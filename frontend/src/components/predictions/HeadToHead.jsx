@@ -75,11 +75,11 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
     <div className="space-y-4">
       {/* Target selector */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+        <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
           <button
             onClick={() => { setTargetId('consensus'); setSearchQuery('') }}
             className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${
-              targetId === 'consensus' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+              targetId === 'consensus' ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             vs Consensus
@@ -87,7 +87,7 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
           <button
             onClick={() => {}}
             className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${
-              targetId !== 'consensus' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+              targetId !== 'consensus' ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             vs User
@@ -101,44 +101,44 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search users to compare..."
-            className="w-full sm:w-64 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-500/50"
+            className="w-full sm:w-64 bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-amber-500/50"
           />
           {searchResults.length > 0 && (
-            <div className="absolute top-full mt-1 left-0 right-0 sm:w-64 bg-[#1A1510] border border-white/10 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto">
+            <div className="absolute top-full mt-1 left-0 right-0 sm:w-64 bg-[#1A1510] border border-stone/30 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto">
               {searchResults.map(u => (
                 <button
                   key={u.userId}
                   onClick={() => selectUser(u.userId)}
-                  className="w-full text-left px-3 py-2 text-sm text-white hover:bg-white/5 flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 text-sm text-text-primary hover:bg-dark-tertiary/5 flex items-center gap-2"
                 >
                   {u.avatar ? (
                     <img src={u.avatar} alt="" className="w-5 h-5 rounded-full" />
                   ) : (
-                    <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] text-white/30">
+                    <div className="w-5 h-5 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-[10px] text-text-primary/30">
                       {(u.name || '?').charAt(0)}
                     </div>
                   )}
                   <span className="truncate">{u.name}</span>
-                  {u.username && <span className="text-white/30 text-xs font-mono">@{u.username}</span>}
+                  {u.username && <span className="text-text-primary/30 text-xs font-mono">@{u.username}</span>}
                 </button>
               ))}
             </div>
           )}
           {searching && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="w-4 h-4 border border-white/30 border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border border-stone/60 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
         </div>
 
         {/* Sport filter */}
-        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+        <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
           {['all', 'nfl', 'golf'].map(s => (
             <button
               key={s}
               onClick={() => setSport(s)}
               className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
-                sport === s ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+                sport === s ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
               }`}
             >
               {s === 'all' ? 'All' : s.toUpperCase()}
@@ -149,56 +149,56 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
 
       {loading ? (
         <div className="space-y-3">
-          <div className="h-48 bg-white/5 rounded-xl animate-pulse" />
+          <div className="h-48 bg-dark-tertiary/5 rounded-xl animate-pulse" />
         </div>
       ) : !comparison ? (
         <div className="text-center py-12">
           <div className="text-4xl mb-3">&#9878;&#65039;</div>
-          <h3 className="text-lg font-semibold text-white mb-2">No Comparison Data</h3>
-          <p className="text-white/50 text-sm">Make some calls first to compare records.</p>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">No Comparison Data</h3>
+          <p className="text-text-primary/50 text-sm">Make some calls first to compare records.</p>
         </div>
       ) : (
         <>
           {/* Main comparison card */}
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+          <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-6">
             {/* Avatars + score */}
             <div className="flex items-center justify-center gap-6 sm:gap-12">
               {/* My side */}
               <div className="text-center">
-                <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-xl font-bold text-white/40 mx-auto mb-2">
+                <div className="w-14 h-14 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-xl font-bold text-text-primary/40 mx-auto mb-2">
                   {comparison.myUser?.avatar ? (
                     <img src={comparison.myUser.avatar} alt="" className="w-14 h-14 rounded-full object-cover" />
                   ) : (
                     (comparison.myUser?.name || 'Y').charAt(0)
                   )}
                 </div>
-                <div className="text-sm text-white font-medium truncate max-w-[100px]">{comparison.myUser?.name || 'You'}</div>
+                <div className="text-sm text-text-primary font-medium truncate max-w-[100px]">{comparison.myUser?.name || 'You'}</div>
               </div>
 
               {/* Score */}
               <div className="text-center">
-                <div className="text-4xl sm:text-5xl font-mono font-black text-white">
+                <div className="text-4xl sm:text-5xl font-mono font-black text-text-primary">
                   {summary?.myCorrect || 0}
-                  <span className="text-white/20 mx-2">-</span>
+                  <span className="text-text-primary/20 mx-2">-</span>
                   {summary?.theirCorrect || 0}
                 </div>
-                <div className="text-xs text-white/40 mt-1">{summary?.overlapTotal || 0} shared predictions</div>
+                <div className="text-xs text-text-primary/40 mt-1">{summary?.overlapTotal || 0} shared predictions</div>
               </div>
 
               {/* Their side */}
               <div className="text-center">
-                <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-xl font-bold text-white/40 mx-auto mb-2">
+                <div className="w-14 h-14 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-xl font-bold text-text-primary/40 mx-auto mb-2">
                   {comparison.targetUser?.avatar ? (
                     <img src={comparison.targetUser.avatar} alt="" className="w-14 h-14 rounded-full object-cover" />
                   ) : comparison.isConsensus ? (
-                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   ) : (
                     (comparison.targetUser?.name || 'T').charAt(0)
                   )}
                 </div>
-                <div className="text-sm text-white font-medium truncate max-w-[100px]">
+                <div className="text-sm text-text-primary font-medium truncate max-w-[100px]">
                   {comparison.targetUser?.name || 'Opponent'}
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
 
             {/* Record bar */}
             {totalWidth > 0 && (
-              <div className="mt-6 h-3 rounded-full bg-white/5 overflow-hidden flex">
+              <div className="mt-6 h-3 rounded-full bg-dark-tertiary/5 overflow-hidden flex">
                 <div
                   className="h-full bg-emerald-500 transition-all"
                   style={{ width: `${(summary.myCorrect / totalWidth) * 100}%` }}
@@ -222,41 +222,41 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
             <div className="grid grid-cols-2 gap-6 mt-6">
               <div>
                 <div className="text-2xl font-mono font-bold text-emerald-400">{myAccPct}%</div>
-                <div className="text-xs text-white/40">Your accuracy</div>
+                <div className="text-xs text-text-primary/40">Your accuracy</div>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-mono font-bold text-rose-400">{theirAccPct}%</div>
-                <div className="text-xs text-white/40">{comparison.isConsensus ? 'Consensus' : 'Their'} accuracy</div>
+                <div className="text-xs text-text-primary/40">{comparison.isConsensus ? 'Consensus' : 'Their'} accuracy</div>
               </div>
             </div>
 
             {/* Clutch Rating comparison */}
             {(comparison.myClutchRating != null || comparison.theirClutchRating != null) && (
-              <div className="grid grid-cols-2 gap-6 mt-4 pt-4 border-t border-white/10">
+              <div className="grid grid-cols-2 gap-6 mt-4 pt-4 border-t border-stone/30">
                 <div>
                   <div className="text-xl font-mono font-bold text-amber-400">
                     {comparison.myClutchRating != null ? Math.round(comparison.myClutchRating) : '—'}
                   </div>
-                  <div className="text-xs text-white/40">Your Clutch Rating</div>
+                  <div className="text-xs text-text-primary/40">Your Clutch Rating</div>
                 </div>
                 <div className="text-right">
                   <div className="text-xl font-mono font-bold text-amber-400">
                     {comparison.theirClutchRating != null ? Math.round(comparison.theirClutchRating) : '—'}
                   </div>
-                  <div className="text-xs text-white/40">{comparison.isConsensus ? 'Consensus' : 'Their'} Clutch Rating</div>
+                  <div className="text-xs text-text-primary/40">{comparison.isConsensus ? 'Consensus' : 'Their'} Clutch Rating</div>
                 </div>
               </div>
             )}
 
             {/* By sport breakdown */}
             {comparison.bySport && Object.keys(comparison.bySport).length > 1 && (
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <h4 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">By Sport</h4>
+              <div className="mt-4 pt-4 border-t border-stone/30">
+                <h4 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">By Sport</h4>
                 <div className="space-y-2">
                   {Object.entries(comparison.bySport).map(([s, data]) => (
                     <div key={s} className="flex items-center gap-3">
-                      <span className="text-xs text-white/40 uppercase w-10 font-mono">{s}</span>
-                      <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden flex">
+                      <span className="text-xs text-text-primary/40 uppercase w-10 font-mono">{s}</span>
+                      <div className="flex-1 h-2 rounded-full bg-dark-tertiary/5 overflow-hidden flex">
                         {(data.myCorrect + data.theirCorrect) > 0 && (
                           <>
                             <div className="h-full bg-emerald-500" style={{ width: `${(data.myCorrect / (data.myCorrect + data.theirCorrect)) * 100}%` }} />
@@ -264,7 +264,7 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
                           </>
                         )}
                       </div>
-                      <span className="text-xs font-mono text-white/60 w-12 text-right">{data.myCorrect}-{data.theirCorrect}</span>
+                      <span className="text-xs font-mono text-text-primary/60 w-12 text-right">{data.myCorrect}-{data.theirCorrect}</span>
                     </div>
                   ))}
                 </div>

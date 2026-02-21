@@ -81,7 +81,7 @@ const NflHub = () => {
               <div className="w-10 h-10 rounded-xl bg-orange/20 flex items-center justify-center">
                 <span className="text-lg">🏈</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-white tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-text-primary tracking-tight">
                 NFL
               </h1>
             </div>
@@ -96,19 +96,19 @@ const NflHub = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-white/[0.08] hover:border-orange/30 transition-all group"
+                className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] backdrop-blur-xl rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-dark-tertiary/[0.08] hover:border-orange/30 transition-all group"
               >
-                <div className="text-white/40 group-hover:text-orange transition-colors">
+                <div className="text-text-primary/40 group-hover:text-orange transition-colors">
                   {link.icon}
                 </div>
-                <span className="text-white text-xs font-semibold">{link.label}</span>
+                <span className="text-text-primary text-xs font-semibold">{link.label}</span>
               </Link>
             ))}
           </div>
 
           {/* Feed */}
           <div>
-            <h2 className="text-lg font-display font-bold text-white mb-4">Latest</h2>
+            <h2 className="text-lg font-display font-bold text-text-primary mb-4">Latest</h2>
             <FeedList
               cards={cards}
               loading={loading}

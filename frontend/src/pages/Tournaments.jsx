@@ -33,7 +33,7 @@ const TourBadge = ({ tour }) => {
     korn: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
   }
   const key = tour.toLowerCase()
-  const color = Object.entries(colors).find(([k]) => key.includes(k))?.[1] || 'bg-white/10 text-text-secondary border-white/10'
+  const color = Object.entries(colors).find(([k]) => key.includes(k))?.[1] || 'bg-dark-tertiary/10 text-text-secondary border-stone/30'
   const label = key.includes('pga') ? 'PGA Tour' : tour
   return (
     <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${color}`}>
@@ -69,10 +69,10 @@ const Tournaments = () => {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-white/[0.06] rounded w-48" />
+          <div className="h-8 bg-dark-tertiary/[0.06] rounded w-48" />
           <div className="grid gap-4 md:grid-cols-2">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-white/[0.04] rounded-card" />
+              <div key={i} className="h-32 bg-dark-tertiary/[0.04] rounded-card" />
             ))}
           </div>
         </div>
@@ -94,14 +94,14 @@ const Tournaments = () => {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-10">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-white">Tournaments</h1>
+        <h1 className="text-2xl font-display font-bold text-text-primary">Tournaments</h1>
         <p className="text-text-muted text-sm mt-1">Schedule, live scoring, and results</p>
       </div>
 
       {/* Live Now */}
       {liveTournaments.length > 0 && (
         <section>
-          <h2 className="text-lg font-display font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-display font-semibold text-text-primary mb-4 flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose" />
@@ -115,7 +115,7 @@ const Tournaments = () => {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg font-display font-bold text-white">{t.name}</h3>
+                        <h3 className="text-lg font-display font-bold text-text-primary">{t.name}</h3>
                         <TourBadge tour={t.tour} />
                         <EventBadge tournament={t} />
                       </div>
@@ -150,7 +150,7 @@ const Tournaments = () => {
 
       {/* Upcoming */}
       <section>
-        <h2 className="text-lg font-display font-semibold text-white mb-4">Upcoming</h2>
+        <h2 className="text-lg font-display font-semibold text-text-primary mb-4">Upcoming</h2>
         {upcomingTournaments.length === 0 ? (
           <Card>
             <p className="text-text-muted text-center text-sm">No upcoming tournaments scheduled</p>
@@ -163,7 +163,7 @@ const Tournaments = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-display font-semibold text-white">{t.name}</h3>
+                        <h3 className="text-sm font-display font-semibold text-text-primary">{t.name}</h3>
                         <TourBadge tour={t.tour} />
                         <EventBadge tournament={t} />
                       </div>
@@ -203,7 +203,7 @@ const Tournaments = () => {
       {/* Recent Results */}
       {recentTournaments.length > 0 && (
         <section>
-          <h2 className="text-lg font-display font-semibold text-white mb-4">Recent Results</h2>
+          <h2 className="text-lg font-display font-semibold text-text-primary mb-4">Recent Results</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {recentTournaments.map(t => (
               <Link key={t.id} to={`/tournaments/${t.id}`} className="block">
@@ -211,7 +211,7 @@ const Tournaments = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-display font-semibold text-white">{t.name}</h3>
+                        <h3 className="text-sm font-display font-semibold text-text-primary">{t.name}</h3>
                         <TourBadge tour={t.tour} />
                         <EventBadge tournament={t} />
                       </div>

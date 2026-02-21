@@ -28,7 +28,7 @@ const Checkbox = ({
           peer-focus:ring-2 peer-focus:ring-gold peer-focus:ring-offset-2 peer-focus:ring-offset-dark-primary
         `}>
           {checked && (
-            <svg className="w-full h-full text-dark-primary p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-full h-full text-slate p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           )}

@@ -121,7 +121,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
   return (
     <div
       className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-        expanded ? 'border-white/[0.12] bg-dark-secondary/80' : 'border-white/[0.06] bg-dark-secondary/60'
+        expanded ? 'border-white/[0.12] bg-dark-secondary/80' : 'border-[var(--card-border)] bg-dark-secondary/60'
       } ${meta.deferred && !isActive ? 'opacity-50' : ''}`}
     >
       {/* Header — always visible, clickable */}
@@ -133,19 +133,19 @@ export default function RatingComponentCard({ componentKey, componentData, owner
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-white">{meta.label}</span>
-              <span className="text-[10px] font-mono text-white/30">{meta.weight}</span>
+              <span className="text-sm font-medium text-text-primary">{meta.label}</span>
+              <span className="text-[10px] font-mono text-text-primary/30">{meta.weight}</span>
             </div>
             {isActive ? (
-              <span className="text-sm font-mono font-bold text-white">{score}</span>
+              <span className="text-sm font-mono font-bold text-text-primary">{score}</span>
             ) : (
-              <span className="text-[10px] font-mono text-white/30">
+              <span className="text-[10px] font-mono text-text-primary/30">
                 {meta.deferred ? 'Coming Soon' : 'Locked'}
               </span>
             )}
           </div>
           {/* Score bar */}
-          <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+          <div className="h-1.5 rounded-full bg-dark-tertiary/5 overflow-hidden">
             {isActive ? (
               <div
                 className="h-full rounded-full transition-all duration-500"
@@ -166,7 +166,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
           </div>
         </div>
         <svg
-          className={`w-4 h-4 text-white/30 shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-text-primary/30 shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -175,34 +175,34 @@ export default function RatingComponentCard({ componentKey, componentData, owner
 
       {/* Expanded content */}
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-white/[0.06] pt-3">
+        <div className="px-4 pb-4 space-y-3 border-t border-[var(--card-border)] pt-3">
           {/* Confidence indicator */}
           {isActive && (
             <div className="flex items-center justify-between text-[10px]">
-              <span className="text-white/40">Confidence</span>
+              <span className="text-text-primary/40">Confidence</span>
               <div className="flex items-center gap-2">
-                <div className="w-16 h-1 rounded-full bg-white/5 overflow-hidden">
+                <div className="w-16 h-1 rounded-full bg-dark-tertiary/5 overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
-                      confidence >= 70 ? 'bg-green-400/60' : confidence >= 40 ? 'bg-yellow-400/60' : 'bg-white/20'
+                      confidence >= 70 ? 'bg-green-400/60' : confidence >= 40 ? 'bg-yellow-400/60' : 'bg-dark-tertiary/20'
                     }`}
                     style={{ width: `${confidence}%` }}
                   />
                 </div>
-                <span className="font-mono text-white/30">{confidence}%</span>
+                <span className="font-mono text-text-primary/30">{confidence}%</span>
               </div>
             </div>
           )}
 
           {/* What feeds this score */}
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-wider text-white/25 mb-1.5">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-text-primary/25 mb-1.5">
               What feeds this score
             </p>
             <ul className="space-y-1">
               {meta.feedsFrom.map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-white/50">
-                  <span className="text-white/20 mt-0.5 shrink-0">-</span>
+                <li key={i} className="flex items-start gap-2 text-xs text-text-primary/50">
+                  <span className="text-text-primary/20 mt-0.5 shrink-0">-</span>
                   {item}
                 </li>
               ))}
@@ -211,7 +211,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
 
           {/* How to improve */}
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-wider text-white/25 mb-1.5">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-text-primary/25 mb-1.5">
               How to improve
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -230,7 +230,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
                 ) : (
                   <span
                     key={i}
-                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/[0.04] text-white/40"
+                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium bg-dark-tertiary/[0.04] text-text-primary/40"
                   >
                     {action.text}
                   </span>

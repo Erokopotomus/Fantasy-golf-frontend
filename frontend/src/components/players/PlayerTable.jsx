@@ -14,8 +14,8 @@ const ScheduleDots = ({ playerId, tournaments = [] }) => {
               inField
                 ? 'bg-emerald-500'
                 : fieldAnnounced
-                ? 'bg-white/10'
-                : 'border border-white/20 bg-transparent'
+                ? 'bg-dark-tertiary/10'
+                : 'border border-stone/50 bg-transparent'
             }`}
             title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
           />
@@ -41,7 +41,7 @@ const PlayerTable = ({
     <th className={`p-3 ${className}`}>
       <button
         onClick={() => onSort(field)}
-        className={`flex items-center gap-1 hover:text-white transition-colors mx-auto ${
+        className={`flex items-center gap-1 hover:text-text-primary transition-colors mx-auto ${
           sortBy === field ? 'text-gold' : 'text-text-muted'
         }`}
       >
@@ -110,7 +110,7 @@ const PlayerTable = ({
                     <span className={`text-xl ${player.headshotUrl ? 'hidden' : ''}`}>{player.countryFlag}</span>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <p className="text-white font-medium hover:text-gold transition-colors">{player.name}</p>
+                        <p className="text-text-primary font-medium hover:text-gold transition-colors">{player.name}</p>
                         {player.primaryTour && (
                           <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
                             player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
@@ -133,7 +133,7 @@ const PlayerTable = ({
                 <td className="p-3 text-center">
                   <span className={`font-medium ${
                     player.stats?.sgTotal > 1 ? 'text-gold' :
-                    player.stats?.sgTotal > 0 ? 'text-white' : 'text-red-400'
+                    player.stats?.sgTotal > 0 ? 'text-text-primary' : 'text-red-400'
                   }`}>
                     {player.stats?.sgTotal?.toFixed(2) || '—'}
                   </span>

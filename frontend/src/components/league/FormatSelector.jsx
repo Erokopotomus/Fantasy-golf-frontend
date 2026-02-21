@@ -77,7 +77,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
               <div className={`mb-2 ${selectedFormat === format.id ? 'text-gold' : 'text-text-secondary'}`}>
                 <FormatIcon format={format.icon} />
               </div>
-              <h4 className={`font-semibold mb-1 ${selectedFormat === format.id ? 'text-white' : 'text-text-secondary'}`}>
+              <h4 className={`font-semibold mb-1 ${selectedFormat === format.id ? 'text-text-primary' : 'text-text-secondary'}`}>
                 {format.name}
               </h4>
               <p className="text-xs text-text-muted line-clamp-2">{format.description}</p>
@@ -115,7 +115,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className={`font-semibold ${selectedDraftType === draftType.id ? 'text-white' : 'text-text-secondary'}`}>
+                    <h4 className={`font-semibold ${selectedDraftType === draftType.id ? 'text-text-primary' : 'text-text-secondary'}`}>
                       {draftType.name}
                     </h4>
                     <p className="text-xs text-text-muted mt-1">{draftType.description}</p>
@@ -142,7 +142,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
               </svg>
             </div>
             <div>
-              <p className="text-sm text-white font-medium">No Draft Required</p>
+              <p className="text-sm text-text-primary font-medium">No Draft Required</p>
               <p className="text-xs text-text-muted mt-1">
                 In One & Done format, you pick any player for each tournament. Once used, a player can't be picked again all season.
               </p>

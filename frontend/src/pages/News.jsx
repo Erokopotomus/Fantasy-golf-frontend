@@ -71,14 +71,14 @@ const News = () => {
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Page Header */}
           <div>
-            <h1 className="text-2xl font-bold font-display text-white">News</h1>
+            <h1 className="text-2xl font-bold font-display text-text-primary">News</h1>
             <p className="text-text-secondary">
               Latest transactions, injuries, and analysis from across the sports world
             </p>
           </div>
 
           {/* Sport Toggle */}
-          <div className="flex gap-1 bg-white/5 rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1 w-fit">
             {SPORT_TABS.map(tab => (
               <button
                 key={tab.id}
@@ -86,7 +86,7 @@ const News = () => {
                 className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${
                   sport === tab.id
                     ? 'bg-gold/20 text-gold'
-                    : 'text-white/40 hover:text-white/60'
+                    : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {tab.label}
@@ -99,7 +99,7 @@ const News = () => {
             <Card className="bg-gradient-to-r from-red-600/10 to-orange-600/10 border-red-500/30">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-xl">🚨</span>
-                <h2 className="text-lg font-semibold font-display text-white">Breaking</h2>
+                <h2 className="text-lg font-semibold font-display text-text-primary">Breaking</h2>
               </div>
               <div className="space-y-3">
                 {highPriority.slice(0, 3).map(item => (
@@ -124,7 +124,7 @@ const News = () => {
                         className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                           category === f.id
                             ? 'bg-gold/20 text-gold border border-gold/30'
-                            : 'bg-dark-tertiary text-text-muted border border-transparent hover:text-white'
+                            : 'bg-dark-tertiary text-text-muted border border-transparent hover:text-text-primary'
                         }`}
                       >
                         {f.label}
@@ -158,7 +158,7 @@ const News = () => {
                         <button
                           onClick={loadMore}
                           disabled={loading}
-                          className="w-full py-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-secondary hover:text-white hover:bg-white/5 transition-colors text-sm font-medium"
+                          className="w-full py-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-tertiary/5 transition-colors text-sm font-medium"
                         >
                           {loading ? 'Loading...' : `Load More (${articles.length} of ${total})`}
                         </button>
@@ -173,7 +173,7 @@ const News = () => {
             <div className="space-y-6">
               {/* Category Summary */}
               <Card>
-                <h3 className="text-lg font-semibold font-display text-white mb-4">Categories</h3>
+                <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Categories</h3>
                 <div className="space-y-3">
                   {[
                     { icon: '📋', label: 'Transactions', key: 'transaction', color: 'text-purple-400' },
@@ -192,7 +192,7 @@ const News = () => {
                           {cat.label}
                         </span>
                       </div>
-                      <span className="text-white font-medium text-sm">
+                      <span className="text-text-primary font-medium text-sm">
                         {categoryCounts[cat.key] || 0}
                       </span>
                     </button>
@@ -203,7 +203,7 @@ const News = () => {
               {/* Total Count */}
               <Card>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-white">{total}</p>
+                  <p className="text-3xl font-bold text-text-primary">{total}</p>
                   <p className="text-text-muted text-sm">Total Articles</p>
                 </div>
               </Card>
@@ -211,7 +211,7 @@ const News = () => {
               {/* Refresh Button */}
               <button
                 onClick={() => fetchNews(true)}
-                className="w-full py-3 bg-dark-secondary border border-dark-border rounded-lg text-text-secondary hover:text-white hover:bg-dark-tertiary transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-dark-secondary border border-dark-border rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-tertiary transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

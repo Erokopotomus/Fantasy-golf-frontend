@@ -201,7 +201,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
     <div className="space-y-6">
       {/* Actions */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Matchup Schedule</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Matchup Schedule</h3>
         <p className="text-text-secondary text-sm mb-4">
           Generate a round-robin schedule for head-to-head matchups, or adjust individual matchup scores.
         </p>
@@ -210,7 +210,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-emerald-500 text-text-primary rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50"
           >
             {generating ? 'Generating...' : schedule.length > 0 ? 'Regenerate Schedule' : 'Generate Schedule'}
           </button>
@@ -218,7 +218,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
           <button
             onClick={handleGeneratePlayoffs}
             disabled={generating}
-            className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-gold text-text-primary rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
           >
             {generating ? 'Generating...' : 'Generate Playoffs'}
           </button>
@@ -249,7 +249,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
               <button
                 onClick={handleReset}
                 disabled={resetting}
-                className="px-3 py-1.5 bg-red-500 text-white rounded font-medium text-sm hover:bg-red-600 transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 bg-red-500 text-text-primary rounded font-medium text-sm hover:bg-red-600 transition-colors disabled:opacity-50"
               >
                 {resetting ? 'Resetting...' : 'Confirm Reset'}
               </button>
@@ -267,7 +267,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
       {/* Commissioner Matchup Builder */}
       {showMatchupBuilder && qualifiedTeams.length > 0 && (
         <Card className="border-gold/30">
-          <h3 className="text-lg font-semibold font-display text-white mb-2">Set Playoff Matchups</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Set Playoff Matchups</h3>
           <p className="text-text-muted text-sm mb-4">
             Assign matchups for the next playoff round. Each team can only appear once.
           </p>
@@ -284,7 +284,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                   <select
                     value={slot.homeTeamId}
                     onChange={(e) => handleSlotChange(idx, 'homeTeamId', e.target.value)}
-                    className="flex-1 p-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                    className="flex-1 p-2 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                   >
                     <option value="">Select team...</option>
                     {qualifiedTeams.map(t => {
@@ -302,7 +302,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                   <select
                     value={slot.awayTeamId}
                     onChange={(e) => handleSlotChange(idx, 'awayTeamId', e.target.value)}
-                    className="flex-1 p-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                    className="flex-1 p-2 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                   >
                     <option value="">Select team...</option>
                     {qualifiedTeams.map(t => {
@@ -323,7 +323,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
             <button
               onClick={handleSubmitCustomMatchups}
               disabled={!allSlotsFilled || submittingMatchups}
-              className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-gold text-text-primary rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
             >
               {submittingMatchups ? 'Submitting...' : 'Confirm Matchups'}
             </button>
@@ -344,10 +344,10 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
       {/* Roster Adjustments — Commissioner only */}
       {isCommissioner && (
         <Card>
-          <h3 className="text-lg font-semibold font-display text-white mb-2">Roster Adjustments</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Roster Adjustments</h3>
           <p className="text-text-secondary text-sm mb-4">
             Reduce the number of active starters for weeks with smaller tournament fields.
-            Default: <span className="text-white font-medium">{defaultStarterCount} starters</span>
+            Default: <span className="text-text-primary font-medium">{defaultStarterCount} starters</span>
           </p>
 
           {overridesLoading ? (
@@ -375,7 +375,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-white text-sm font-medium">Week {week.week}</span>
+                        <span className="text-text-primary text-sm font-medium">Week {week.week}</span>
                         {week.tournament && (
                           <span className="text-text-muted text-xs truncate">{week.tournament}</span>
                         )}
@@ -397,7 +397,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => setOverrideValue(v => String(Math.max(1, (parseInt(v) || defaultStarterCount) - 1)))}
-                              className="w-7 h-7 flex items-center justify-center bg-dark-primary border border-dark-border rounded text-white text-sm hover:bg-dark-border"
+                              className="w-7 h-7 flex items-center justify-center bg-dark-primary border border-dark-border rounded text-text-primary text-sm hover:bg-dark-border"
                             >
                               -
                             </button>
@@ -407,11 +407,11 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                               onChange={(e) => setOverrideValue(e.target.value)}
                               min={1}
                               max={defaultStarterCount}
-                              className="w-12 px-1 py-1 bg-dark-primary border border-dark-border rounded text-white text-center text-sm"
+                              className="w-12 px-1 py-1 bg-dark-primary border border-dark-border rounded text-text-primary text-center text-sm"
                             />
                             <button
                               onClick={() => setOverrideValue(v => String(Math.min(defaultStarterCount, (parseInt(v) || 1) + 1)))}
-                              className="w-7 h-7 flex items-center justify-center bg-dark-primary border border-dark-border rounded text-white text-sm hover:bg-dark-border"
+                              className="w-7 h-7 flex items-center justify-center bg-dark-primary border border-dark-border rounded text-text-primary text-sm hover:bg-dark-border"
                             >
                               +
                             </button>
@@ -458,13 +458,13 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                               }
                             }}
                             disabled={savingOverride}
-                            className="px-2 py-1 bg-emerald-500 text-white rounded text-xs font-medium hover:bg-emerald-600 disabled:opacity-50"
+                            className="px-2 py-1 bg-emerald-500 text-text-primary rounded text-xs font-medium hover:bg-emerald-600 disabled:opacity-50"
                           >
                             {savingOverride ? '...' : 'Save'}
                           </button>
                           <button
                             onClick={() => setEditingOverrideWeek(null)}
-                            className="px-2 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-white"
+                            className="px-2 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-text-primary"
                           >
                             Cancel
                           </button>
@@ -495,7 +495,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                               setEditingOverrideWeek(week.week)
                               setOverrideValue(String(defaultStarterCount - 1))
                             }}
-                            className="px-2.5 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-white transition-colors"
+                            className="px-2.5 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-text-primary transition-colors"
                           >
                             Adjust
                           </button>
@@ -520,7 +520,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
           {schedule.map(week => (
             <Card key={week.week}>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-white">
+                <h4 className="font-semibold text-text-primary">
                   Week {week.week}
                   {week.tournament && (
                     <span className="text-text-muted font-normal ml-2">- {week.tournament}</span>
@@ -548,7 +548,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                     >
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-white font-medium text-sm">
+                          <span className="text-text-primary font-medium text-sm">
                             {homeTeam?.name || 'Team'}
                           </span>
                           {isEditing ? (
@@ -556,7 +556,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                               type="number"
                               value={editHomeScore}
                               onChange={(e) => setEditHomeScore(e.target.value)}
-                              className="w-20 px-2 py-1 bg-dark-primary border border-dark-border rounded text-white text-center text-sm"
+                              className="w-20 px-2 py-1 bg-dark-primary border border-dark-border rounded text-text-primary text-center text-sm"
                               step="0.5"
                             />
                           ) : (
@@ -572,7 +572,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                               type="number"
                               value={editAwayScore}
                               onChange={(e) => setEditAwayScore(e.target.value)}
-                              className="w-20 px-2 py-1 bg-dark-primary border border-dark-border rounded text-white text-center text-sm"
+                              className="w-20 px-2 py-1 bg-dark-primary border border-dark-border rounded text-text-primary text-center text-sm"
                               step="0.5"
                             />
                           ) : (
@@ -587,13 +587,13 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                             <button
                               onClick={() => handleSaveMatchup(matchup.id)}
                               disabled={saving}
-                              className="px-2 py-1 bg-emerald-500 text-white rounded text-xs font-medium hover:bg-emerald-600 disabled:opacity-50"
+                              className="px-2 py-1 bg-emerald-500 text-text-primary rounded text-xs font-medium hover:bg-emerald-600 disabled:opacity-50"
                             >
                               {saving ? '...' : 'Save'}
                             </button>
                             <button
                               onClick={() => setEditingMatchup(null)}
-                              className="px-2 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-white"
+                              className="px-2 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-text-primary"
                             >
                               X
                             </button>
@@ -601,7 +601,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
                         ) : (
                           <button
                             onClick={() => handleEditMatchup(matchup)}
-                            className="p-1.5 text-text-muted hover:text-white transition-colors"
+                            className="p-1.5 text-text-muted hover:text-text-primary transition-colors"
                             title="Edit score"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -624,7 +624,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">No Schedule Yet</h3>
+          <h3 className="text-lg font-medium text-text-primary mb-2">No Schedule Yet</h3>
           <p className="text-text-secondary mb-4">Generate a matchup schedule to start head-to-head competition</p>
         </Card>
       )}

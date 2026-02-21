@@ -36,19 +36,19 @@ export default function RatingBreakdown({ components, ownerColor = '#E8B84D', an
         return (
           <div key={key} className={`transition-all duration-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
             <div className="flex items-center justify-between mb-0.5">
-              <span className="text-xs text-white/60 font-sans flex items-center gap-1.5">
+              <span className="text-xs text-text-primary/60 font-sans flex items-center gap-1.5">
                 <span className="text-[10px]">{icon}</span>
                 {label}
               </span>
               {isActive ? (
-                <span className="text-xs font-mono font-semibold text-white">{comp.score}</span>
+                <span className="text-xs font-mono font-semibold text-text-primary">{comp.score}</span>
               ) : (
-                <span className="text-[10px] text-white/30 flex items-center gap-1">
+                <span className="text-[10px] text-text-primary/30 flex items-center gap-1">
                   🔒 {unlockText}
                 </span>
               )}
             </div>
-            <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-dark-tertiary/5 overflow-hidden">
               {isActive ? (
                 <div
                   className="h-full rounded-full transition-all duration-700 ease-out"

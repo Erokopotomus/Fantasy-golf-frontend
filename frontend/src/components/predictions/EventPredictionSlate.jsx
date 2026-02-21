@@ -84,15 +84,15 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
   const totalTargets = leaderboard.filter(p => p.sgTotal != null || p.fantasyPoints != null).length
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-white/80">This Week's Calls</h3>
+        <h3 className="text-sm font-semibold text-text-primary/80">This Week's Calls</h3>
         {madeCount > 0 && (
           <span className="text-xs font-mono text-amber-400">{madeCount} made</span>
         )}
       </div>
 
-      <p className="text-white/40 text-xs mb-3">
+      <p className="text-text-primary/40 text-xs mb-3">
         {isLocked
           ? 'Predictions locked — tournament in progress'
           : 'Will they finish above or below their SG benchmark?'}
@@ -114,12 +114,12 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
                     {player.headshotUrl && (
                       <img src={player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
                     )}
-                    <span className="text-sm text-white truncate">{player.name}</span>
+                    <span className="text-sm text-text-primary truncate">{player.name}</span>
                   </div>
                 </div>
 
                 {/* Benchmark */}
-                <span className="text-xs font-mono text-white/50 w-12 text-right">
+                <span className="text-xs font-mono text-text-primary/50 w-12 text-right">
                   {benchmarkValue > 0 ? '+' : ''}{benchmarkValue}
                 </span>
 
@@ -137,7 +137,7 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
                   </div>
                 ) : isLocked ? (
                   <div className="w-20 text-right">
-                    <span className="text-xs text-white/30">Locked</span>
+                    <span className="text-xs text-text-primary/30">Locked</span>
                   </div>
                 ) : (
                   <div className="flex gap-1 w-20 justify-end">
@@ -166,7 +166,7 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
                     type="text"
                     maxLength={280}
                     placeholder="Quick reason? (optional)"
-                    className="w-full bg-white/[0.04] border border-white/[0.06] rounded px-2 py-1 text-[10px] text-white/60 placeholder-white/15 focus:outline-none focus:border-gold/30"
+                    className="w-full bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded px-2 py-1 text-[10px] text-text-primary/60 placeholder-white/15 focus:outline-none focus:border-gold/30"
                     autoFocus
                     onBlur={e => {
                       if (e.target.value.trim() && existing?.id) {

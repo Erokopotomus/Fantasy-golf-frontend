@@ -25,7 +25,7 @@ const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, 
 
   return (
     <th
-      className={`text-${align} px-2 py-2 font-medium cursor-pointer hover:text-white transition-colors relative ${sortBy === sortKey ? 'text-gold' : ''} ${className}`}
+      className={`text-${align} px-2 py-2 font-medium cursor-pointer hover:text-text-primary transition-colors relative ${sortBy === sortKey ? 'text-gold' : ''} ${className}`}
       onClick={() => onSort(sortKey)}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
@@ -33,7 +33,7 @@ const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, 
       <span className="border-b border-dotted border-current">{label}</span>
       {show && (
         <div className="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-dark-primary border border-dark-border shadow-xl text-left normal-case tracking-normal pointer-events-none">
-          <p className="text-[11px] text-white font-semibold mb-0.5 leading-tight">{label}</p>
+          <p className="text-[11px] text-text-primary font-semibold mb-0.5 leading-tight">{label}</p>
           <p className="text-[10px] text-text-muted font-normal leading-snug">{tip}</p>
         </div>
       )}
@@ -95,7 +95,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
           {/* Filters */}
           <div className="px-4 py-3 border-b border-dark-border">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold text-white">
+              <h3 className="text-sm font-bold text-text-primary">
                 Field Analysis
               </h3>
               <span className="text-xs font-mono text-text-muted">
@@ -114,7 +114,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                         ? 'bg-gold/15 text-gold border border-gold/25'
                         : disabled
                           ? 'bg-dark-tertiary text-text-muted/40 border border-dark-border cursor-not-allowed'
-                          : 'bg-dark-tertiary text-text-muted border border-dark-border hover:text-white'
+                          : 'bg-dark-tertiary text-text-muted border border-dark-border hover:text-text-primary'
                     }`}
                     title={disabled ? 'Clutch metrics not yet computed for this event' : ''}
                   >
@@ -181,7 +181,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                               {entry.countryFlag || '?'}
                             </div>
                           )}
-                          <span className={`font-semibold text-xs group-hover:text-gold transition-colors ${isMyPlayer ? 'text-gold' : 'text-white'}`}>
+                          <span className={`font-semibold text-xs group-hover:text-gold transition-colors ${isMyPlayer ? 'text-gold' : 'text-text-primary'}`}>
                             {entry.name}
                           </span>
                           {isMyPlayer && <span className="text-[10px] text-gold">★</span>}
@@ -251,7 +251,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
         {!hasClutchData && leaderboard.length > 0 && (
           <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
             <div className="px-4 py-3 border-b border-dark-border bg-gradient-to-r from-emerald-500/5 to-transparent">
-              <h3 className="text-sm font-bold text-white">Field Snapshot</h3>
+              <h3 className="text-sm font-bold text-text-primary">Field Snapshot</h3>
             </div>
             <div className="p-4 space-y-4">
               {/* Top OWGR */}
@@ -270,7 +270,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                         ) : (
                           <span className="text-xs">{p.countryFlag || '?'}</span>
                         )}
-                        <span className="text-xs font-medium text-white truncate">{p.name}</span>
+                        <span className="text-xs font-medium text-text-primary truncate">{p.name}</span>
                       </div>
                       <span className="text-xs font-mono text-gold ml-2 flex-shrink-0">#{p.owgrRank}</span>
                     </Link>
@@ -283,7 +283,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                 <p className="text-[10px] text-text-muted uppercase tracking-wider font-bold">Field Stats</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-text-muted">Total Players</span>
-                  <span className="text-xs font-mono text-white">{leaderboard.length}</span>
+                  <span className="text-xs font-mono text-text-primary">{leaderboard.length}</span>
                 </div>
                 {(() => {
                   const ranked = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 50).length

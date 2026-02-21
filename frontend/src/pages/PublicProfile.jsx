@@ -5,7 +5,7 @@ import Card from '../components/common/Card'
 import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
 
 const TIER_COLORS = {
-  rookie: 'bg-white/10 text-white/60',
+  rookie: 'bg-dark-tertiary/10 text-text-primary/60',
   contender: 'bg-green-500/20 text-green-400',
   sharp: 'bg-blue-500/20 text-blue-400',
   expert: 'bg-accent-gold/20 text-accent-gold',
@@ -58,10 +58,10 @@ const OUTCOME_BADGE = {
   CORRECT: { label: 'Correct', class: 'bg-green-500/20 text-green-400' },
   INCORRECT: { label: 'Incorrect', class: 'bg-red-500/20 text-red-400' },
   PUSH: { label: 'Push', class: 'bg-yellow-500/20 text-yellow-400' },
-  VOIDED: { label: 'Voided', class: 'bg-white/10 text-white/40' },
+  VOIDED: { label: 'Voided', class: 'bg-dark-tertiary/10 text-text-primary/40' },
 }
 
-const StatBox = ({ label, value, color = 'text-white' }) => (
+const StatBox = ({ label, value, color = 'text-text-primary' }) => (
   <div className="bg-dark-primary rounded-lg p-3 text-center">
     <p className={`text-xl font-bold font-mono ${color}`}>{value}</p>
     <p className="text-text-muted text-xs">{label}</p>
@@ -86,7 +86,7 @@ export default function PublicProfile() {
       <div className="min-h-screen">
         <div className="max-w-3xl mx-auto px-4 py-12 text-center">
           <div className="text-5xl mb-4">&#128683;</div>
-          <h1 className="text-2xl font-bold text-white mb-2">Profile Not Found</h1>
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Profile Not Found</h1>
           <p className="text-text-secondary mb-6">No user with the username "@{username}" exists.</p>
           <Link to="/" className="text-accent-gold hover:underline">Go to homepage</Link>
         </div>
@@ -112,13 +112,13 @@ export default function PublicProfile() {
         <Card className="mb-6">
           <div className="flex items-start gap-4">
             {/* Avatar */}
-            <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-white text-2xl font-bold font-display shadow-button shrink-0">
+            <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-text-primary text-2xl font-bold font-display shadow-button shrink-0">
               {user.name?.charAt(0).toUpperCase() || 'U'}
             </div>
 
             {/* Name + details */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold font-display text-white truncate">{user.name}</h1>
+              <h1 className="text-2xl font-bold font-display text-text-primary truncate">{user.name}</h1>
               <p className="text-text-muted text-sm font-mono">@{user.username}</p>
               {user.tagline && (
                 <p className="text-text-secondary text-sm mt-1 italic">{user.tagline}</p>
@@ -138,7 +138,7 @@ export default function PublicProfile() {
                         href={url.startsWith('http') ? url : `https://${url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-text-secondary hover:text-white transition-colors"
+                        className="text-text-secondary hover:text-text-primary transition-colors"
                         title={SOCIAL_LABELS[key] || key}
                       >
                         {SOCIAL_ICONS[key] || key}
@@ -184,7 +184,7 @@ export default function PublicProfile() {
         {/* Recent Calls */}
         {recentCalls.length > 0 && (
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold font-display text-white mb-4">Recent Calls</h2>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Recent Calls</h2>
             <div className="space-y-2">
               {recentCalls.map(call => {
                 const badge = OUTCOME_BADGE[call.outcome] || OUTCOME_BADGE.VOIDED
@@ -201,7 +201,7 @@ export default function PublicProfile() {
                       {badge.label}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">
+                      <p className="text-sm text-text-primary truncate">
                         {data.playerName && <span className="font-medium">{data.playerName}</span>}
                         {data.direction && <span className="text-text-secondary"> {data.direction.toUpperCase()}</span>}
                         {data.benchmark_value != null && <span className="text-text-muted font-mono"> {data.benchmark_value}</span>}
@@ -221,7 +221,7 @@ export default function PublicProfile() {
         {/* League Credentials */}
         {(agg.totalLeagues > 0 || agg.totalSeasons > 0) && (
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold font-display text-white mb-4">League Credentials</h2>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">League Credentials</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <StatBox label="Leagues" value={agg.totalLeagues || 0} />
               <StatBox label="Championships" value={agg.championships || 0} color="text-gold" />
@@ -234,7 +234,7 @@ export default function PublicProfile() {
         {/* Achievements */}
         {achievements.length > 0 && (
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold font-display text-white mb-4">Achievements</h2>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Achievements</h2>
             <div className="flex flex-wrap gap-2">
               {achievements.map(a => (
                 <div
@@ -243,7 +243,7 @@ export default function PublicProfile() {
                   title={a.name}
                 >
                   <span className="text-xl">{a.icon || '?'}</span>
-                  <p className="text-xs text-white mt-0.5">{a.name}</p>
+                  <p className="text-xs text-text-primary mt-0.5">{a.name}</p>
                 </div>
               ))}
             </div>
@@ -256,7 +256,7 @@ export default function PublicProfile() {
             <p className="text-text-secondary mb-4">Want to build your own track record?</p>
             <Link
               to="/signup"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-text-primary rounded-lg font-medium hover:opacity-90 transition-opacity"
             >
               Sign up to make your own calls
             </Link>

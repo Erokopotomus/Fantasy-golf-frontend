@@ -3,7 +3,7 @@
 const TREND_CONFIG = {
   up:     { icon: '↗', color: 'text-green-400', label: 'Rising' },
   down:   { icon: '↘', color: 'text-red-400', label: 'Falling' },
-  stable: { icon: '→', color: 'text-white/40', label: 'Stable' },
+  stable: { icon: '→', color: 'text-text-primary/40', label: 'Stable' },
   new:    { icon: '✦', color: 'text-yellow-400', label: 'New' },
 }
 

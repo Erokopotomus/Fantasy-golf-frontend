@@ -15,14 +15,14 @@ const toParColor = (toPar) => {
   if (toPar == null) return 'text-text-muted'
   if (toPar < 0) return 'text-emerald-400'
   if (toPar > 0) return 'text-red-400'
-  return 'text-white'
+  return 'text-text-primary'
 }
 
 const positionColor = (pos, status) => {
   if (status === 'CUT' || status === 'WD' || status === 'DQ') return 'text-red-400'
   if (pos == null) return 'text-text-muted'
   if (pos <= 10) return 'text-emerald-400'
-  if (pos <= 25) return 'text-white'
+  if (pos <= 25) return 'text-text-primary'
   return 'text-text-secondary'
 }
 
@@ -50,7 +50,7 @@ const PlayerRow = ({ player, isBench }) => (
 
     {/* Name + tour */}
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-white truncate">{player.playerName}</p>
+      <p className="text-sm font-medium text-text-primary truncate">{player.playerName}</p>
       {player.primaryTour && (
         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
           player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
@@ -110,14 +110,14 @@ const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
         {(team.userName || team.teamName || '?').charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`font-medium truncate ${isUser ? 'text-emerald-400' : 'text-white'}`}>
+        <p className={`font-medium truncate ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
           {team.teamName}
           {isUser && <span className="text-xs ml-1 text-emerald-400/60">(You)</span>}
         </p>
         <p className="text-xs text-text-muted">{team.userName}</p>
       </div>
       <div className="text-right">
-        <p className="text-lg font-bold font-display text-white">{team.totalPoints.toFixed(1)}</p>
+        <p className="text-lg font-bold font-display text-text-primary">{team.totalPoints.toFixed(1)}</p>
         <p className="text-[10px] text-text-muted">pts</p>
       </div>
       <svg className={`w-4 h-4 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,7 +193,7 @@ const GolfLiveScoring = ({ leagueId }) => {
       <div className="min-h-screen bg-dark-primary pt-8 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="text-center py-12">
-            <h2 className="text-xl font-bold font-display text-white mb-2">Error</h2>
+            <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error</h2>
             <p className="text-text-secondary mb-4">{error}</p>
             <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">Back to League</Link>
           </Card>
@@ -206,7 +206,7 @@ const GolfLiveScoring = ({ leagueId }) => {
     return (
       <div className="min-h-screen bg-dark-primary pt-8 px-4">
         <div className="max-w-2xl mx-auto">
-          <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-white mb-4">
+          <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-text-primary mb-4">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -216,7 +216,7 @@ const GolfLiveScoring = ({ leagueId }) => {
             <svg className="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h2 className="text-xl font-bold font-display text-white mb-2">No Tournament in Progress</h2>
+            <h2 className="text-xl font-bold font-display text-text-primary mb-2">No Tournament in Progress</h2>
             <p className="text-text-secondary">Check back when the next tournament begins.</p>
           </Card>
         </div>
@@ -231,12 +231,12 @@ const GolfLiveScoring = ({ leagueId }) => {
         <div className="flex items-center gap-3">
           <span className={`text-2xl font-bold ${
             userTeam.rank === 1 ? 'text-yellow-400' :
-            userTeam.rank <= 3 ? 'text-emerald-400' : 'text-white'
+            userTeam.rank <= 3 ? 'text-emerald-400' : 'text-text-primary'
           }`}>
             #{userTeam.rank}
           </span>
           <div>
-            <h3 className="text-lg font-semibold font-display text-white">{userTeam.teamName}</h3>
+            <h3 className="text-lg font-semibold font-display text-text-primary">{userTeam.teamName}</h3>
             <p className="text-xs text-text-muted">{userTeam.starters.length} starters, {userTeam.bench.length} bench</p>
           </div>
         </div>
@@ -316,13 +316,13 @@ const GolfLiveScoring = ({ leagueId }) => {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-white">
+            <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-text-primary">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to League
             </Link>
-            <h1 className="text-xl font-bold font-display text-white">Live Scoring</h1>
+            <h1 className="text-xl font-bold font-display text-text-primary">Live Scoring</h1>
           </div>
 
           {/* Tournament Banner */}
@@ -330,7 +330,7 @@ const GolfLiveScoring = ({ leagueId }) => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold font-display text-white">{tournament.name}</h2>
+                  <h2 className="text-lg font-bold font-display text-text-primary">{tournament.name}</h2>
                   {isLive && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
                       <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
@@ -377,11 +377,11 @@ const GolfLiveScoring = ({ leagueId }) => {
           {/* Desktop: side by side */}
           <div className="hidden sm:grid sm:grid-cols-2 gap-6">
             <Card>
-              <h3 className="text-base font-semibold text-white mb-4">My Team</h3>
+              <h3 className="text-base font-semibold text-text-primary mb-4">My Team</h3>
               {myTeamContent}
             </Card>
             <Card>
-              <h3 className="text-base font-semibold text-white mb-4">League Standings</h3>
+              <h3 className="text-base font-semibold text-text-primary mb-4">League Standings</h3>
               {leagueContent}
             </Card>
           </div>

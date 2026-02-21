@@ -59,7 +59,7 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
           <div className="space-y-2">
             {youReceive.map(player => (
               <div key={player.id} className="flex items-center gap-2">
-                <span className="text-white font-medium text-sm">{player.name}</span>
+                <span className="text-text-primary font-medium text-sm">{player.name}</span>
                 {player.owgr && (
                   <span className="text-text-muted text-xs">#{player.owgr}</span>
                 )}
@@ -83,7 +83,7 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
           <div className="space-y-2">
             {youSend.map(player => (
               <div key={player.id} className="flex items-center gap-2">
-                <span className="text-white font-medium text-sm">{player.name}</span>
+                <span className="text-text-primary font-medium text-sm">{player.name}</span>
                 {player.owgr && (
                   <span className="text-text-muted text-xs">#{player.owgr}</span>
                 )}
@@ -108,7 +108,7 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
           <>
             <button
               onClick={() => onAccept(trade.id)}
-              className="flex-1 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors"
+              className="flex-1 py-2 bg-emerald-500 text-text-primary rounded-lg font-medium hover:bg-emerald-600 transition-colors"
             >
               Accept
             </button>

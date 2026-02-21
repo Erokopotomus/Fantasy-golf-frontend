@@ -135,7 +135,7 @@ export default function NflCompare() {
   if (!p1Id || !p2Id) {
     return (
       <div className="max-w-7xl mx-auto px-4 pt-20 pb-8">
-        <div className="text-center py-20 text-white/30">Select two players to compare</div>
+        <div className="text-center py-20 text-text-primary/30">Select two players to compare</div>
       </div>
     )
   }
@@ -145,18 +145,18 @@ export default function NflCompare() {
   return (
     <div className="max-w-7xl mx-auto px-4 pt-20 pb-8">
       {/* Back link */}
-      <Link to="/nfl/players" className="text-white/40 hover:text-white/60 text-sm mb-4 inline-block">&larr; Back to Players</Link>
+      <Link to="/nfl/players" className="text-text-primary/40 hover:text-text-primary/60 text-sm mb-4 inline-block">&larr; Back to Players</Link>
 
       {/* Title + scoring toggle */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-display font-bold text-white">Player Comparison</h1>
-        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+        <h1 className="text-2xl font-display font-bold text-text-primary">Player Comparison</h1>
+        <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
           {['standard', 'half_ppr', 'ppr'].map(s => (
             <button
               key={s}
               onClick={() => setScoringView(s)}
               className={`px-3 py-1.5 rounded-md text-sm font-mono font-bold transition-colors ${
-                scoringView === s ? 'bg-gold/20 text-gold' : 'text-white/50 hover:text-white/70'
+                scoringView === s ? 'bg-gold/20 text-gold' : 'text-text-primary/50 hover:text-text-primary/70'
               }`}
             >
               {SCORING_LABELS[s]}
@@ -175,8 +175,8 @@ export default function NflCompare() {
 
       {/* ── Stat Comparison Grid ───────────────────────────────────── */}
       {p1 && p2 && p1Totals && p2Totals && (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6">
-          <h2 className="text-sm font-mono font-bold text-white/50 uppercase tracking-wider mb-4">Season Stats</h2>
+        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 mb-6">
+          <h2 className="text-sm font-mono font-bold text-text-primary/50 uppercase tracking-wider mb-4">Season Stats</h2>
 
           {/* Games played */}
           <StatCompareRow label="Games Played" v1={p1Totals.gamesPlayed} v2={p2Totals.gamesPlayed} statKey="gamesPlayed" />
@@ -195,7 +195,7 @@ export default function NflCompare() {
           ))}
 
           {/* Fantasy Points */}
-          <div className="mt-2 pt-2 border-t border-white/10">
+          <div className="mt-2 pt-2 border-t border-stone/30">
             <StatCompareRow
               label="Fantasy Points"
               v1={getFpts(p1Totals)}
@@ -236,8 +236,8 @@ export default function NflCompare() {
 function PlayerHeader({ player, totals, loading, season, seasons, onSeasonChange, fpts }) {
   if (loading && !player) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5">
-        <div className="text-center text-white/30 py-6">Loading...</div>
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5">
+        <div className="text-center text-text-primary/30 py-6">Loading...</div>
       </div>
     )
   }
@@ -250,48 +250,48 @@ function PlayerHeader({ player, totals, loading, season, seasons, onSeasonChange
     TE: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
     K: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
     DST: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-  }[player.nflPosition] || 'text-white/50 bg-white/5 border-white/10'
+  }[player.nflPosition] || 'text-text-primary/50 bg-dark-tertiary/5 border-stone/30'
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5">
+    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5">
       <div className="flex items-center gap-4">
         {player.headshotUrl ? (
-          <img src={player.headshotUrl} alt="" className="w-16 h-16 rounded-full object-cover bg-white/10" />
+          <img src={player.headshotUrl} alt="" className="w-16 h-16 rounded-full object-cover bg-dark-tertiary/10" />
         ) : (
-          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-xl font-bold">
+          <div className="w-16 h-16 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-xl font-bold">
             {player.nflPosition}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <Link to={`/nfl/players/${player.id}`} className="text-xl font-display font-bold text-white hover:text-gold transition-colors">
+          <Link to={`/nfl/players/${player.id}`} className="text-xl font-display font-bold text-text-primary hover:text-gold transition-colors">
             {player.name}
           </Link>
           <div className="flex items-center gap-2 mt-1">
             <span className={`px-2 py-0.5 rounded-full border font-mono text-xs font-bold ${posColor}`}>
               {player.nflPosition}
             </span>
-            <span className="text-white/50 font-mono text-xs">{player.nflTeamAbbr}</span>
-            {player.nflNumber && <span className="text-white/30 font-mono text-xs">#{player.nflNumber}</span>}
+            <span className="text-text-primary/50 font-mono text-xs">{player.nflTeamAbbr}</span>
+            {player.nflNumber && <span className="text-text-primary/30 font-mono text-xs">#{player.nflNumber}</span>}
           </div>
         </div>
         <div className="text-right">
           <div className="text-2xl font-mono font-bold text-gold">
             {fpts != null ? Number(fpts).toFixed(2) : '-'}
           </div>
-          <div className="text-white/40 text-xs font-mono uppercase">FPTS</div>
+          <div className="text-text-primary/40 text-xs font-mono uppercase">FPTS</div>
         </div>
       </div>
 
       {/* Season selector */}
       {seasons.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-white/5">
+        <div className="mt-3 pt-3 border-t border-stone/20">
           <select
             value={season}
             onChange={e => onSeasonChange(e.target.value)}
-            className="bg-[#1a1917] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm font-mono focus:border-gold/50 focus:outline-none w-full"
+            className="bg-[#1a1917] border border-stone/30 rounded-lg px-3 py-1.5 text-text-primary text-sm font-mono focus:border-gold/50 focus:outline-none w-full"
           >
             {seasons.map(yr => (
-              <option key={yr} value={yr} className="bg-[#1a1917] text-white">{yr} Season</option>
+              <option key={yr} value={yr} className="bg-[#1a1917] text-text-primary">{yr} Season</option>
             ))}
           </select>
         </div>
@@ -323,16 +323,16 @@ function StatCompareRow({ label, v1, v2, statKey, fmt, accent, negative }) {
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center py-1.5">
       <div className={`text-right font-mono text-sm pr-4 ${
-        winner === 1 ? 'text-gold font-bold' : 'text-white/60'
+        winner === 1 ? 'text-gold font-bold' : 'text-text-primary/60'
       }`}>
         {formatVal(v1)}
         {winner === 1 && <span className="ml-1 text-gold/50 text-xs">&#9650;</span>}
       </div>
-      <div className="text-center text-white/30 text-xs font-mono w-32 truncate">
+      <div className="text-center text-text-primary/30 text-xs font-mono w-32 truncate">
         {label}
       </div>
       <div className={`text-left font-mono text-sm pl-4 ${
-        winner === 2 ? 'text-gold font-bold' : 'text-white/60'
+        winner === 2 ? 'text-gold font-bold' : 'text-text-primary/60'
       }`}>
         {winner === 2 && <span className="mr-1 text-gold/50 text-xs">&#9650;</span>}
         {formatVal(v2)}
@@ -351,43 +351,43 @@ function GameLogPanel({ player, gameLog, loading, season, scoringView }) {
   const isDst = player.nflPosition === 'DST'
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-        <h3 className="text-sm font-display font-bold text-white">
+    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-stone/30 flex items-center justify-between">
+        <h3 className="text-sm font-display font-bold text-text-primary">
           {season ? `${season} Game Log` : 'Game Log'}
         </h3>
-        {loading && <span className="text-white/30 text-xs font-mono">Loading...</span>}
+        {loading && <span className="text-text-primary/30 text-xs font-mono">Loading...</span>}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left px-2 py-2 text-white/40 font-mono">WK</th>
-              <th className="text-left px-2 py-2 text-white/40 font-mono">OPP</th>
+            <tr className="border-b border-stone/30">
+              <th className="text-left px-2 py-2 text-text-primary/40 font-mono">WK</th>
+              <th className="text-left px-2 py-2 text-text-primary/40 font-mono">OPP</th>
               {isQb ? (
                 <>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">YDS</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">TD</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">INT</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">RSH</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">YDS</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">TD</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">INT</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">RSH</th>
                 </>
               ) : isK ? (
                 <>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">FGM</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">XPM</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">FGM</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">XPM</th>
                 </>
               ) : isDst ? (
                 <>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">SCK</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">INT</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">TD</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">SCK</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">INT</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">TD</th>
                 </>
               ) : (
                 <>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">RSH</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">REC</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">YDS</th>
-                  <th className="text-right px-1.5 py-2 text-white/40 font-mono">TD</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">RSH</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">REC</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">YDS</th>
+                  <th className="text-right px-1.5 py-2 text-text-primary/40 font-mono">TD</th>
                 </>
               )}
               <th className="text-right px-2 py-2 text-gold/50 font-mono font-bold">PTS</th>
@@ -395,37 +395,37 @@ function GameLogPanel({ player, gameLog, loading, season, scoringView }) {
           </thead>
           <tbody>
             {gameLog.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-6 text-white/20">No game data</td></tr>
+              <tr><td colSpan={8} className="text-center py-6 text-text-primary/20">No game data</td></tr>
             ) : (
               gameLog.map(g => (
-                <tr key={g.gameId} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="px-2 py-1.5 font-mono text-white/50">{g.week}</td>
-                  <td className="px-2 py-1.5 font-mono text-white/60">
+                <tr key={g.gameId} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                  <td className="px-2 py-1.5 font-mono text-text-primary/50">{g.week}</td>
+                  <td className="px-2 py-1.5 font-mono text-text-primary/60">
                     {g.isHome ? 'v' : '@'}{g.opponent}
                   </td>
                   {isQb ? (
                     <>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/70">{g.stats.passYards ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/70">{g.stats.passYards ?? '-'}</td>
                       <td className="text-right px-1.5 py-1.5 font-mono text-gold font-bold">{g.stats.passTds ?? '-'}</td>
                       <td className="text-right px-1.5 py-1.5 font-mono text-red-400">{g.stats.interceptions ?? '-'}</td>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/50">{g.stats.rushYards ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/50">{g.stats.rushYards ?? '-'}</td>
                     </>
                   ) : isK ? (
                     <>
                       <td className="text-right px-1.5 py-1.5 font-mono text-gold">{g.stats.fgMade ?? '-'}</td>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/60">{g.stats.xpMade ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/60">{g.stats.xpMade ?? '-'}</td>
                     </>
                   ) : isDst ? (
                     <>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/70">{g.stats.sacks ?? '-'}</td>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/70">{g.stats.defInterceptions ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/70">{g.stats.sacks ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/70">{g.stats.defInterceptions ?? '-'}</td>
                       <td className="text-right px-1.5 py-1.5 font-mono text-gold">{g.stats.defTds ?? '-'}</td>
                     </>
                   ) : (
                     <>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/50">{g.stats.rushYards ?? '-'}</td>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/60">{g.stats.receptions ?? '-'}</td>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-white/70">{g.stats.recYards ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/50">{g.stats.rushYards ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/60">{g.stats.receptions ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/70">{g.stats.recYards ?? '-'}</td>
                       <td className="text-right px-1.5 py-1.5 font-mono text-gold">{g.stats.recTds ?? '-'}</td>
                     </>
                   )}

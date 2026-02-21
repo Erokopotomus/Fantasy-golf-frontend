@@ -11,7 +11,7 @@ const TradeReview = ({
   if (trades.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Pending Trades</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Pending Trades</h3>
         <div className="text-center py-8 text-text-muted">
           <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -25,7 +25,7 @@ const TradeReview = ({
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">
         Pending Trades ({trades.length})
       </h3>
       <div className="space-y-4">
@@ -45,7 +45,7 @@ const TradeReview = ({
                 }`}>
                   {trade.isIncoming ? 'Incoming from' : 'Sent to'}
                 </span>
-                <p className="text-white font-medium">{trade.otherTeamName}</p>
+                <p className="text-text-primary font-medium">{trade.otherTeamName}</p>
               </div>
               <span className="text-text-muted text-xs">
                 {new Date(trade.createdAt).toLocaleDateString()}
@@ -63,7 +63,7 @@ const TradeReview = ({
                   {(trade.isIncoming ? trade.playersOffered : trade.playersRequested).map((player) => (
                     <div key={player.id} className="flex items-center gap-2 text-sm">
                       <span>{player.countryFlag}</span>
-                      <span className="text-white">{player.name}</span>
+                      <span className="text-text-primary">{player.name}</span>
                     </div>
                   ))}
                 </div>
@@ -78,7 +78,7 @@ const TradeReview = ({
                   {(trade.isIncoming ? trade.playersRequested : trade.playersOffered).map((player) => (
                     <div key={player.id} className="flex items-center gap-2 text-sm">
                       <span>{player.countryFlag}</span>
-                      <span className="text-white">{player.name}</span>
+                      <span className="text-text-primary">{player.name}</span>
                     </div>
                   ))}
                 </div>

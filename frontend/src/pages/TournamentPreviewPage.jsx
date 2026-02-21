@@ -33,8 +33,8 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-white/30' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-white/10' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
 }
 
 const storyIcons = {
@@ -81,14 +81,14 @@ const storyIcons = {
 
 const SectionHeader = ({ children, subtitle }) => (
   <div className="mb-5">
-    <h2 className="text-xl sm:text-2xl font-display font-bold text-white tracking-tight">
+    <h2 className="text-xl sm:text-2xl font-display font-bold text-text-primary tracking-tight">
       {children}
     </h2>
     {subtitle && <p className="text-sm text-text-muted mt-1">{subtitle}</p>}
   </div>
 )
 
-const StatPill = ({ label, value, color = 'text-white' }) => (
+const StatPill = ({ label, value, color = 'text-text-primary' }) => (
   <div className="bg-dark-primary/60 border border-dark-border/50 rounded-lg px-3 py-2 text-center">
     <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">{label}</p>
     <p className={`text-sm font-mono font-bold ${color}`}>{value}</p>
@@ -189,7 +189,7 @@ const TournamentPreviewPage = () => {
               )}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-text-primary tracking-tight leading-tight">
               {tournament.name}
             </h1>
 
@@ -233,7 +233,7 @@ const TournamentPreviewPage = () => {
                           {cat.rating.text}
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-1.5">
+                      <div className="h-2 rounded-full bg-dark-tertiary/[0.06] overflow-hidden mb-1.5">
                         <div
                           className={`h-full rounded-full ${cat.rating.bar} transition-all`}
                           style={{ width: `${barPct}%` }}
@@ -306,7 +306,7 @@ const TournamentPreviewPage = () => {
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white group-hover:text-gold transition-colors truncate">
+                        <p className="text-sm font-semibold text-text-primary group-hover:text-gold transition-colors truncate">
                           {player.name}
                         </p>
                         {player.owgrRank && (
@@ -386,7 +386,7 @@ const TournamentPreviewPage = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-mono text-text-muted">{i + 1}.</span>
-                          <p className="text-sm font-semibold text-white group-hover:text-gold transition-colors truncate">
+                          <p className="text-sm font-semibold text-text-primary group-hover:text-gold transition-colors truncate">
                             {p.name}
                           </p>
                         </div>
@@ -452,7 +452,7 @@ const TournamentPreviewPage = () => {
                       {storyIcons[story.icon] || storyIcons.trophy}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-white mb-1.5">{story.title}</h3>
+                      <h3 className="text-sm font-bold text-text-primary mb-1.5">{story.title}</h3>
                       <p className="text-sm text-text-secondary leading-relaxed">{story.body}</p>
                     </div>
                   </div>
@@ -483,7 +483,7 @@ const TournamentPreviewPage = () => {
                   >
                     <p className="text-[10px] font-mono text-text-muted uppercase mb-2">Round {day.round || i + 1}</p>
                     {day.temperature != null && (
-                      <p className="text-2xl font-mono font-bold text-white mb-1">{Math.round(day.temperature)}°</p>
+                      <p className="text-2xl font-mono font-bold text-text-primary mb-1">{Math.round(day.temperature)}°</p>
                     )}
                     {day.windSpeed != null && (
                       <p className={`text-xs font-mono ${windColor} mb-2`}>{Math.round(day.windSpeed)} mph wind</p>
@@ -530,7 +530,7 @@ const TournamentPreviewPage = () => {
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-white group-hover:text-gold transition-colors truncate">
+                      <p className="text-xs font-semibold text-text-primary group-hover:text-gold transition-colors truncate">
                         {player.name}
                       </p>
                       <p className="text-[10px] text-text-muted font-mono">#{player.owgrRank}</p>
@@ -567,7 +567,7 @@ const TournamentPreviewPage = () => {
                           <td className="p-3">
                             <Link to={`/players/${ph.player.id}`} className="flex items-center gap-2 hover:text-gold transition-colors">
                               {ph.player.countryFlag && <span className="text-sm">{ph.player.countryFlag}</span>}
-                              <span className="text-white font-medium text-xs">{ph.player.name}</span>
+                              <span className="text-text-primary font-medium text-xs">{ph.player.name}</span>
                             </Link>
                           </td>
                           <td className="p-3 text-center text-text-secondary font-mono">{ph.rounds}</td>
@@ -608,7 +608,7 @@ const TournamentPreviewPage = () => {
         <section className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 pb-4">
           <Link
             to={`/tournaments/${tournamentId}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-text-primary text-sm font-semibold transition-colors"
           >
             View Full Leaderboard
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

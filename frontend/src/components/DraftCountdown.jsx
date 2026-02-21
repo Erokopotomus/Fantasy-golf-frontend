@@ -90,7 +90,7 @@ const DraftCountdown = ({ scheduledFor, compact = false }) => {
         <svg className={`w-5 h-5 ${color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h4 className="text-white font-semibold">Draft Day</h4>
+        <h4 className="text-text-primary font-semibold">Draft Day</h4>
       </div>
       <p className="text-text-secondary text-sm mb-3">
         {new Date(scheduledFor).toLocaleDateString('en-US', {

@@ -57,7 +57,7 @@ const Feed = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-display font-extrabold text-text-primary tracking-tight">
                 Feed
               </h1>
               <p className="text-text-secondary text-sm mt-1">
@@ -69,7 +69,7 @@ const Feed = () => {
           {/* Sport Toggle + Quick Nav */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
             {/* Sport pills */}
-            <div className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.08] rounded-xl p-1">
+            <div className="flex items-center gap-1 bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-xl p-1">
               {SPORTS.map(s => (
                 <button
                   key={s.key}
@@ -77,7 +77,7 @@ const Feed = () => {
                   className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                     sport === s.key
                       ? 'bg-gold/20 text-gold'
-                      : 'text-white/30 hover:text-white/60'
+                      : 'text-text-primary/30 hover:text-text-primary/60'
                   }`}
                 >
                   {s.label}
@@ -86,12 +86,12 @@ const Feed = () => {
             </div>
 
             {/* Contextual quick nav */}
-            <div className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.08] rounded-xl p-1">
+            <div className="flex items-center gap-1 bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-xl p-1">
               {quickLinks.map(link => (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
+                  className="px-3 py-2 rounded-lg text-xs font-semibold text-text-primary/40 hover:text-text-primary hover:bg-dark-tertiary/[0.06] transition-all"
                 >
                   {link.label}
                 </Link>
@@ -103,15 +103,15 @@ const Feed = () => {
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 animate-pulse">
+                <div key={i} className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-xl p-4 animate-pulse">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-white/10" />
-                    <div className="h-3 w-20 bg-white/10 rounded" />
+                    <div className="w-2 h-2 rounded-full bg-dark-tertiary/10" />
+                    <div className="h-3 w-20 bg-dark-tertiary/10 rounded" />
                   </div>
-                  <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-                  <div className="h-3 w-full bg-white/10 rounded mb-1" />
-                  <div className="h-3 w-2/3 bg-white/10 rounded mb-3" />
-                  <div className="h-3 w-16 bg-white/10 rounded" />
+                  <div className="h-4 w-3/4 bg-dark-tertiary/10 rounded mb-2" />
+                  <div className="h-3 w-full bg-dark-tertiary/10 rounded mb-1" />
+                  <div className="h-3 w-2/3 bg-dark-tertiary/10 rounded mb-3" />
+                  <div className="h-3 w-16 bg-dark-tertiary/10 rounded" />
                 </div>
               ))}
             </div>
@@ -123,13 +123,13 @@ const Feed = () => {
             </div>
           ) : (
             <div className="text-center py-16">
-              <div className="w-16 h-16 bg-white/[0.04] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-dark-tertiary/[0.04] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-text-primary/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                 </svg>
               </div>
-              <p className="text-white/30 text-sm mb-2">No updates for {sport === 'all' ? 'any sport' : sport.toUpperCase()} yet.</p>
-              <p className="text-white/20 text-xs">Feed cards are generated from game results, stat leaders, and tournament data.</p>
+              <p className="text-text-primary/30 text-sm mb-2">No updates for {sport === 'all' ? 'any sport' : sport.toUpperCase()} yet.</p>
+              <p className="text-text-primary/20 text-xs">Feed cards are generated from game results, stat leaders, and tournament data.</p>
             </div>
           )}
         </div>

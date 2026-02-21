@@ -99,7 +99,7 @@ const ChatMessage = ({ message }) => {
       {/* Avatar */}
       <div className={`
         w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold
-        ${isOwnMessage ? 'bg-gold text-white' : 'bg-dark-tertiary text-text-secondary'}
+        ${isOwnMessage ? 'bg-gold text-text-primary' : 'bg-dark-tertiary text-text-secondary'}
       `}>
         {message.userAvatar || message.userName?.charAt(0).toUpperCase() || '?'}
       </div>
@@ -107,7 +107,7 @@ const ChatMessage = ({ message }) => {
       {/* Message content */}
       <div className={`flex flex-col max-w-[75%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
         <div className={`flex items-center gap-2 mb-1 ${isOwnMessage ? 'flex-row-reverse' : ''}`}>
-          <span className="text-sm font-medium text-white">
+          <span className="text-sm font-medium text-text-primary">
             {isOwnMessage ? 'You' : message.userName}
           </span>
           <span className="text-xs text-text-muted">{formatTime(message.timestamp)}</span>
@@ -115,7 +115,7 @@ const ChatMessage = ({ message }) => {
         <div className={`
           px-4 py-2 rounded-2xl
           ${isOwnMessage
-            ? 'bg-gold text-white rounded-br-md'
+            ? 'bg-gold text-text-primary rounded-br-md'
             : 'bg-dark-tertiary text-text-primary rounded-bl-md'
           }
         `}>

@@ -68,7 +68,7 @@ const BidPanel = ({
   if (isNominating && selectedPlayer) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Nominate Player</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Nominate Player</h3>
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-3 mb-2">
             {selectedPlayer.headshotUrl ? (
@@ -78,7 +78,7 @@ const BidPanel = ({
                 {selectedPlayer.name?.charAt(0)}
               </div>
             )}
-            <span className="text-xl font-bold font-display text-white">{selectedPlayer.name}</span>
+            <span className="text-xl font-bold font-display text-text-primary">{selectedPlayer.name}</span>
           </div>
           <p className="text-text-muted text-sm">
             Rank #{selectedPlayer.owgrRank || selectedPlayer.rank}
@@ -91,7 +91,7 @@ const BidPanel = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setNominateBid(Math.max(1, nominateBid - 1))}
-              className="w-10 h-10 bg-dark-tertiary rounded-lg text-white hover:bg-dark-border transition-colors"
+              className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors"
             >
               -
             </button>
@@ -100,7 +100,7 @@ const BidPanel = ({
             </div>
             <button
               onClick={() => setNominateBid(Math.min(maxBid, nominateBid + 1))}
-              className="w-10 h-10 bg-dark-tertiary rounded-lg text-white hover:bg-dark-border transition-colors"
+              className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors"
             >
               +
             </button>
@@ -112,7 +112,7 @@ const BidPanel = ({
             <button
               key={inc}
               onClick={() => setNominateBid(Math.min(maxBid, nominateBid + inc))}
-              className="flex-1 py-1.5 bg-dark-tertiary rounded-lg text-text-secondary hover:text-white hover:bg-dark-border transition-colors text-sm"
+              className="flex-1 py-1.5 bg-dark-tertiary rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-border transition-colors text-sm"
             >
               +${inc}
             </button>
@@ -130,7 +130,7 @@ const BidPanel = ({
   if (!currentBid) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Auction</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Auction</h3>
         <div className="text-center py-8 text-text-muted">
           <p>Waiting for nomination...</p>
           {isUserTurn && (
@@ -154,7 +154,7 @@ const BidPanel = ({
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold font-display text-white">Current Bid</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">Current Bid</h3>
         <div className="flex items-center gap-4">
           {/* Bid Countdown */}
           {bidTimer > 0 && (
@@ -185,7 +185,7 @@ const BidPanel = ({
             </div>
           )}
           <div className="flex-1">
-            <p className="text-white font-bold">{currentBid.playerName || player?.name}</p>
+            <p className="text-text-primary font-bold">{currentBid.playerName || player?.name}</p>
             <p className="text-text-muted text-sm">
               Nominated by {getTeamName(currentBid.nominatedByTeamId)}
             </p>
@@ -198,7 +198,7 @@ const BidPanel = ({
           </div>
           <div className="text-right">
             <p className="text-text-muted text-xs">High Bidder</p>
-            <p className={`font-medium ${isHighBidder ? 'text-gold' : 'text-white'}`}>
+            <p className={`font-medium ${isHighBidder ? 'text-gold' : 'text-text-primary'}`}>
               {getTeamName(currentBid.highBidderTeamId)}
               {isHighBidder && ' (You)'}
             </p>
@@ -212,17 +212,17 @@ const BidPanel = ({
           <button
             onClick={() => setBidAmount(Math.max(minBid, bidAmount - 1))}
             disabled={bidAmount <= minBid}
-            className="w-10 h-10 bg-dark-tertiary rounded-lg text-white hover:bg-dark-border transition-colors disabled:opacity-50"
+            className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors disabled:opacity-50"
           >
             -
           </button>
           <div className="flex-1 bg-dark-tertiary rounded-lg py-2 text-center">
-            <span className="text-2xl font-bold font-display text-white">${bidAmount}</span>
+            <span className="text-2xl font-bold font-display text-text-primary">${bidAmount}</span>
           </div>
           <button
             onClick={() => setBidAmount(Math.min(maxBid, bidAmount + 1))}
             disabled={bidAmount >= maxBid}
-            className="w-10 h-10 bg-dark-tertiary rounded-lg text-white hover:bg-dark-border transition-colors disabled:opacity-50"
+            className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors disabled:opacity-50"
           >
             +
           </button>
@@ -234,7 +234,7 @@ const BidPanel = ({
               key={inc}
               onClick={() => incrementBid(inc)}
               disabled={bidAmount + inc > maxBid}
-              className="flex-1 py-2 bg-dark-tertiary rounded-lg text-text-secondary hover:text-white hover:bg-dark-border transition-colors disabled:opacity-50 text-sm"
+              className="flex-1 py-2 bg-dark-tertiary rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-border transition-colors disabled:opacity-50 text-sm"
             >
               +${inc}
             </button>

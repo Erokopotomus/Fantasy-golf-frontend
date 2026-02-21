@@ -4,8 +4,8 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-white/30' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-white/10' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
 }
 
 const TournamentHeader = ({ tournament, leaderboard = [] }) => {
@@ -87,7 +87,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
             </div>
 
             {/* Tournament name + course */}
-            <h1 className="text-2xl font-bold font-display text-white mb-1 tracking-tight">{tournament.name}</h1>
+            <h1 className="text-2xl font-bold font-display text-text-primary mb-1 tracking-tight">{tournament.name}</h1>
             <div className="text-text-secondary text-sm mb-4">
               {course ? (
                 <span>
@@ -112,7 +112,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
               <div>
                 <span className="text-text-muted text-xs uppercase tracking-wide">Dates</span>
-                <p className="text-white font-medium">
+                <p className="text-text-primary font-medium">
                   {formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}
                 </p>
               </div>
@@ -120,14 +120,14 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
               {tournament.purse && (
                 <div>
                   <span className="text-text-muted text-xs uppercase tracking-wide">Purse</span>
-                  <p className="text-white font-medium">{formatPurse(tournament.purse)}</p>
+                  <p className="text-text-primary font-medium">{formatPurse(tournament.purse)}</p>
                 </div>
               )}
 
               {leaderboard.length > 0 && (
                 <div>
                   <span className="text-text-muted text-xs uppercase tracking-wide">Field</span>
-                  <p className="text-white font-medium">
+                  <p className="text-text-primary font-medium">
                     {leaderboard.length} players{cutPlayers.length > 0 ? ` (${cutPlayers.length} cut)` : ''}
                   </p>
                 </div>
@@ -138,13 +138,13 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                   {course.par && (
                     <div>
                       <span className="text-text-muted text-xs uppercase tracking-wide">Par</span>
-                      <p className="text-white font-medium font-mono">{course.par}</p>
+                      <p className="text-text-primary font-medium font-mono">{course.par}</p>
                     </div>
                   )}
                   {course.yardage && (
                     <div>
                       <span className="text-text-muted text-xs uppercase tracking-wide">Yards</span>
-                      <p className="text-white font-medium font-mono">{course.yardage?.toLocaleString()}</p>
+                      <p className="text-text-primary font-medium font-mono">{course.yardage?.toLocaleString()}</p>
                     </div>
                   )}
                 </>
@@ -155,11 +155,11 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                   <span className="text-text-muted text-xs uppercase tracking-wide">
                     {isCompleted ? 'Winner' : 'Leader'}
                   </span>
-                  <p className="text-white font-medium flex items-center gap-1.5 justify-end">
+                  <p className="text-text-primary font-medium flex items-center gap-1.5 justify-end">
                     {isCompleted && <span className="text-yellow-400">&#127942;</span>}
                     <span className="text-lg">{leader.countryFlag}</span>
                     {leader.name}
-                    <span className={`ml-1 font-bold ${leader.score < 0 ? 'text-emerald-400' : leader.score > 0 ? 'text-red-400' : 'text-white'}`}>
+                    <span className={`ml-1 font-bold ${leader.score < 0 ? 'text-emerald-400' : leader.score > 0 ? 'text-red-400' : 'text-text-primary'}`}>
                       {leader.score > 0 ? `+${leader.score}` : leader.score === 0 ? 'E' : leader.score}
                     </span>
                   </p>
@@ -177,7 +177,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                         key={r}
                         className={`
                           w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
-                          ${isCurrent ? 'bg-emerald-500 text-white ring-2 ring-emerald-400/50' : ''}
+                          ${isCurrent ? 'bg-emerald-500 text-text-primary ring-2 ring-emerald-400/50' : ''}
                           ${isPast ? 'bg-dark-tertiary text-emerald-400' : ''}
                           ${!isCurrent && !isPast ? 'bg-dark-tertiary/50 text-text-muted' : ''}
                         `}
@@ -215,7 +215,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                           {cat.rating.text}
                         </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-dark-tertiary/[0.06] overflow-hidden">
                         <div
                           className={`h-full rounded-full ${cat.rating.bar} transition-all`}
                           style={{ width: `${barPct}%` }}

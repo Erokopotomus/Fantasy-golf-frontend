@@ -41,7 +41,7 @@ const REASON_CHIPS = [
 const CHIP_STYLES = {
   positive: { active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40', inactive: 'border-emerald-500/20 text-emerald-500/40 hover:border-emerald-500/40 hover:text-emerald-400' },
   negative: { active: 'bg-red-500/20 text-red-400 border-red-500/40', inactive: 'border-red-500/20 text-red-500/40 hover:border-red-500/40 hover:text-red-400' },
-  source:   { active: 'bg-white/15 text-white/80 border-white/30', inactive: 'border-white/10 text-white/30 hover:border-white/25 hover:text-white/50' },
+  source:   { active: 'bg-dark-tertiary/15 text-text-primary/80 border-stone/60', inactive: 'border-stone/30 text-text-primary/30 hover:border-white/25 hover:text-text-primary/50' },
 }
 
 // ── Filter Bars ──────────────────────────────────────────────────────────────
@@ -57,19 +57,19 @@ function TagFilterBar({ entries, activeFilter, onFilterChange }) {
   }
 
   const filters = [
-    { key: 'all', label: 'All', count: entries.length, style: 'text-white/60 border-white/10 hover:border-white/25' },
+    { key: 'all', label: 'All', count: entries.length, style: 'text-text-primary/60 border-stone/30 hover:border-white/25' },
     { key: 'target', label: 'Targets', count: counts.target, style: 'text-emerald-400/70 border-emerald-500/20 hover:border-emerald-500/40' },
     { key: 'sleeper', label: 'Sleepers', count: counts.sleeper, style: 'text-gold/70 border-gold/20 hover:border-gold/40' },
     { key: 'avoid', label: 'Avoids', count: counts.avoid, style: 'text-red-400/70 border-red-500/20 hover:border-red-500/40' },
-    { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-white/40 border-white/10 hover:border-white/20' },
+    { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-text-primary/40 border-stone/30 hover:border-stone/50' },
   ]
 
   const activeStyles = {
-    all: 'bg-white/10 text-white border-white/25',
+    all: 'bg-dark-tertiary/10 text-text-primary border-white/25',
     target: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40',
     sleeper: 'bg-gold/15 text-gold border-gold/40',
     avoid: 'bg-red-500/15 text-red-400 border-red-500/40',
-    untagged: 'bg-white/10 text-white/60 border-white/20',
+    untagged: 'bg-dark-tertiary/10 text-text-primary/60 border-stone/50',
   }
 
   return (
@@ -108,7 +108,7 @@ function PositionTabBar({ activePos, onPosChange, entries }) {
             key={pos}
             onClick={() => onPosChange(pos)}
             className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider transition-all whitespace-nowrap
-              ${isActive ? 'bg-gold/15 text-gold border border-gold/30' : 'text-white/40 border border-transparent hover:text-white/60'}`}
+              ${isActive ? 'bg-gold/15 text-gold border border-gold/30' : 'text-text-primary/40 border border-transparent hover:text-text-primary/60'}`}
           >
             {pos} {count > 0 && `(${count})`}
           </button>
@@ -144,11 +144,11 @@ function ReasonChipRow({ movedEntry, existingChips, onUpdateChips, onDismiss }) 
   const direction = delta > 0 ? `\u2191${delta}` : `\u2193${Math.abs(delta)}`
 
   return (
-    <div className="px-3 py-2.5 bg-dark-primary/60 border-b border-white/[0.06]">
-      <p className="text-[11px] text-white/50 mb-2">
-        Moved <span className="text-white font-medium">{movedEntry.playerName}</span>{' '}
+    <div className="px-3 py-2.5 bg-dark-primary/60 border-b border-[var(--card-border)]">
+      <p className="text-[11px] text-text-primary/50 mb-2">
+        Moved <span className="text-text-primary font-medium">{movedEntry.playerName}</span>{' '}
         <span className={delta > 0 ? 'text-emerald-400' : 'text-red-400'}>{direction} spots</span>.{' '}
-        Why? <span className="text-white/25">(optional)</span>
+        Why? <span className="text-text-primary/25">(optional)</span>
       </p>
       <div className="flex flex-wrap gap-1.5">
         {REASON_CHIPS.map(chip => {
@@ -300,11 +300,11 @@ export default function DraftBoardEditor() {
       />
 
       {/* Mobile tab toggle */}
-      <div className="md:hidden flex border-b border-white/[0.06]">
+      <div className="md:hidden flex border-b border-[var(--card-border)]">
         <button
           onClick={() => setMobileTab('rankings')}
           className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider text-center transition-colors ${
-            mobileTab === 'rankings' ? 'text-gold border-b-2 border-gold' : 'text-white/40'
+            mobileTab === 'rankings' ? 'text-gold border-b-2 border-gold' : 'text-text-primary/40'
           }`}
         >
           Rankings ({entries.length})
@@ -312,7 +312,7 @@ export default function DraftBoardEditor() {
         <button
           onClick={() => setMobileTab('search')}
           className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider text-center transition-colors ${
-            mobileTab === 'search' ? 'text-gold border-b-2 border-gold' : 'text-white/40'
+            mobileTab === 'search' ? 'text-gold border-b-2 border-gold' : 'text-text-primary/40'
           }`}
         >
           Add Players
@@ -320,7 +320,7 @@ export default function DraftBoardEditor() {
         <button
           onClick={() => setMobileTab('timeline')}
           className={`flex-1 py-2.5 text-xs font-semibold uppercase tracking-wider text-center transition-colors ${
-            mobileTab === 'timeline' ? 'text-gold border-b-2 border-gold' : 'text-white/40'
+            mobileTab === 'timeline' ? 'text-gold border-b-2 border-gold' : 'text-text-primary/40'
           }`}
         >
           Timeline
@@ -333,7 +333,7 @@ export default function DraftBoardEditor() {
         <div className={`flex-1 md:w-[60%] md:block overflow-y-auto ${mobileTab !== 'rankings' ? 'hidden' : ''}`}>
           {/* Filter bars */}
           {entries.length > 0 && (
-            <div className="border-b border-white/[0.06]">
+            <div className="border-b border-[var(--card-border)]">
               <TagFilterBar entries={entries} activeFilter={tagFilter} onFilterChange={setTagFilter} />
               {isNfl && (
                 <PositionTabBar activePos={posFilter} onPosChange={setPosFilter} entries={entries} />
@@ -347,7 +347,7 @@ export default function DraftBoardEditor() {
               <DivergenceSummary entries={entries} />
               <button
                 onClick={() => setShowDivergence(false)}
-                className="absolute top-3 right-4 text-white/20 hover:text-white/50 text-xs"
+                className="absolute top-3 right-4 text-text-primary/20 hover:text-text-primary/50 text-xs"
                 title="Hide"
               >
                 {'\u2715'}
@@ -357,11 +357,11 @@ export default function DraftBoardEditor() {
 
           {entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <svg className="w-12 h-12 text-white/10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 text-text-primary/10 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
               </svg>
-              <p className="text-sm text-white/40 mb-1">No players ranked yet</p>
-              <p className="text-xs text-white/25">Search and add players from the right panel</p>
+              <p className="text-sm text-text-primary/40 mb-1">No players ranked yet</p>
+              <p className="text-xs text-text-primary/25">Search and add players from the right panel</p>
               <button
                 onClick={() => setMobileTab('search')}
                 className="md:hidden mt-4 px-4 py-2 text-xs font-semibold bg-gold/10 text-gold rounded-lg"
@@ -371,7 +371,7 @@ export default function DraftBoardEditor() {
             </div>
           ) : filteredEntries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-              <p className="text-sm text-white/40 mb-1">No players match this filter</p>
+              <p className="text-sm text-text-primary/40 mb-1">No players match this filter</p>
               <button
                 onClick={() => { setTagFilter('all'); setPosFilter('All') }}
                 className="mt-2 text-xs text-gold hover:underline"
@@ -431,7 +431,7 @@ export default function DraftBoardEditor() {
         </div>
 
         {/* Right: Player Search */}
-        <div className={`md:w-[40%] md:block md:border-l border-white/[0.06] bg-dark-secondary/30 ${mobileTab === 'search' ? 'flex-1' : mobileTab === 'timeline' ? 'hidden md:block' : 'hidden'}`}>
+        <div className={`md:w-[40%] md:block md:border-l border-[var(--card-border)] bg-dark-secondary/30 ${mobileTab === 'search' ? 'flex-1' : mobileTab === 'timeline' ? 'hidden md:block' : 'hidden'}`}>
           <PlayerSearchPanel
             sport={board?.sport || 'nfl'}
             onAdd={handleAddPlayer}
@@ -450,7 +450,7 @@ export default function DraftBoardEditor() {
       {/* Desktop Timeline button */}
       <button
         onClick={() => setShowTimeline(true)}
-        className="hidden md:flex fixed bottom-6 left-6 z-30 items-center gap-2 px-3 py-2 bg-dark-secondary border border-white/10 rounded-lg text-xs text-white/40 hover:text-gold hover:border-gold/30 transition-colors shadow-lg"
+        className="hidden md:flex fixed bottom-6 left-6 z-30 items-center gap-2 px-3 py-2 bg-dark-secondary border border-stone/30 rounded-lg text-xs text-text-primary/40 hover:text-gold hover:border-gold/30 transition-colors shadow-lg"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -463,12 +463,12 @@ export default function DraftBoardEditor() {
         <div className="hidden md:flex fixed inset-0 z-50 items-center justify-center p-4" onClick={() => setShowTimeline(false)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div
-            className="relative w-full max-w-lg max-h-[80vh] bg-dark-secondary border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-lg max-h-[80vh] bg-dark-secondary border border-[var(--card-border)] rounded-xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
-              <h2 className="text-sm font-bold text-white">Board Timeline</h2>
-              <button onClick={() => setShowTimeline(false)} className="text-white/30 hover:text-white/60">
+            <div className="p-4 border-b border-[var(--card-border)] flex items-center justify-between">
+              <h2 className="text-sm font-bold text-text-primary">Board Timeline</h2>
+              <button onClick={() => setShowTimeline(false)} className="text-text-primary/30 hover:text-text-primary/60">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -501,14 +501,14 @@ export default function DraftBoardEditor() {
                 </svg>
                 <span className="text-xs font-semibold text-purple-300">Clutch Coach</span>
               </div>
-              <button onClick={() => setCoachingCard(null)} className="text-white/30 hover:text-white/60">
+              <button onClick={() => setCoachingCard(null)} className="text-text-primary/30 hover:text-text-primary/60">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <h4 className="text-sm font-semibold text-white mb-1">{coachingCard.cardTitle}</h4>
-            <p className="text-xs text-white/60 leading-relaxed">{coachingCard.cardBody}</p>
+            <h4 className="text-sm font-semibold text-text-primary mb-1">{coachingCard.cardTitle}</h4>
+            <p className="text-xs text-text-primary/60 leading-relaxed">{coachingCard.cardBody}</p>
             {coachingCard.actionSuggestion && (
               <p className="text-xs text-gold mt-2">{coachingCard.actionSuggestion}</p>
             )}

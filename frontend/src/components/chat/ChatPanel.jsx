@@ -56,7 +56,7 @@ const ChatPanel = ({
             </svg>
           </div>
           <div className="text-left">
-            <p className="text-white font-medium">League Chat</p>
+            <p className="text-text-primary font-medium">League Chat</p>
             <p className="text-text-muted text-sm">{messages.length} messages</p>
           </div>
         </div>
@@ -79,7 +79,7 @@ const ChatPanel = ({
             </svg>
           </div>
           <div>
-            <p className="text-white font-medium text-sm">{leagueName || 'League Chat'}</p>
+            <p className="text-text-primary font-medium text-sm">{leagueName || 'League Chat'}</p>
             {memberCount && (
               <p className="text-text-muted text-xs">{memberCount} members</p>
             )}
@@ -100,7 +100,7 @@ const ChatPanel = ({
           {collapsible && (
             <button
               onClick={() => setIsCollapsed(true)}
-              className="p-2 text-text-muted hover:text-white hover:bg-dark-tertiary rounded-lg transition-colors"
+              className="p-2 text-text-muted hover:text-text-primary hover:bg-dark-tertiary rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />

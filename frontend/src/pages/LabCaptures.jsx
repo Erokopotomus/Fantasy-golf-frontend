@@ -38,14 +38,14 @@ function relativeTime(dateStr) {
 function sentimentBadge(s) {
   if (s === 'bullish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/15 text-emerald-400">Bullish</span>
   if (s === 'bearish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/15 text-red-400">Bearish</span>
-  if (s === 'neutral') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-white/10 text-white/40">Neutral</span>
+  if (s === 'neutral') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-dark-tertiary/10 text-text-primary/40">Neutral</span>
   return null
 }
 
 function sourceBadge(type) {
   if (!type) return null
   const label = type === 'gut_feel' ? 'Gut Feel' : type.charAt(0).toUpperCase() + type.slice(1)
-  return <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.05] text-white/30">{label}</span>
+  return <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-dark-tertiary/[0.05] text-text-primary/30">{label}</span>
 }
 
 function outcomeBadge(capture) {
@@ -58,7 +58,7 @@ function outcomeBadge(capture) {
   if (verdict === 'INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed this one</span>
   if (verdict === 'TRENDING_CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending right</span>
   if (verdict === 'TRENDING_INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending wrong</span>
-  if (verdict === 'NOTED') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/[0.06] text-white/30">&#8212; Noted</span>
+  if (verdict === 'NOTED') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-dark-tertiary/[0.06] text-text-primary/30">&#8212; Noted</span>
   return null
 }
 
@@ -124,18 +124,18 @@ export default function LabCaptures() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-3">
-            <Link to="/lab" className="text-white/30 hover:text-white/60 transition-colors">
+            <Link to="/lab" className="text-text-primary/30 hover:text-text-primary/60 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className="text-xl font-display font-bold text-white">Captures</h1>
-            <span className="px-2 py-0.5 text-[10px] font-bold bg-white/[0.06] text-white/30 rounded">{total}</span>
+            <h1 className="text-xl font-display font-bold text-text-primary">Captures</h1>
+            <span className="px-2 py-0.5 text-[10px] font-bold bg-dark-tertiary/[0.06] text-text-primary/30 rounded">{total}</span>
           </div>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-4 py-2 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-gold text-slate text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -151,7 +151,7 @@ export default function LabCaptures() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search captures..."
-          className="w-full px-3 py-2 text-sm bg-dark-secondary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50"
+          className="w-full px-3 py-2 text-sm bg-dark-secondary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
         />
 
         {/* Source type pills */}
@@ -163,7 +163,7 @@ export default function LabCaptures() {
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border ${
                 sourceFilter === f.value
                   ? 'border-gold/40 bg-gold/10 text-gold'
-                  : 'border-white/[0.06] text-white/30 hover:text-white/50'
+                  : 'border-[var(--card-border)] text-text-primary/30 hover:text-text-primary/50'
               }`}
             >
               {f.label}
@@ -180,7 +180,7 @@ export default function LabCaptures() {
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border ${
                 sentimentFilter === f.value
                   ? 'border-gold/40 bg-gold/10 text-gold'
-                  : 'border-white/[0.06] text-white/30 hover:text-white/50'
+                  : 'border-[var(--card-border)] text-text-primary/30 hover:text-text-primary/50'
               }`}
             >
               {f.label}
@@ -196,14 +196,14 @@ export default function LabCaptures() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-sm text-white/30">No captures yet — start jotting down your takes.</p>
+          <p className="text-sm text-text-primary/30">No captures yet — start jotting down your takes.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map(c => (
-            <div key={c.id} className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+            <div key={c.id} className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
               {/* Content */}
-              <p className="text-sm text-white/70 whitespace-pre-wrap mb-3">{c.content}</p>
+              <p className="text-sm text-text-primary/70 whitespace-pre-wrap mb-3">{c.content}</p>
 
               {/* Player tags */}
               {c.players && c.players.length > 0 && (
@@ -225,13 +225,13 @@ export default function LabCaptures() {
                 <div className="flex items-center gap-2 flex-wrap">
                   {outcomeBadge(c)}
                   {sourceBadge(c.sourceType)}
-                  {c.sourceName && <span className="text-[10px] text-white/20">{c.sourceName}</span>}
+                  {c.sourceName && <span className="text-[10px] text-text-primary/20">{c.sourceName}</span>}
                   {sentimentBadge(c.sentiment)}
-                  <span className="text-[10px] text-white/20">{relativeTime(c.createdAt)}</span>
+                  <span className="text-[10px] text-text-primary/20">{relativeTime(c.createdAt)}</span>
                 </div>
                 <button
                   onClick={() => handleDelete(c.id)}
-                  className="text-white/15 hover:text-red-400 transition-colors"
+                  className="text-text-primary/15 hover:text-red-400 transition-colors"
                   title="Delete capture"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

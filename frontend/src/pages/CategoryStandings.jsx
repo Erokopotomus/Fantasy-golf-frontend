@@ -49,7 +49,7 @@ const CategoryStandings = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold font-display text-white mb-2">Not a Roto League</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Not a Roto League</h2>
           <p className="text-text-secondary mb-6">
             Category standings are only available for Rotisserie format leagues.
           </p>
@@ -78,14 +78,14 @@ const CategoryStandings = () => {
       <div className="mb-6">
         <Link
           to={`/leagues/${leagueId}`}
-          className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+          className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to {league.name}
         </Link>
-        <h1 className="text-2xl font-bold font-display text-white">Roto Categories</h1>
+        <h1 className="text-2xl font-bold font-display text-text-primary">Roto Categories</h1>
         <p className="text-text-secondary">Track your performance across {categories.length} categories</p>
       </div>
 
@@ -93,7 +93,7 @@ const CategoryStandings = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
           <p className="text-xs text-text-muted mb-1">Your Rank</p>
-          <p className="text-2xl font-bold font-display text-white">
+          <p className="text-2xl font-bold font-display text-text-primary">
             #{standings.findIndex(s => s.userId === user?.id) + 1 || '-'}
           </p>
           <p className="text-xs text-text-secondary">of {standings.length} teams</p>
@@ -109,13 +109,13 @@ const CategoryStandings = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Categories</p>
-          <p className="text-2xl font-bold font-display text-white">{categories.length}</p>
+          <p className="text-2xl font-bold font-display text-text-primary">{categories.length}</p>
           <p className="text-xs text-text-secondary">being tracked</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Max Points</p>
-          <p className="text-2xl font-bold font-display text-white">
+          <p className="text-2xl font-bold font-display text-text-primary">
             {categories.length * standings.length}
           </p>
           <p className="text-xs text-text-secondary">possible points</p>
@@ -130,8 +130,8 @@ const CategoryStandings = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-gold text-white'
-                : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                ? 'bg-gold text-text-primary'
+                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -150,8 +150,8 @@ const CategoryStandings = () => {
                 onClick={() => setSelectedTeam(team.userId === user?.id ? null : team.userId)}
                 className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                   (!selectedTeam && team.userId === user?.id) || selectedTeam === team.userId
-                    ? 'bg-gold text-white'
-                    : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                    ? 'bg-gold text-text-primary'
+                    : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {team.name}

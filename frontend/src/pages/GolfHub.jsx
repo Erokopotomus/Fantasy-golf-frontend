@@ -182,7 +182,7 @@ const GolfHub = () => {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                 <span className="text-lg">⛳</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-white tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-text-primary tracking-tight">
                 Golf
               </h1>
             </div>
@@ -193,14 +193,14 @@ const GolfHub = () => {
 
           {/* Section 1: This Week Hero Card */}
           {tournamentsLoading ? (
-            <div className="mb-8 h-36 bg-white/[0.04] rounded-xl animate-pulse" />
+            <div className="mb-8 h-36 bg-dark-tertiary/[0.04] rounded-xl animate-pulse" />
           ) : heroTournament ? (
             <Link
               to={`/tournaments/${heroTournament.id}`}
               className="block mb-8 rounded-xl border overflow-hidden transition-all hover:border-emerald-500/40 group"
               style={{ borderColor: isLive ? 'rgba(244, 63, 94, 0.3)' : 'rgba(255,255,255,0.08)' }}
             >
-              <div className={`p-5 sm:p-6 ${isLive ? 'bg-rose/[0.04]' : 'bg-white/[0.03]'}`}>
+              <div className={`p-5 sm:p-6 ${isLive ? 'bg-rose/[0.04]' : 'bg-dark-tertiary/[0.03]'}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     {/* Status badge */}
@@ -218,12 +218,12 @@ const GolfHub = () => {
                           Starts in {days} day{days !== 1 ? 's' : ''}
                         </span>
                       ) : (
-                        <span className="text-xs font-mono text-text-muted bg-white/[0.06] px-2 py-0.5 rounded">UPCOMING</span>
+                        <span className="text-xs font-mono text-text-muted bg-dark-tertiary/[0.06] px-2 py-0.5 rounded">UPCOMING</span>
                       )}
                       <EventBadge tournament={heroTournament} />
                     </div>
 
-                    <h2 className="text-xl sm:text-2xl font-display font-bold text-white group-hover:text-emerald-400 transition-colors">
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-text-primary group-hover:text-emerald-400 transition-colors">
                       {heroTournament.name}
                     </h2>
 
@@ -291,7 +291,7 @@ const GolfHub = () => {
                   </svg>
                   <div>
                     <p className="text-sm font-display font-bold text-purple-300">AI Scout Report</p>
-                    <p className="text-[11px] text-white/40">Field analysis, value plays, course fit — powered by Clutch Scout</p>
+                    <p className="text-[11px] text-text-primary/40">Field analysis, value plays, course fit — powered by Clutch Scout</p>
                   </div>
                 </div>
                 <span className="text-xs text-purple-300 group-hover:text-purple-200 transition-colors font-semibold">View &rarr;</span>
@@ -303,7 +303,7 @@ const GolfHub = () => {
           {heroTournament?.status === 'UPCOMING' && heroIntel && (
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-display font-bold text-white">Tournament Intel</h2>
+                <h2 className="text-lg font-display font-bold text-text-primary">Tournament Intel</h2>
                 <Link
                   to={`/tournaments/${heroTournament.id}`}
                   className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
@@ -315,9 +315,9 @@ const GolfHub = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Course DNA snapshot */}
                 {heroIntel.course && (
-                  <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
+                  <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-white">What Wins Here</h3>
+                      <h3 className="text-sm font-bold text-text-primary">What Wins Here</h3>
                       {heroIntel.course.id && (
                         <Link to={`/courses/${heroIntel.course.id}`} className="text-[10px] text-gold hover:text-gold/80 transition-colors">
                           Course Profile →
@@ -333,8 +333,8 @@ const GolfHub = () => {
                       const getDnaLabel = (val) => {
                         if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
                         if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-                        if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-white/30' }
-                        return { text: 'Low', color: 'text-text-muted', bar: 'bg-white/10' }
+                        if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
+                        return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
                       }
                       const dna = [
                         { label: 'Driving', value: heroIntel.course.drivingImportance },
@@ -353,7 +353,7 @@ const GolfHub = () => {
                                   <span className="text-text-secondary text-[10px] font-medium">{cat.label}</span>
                                   <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
                                 </div>
-                                <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                                <div className="h-1.5 rounded-full bg-dark-tertiary/[0.06] overflow-hidden">
                                   <div className={`h-full rounded-full ${cat.rating.bar} transition-all`} style={{ width: `${barPct}%` }} />
                                 </div>
                               </div>
@@ -366,8 +366,8 @@ const GolfHub = () => {
                 )}
 
                 {/* Top Course Fits */}
-                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-white mb-3">Top Course Fits</h3>
+                <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4">
+                  <h3 className="text-sm font-bold text-text-primary mb-3">Top Course Fits</h3>
                   {(() => {
                     const fits = (heroIntel.leaderboard || [])
                       .filter(e => e.clutchMetrics?.courseFitScore != null)
@@ -380,10 +380,10 @@ const GolfHub = () => {
                           const p = e.player || e
                           const score = Math.round(e.clutchMetrics.courseFitScore)
                           return (
-                            <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-white/[0.04] -mx-1 px-1 py-0.5 rounded transition-colors">
+                            <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-dark-tertiary/[0.04] -mx-1 px-1 py-0.5 rounded transition-colors">
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-mono text-text-muted w-3">{i + 1}.</span>
-                                <span className="text-xs font-medium text-white">{p.name}</span>
+                                <span className="text-xs font-medium text-text-primary">{p.name}</span>
                               </div>
                               <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-gold' : score >= 60 ? 'text-yellow-400' : 'text-text-secondary'}`}>
                                 {score}
@@ -397,8 +397,8 @@ const GolfHub = () => {
                 </div>
 
                 {/* Weather snapshot */}
-                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-white mb-3">Weather Outlook</h3>
+                <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4">
+                  <h3 className="text-sm font-bold text-text-primary mb-3">Weather Outlook</h3>
                   {heroIntel.weather && heroIntel.weather.length > 0 ? (
                     <div className="space-y-2">
                       {heroIntel.weather.slice(0, 4).map((day, i) => {
@@ -408,7 +408,7 @@ const GolfHub = () => {
                             <span className="text-[10px] font-mono text-text-muted uppercase">Rd {day.round || i + 1}</span>
                             <div className="flex items-center gap-3">
                               {day.temperature != null && (
-                                <span className="text-xs font-mono text-white">{Math.round(day.temperature)}°</span>
+                                <span className="text-xs font-mono text-text-primary">{Math.round(day.temperature)}°</span>
                               )}
                               {day.windSpeed != null && (
                                 <span className={`text-xs font-mono ${windColor}`}>{Math.round(day.windSpeed)} mph</span>
@@ -447,12 +447,12 @@ const GolfHub = () => {
               <Link
                 key={link.label}
                 to={link.href}
-                className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-white/[0.08] hover:border-emerald-500/30 transition-all group"
+                className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] backdrop-blur-xl rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-dark-tertiary/[0.08] hover:border-emerald-500/30 transition-all group"
               >
-                <div className="text-white/40 group-hover:text-emerald-400 transition-colors">
+                <div className="text-text-primary/40 group-hover:text-emerald-400 transition-colors">
                   {link.icon}
                 </div>
-                <span className="text-white text-[10px] sm:text-xs font-semibold">{link.label}</span>
+                <span className="text-text-primary text-[10px] sm:text-xs font-semibold">{link.label}</span>
               </Link>
             ))}
           </div>
@@ -460,7 +460,7 @@ const GolfHub = () => {
           {/* Section 3: Upcoming Schedule */}
           {upcomingSchedule.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-lg font-display font-bold text-white mb-4">Upcoming Schedule</h2>
+              <h2 className="text-lg font-display font-bold text-text-primary mb-4">Upcoming Schedule</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {upcomingSchedule.map(t => {
                   const fieldAnnounced = t.fieldSize > 0 || t.field?.length > 0
@@ -471,12 +471,12 @@ const GolfHub = () => {
                     <Link
                       key={t.id}
                       to={`/tournaments/${t.id}`}
-                      className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 hover:bg-white/[0.06] hover:border-emerald-500/20 transition-all group"
+                      className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4 hover:bg-dark-tertiary/[0.06] hover:border-emerald-500/20 transition-all group"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-sm font-display font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                            <h3 className="text-sm font-display font-semibold text-text-primary group-hover:text-emerald-400 transition-colors">
                               {t.shortName || t.name}
                             </h3>
                             <EventBadge tournament={t} />
@@ -516,10 +516,10 @@ const GolfHub = () => {
           {/* Section 4: Roster Status (auth-gated, golf league only) */}
           {user && rosterCheck && heroTournament && (
             <div className="mb-8">
-              <h2 className="text-lg font-display font-bold text-white mb-4">
+              <h2 className="text-lg font-display font-bold text-text-primary mb-4">
                 Roster Check — {heroTournament.shortName || heroTournament.name}
               </h2>
-              <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5">
+              <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-5">
                 {!rosterCheck.fieldAnnounced ? (
                   <div className="text-center py-4">
                     <p className="text-text-muted text-sm">Field not yet announced</p>
@@ -531,7 +531,7 @@ const GolfHub = () => {
                     <div className="flex items-center gap-3 mb-4">
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-sm font-semibold text-text-primary">
                           {rosterCheck.playing.length} of {rosterCheck.total} confirmed
                         </span>
                       </div>
@@ -550,7 +550,7 @@ const GolfHub = () => {
                         {rosterCheck.playing.length > 0 ? (
                           <div className="space-y-1.5">
                             {rosterCheck.playing.map(p => (
-                              <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-2 text-sm text-white hover:text-emerald-400 transition-colors">
+                              <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-2 text-sm text-text-primary hover:text-emerald-400 transition-colors">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                                 {p.name}
                               </Link>
@@ -567,8 +567,8 @@ const GolfHub = () => {
                         {rosterCheck.notPlaying.length > 0 ? (
                           <div className="space-y-1.5">
                             {rosterCheck.notPlaying.map(p => (
-                              <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-2 text-sm text-text-muted hover:text-white transition-colors">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
+                              <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
+                                <span className="w-1.5 h-1.5 rounded-full bg-dark-tertiary/20 shrink-0" />
                                 {p.name}
                               </Link>
                             ))}
@@ -581,11 +581,11 @@ const GolfHub = () => {
 
                     {/* Links */}
                     {leagues.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center gap-4 text-xs">
+                      <div className="mt-4 pt-3 border-t border-[var(--card-border)] flex items-center gap-4 text-xs">
                         <Link to={`/leagues/${leagues[0].id}/roster`} className="text-emerald-400 hover:text-emerald-300 transition-colors">
                           Full Roster →
                         </Link>
-                        <Link to={`/leagues/${leagues[0].id}/waivers`} className="text-text-muted hover:text-white transition-colors">
+                        <Link to={`/leagues/${leagues[0].id}/waivers`} className="text-text-muted hover:text-text-primary transition-colors">
                           Waiver Wire →
                         </Link>
                       </div>
@@ -598,7 +598,7 @@ const GolfHub = () => {
 
           {/* Section 5: Feed */}
           <div>
-            <h2 className="text-lg font-display font-bold text-white mb-4">Latest</h2>
+            <h2 className="text-lg font-display font-bold text-text-primary mb-4">Latest</h2>
             <FeedList
               cards={cards}
               loading={feedLoading}

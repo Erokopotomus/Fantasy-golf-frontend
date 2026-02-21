@@ -73,14 +73,14 @@ const JoinLeague = () => {
           <div className="mb-6">
             <Link
               to="/dashboard"
-              className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-4"
+              className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-4"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2">
               Join a League
             </h1>
             <p className="text-text-secondary">
@@ -113,7 +113,7 @@ const JoinLeague = () => {
                 className="mb-4"
               />
               <div className="text-center mb-4">
-                <span className="text-4xl font-mono tracking-[0.5em] text-white">
+                <span className="text-4xl font-mono tracking-[0.5em] text-text-primary">
                   {code.padEnd(6, '_').split('').join('')}
                 </span>
               </div>
@@ -140,7 +140,7 @@ const JoinLeague = () => {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-semibold text-lg">{previewLeague.name}</h3>
+                  <h3 className="text-text-primary font-semibold text-lg">{previewLeague.name}</h3>
                   <p className="text-text-muted text-sm">
                     Created by {previewLeague.commissioner}
                   </p>
@@ -150,23 +150,23 @@ const JoinLeague = () => {
               <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
                 <div className="bg-dark-primary rounded-lg p-3">
                   <span className="text-text-muted block">Type</span>
-                  <span className="text-white capitalize">{previewLeague.type} Draft</span>
+                  <span className="text-text-primary capitalize">{previewLeague.type} Draft</span>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-3">
                   <span className="text-text-muted block">Members</span>
-                  <span className="text-white">
+                  <span className="text-text-primary">
                     {previewLeague.memberCount} / {previewLeague.maxMembers}
                   </span>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-3">
                   <span className="text-text-muted block">Scoring</span>
-                  <span className="text-white capitalize">
+                  <span className="text-text-primary capitalize">
                     {previewLeague.scoringType === 'strokes-gained' ? 'Strokes Gained' : 'Standard'}
                   </span>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-3">
                   <span className="text-text-muted block">Roster Size</span>
-                  <span className="text-white">{previewLeague.rosterSize} players</span>
+                  <span className="text-text-primary">{previewLeague.rosterSize} players</span>
                 </div>
               </div>
 

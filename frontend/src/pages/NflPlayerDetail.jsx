@@ -72,7 +72,7 @@ export default function NflPlayerDetail() {
   if (loading && !player) {
     return (
       <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
-        <div className="text-center py-20 text-white/30">Loading player profile...</div>
+        <div className="text-center py-20 text-text-primary/30">Loading player profile...</div>
       </div>
     )
   }
@@ -80,7 +80,7 @@ export default function NflPlayerDetail() {
   if (!player) {
     return (
       <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
-        <div className="text-center py-20 text-white/30">Player not found</div>
+        <div className="text-center py-20 text-text-primary/30">Player not found</div>
       </div>
     )
   }
@@ -92,7 +92,7 @@ export default function NflPlayerDetail() {
     TE: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
     K: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
     DEF: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
-  }[player.nflPosition] || 'text-white/50 bg-white/5 border-white/10'
+  }[player.nflPosition] || 'text-text-primary/50 bg-dark-tertiary/5 border-stone/30'
 
   const isQb = player.nflPosition === 'QB'
   const isK = player.nflPosition === 'K'
@@ -132,37 +132,37 @@ export default function NflPlayerDetail() {
   return (
     <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
       {/* Back link */}
-      <Link to="/nfl/players" className="text-white/40 hover:text-white/60 text-sm mb-4 inline-block">&larr; Back to Players</Link>
+      <Link to="/nfl/players" className="text-text-primary/40 hover:text-text-primary/60 text-sm mb-4 inline-block">&larr; Back to Players</Link>
 
       {/* ─── Player Header ─── */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-6">
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           {player.headshotUrl ? (
-            <img src={player.headshotUrl} alt="" className="w-24 h-24 rounded-full object-cover bg-white/10 flex-shrink-0" />
+            <img src={player.headshotUrl} alt="" className="w-24 h-24 rounded-full object-cover bg-dark-tertiary/10 flex-shrink-0" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-2xl font-bold flex-shrink-0">
+            <div className="w-24 h-24 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-2xl font-bold flex-shrink-0">
               {player.nflPosition}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-display font-bold text-white">{player.name}</h1>
+            <h1 className="text-3xl font-display font-bold text-text-primary">{player.name}</h1>
             <div className="flex flex-wrap items-center gap-3 mt-2">
               <span className={`px-3 py-1 rounded-full border font-mono text-sm font-bold ${posColor}`}>
                 {player.nflPosition}
               </span>
               {player.nflTeamAbbr && (
-                <Link to={`/nfl/teams/${player.nflTeamAbbr}`} className="text-white/60 hover:text-gold font-mono text-sm">
+                <Link to={`/nfl/teams/${player.nflTeamAbbr}`} className="text-text-primary/60 hover:text-gold font-mono text-sm">
                   {player.nflTeamAbbr}
                 </Link>
               )}
               {player.nflNumber && (
-                <span className="text-white/30 font-mono text-sm">#{player.nflNumber}</span>
+                <span className="text-text-primary/30 font-mono text-sm">#{player.nflNumber}</span>
               )}
               {player.college && (
-                <span className="text-white/30 text-sm">{player.college}</span>
+                <span className="text-text-primary/30 text-sm">{player.college}</span>
               )}
               {careerTotals.seasons > 0 && (
-                <span className="text-white/20 text-sm">{careerTotals.seasons} season{careerTotals.seasons !== 1 ? 's' : ''}</span>
+                <span className="text-text-primary/20 text-sm">{careerTotals.seasons} season{careerTotals.seasons !== 1 ? 's' : ''}</span>
               )}
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function NflPlayerDetail() {
                 <div className="text-3xl font-mono font-bold text-gold">
                   {latestSeason.fantasyPts[scoringView]?.toFixed(1) ?? '0.0'}
                 </div>
-                <div className="text-white/40 text-xs font-mono uppercase">
+                <div className="text-text-primary/40 text-xs font-mono uppercase">
                   {latestSeason.season} FPTS ({latestSeason.fantasyPtsPerGame[scoringView]}/g)
                 </div>
                 <div className="flex gap-1 mt-1 justify-end">
@@ -183,7 +183,7 @@ export default function NflPlayerDetail() {
                       key={s}
                       onClick={() => setScoringView(s)}
                       className={`px-2 py-0.5 rounded text-xs font-mono ${
-                        scoringView === s ? 'bg-gold/20 text-gold' : 'text-white/30 hover:text-white/50'
+                        scoringView === s ? 'bg-gold/20 text-gold' : 'text-text-primary/30 hover:text-text-primary/50'
                       }`}
                     >
                       {SCORING_LABELS[s]}
@@ -197,7 +197,7 @@ export default function NflPlayerDetail() {
 
         {/* Add to Board + Watch */}
         {user && (
-          <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-2">
+          <div className="mt-4 pt-4 border-t border-stone/20 flex items-center gap-2">
             <button
               onClick={() => setShowAddToBoard(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gold/40 rounded-lg text-gold text-sm font-semibold hover:bg-gold/10 transition-colors"
@@ -210,7 +210,7 @@ export default function NflPlayerDetail() {
             <button
               onClick={() => toggleWatch(playerId, 'nfl')}
               className={`inline-flex items-center gap-1 px-3 py-1.5 border rounded-lg text-sm font-semibold transition-colors
-                ${isWatched(playerId) ? 'border-gold/40 text-gold bg-gold/10' : 'border-white/20 text-white/40 hover:border-gold/30 hover:text-gold'}`}
+                ${isWatched(playerId) ? 'border-gold/40 text-gold bg-gold/10' : 'border-stone/50 text-text-primary/40 hover:border-gold/30 hover:text-gold'}`}
             >
               <svg className="w-4 h-4" fill={isWatched(playerId) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -222,7 +222,7 @@ export default function NflPlayerDetail() {
 
         {/* Quick season stats (default view for Informed Fan) */}
         {latestSeason && latestSeason.totals.gamesPlayed > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-6 pt-4 border-t border-white/5">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-6 pt-4 border-t border-stone/20">
             <QuickStat label="GP" value={latestSeason.totals.gamesPlayed} />
             {isQb ? (
               <>
@@ -261,7 +261,7 @@ export default function NflPlayerDetail() {
       </div>
 
       {/* ─── Tab Navigation ─── */}
-      <div className="flex gap-1 mb-4 bg-white/5 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 mb-4 bg-dark-tertiary/5 rounded-lg p-1 w-fit">
         {TABS.map(tab => (
           <button
             key={tab.key}
@@ -269,7 +269,7 @@ export default function NflPlayerDetail() {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? 'bg-gold/20 text-gold'
-                : 'text-white/40 hover:text-white/60'
+                : 'text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             {tab.label}
@@ -281,177 +281,177 @@ export default function NflPlayerDetail() {
       {activeTab === 'career' && (
         <div className="space-y-4">
           {/* Career Stats by Season Table */}
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/10">
-              <h2 className="text-lg font-display font-bold text-white">Career Stats by Season</h2>
+          <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-stone/30">
+              <h2 className="text-lg font-display font-bold text-text-primary">Career Stats by Season</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left px-4 py-2 text-white/40 text-xs font-mono uppercase sticky left-0 bg-[#0e0d0b]">Year</th>
-                    <th className="text-left px-3 py-2 text-white/40 text-xs font-mono">TM</th>
-                    <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">GP</th>
+                  <tr className="border-b border-stone/30">
+                    <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase sticky left-0 bg-[#0e0d0b]">Year</th>
+                    <th className="text-left px-3 py-2 text-text-primary/40 text-xs font-mono">TM</th>
+                    <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">GP</th>
                     {isQb ? (
                       <>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">CMP</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">ATT</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">CMP%</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">P.YDS</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">P.TD</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">INT</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">R.YDS</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">R.TD</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">CMP</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">ATT</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">CMP%</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">P.YDS</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">P.TD</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">INT</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">R.YDS</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">R.TD</th>
                       </>
                     ) : isK ? (
                       <>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FGM</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FGA</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FG%</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">XPM</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">XPA</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FGM</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FGA</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FG%</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">XPM</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">XPA</th>
                       </>
                     ) : isDst ? (
                       <>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">SACK</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">INT</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FF</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FR</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">TD</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">SACK</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">INT</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FF</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FR</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">TD</th>
                       </>
                     ) : (
                       <>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">RUSH</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">R.YDS</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">R.TD</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">TGT</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">REC</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">REC.YDS</th>
-                        <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">REC.TD</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">RUSH</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">R.YDS</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">R.TD</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">TGT</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">REC</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">REC.YDS</th>
+                        <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">REC.TD</th>
                       </>
                     )}
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">FPTS</th>
-                    <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FPTS/G</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">FPTS</th>
+                    <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FPTS/G</th>
                   </tr>
                 </thead>
                 <tbody>
                   {seasonSummaries.map(ss => (
-                    <tr key={ss.season} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="px-4 py-2.5 font-mono text-sm font-bold text-white sticky left-0 bg-transparent">{ss.season}</td>
-                      <td className="px-3 py-2.5 font-mono text-sm text-white/60">{ss.teamAbbr || '-'}</td>
-                      <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.gamesPlayed}</td>
+                    <tr key={ss.season} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                      <td className="px-4 py-2.5 font-mono text-sm font-bold text-text-primary sticky left-0 bg-transparent">{ss.season}</td>
+                      <td className="px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.teamAbbr || '-'}</td>
+                      <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.gamesPlayed}</td>
                       {isQb ? (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.passCompletions}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.passAttempts}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.passCompletions}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.passAttempts}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">
                             {ss.totals.passAttempts > 0
                               ? `${Math.round((ss.totals.passCompletions / ss.totals.passAttempts) * 1000) / 10}%`
                               : '-'}
                           </td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{ss.totals.passYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{ss.totals.passYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold font-bold">{ss.totals.passTds}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-red-400">{ss.totals.interceptions}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.rushYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.rushYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{ss.totals.rushTds}</td>
                         </>
                       ) : isK ? (
                         <>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{ss.totals.fgMade}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.fgAttempts}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.fgAttempts}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">
                             {ss.totals.fgAttempts > 0 ? `${Math.round((ss.totals.fgMade / ss.totals.fgAttempts) * 100)}%` : '-'}
                           </td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.xpMade}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.xpAttempts}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.xpMade}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.xpAttempts}</td>
                         </>
                       ) : isDst ? (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{ss.totals.sacks}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{ss.totals.defInterceptions}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.fumblesForced}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.fumblesRecovered}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{ss.totals.sacks}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{ss.totals.defInterceptions}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.fumblesForced}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.fumblesRecovered}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{ss.totals.defTds}</td>
                         </>
                       ) : (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.rushAttempts}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{ss.totals.rushYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.rushAttempts}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{ss.totals.rushYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{ss.totals.rushTds}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/40">{ss.totals.targets}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{ss.totals.receptions}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{ss.totals.recYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/40">{ss.totals.targets}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.receptions}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{ss.totals.recYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{ss.totals.recTds}</td>
                         </>
                       )}
                       <td className="text-right px-4 py-2.5 font-mono text-sm font-bold text-gold">
                         {ss.fantasyPts[scoringView]?.toFixed(1)}
                       </td>
-                      <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">
+                      <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">
                         {ss.fantasyPtsPerGame[scoringView]?.toFixed(1)}
                       </td>
                     </tr>
                   ))}
                   {/* Career totals row */}
                   {seasonSummaries.length > 1 && (
-                    <tr className="border-t border-white/20 bg-white/5">
+                    <tr className="border-t border-stone/50 bg-dark-tertiary/5">
                       <td className="px-4 py-2.5 font-mono text-sm font-bold text-gold sticky left-0">Career</td>
-                      <td className="px-3 py-2.5 font-mono text-sm text-white/40">—</td>
-                      <td className="text-right px-3 py-2.5 font-mono text-sm text-white font-bold">{careerTotals.gamesPlayed}</td>
+                      <td className="px-3 py-2.5 font-mono text-sm text-text-primary/40">—</td>
+                      <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary font-bold">{careerTotals.gamesPlayed}</td>
                       {isQb ? (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.passCompletions, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.passAttempts, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.passCompletions, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.passAttempts, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">
                             {(() => {
                               const att = seasonSummaries.reduce((s, ss) => s + ss.totals.passAttempts, 0)
                               const cmp = seasonSummaries.reduce((s, ss) => s + ss.totals.passCompletions, 0)
                               return att > 0 ? `${Math.round((cmp / att) * 1000) / 10}%` : '-'
                             })()}
                           </td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white font-bold">{careerTotals.passYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary font-bold">{careerTotals.passYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold font-bold">{careerTotals.passTds}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-red-400">{careerTotals.interceptions}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{careerTotals.rushYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{careerTotals.rushYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{careerTotals.rushTds}</td>
                         </>
                       ) : isK ? (
                         <>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{seasonSummaries.reduce((s, ss) => s + ss.totals.fgMade, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.fgAttempts, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.fgAttempts, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">
                             {(() => {
                               const att = seasonSummaries.reduce((s, ss) => s + ss.totals.fgAttempts, 0)
                               const made = seasonSummaries.reduce((s, ss) => s + ss.totals.fgMade, 0)
                               return att > 0 ? `${Math.round((made / att) * 100)}%` : '-'
                             })()}
                           </td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.xpMade, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.xpAttempts, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.xpMade, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.xpAttempts, 0)}</td>
                         </>
                       ) : isDst ? (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{seasonSummaries.reduce((s, ss) => s + ss.totals.sacks, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{seasonSummaries.reduce((s, ss) => s + ss.totals.defInterceptions, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.fumblesForced, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.fumblesRecovered, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{seasonSummaries.reduce((s, ss) => s + ss.totals.sacks, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{seasonSummaries.reduce((s, ss) => s + ss.totals.defInterceptions, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.fumblesForced, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.fumblesRecovered, 0)}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{seasonSummaries.reduce((s, ss) => s + ss.totals.defTds, 0)}</td>
                         </>
                       ) : (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.rushAttempts, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white font-bold">{careerTotals.rushYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{seasonSummaries.reduce((s, ss) => s + ss.totals.rushAttempts, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary font-bold">{careerTotals.rushYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{careerTotals.rushTds}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/40">{seasonSummaries.reduce((s, ss) => s + ss.totals.targets, 0)}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{careerTotals.receptions}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white font-bold">{careerTotals.recYards?.toLocaleString()}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/40">{seasonSummaries.reduce((s, ss) => s + ss.totals.targets, 0)}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{careerTotals.receptions}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary font-bold">{careerTotals.recYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{careerTotals.recTds}</td>
                         </>
                       )}
                       <td className="text-right px-4 py-2.5 font-mono text-sm font-bold text-gold">
                         {careerTotals.fantasyPts?.[scoringView]?.toFixed(1)}
                       </td>
-                      <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">
+                      <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">
                         {careerTotals.gamesPlayed > 0
                           ? (careerTotals.fantasyPts?.[scoringView] / careerTotals.gamesPlayed).toFixed(1)
                           : '-'}
@@ -474,15 +474,15 @@ export default function NflPlayerDetail() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left px-4 py-2 text-white/40 text-xs font-mono uppercase">Year</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">EPA Total</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">EPA/Game</th>
-                      {isQb && <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">CPOE</th>}
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">Success%</th>
-                      {isSkillPos && <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">Tgt Share</th>}
-                      {(player.nflPosition === 'RB') && <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">Rush Share</th>}
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">Snap %</th>
+                    <tr className="border-b border-stone/30">
+                      <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Year</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">EPA Total</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">EPA/Game</th>
+                      {isQb && <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">CPOE</th>}
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">Success%</th>
+                      {isSkillPos && <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">Tgt Share</th>}
+                      {(player.nflPosition === 'RB') && <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">Rush Share</th>}
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">Snap %</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -491,37 +491,37 @@ export default function NflPlayerDetail() {
                       const hasAny = adv.epaTotal != null || adv.cpoe != null || adv.successRate != null
                       if (!hasAny) return null
                       return (
-                        <tr key={ss.season} className="border-b border-white/5 hover:bg-white/5">
-                          <td className="px-4 py-2.5 font-mono text-sm font-bold text-white">{ss.season}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{adv.epaTotal ?? '-'}</td>
+                        <tr key={ss.season} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                          <td className="px-4 py-2.5 font-mono text-sm font-bold text-text-primary">{ss.season}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{adv.epaTotal ?? '-'}</td>
                           <td className={`text-right px-3 py-2.5 font-mono text-sm font-bold ${
                             adv.epaPerGame != null && adv.epaPerGame > 0 ? 'text-green-400' :
-                            adv.epaPerGame != null && adv.epaPerGame < 0 ? 'text-red-400' : 'text-white/60'
+                            adv.epaPerGame != null && adv.epaPerGame < 0 ? 'text-red-400' : 'text-text-primary/60'
                           }`}>
                             {adv.epaPerGame != null ? (adv.epaPerGame > 0 ? '+' : '') + adv.epaPerGame : '-'}
                           </td>
                           {isQb && (
                             <td className={`text-right px-3 py-2.5 font-mono text-sm ${
                               adv.cpoe != null && adv.cpoe > 0 ? 'text-green-400' :
-                              adv.cpoe != null && adv.cpoe < 0 ? 'text-red-400' : 'text-white/60'
+                              adv.cpoe != null && adv.cpoe < 0 ? 'text-red-400' : 'text-text-primary/60'
                             }`}>
                               {adv.cpoe != null ? (adv.cpoe > 0 ? '+' : '') + adv.cpoe + '%' : '-'}
                             </td>
                           )}
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">
                             {adv.successRate != null ? adv.successRate + '%' : '-'}
                           </td>
                           {isSkillPos && (
-                            <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">
+                            <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">
                               {adv.targetShare != null ? adv.targetShare + '%' : '-'}
                             </td>
                           )}
                           {(player.nflPosition === 'RB') && (
-                            <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">
+                            <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">
                               {adv.rushShare != null ? adv.rushShare + '%' : '-'}
                             </td>
                           )}
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">
                             {adv.snapPct != null ? adv.snapPct + '%' : '-'}
                           </td>
                         </tr>
@@ -530,7 +530,7 @@ export default function NflPlayerDetail() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-white/20 text-xs px-4 pb-3 pt-1">
+              <p className="text-text-primary/20 text-xs px-4 pb-3 pt-1">
                 EPA = Expected Points Added. CPOE = Completion % Over Expected. Success Rate = % of plays with positive EPA.
               </p>
             </ExpandableSection>
@@ -540,17 +540,17 @@ export default function NflPlayerDetail() {
 
       {/* ─── Game Log Tab ─── */}
       {activeTab === 'gamelog' && (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-            <h2 className="text-lg font-display font-bold text-white">Game Log</h2>
+        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-stone/30 flex items-center justify-between">
+            <h2 className="text-lg font-display font-bold text-text-primary">Game Log</h2>
             {availableSeasons.length > 1 && (
               <select
                 value={gameLogSeason || ''}
                 onChange={e => setGameLogSeason(Number(e.target.value))}
-                className="bg-[#1a1917] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:border-gold/50 focus:outline-none"
+                className="bg-[#1a1917] border border-stone/30 rounded-lg px-3 py-1.5 text-text-primary text-sm focus:border-gold/50 focus:outline-none"
               >
                 {availableSeasons.map(yr => (
-                  <option key={yr} value={yr} className="bg-[#1a1917] text-white">{yr}</option>
+                  <option key={yr} value={yr} className="bg-[#1a1917] text-text-primary">{yr}</option>
                 ))}
               </select>
             )}
@@ -558,91 +558,91 @@ export default function NflPlayerDetail() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left px-4 py-2 text-white/40 text-xs font-mono uppercase">WK</th>
-                  <th className="text-left px-4 py-2 text-white/40 text-xs font-mono uppercase">OPP</th>
-                  <th className="text-center px-4 py-2 text-white/40 text-xs font-mono uppercase">Result</th>
+                <tr className="border-b border-stone/30">
+                  <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">WK</th>
+                  <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">OPP</th>
+                  <th className="text-center px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Result</th>
                   {isQb ? (
                     <>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">CMP</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">ATT</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">YDS</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">TD</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">INT</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">RUSH</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">R.TD</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">CMP</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">ATT</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">YDS</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">TD</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">INT</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">RUSH</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">R.TD</th>
                     </>
                   ) : isK ? (
                     <>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FGM</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FGA</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">XPM</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FGM</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FGA</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">XPM</th>
                     </>
                   ) : isDst ? (
                     <>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">SACK</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">INT</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FR</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">FF</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">TD</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">SACK</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">INT</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FR</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">FF</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">TD</th>
                     </>
                   ) : (
                     <>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">RUSH</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">R.YDS</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">R.TD</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">TGT</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">REC</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">REC.YDS</th>
-                      <th className="text-right px-3 py-2 text-white/40 text-xs font-mono">REC.TD</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">RUSH</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">R.YDS</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">R.TD</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">TGT</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">REC</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">REC.YDS</th>
+                      <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">REC.TD</th>
                     </>
                   )}
-                  <th className="text-right px-4 py-2 text-white/40 text-xs font-mono uppercase">FPTS</th>
+                  <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">FPTS</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredGameLog.length === 0 ? (
-                  <tr><td colSpan={12} className="text-center py-8 text-white/20">No game data available</td></tr>
+                  <tr><td colSpan={12} className="text-center py-8 text-text-primary/20">No game data available</td></tr>
                 ) : (
                   filteredGameLog.map(g => (
-                    <tr key={g.gameId} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="px-4 py-2.5 font-mono text-sm text-white/60">{g.week}</td>
-                      <td className="px-4 py-2.5 font-mono text-sm text-white/70">
+                    <tr key={g.gameId} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                      <td className="px-4 py-2.5 font-mono text-sm text-text-primary/60">{g.week}</td>
+                      <td className="px-4 py-2.5 font-mono text-sm text-text-primary/70">
                         {g.isHome ? 'vs ' : '@ '}{g.opponent}
                       </td>
-                      <td className="px-4 py-2.5 text-center font-mono text-sm text-white/40">{g.result}</td>
+                      <td className="px-4 py-2.5 text-center font-mono text-sm text-text-primary/40">{g.result}</td>
                       {isQb ? (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.passCompletions ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.passAttempts ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{g.stats.passYards ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.passCompletions ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.passAttempts ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{g.stats.passYards ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold font-bold">{g.stats.passTds ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-red-400">{g.stats.interceptions ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.rushYards ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.rushYards ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.rushTds ?? '-'}</td>
                         </>
                       ) : isK ? (
                         <>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.fgMade ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.fgAttempts ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.xpMade ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.fgAttempts ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.xpMade ?? '-'}</td>
                         </>
                       ) : isDst ? (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{g.stats.sacks ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{g.stats.defInterceptions ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.fumblesRecovered ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.fumblesForced ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{g.stats.sacks ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{g.stats.defInterceptions ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.fumblesRecovered ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.fumblesForced ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.defTds ?? '-'}</td>
                         </>
                       ) : (
                         <>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.rushAttempts ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{g.stats.rushYards ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.rushAttempts ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{g.stats.rushYards ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.rushTds ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/40">{g.stats.targets ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/60">{g.stats.receptions ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-white/80">{g.stats.recYards ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/40">{g.stats.targets ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.receptions ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{g.stats.recYards ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.recTds ?? '-'}</td>
                         </>
                       )}
@@ -662,35 +662,35 @@ export default function NflPlayerDetail() {
       {activeTab === 'fantasy' && (
         <div className="space-y-4">
           {/* Fantasy Points by Format Comparison */}
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/10">
-              <h2 className="text-lg font-display font-bold text-white">Fantasy Points by Scoring Format</h2>
+          <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-stone/30">
+              <h2 className="text-lg font-display font-bold text-text-primary">Fantasy Points by Scoring Format</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left px-4 py-2 text-white/40 text-xs font-mono uppercase">Year</th>
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">GP</th>
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">STD Total</th>
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">STD/G</th>
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">Half Total</th>
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">Half/G</th>
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">PPR Total</th>
-                    <th className="text-right px-4 py-2 text-white/40 text-xs font-mono">PPR/G</th>
+                  <tr className="border-b border-stone/30">
+                    <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Year</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">GP</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">STD Total</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">STD/G</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">Half Total</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">Half/G</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">PPR Total</th>
+                    <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">PPR/G</th>
                   </tr>
                 </thead>
                 <tbody>
                   {seasonSummaries.map(ss => (
-                    <tr key={ss.season} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="px-4 py-2.5 font-mono text-sm font-bold text-white">{ss.season}</td>
-                      <td className="text-right px-4 py-2.5 font-mono text-sm text-white/60">{ss.totals.gamesPlayed}</td>
-                      <td className="text-right px-4 py-2.5 font-mono text-sm text-white/80">{ss.fantasyPts.standard.toFixed(1)}</td>
-                      <td className="text-right px-4 py-2.5 font-mono text-sm text-white/60">{ss.fantasyPtsPerGame.standard.toFixed(1)}</td>
+                    <tr key={ss.season} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                      <td className="px-4 py-2.5 font-mono text-sm font-bold text-text-primary">{ss.season}</td>
+                      <td className="text-right px-4 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.gamesPlayed}</td>
+                      <td className="text-right px-4 py-2.5 font-mono text-sm text-text-primary/80">{ss.fantasyPts.standard.toFixed(1)}</td>
+                      <td className="text-right px-4 py-2.5 font-mono text-sm text-text-primary/60">{ss.fantasyPtsPerGame.standard.toFixed(1)}</td>
                       <td className="text-right px-4 py-2.5 font-mono text-sm text-gold">{ss.fantasyPts.half_ppr.toFixed(1)}</td>
                       <td className="text-right px-4 py-2.5 font-mono text-sm text-gold/70">{ss.fantasyPtsPerGame.half_ppr.toFixed(1)}</td>
-                      <td className="text-right px-4 py-2.5 font-mono text-sm text-white/80">{ss.fantasyPts.ppr.toFixed(1)}</td>
-                      <td className="text-right px-4 py-2.5 font-mono text-sm text-white/60">{ss.fantasyPtsPerGame.ppr.toFixed(1)}</td>
+                      <td className="text-right px-4 py-2.5 font-mono text-sm text-text-primary/80">{ss.fantasyPts.ppr.toFixed(1)}</td>
+                      <td className="text-right px-4 py-2.5 font-mono text-sm text-text-primary/60">{ss.fantasyPtsPerGame.ppr.toFixed(1)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -700,18 +700,18 @@ export default function NflPlayerDetail() {
 
           {/* PPR vs Standard Differential (for skill positions) */}
           {isSkillPos && seasonSummaries.length > 0 && (
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-              <h3 className="text-sm font-display font-bold text-white/60 mb-3">PPR Boost</h3>
-              <p className="text-white/40 text-xs mb-3">How much this player benefits from PPR scoring vs Standard</p>
+            <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
+              <h3 className="text-sm font-display font-bold text-text-primary/60 mb-3">PPR Boost</h3>
+              <p className="text-text-primary/40 text-xs mb-3">How much this player benefits from PPR scoring vs Standard</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {seasonSummaries.map(ss => {
                   const boost = ss.fantasyPts.ppr - ss.fantasyPts.standard
                   const boostPg = ss.fantasyPtsPerGame.ppr - ss.fantasyPtsPerGame.standard
                   return (
-                    <div key={ss.season} className="bg-white/5 rounded-lg p-3 text-center">
-                      <div className="text-white/40 text-xs font-mono mb-1">{ss.season}</div>
+                    <div key={ss.season} className="bg-dark-tertiary/5 rounded-lg p-3 text-center">
+                      <div className="text-text-primary/40 text-xs font-mono mb-1">{ss.season}</div>
                       <div className="text-gold font-mono font-bold text-lg">+{boost.toFixed(1)}</div>
-                      <div className="text-white/30 text-xs font-mono">+{boostPg.toFixed(1)}/game</div>
+                      <div className="text-text-primary/30 text-xs font-mono">+{boostPg.toFixed(1)}/game</div>
                     </div>
                   )
                 })}
@@ -727,11 +727,11 @@ export default function NflPlayerDetail() {
           {newsLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="animate-pulse h-28 bg-white/5 rounded-lg" />
+                <div key={i} className="animate-pulse h-28 bg-dark-tertiary/5 rounded-lg" />
               ))}
             </div>
           ) : playerNews.length === 0 ? (
-            <div className="text-center py-12 text-white/30">
+            <div className="text-center py-12 text-text-primary/30">
               <p className="text-4xl mb-3">📰</p>
               <p>No recent news for {player.name}</p>
             </div>
@@ -745,9 +745,9 @@ export default function NflPlayerDetail() {
 
       {/* ─── Your Notes (Captures) ─── */}
       {user && (
-        <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-            <h3 className="text-sm font-display font-bold text-white">Your Notes</h3>
+        <div className="mt-6 bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-stone/30 flex items-center justify-between">
+            <h3 className="text-sm font-display font-bold text-text-primary">Your Notes</h3>
             <button
               onClick={() => setShowCaptureForm(true)}
               className="text-xs text-gold hover:text-gold/80 transition-colors flex items-center gap-1"
@@ -760,9 +760,9 @@ export default function NflPlayerDetail() {
           </div>
           <div className="p-4">
             {capturesLoading ? (
-              <div className="text-xs text-white/20 text-center py-4">Loading...</div>
+              <div className="text-xs text-text-primary/20 text-center py-4">Loading...</div>
             ) : playerCaptures.length === 0 ? (
-              <p className="text-xs text-white/30 text-center py-4">
+              <p className="text-xs text-text-primary/30 text-center py-4">
                 No notes yet.{' '}
                 <button onClick={() => setShowCaptureForm(true)} className="text-gold hover:underline">Add Note</button>
               </p>
@@ -771,24 +771,24 @@ export default function NflPlayerDetail() {
                 {playerCaptures.map(c => {
                   const verdict = c.outcomeLinked && c.outcomeData?.players?.[0]?.verdict
                   return (
-                    <div key={c.id} className="px-3 py-2 bg-white/[0.03] rounded-lg border border-white/[0.04]">
-                      <p className="text-xs text-white/70 line-clamp-3">{c.content}</p>
+                    <div key={c.id} className="px-3 py-2 bg-dark-tertiary/[0.03] rounded-lg border border-[var(--card-border)]">
+                      <p className="text-xs text-text-primary/70 line-clamp-3">{c.content}</p>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; Called it</span>}
                         {verdict === 'INCORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed</span>}
                         {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending</span>}
                         {(verdict === 'TRENDING_INCORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending</span>}
                         {c.sourceType && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.06] text-white/30">{c.sourceType}</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-dark-tertiary/[0.06] text-text-primary/30">{c.sourceType}</span>
                         )}
                         {c.sentiment && (
                           <span className={`text-[10px] font-medium ${
-                            c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-white/30'
+                            c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-text-primary/30'
                           }`}>
                             {c.sentiment === 'bullish' ? '↑' : c.sentiment === 'bearish' ? '↓' : '–'} {c.sentiment}
                           </span>
                         )}
-                        <span className="text-[10px] text-white/15">
+                        <span className="text-[10px] text-text-primary/15">
                           {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
@@ -820,7 +820,7 @@ export default function NflPlayerDetail() {
 
       {/* ─── Clutch Brief (AI Player Analysis) ─── */}
       {user && (
-        <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+        <div className="mt-6 bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
           <button
             onClick={() => {
               setShowBrief(!showBrief)
@@ -844,34 +844,34 @@ export default function NflPlayerDetail() {
                   .finally(() => setBriefLoading(false))
               }
             }}
-            className="w-full px-4 py-3 border-b border-white/10 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+            className="w-full px-4 py-3 border-b border-stone/30 flex items-center justify-between hover:bg-dark-tertiary/[0.02] transition-colors"
           >
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
-              <h3 className="text-sm font-display font-bold text-white">Clutch Brief</h3>
+              <h3 className="text-sm font-display font-bold text-text-primary">Clutch Brief</h3>
             </div>
-            <svg className={`w-4 h-4 text-white/30 transition-transform ${showBrief ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 text-text-primary/30 transition-transform ${showBrief ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           {showBrief && (
             <div className="p-4">
               {briefLoading ? (
-                <div className="flex items-center gap-2 text-xs text-white/40">
+                <div className="flex items-center gap-2 text-xs text-text-primary/40">
                   <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
                   Generating AI brief...
                 </div>
               ) : clutchBrief ? (
                 <div>
-                  <p className="text-sm text-white/60 leading-relaxed whitespace-pre-line">{clutchBrief.brief}</p>
+                  <p className="text-sm text-text-primary/60 leading-relaxed whitespace-pre-line">{clutchBrief.brief}</p>
                   {clutchBrief.keyInsight && (
                     <p className="mt-3 text-xs text-gold font-semibold">{clutchBrief.keyInsight}</p>
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-white/30">Unable to generate brief. Try again later.</p>
+                <p className="text-xs text-text-primary/30">Unable to generate brief. Try again later.</p>
               )}
             </div>
           )}
@@ -880,15 +880,15 @@ export default function NflPlayerDetail() {
 
       {/* ─── Your History (Opinion Timeline) ─── */}
       {user && timeline.length > 0 && (
-        <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+        <div className="mt-6 bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
           <button
             onClick={() => setShowTimeline(!showTimeline)}
-            className="w-full px-4 py-3 border-b border-white/10 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+            className="w-full px-4 py-3 border-b border-stone/30 flex items-center justify-between hover:bg-dark-tertiary/[0.02] transition-colors"
           >
-            <h3 className="text-sm font-display font-bold text-white">Your History with {player.name}</h3>
+            <h3 className="text-sm font-display font-bold text-text-primary">Your History with {player.name}</h3>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-white/30">{timeline.length} events</span>
-              <svg className={`w-4 h-4 text-white/30 transition-transform ${showTimeline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-[10px] text-text-primary/30">{timeline.length} events</span>
+              <svg className={`w-4 h-4 text-text-primary/30 transition-transform ${showTimeline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
@@ -905,14 +905,14 @@ export default function NflPlayerDetail() {
                     <span className="text-sm mt-0.5 w-5 text-center shrink-0">{icon}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-white/70">{label}</span>
+                        <span className="text-xs font-medium text-text-primary/70">{label}</span>
                         {ev.sentiment && (
-                          <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-emerald-400' : ev.sentiment === 'negative' ? 'text-red-400' : 'text-white/30'}`}>{ev.sentiment}</span>
+                          <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-emerald-400' : ev.sentiment === 'negative' ? 'text-red-400' : 'text-text-primary/30'}`}>{ev.sentiment}</span>
                         )}
                       </div>
-                      {detail && <p className="text-[10px] text-white/30 truncate">{detail}</p>}
+                      {detail && <p className="text-[10px] text-text-primary/30 truncate">{detail}</p>}
                     </div>
-                    <span className="text-[10px] text-white/15 shrink-0">
+                    <span className="text-[10px] text-text-primary/15 shrink-0">
                       {new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
@@ -924,8 +924,8 @@ export default function NflPlayerDetail() {
       )}
 
       {/* ─── Source Attribution ─── */}
-      <div className="mt-8 text-center text-white/15 text-xs font-mono">
-        Data via <a href="https://github.com/nflverse" target="_blank" rel="noopener noreferrer" className="hover:text-white/30 underline">nflverse</a>
+      <div className="mt-8 text-center text-text-primary/15 text-xs font-mono">
+        Data via <a href="https://github.com/nflverse" target="_blank" rel="noopener noreferrer" className="hover:text-text-primary/30 underline">nflverse</a>
       </div>
 
       {showAddToBoard && (
@@ -945,26 +945,26 @@ export default function NflPlayerDetail() {
 function QuickStat({ label, value, accent, negative }) {
   return (
     <div className="text-center">
-      <div className={`text-lg font-mono font-bold ${accent ? 'text-gold' : negative ? 'text-red-400' : 'text-white'}`}>
+      <div className={`text-lg font-mono font-bold ${accent ? 'text-gold' : negative ? 'text-red-400' : 'text-text-primary'}`}>
         {value ?? '-'}
       </div>
-      <div className="text-white/30 text-xs font-mono uppercase">{label}</div>
+      <div className="text-text-primary/30 text-xs font-mono uppercase">{label}</div>
     </div>
   )
 }
 
 function ExpandableSection({ title, subtitle, expanded, onToggle, children }) {
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full px-4 py-3 border-b border-white/10 flex items-center justify-between hover:bg-white/5 transition-colors"
+        className="w-full px-4 py-3 border-b border-stone/30 flex items-center justify-between hover:bg-dark-tertiary/5 transition-colors"
       >
         <div className="text-left">
-          <h2 className="text-lg font-display font-bold text-white">{title}</h2>
-          {subtitle && <p className="text-white/30 text-xs mt-0.5">{subtitle}</p>}
+          <h2 className="text-lg font-display font-bold text-text-primary">{title}</h2>
+          {subtitle && <p className="text-text-primary/30 text-xs mt-0.5">{subtitle}</p>}
         </div>
-        <span className={`text-white/30 text-xl transition-transform ${expanded ? 'rotate-180' : ''}`}>
+        <span className={`text-text-primary/30 text-xl transition-transform ${expanded ? 'rotate-180' : ''}`}>
           &#9662;
         </span>
       </button>

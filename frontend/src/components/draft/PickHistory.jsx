@@ -5,7 +5,7 @@ const PickHistory = ({ picks, limit = 10 }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">Recent Picks</h3>
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Recent Picks</h3>
 
       {recentPicks.length === 0 ? (
         <div className="text-center py-6 text-text-muted">
@@ -27,7 +27,7 @@ const PickHistory = ({ picks, limit = 10 }) => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span>{pick.playerFlag}</span>
-                  <span className="text-white font-medium truncate">
+                  <span className="text-text-primary font-medium truncate">
                     {pick.playerName}
                   </span>
                 </div>

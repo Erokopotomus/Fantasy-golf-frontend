@@ -40,7 +40,7 @@ const ScoreCell = ({ score, par }) => {
   // Par — plain number, no decoration
   if (diff === 0) {
     return (
-      <span className="inline-flex items-center justify-center w-7 h-7 text-white text-[11px]">
+      <span className="inline-flex items-center justify-center w-7 h-7 text-text-primary text-[11px]">
         {numText}
       </span>
     )
@@ -100,7 +100,7 @@ const PlayerScoreCard = ({ player, onClose }) => {
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-text-muted hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -118,18 +118,18 @@ const PlayerScoreCard = ({ player, onClose }) => {
           </div>
         )}
         <div className="flex-1">
-          <h3 className="text-lg font-bold font-display text-white">{player.name}</h3>
+          <h3 className="text-lg font-bold font-display text-text-primary">{player.name}</h3>
           <div className="flex items-center gap-3 text-sm text-text-secondary">
             <span>
-              Pos: <span className="text-white font-semibold">{player.position}</span>
+              Pos: <span className="text-text-primary font-semibold">{player.position}</span>
             </span>
             <span>
-              Total: <span className={`font-semibold ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-white'}`}>
+              Total: <span className={`font-semibold ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
                 {formatScore(player.score)}
               </span>
             </span>
             <span>
-              Today: <span className={`font-semibold ${parseInt(player.today) < 0 ? 'text-emerald-400' : parseInt(player.today) > 0 ? 'text-red-400' : 'text-white'}`}>
+              Today: <span className={`font-semibold ${parseInt(player.today) < 0 ? 'text-emerald-400' : parseInt(player.today) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
                 {formatScore(player.today)}
               </span>
             </span>
@@ -205,13 +205,13 @@ const PlayerScoreCard = ({ player, onClose }) => {
               <td className="p-1.5 text-center bg-dark-secondary font-bold text-[10px]">{front9Par}</td>
             </tr>
             <tr>
-              <td className="p-1.5 text-left bg-dark-tertiary/50 text-white font-medium text-[10px]">Score</td>
+              <td className="p-1.5 text-left bg-dark-tertiary/50 text-text-primary font-medium text-[10px]">Score</td>
               {front9.map(h => (
                 <td key={h.hole} className="p-0.5 text-center bg-dark-tertiary/30">
                   <ScoreCell score={h.score} par={h.par} />
                 </td>
               ))}
-              <td className="p-1.5 text-center bg-dark-tertiary/50 font-bold text-white text-[11px]">
+              <td className="p-1.5 text-center bg-dark-tertiary/50 font-bold text-text-primary text-[11px]">
                 {front9.some(h => h.score !== null) ? front9Score : '-'}
               </td>
             </tr>
@@ -240,16 +240,16 @@ const PlayerScoreCard = ({ player, onClose }) => {
               <td className="p-1.5 text-center bg-dark-secondary font-bold text-[10px]">{front9Par + back9Par}</td>
             </tr>
             <tr>
-              <td className="p-1.5 text-left bg-dark-tertiary/50 text-white font-medium text-[10px]">Score</td>
+              <td className="p-1.5 text-left bg-dark-tertiary/50 text-text-primary font-medium text-[10px]">Score</td>
               {back9.map(h => (
                 <td key={h.hole} className="p-0.5 text-center bg-dark-tertiary/30">
                   <ScoreCell score={h.score} par={h.par} />
                 </td>
               ))}
-              <td className="p-1.5 text-center bg-dark-tertiary/50 font-bold text-white text-[11px]">
+              <td className="p-1.5 text-center bg-dark-tertiary/50 font-bold text-text-primary text-[11px]">
                 {back9.some(h => h.score !== null) ? back9Score : '-'}
               </td>
-              <td className="p-1.5 text-center bg-dark-tertiary/50 font-bold text-white text-[11px]">
+              <td className="p-1.5 text-center bg-dark-tertiary/50 font-bold text-text-primary text-[11px]">
                 {(front9.some(h => h.score !== null) || back9.some(h => h.score !== null))
                   ? front9Score + back9Score
                   : '-'}

@@ -121,13 +121,13 @@ const MockDraftRecap = () => {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <Link to="/draft/history" className="text-text-secondary hover:text-white transition-colors">
+            <Link to="/draft/history" className="text-text-secondary hover:text-text-primary transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold font-display text-white">Mock Draft Recap</h1>
+              <h1 className="text-2xl font-bold font-display text-text-primary">Mock Draft Recap</h1>
               <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
                 <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
                   sport === 'nfl' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'
@@ -152,7 +152,7 @@ const MockDraftRecap = () => {
                 </span>
               </div>
               <div className="flex-1">
-                <h2 className="text-lg font-semibold font-display text-white mb-1">Your Draft Grade</h2>
+                <h2 className="text-lg font-semibold font-display text-text-primary mb-1">Your Draft Grade</h2>
                 <p className="text-text-secondary text-sm mb-3">Score: {result.overallScore}/100</p>
                 <div className="flex flex-wrap gap-4 text-sm">
                   {result.bestPick && (
@@ -174,7 +174,7 @@ const MockDraftRecap = () => {
 
           {/* Pick-by-Pick Grades */}
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold font-display text-white mb-4">Your Picks</h2>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Your Picks</h2>
             <div className="space-y-2">
               {userPicks.map((pick, i) => {
                 const pg = pickGrades.find(g => g.pickNumber === pick.pickNumber) || pickGrades[i] || {}
@@ -190,7 +190,7 @@ const MockDraftRecap = () => {
                         <span className="text-lg">{pick.playerFlag || ''}</span>
                       )}
                       <div>
-                        <p className="text-white font-medium">{pick.playerName}</p>
+                        <p className="text-text-primary font-medium">{pick.playerName}</p>
                         <p className="text-text-muted text-xs">
                           Pick #{pick.pickNumber} · Rank #{pick.playerRank || '—'}
                           {pick.pickTag && (
@@ -201,7 +201,7 @@ const MockDraftRecap = () => {
                               pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
                               pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                               pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
-                              'bg-white/10 text-white/40'
+                              'bg-dark-tertiary/10 text-text-primary/40'
                             }`}>{pick.pickTag}</span>
                           )}
                           {!pick.pickTag && pg.adpDiff != null && pg.adpDiff > 3 && (
@@ -211,7 +211,7 @@ const MockDraftRecap = () => {
                             <span className="ml-2 text-red-400">Reach</span>
                           )}
                           {pick.boardRankAtPick && (
-                            <span className="ml-1.5 text-[9px] text-white/20 font-mono">B#{pick.boardRankAtPick}</span>
+                            <span className="ml-1.5 text-[9px] text-text-primary/20 font-mono">B#{pick.boardRankAtPick}</span>
                           )}
                         </p>
                       </div>
@@ -237,7 +237,7 @@ const MockDraftRecap = () => {
           {/* Draft Board */}
           {allPicks.length > 0 && teamNames.length > 0 && (
             <Card className="mb-6 overflow-x-auto">
-              <h2 className="text-lg font-semibold font-display text-white mb-4">Draft Board</h2>
+              <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Draft Board</h2>
               <div className="min-w-[500px]">
                 <div className="grid gap-px bg-dark-border" style={{ gridTemplateColumns: `50px repeat(${result.teamCount}, 1fr)` }}>
                   {/* Headers */}
@@ -273,7 +273,7 @@ const MockDraftRecap = () => {
                                     {pick.playerPosition}
                                   </span>
                                 )}
-                                <span className="text-white text-xs">{pick.playerName?.split(' ').pop()}</span>
+                                <span className="text-text-primary text-xs">{pick.playerName?.split(' ').pop()}</span>
                                 {pg && (
                                   <span className={`ml-1 text-[10px] font-bold ${gradeColors[pg.grade] || ''}`}>{pg.grade}</span>
                                 )}
@@ -300,7 +300,7 @@ const MockDraftRecap = () => {
                   <div className="space-y-2">
                     {pickGrades.filter(pg => pg.round >= 3 && pg.score >= 80).map(s => (
                       <div key={s.pickNumber} className="flex items-center justify-between text-sm">
-                        <span className="text-white">{s.playerName}</span>
+                        <span className="text-text-primary">{s.playerName}</span>
                         <span className="text-green-400">R{s.round} · +{s.adpDiff}</span>
                       </div>
                     ))}
@@ -313,7 +313,7 @@ const MockDraftRecap = () => {
                   <div className="space-y-2">
                     {pickGrades.filter(pg => pg.score < 60).map(r => (
                       <div key={r.pickNumber} className="flex items-center justify-between text-sm">
-                        <span className="text-white">{r.playerName}</span>
+                        <span className="text-text-primary">{r.playerName}</span>
                         <span className="text-red-400">R{r.round} · {r.adpDiff}</span>
                       </div>
                     ))}
@@ -327,7 +327,7 @@ const MockDraftRecap = () => {
           {boardComparison && (
             <Card className="mt-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-white">Board vs. Reality</h3>
+                <h3 className="text-sm font-semibold text-text-primary">Board vs. Reality</h3>
                 <span className="text-xs font-mono text-gold">
                   {boardComparison.picksMatchingBoard}/{boardComparison.totalPicks} followed
                 </span>
@@ -337,17 +337,17 @@ const MockDraftRecap = () => {
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="bg-dark-primary rounded-lg p-3 text-center">
                   <div className="text-lg font-mono font-bold text-emerald-400">{boardComparison.picksMatchingBoard}</div>
-                  <div className="text-[10px] text-white/40">On Plan</div>
+                  <div className="text-[10px] text-text-primary/40">On Plan</div>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-3 text-center">
                   <div className="text-lg font-mono font-bold text-orange-400">{boardComparison.picksDeviatingFromBoard}</div>
-                  <div className="text-[10px] text-white/40">Deviated</div>
+                  <div className="text-[10px] text-text-primary/40">Deviated</div>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-3 text-center">
-                  <div className="text-lg font-mono font-bold text-white/60">
+                  <div className="text-lg font-mono font-bold text-text-primary/60">
                     {boardComparison.averageBoardRankDeviation != null ? `${boardComparison.averageBoardRankDeviation}` : '—'}
                   </div>
-                  <div className="text-[10px] text-white/40">Avg Deviation</div>
+                  <div className="text-[10px] text-text-primary/40">Avg Deviation</div>
                 </div>
               </div>
 
@@ -356,14 +356,14 @@ const MockDraftRecap = () => {
                 {(boardComparison.picks || []).map((pick, i) => {
                   const devAbs = pick.deviation != null ? Math.abs(pick.deviation) : null
                   const deviationColor = !pick.wasOnBoard ? 'text-rose-400' :
-                    devAbs === null ? 'text-white/30' :
+                    devAbs === null ? 'text-text-primary/30' :
                     devAbs <= 3 ? 'text-emerald-400' :
                     devAbs <= 8 ? 'text-yellow-400' : 'text-rose-400'
 
                   return (
                     <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-dark-primary/50">
-                      <span className="text-[10px] font-mono text-white/30 w-6 text-right shrink-0">#{pick.draftPosition}</span>
-                      <span className="text-xs text-white truncate flex-1">{pick.playerName}</span>
+                      <span className="text-[10px] font-mono text-text-primary/30 w-6 text-right shrink-0">#{pick.draftPosition}</span>
+                      <span className="text-xs text-text-primary truncate flex-1">{pick.playerName}</span>
                       {pick.pickTag && (
                         <span className={`text-[8px] font-bold px-1 py-0.5 rounded shrink-0 ${
                           pick.pickTag === 'STEAL' ? 'bg-emerald-500/20 text-emerald-400' :
@@ -372,7 +372,7 @@ const MockDraftRecap = () => {
                           pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
                           pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                           pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
-                          'bg-white/10 text-white/40'
+                          'bg-dark-tertiary/10 text-text-primary/40'
                         }`}>{pick.pickTag}</span>
                       )}
                       {pick.wasOnBoard ? (
@@ -389,12 +389,12 @@ const MockDraftRecap = () => {
 
               {/* Board players not drafted */}
               {(boardComparison.boardPlayersNotDrafted || []).length > 0 && (
-                <div className="mt-4 pt-3 border-t border-white/5">
-                  <h4 className="text-[11px] text-white/40 mb-2">Targeted but didn't draft</h4>
+                <div className="mt-4 pt-3 border-t border-stone/20">
+                  <h4 className="text-[11px] text-text-primary/40 mb-2">Targeted but didn't draft</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {boardComparison.boardPlayersNotDrafted.slice(0, 8).map((p, i) => (
-                      <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-white/30 border border-white/[0.06]">
-                        {p.playerName} <span className="text-white/15">B#{p.boardRank}</span>
+                      <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-dark-tertiary/[0.04] text-text-primary/30 border border-[var(--card-border)]">
+                        {p.playerName} <span className="text-text-primary/15">B#{p.boardRank}</span>
                       </span>
                     ))}
                   </div>

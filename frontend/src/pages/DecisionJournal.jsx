@@ -95,8 +95,8 @@ export default function DecisionJournal() {
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-white">Decision Journal</h1>
-          <p className="text-xs text-white/40 mt-0.5">Your board activity history</p>
+          <h1 className="text-xl font-bold text-text-primary">Decision Journal</h1>
+          <p className="text-xs text-text-primary/40 mt-0.5">Your board activity history</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -121,13 +121,13 @@ export default function DecisionJournal() {
             onChange={e => setEntryContent(e.target.value)}
             placeholder="What's your take? A draft strategy thought, trade idea, player insight..."
             rows={3}
-            className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50 resize-none"
+            className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
           />
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <select
               value={entryBoardId}
               onChange={e => setEntryBoardId(e.target.value)}
-              className="px-2 py-1.5 text-xs bg-dark-primary border border-white/[0.08] rounded-lg text-white/60 outline-none focus:border-gold/50"
+              className="px-2 py-1.5 text-xs bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary/60 outline-none focus:border-gold/50"
             >
               <option value="">No board (general)</option>
               {boards.map(b => (
@@ -138,19 +138,19 @@ export default function DecisionJournal() {
               value={entryPlayerName}
               onChange={e => setEntryPlayerName(e.target.value)}
               placeholder="Player name (optional)"
-              className="px-2 py-1.5 text-xs bg-dark-primary border border-white/[0.08] rounded-lg text-white/60 placeholder-white/20 outline-none focus:border-gold/50 w-40"
+              className="px-2 py-1.5 text-xs bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary/60 placeholder-text-muted outline-none focus:border-gold/50 w-40"
             />
             <div className="flex-1" />
             <button
               onClick={() => { setShowNewEntry(false); setEntryContent(''); setEntryBoardId(''); setEntryPlayerName('') }}
-              className="px-3 py-1.5 text-xs text-white/40 hover:text-white/60 transition-colors"
+              className="px-3 py-1.5 text-xs text-text-primary/40 hover:text-text-primary/60 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmitEntry}
               disabled={!entryContent.trim() || submitting}
-              className="px-4 py-1.5 text-xs font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-1.5 text-xs font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {submitting ? 'Saving...' : 'Save Entry'}
             </button>
@@ -169,7 +169,7 @@ export default function DecisionJournal() {
             key={f.key || 'all'}
             onClick={() => setSportFilter(f.key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors
-              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-white/40 border border-white/10 hover:border-white/20'}`}
+              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-text-primary/40 border border-stone/30 hover:border-stone/50'}`}
           >
             {f.label}
           </button>
@@ -182,30 +182,30 @@ export default function DecisionJournal() {
         </div>
       ) : activities.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-sm text-white/40">No board activity yet</p>
-          <p className="text-xs text-white/25 mt-1">Create a board and start ranking players to build your journal</p>
+          <p className="text-sm text-text-primary/40">No board activity yet</p>
+          <p className="text-xs text-text-primary/25 mt-1">Create a board and start ranking players to build your journal</p>
           <Link to="/lab" className="inline-block mt-3 text-xs text-gold hover:underline">Go to The Lab</Link>
         </div>
       ) : (
         <div className="space-y-6">
           {Object.entries(grouped).map(([date, items]) => (
             <div key={date}>
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/30 mb-2">{date}</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-primary/30 mb-2">{date}</h3>
               <div className="space-y-1">
                 {items.map(a => {
-                  const cfg = ACTION_CONFIG[a.action] || { icon: '\u2022', label: a.action, color: 'text-white/50' }
+                  const cfg = ACTION_CONFIG[a.action] || { icon: '\u2022', label: a.action, color: 'text-text-primary/50' }
                   const details = a.details || {}
                   return (
                     <div key={a.id} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-dark-secondary/30 hover:bg-dark-secondary/50 transition-colors">
                       <span className={`text-sm shrink-0 mt-0.5 ${cfg.color}`}>{cfg.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-white/80">
+                        <p className="text-xs text-text-primary/80">
                           {a.action === 'board_created' && (
-                            <>Created board <span className="text-white font-medium">"{details.name}"</span> from {details.startFrom || 'scratch'}</>
+                            <>Created board <span className="text-text-primary font-medium">"{details.name}"</span> from {details.startFrom || 'scratch'}</>
                           )}
                           {a.action === 'player_moved' && (
                             <>
-                              Moved <span className="text-white font-medium">{details.playerName}</span>{' '}
+                              Moved <span className="text-text-primary font-medium">{details.playerName}</span>{' '}
                               <span className={details.delta > 0 ? 'text-emerald-400' : 'text-red-400'}>
                                 {details.delta > 0 ? `\u2191${details.delta}` : `\u2193${Math.abs(details.delta)}`} spots
                               </span>
@@ -214,7 +214,7 @@ export default function DecisionJournal() {
                           )}
                           {a.action === 'player_tagged' && (
                             <>
-                              Tagged <span className="text-white font-medium">{details.playerName}</span>{' '}
+                              Tagged <span className="text-text-primary font-medium">{details.playerName}</span>{' '}
                               {(details.tags || []).map(t => (
                                 <span key={t} className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ml-1
                                   ${t === 'target' ? 'bg-emerald-500/20 text-emerald-400' : t === 'sleeper' ? 'bg-gold/20 text-gold' : 'bg-red-500/20 text-red-400'}`}>
@@ -225,20 +225,20 @@ export default function DecisionJournal() {
                           )}
                           {a.action === 'note_added' && (
                             <>
-                              Note on <span className="text-white font-medium">{details.playerName}</span>
-                              {details.note && <span className="text-white/40">: "{details.note}"</span>}
+                              Note on <span className="text-text-primary font-medium">{details.playerName}</span>
+                              {details.note && <span className="text-text-primary/40">: "{details.note}"</span>}
                             </>
                           )}
                           {a.action === 'player_added' && (
-                            <>Added <span className="text-white font-medium">{details.playerName}</span> at #{details.rank}</>
+                            <>Added <span className="text-text-primary font-medium">{details.playerName}</span> at #{details.rank}</>
                           )}
                           {a.action === 'player_removed' && (
-                            <>Removed <span className="text-white font-medium">{details.playerName}</span> from #{details.rank}</>
+                            <>Removed <span className="text-text-primary font-medium">{details.playerName}</span> from #{details.rank}</>
                           )}
                           {a.action === 'manual_entry' && (
                             <>
-                              {details.playerName && <><span className="text-white font-medium">{details.playerName}</span> — </>}
-                              <span className="text-white/60">{details.content}</span>
+                              {details.playerName && <><span className="text-text-primary font-medium">{details.playerName}</span> — </>}
+                              <span className="text-text-primary/60">{details.content}</span>
                             </>
                           )}
                         </p>
@@ -246,15 +246,15 @@ export default function DecisionJournal() {
                         {details.reasonChips?.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {details.reasonChips.map(c => (
-                              <span key={c} className="px-1.5 py-0.5 rounded-full text-[9px] font-medium border border-white/10 text-white/40">
+                              <span key={c} className="px-1.5 py-0.5 rounded-full text-[9px] font-medium border border-stone/30 text-text-primary/40">
                                 {CHIP_LABELS[c] || c}
                               </span>
                             ))}
                           </div>
                         )}
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-white/20">{formatTime(a.createdAt)}</span>
-                          {a.board && <span className="text-[10px] text-white/20">{a.board.name}</span>}
+                          <span className="text-[10px] text-text-primary/20">{formatTime(a.createdAt)}</span>
+                          {a.board && <span className="text-[10px] text-text-primary/20">{a.board.name}</span>}
                         </div>
                       </div>
                     </div>

@@ -11,7 +11,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
   if (picks.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Pick History</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Pick History</h3>
         <div className="text-center py-8 text-text-muted">
           No picks made yet
         </div>
@@ -28,7 +28,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold font-display text-white">Pick History</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">Pick History</h3>
         <div className="text-right">
           <span className="text-2xl font-bold font-display text-gold">{totalPoints}</span>
           <p className="text-xs text-text-muted">Total Points</p>
@@ -52,7 +52,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
 
               {/* Player Info */}
               <div className="flex-1">
-                <p className="text-white font-medium">{pick.playerName}</p>
+                <p className="text-text-primary font-medium">{pick.playerName}</p>
                 <p className="text-xs text-text-muted">
                   Tournament #{sortedPicks.length - index}
                 </p>
@@ -79,7 +79,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
       <div className="mt-4 pt-4 border-t border-dark-border">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-2xl font-bold font-display text-white">{picks.length}</p>
+            <p className="text-2xl font-bold font-display text-text-primary">{picks.length}</p>
             <p className="text-xs text-text-muted">Tournaments</p>
           </div>
           <div>

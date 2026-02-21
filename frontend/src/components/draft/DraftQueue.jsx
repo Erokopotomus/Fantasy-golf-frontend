@@ -38,7 +38,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
   return (
     <Card className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold font-display text-white">My Queue</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">My Queue</h3>
         <span className="text-text-muted text-sm">
           {queue.length} {queue.length === 1 ? 'player' : 'players'}
         </span>
@@ -80,7 +80,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
                 <button
                   onClick={() => moveItem(index, -1)}
                   disabled={index === 0}
-                  className="text-text-muted hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="text-text-muted hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -89,7 +89,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
                 <button
                   onClick={() => moveItem(index, 1)}
                   disabled={index === queue.length - 1}
-                  className="text-text-muted hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="text-text-muted hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -104,7 +104,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span>{player.countryFlag}</span>
-                  <span className="text-white font-medium truncate">{player.name}</span>
+                  <span className="text-text-primary font-medium truncate">{player.name}</span>
                 </div>
                 <p className="text-text-muted text-xs">
                   Rank #{player.rank} • SG: {player.stats?.sgTotal?.toFixed(2) || '—'}

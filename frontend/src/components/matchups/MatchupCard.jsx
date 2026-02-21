@@ -24,7 +24,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
       {/* Teams */}
       <div className="p-4 space-y-3">
         {/* Home Team */}
-        <div className={`flex items-center justify-between ${homeWon ? 'text-white' : 'text-text-secondary'}`}>
+        <div className={`flex items-center justify-between ${homeWon ? 'text-text-primary' : 'text-text-secondary'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
               matchup.home === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
@@ -32,7 +32,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
               {homeTeam?.avatar || '?'}
             </div>
             <div>
-              <p className={`font-medium ${homeWon ? 'text-white' : ''}`}>
+              <p className={`font-medium ${homeWon ? 'text-text-primary' : ''}`}>
                 {homeTeam?.name || 'Unknown'}
                 {matchup.home === currentUserId && <span className="text-xs text-gold ml-1">(You)</span>}
               </p>
@@ -63,7 +63,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
         </div>
 
         {/* Away Team */}
-        <div className={`flex items-center justify-between ${awayWon ? 'text-white' : 'text-text-secondary'}`}>
+        <div className={`flex items-center justify-between ${awayWon ? 'text-text-primary' : 'text-text-secondary'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
               matchup.away === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
@@ -71,7 +71,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
               {awayTeam?.avatar || '?'}
             </div>
             <div>
-              <p className={`font-medium ${awayWon ? 'text-white' : ''}`}>
+              <p className={`font-medium ${awayWon ? 'text-text-primary' : ''}`}>
                 {awayTeam?.name || 'Unknown'}
                 {matchup.away === currentUserId && <span className="text-xs text-gold ml-1">(You)</span>}
               </p>

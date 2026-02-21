@@ -49,15 +49,15 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
 
   // Recent form badge color
   const getFormBadgeStyle = (result) => {
-    if (!result) return 'bg-white/5 text-text-muted'
+    if (!result) return 'bg-dark-tertiary/5 text-text-muted'
     if (result === 'CUT') return 'bg-red-500/20 text-red-400'
     if (result === 'WD') return 'bg-gray-500/20 text-gray-400'
     const num = parseInt(result.replace('T', ''), 10)
-    if (isNaN(num)) return 'bg-white/5 text-text-secondary'
+    if (isNaN(num)) return 'bg-dark-tertiary/5 text-text-secondary'
     if (num === 1) return 'bg-gold/20 text-gold'
     if (num <= 10) return 'bg-green-500/20 text-green-400'
     if (num <= 25) return 'bg-yellow-500/20 text-yellow-400'
-    return 'bg-white/5 text-text-secondary'
+    return 'bg-dark-tertiary/5 text-text-secondary'
   }
 
   // Compute age from birthDate
@@ -121,17 +121,17 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
     {
       label: 'Events',
       value: player.events > 0 ? player.events : null,
-      color: 'text-white',
+      color: 'text-text-primary',
     },
     {
       label: 'Wins',
       value: player.wins > 0 ? player.wins : player.events > 0 ? '0' : null,
-      color: player.wins > 0 ? 'text-yellow-400' : 'text-white',
+      color: player.wins > 0 ? 'text-yellow-400' : 'text-text-primary',
     },
     {
       label: 'Top 10s',
       value: player.top10s > 0 ? player.top10s : player.events > 0 ? '0' : null,
-      color: player.top10s > 0 ? 'text-green-400' : 'text-white',
+      color: player.top10s > 0 ? 'text-green-400' : 'text-text-primary',
     },
     {
       label: 'FedEx Pts',
@@ -141,7 +141,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
   ]
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 sm:p-6">
+    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5 sm:p-6">
       {/* Top section: headshot + info + actions */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
         {/* Headshot */}
@@ -150,12 +150,12 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
             <img
               src={headshotSrc}
               alt=""
-              className="w-[120px] h-[120px] rounded-xl object-cover bg-dark-primary border border-white/10"
+              className="w-[120px] h-[120px] rounded-xl object-cover bg-dark-primary border border-stone/30"
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
             />
           ) : null}
           <div
-            className={`w-[120px] h-[120px] rounded-xl bg-dark-primary flex items-center justify-center text-5xl border border-white/10 ${hasHeadshot ? 'hidden' : ''}`}
+            className={`w-[120px] h-[120px] rounded-xl bg-dark-primary flex items-center justify-center text-5xl border border-stone/30 ${hasHeadshot ? 'hidden' : ''}`}
           >
             {player.countryFlag}
           </div>
@@ -165,7 +165,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
         <div className="flex-1 min-w-0 text-center sm:text-left">
           {/* Name + My Player badge */}
           <div className="flex items-center justify-center sm:justify-start gap-2 mb-1.5">
-            <h1 className="text-2xl font-bold font-display text-white truncate">{player.name}</h1>
+            <h1 className="text-2xl font-bold font-display text-text-primary truncate">{player.name}</h1>
             {isOnMyTeam && (
               <span className="flex-shrink-0 px-2 py-0.5 bg-gold/20 text-gold text-xs rounded font-medium">
                 My Player
@@ -221,7 +221,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
           {!isOwned && (
             <button
               onClick={onAddToRoster}
-              className="px-4 py-2 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors text-sm"
+              className="px-4 py-2 bg-gold text-text-primary rounded-lg font-medium hover:bg-gold/90 transition-colors text-sm"
             >
               Add to Roster
             </button>
@@ -229,7 +229,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
           {isOwned && !isOnMyTeam && (
             <button
               onClick={onProposeTrade}
-              className="px-4 py-2 bg-orange text-white rounded-lg font-medium hover:bg-orange/90 transition-colors text-sm"
+              className="px-4 py-2 bg-orange text-text-primary rounded-lg font-medium hover:bg-orange/90 transition-colors text-sm"
             >
               Propose Trade
             </button>
@@ -238,7 +238,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
       </div>
 
       {/* Season Stats Row */}
-      <div className="mt-5 pt-5 border-t border-white/10">
+      <div className="mt-5 pt-5 border-t border-stone/30">
         <p className="text-xs text-text-muted mb-3 text-center sm:text-left">2025–26 Season</p>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">

@@ -76,7 +76,7 @@ export default function RatingRing({
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white/40" style={{ fontSize: config.size * 0.25 }}>🔒</span>
+          <span className="text-text-primary/40" style={{ fontSize: config.size * 0.25 }}>🔒</span>
         </div>
       </div>
     )
@@ -109,7 +109,7 @@ export default function RatingRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`font-mono font-bold text-white ${config.fontSize}`}>
+        <span className={`font-mono font-bold text-text-primary ${config.fontSize}`}>
           {displayValue}
         </span>
       </div>

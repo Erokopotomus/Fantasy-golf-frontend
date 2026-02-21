@@ -46,7 +46,7 @@ const WaiverWireList = ({
     <>
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold font-display text-white">Waiver Wire</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Waiver Wire</h3>
           <span className="text-text-muted text-sm">
             {filteredPlayers.length} available
           </span>
@@ -80,7 +80,7 @@ const WaiverWireList = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-white font-medium truncate hover:text-gold transition-colors">{player.name}</span>
+                    <span className="text-text-primary font-medium truncate hover:text-gold transition-colors">{player.name}</span>
                     <span className="text-text-muted text-sm">#{player.rank}</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-text-muted">
@@ -110,13 +110,13 @@ const WaiverWireList = ({
       {showClaimModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
-            <h3 className="text-lg font-semibold font-display text-white mb-4">Claim Player</h3>
+            <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Claim Player</h3>
 
             <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{selectedPlayer?.countryFlag}</span>
                 <div>
-                  <p className="text-white font-medium">{selectedPlayer?.name}</p>
+                  <p className="text-text-primary font-medium">{selectedPlayer?.name}</p>
                   <p className="text-text-muted text-sm">
                     Rank #{selectedPlayer?.rank} • SG: {selectedPlayer?.stats?.sgTotal?.toFixed(2)}
                   </p>
@@ -150,7 +150,7 @@ const WaiverWireList = ({
                     >
                       <div className="flex items-center gap-2">
                         <span>{player.countryFlag}</span>
-                        <span className="text-white">{player.name}</span>
+                        <span className="text-text-primary">{player.name}</span>
                       </div>
                     </button>
                   ))}

@@ -100,7 +100,7 @@ const TeamSettings = () => {
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
-              <h2 className="text-xl font-bold font-display text-white mb-2">Team Not Found</h2>
+              <h2 className="text-xl font-bold font-display text-text-primary mb-2">Team Not Found</h2>
               <p className="text-text-secondary mb-6">You don't have a team in this league.</p>
               <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
                 Back to League
@@ -120,14 +120,14 @@ const TeamSettings = () => {
           <div className="mb-6">
             <Link
               to={`/leagues/${leagueId}/roster`}
-              className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+              className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Roster
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Team Settings</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary">Team Settings</h1>
             <p className="text-text-secondary">Customize your team in {league?.name}</p>
           </div>
 
@@ -151,7 +151,7 @@ const TeamSettings = () => {
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold font-display text-white">{teamName || 'Your Team'}</h2>
+                <h2 className="text-xl font-bold font-display text-text-primary">{teamName || 'Your Team'}</h2>
                 <p className="text-text-muted text-sm">{league?.name}</p>
               </div>
             </div>
@@ -159,7 +159,7 @@ const TeamSettings = () => {
 
           {/* Team Name */}
           <Card className="mb-6">
-            <h3 className="text-lg font-semibold font-display text-white mb-4">Team Name</h3>
+            <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Team Name</h3>
             <Input
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
@@ -171,7 +171,7 @@ const TeamSettings = () => {
 
           {/* Avatar Selection */}
           <Card className="mb-6">
-            <h3 className="text-lg font-semibold font-display text-white mb-4">Team Avatar</h3>
+            <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Team Avatar</h3>
 
             {/* Toggle between preset and custom */}
             <div className="flex gap-2 mb-4">
@@ -179,7 +179,7 @@ const TeamSettings = () => {
                 onClick={() => setUseCustomAvatar(false)}
                 className={`flex-1 p-3 rounded-lg border transition-colors ${
                   !useCustomAvatar
-                    ? 'bg-gold/20 border-gold text-white'
+                    ? 'bg-gold/20 border-gold text-text-primary'
                     : 'bg-dark-tertiary border-dark-border text-text-secondary hover:border-dark-border/80'
                 }`}
               >
@@ -189,7 +189,7 @@ const TeamSettings = () => {
                 onClick={() => setUseCustomAvatar(true)}
                 className={`flex-1 p-3 rounded-lg border transition-colors ${
                   useCustomAvatar
-                    ? 'bg-gold/20 border-gold text-white'
+                    ? 'bg-gold/20 border-gold text-text-primary'
                     : 'bg-dark-tertiary border-dark-border text-text-secondary hover:border-dark-border/80'
                 }`}
               >

@@ -69,22 +69,22 @@ const FeatureTip = ({
           {/* Content */}
           <div className="relative">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className="text-white font-semibold text-sm">{title}</h4>
+              <h4 className="text-text-primary font-semibold text-sm">{title}</h4>
               <button
                 onClick={handleDismiss}
-                className="text-white/70 hover:text-white transition-colors flex-shrink-0"
+                className="text-text-primary/70 hover:text-text-primary transition-colors flex-shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <p className="text-white/90 text-xs leading-relaxed">{description}</p>
+            <p className="text-text-primary/90 text-xs leading-relaxed">{description}</p>
 
             {/* Got it button */}
             <button
               onClick={handleDismiss}
-              className="mt-2 text-xs font-medium text-white bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
+              className="mt-2 text-xs font-medium text-text-primary bg-dark-tertiary/20 hover:bg-dark-tertiary/30 px-2 py-1 rounded transition-colors"
             >
               Got it!
             </button>

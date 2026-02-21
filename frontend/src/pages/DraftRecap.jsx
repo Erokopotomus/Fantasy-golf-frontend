@@ -57,13 +57,13 @@ const DraftRecap = () => {
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <Link to="/draft/history" className="text-text-secondary hover:text-white transition-colors">
+            <Link to="/draft/history" className="text-text-secondary hover:text-text-primary transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold font-display text-white">{draft.leagueName}</h1>
+              <h1 className="text-2xl font-bold font-display text-text-primary">{draft.leagueName}</h1>
               <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
                 <span className="px-2 py-0.5 bg-dark-tertiary rounded text-xs">{draft.draftType} Draft</span>
                 <span>{draft.teamCount} teams</span>
@@ -83,7 +83,7 @@ const DraftRecap = () => {
                   </span>
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold font-display text-white mb-1">Your Draft Grade</h2>
+                  <h2 className="text-lg font-semibold font-display text-text-primary mb-1">Your Draft Grade</h2>
                   <p className="text-text-secondary text-sm mb-3">Score: {userGrade.overallScore}/100</p>
                   <div className="flex flex-wrap gap-4 text-sm">
                     {userGrade.bestPick && (
@@ -112,7 +112,7 @@ const DraftRecap = () => {
 
           {/* Your Picks */}
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold font-display text-white mb-4">Your Picks</h2>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Your Picks</h2>
             <div className="space-y-2">
               {userPicks.map((pick, i) => {
                 const pg = userPickGrades.find(g => g.pickNumber === pick.pickNumber) || {}
@@ -128,7 +128,7 @@ const DraftRecap = () => {
                         </div>
                       )}
                       <div>
-                        <p className="text-white font-medium">{pick.playerName}</p>
+                        <p className="text-text-primary font-medium">{pick.playerName}</p>
                         <p className="text-text-muted text-xs">
                           Pick #{pick.pickNumber} · Rank #{pick.playerRank || '—'}
                           {pg.adpDiff != null && (
@@ -157,7 +157,7 @@ const DraftRecap = () => {
 
           {/* Draft Board */}
           <Card className="mb-6 overflow-x-auto">
-            <h2 className="text-lg font-semibold font-display text-white mb-4">Draft Board</h2>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Draft Board</h2>
             <div className="min-w-[600px]">
               {/* Team headers */}
               <div className="grid gap-px bg-dark-border" style={{ gridTemplateColumns: `60px repeat(${teams.length}, 1fr)` }}>
@@ -185,7 +185,7 @@ const DraftRecap = () => {
                         >
                           {pick ? (
                             <div className="truncate">
-                              <span className="text-white text-xs">{pick.playerName?.split(' ').pop()}</span>
+                              <span className="text-text-primary text-xs">{pick.playerName?.split(' ').pop()}</span>
                               {pg && (
                                 <span className={`ml-1 text-[10px] font-bold ${gradeColors[pg.grade] || ''}`}>{pg.grade}</span>
                               )}
@@ -205,7 +205,7 @@ const DraftRecap = () => {
           {/* Team Grades Leaderboard */}
           {sortedTeamGrades.length > 0 && (
             <Card className="mb-6">
-              <h2 className="text-lg font-semibold font-display text-white mb-4">All Teams Grades</h2>
+              <h2 className="text-lg font-semibold font-display text-text-primary mb-4">All Teams Grades</h2>
               <div className="space-y-2">
                 {sortedTeamGrades.map((grade, i) => (
                   <div
@@ -217,7 +217,7 @@ const DraftRecap = () => {
                       <span className={`text-lg font-bold ${gradeColors[grade.overallGrade] || 'text-text-muted'}`}>{grade.overallGrade}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium truncate ${grade.teamId === draft.userTeamId ? 'text-gold' : 'text-white'}`}>
+                      <p className={`font-medium truncate ${grade.teamId === draft.userTeamId ? 'text-gold' : 'text-text-primary'}`}>
                         {grade.teamName} {grade.teamId === draft.userTeamId && '(You)'}
                       </p>
                       <p className="text-text-muted text-xs">Score: {grade.overallScore}</p>
@@ -248,7 +248,7 @@ const DraftRecap = () => {
                   <div className="space-y-2">
                     {userGrade.sleepers.map(s => (
                       <div key={s.pickNumber} className="flex items-center justify-between text-sm">
-                        <span className="text-white">{s.playerName}</span>
+                        <span className="text-text-primary">{s.playerName}</span>
                         <span className="text-green-400">R{s.round} · +{s.adpDiff}</span>
                       </div>
                     ))}
@@ -266,7 +266,7 @@ const DraftRecap = () => {
                   <div className="space-y-2">
                     {userGrade.reaches.map(r => (
                       <div key={r.pickNumber} className="flex items-center justify-between text-sm">
-                        <span className="text-white">{r.playerName}</span>
+                        <span className="text-text-primary">{r.playerName}</span>
                         <span className="text-red-400">R{r.round} · {r.adpDiff}</span>
                       </div>
                     ))}

@@ -80,7 +80,7 @@ const DraftDollars = () => {
     return (
       <div className="max-w-2xl mx-auto pt-8 px-4">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold font-display text-white mb-2">Draft Dollar Trading Not Enabled</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Draft Dollar Trading Not Enabled</h2>
           <p className="text-text-secondary mb-4">The commissioner can enable this feature in League Settings.</p>
           <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">Back to League</Link>
         </Card>
@@ -97,7 +97,7 @@ const DraftDollars = () => {
       <div className="mb-6">
         <Link
           to={`/leagues/${leagueId}`}
-          className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+          className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -105,7 +105,7 @@ const DraftDollars = () => {
           Back to League
         </Link>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold font-display text-white">Draft Dollars</h1>
+          <h1 className="text-2xl font-bold font-display text-text-primary">Draft Dollars</h1>
           {isCommissioner && (
             <Button size="sm" onClick={() => setShowForm(!showForm)}>
               {showForm ? 'Cancel' : 'Record Transaction'}
@@ -117,7 +117,7 @@ const DraftDollars = () => {
       {/* Commissioner Form */}
       {showForm && isCommissioner && (
         <Card className="mb-6 border-gold/30">
-          <h3 className="text-sm font-display font-bold text-white mb-4">Record Transaction</h3>
+          <h3 className="text-sm font-display font-bold text-text-primary mb-4">Record Transaction</h3>
           <form onSubmit={handleSubmitTransaction} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -125,7 +125,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.fromTeamId}
                   onChange={(e) => setFormData(p => ({ ...p, fromTeamId: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="">None (league)</option>
                   {(balances || []).map(a => (
@@ -138,7 +138,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.toTeamId}
                   onChange={(e) => setFormData(p => ({ ...p, toTeamId: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="">None (league)</option>
                   {(balances || []).map(a => (
@@ -155,7 +155,7 @@ const DraftDollars = () => {
                   min="1"
                   value={formData.amount}
                   onChange={(e) => setFormData(p => ({ ...p, amount: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 />
               </div>
               <div>
@@ -163,7 +163,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.yearType}
                   onChange={(e) => setFormData(p => ({ ...p, yearType: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="current">Current Year</option>
                   <option value="next">Next Year</option>
@@ -174,7 +174,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData(p => ({ ...p, category: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="side_bet">Side Bet</option>
                   <option value="commissioner_adjustment">Commissioner Adjustment</option>
@@ -188,7 +188,7 @@ const DraftDollars = () => {
                 value={formData.description}
                 onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
                 placeholder="e.g., Weekly matchup side bet"
-                className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
               />
             </div>
 
@@ -214,7 +214,7 @@ const DraftDollars = () => {
 
       {/* Balances Table */}
       <Card className="mb-6">
-        <h3 className="text-sm font-display font-bold text-white mb-4">Team Balances</h3>
+        <h3 className="text-sm font-display font-bold text-text-primary mb-4">Team Balances</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -240,7 +240,7 @@ const DraftDollars = () => {
                 const getColor = (nearMin, nearMax, atMin, atMax) => {
                   if (atMin || atMax) return 'text-red-400'
                   if (nearMin || nearMax) return 'text-yellow-400'
-                  return 'text-white'
+                  return 'text-text-primary'
                 }
 
                 return (
@@ -248,7 +248,7 @@ const DraftDollars = () => {
                     key={account.teamId}
                     className={`border-b border-dark-border/30 ${isMe ? 'bg-gold/5' : ''}`}
                   >
-                    <td className={`py-3 font-medium ${isMe ? 'text-gold' : 'text-white'}`}>
+                    <td className={`py-3 font-medium ${isMe ? 'text-gold' : 'text-text-primary'}`}>
                       {account.teamName}{isMe ? ' (You)' : ''}
                     </td>
                     <td className="py-3 text-text-secondary">{account.ownerName}</td>
@@ -274,11 +274,11 @@ const DraftDollars = () => {
       {/* Transaction Ledger */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-display font-bold text-white">Transaction Ledger</h3>
+          <h3 className="text-sm font-display font-bold text-text-primary">Transaction Ledger</h3>
           <select
             value={filterTeamId}
             onChange={(e) => handleFilterChange(e.target.value)}
-            className="p-1.5 bg-dark-tertiary border border-dark-border rounded-lg text-white text-xs focus:border-gold focus:outline-none"
+            className="p-1.5 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-xs focus:border-gold focus:outline-none"
           >
             <option value="">All Teams</option>
             {(balances || []).map(a => (
@@ -298,13 +298,13 @@ const DraftDollars = () => {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-white font-medium">
+                    <span className="text-text-primary font-medium">
                       {tx.fromTeam?.name || 'League'}
                     </span>
                     <svg className="w-3 h-3 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
-                    <span className="text-white font-medium">
+                    <span className="text-text-primary font-medium">
                       {tx.toTeam?.name || 'League'}
                     </span>
                     <span className="font-mono font-bold text-gold">${tx.amount}</span>

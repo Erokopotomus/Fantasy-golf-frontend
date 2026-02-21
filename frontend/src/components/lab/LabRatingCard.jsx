@@ -14,7 +14,7 @@ export default function LabRatingCard() {
 
   if (loading) {
     return (
-      <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+      <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-dark-tertiary/50 animate-pulse shrink-0" />
           <div className="flex-1 space-y-2">
@@ -56,17 +56,17 @@ export default function LabRatingCard() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-display font-bold text-white group-hover:text-accent-gold transition-colors">
+            <span className="text-sm font-display font-bold text-text-primary group-hover:text-accent-gold transition-colors">
               {isActive ? `Clutch Rating: ${rating.overall}` : 'Clutch Rating'}
             </span>
             {isActive && rating.tier && <RatingTierBadge tier={rating.tier} size="sm" />}
           </div>
-          <div className="flex items-center gap-3 text-[10px] text-white/40">
+          <div className="flex items-center gap-3 text-[10px] text-text-primary/40">
             {draftIQ?.active && (
-              <span>Draft IQ: <span className="font-mono text-white/60">{draftIQ.score}</span></span>
+              <span>Draft IQ: <span className="font-mono text-text-primary/60">{draftIQ.score}</span></span>
             )}
             {rosterMgmt?.active && (
-              <span>Roster Mgmt: <span className="font-mono text-white/60">{rosterMgmt.score}</span></span>
+              <span>Roster Mgmt: <span className="font-mono text-text-primary/60">{rosterMgmt.score}</span></span>
             )}
             {!draftIQ?.active && !rosterMgmt?.active && (
               <span>Lab work feeds Draft IQ + Roster Management</span>
@@ -76,7 +76,7 @@ export default function LabRatingCard() {
             <p className="text-[10px] text-accent-gold/60 mt-1 truncate">{nudge}</p>
           )}
         </div>
-        <svg className="w-4 h-4 text-white/20 group-hover:text-accent-gold/50 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-text-primary/20 group-hover:text-accent-gold/50 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </div>

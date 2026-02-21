@@ -122,7 +122,7 @@ export default function NotificationSettings() {
   return (
     <div className="min-h-screen bg-dark-primary pt-20 px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold font-display text-white mb-6">Notification Settings</h1>
+        <h1 className="text-2xl font-bold font-display text-text-primary mb-6">Notification Settings</h1>
 
         {error && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4 text-red-400 text-sm">
@@ -132,11 +132,11 @@ export default function NotificationSettings() {
 
         {/* Push Notifications */}
         <div className="bg-dark-card border border-dark-border rounded-lg p-4 mb-6">
-          <h2 className="text-lg font-semibold font-display text-white mb-4">Push Notifications</h2>
+          <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Push Notifications</h2>
 
           <div className="flex items-center justify-between py-3">
             <div>
-              <p className="text-white font-medium">Desktop Push Notifications</p>
+              <p className="text-text-primary font-medium">Desktop Push Notifications</p>
               <p className="text-gray-400 text-sm">
                 {pushStatus === 'unsupported'
                   ? 'Your browser does not support push notifications'
@@ -155,7 +155,7 @@ export default function NotificationSettings() {
               } ${(pushStatus === 'unsupported' || pushStatus === 'denied') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-dark-tertiary rounded-full transition-transform ${
                   pushStatus === 'granted' && pushTokenId ? 'translate-x-6' : 'translate-x-0'
                 }`}
               />
@@ -164,21 +164,21 @@ export default function NotificationSettings() {
 
           <div className="flex items-center justify-between py-3 border-t border-dark-border">
             <div>
-              <p className="text-white font-medium">Email Notifications</p>
+              <p className="text-text-primary font-medium">Email Notifications</p>
               <p className="text-gray-400 text-sm">Coming soon</p>
             </div>
             <button
               disabled
               className="relative w-12 h-6 rounded-full bg-gray-600 opacity-50 cursor-not-allowed"
             >
-              <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full" />
+              <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-dark-tertiary rounded-full" />
             </button>
           </div>
         </div>
 
         {/* AI Coaching Preferences */}
         <div className="bg-dark-card border border-dark-border rounded-lg p-4 mb-6">
-          <h2 className="text-lg font-semibold font-display text-white mb-4">AI Coaching Preferences</h2>
+          <h2 className="text-lg font-semibold font-display text-text-primary mb-4">AI Coaching Preferences</h2>
           <p className="text-gray-400 text-sm mb-4">
             Control which types of AI coaching you receive. Disabling a category stops that type of AI analysis for your account.
           </p>
@@ -187,7 +187,7 @@ export default function NotificationSettings() {
             {Object.entries(AI_PREF_LABELS).map(([key, { label, description }]) => (
               <div key={key} className="flex items-center justify-between py-3 border-t border-dark-border first:border-t-0">
                 <div>
-                  <p className="text-white font-medium">{label}</p>
+                  <p className="text-text-primary font-medium">{label}</p>
                   <p className="text-gray-400 text-sm">{description}</p>
                 </div>
                 <button
@@ -198,7 +198,7 @@ export default function NotificationSettings() {
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-dark-tertiary rounded-full transition-transform ${
                       aiPrefs?.[key] ? 'translate-x-6' : 'translate-x-0'
                     }`}
                   />
@@ -210,7 +210,7 @@ export default function NotificationSettings() {
 
         {/* Category Toggles */}
         <div className="bg-dark-card border border-dark-border rounded-lg p-4">
-          <h2 className="text-lg font-semibold font-display text-white mb-4">Notification Categories</h2>
+          <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Notification Categories</h2>
           <p className="text-gray-400 text-sm mb-4">
             Choose which types of notifications you want to receive.
           </p>
@@ -219,7 +219,7 @@ export default function NotificationSettings() {
             {Object.entries(CATEGORY_LABELS).map(([key, { label, description }]) => (
               <div key={key} className="flex items-center justify-between py-3 border-t border-dark-border first:border-t-0">
                 <div>
-                  <p className="text-white font-medium">{label}</p>
+                  <p className="text-text-primary font-medium">{label}</p>
                   <p className="text-gray-400 text-sm">{description}</p>
                 </div>
                 <button
@@ -230,7 +230,7 @@ export default function NotificationSettings() {
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-dark-tertiary rounded-full transition-transform ${
                       prefs?.[key] ? 'translate-x-6' : 'translate-x-0'
                     }`}
                   />

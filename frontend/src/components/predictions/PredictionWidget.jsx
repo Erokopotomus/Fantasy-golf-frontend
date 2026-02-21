@@ -25,9 +25,9 @@ export default function PredictionWidget() {
 
   if (loading) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 animate-pulse">
-        <div className="h-4 bg-white/10 rounded w-24 mb-3" />
-        <div className="h-8 bg-white/10 rounded w-full" />
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 animate-pulse">
+        <div className="h-4 bg-dark-tertiary/10 rounded w-24 mb-3" />
+        <div className="h-8 bg-dark-tertiary/10 rounded w-full" />
       </div>
     )
   }
@@ -46,7 +46,7 @@ export default function PredictionWidget() {
   const total = allTimeRep?.totalPredictions || 0
 
   const tierColors = {
-    rookie: 'text-white/60',
+    rookie: 'text-text-primary/60',
     contender: 'text-blue-400',
     sharp: 'text-purple-400',
     expert: 'text-amber-400',
@@ -54,10 +54,10 @@ export default function PredictionWidget() {
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-white/80">Prove It</h3>
-        <span className={`text-xs font-mono capitalize ${tierColors[tier] || 'text-white/60'}`}>
+        <h3 className="text-sm font-semibold text-text-primary/80">Prove It</h3>
+        <span className={`text-xs font-mono capitalize ${tierColors[tier] || 'text-text-primary/60'}`}>
           {tier}
         </span>
       </div>
@@ -65,10 +65,10 @@ export default function PredictionWidget() {
       {total === 0 ? (
         /* First-time user — CTA to make first call */
         <div className="text-center py-2">
-          <p className="text-white/50 text-sm mb-3">Make your first performance call</p>
+          <p className="text-text-primary/50 text-sm mb-3">Make your first performance call</p>
           <Link
             to="/prove-it"
-            className="inline-block px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold hover:from-amber-400 hover:to-orange-400 transition-all"
+            className="inline-block px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-text-primary text-sm font-semibold hover:from-amber-400 hover:to-orange-400 transition-all"
           >
             Get Started
           </Link>
@@ -78,30 +78,30 @@ export default function PredictionWidget() {
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-white">{accuracy}%</div>
-              <div className="text-xs text-white/40">Accuracy</div>
+              <div className="text-lg font-mono font-bold text-text-primary">{accuracy}%</div>
+              <div className="text-xs text-text-primary/40">Accuracy</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-white">{streak}</div>
-              <div className="text-xs text-white/40">Streak</div>
+              <div className="text-lg font-mono font-bold text-text-primary">{streak}</div>
+              <div className="text-xs text-text-primary/40">Streak</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-white">{total}</div>
-              <div className="text-xs text-white/40">Calls</div>
+              <div className="text-lg font-mono font-bold text-text-primary">{total}</div>
+              <div className="text-xs text-text-primary/40">Calls</div>
             </div>
           </div>
 
           {/* Weekly mini-summary */}
           {weekResolved > 0 && (
-            <div className="text-center text-xs text-white/50 mb-3">
-              This week: <span className="text-white font-mono">{weekCorrect}/{weekResolved}</span>
+            <div className="text-center text-xs text-text-primary/50 mb-3">
+              This week: <span className="text-text-primary font-mono">{weekCorrect}/{weekResolved}</span>
             </div>
           )}
 
           {/* CTA */}
           <Link
             to="/prove-it"
-            className="block w-full py-2 text-center rounded-lg bg-white/5 border border-white/10 text-amber-400 text-sm font-medium hover:bg-white/10 transition-colors"
+            className="block w-full py-2 text-center rounded-lg bg-dark-tertiary/5 border border-stone/30 text-amber-400 text-sm font-medium hover:bg-dark-tertiary/10 transition-colors"
           >
             Make Calls
           </Link>

@@ -18,7 +18,7 @@ const RosterList = ({
       {/* Active Lineup */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold font-display text-white">Active Lineup</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Active Lineup</h3>
           <span className="text-text-muted text-sm">
             {activePlayers.length} players
           </span>
@@ -48,7 +48,7 @@ const RosterList = ({
       {/* Bench */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold font-display text-white">Bench</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Bench</h3>
           <span className="text-text-muted text-sm">
             {benchedPlayers.length} players
           </span>

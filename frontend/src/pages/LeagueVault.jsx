@@ -115,7 +115,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
           <span className="text-2xl font-mono font-bold text-accent-gold">{year}</span>
           <div>
             {champion && (
-              <p className="text-sm text-white font-display font-bold flex items-center gap-1.5">
+              <p className="text-sm text-text-primary font-display font-bold flex items-center gap-1.5">
                 <span className="text-accent-gold">🏆</span>
                 {avatarMap[champion.ownerName || champion.teamName] ? (
                   <img src={avatarMap[champion.ownerName || champion.teamName]} alt="" className="w-6 h-6 rounded-full object-cover" />
@@ -156,7 +156,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
               )}
               <button
                 onClick={() => { setEditing(e => !e); setSelected(new Set()) }}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors ${editing ? 'bg-rose/15 text-rose' : 'text-text-secondary hover:text-white hover:bg-dark-tertiary'}`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors ${editing ? 'bg-rose/15 text-rose' : 'text-text-secondary hover:text-text-primary hover:bg-dark-tertiary'}`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -172,7 +172,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
               <button
                 onClick={handleBulkDelete}
                 disabled={deleting}
-                className="px-3 py-1.5 bg-rose text-white rounded-lg text-xs font-display font-bold hover:bg-rose/90 disabled:opacity-50 transition-colors"
+                className="px-3 py-1.5 bg-rose text-text-primary rounded-lg text-xs font-display font-bold hover:bg-rose/90 disabled:opacity-50 transition-colors"
               >
                 {deleting ? 'Deleting...' : `Delete ${selected.size} Entr${selected.size === 1 ? 'y' : 'ies'}`}
               </button>
@@ -224,7 +224,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
                       )}
                       <td className="py-2 pl-2 font-mono text-text-secondary">{team.finalStanding || idx + 1}</td>
                       <td className="py-2">
-                        <p className="text-white font-display font-semibold text-sm">{team.ownerName || team.teamName}</p>
+                        <p className="text-text-primary font-display font-semibold text-sm">{team.ownerName || team.teamName}</p>
                         {team.teamName && team.teamName !== team.ownerName && (
                           <p className="text-xs text-text-secondary">{team.teamName}</p>
                         )}
@@ -232,7 +232,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
                       <td className="py-2 text-center font-mono text-green-400">{team.wins}</td>
                       <td className="py-2 text-center font-mono text-red-400">{team.losses}</td>
                       <td className="py-2 text-center font-mono text-text-secondary">{team.ties || 0}</td>
-                      <td className="py-2 text-right font-mono text-white">{team.pointsFor?.toFixed(1)}</td>
+                      <td className="py-2 text-right font-mono text-text-primary">{team.pointsFor?.toFixed(1)}</td>
                       <td className="py-2 text-right font-mono text-text-secondary">{team.pointsAgainst?.toFixed(1)}</td>
                       <td className="py-2 text-right pr-2">
                         {playoff.text && (
@@ -324,14 +324,14 @@ const HeadToHeadTab = ({ history }) => {
   return (
     <div className="space-y-4">
       <Card>
-        <h3 className="font-display font-bold text-white mb-4">Select Two Managers</h3>
+        <h3 className="font-display font-bold text-text-primary mb-4">Select Two Managers</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-text-secondary font-mono mb-1">Manager 1</label>
             <select
               value={ownerA}
               onChange={e => setOwnerA(e.target.value)}
-              className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+              className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
             >
               <option value="">Select...</option>
               {owners.filter(o => o !== ownerB).map(o => (
@@ -344,7 +344,7 @@ const HeadToHeadTab = ({ history }) => {
             <select
               value={ownerB}
               onChange={e => setOwnerB(e.target.value)}
-              className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+              className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
             >
               <option value="">Select...</option>
               {owners.filter(o => o !== ownerA).map(o => (
@@ -362,7 +362,7 @@ const HeadToHeadTab = ({ history }) => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-text-secondary font-mono mb-1">{ownerA}</p>
-                <p className={`text-3xl font-mono font-bold ${h2hData.winsA > h2hData.winsB ? 'text-green-400' : 'text-white'}`}>
+                <p className={`text-3xl font-mono font-bold ${h2hData.winsA > h2hData.winsB ? 'text-green-400' : 'text-text-primary'}`}>
                   {h2hData.winsA}
                 </p>
                 <p className="text-xs text-text-secondary font-mono mt-1">{h2hData.totalPtsA.toFixed(1)} pts</p>
@@ -374,7 +374,7 @@ const HeadToHeadTab = ({ history }) => {
               </div>
               <div>
                 <p className="text-xs text-text-secondary font-mono mb-1">{ownerB}</p>
-                <p className={`text-3xl font-mono font-bold ${h2hData.winsB > h2hData.winsA ? 'text-green-400' : 'text-white'}`}>
+                <p className={`text-3xl font-mono font-bold ${h2hData.winsB > h2hData.winsA ? 'text-green-400' : 'text-text-primary'}`}>
                   {h2hData.winsB}
                 </p>
                 <p className="text-xs text-text-secondary font-mono mt-1">{h2hData.totalPtsB.toFixed(1)} pts</p>
@@ -385,7 +385,7 @@ const HeadToHeadTab = ({ history }) => {
           {/* Matchup History */}
           {h2hData.matchups.length > 0 ? (
             <Card>
-              <h3 className="font-display font-bold text-white mb-3">Matchup History</h3>
+              <h3 className="font-display font-bold text-text-primary mb-3">Matchup History</h3>
               <div className="space-y-1">
                 {h2hData.matchups.map((m, i) => (
                   <div
@@ -394,11 +394,11 @@ const HeadToHeadTab = ({ history }) => {
                   >
                     <span className="font-mono text-text-secondary w-20">{m.year} W{m.week}</span>
                     <div className="flex-1 flex items-center justify-center gap-4">
-                      <span className={`font-mono ${m.winner === ownerA ? 'text-green-400 font-bold' : 'text-white'}`}>
+                      <span className={`font-mono ${m.winner === ownerA ? 'text-green-400 font-bold' : 'text-text-primary'}`}>
                         {m.ptsA.toFixed(1)}
                       </span>
                       <span className="text-text-secondary text-xs">—</span>
-                      <span className={`font-mono ${m.winner === ownerB ? 'text-green-400 font-bold' : 'text-white'}`}>
+                      <span className={`font-mono ${m.winner === ownerB ? 'text-green-400 font-bold' : 'text-text-primary'}`}>
                         {m.ptsB.toFixed(1)}
                       </span>
                     </div>
@@ -477,7 +477,7 @@ const DraftHistoryTab = ({ history }) => {
               key={y}
               onClick={() => setSelectedYear(y)}
               className={`px-3 py-1.5 rounded-lg text-sm font-mono font-bold transition-colors ${
-                selectedYear === y ? 'bg-accent-gold text-dark-primary' : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                selectedYear === y ? 'bg-accent-gold text-slate' : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
               }`}
             >
               {y}
@@ -490,7 +490,7 @@ const DraftHistoryTab = ({ history }) => {
       {draftInfo ? (
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display font-bold text-white">
+            <h3 className="font-display font-bold text-text-primary">
               {selectedYear} Draft
             </h3>
             {draftInfo.type && (
@@ -516,7 +516,7 @@ const DraftHistoryTab = ({ history }) => {
                         {pick.pick}.
                       </span>
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm text-white font-display font-semibold">
+                        <span className="text-sm text-text-primary font-display font-semibold">
                           {pick.playerName || `Player ${pick.playerId}`}
                         </span>
                         {pick.position && (
@@ -850,7 +850,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
         <select
           value={selectedOwner}
           onChange={e => { setSelectedOwner(e.target.value); setExpandedYear(null); setExpandedDraftYear(null) }}
-          className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+          className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
         >
           <option value="">Select...</option>
           {owners.map(o => (
@@ -927,7 +927,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   )}
                   {isCommissioner && (
                     <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-accent-gold rounded-full flex items-center justify-center shadow-lg pointer-events-none">
-                      <svg className="w-3 h-3 text-dark-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 text-slate" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -940,7 +940,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-display font-bold text-white mb-1 truncate">{selectedOwner}</h2>
+                  <h2 className="text-2xl font-display font-bold text-text-primary mb-1 truncate">{selectedOwner}</h2>
                   <p className="text-sm font-mono text-text-secondary">
                     {profileData.summary.totalW}-{profileData.summary.totalL}{profileData.summary.totalT > 0 ? `-${profileData.summary.totalT}` : ''} ({profileData.summary.winPct}%) · {profileData.summary.seasons} season{profileData.summary.seasons !== 1 ? 's' : ''}
                   </p>
@@ -952,15 +952,15 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   <p className="text-xs font-mono text-text-secondary mt-1">Titles</p>
                 </div>
                 <div className="bg-dark-tertiary/40 rounded-lg p-3">
-                  <p className="text-2xl font-mono font-bold text-white">{profileData.summary.runnerUps}</p>
+                  <p className="text-2xl font-mono font-bold text-text-primary">{profileData.summary.runnerUps}</p>
                   <p className="text-xs font-mono text-text-secondary mt-1">Runner-Up</p>
                 </div>
                 <div className="bg-dark-tertiary/40 rounded-lg p-3">
-                  <p className="text-2xl font-mono font-bold text-white">{profileData.summary.thirdPlaces}</p>
+                  <p className="text-2xl font-mono font-bold text-text-primary">{profileData.summary.thirdPlaces}</p>
                   <p className="text-xs font-mono text-text-secondary mt-1">3rd Place</p>
                 </div>
                 <div className="bg-dark-tertiary/40 rounded-lg p-3">
-                  <p className="text-2xl font-mono font-bold text-white">{profileData.summary.playoffApps}</p>
+                  <p className="text-2xl font-mono font-bold text-text-primary">{profileData.summary.playoffApps}</p>
                   <p className="text-xs font-mono text-text-secondary mt-1">Playoffs</p>
                 </div>
               </div>
@@ -968,13 +968,13 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
 
             {/* Section 2 — Career Highlights */}
             <Card>
-              <h3 className="font-display font-bold text-white mb-3">Career Highlights</h3>
+              <h3 className="font-display font-bold text-text-primary mb-3">Career Highlights</h3>
               <div className="space-y-2">
                 {profileData.highlights.map((h, i) => (
                   <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-dark-tertiary/20">
                     <span className="text-sm text-text-secondary">{h.label}</span>
                     <div className="text-right">
-                      <span className={`text-sm font-mono font-bold ${h.color || 'text-white'}`}>{h.value}</span>
+                      <span className={`text-sm font-mono font-bold ${h.color || 'text-text-primary'}`}>{h.value}</span>
                       {h.context && <p className="text-xs text-text-secondary">{h.context}</p>}
                     </div>
                   </div>
@@ -986,7 +986,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           {/* Section 3 — H2H Records (sortable) */}
           {profileData.h2hRecords.length > 0 && (
             <Card>
-              <h3 className="font-display font-bold text-white mb-3">Head-to-Head Records</h3>
+              <h3 className="font-display font-bold text-text-primary mb-3">Head-to-Head Records</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -1002,7 +1002,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                       ].map(col => (
                         <th
                           key={col.key}
-                          className={`${col.align} pb-2 cursor-pointer select-none hover:text-white transition-colors ${h2hSort.key === col.key ? 'text-accent-gold' : ''}`}
+                          className={`${col.align} pb-2 cursor-pointer select-none hover:text-text-primary transition-colors ${h2hSort.key === col.key ? 'text-accent-gold' : ''}`}
                           onClick={() => setH2hSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
                         >
                           {col.label}
@@ -1021,11 +1021,11 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                       return h2hSort.dir === 'desc' ? -cmp : cmp
                     }).map(r => (
                       <tr key={r.name} className="border-t border-dark-tertiary/50">
-                        <td className="py-2 font-display font-semibold text-white">{r.name}</td>
+                        <td className="py-2 font-display font-semibold text-text-primary">{r.name}</td>
                         <td className="py-2 text-center font-mono text-green-400">{r.w}</td>
                         <td className="py-2 text-center font-mono text-red-400">{r.l}</td>
                         <td className="py-2 text-center font-mono text-text-secondary">{r.t || '—'}</td>
-                        <td className="py-2 text-right font-mono text-white">{r.pf.toFixed(1)}</td>
+                        <td className="py-2 text-right font-mono text-text-primary">{r.pf.toFixed(1)}</td>
                         <td className="py-2 text-right font-mono text-text-secondary">{r.pa.toFixed(1)}</td>
                         <td className={`py-2 text-right pr-2 font-mono font-bold ${r.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {r.margin >= 0 ? '+' : ''}{r.margin.toFixed(1)}
@@ -1040,7 +1040,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
 
           {/* Section 4 — Season-by-Season (sortable) */}
           <Card>
-            <h3 className="font-display font-bold text-white mb-3">Season-by-Season</h3>
+            <h3 className="font-display font-bold text-text-primary mb-3">Season-by-Season</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -1059,7 +1059,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                     ].map(col => (
                       <th
                         key={col.key}
-                        className={`${col.align} pb-2 cursor-pointer select-none hover:text-white transition-colors ${seasonSort.key === col.key ? 'text-accent-gold' : ''}`}
+                        className={`${col.align} pb-2 cursor-pointer select-none hover:text-text-primary transition-colors ${seasonSort.key === col.key ? 'text-accent-gold' : ''}`}
                         onClick={() => setSeasonSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
                       >
                         {col.label}
@@ -1085,7 +1085,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                       <tr key={s.year} className="border-t border-dark-tertiary/50 hover:bg-dark-tertiary/20">
                         <td className="py-2 font-mono font-bold text-accent-gold">{s.year}</td>
                         <td className="py-2 text-center font-mono text-text-secondary">{s.place || '—'}</td>
-                        <td className="py-2 font-display text-white text-xs">
+                        <td className="py-2 font-display text-text-primary text-xs">
                           <span>{s.teamName}</span>
                           {playoff.text && (
                             <span className={`ml-1.5 text-xs font-mono px-1 py-0.5 rounded ${playoff.color}`}>{playoff.text}</span>
@@ -1094,9 +1094,9 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                         <td className="py-2 text-center font-mono text-green-400">{s.wins}</td>
                         <td className="py-2 text-center font-mono text-red-400">{s.losses}</td>
                         <td className="py-2 text-center font-mono text-text-secondary">{s.ties || '—'}</td>
-                        <td className="py-2 text-right font-mono text-white">{s.pf.toFixed(1)}</td>
+                        <td className="py-2 text-right font-mono text-text-primary">{s.pf.toFixed(1)}</td>
                         <td className="py-2 text-right font-mono text-text-secondary">{s.pa.toFixed(1)}</td>
-                        <td className="py-2 text-right font-mono text-white">{s.pfAvg > 0 ? s.pfAvg.toFixed(1) : '—'}</td>
+                        <td className="py-2 text-right font-mono text-text-primary">{s.pfAvg > 0 ? s.pfAvg.toFixed(1) : '—'}</td>
                         <td className="py-2 text-right pr-2 font-mono text-text-secondary">{s.streak}</td>
                       </tr>
                     )
@@ -1107,9 +1107,9 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                     <td className="py-2 text-center font-mono font-bold text-green-400">{profileData.summary.totalW}</td>
                     <td className="py-2 text-center font-mono font-bold text-red-400">{profileData.summary.totalL}</td>
                     <td className="py-2 text-center font-mono font-bold text-text-secondary">{profileData.summary.totalT || '—'}</td>
-                    <td className="py-2 text-right font-mono font-bold text-white">{profileData.summary.totalPF.toFixed(1)}</td>
+                    <td className="py-2 text-right font-mono font-bold text-text-primary">{profileData.summary.totalPF.toFixed(1)}</td>
                     <td className="py-2 text-right font-mono font-bold text-text-secondary">{profileData.summary.totalPA.toFixed(1)}</td>
-                    <td className="py-2 text-right font-mono font-bold text-white">{profileData.summary.winPct}%</td>
+                    <td className="py-2 text-right font-mono font-bold text-text-primary">{profileData.summary.winPct}%</td>
                     <td className="py-2" />
                   </tr>
                 </tbody>
@@ -1121,7 +1121,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           {/* Section 6 — Draft History */}
           {Object.keys(profileData.draftHistory).length > 0 && (
             <Card>
-              <h3 className="font-display font-bold text-white mb-3">Draft History</h3>
+              <h3 className="font-display font-bold text-text-primary mb-3">Draft History</h3>
               <div className="space-y-1">
                 {Object.entries(profileData.draftHistory)
                   .sort(([a], [b]) => parseInt(b) - parseInt(a))
@@ -1164,7 +1164,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                                       Rd {pick.round}, #{pick.pick}
                                     </span>
                                   )}
-                                  <span className={`font-display font-semibold ${pick.playerName ? 'text-white' : 'text-text-secondary'}`}>
+                                  <span className={`font-display font-semibold ${pick.playerName ? 'text-text-primary' : 'text-text-secondary'}`}>
                                     {pick.playerName || '(Unknown)'}
                                   </span>
                                   {pick.position && (
@@ -1199,7 +1199,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
             const missingYears = allYears.filter(y => !logYears.has(y)).sort()
             return (
               <Card>
-                <h3 className="font-display font-bold text-white mb-3">Weekly Matchup Log</h3>
+                <h3 className="font-display font-bold text-text-primary mb-3">Weekly Matchup Log</h3>
                 {Object.keys(profileData.weeklyLog).length > 0 ? (
                   <div className="space-y-1">
                     {Object.entries(profileData.weeklyLog)
@@ -1233,10 +1233,10 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                                     <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${RESULT_BADGE[w.result]}`}>
                                       {w.result}
                                     </span>
-                                    <span className="text-white text-xs font-display">vs {w.opponent}</span>
+                                    <span className="text-text-primary text-xs font-display">vs {w.opponent}</span>
                                   </div>
                                   <div className="flex items-center gap-3 font-mono text-xs">
-                                    <span className="text-white">{w.pf.toFixed(1)}</span>
+                                    <span className="text-text-primary">{w.pf.toFixed(1)}</span>
                                     <span className="text-text-secondary">-</span>
                                     <span className="text-text-secondary">{w.pa.toFixed(1)}</span>
                                     <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -1332,13 +1332,13 @@ const CustomDataTab = ({ leagueId }) => {
     return (
       <Card className="text-center py-12">
         <div className="text-3xl mb-3">&#128203;</div>
-        <h3 className="font-display font-bold text-white mb-2">No Custom Data Yet</h3>
+        <h3 className="font-display font-bold text-text-primary mb-2">No Custom Data Yet</h3>
         <p className="text-text-secondary text-sm mb-4">
           Import your league's custom records, awards, punishments, and more.
         </p>
         <Link
           to={`/import/custom?leagueId=${leagueId}`}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent-gold text-slate rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90"
         >
           Import Custom Data
         </Link>
@@ -1387,7 +1387,7 @@ const CustomDataTab = ({ leagueId }) => {
                       {item.seasonYear && (
                         <span className="text-xs font-mono text-accent-gold">{item.seasonYear}</span>
                       )}
-                      <span className="text-sm text-white font-display">
+                      <span className="text-sm text-text-primary font-display">
                         {item.sourceFileName || item.sourceType}
                       </span>
                       <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
@@ -1422,7 +1422,7 @@ const CustomDataTab = ({ leagueId }) => {
                           {item.data.rows.slice(0, 20).map((row, idx) => (
                             <tr key={idx} className="border-b border-dark-tertiary/30">
                               {Object.values(row).map((val, j) => (
-                                <td key={j} className="py-1 pr-3 text-white">
+                                <td key={j} className="py-1 pr-3 text-text-primary">
                                   {val != null ? String(val) : ''}
                                 </td>
                               ))}
@@ -1513,10 +1513,10 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
       >
         <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-display font-bold text-white">Add Season Manually</h2>
+            <h2 className="text-lg font-display font-bold text-text-primary">Add Season Manually</h2>
             <p className="text-xs text-text-secondary mt-1">For years before your digital league history</p>
           </div>
-          <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-xl">&times;</button>
         </div>
 
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
@@ -1527,7 +1527,7 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
                 type="number"
                 value={year}
                 onChange={e => setYear(parseInt(e.target.value) || 2020)}
-                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
               />
             </div>
             <div>
@@ -1538,7 +1538,7 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
                 onChange={e => updateTeamCount(parseInt(e.target.value) || 12)}
                 min={2}
                 max={20}
-                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold"
+                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
               />
             </div>
           </div>
@@ -1556,26 +1556,26 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
                     placeholder="Manager name"
                     value={team.ownerName}
                     onChange={e => updateTeam(idx, 'ownerName', e.target.value)}
-                    className="flex-1 min-w-0 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm focus:outline-none focus:border-accent-gold"
+                    className="flex-1 min-w-0 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     placeholder="W"
                     value={team.wins || ''}
                     onChange={e => updateTeam(idx, 'wins', e.target.value)}
-                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center focus:outline-none focus:border-accent-gold"
+                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     placeholder="L"
                     value={team.losses || ''}
                     onChange={e => updateTeam(idx, 'losses', e.target.value)}
-                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center focus:outline-none focus:border-accent-gold"
+                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center focus:outline-none focus:border-accent-gold"
                   />
                   <select
                     value={team.playoffResult}
                     onChange={e => updateTeam(idx, 'playoffResult', e.target.value)}
-                    className="w-28 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm focus:outline-none focus:border-accent-gold"
+                    className="w-28 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm focus:outline-none focus:border-accent-gold"
                   >
                     <option value="">—</option>
                     <option value="champion">Champion</option>
@@ -1597,14 +1597,14 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
         <div className="p-5 border-t border-dark-tertiary flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
+            className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-50"
+            className="px-4 py-2 bg-accent-gold text-slate rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Add Season'}
           </button>
@@ -1783,7 +1783,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
         <div className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
           <div className="p-5 border-b border-dark-tertiary">
-            <h2 className="text-lg font-display font-bold text-white">Step 1: Who's in your league?</h2>
+            <h2 className="text-lg font-display font-bold text-text-primary">Step 1: Who's in your league?</h2>
             <p className="text-xs text-text-secondary mt-1">
               Tap the names of real people. Team names like "SWAMP DONKEYS" can be assigned to people in the next step.
             </p>
@@ -1793,7 +1793,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
               {allRawNames.sort().map(name => (
                 <div key={name} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-dark-tertiary/30 hover:bg-dark-tertiary/50 transition-colors">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm text-white font-display truncate">{name}</span>
+                    <span className="text-sm text-text-primary font-display truncate">{name}</span>
                     {nameToYears[name] && (
                       <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
                         {formatYearRanges(nameToYears[name])}
@@ -1820,7 +1820,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
             >
               + Type a name
             </button>
-            <button onClick={onClose} className="px-4 py-2 text-sm text-text-secondary hover:text-white">Cancel</button>
+            <button onClick={onClose} className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary">Cancel</button>
           </div>
         </div>
       </div>
@@ -1834,14 +1834,14 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
         {/* Header */}
         <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-display font-bold text-white">Manage Owners</h2>
+            <h2 className="text-lg font-display font-bold text-text-primary">Manage Owners</h2>
             <p className="text-xs text-text-secondary mt-1">
               {unassigned.length > 0
                 ? `Select an owner, then tap team names to assign them`
                 : `All names assigned`}
             </p>
           </div>
-          <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-xl">&times;</button>
         </div>
 
         {/* Owner tabs */}
@@ -1855,8 +1855,8 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                 onClick={() => setActiveOwner(isActive ? null : name)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-display font-bold transition-colors ${
                   isActive
-                    ? 'bg-accent-gold text-dark-primary'
-                    : 'bg-dark-tertiary text-white hover:bg-dark-tertiary/80'
+                    ? 'bg-accent-gold text-slate'
+                    : 'bg-dark-tertiary text-text-primary hover:bg-dark-tertiary/80'
                 }`}
               >
                 {name}
@@ -1884,7 +1884,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
             <div className="px-5 py-3 bg-dark-tertiary/20 border-b border-dark-tertiary/30">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <span className="text-sm font-display font-bold text-white">{activeOwner}</span>
+                  <span className="text-sm font-display font-bold text-text-primary">{activeOwner}</span>
                   {activeOwnerYears.size > 0 && (
                     <span className="ml-2 text-[10px] font-mono text-text-secondary/60">
                       {formatYearRanges([...activeOwnerYears])} ({activeOwnerYears.size} season{activeOwnerYears.size !== 1 ? 's' : ''})
@@ -1953,7 +1953,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm text-white font-display truncate">{name}</span>
+                          <span className="text-sm text-text-primary font-display truncate">{name}</span>
                           {yrs.length > 0 && (
                             <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
                               {formatYearRanges(yrs)}
@@ -1998,11 +1998,11 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
             {ownerNames.length} owner{ownerNames.length !== 1 ? 's' : ''} &middot; {unassigned.length} unassigned
           </span>
           <div className="flex items-center gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors">Cancel</button>
+            <button onClick={onClose} className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors">Cancel</button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-5 py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright disabled:opacity-50 shadow-lg shadow-gold/30"
+              className="px-5 py-2.5 bg-gold text-slate rounded-lg font-display font-bold text-sm hover:bg-gold-bright disabled:opacity-50 shadow-lg shadow-gold/30"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -2373,7 +2373,7 @@ const LeagueVault = () => {
           <div className="mb-6">
             <Link
               to={`/leagues/${leagueId}`}
-              className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-4"
+              className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-4"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -2382,7 +2382,7 @@ const LeagueVault = () => {
             </Link>
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-1">
+                <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-1">
                   League Vault
                 </h1>
                 <p className="text-text-secondary">
@@ -2435,7 +2435,7 @@ const LeagueVault = () => {
                 {years.length > 0 && (
                   <button
                     onClick={handleExport}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-secondary bg-dark-tertiary rounded-lg hover:text-white hover:bg-dark-tertiary/80 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-secondary bg-dark-tertiary rounded-lg hover:text-text-primary hover:bg-dark-tertiary/80 transition-colors"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -2457,11 +2457,11 @@ const LeagueVault = () => {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-display font-bold text-white mb-1.5">
+                  <p className="text-base font-display font-bold text-text-primary mb-1.5">
                     One more step — assign teams to owners
                   </p>
                   <p className="text-sm text-text-secondary leading-relaxed mb-2">
-                    You're seeing <span className="text-white font-bold">{allRawNames.length} team names</span> across {years.length} seasons because
+                    You're seeing <span className="text-text-primary font-bold">{allRawNames.length} team names</span> across {years.length} seasons because
                     Yahoo's older API doesn't track which manager owned which team each year.
                     <span className="text-accent-gold font-bold"> The good news:</span> all your data is here — every win,
                     loss, matchup, and championship is preserved.
@@ -2472,7 +2472,7 @@ const LeagueVault = () => {
                   </p>
                   <Link
                     to={`/leagues/${leagueId}/vault/assign-owners`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-gold to-orange text-dark-primary rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 transition-all"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-gold to-orange text-slate rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 transition-all"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2549,7 +2549,7 @@ const LeagueVault = () => {
                 <div className="mt-4 pt-3 border-t border-dark-tertiary/50 space-y-2">
                   {health.missingYears?.length > 0 && (
                     <div className="bg-red-500/10 rounded-lg p-3">
-                      <p className="text-sm text-white font-medium mb-1">Missing: {health.missingYears.join(', ')}</p>
+                      <p className="text-sm text-text-primary font-medium mb-1">Missing: {health.missingYears.join(', ')}</p>
                       <p className="text-xs text-text-secondary">
                         Add these years manually or re-import with a different league ID.
                       </p>
@@ -2561,10 +2561,10 @@ const LeagueVault = () => {
                       <div className="flex items-start gap-3">
                         <span className="text-lg flex-shrink-0">👤</span>
                         <div>
-                          <p className="text-sm text-white font-medium">Map Your Owner Names</p>
+                          <p className="text-sm text-text-primary font-medium">Map Your Owner Names</p>
                           <p className="text-xs text-text-secondary mt-1 leading-relaxed">
                             Some team names couldn't be auto-matched to current owners — especially for older Yahoo seasons (pre-2013) where manager names aren't available.
-                            This is normal! Just tap <strong className="text-white">Manage Owners</strong> below to match team names to real people. Takes about a minute.
+                            This is normal! Just tap <strong className="text-text-primary">Manage Owners</strong> below to match team names to real people. Takes about a minute.
                           </p>
                           <Link
                             to={`/leagues/${leagueId}/vault/assign-owners`}
@@ -2583,7 +2583,7 @@ const LeagueVault = () => {
                       <div className="flex items-start gap-3">
                         <span className="text-lg flex-shrink-0">📊</span>
                         <div className="flex-1">
-                          <p className="text-sm text-white font-medium">Weekly Score Data Available</p>
+                          <p className="text-sm text-text-primary font-medium">Weekly Score Data Available</p>
                           <p className="text-xs text-text-secondary mt-1 leading-relaxed">
                             {health.issues.filter(i => i.type === 'MISSING_WEEKLY_SCORES').length} season{health.issues.filter(i => i.type === 'MISSING_WEEKLY_SCORES').length !== 1 ? 's are' : ' is'} missing
                             week-by-week scores. Yahoo has this data — tap below to pull it in.
@@ -2622,7 +2622,7 @@ const LeagueVault = () => {
                         issue.severity === 'medium' ? 'bg-accent-gold/10' :
                         'bg-dark-tertiary/30'
                       }`}>
-                        <p className="text-sm text-white">{issue.message}</p>
+                        <p className="text-sm text-text-primary">{issue.message}</p>
                         {issue.repairAction === 'EDIT_SEASON' && issue.seasonYear && (
                           <button
                             onClick={() => setEditSeasonYear(issue.seasonYear)}
@@ -2699,7 +2699,7 @@ const LeagueVault = () => {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={`flex-1 px-3 py-2 rounded-md text-sm font-display font-bold transition-colors ${
-                  tab === t.id ? 'bg-dark-tertiary text-white' : 'text-text-secondary hover:text-white'
+                  tab === t.id ? 'bg-dark-tertiary text-text-primary' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {t.label}
@@ -2736,28 +2736,28 @@ const LeagueVault = () => {
                 </Card>
                 <Card className="text-center">
                   <p className="text-xs text-text-secondary font-mono uppercase mb-1">Most Titles</p>
-                  <p className="text-lg font-display font-bold text-white truncate">{allTimeRecords.mostChampionships.name || '—'}</p>
+                  <p className="text-lg font-display font-bold text-text-primary truncate">{allTimeRecords.mostChampionships.name || '—'}</p>
                   {allTimeRecords.mostChampionships.count > 0 && (
                     <p className="text-xs font-mono text-accent-gold">{allTimeRecords.mostChampionships.count}x 🏆</p>
                   )}
                 </Card>
                 <Card className="text-center">
                   <p className="text-xs text-text-secondary font-mono uppercase mb-1">Best Season</p>
-                  <p className="text-lg font-mono font-bold text-white">{allTimeRecords.highestPF.value?.toFixed(1) || '—'}</p>
+                  <p className="text-lg font-mono font-bold text-text-primary">{allTimeRecords.highestPF.value?.toFixed(1) || '—'}</p>
                   {allTimeRecords.highestPF.name && (
                     <p className="text-xs text-text-secondary truncate">{allTimeRecords.highestPF.name} ({allTimeRecords.highestPF.year})</p>
                   )}
                 </Card>
                 <Card className="text-center">
                   <p className="text-xs text-text-secondary font-mono uppercase mb-1">Best Week</p>
-                  <p className="text-lg font-mono font-bold text-white">{allTimeRecords.highestWeek.value?.toFixed(1) || '—'}</p>
+                  <p className="text-lg font-mono font-bold text-text-primary">{allTimeRecords.highestWeek.value?.toFixed(1) || '—'}</p>
                   {allTimeRecords.highestWeek.name && (
                     <p className="text-xs text-text-secondary truncate">{allTimeRecords.highestWeek.name} ({allTimeRecords.highestWeek.year} W{allTimeRecords.highestWeek.week})</p>
                   )}
                 </Card>
                 <Card className="text-center">
                   <p className="text-xs text-text-secondary font-mono uppercase mb-1">Biggest Blowout</p>
-                  <p className="text-lg font-mono font-bold text-white">{allTimeRecords.biggestBlowout.value?.toFixed(1) || '—'}</p>
+                  <p className="text-lg font-mono font-bold text-text-primary">{allTimeRecords.biggestBlowout.value?.toFixed(1) || '—'}</p>
                   {allTimeRecords.biggestBlowout.winner && (
                     <p className="text-xs text-text-secondary truncate">{allTimeRecords.biggestBlowout.winner} over {allTimeRecords.biggestBlowout.loser}</p>
                   )}
@@ -2767,7 +2767,7 @@ const LeagueVault = () => {
                 </Card>
                 <Card className="text-center">
                   <p className="text-xs text-text-secondary font-mono uppercase mb-1">Win Streak</p>
-                  <p className="text-lg font-mono font-bold text-white">{allTimeRecords.longestStreak.value || '—'}</p>
+                  <p className="text-lg font-mono font-bold text-text-primary">{allTimeRecords.longestStreak.value || '—'}</p>
                   {allTimeRecords.longestStreak.name && (
                     <p className="text-xs text-text-secondary truncate">{allTimeRecords.longestStreak.name} ({allTimeRecords.longestStreak.year})</p>
                   )}
@@ -2777,7 +2777,7 @@ const LeagueVault = () => {
               {/* All-Time Standings */}
               <Card>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display font-bold text-white">All-Time Standings</h3>
+                  <h3 className="font-display font-bold text-text-primary">All-Time Standings</h3>
                   {inactiveOwnerSet.size > 0 && (
                     <button
                       onClick={() => setShowActiveOnly(prev => !prev)}
@@ -2804,7 +2804,7 @@ const LeagueVault = () => {
                         ].map(col => (
                           <th
                             key={col.key}
-                            className={`${col.align} pb-2 cursor-pointer select-none hover:text-white transition-colors ${recordsSort.key === col.key ? 'text-accent-gold' : ''}`}
+                            className={`${col.align} pb-2 cursor-pointer select-none hover:text-text-primary transition-colors ${recordsSort.key === col.key ? 'text-accent-gold' : ''}`}
                             onClick={() => setRecordsSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
                           >
                             {col.label}
@@ -2838,13 +2838,13 @@ const LeagueVault = () => {
                                     {(owner.name || '?').charAt(0).toUpperCase()}
                                   </span>
                                 )}
-                                <span className="font-display font-semibold text-white">{owner.name}</span>
+                                <span className="font-display font-semibold text-text-primary">{owner.name}</span>
                               </div>
                             </td>
                             <td className="py-2 text-center font-mono text-green-400">{owner.wins}</td>
                             <td className="py-2 text-center font-mono text-red-400">{owner.losses}</td>
                             <td className="py-2 text-center font-mono text-text-muted">{owner.ties || 0}</td>
-                            <td className="py-2 text-center font-mono text-white">{(owner.winPct * 100).toFixed(1)}%</td>
+                            <td className="py-2 text-center font-mono text-text-primary">{(owner.winPct * 100).toFixed(1)}%</td>
                             <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPF.toFixed(1)}</td>
                             <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPA.toFixed(1)}</td>
                             <td className="py-2 text-center font-mono text-accent-gold">

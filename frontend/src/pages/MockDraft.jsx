@@ -95,14 +95,14 @@ const MockDraft = () => {
           <div className="mb-8">
             <button
               onClick={() => navigate('/dashboard')}
-              className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-4"
+              className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-4"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Dashboard
             </button>
-            <h1 className="text-3xl font-bold font-display text-white mb-2">Mock Draft</h1>
+            <h1 className="text-3xl font-bold font-display text-text-primary mb-2">Mock Draft</h1>
             <p className="text-text-secondary">
               Practice your draft strategy against AI opponents. Experiment with different picks and positions.
             </p>
@@ -110,7 +110,7 @@ const MockDraft = () => {
 
           {/* Settings */}
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold font-display text-white mb-6">Draft Settings</h2>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-6">Draft Settings</h2>
 
             <div className="space-y-6">
               {/* Sport Selector */}
@@ -122,7 +122,7 @@ const MockDraft = () => {
                     className={`py-3 px-4 rounded-lg border-2 text-center font-semibold transition-all ${
                       sport === 'golf'
                         ? 'border-gold bg-gold/10 text-gold'
-                        : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-dark-border/80 hover:text-white'
+                        : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-dark-border/80 hover:text-text-primary'
                     }`}
                   >
                     Golf
@@ -132,7 +132,7 @@ const MockDraft = () => {
                     className={`py-3 px-4 rounded-lg border-2 text-center font-semibold transition-all ${
                       sport === 'nfl'
                         ? 'border-gold bg-gold/10 text-gold'
-                        : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-dark-border/80 hover:text-white'
+                        : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-dark-border/80 hover:text-text-primary'
                     }`}
                   >
                     NFL
@@ -158,7 +158,7 @@ const MockDraft = () => {
                       }`}>
                         🐍
                       </div>
-                      <span className={`font-semibold ${settings.draftType === 'snake' ? 'text-gold' : 'text-white'}`}>
+                      <span className={`font-semibold ${settings.draftType === 'snake' ? 'text-gold' : 'text-text-primary'}`}>
                         Snake
                       </span>
                     </div>
@@ -178,7 +178,7 @@ const MockDraft = () => {
                       }`}>
                         💰
                       </div>
-                      <span className={`font-semibold ${settings.draftType === 'auction' ? 'text-gold' : 'text-white'}`}>
+                      <span className={`font-semibold ${settings.draftType === 'auction' ? 'text-gold' : 'text-text-primary'}`}>
                         Auction
                       </span>
                     </div>
@@ -201,8 +201,8 @@ const MockDraft = () => {
                       }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.teamCount === count
-                          ? 'bg-gold text-white'
-                          : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                          ? 'bg-gold text-text-primary'
+                          : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
                       }`}
                     >
                       {count}
@@ -221,8 +221,8 @@ const MockDraft = () => {
                       onClick={() => setSettings(s => ({ ...s, rosterSize: size }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.rosterSize === size
-                          ? 'bg-gold text-white'
-                          : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                          ? 'bg-gold text-text-primary'
+                          : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
                       }`}
                     >
                       {size}
@@ -246,8 +246,8 @@ const MockDraft = () => {
                         onClick={() => setSettings(s => ({ ...s, scoring: fmt.key }))}
                         className={`py-3 rounded-lg font-semibold transition-all ${
                           settings.scoring === fmt.key
-                            ? 'bg-gold text-white'
-                            : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                            ? 'bg-gold text-text-primary'
+                            : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
                         }`}
                       >
                         {fmt.label}
@@ -264,7 +264,7 @@ const MockDraft = () => {
                   <select
                     value={selectedBoardId || ''}
                     onChange={(e) => setSelectedBoardId(e.target.value || null)}
-                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
                   >
                     <option value="">None — use default rankings</option>
                     {boards.map(b => (
@@ -289,7 +289,7 @@ const MockDraft = () => {
                     <select
                       value={settings.userPosition}
                       onChange={(e) => setSettings(s => ({ ...s, userPosition: parseInt(e.target.value) }))}
-                      className="flex-1 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+                      className="flex-1 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
                     >
                       {Array.from({ length: settings.teamCount }, (_, i) => (
                         <option key={i + 1} value={i + 1}>
@@ -303,7 +303,7 @@ const MockDraft = () => {
                         ...s,
                         userPosition: Math.floor(Math.random() * s.teamCount) + 1
                       }))}
-                      className="p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-secondary hover:text-white transition-colors"
+                      className="p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-secondary hover:text-text-primary transition-colors"
                       title="Randomize"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,8 +324,8 @@ const MockDraft = () => {
                       onClick={() => setSettings(s => ({ ...s, pickTimer: time }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.pickTimer === time
-                          ? 'bg-gold text-white'
-                          : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                          ? 'bg-gold text-text-primary'
+                          : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
                       }`}
                     >
                       {time}s
@@ -342,29 +342,29 @@ const MockDraft = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-text-muted text-xs">Sport</p>
-                <p className="text-white font-medium uppercase">{sport}</p>
+                <p className="text-text-primary font-medium uppercase">{sport}</p>
               </div>
               <div>
                 <p className="text-text-muted text-xs">Type</p>
-                <p className="text-white font-medium capitalize">{settings.draftType}</p>
+                <p className="text-text-primary font-medium capitalize">{settings.draftType}</p>
               </div>
               <div>
                 <p className="text-text-muted text-xs">Teams</p>
-                <p className="text-white font-medium">{settings.teamCount}</p>
+                <p className="text-text-primary font-medium">{settings.teamCount}</p>
               </div>
               <div>
                 <p className="text-text-muted text-xs">Roster Size</p>
-                <p className="text-white font-medium">{settings.rosterSize} players</p>
+                <p className="text-text-primary font-medium">{settings.rosterSize} players</p>
               </div>
               {sport === 'nfl' && (
                 <div>
                   <p className="text-text-muted text-xs">Scoring</p>
-                  <p className="text-white font-medium">{settings.scoring === 'half_ppr' ? 'Half PPR' : settings.scoring === 'ppr' ? 'PPR' : 'Standard'}</p>
+                  <p className="text-text-primary font-medium">{settings.scoring === 'half_ppr' ? 'Half PPR' : settings.scoring === 'ppr' ? 'PPR' : 'Standard'}</p>
                 </div>
               )}
               <div>
                 <p className="text-text-muted text-xs">Total Picks</p>
-                <p className="text-white font-medium">{settings.teamCount * settings.rosterSize}</p>
+                <p className="text-text-primary font-medium">{settings.teamCount * settings.rosterSize}</p>
               </div>
               {settings.draftType === 'snake' && (
                 <div>
@@ -376,7 +376,7 @@ const MockDraft = () => {
               )}
               <div>
                 <p className="text-text-muted text-xs">Pick Timer</p>
-                <p className="text-white font-medium">{settings.pickTimer}s</p>
+                <p className="text-text-primary font-medium">{settings.pickTimer}s</p>
               </div>
               {selectedBoardId && (
                 <div>
@@ -404,21 +404,21 @@ const MockDraft = () => {
               <div className="flex items-start gap-3 p-3 bg-dark-secondary rounded-lg">
                 <span className="text-gold text-lg flex-shrink-0">1</span>
                 <div>
-                  <p className="text-white text-sm font-medium">Pre-rank your players</p>
+                  <p className="text-text-primary text-sm font-medium">Pre-rank your players</p>
                   <p className="text-text-muted text-xs">Add players to your queue before the draft starts to plan ahead.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-dark-secondary rounded-lg">
                 <span className="text-gold text-lg flex-shrink-0">2</span>
                 <div>
-                  <p className="text-white text-sm font-medium">Watch the board</p>
+                  <p className="text-text-primary text-sm font-medium">Watch the board</p>
                   <p className="text-text-muted text-xs">Track which positions and tiers are being drafted to find value.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-dark-secondary rounded-lg">
                 <span className="text-gold text-lg flex-shrink-0">3</span>
                 <div>
-                  <p className="text-white text-sm font-medium">Balance your roster</p>
+                  <p className="text-text-primary text-sm font-medium">Balance your roster</p>
                   <p className="text-text-muted text-xs">Mix elite players with high-upside sleepers for the best results.</p>
                 </div>
               </div>

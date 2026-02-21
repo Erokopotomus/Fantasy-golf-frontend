@@ -27,7 +27,7 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
     if (position.includes('T2') || position === '2nd') return 'text-gray-300'
     if (position.includes('T3') || position === '3rd') return 'text-amber-600'
     if (position.includes('T') && parseInt(position.slice(1)) <= 10) return 'text-gold'
-    return 'text-white'
+    return 'text-text-primary'
   }
 
   if (compact) {
@@ -38,7 +38,7 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
             {countryFlag}
           </div>
           <div>
-            <p className="text-white font-medium text-sm">{name}</p>
+            <p className="text-text-primary font-medium text-sm">{name}</p>
             <p className="text-text-muted text-xs">#{rank} OWGR</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
             {countryFlag}
           </div>
           <div>
-            <p className="text-white font-semibold">{name}</p>
+            <p className="text-text-primary font-semibold">{name}</p>
             <p className="text-text-muted text-sm">#{rank} World Ranking</p>
           </div>
         </div>
@@ -145,15 +145,15 @@ const PlayerCard = ({ player, compact = false, showTournamentStatus = true }) =>
       {stats && (
         <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-dark-border">
           <div className="text-center">
-            <p className="text-white font-medium text-sm">{stats.drivingDistance?.toFixed(1)}</p>
+            <p className="text-text-primary font-medium text-sm">{stats.drivingDistance?.toFixed(1)}</p>
             <p className="text-text-muted text-xs">Driving (yds)</p>
           </div>
           <div className="text-center">
-            <p className="text-white font-medium text-sm">{stats.gir?.toFixed(1)}%</p>
+            <p className="text-text-primary font-medium text-sm">{stats.gir?.toFixed(1)}%</p>
             <p className="text-text-muted text-xs">GIR</p>
           </div>
           <div className="text-center">
-            <p className="text-white font-medium text-sm">{stats.scoringAvg?.toFixed(1)}</p>
+            <p className="text-text-primary font-medium text-sm">{stats.scoringAvg?.toFixed(1)}</p>
             <p className="text-text-muted text-xs">Scoring Avg</p>
           </div>
         </div>

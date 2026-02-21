@@ -100,7 +100,7 @@ const VaultLanding = () => {
           {/* Hero header */}
           <div className="text-center mb-10">
             <VaultIcon size={80} className="mx-auto mb-4" />
-            <h1 className="text-3xl sm:text-4xl font-bold font-display text-white mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold font-display text-text-primary mb-2">
               League Vault
             </h1>
             <p className="text-text-secondary max-w-md mx-auto">
@@ -114,7 +114,7 @@ const VaultLanding = () => {
               <p className="text-text-secondary mb-4">You haven't joined any leagues yet.</p>
               <Link
                 to="/leagues"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent-gold text-slate rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90"
               >
                 Browse Leagues
               </Link>
@@ -140,7 +140,7 @@ const VaultLanding = () => {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-display font-bold text-white truncate group-hover:text-accent-gold transition-colors">
+                        <h3 className="font-display font-bold text-text-primary truncate group-hover:text-accent-gold transition-colors">
                           {league.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-0.5">

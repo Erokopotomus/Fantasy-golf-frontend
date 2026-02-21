@@ -35,7 +35,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
   return (
     <Card padding="none">
       <div className="p-4 border-b border-dark-border">
-        <h3 className="text-lg font-semibold font-display text-white">Season Standings</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">Season Standings</h3>
       </div>
 
       <div className="overflow-x-auto">
@@ -78,7 +78,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
                         {team.avatar || '⛳'}
                       </div>
                       <div>
-                        <p className={`font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-white'}`}>
+                        <p className={`font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-text-primary'}`}>
                           {team.name}
                         </p>
                         <p className="text-xs text-text-muted">{team.ownerName}</p>
@@ -88,7 +88,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
                   <td className="p-3 text-center font-mono font-medium text-emerald-400">{team.wins}</td>
                   <td className="p-3 text-center font-mono font-medium text-red-400">{team.losses}</td>
                   <td className="p-3 text-center font-mono font-medium text-text-secondary">{team.ties}</td>
-                  <td className="p-3 text-right font-mono font-bold text-white">{(team.totalPoints || 0).toLocaleString()}</td>
+                  <td className="p-3 text-right font-mono font-bold text-text-primary">{(team.totalPoints || 0).toLocaleString()}</td>
                   <td className="p-3 text-right font-mono text-text-secondary hidden sm:table-cell">
                     {typeof team.avgPoints === 'number' ? team.avgPoints.toFixed(1) : '-'}
                   </td>

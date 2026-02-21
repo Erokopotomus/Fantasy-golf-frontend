@@ -116,7 +116,7 @@ const Toast = ({ notification, onDismiss }) => {
         return {
           bg: 'bg-dark-tertiary border-dark-border',
           icon: 'bg-dark-border text-text-muted',
-          title: 'text-white',
+          title: 'text-text-primary',
         }
     }
   }
@@ -157,7 +157,7 @@ const Toast = ({ notification, onDismiss }) => {
 
       <button
         onClick={handleDismiss}
-        className="flex-shrink-0 text-text-muted hover:text-white transition-colors p-1"
+        className="flex-shrink-0 text-text-muted hover:text-text-primary transition-colors p-1"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

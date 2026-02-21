@@ -34,13 +34,13 @@ export default function NflSchedule() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
-      <button onClick={() => navigate(-1)} className="text-white/40 hover:text-white/60 text-sm mb-4 inline-flex items-center gap-1">
+      <button onClick={() => navigate(-1)} className="text-text-primary/40 hover:text-text-primary/60 text-sm mb-4 inline-flex items-center gap-1">
         &larr; Back
       </button>
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">{'\uD83C\uDFC8'}</span>
-        <h1 className="text-2xl font-display font-bold text-white">NFL Schedule</h1>
-        <span className="text-white/30 font-mono text-sm ml-auto">{season} Season</span>
+        <h1 className="text-2xl font-display font-bold text-text-primary">NFL Schedule</h1>
+        <span className="text-text-primary/30 font-mono text-sm ml-auto">{season} Season</span>
       </div>
 
       {/* Week selector */}
@@ -48,7 +48,7 @@ export default function NflSchedule() {
         <button
           onClick={() => setSelectedWeek(null)}
           className={`px-3 py-1.5 rounded-md text-sm font-mono font-bold whitespace-nowrap transition-colors ${
-            !selectedWeek ? 'bg-gold/20 text-gold' : 'text-white/40 hover:text-white/60 bg-white/5'
+            !selectedWeek ? 'bg-gold/20 text-gold' : 'text-text-primary/40 hover:text-text-primary/60 bg-dark-tertiary/5'
           }`}
         >
           All
@@ -58,7 +58,7 @@ export default function NflSchedule() {
             key={w}
             onClick={() => setSelectedWeek(w)}
             className={`px-3 py-1.5 rounded-md text-sm font-mono font-bold whitespace-nowrap transition-colors ${
-              selectedWeek === w ? 'bg-gold/20 text-gold' : 'text-white/40 hover:text-white/60 bg-white/5'
+              selectedWeek === w ? 'bg-gold/20 text-gold' : 'text-text-primary/40 hover:text-text-primary/60 bg-dark-tertiary/5'
             }`}
           >
             {w}
@@ -67,7 +67,7 @@ export default function NflSchedule() {
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-white/30">Loading schedule...</div>
+        <div className="text-center py-20 text-text-primary/30">Loading schedule...</div>
       ) : (
         weekToShow.map(week => {
           const weekGames = byWeek[week] || []
@@ -75,7 +75,7 @@ export default function NflSchedule() {
 
           return (
             <div key={week} className="mb-8">
-              <h2 className="text-lg font-display font-bold text-white/60 mb-3">Week {week}</h2>
+              <h2 className="text-lg font-display font-bold text-text-primary/60 mb-3">Week {week}</h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {weekGames.map(game => (
                   <GameCard key={game.id} game={game} />
@@ -87,7 +87,7 @@ export default function NflSchedule() {
       )}
 
       {!loading && games.length === 0 && (
-        <div className="text-center py-20 text-white/30">No games found for this season</div>
+        <div className="text-center py-20 text-text-primary/30">No games found for this season</div>
       )}
     </div>
   )
@@ -100,24 +100,24 @@ function GameCard({ game }) {
   const awayWon = isFinal && game.awayScore > game.homeScore
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:border-white/20 transition-colors">
+    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 hover:border-stone/50 transition-colors">
       {/* Status badge */}
       <div className="flex items-center justify-between mb-3">
         <span className={`text-xs font-mono font-bold uppercase ${
-          isFinal ? 'text-white/30' : game.status === 'IN_PROGRESS' ? 'text-green-400' : 'text-white/40'
+          isFinal ? 'text-text-primary/30' : game.status === 'IN_PROGRESS' ? 'text-green-400' : 'text-text-primary/40'
         }`}>
           {isFinal ? 'Final' : game.status === 'IN_PROGRESS' ? 'Live' : kickoff ? kickoff.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD'}
         </span>
         {game.venue && (
-          <span className="text-white/20 text-xs truncate ml-2">{game.venue}</span>
+          <span className="text-text-primary/20 text-xs truncate ml-2">{game.venue}</span>
         )}
       </div>
 
       {/* Away team */}
-      <div className={`flex items-center justify-between py-2 ${awayWon ? 'text-white' : 'text-white/60'}`}>
+      <div className={`flex items-center justify-between py-2 ${awayWon ? 'text-text-primary' : 'text-text-primary/60'}`}>
         <Link to={`/nfl/teams/${game.awayTeam?.abbreviation}`} className="flex items-center gap-2 hover:text-gold transition-colors">
           <span
-            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-text-primary"
             style={{ backgroundColor: game.awayTeam?.primaryColor || '#333' }}
           >
             {game.awayTeam?.abbreviation?.slice(0, 2)}
@@ -125,17 +125,17 @@ function GameCard({ game }) {
           <span className="font-medium text-sm">{game.awayTeam?.name}</span>
         </Link>
         {isFinal && (
-          <span className={`font-mono font-bold text-lg ${awayWon ? 'text-white' : 'text-white/40'}`}>
+          <span className={`font-mono font-bold text-lg ${awayWon ? 'text-text-primary' : 'text-text-primary/40'}`}>
             {game.awayScore}
           </span>
         )}
       </div>
 
       {/* Home team */}
-      <div className={`flex items-center justify-between py-2 ${homeWon ? 'text-white' : 'text-white/60'}`}>
+      <div className={`flex items-center justify-between py-2 ${homeWon ? 'text-text-primary' : 'text-text-primary/60'}`}>
         <Link to={`/nfl/teams/${game.homeTeam?.abbreviation}`} className="flex items-center gap-2 hover:text-gold transition-colors">
           <span
-            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+            className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-text-primary"
             style={{ backgroundColor: game.homeTeam?.primaryColor || '#333' }}
           >
             {game.homeTeam?.abbreviation?.slice(0, 2)}
@@ -143,7 +143,7 @@ function GameCard({ game }) {
           <span className="font-medium text-sm">{game.homeTeam?.name}</span>
         </Link>
         {isFinal && (
-          <span className={`font-mono font-bold text-lg ${homeWon ? 'text-white' : 'text-white/40'}`}>
+          <span className={`font-mono font-bold text-lg ${homeWon ? 'text-text-primary' : 'text-text-primary/40'}`}>
             {game.homeScore}
           </span>
         )}
@@ -151,14 +151,14 @@ function GameCard({ game }) {
 
       {/* Lines */}
       {(game.spreadLine || game.totalLine) && (
-        <div className="flex gap-3 mt-2 pt-2 border-t border-white/5">
+        <div className="flex gap-3 mt-2 pt-2 border-t border-stone/20">
           {game.spreadLine != null && (
-            <span className="text-white/20 text-xs font-mono">
+            <span className="text-text-primary/20 text-xs font-mono">
               Spread: {game.spreadLine > 0 ? '+' : ''}{game.spreadLine}
             </span>
           )}
           {game.totalLine != null && (
-            <span className="text-white/20 text-xs font-mono">
+            <span className="text-text-primary/20 text-xs font-mono">
               O/U: {game.totalLine}
             </span>
           )}

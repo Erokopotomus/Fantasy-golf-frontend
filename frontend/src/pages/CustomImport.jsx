@@ -131,7 +131,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
     return (
       <Card className="text-center py-12">
         <div className="text-4xl mb-4">&#10003;</div>
-        <h3 className="text-xl font-display font-bold text-white mb-2">Import Complete</h3>
+        <h3 className="text-xl font-display font-bold text-text-primary mb-2">Import Complete</h3>
         <p className="text-text-secondary mb-6 font-mono">
           {result.imported} record{result.imported !== 1 ? 's' : ''} imported successfully.
         </p>
@@ -146,10 +146,10 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-display font-bold text-white">
+          <h3 className="text-lg font-display font-bold text-text-primary">
             Preview: {preview.fileName || preview.sourceUrl}
           </h3>
-          <button onClick={() => { setStep('upload'); setPreview(null) }} className="text-text-secondary hover:text-white text-sm">
+          <button onClick={() => { setStep('upload'); setPreview(null) }} className="text-text-secondary hover:text-text-primary text-sm">
             Back
           </button>
         </div>
@@ -157,7 +157,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
         {preview.sheets?.map((sheet, i) => (
           <Card key={i}>
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-display font-bold text-white">{sheet.sheetName}</h4>
+              <h4 className="font-display font-bold text-text-primary">{sheet.sheetName}</h4>
               <span className="text-xs text-text-secondary font-mono">{sheet.totalRows} rows</span>
             </div>
 
@@ -166,7 +166,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
               <div>
                 <label className="text-xs text-text-secondary font-mono block mb-1">Data Category</label>
                 <select
-                  className="bg-dark-tertiary text-white text-sm rounded px-3 py-1.5 border border-dark-tertiary focus:border-accent-gold outline-none"
+                  className="bg-dark-tertiary text-text-primary text-sm rounded px-3 py-1.5 border border-dark-tertiary focus:border-accent-gold outline-none"
                   value={overrides[sheet.sheetName]?.dataCategory || sheet.mapping?.dataCategory || 'other'}
                   onChange={(e) => updateCategory(sheet.sheetName, e.target.value)}
                 >
@@ -180,7 +180,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                 <input
                   type="number"
                   placeholder="e.g. 2024"
-                  className="bg-dark-tertiary text-white text-sm rounded px-3 py-1.5 border border-dark-tertiary focus:border-accent-gold outline-none w-24"
+                  className="bg-dark-tertiary text-text-primary text-sm rounded px-3 py-1.5 border border-dark-tertiary focus:border-accent-gold outline-none w-24"
                   value={overrides[sheet.sheetName]?.seasonYear ?? sheet.mapping?.seasonYear ?? ''}
                   onChange={(e) => updateSeasonYear(sheet.sheetName, e.target.value)}
                 />
@@ -201,7 +201,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                 <tbody>
                   {sheet.mapping?.columns?.map((col, j) => (
                     <tr key={j} className="border-b border-dark-tertiary/50">
-                      <td className="py-2 pr-4 text-white font-mono">{col.header}</td>
+                      <td className="py-2 pr-4 text-text-primary font-mono">{col.header}</td>
                       <td className="py-2 pr-4 text-text-secondary">{col.mappedTo}</td>
                       <td className="py-2 pr-4">
                         <span className={`px-2 py-0.5 rounded text-xs font-mono ${CONFIDENCE_COLORS[col.confidence] || CONFIDENCE_COLORS.low}`}>
@@ -210,7 +210,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                       </td>
                       <td className="py-2">
                         <select
-                          className="bg-dark-tertiary text-white text-xs rounded px-2 py-1 border border-dark-tertiary focus:border-accent-gold outline-none"
+                          className="bg-dark-tertiary text-text-primary text-xs rounded px-2 py-1 border border-dark-tertiary focus:border-accent-gold outline-none"
                           value={
                             overrides[sheet.sheetName]?.columns?.find(c => c.header === col.header)?.mappedTo
                             || col.mappedTo
@@ -245,7 +245,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                       {sheet.sampleRows.map((row, k) => (
                         <tr key={k} className="border-b border-dark-tertiary/30">
                           {row.map((cell, l) => (
-                            <td key={l} className="py-1 pr-3 text-white">{cell != null ? String(cell) : ''}</td>
+                            <td key={l} className="py-1 pr-3 text-text-primary">{cell != null ? String(cell) : ''}</td>
                           ))}
                         </tr>
                       ))}
@@ -276,7 +276,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
     <div className="space-y-6">
       {/* File Upload Zone */}
       <Card>
-        <h3 className="font-display font-bold text-white mb-4">Upload Spreadsheet</h3>
+        <h3 className="font-display font-bold text-text-primary mb-4">Upload Spreadsheet</h3>
         <div
           className="border-2 border-dashed border-dark-tertiary rounded-lg p-8 text-center hover:border-accent-gold/50 transition-colors cursor-pointer"
           onDragOver={(e) => e.preventDefault()}
@@ -284,7 +284,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
           onClick={() => fileRef.current?.click()}
         >
           <div className="text-3xl mb-2">&#128196;</div>
-          <p className="text-white font-display mb-1">
+          <p className="text-text-primary font-display mb-1">
             {loading ? 'Processing...' : 'Drop your file here or click to browse'}
           </p>
           <p className="text-text-secondary text-sm font-mono">Supports .xlsx, .xls, and .csv</p>
@@ -300,12 +300,12 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
 
       {/* Google Sheets URL */}
       <Card>
-        <h3 className="font-display font-bold text-white mb-4">Or Import from Google Sheets</h3>
+        <h3 className="font-display font-bold text-text-primary mb-4">Or Import from Google Sheets</h3>
         <div className="flex gap-3">
           <input
             type="url"
             placeholder="Paste Google Sheets URL..."
-            className="flex-1 bg-dark-tertiary text-white rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none font-mono text-sm"
+            className="flex-1 bg-dark-tertiary text-text-primary rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none font-mono text-sm"
             value={sheetsUrl}
             onChange={(e) => setSheetsUrl(e.target.value)}
           />
@@ -382,7 +382,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
     return (
       <Card className="text-center py-12">
         <div className="text-4xl mb-4">&#10003;</div>
-        <h3 className="text-xl font-display font-bold text-white mb-2">Website Import Complete</h3>
+        <h3 className="text-xl font-display font-bold text-text-primary mb-2">Website Import Complete</h3>
         <p className="text-text-secondary mb-6 font-mono">
           {result.imported} record{result.imported !== 1 ? 's' : ''} imported from {preview?.pagesScanned} pages.
         </p>
@@ -397,7 +397,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
     return (
       <Card className="text-center py-12">
         <div className="animate-spin text-4xl mb-4">&#8987;</div>
-        <h3 className="text-lg font-display font-bold text-white mb-2">Scanning Your Site</h3>
+        <h3 className="text-lg font-display font-bold text-text-primary mb-2">Scanning Your Site</h3>
         <p className="text-text-secondary font-mono text-sm">
           Crawling pages and extracting data... this may take a minute.
         </p>
@@ -409,10 +409,10 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-display font-bold text-white">
+          <h3 className="text-lg font-display font-bold text-text-primary">
             Found data on {preview.pagesScanned} page{preview.pagesScanned !== 1 ? 's' : ''}
           </h3>
-          <button onClick={() => { setStep('input'); setPreview(null) }} className="text-text-secondary hover:text-white text-sm">
+          <button onClick={() => { setStep('input'); setPreview(null) }} className="text-text-secondary hover:text-text-primary text-sm">
             Back
           </button>
         </div>
@@ -427,7 +427,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
                 className="mt-1 accent-accent-gold"
               />
               <div className="flex-1">
-                <h4 className="font-display font-bold text-white text-sm">{page.title || page.url}</h4>
+                <h4 className="font-display font-bold text-text-primary text-sm">{page.title || page.url}</h4>
                 <p className="text-xs text-text-secondary font-mono truncate">{page.url}</p>
 
                 {page.extractedData?.map((data, j) => (
@@ -470,7 +470,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
   // Input step
   return (
     <Card>
-      <h3 className="font-display font-bold text-white mb-4">Import from League Website</h3>
+      <h3 className="font-display font-bold text-text-primary mb-4">Import from League Website</h3>
       <p className="text-text-secondary text-sm mb-4">
         Paste your league's website URL and we'll crawl it for standings, records, awards, and other league data.
       </p>
@@ -478,7 +478,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
         <input
           type="url"
           placeholder="https://yourleague.com"
-          className="flex-1 bg-dark-tertiary text-white rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none font-mono text-sm"
+          className="flex-1 bg-dark-tertiary text-text-primary rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none font-mono text-sm"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
@@ -520,14 +520,14 @@ const CustomImport = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white">Custom Data Import</h1>
+          <h1 className="text-2xl font-display font-bold text-text-primary">Custom Data Import</h1>
           <p className="text-text-secondary text-sm mt-1">
             Import your league's custom history — records, awards, punishments, and more.
           </p>
         </div>
         <button
           onClick={() => navigate('/import')}
-          className="text-text-secondary hover:text-white text-sm"
+          className="text-text-secondary hover:text-text-primary text-sm"
         >
           Back to Imports
         </button>
@@ -547,7 +547,7 @@ const CustomImport = () => {
           </p>
         ) : (
           <select
-            className="bg-dark-tertiary text-white rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none w-full"
+            className="bg-dark-tertiary text-text-primary rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none w-full"
             value={leagueId}
             onChange={(e) => setLeagueId(e.target.value)}
           >
@@ -562,7 +562,7 @@ const CustomImport = () => {
       <div className="flex gap-1 mb-6 bg-dark-secondary rounded-lg p-1">
         <button
           className={`flex-1 py-2 px-4 rounded-md text-sm font-display transition-colors ${
-            tab === 'spreadsheet' ? 'bg-dark-tertiary text-white' : 'text-text-secondary hover:text-white'
+            tab === 'spreadsheet' ? 'bg-dark-tertiary text-text-primary' : 'text-text-secondary hover:text-text-primary'
           }`}
           onClick={() => setTab('spreadsheet')}
         >
@@ -570,7 +570,7 @@ const CustomImport = () => {
         </button>
         <button
           className={`flex-1 py-2 px-4 rounded-md text-sm font-display transition-colors ${
-            tab === 'website' ? 'bg-dark-tertiary text-white' : 'text-text-secondary hover:text-white'
+            tab === 'website' ? 'bg-dark-tertiary text-text-primary' : 'text-text-secondary hover:text-text-primary'
           }`}
           onClick={() => setTab('website')}
         >

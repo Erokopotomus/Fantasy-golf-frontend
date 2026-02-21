@@ -26,7 +26,7 @@ const StepIndicator = ({ current }) => (
           )}
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-colors ${
-              isComplete ? 'bg-accent-gold text-dark-primary' :
+              isComplete ? 'bg-accent-gold text-slate' :
               isActive ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold' :
               'bg-dark-tertiary text-text-muted border border-dark-border'
             }`}>
@@ -37,7 +37,7 @@ const StepIndicator = ({ current }) => (
               ) : s.num}
             </div>
             <span className={`text-xs font-display font-bold hidden sm:inline ${
-              isActive ? 'text-white' : 'text-text-muted'
+              isActive ? 'text-text-primary' : 'text-text-muted'
             }`}>
               {s.label}
             </span>
@@ -64,7 +64,7 @@ const TeamCard = ({ rawName, years, totalWins, totalLosses, totalPF, hasChampion
     style={isClickable && activeOwnerColor ? { borderColor: activeOwnerColor + '40' } : {}}
   >
     <div className="flex items-center justify-between mb-1">
-      <span className="text-sm font-display font-bold text-white truncate pr-2" title={rawName}>{rawName}</span>
+      <span className="text-sm font-display font-bold text-text-primary truncate pr-2" title={rawName}>{rawName}</span>
       {hasChampionship && <span className="text-accent-gold text-xs flex-shrink-0" title="Champion">&#9733;</span>}
     </div>
     <div className="flex items-center gap-2 text-xs font-mono text-text-secondary">
@@ -128,8 +128,8 @@ const OwnerChipBar = ({ owners, activeOwnerId, setActiveOwnerId, progress }) => 
           onClick={() => setActiveOwnerId(isActive ? null : name)}
           className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-display font-bold transition-all duration-200 ${
             isActive
-              ? 'text-dark-primary shadow-lg ring-1'
-              : 'text-white/80 hover:text-white border border-dark-border hover:border-white/20'
+              ? 'text-slate shadow-lg ring-1'
+              : 'text-text-primary/80 hover:text-text-primary border border-dark-border hover:border-stone/50'
           }`}
           style={isActive
             ? { backgroundColor: data.color, boxShadow: `0 0 16px ${data.color}40`, ringColor: data.color }
@@ -192,7 +192,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
       <div className="lg:col-span-2 space-y-6">
         {/* Header */}
         <div>
-          <h2 className="text-xl sm:text-2xl font-display font-bold text-white mb-1">
+          <h2 className="text-xl sm:text-2xl font-display font-bold text-text-primary mb-1">
             Who's in this league?
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
@@ -215,7 +215,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
               {filteredDetections.map(({ name, seasons }) => (
                 <div key={name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-dark-tertiary/30 hover:bg-dark-tertiary/50 transition-colors">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm text-white font-display truncate">{name}</span>
+                    <span className="text-sm text-text-primary font-display truncate">{name}</span>
                     {seasons.length > 0 && (
                       <span className="text-[10px] font-mono text-text-secondary/60 flex-shrink-0">
                         {formatYearRanges(seasons)}
@@ -250,12 +250,12 @@ const Step1IdentifyOwners = ({ wizard }) => {
             value={manualInput}
             onChange={e => setManualInput(e.target.value)}
             placeholder="Type a name and press Enter..."
-            className="flex-1 px-4 py-3 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm font-display placeholder:text-text-muted focus:outline-none focus:border-accent-gold transition-colors"
+            className="flex-1 px-4 py-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm font-display placeholder:text-text-muted focus:outline-none focus:border-accent-gold transition-colors"
           />
           <button
             type="submit"
             disabled={!manualInput.trim()}
-            className="px-4 py-3 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-30 disabled:cursor-default transition-colors"
+            className="px-4 py-3 bg-accent-gold text-slate rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90 disabled:opacity-30 disabled:cursor-default transition-colors"
           >
             Add
           </button>
@@ -276,7 +276,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: data.color }}
                   />
-                  <span className="text-sm text-white font-display font-bold truncate">{name}</span>
+                  <span className="text-sm text-text-primary font-display font-bold truncate">{name}</span>
                   {years.length > 0 && (
                     <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
                       {formatYearRanges(years)}
@@ -370,7 +370,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
         <button
           onClick={() => setStep(2)}
           disabled={!canProceedToStep2}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-orange text-dark-primary rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 disabled:opacity-30 disabled:cursor-default transition-all"
+          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-orange text-slate rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 disabled:opacity-30 disabled:cursor-default transition-all"
         >
           Continue to Team Assignment &rarr;
         </button>
@@ -455,9 +455,9 @@ const Step2AssignTeams = ({ wizard }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-display font-bold text-white mb-2">Why do I need to do this?</p>
+              <p className="text-sm font-display font-bold text-text-primary mb-2">Why do I need to do this?</p>
               <p className="text-xs text-text-secondary leading-relaxed mb-2">
-                Your imported history has <span className="text-white font-bold">fantasy team names</span>, not owner names.
+                Your imported history has <span className="text-text-primary font-bold">fantasy team names</span>, not owner names.
                 Names like "Prestige Worldwide" or "Loud Noises" don't tell us who that person was.
                 Before we can build all-time records, head-to-head history, and championship counts,
                 you need to connect each team name to the person who owned it.
@@ -472,7 +472,7 @@ const Step2AssignTeams = ({ wizard }) => {
             </div>
             <button
               onClick={() => setInfoBannerDismissed(true)}
-              className="text-text-muted hover:text-white flex-shrink-0"
+              className="text-text-muted hover:text-text-primary flex-shrink-0"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -498,7 +498,7 @@ const Step2AssignTeams = ({ wizard }) => {
             className={`px-2.5 py-1 text-[11px] font-mono rounded-lg whitespace-nowrap transition-colors ${
               seasonFilter === null
                 ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold/30'
-                : 'text-text-muted hover:text-white border border-dark-border'
+                : 'text-text-muted hover:text-text-primary border border-dark-border'
             }`}
           >
             All
@@ -510,7 +510,7 @@ const Step2AssignTeams = ({ wizard }) => {
               className={`px-2.5 py-1 text-[11px] font-mono rounded-lg whitespace-nowrap transition-colors ${
                 seasonFilter === year
                   ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold/30'
-                  : 'text-text-muted hover:text-white border border-dark-border'
+                  : 'text-text-muted hover:text-text-primary border border-dark-border'
               }`}
             >
               {year}
@@ -521,7 +521,7 @@ const Step2AssignTeams = ({ wizard }) => {
           <button
             onClick={() => setSortMode('season')}
             className={`px-2 py-1 text-[10px] font-mono rounded transition-colors ${
-              sortMode === 'season' ? 'text-white bg-dark-tertiary' : 'text-text-muted hover:text-white'
+              sortMode === 'season' ? 'text-text-primary bg-dark-tertiary' : 'text-text-muted hover:text-text-primary'
             }`}
           >
             By Season
@@ -529,7 +529,7 @@ const Step2AssignTeams = ({ wizard }) => {
           <button
             onClick={() => setSortMode('alpha')}
             className={`px-2 py-1 text-[10px] font-mono rounded transition-colors ${
-              sortMode === 'alpha' ? 'text-white bg-dark-tertiary' : 'text-text-muted hover:text-white'
+              sortMode === 'alpha' ? 'text-text-primary bg-dark-tertiary' : 'text-text-muted hover:text-text-primary'
             }`}
           >
             A-Z
@@ -557,7 +557,7 @@ const Step2AssignTeams = ({ wizard }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-sm font-display font-bold text-white mb-1">All teams assigned!</p>
+              <p className="text-sm font-display font-bold text-text-primary mb-1">All teams assigned!</p>
               <p className="text-xs text-text-secondary">Every team has been mapped to an owner.</p>
             </div>
           )}
@@ -606,13 +606,13 @@ const Step2AssignTeams = ({ wizard }) => {
                   {/* Active owner header */}
                   <div className="flex items-center gap-2 mb-3">
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-display font-bold text-dark-primary"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-display font-bold text-slate"
                       style={{ backgroundColor: activeOwner.color }}
                     >
                       {activeOwnerId.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-sm font-display font-bold text-white">{activeOwnerId}</div>
+                      <div className="text-sm font-display font-bold text-text-primary">{activeOwnerId}</div>
                       <div className="text-[10px] font-mono text-text-muted">
                         {(ownerClaimedEntries.get(activeOwnerId) || []).length} team{(ownerClaimedEntries.get(activeOwnerId) || []).length !== 1 ? 's' : ''}
                       </div>
@@ -634,7 +634,7 @@ const Step2AssignTeams = ({ wizard }) => {
                           title="Click to unassign"
                         >
                           <div className="min-w-0">
-                            <div className="text-xs text-white font-display truncate">{rawName}</div>
+                            <div className="text-xs text-text-primary font-display truncate">{rawName}</div>
                             <div className="text-[10px] font-mono text-text-muted">
                               {formatYearRanges(years)}
                             </div>
@@ -699,14 +699,14 @@ const Step2AssignTeams = ({ wizard }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setStep(1)}
-            className="px-3 py-2 text-xs text-text-secondary hover:text-white font-display transition-colors"
+            className="px-3 py-2 text-xs text-text-secondary hover:text-text-primary font-display transition-colors"
           >
             &larr; Back
           </button>
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="px-3 py-2 text-xs font-mono text-text-muted hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1"
+            className="px-3 py-2 text-xs font-mono text-text-muted hover:text-text-primary disabled:opacity-30 transition-colors flex items-center gap-1"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -716,7 +716,7 @@ const Step2AssignTeams = ({ wizard }) => {
         </div>
         <button
           onClick={() => setStep(3)}
-          className="px-5 py-2.5 bg-gradient-to-r from-gold to-orange text-dark-primary rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 transition-all"
+          className="px-5 py-2.5 bg-gradient-to-r from-gold to-orange text-slate rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 transition-all"
         >
           Review & Save &rarr;
         </button>
@@ -935,11 +935,11 @@ const OwnerAssignment = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <p className="text-white font-display font-bold mb-2">No imported history yet</p>
+          <p className="text-text-primary font-display font-bold mb-2">No imported history yet</p>
           <p className="text-text-secondary text-sm mb-4">Import your league history first to start mapping owners.</p>
           <Link
             to="/import"
-            className="inline-block px-5 py-2.5 bg-accent-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90"
+            className="inline-block px-5 py-2.5 bg-accent-gold text-slate rounded-lg font-display font-bold text-sm hover:bg-accent-gold/90"
           >
             Import League History
           </Link>
@@ -984,7 +984,7 @@ const OwnerAssignment = () => {
       </Link>
 
       {/* Page title */}
-      <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-6">
+      <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-primary mb-6">
         Assign Teams to Owners
       </h1>
 

@@ -117,7 +117,7 @@ const ActivityFeed = ({ activity, loading }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-white text-sm">
+                <p className="text-text-primary text-sm">
                   <span className="font-medium">{item.user.name}</span>
                 </p>
                 <p className="text-text-secondary text-xs truncate">

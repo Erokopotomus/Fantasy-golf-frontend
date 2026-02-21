@@ -11,7 +11,7 @@ import StreakCard from '../components/share/cards/StreakCard'
 
 // ─── Tier helpers ───────────────────────────────────────────────────────────
 const TIER_CONFIG = {
-  rookie:    { color: 'text-white/60',   bg: 'bg-white/10',       label: 'Rookie' },
+  rookie:    { color: 'text-text-primary/60',   bg: 'bg-dark-tertiary/10',       label: 'Rookie' },
   contender: { color: 'text-blue-400',   bg: 'bg-blue-500/20',    label: 'Contender' },
   sharp:     { color: 'text-purple-400', bg: 'bg-purple-500/20',  label: 'Sharp' },
   expert:    { color: 'text-amber-400',  bg: 'bg-amber-500/20',   label: 'Expert' },
@@ -139,7 +139,7 @@ function WeeklySlate({ onPredictionMade }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
+          <div key={i} className="h-16 bg-dark-tertiary/5 rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -149,8 +149,8 @@ function WeeklySlate({ onPredictionMade }) {
     return (
       <div className="text-center py-12">
         <div className="text-4xl mb-3">⛳</div>
-        <h3 className="text-lg font-semibold text-white mb-2">No Active Tournament</h3>
-        <p className="text-white/50 text-sm">
+        <h3 className="text-lg font-semibold text-text-primary mb-2">No Active Tournament</h3>
+        <p className="text-text-primary/50 text-sm">
           Performance calls will be available when the next tournament field is set.
         </p>
       </div>
@@ -163,15 +163,15 @@ function WeeklySlate({ onPredictionMade }) {
   return (
     <div>
       {/* Tournament header */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-4">
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-white font-semibold">{currentTournament.name}</h3>
-            <p className="text-white/40 text-sm mt-0.5">Player Benchmark Calls</p>
+            <h3 className="text-text-primary font-semibold">{currentTournament.name}</h3>
+            <p className="text-text-primary/40 text-sm mt-0.5">Player Benchmark Calls</p>
           </div>
           <div className="text-right">
             <div className="text-2xl font-mono font-bold text-amber-400">{madeCount}</div>
-            <div className="text-xs text-white/40">{remaining} remaining</div>
+            <div className="text-xs text-text-primary/40">{remaining} remaining</div>
           </div>
         </div>
       </div>
@@ -183,29 +183,29 @@ function WeeklySlate({ onPredictionMade }) {
           const benchmarkValue = Math.round(player.sgTotal * 10) / 10
 
           return (
-            <div key={player.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+            <div key={player.id} className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
               <div className="p-3 flex items-center gap-3">
                 {/* Player info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {player.headshotUrl ? (
                     <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-sm">
+                    <div className="w-10 h-10 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-sm">
                       {player.name?.charAt(0)}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="text-sm text-white font-medium truncate">{player.name}</div>
+                    <div className="text-sm text-text-primary font-medium truncate">{player.name}</div>
                     {player.rank && (
-                      <div className="text-xs text-white/40 font-mono">Rank #{player.rank}</div>
+                      <div className="text-xs text-text-primary/40 font-mono">Rank #{player.rank}</div>
                     )}
                   </div>
                 </div>
 
                 {/* Benchmark */}
                 <div className="text-center px-2">
-                  <div className="text-xs text-white/40">SG</div>
-                  <div className="text-sm font-mono font-bold text-white">
+                  <div className="text-xs text-text-primary/40">SG</div>
+                  <div className="text-sm font-mono font-bold text-text-primary">
                     {benchmarkValue > 0 ? '+' : ''}{benchmarkValue}
                   </div>
                 </div>
@@ -259,7 +259,7 @@ function WeeklySlate({ onPredictionMade }) {
                     </button>
                     <button
                       onClick={() => { setShowBackingFor(null); setBackingData(prev => { const n = { ...prev }; delete n[player.id]; return n }) }}
-                      className="text-[10px] text-white/30 hover:text-white/50 transition-colors"
+                      className="text-[10px] text-text-primary/30 hover:text-text-primary/50 transition-colors"
                     >
                       Skip
                     </button>
@@ -301,8 +301,8 @@ function TrackRecord() {
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-32 bg-white/5 rounded-xl animate-pulse" />
-        <div className="h-64 bg-white/5 rounded-xl animate-pulse" />
+        <div className="h-32 bg-dark-tertiary/5 rounded-xl animate-pulse" />
+        <div className="h-64 bg-dark-tertiary/5 rounded-xl animate-pulse" />
       </div>
     )
   }
@@ -335,13 +335,13 @@ function TrackRecord() {
   return (
     <div className="space-y-4">
       {/* Sport filter */}
-      <div className="flex gap-1 bg-white/5 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1 w-fit">
         {['all', 'nfl', 'golf'].map(s => (
           <button
             key={s}
             onClick={() => setSportFilter(s)}
             className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
-              sportFilter === s ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+              sportFilter === s ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             {s === 'all' ? 'All Sports' : s.toUpperCase()}
@@ -351,11 +351,11 @@ function TrackRecord() {
 
       {/* NFL Quick Record (when NFL filter active) */}
       {sportFilter === 'nfl' && nflRecord && nflRecord.record?.total > 0 && (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div>
-              <div className="text-xl font-mono font-bold text-white">{nflRecord.record.winLoss}</div>
-              <div className="text-xs text-white/40">NFL Record</div>
+              <div className="text-xl font-mono font-bold text-text-primary">{nflRecord.record.winLoss}</div>
+              <div className="text-xs text-text-primary/40">NFL Record</div>
             </div>
             {nflRecord.streak > 0 && (
               <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
@@ -366,14 +366,14 @@ function TrackRecord() {
           {nflRecord.clutchRating != null && (
             <div className="text-right">
               <div className="text-xl font-mono font-bold text-amber-400">{Math.round(nflRecord.clutchRating)}</div>
-              <div className="text-xs text-white/40">Clutch Rating</div>
+              <div className="text-xs text-text-primary/40">Clutch Rating</div>
             </div>
           )}
         </div>
       )}
 
       {/* Stats overview */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5">
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5">
         <div className="flex items-center gap-3 mb-4">
           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${tierCfg.bg} ${tierCfg.color}`}>
             {tierCfg.label}
@@ -391,26 +391,26 @@ function TrackRecord() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
-            <div className="text-2xl font-mono font-bold text-white">{accuracy}%</div>
-            <div className="text-xs text-white/40">Accuracy</div>
+            <div className="text-2xl font-mono font-bold text-text-primary">{accuracy}%</div>
+            <div className="text-xs text-text-primary/40">Accuracy</div>
           </div>
           <div>
-            <div className="text-2xl font-mono font-bold text-white">{total}</div>
-            <div className="text-xs text-white/40">Total Calls</div>
+            <div className="text-2xl font-mono font-bold text-text-primary">{total}</div>
+            <div className="text-xs text-text-primary/40">Total Calls</div>
           </div>
           <div>
-            <div className="text-2xl font-mono font-bold text-white">{streak}</div>
-            <div className="text-xs text-white/40">Current Streak</div>
+            <div className="text-2xl font-mono font-bold text-text-primary">{streak}</div>
+            <div className="text-xs text-text-primary/40">Current Streak</div>
           </div>
           <div>
-            <div className="text-2xl font-mono font-bold text-white">{bestStreak}</div>
-            <div className="text-xs text-white/40">Best Streak</div>
+            <div className="text-2xl font-mono font-bold text-text-primary">{bestStreak}</div>
+            <div className="text-xs text-text-primary/40">Best Streak</div>
           </div>
         </div>
 
         {/* Share buttons */}
         {total > 0 && (
-          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
+          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-stone/30">
             <ShareButton
               CardComponent={PicksResultCard}
               cardProps={{
@@ -439,15 +439,15 @@ function TrackRecord() {
 
         {/* Tier progress */}
         {progress && (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex items-center justify-between text-xs text-white/50 mb-2">
+          <div className="mt-4 pt-4 border-t border-stone/30">
+            <div className="flex items-center justify-between text-xs text-text-primary/50 mb-2">
               <span>Progress to {TIER_CONFIG[progress.nextTier]?.label}</span>
               <span className="font-mono">
                 {total}/{progress.needed.minPredictions} calls
                 {progress.needed.minAccuracy > 0 && ` · ${accuracy}%/${Math.round(progress.needed.minAccuracy * 100)}%`}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+            <div className="h-2 rounded-full bg-dark-tertiary/10 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500 rounded-full"
                 style={{ width: `${Math.min(progress.predPct, progress.accPct)}%` }}
@@ -458,16 +458,16 @@ function TrackRecord() {
       </div>
 
       {/* Prediction history */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-sm font-semibold text-white/80 flex-1">History</h3>
+          <h3 className="text-sm font-semibold text-text-primary/80 flex-1">History</h3>
           <div className="flex gap-1">
             {['all', 'correct', 'incorrect', 'pending'].map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-2 py-1 text-xs rounded transition-colors ${
-                  filter === f ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+                  filter === f ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -477,23 +477,23 @@ function TrackRecord() {
         </div>
 
         {filtered.length === 0 ? (
-          <p className="text-white/40 text-sm text-center py-6">
+          <p className="text-text-primary/40 text-sm text-center py-6">
             {total === 0 ? 'No calls yet. Head to the slate to make your first!' : 'No matching calls.'}
           </p>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {filtered.map(p => (
-              <div key={p.id} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+              <div key={p.id} className="flex items-center gap-3 py-2 border-b border-stone/20 last:border-0">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                   p.outcome === 'CORRECT' ? 'bg-emerald-500/20 text-emerald-400' :
                   p.outcome === 'INCORRECT' ? 'bg-rose-500/20 text-rose-400' :
-                  p.outcome === 'VOIDED' ? 'bg-white/10 text-white/30' :
+                  p.outcome === 'VOIDED' ? 'bg-dark-tertiary/10 text-text-primary/30' :
                   'bg-amber-500/20 text-amber-400'
                 }`}>
                   {p.outcome === 'CORRECT' ? '✓' : p.outcome === 'INCORRECT' ? '✗' : p.outcome === 'VOIDED' ? '—' : '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white truncate">
+                  <div className="text-sm text-text-primary truncate">
                     {p.sport === 'nfl' ? (
                       <>
                         {p.predictionData?.description || p.predictionData?.playerName || 'Unknown'}{' '}
@@ -501,7 +501,7 @@ function TrackRecord() {
                           {p.predictionData?.direction?.toUpperCase()}
                         </span>
                         {' '}
-                        <span className="text-white/40 font-mono">{p.predictionData?.lineValue}</span>
+                        <span className="text-text-primary/40 font-mono">{p.predictionData?.lineValue}</span>
                       </>
                     ) : (
                       <>
@@ -510,16 +510,16 @@ function TrackRecord() {
                           {p.predictionData?.direction?.toUpperCase()}
                         </span>
                         {' '}
-                        <span className="text-white/40 font-mono">
+                        <span className="text-text-primary/40 font-mono">
                           {p.predictionData?.benchmarkValue > 0 ? '+' : ''}{p.predictionData?.benchmarkValue}
                         </span>
                       </>
                     )}
                   </div>
-                  <div className="text-xs text-white/30 font-mono flex items-center gap-2">
+                  <div className="text-xs text-text-primary/30 font-mono flex items-center gap-2">
                     {new Date(p.createdAt).toLocaleDateString()}
                     {sportFilter === 'all' && (
-                      <span className="px-1 py-0.5 rounded bg-white/5 text-[10px] uppercase">{p.sport}</span>
+                      <span className="px-1 py-0.5 rounded bg-dark-tertiary/5 text-[10px] uppercase">{p.sport}</span>
                     )}
                     {p.confidenceLevel && (
                       <span className="px-1 py-0.5 rounded bg-gold/10 text-gold/60 text-[9px]">
@@ -528,7 +528,7 @@ function TrackRecord() {
                     )}
                   </div>
                   {p.thesis && (
-                    <p className="text-[11px] text-white/30 italic mt-0.5 line-clamp-2">
+                    <p className="text-[11px] text-text-primary/30 italic mt-0.5 line-clamp-2">
                       "{p.thesis}"
                     </p>
                   )}
@@ -604,7 +604,7 @@ function Leaderboards() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               board === b.id
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
-                : 'bg-white/5 text-white/40 hover:text-white/60'
+                : 'bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             {b.label}
@@ -616,13 +616,13 @@ function Leaderboards() {
       {board === 'overall' && (
         <div className="flex flex-wrap items-center gap-3 mb-4">
           {/* Timeframe */}
-          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
             {TIMEFRAMES.map(tf => (
               <button
                 key={tf.id}
                 onClick={() => setTimeframe(tf.id)}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                  timeframe === tf.id ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+                  timeframe === tf.id ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {tf.label}
@@ -631,13 +631,13 @@ function Leaderboards() {
           </div>
 
           {/* Sort by */}
-          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
             {SORT_OPTIONS.map(s => (
               <button
                 key={s.id}
                 onClick={() => setSortBy(s.id)}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                  sortBy === s.id ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+                  sortBy === s.id ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {s.label}
@@ -647,7 +647,7 @@ function Leaderboards() {
 
           {/* Min calls slider */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40">Min calls:</span>
+            <span className="text-xs text-text-primary/40">Min calls:</span>
             <input
               type="range"
               min={1}
@@ -656,7 +656,7 @@ function Leaderboards() {
               onChange={e => setMinCalls(parseInt(e.target.value))}
               className="w-20 accent-amber-500"
             />
-            <span className="text-xs font-mono text-white/60 w-6">{minCalls}</span>
+            <span className="text-xs font-mono text-text-primary/60 w-6">{minCalls}</span>
           </div>
         </div>
       )}
@@ -664,21 +664,21 @@ function Leaderboards() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-14 bg-white/5 rounded-xl animate-pulse" />
+            <div key={i} className="h-14 bg-dark-tertiary/5 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : leaderboard.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-4xl mb-3">&#127942;</div>
-          <h3 className="text-lg font-semibold text-white mb-2">No Rankings Yet</h3>
-          <p className="text-white/50 text-sm">
+          <h3 className="text-lg font-semibold text-text-primary mb-2">No Rankings Yet</h3>
+          <p className="text-text-primary/50 text-sm">
             Make performance calls to appear on the leaderboard.
           </p>
         </div>
       ) : (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-white/10 text-xs text-white/40">
+          <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-stone/30 text-xs text-text-primary/40">
             <div className="col-span-1">#</div>
             <div className="col-span-4">User</div>
             <div className="col-span-2 text-center">Rating</div>
@@ -703,18 +703,18 @@ function Leaderboards() {
               <Link
                 key={entry.userId || i}
                 to={`/manager/${entry.userId}`}
-                className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
+                className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-stone/20 last:border-0 hover:bg-dark-tertiary/5 transition-colors"
               >
-                <div className="col-span-1 text-white/60 font-mono text-sm flex items-center">{i + 1}</div>
+                <div className="col-span-1 text-text-primary/60 font-mono text-sm flex items-center">{i + 1}</div>
                 <div className="col-span-4 flex items-center gap-2 min-w-0">
                   {entry.avatar ? (
                     <img src={entry.avatar} alt="" className="w-6 h-6 rounded-full shrink-0" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white/30 text-xs shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-xs shrink-0">
                       {(entry.name || entry.userName || '?').charAt(0)}
                     </div>
                   )}
-                  <span className="text-sm text-white truncate">{entry.name || entry.userName || 'Anonymous'}</span>
+                  <span className="text-sm text-text-primary truncate">{entry.name || entry.userName || 'Anonymous'}</span>
                   {Array.isArray(entry.pinnedBadges) && entry.pinnedBadges.length > 0 && (
                     <span className="flex items-center gap-0.5 ml-1 shrink-0">
                       {entry.pinnedBadges.slice(0, 3).map((badge, bi) => (
@@ -744,16 +744,16 @@ function Leaderboards() {
                       )}
                     </div>
                   ) : (
-                    <span className="text-xs text-white/20 font-mono">—</span>
+                    <span className="text-xs text-text-primary/20 font-mono">—</span>
                   )}
                 </div>
-                <div className="col-span-2 text-right text-sm font-mono text-white flex items-center justify-end">
+                <div className="col-span-2 text-right text-sm font-mono text-text-primary flex items-center justify-end">
                   {accuracyVal}%
                 </div>
-                <div className="col-span-1 text-right text-sm font-mono text-white/60 flex items-center justify-end">
+                <div className="col-span-1 text-right text-sm font-mono text-text-primary/60 flex items-center justify-end">
                   {totalCalls}
                 </div>
-                <div className="col-span-2 text-right text-sm font-mono text-white/60 flex items-center justify-end">
+                <div className="col-span-2 text-right text-sm font-mono text-text-primary/60 flex items-center justify-end">
                   {streak}
                 </div>
               </Link>
@@ -816,7 +816,7 @@ function Analysts() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-32 bg-white/5 rounded-xl animate-pulse" />
+          <div key={i} className="h-32 bg-dark-tertiary/5 rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -826,8 +826,8 @@ function Analysts() {
     return (
       <div className="text-center py-12">
         <div className="text-4xl mb-3">&#128269;</div>
-        <h3 className="text-lg font-semibold text-white mb-2">No Analysts Yet</h3>
-        <p className="text-white/50 text-sm">
+        <h3 className="text-lg font-semibold text-text-primary mb-2">No Analysts Yet</h3>
+        <p className="text-text-primary/50 text-sm">
           Top performers will appear here as the community grows.
         </p>
       </div>
@@ -850,7 +850,7 @@ function Analysts() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search analysts..."
-          className="w-full sm:w-64 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-amber-500/50"
+          className="w-full sm:w-64 bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-amber-500/50"
         />
       </div>
 
@@ -868,25 +868,25 @@ function Analysts() {
             <Link
               key={analyst.userId || i}
               to={profileUrl}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors"
+              className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 hover:bg-dark-tertiary/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 {analyst.avatar ? (
                   <img src={analyst.avatar} alt="" className="w-10 h-10 rounded-full" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/30">
+                  <div className="w-10 h-10 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30">
                     {(analyst.name || '?').charAt(0)}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white font-medium truncate">
+                  <div className="text-sm text-text-primary font-medium truncate">
                     {analyst.name || 'Anonymous'}
                   </div>
                   {analyst.username && (
-                    <div className="text-xs text-white/30 font-mono">@{analyst.username}</div>
+                    <div className="text-xs text-text-primary/30 font-mono">@{analyst.username}</div>
                   )}
                   {analyst.tagline && (
-                    <div className="text-xs text-white/40 truncate mt-0.5">{analyst.tagline}</div>
+                    <div className="text-xs text-text-primary/40 truncate mt-0.5">{analyst.tagline}</div>
                   )}
                 </div>
                 <div className="text-right shrink-0">
@@ -894,7 +894,7 @@ function Analysts() {
                     <div className="text-lg font-mono font-bold text-accent-gold">{Math.round(analyst.clutchRating)}</div>
                   )}
                   {analyst.clutchRating == null && (
-                    <div className="text-lg font-mono font-bold text-white">{accuracyPct}%</div>
+                    <div className="text-lg font-mono font-bold text-text-primary">{accuracyPct}%</div>
                   )}
                 </div>
               </div>
@@ -902,17 +902,17 @@ function Analysts() {
                 <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${tierCfg.bg} ${tierCfg.color}`}>
                   {tierCfg.label}
                 </span>
-                <span className="text-[10px] text-white/40 font-mono">{accuracyPct}%</span>
-                <span className="text-white/20">·</span>
-                <span className="text-[10px] text-white/40 font-mono">{total} calls</span>
+                <span className="text-[10px] text-text-primary/40 font-mono">{accuracyPct}%</span>
+                <span className="text-text-primary/20">·</span>
+                <span className="text-[10px] text-text-primary/40 font-mono">{total} calls</span>
                 {hasSocial && (
                   <>
-                    <span className="text-white/20">·</span>
+                    <span className="text-text-primary/20">·</span>
                     <div className="flex items-center gap-1">
                       {Object.entries(socialLinks).map(([key, url]) => {
                         if (!url || !SOCIAL_ICON_MAP[key]) return null
                         return (
-                          <span key={key} className="text-white/30">
+                          <span key={key} className="text-text-primary/30">
                             {SOCIAL_ICON_MAP[key]}
                           </span>
                         )
@@ -1015,7 +1015,7 @@ function NflWeeklyProps({ onPredictionMade }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
+          <div key={i} className="h-16 bg-dark-tertiary/5 rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -1024,21 +1024,21 @@ function NflWeeklyProps({ onPredictionMade }) {
   return (
     <div>
       {/* Week selector + record */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-4">
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => setWeek(w => Math.max(1, w - 1))} disabled={week <= 1}
-              className="p-1.5 rounded bg-white/10 text-white/60 hover:text-white disabled:opacity-30">
+              className="p-1.5 rounded bg-dark-tertiary/10 text-text-primary/60 hover:text-text-primary disabled:opacity-30">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div>
-              <h3 className="text-white font-semibold">NFL Week {week}</h3>
-              <p className="text-white/40 text-xs">{totalProps} prop{totalProps !== 1 ? 's' : ''} available</p>
+              <h3 className="text-text-primary font-semibold">NFL Week {week}</h3>
+              <p className="text-text-primary/40 text-xs">{totalProps} prop{totalProps !== 1 ? 's' : ''} available</p>
             </div>
             <button onClick={() => setWeek(w => Math.min(18, w + 1))} disabled={week >= 18}
-              className="p-1.5 rounded bg-white/10 text-white/60 hover:text-white disabled:opacity-30">
+              className="p-1.5 rounded bg-dark-tertiary/10 text-text-primary/60 hover:text-text-primary disabled:opacity-30">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -1047,15 +1047,15 @@ function NflWeeklyProps({ onPredictionMade }) {
           {record && record.record.total > 0 && (
             <div className="flex items-center gap-4 text-right">
               <div>
-                <div className="text-lg font-mono font-bold text-white">{record.record.winLoss}</div>
-                <div className="text-xs text-white/40">Record</div>
+                <div className="text-lg font-mono font-bold text-text-primary">{record.record.winLoss}</div>
+                <div className="text-xs text-text-primary/40">Record</div>
               </div>
               {record.record.accuracy && (
                 <div>
                   <div className="text-lg font-mono font-bold text-emerald-400">
                     {(parseFloat(record.record.accuracy) * 100).toFixed(1)}%
                   </div>
-                  <div className="text-xs text-white/40">Accuracy</div>
+                  <div className="text-xs text-text-primary/40">Accuracy</div>
                 </div>
               )}
               {record.streak > 0 && (
@@ -1076,9 +1076,9 @@ function NflWeeklyProps({ onPredictionMade }) {
           </svg>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-purple-300 font-semibold mb-0.5">Clutch Coach</p>
-            <p className="text-xs text-white/60 leading-relaxed">{predCoaching.calibrationNote}</p>
+            <p className="text-xs text-text-primary/60 leading-relaxed">{predCoaching.calibrationNote}</p>
           </div>
-          <button onClick={() => setPredCoaching(null)} className="text-white/30 hover:text-white/60 flex-shrink-0">
+          <button onClick={() => setPredCoaching(null)} className="text-text-primary/30 hover:text-text-primary/60 flex-shrink-0">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -1089,7 +1089,7 @@ function NflWeeklyProps({ onPredictionMade }) {
       {/* Player Props */}
       {props.playerProps.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Player Props</h3>
+          <h3 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">Player Props</h3>
           <div className="space-y-2">
             {props.playerProps.map(prop => (
               <NflPropCard key={prop.id} prop={prop} onPick={handlePick} onReasonChip={handleReasonChip}
@@ -1102,7 +1102,7 @@ function NflWeeklyProps({ onPredictionMade }) {
       {/* Game Props */}
       {props.gameProps.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">Game Props</h3>
+          <h3 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">Game Props</h3>
           <div className="space-y-2">
             {props.gameProps.map(prop => (
               <NflPropCard key={prop.id} prop={prop} onPick={handlePick} onReasonChip={handleReasonChip}
@@ -1115,8 +1115,8 @@ function NflWeeklyProps({ onPredictionMade }) {
       {totalProps === 0 && (
         <div className="text-center py-12">
           <div className="text-4xl mb-3">🏈</div>
-          <h3 className="text-lg font-semibold text-white mb-2">No Props for Week {week}</h3>
-          <p className="text-white/50 text-sm">Props are generated from player performance data. Try a different week.</p>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">No Props for Week {week}</h3>
+          <p className="text-text-primary/50 text-sm">Props are generated from player performance data. Try a different week.</p>
         </div>
       )}
 
@@ -1126,7 +1126,7 @@ function NflWeeklyProps({ onPredictionMade }) {
           {weeks.map(w => (
             <button key={w} onClick={() => setWeek(w)}
               className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                w === week ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/40 hover:text-white/60'
+                w === week ? 'bg-emerald-500 text-text-primary' : 'bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary/60'
               }`}>{w}</button>
           ))}
         </div>
@@ -1142,29 +1142,29 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
   const isLocked = prop.locksAt && new Date(prop.locksAt) <= new Date()
 
   return (
-    <div className={`bg-white/5 backdrop-blur-sm border rounded-xl p-3 ${
+    <div className={`bg-dark-tertiary/5 backdrop-blur-sm border rounded-xl p-3 ${
       userPick?.outcome === 'CORRECT' ? 'border-emerald-500/30' :
       userPick?.outcome === 'INCORRECT' ? 'border-rose-500/30' :
-      userDirection ? 'border-white/20' : 'border-white/10'
+      userDirection ? 'border-stone/50' : 'border-stone/30'
     }`}>
       <div className="flex items-center gap-3">
         {prop.player?.nflPosition && (
           <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${
-            nflPosColors[prop.player.nflPosition] || 'bg-white/10 text-white/40'
+            nflPosColors[prop.player.nflPosition] || 'bg-dark-tertiary/10 text-text-primary/40'
           }`}>{prop.player.nflPosition}</span>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">{prop.description}</p>
-          {prop.player?.nflTeamAbbr && <p className="text-[10px] text-white/40">{prop.player.nflTeamAbbr}</p>}
+          <p className="text-sm font-medium text-text-primary truncate">{prop.description}</p>
+          {prop.player?.nflTeamAbbr && <p className="text-[10px] text-text-primary/40">{prop.player.nflTeamAbbr}</p>}
         </div>
         <div className="text-center mx-2">
-          <p className="text-[10px] text-white/40 uppercase">O/U</p>
-          <p className="text-sm font-bold font-mono text-white">{prop.lineValue}</p>
+          <p className="text-[10px] text-text-primary/40 uppercase">O/U</p>
+          <p className="text-sm font-bold font-mono text-text-primary">{prop.lineValue}</p>
         </div>
 
         {isResolved ? (
           <div className="flex items-center gap-2">
-            {prop.actualValue != null && <span className="text-xs font-mono text-white/40">Actual: {prop.actualValue}</span>}
+            {prop.actualValue != null && <span className="text-xs font-mono text-text-primary/40">Actual: {prop.actualValue}</span>}
             {userDirection && (
               <span className={`text-sm font-bold ${
                 userPick?.outcome === 'CORRECT' ? 'text-emerald-400' :
@@ -1179,31 +1179,31 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
                 userDirection === 'over' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
               }`}>{userDirection.toUpperCase()}</span>
             )}
-            <span className="text-[10px] text-white/30">Locked</span>
+            <span className="text-[10px] text-text-primary/30">Locked</span>
           </div>
         ) : (
           <div className="flex items-center gap-1.5">
             <button onClick={() => onPick(prop.id, 'over')} disabled={submitting}
               className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${
-                userDirection === 'over' ? 'bg-emerald-500 text-white' : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/30'
+                userDirection === 'over' ? 'bg-emerald-500 text-text-primary' : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/30'
               } disabled:opacity-50`}>Over</button>
             <button onClick={() => onPick(prop.id, 'under')} disabled={submitting}
               className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${
-                userDirection === 'under' ? 'bg-rose-500 text-white' : 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/30'
+                userDirection === 'under' ? 'bg-rose-500 text-text-primary' : 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/30'
               } disabled:opacity-50`}>Under</button>
           </div>
         )}
       </div>
 
       {showReason && !isLocked && !isResolved && (
-        <div className="mt-2 pt-2 border-t border-white/5">
-          <p className="text-[10px] text-white/30 mb-1.5">Why? (optional)</p>
+        <div className="mt-2 pt-2 border-t border-stone/20">
+          <p className="text-[10px] text-text-primary/30 mb-1.5">Why? (optional)</p>
           <div className="flex flex-wrap gap-1.5">
             {REASON_CHIPS.map(chip => (
               <button key={chip} onClick={() => onReasonChip(prop.id, chip)}
                 className={`px-2 py-0.5 rounded-full text-[10px] transition-colors ${
                   userPick?.predictionData?.reasonChip === chip
-                    ? 'bg-emerald-500/30 text-emerald-400' : 'bg-white/5 text-white/30 hover:text-white/60'
+                    ? 'bg-emerald-500/30 text-emerald-400' : 'bg-dark-tertiary/5 text-text-primary/30 hover:text-text-primary/60'
                 }`}>{chip}</button>
             ))}
           </div>
@@ -1212,7 +1212,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
             type="text"
             maxLength={280}
             placeholder="Quick thesis... (optional)"
-            className="w-full mt-2 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[11px] text-white/70 placeholder-white/15 focus:outline-none focus:border-gold/30"
+            className="w-full mt-2 bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-lg px-2.5 py-1.5 text-[11px] text-text-primary/70 placeholder-white/15 focus:outline-none focus:border-gold/30"
             onBlur={e => {
               if (e.target.value.trim()) {
                 onReasonChip?.(prop.id, null, e.target.value.trim())
@@ -1266,8 +1266,8 @@ export default function ProveIt() {
     <div className="max-w-4xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Prove It</h1>
-        <p className="text-white/50 text-sm mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">Prove It</h1>
+        <p className="text-text-primary/50 text-sm mt-1">
           Make performance calls. Build your track record. Climb the leaderboard.
         </p>
       </div>
@@ -1281,7 +1281,7 @@ export default function ProveIt() {
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
-                : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                : 'text-text-primary/40 hover:text-text-primary/60 hover:bg-dark-tertiary/5'
             }`}
           >
             {tab.label}

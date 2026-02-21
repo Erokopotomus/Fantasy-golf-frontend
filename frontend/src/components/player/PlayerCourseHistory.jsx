@@ -34,11 +34,11 @@ const PlayerCourseHistory = ({ courseHistory }) => {
               <tr key={index} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
                 <td className="p-3">
                   {course.courseId ? (
-                    <Link to={`/courses/${course.courseId}`} className="text-white font-medium hover:text-gold transition-colors">
+                    <Link to={`/courses/${course.courseId}`} className="text-text-primary font-medium hover:text-gold transition-colors">
                       {course.name}
                     </Link>
                   ) : (
-                    <p className="text-white font-medium">{course.name}</p>
+                    <p className="text-text-primary font-medium">{course.name}</p>
                   )}
                   <p className="text-text-muted text-xs">Par {course.par}</p>
                 </td>

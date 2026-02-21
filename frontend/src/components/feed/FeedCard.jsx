@@ -65,7 +65,7 @@ const FeedCard = ({ card }) => {
   const hasImage = !!card.meta?.imageUrl
 
   return (
-    <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-xl p-4 hover:bg-white/[0.06] transition-colors">
+    <div className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] backdrop-blur-xl rounded-xl p-4 hover:bg-dark-tertiary/[0.06] transition-colors">
       <div className={hasImage ? 'flex gap-4' : ''}>
         {/* Left-side thumbnail */}
         {hasImage && (
@@ -93,27 +93,27 @@ const FeedCard = ({ card }) => {
               </span>
             </div>
             {card.timestamp && (
-              <span className="text-[10px] text-white/25 font-mono">
+              <span className="text-[10px] text-text-primary/25 font-mono">
                 {timeAgo(card.timestamp)}
               </span>
             )}
           </div>
 
           {/* Headline */}
-          <h3 className="text-white font-display font-bold text-sm leading-snug mb-1">
+          <h3 className="text-text-primary font-display font-bold text-sm leading-snug mb-1">
             {card.headline}
           </h3>
 
           {/* Context */}
           {card.context && (
-            <p className="text-white/50 text-xs leading-relaxed mb-2 line-clamp-2">
+            <p className="text-text-primary/50 text-xs leading-relaxed mb-2 line-clamp-2">
               {card.context}
             </p>
           )}
 
           {/* Byline */}
           {card.meta?.byline && (
-            <p className="text-white/30 text-[10px] font-mono mb-2">
+            <p className="text-text-primary/30 text-[10px] font-mono mb-2">
               via {card.meta.byline}
             </p>
           )}

@@ -53,7 +53,7 @@ const TradeVotePanel = ({ tradeId, currentUserId, initiatorId, receiverId }) => 
 
   return (
     <Card>
-      <h4 className="text-sm font-semibold text-white mb-3">League Vote</h4>
+      <h4 className="text-sm font-semibold text-text-primary mb-3">League Vote</h4>
 
       {/* Countdown */}
       {timeLeft > 0 && (

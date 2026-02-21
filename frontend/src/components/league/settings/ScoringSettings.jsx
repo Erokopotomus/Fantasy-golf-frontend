@@ -85,7 +85,7 @@ const ScoringSettings = ({ settings, onChange }) => {
     <div className="space-y-6">
       {/* Preset Selector */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Scoring Preset</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Scoring Preset</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {PRESETS.map((p) => {
             const active = config.preset === p.key
@@ -100,7 +100,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                     : 'border-dark-border bg-dark-tertiary hover:border-dark-border/80'
                 }`}
               >
-                <p className={`font-semibold ${active ? c.text : 'text-white'}`}>{p.name}</p>
+                <p className={`font-semibold ${active ? c.text : 'text-text-primary'}`}>{p.name}</p>
                 <p className="text-text-muted text-xs mt-1">{p.desc}</p>
               </button>
             )
@@ -118,7 +118,7 @@ const ScoringSettings = ({ settings, onChange }) => {
 
       {/* Live Preview */}
       <Card className="border-gold/30">
-        <h3 className="text-lg font-semibold font-display text-white mb-1">Live Preview</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-1">Live Preview</h3>
         <p className="text-text-muted text-xs mb-4">
           Example: 5th place finish, 22 birdies, 2 eagles, 38 pars, 8 bogeys, 1 double, 1 bogey-free round, 1 birdie streak
         </p>
@@ -149,7 +149,7 @@ const ScoringSettings = ({ settings, onChange }) => {
       {/* Position Points */}
       <Card>
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-semibold font-display text-white">Position Points</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Position Points</h3>
           {!isCustom && (
             <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
@@ -167,7 +167,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.positionPoints[key] ?? 0}
                 onChange={(e) => updateConfig(`positionPoints.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -179,7 +179,7 @@ const ScoringSettings = ({ settings, onChange }) => {
       {/* Hole Scoring */}
       <Card>
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-semibold font-display text-white">Hole Scoring</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Hole Scoring</h3>
           {!isCustom && (
             <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
@@ -197,7 +197,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.holeScoring[key] ?? 0}
                 onChange={(e) => updateConfig(`holeScoring.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -209,7 +209,7 @@ const ScoringSettings = ({ settings, onChange }) => {
       {/* Bonuses */}
       <Card>
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-semibold font-display text-white">Bonuses</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Bonuses</h3>
           {!isCustom && (
             <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
@@ -227,7 +227,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.bonuses[key] ?? 0}
                 onChange={(e) => updateConfig(`bonuses.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -239,7 +239,7 @@ const ScoringSettings = ({ settings, onChange }) => {
       {/* Strokes Gained */}
       <Card>
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-semibold font-display text-white">Strokes Gained</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Strokes Gained</h3>
           {!isCustom && (
             <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
@@ -256,7 +256,7 @@ const ScoringSettings = ({ settings, onChange }) => {
               disabled={!isCustom}
               className="rounded border-dark-border text-gold focus:ring-gold"
             />
-            <span className="text-sm text-white">Enable SG scoring</span>
+            <span className="text-sm text-text-primary">Enable SG scoring</span>
           </label>
           {config.strokesGained?.enabled && (
             <div className="flex items-center gap-2">
@@ -268,7 +268,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.strokesGained.multiplier || 5}
                 onChange={(e) => updateConfig('strokesGained.multiplier', parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-20 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-20 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />

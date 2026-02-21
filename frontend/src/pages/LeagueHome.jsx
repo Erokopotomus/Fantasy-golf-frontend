@@ -232,7 +232,7 @@ const LeagueHome = () => {
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
-              <h2 className="text-xl font-bold font-display text-white mb-2">League Not Found</h2>
+              <h2 className="text-xl font-bold font-display text-text-primary mb-2">League Not Found</h2>
               <p className="text-text-secondary mb-6">This league doesn't exist or you don't have access.</p>
               <Link to="/leagues" className="text-gold hover:underline">
                 Back to Leagues
@@ -253,14 +253,14 @@ const LeagueHome = () => {
             <div>
               <Link
                 to="/leagues"
-                className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+                className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 All Leagues
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">{league.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary">{league.name}</h1>
               <div className="flex items-center gap-3 mt-1">
                 <span className="text-text-secondary">{format?.name || 'League'}</span>
                 {hasDraft && (
@@ -437,7 +437,7 @@ const LeagueHome = () => {
                 <Card className="border-gold/30 bg-gradient-to-r from-gold/10 to-dark-secondary">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-semibold font-display text-white">Ready to Draft?</h3>
+                      <h3 className="text-lg font-semibold font-display text-text-primary">Ready to Draft?</h3>
                       <p className="text-text-secondary text-sm">Create a draft for this league to get started.</p>
                     </div>
                     <Button onClick={handleCreateDraft} disabled={creatingDraft}>
@@ -450,7 +450,7 @@ const LeagueHome = () => {
                 <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-dark-secondary">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold font-display text-white">
+                      <h3 className="text-lg font-semibold font-display text-text-primary">
                         {draftStatus === 'SCHEDULED' ? 'Draft Scheduled' :
                          draftStatus === 'PAUSED' ? 'Draft Paused' : 'Draft In Progress'}
                       </h3>
@@ -463,7 +463,7 @@ const LeagueHome = () => {
                                 setDraftDateInput(new Date(latestDraft.scheduledFor).toISOString().slice(0, 16))
                                 setEditingDraftDate(true)
                               }}
-                              className="text-xs text-text-muted hover:text-white mt-2 underline"
+                              className="text-xs text-text-muted hover:text-text-primary mt-2 underline"
                             >
                               Change Date
                             </button>
@@ -490,7 +490,7 @@ const LeagueHome = () => {
                             type="datetime-local"
                             value={draftDateInput}
                             onChange={(e) => setDraftDateInput(e.target.value)}
-                            className="bg-dark-primary border border-dark-border rounded-lg px-3 py-1.5 text-sm text-white"
+                            className="bg-dark-primary border border-dark-border rounded-lg px-3 py-1.5 text-sm text-text-primary"
                           />
                           <Button size="sm" onClick={handleSaveDraftDate} disabled={savingDate || !draftDateInput}>
                             {savingDate ? 'Saving...' : 'Save'}
@@ -502,7 +502,7 @@ const LeagueHome = () => {
                           )}
                           <button
                             onClick={() => setEditingDraftDate(false)}
-                            className="text-xs text-text-muted hover:text-white"
+                            className="text-xs text-text-muted hover:text-text-primary"
                           >
                             Cancel
                           </button>
@@ -530,7 +530,7 @@ const LeagueHome = () => {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-white font-medium">Draft Complete</h3>
+                      <h3 className="text-text-primary font-medium">Draft Complete</h3>
                       <p className="text-text-muted text-sm">The draft has finished. Manage your roster below.</p>
                     </div>
                   </div>
@@ -549,7 +549,7 @@ const LeagueHome = () => {
                       <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold">{currentTournament.name}</h3>
+                      <h3 className="text-text-primary font-semibold">{currentTournament.name}</h3>
                       <p className="text-text-muted text-xs">
                         {currentTournament.courseName && <span>{currentTournament.courseName} &middot; </span>}
                         Round {currentTournament.currentRound || '?'}
@@ -573,7 +573,7 @@ const LeagueHome = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-medium text-sm">Next Event: {currentTournament.name}</h3>
+                    <h3 className="text-text-primary font-medium text-sm">Next Event: {currentTournament.name}</h3>
                     <p className="text-text-muted text-xs">
                       Starts {new Date(currentTournament.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
@@ -599,7 +599,7 @@ const LeagueHome = () => {
                     {nflMatchupData.isLive && (
                       <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                     )}
-                    <h3 className="text-sm font-display font-bold text-white uppercase tracking-wide">
+                    <h3 className="text-sm font-display font-bold text-text-primary uppercase tracking-wide">
                       {nflMatchupData.isLive ? 'Live — ' : nflMatchupData.isComplete ? '' : 'Up Next — '}
                       Week {nflMatchupData.week}
                     </h3>
@@ -618,7 +618,7 @@ const LeagueHome = () => {
                   {/* Your team */}
                   <div className="flex-1 text-center">
                     <p className="text-xs text-emerald-400 font-medium mb-1">You</p>
-                    <p className="text-sm text-white font-medium truncate">
+                    <p className="text-sm text-text-primary font-medium truncate">
                       {nflMatchupData.userTeam?.teamName || nflMatchupData.userTeam?.name || 'Your Team'}
                     </p>
                     {nflMatchupData.userTeam && (
@@ -633,7 +633,7 @@ const LeagueHome = () => {
                     <span className={`text-3xl font-bold font-display ${
                       nflMatchupData.isComplete
                         ? nflMatchupData.userWon ? 'text-emerald-400' : 'text-red-400'
-                        : 'text-white'
+                        : 'text-text-primary'
                     }`}>
                       {nflMatchupData.userScore?.toFixed(1) || '0.0'}
                     </span>
@@ -641,7 +641,7 @@ const LeagueHome = () => {
                     <span className={`text-3xl font-bold font-display ${
                       nflMatchupData.isComplete
                         ? !nflMatchupData.userWon ? 'text-emerald-400' : 'text-red-400'
-                        : 'text-white'
+                        : 'text-text-primary'
                     }`}>
                       {nflMatchupData.opponentScore?.toFixed(1) || '0.0'}
                     </span>
@@ -650,7 +650,7 @@ const LeagueHome = () => {
                   {/* Opponent */}
                   <div className="flex-1 text-center">
                     <p className="text-xs text-text-muted font-medium mb-1">Opponent</p>
-                    <p className="text-sm text-white font-medium truncate">
+                    <p className="text-sm text-text-primary font-medium truncate">
                       {nflMatchupData.opponentTeam?.teamName || nflMatchupData.opponentTeam?.name || 'Opponent'}
                     </p>
                     {nflMatchupData.opponentTeam && (
@@ -703,7 +703,7 @@ const LeagueHome = () => {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold">Playoffs</h3>
+                      <h3 className="text-text-primary font-semibold">Playoffs</h3>
                       <p className="text-text-muted text-sm">
                         Generate the playoff bracket based on current standings ({league.settings?.playoffTeams || 4} teams)
                       </p>
@@ -728,10 +728,10 @@ const LeagueHome = () => {
               {!hasNoActiveTeams && (
               <Card className="bg-gradient-to-br from-gold/20 to-dark-secondary border-gold/30">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold font-display text-white">Your Position</h3>
+                  <h3 className="text-lg font-semibold font-display text-text-primary">Your Position</h3>
                   <span className={`text-3xl font-bold ${
                     userRank === 1 ? 'text-yellow-400' :
-                    userRank <= 3 ? 'text-gold' : 'text-white'
+                    userRank <= 3 ? 'text-gold' : 'text-text-primary'
                   }`}>
                     #{userRank}
                   </span>
@@ -742,7 +742,7 @@ const LeagueHome = () => {
                     <p className="text-text-muted text-xs">Total Points</p>
                   </div>
                   <div className="bg-dark-primary/50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold font-display text-white">
+                    <p className="text-2xl font-bold font-display text-text-primary">
                       {pointsDiff > 0 ? '-' : '+'}{Math.abs(pointsDiff).toLocaleString()}
                     </p>
                     <p className="text-text-muted text-xs">vs Leader</p>
@@ -755,7 +755,7 @@ const LeagueHome = () => {
               {!hasNoActiveTeams && (
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold font-display text-white">Standings</h3>
+                  <h3 className="text-lg font-semibold font-display text-text-primary">Standings</h3>
                   <span className="text-text-muted text-sm">{league.standings?.length} teams</span>
                 </div>
                 <div className="space-y-2">
@@ -777,7 +777,7 @@ const LeagueHome = () => {
                         {team.avatar}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`font-medium truncate ${team.userId === '1' ? 'text-gold' : 'text-white'}`}>
+                        <p className={`font-medium truncate ${team.userId === '1' ? 'text-gold' : 'text-text-primary'}`}>
                           {team.name}
                           {team.userId === '1' && <span className="text-xs ml-1">(You)</span>}
                         </p>
@@ -791,7 +791,7 @@ const LeagueHome = () => {
 
               {/* League Info */}
               <Card>
-                <h3 className="text-lg font-semibold font-display text-white mb-4">League Settings</h3>
+                <h3 className="text-lg font-semibold font-display text-text-primary mb-4">League Settings</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-text-muted">Format</span>
@@ -799,40 +799,40 @@ const LeagueHome = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-muted">Teams</span>
-                    <span className="text-white">{league.maxTeams || historicalTeams?.teams?.length || '–'}</span>
+                    <span className="text-text-primary">{league.maxTeams || historicalTeams?.teams?.length || '–'}</span>
                   </div>
                   {hasDraft && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Draft Type</span>
-                      <span className="text-white capitalize">{league.draftType}</span>
+                      <span className="text-text-primary capitalize">{league.draftType}</span>
                     </div>
                   )}
                   {!isOneAndDone && league.settings?.rosterSize && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Roster Spots</span>
-                      <span className="text-white">{league.settings.rosterSize}</span>
+                      <span className="text-text-primary">{league.settings.rosterSize}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-text-muted">Scoring</span>
-                    <span className="text-white capitalize">{league.settings?.scoringType || 'Standard'}</span>
+                    <span className="text-text-primary capitalize">{league.settings?.scoringType || 'Standard'}</span>
                   </div>
                   {league.settings?.waiverType && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Waivers</span>
-                      <span className="text-white capitalize">{league.settings.waiverType === 'faab' ? 'FAAB' : league.settings.waiverType}</span>
+                      <span className="text-text-primary capitalize">{league.settings.waiverType === 'faab' ? 'FAAB' : league.settings.waiverType}</span>
                     </div>
                   )}
                   {league.settings?.faabBudget && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">FAAB Budget</span>
-                      <span className="text-white">${league.settings.faabBudget}</span>
+                      <span className="text-text-primary">${league.settings.faabBudget}</span>
                     </div>
                   )}
                   {league.settings?.tradeDeadline && league.settings?.tradeDeadlineDate && (
                     <div className="flex justify-between">
                       <span className="text-text-muted">Trade Deadline</span>
-                      <span className="text-white">{new Date(league.settings.tradeDeadlineDate).toLocaleDateString()}</span>
+                      <span className="text-text-primary">{new Date(league.settings.tradeDeadlineDate).toLocaleDateString()}</span>
                     </div>
                   )}
                   {!isImportedLeague && (
@@ -858,7 +858,7 @@ const LeagueHome = () => {
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-display font-bold text-sm group-hover:text-accent-gold transition-colors">League Vault</p>
+                        <p className="text-text-primary font-display font-bold text-sm group-hover:text-accent-gold transition-colors">League Vault</p>
                         <p className="text-xs text-text-secondary">View your league's imported history</p>
                       </div>
                       <svg className="w-4 h-4 text-text-secondary group-hover:text-accent-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -882,7 +882,7 @@ const LeagueHome = () => {
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-display font-bold text-sm group-hover:text-accent-gold transition-colors">Season Recap</p>
+                      <p className="text-text-primary font-display font-bold text-sm group-hover:text-accent-gold transition-colors">Season Recap</p>
                       <p className="text-xs text-text-secondary">Awards, records, and final standings</p>
                     </div>
                     <svg className="w-4 h-4 text-text-secondary group-hover:text-accent-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -896,7 +896,7 @@ const LeagueHome = () => {
               {leagueLeaderboard.length > 0 && (
                 <Card>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-display font-bold text-white">Sharpest Predictors</h3>
+                    <h3 className="text-sm font-display font-bold text-text-primary">Sharpest Predictors</h3>
                     <Link to="/prove-it" className="text-xs text-accent-gold hover:text-accent-gold/80 font-mono">View All</Link>
                   </div>
                   <div className="space-y-2">
@@ -907,7 +907,7 @@ const LeagueHome = () => {
                         </span>
                         <Link
                           to={`/manager/${entry.userId}`}
-                          className="flex-1 text-sm text-white hover:text-accent-gold transition-colors truncate font-display"
+                          className="flex-1 text-sm text-text-primary hover:text-accent-gold transition-colors truncate font-display"
                         >
                           {entry.name || entry.userName || 'Unknown'}
                         </Link>
@@ -925,7 +925,7 @@ const LeagueHome = () => {
 
               {/* Activity Feed */}
               <Card>
-                <h3 className="text-base font-semibold text-white mb-4">Recent Activity</h3>
+                <h3 className="text-base font-semibold text-text-primary mb-4">Recent Activity</h3>
                 <ActivityFeed activity={activity} loading={activityLoading} />
               </Card>
             </div>
@@ -935,7 +935,7 @@ const LeagueHome = () => {
               {/* League Members / Teams */}
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold font-display text-white">
+                  <h3 className="text-lg font-semibold font-display text-text-primary">
                     {hasNoActiveTeams && historicalTeams ? `${historicalTeams.year} Standings` : 'Teams'}
                   </h3>
                   <span className="text-text-muted text-sm">
@@ -986,7 +986,7 @@ const LeagueHome = () => {
                                 <div className="w-7 h-7 bg-dark-tertiary rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
                                   {(team.name || ownerName || '?').charAt(0).toUpperCase()}
                                 </div>
-                                <span className={`font-medium truncate ${isMe ? 'text-emerald-400' : 'text-white'}`}>
+                                <span className={`font-medium truncate ${isMe ? 'text-emerald-400' : 'text-text-primary'}`}>
                                   {team.name || 'Team ' + rank}
                                   {isMe && <span className="text-xs text-emerald-400/60 ml-1">(You)</span>}
                                 </span>
@@ -1001,7 +1001,7 @@ const LeagueHome = () => {
                             <td className="py-3 text-center text-text-secondary">
                               {team.wins != null ? `${team.wins}-${team.losses || 0}` : '–'}
                             </td>
-                            <td className="py-3 text-right font-semibold text-white">
+                            <td className="py-3 text-right font-semibold text-text-primary">
                               {team.totalPoints?.toLocaleString() || '0'}
                             </td>
                           </tr>
@@ -1046,7 +1046,7 @@ const LeagueHome = () => {
                                   <div className="w-7 h-7 bg-dark-tertiary rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
                                     {(ht.teamName || '?').charAt(0).toUpperCase()}
                                   </div>
-                                  <span className="font-medium truncate text-white">
+                                  <span className="font-medium truncate text-text-primary">
                                     {ht.teamName}
                                     {isChamp && <span className="ml-1">🏆</span>}
                                   </span>
@@ -1058,7 +1058,7 @@ const LeagueHome = () => {
                               <td className="py-3 text-center text-text-secondary">
                                 {ht.wins != null ? `${ht.wins}-${ht.losses || 0}${ht.ties > 0 ? `-${ht.ties}` : ''}` : '–'}
                               </td>
-                              <td className="py-3 text-right font-mono text-sm text-white">
+                              <td className="py-3 text-right font-mono text-sm text-text-primary">
                                 {ht.pointsFor ? Number(ht.pointsFor).toFixed(1) : '–'}
                               </td>
                               <td className="py-3 text-right">

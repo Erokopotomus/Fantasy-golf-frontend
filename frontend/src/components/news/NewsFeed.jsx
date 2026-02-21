@@ -58,10 +58,10 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
       {/* Header */}
       <div className="p-4 border-b border-dark-border">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold font-display text-white">{title}</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">{title}</h3>
           <button
             onClick={refetch}
-            className="text-text-muted hover:text-white transition-colors"
+            className="text-text-muted hover:text-text-primary transition-colors"
             title="Refresh"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,8 +81,8 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
                   flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium
                   whitespace-nowrap transition-colors
                   ${activeFilter === filter.id
-                    ? 'bg-gold text-white'
-                    : 'bg-dark-tertiary text-text-muted hover:bg-dark-border hover:text-white'
+                    ? 'bg-gold text-text-primary'
+                    : 'bg-dark-tertiary text-text-muted hover:bg-dark-border hover:text-text-primary'
                   }
                 `}
               >

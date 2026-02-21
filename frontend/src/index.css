@@ -22,18 +22,38 @@
   --card-shadow: 0 2px 8px rgba(0,0,0,0.04);
   --gauge-bg: #E0DBD2;
 
-  /* Brand accents (same both modes) */
+  /* RGB channels for Tailwind opacity modifier support */
+  --bg-rgb: 250 250 246;
+  --bg-alt-rgb: 240 237 230;
+  --surface-rgb: 255 255 255;
+  --surface-alt-rgb: 247 245 240;
+  --stone-rgb: 224 219 210;
+  --text-1-rgb: 26 26 26;
+  --text-2-rgb: 101 97 90;
+  --text-3-rgb: 160 154 144;
+
+  /* Translucent surface layers (for glass cards, hover states) */
+  --glass: rgba(0,0,0,0.03);
+  --glass-hover: rgba(0,0,0,0.05);
+  --glass-bright: rgba(0,0,0,0.08);
+
+  /* Brand accents — RGB channels for opacity support */
   --blaze: #F06820;
   --blaze-hot: #FF8828;
   --blaze-deep: #D45A10;
+  --blaze-rgb: 240 104 32;
   --slate: #1E2A3A;
   --slate-mid: #2C3E50;
   --slate-light: #3D5166;
   --field: #0D9668;
   --field-bright: #14B880;
+  --field-rgb: 13 150 104;
   --crown: #D4930D;
   --crown-bright: #F0B429;
+  --crown-rgb: 212 147 13;
+  --crown-bright-rgb: 240 180 41;
   --live-red: #E83838;
+  --live-red-rgb: 232 56 56;
 
   /* Tinted card backgrounds (light mode) */
   --tint-golf: #F0F7F4;
@@ -47,21 +67,6 @@
   --font-body: 'DM Sans', sans-serif;
   --font-data: 'JetBrains Mono', monospace;
   --font-editorial: 'Instrument Serif', serif;
-
-  /* Legacy variable mappings (keep existing components working) */
-  --border: #E0DBD2;
-  --border-subtle: rgba(0,0,0,0.06);
-  --text: #1A1A1A;
-  --text-secondary: #65615A;
-  --text-muted: #A09A90;
-  --gold: #D4930D;
-  --gold-bright: #F0B429;
-  --gold-muted: #B07D0A;
-  --orange: #F06820;
-  --rose: #E83838;
-  --green: #0D9668;
-  --surface-hover: rgba(0,0,0,0.04);
-  --surface-bright: rgba(0,0,0,0.06);
 }
 
 /* DARK MODE */
@@ -79,27 +84,27 @@
   --card-shadow: 0 2px 8px rgba(0,0,0,0.2);
   --gauge-bg: rgba(255,255,255,0.08);
 
+  /* RGB channels */
+  --bg-rgb: 14 16 21;
+  --bg-alt-rgb: 21 24 32;
+  --surface-rgb: 26 29 38;
+  --surface-alt-rgb: 31 34 46;
+  --stone-rgb: 42 45 56;
+  --text-1-rgb: 238 234 226;
+  --text-2-rgb: 144 140 132;
+  --text-3-rgb: 92 89 82;
+
+  /* Translucent surface layers */
+  --glass: rgba(255,255,255,0.06);
+  --glass-hover: rgba(255,255,255,0.09);
+  --glass-bright: rgba(255,255,255,0.12);
+
   /* Dark mode tints */
   --tint-golf: #1A1D26;
   --tint-nfl: #1A1D26;
   --tint-news: #1A1D26;
   --tint-rating: #1A1D26;
   --tint-ai: #1A1D26;
-
-  /* Legacy variable mappings (keep existing components working) */
-  --border: #2A2D38;
-  --border-subtle: rgba(255,255,255,0.06);
-  --text: #EEEAE2;
-  --text-secondary: #908C84;
-  --text-muted: #5C5952;
-  --gold: #D4930D;
-  --gold-bright: #F0B429;
-  --gold-muted: #B07D0A;
-  --orange: #F06820;
-  --rose: #E83838;
-  --green: #0D9668;
-  --surface-hover: rgba(255,255,255,0.07);
-  --surface-bright: rgba(255,255,255,0.10);
 }
 
 /* Theme transition */
@@ -179,14 +184,14 @@ body {
 
   .card {
     @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
-    background: rgba(255,245,230,0.04);
-    border-color: rgba(255,255,255,0.08);
+    background: var(--glass);
+    border-color: var(--card-border);
   }
 
   .card-hover {
     @apply hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300;
     &:hover {
-      background: rgba(255,245,230,0.07);
+      background: var(--glass-hover);
     }
   }
 
@@ -205,14 +210,14 @@ body {
 @layer components {
   .glass-card {
     @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
-    background: rgba(255,245,230,0.04);
-    border-color: rgba(255,255,255,0.08);
+    background: var(--glass);
+    border-color: var(--card-border);
   }
 
   .glass-card--highlighted {
     @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border;
-    background: rgba(255,245,230,0.06);
-    border-color: rgba(232,184,77,0.2);
+    background: var(--glass-hover);
+    border-color: rgb(var(--crown-rgb) / 0.2);
   }
 }
 
@@ -222,7 +227,7 @@ body {
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center font-semibold font-display rounded-button
-           bg-gradient-to-r from-gold to-orange text-dark-primary
+           bg-gradient-to-r from-gold to-orange text-slate
            shadow-button hover:shadow-glow-gold
            active:scale-[0.98] transition-all duration-300
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -268,7 +273,8 @@ body {
 
   .tag {
     @apply inline-flex items-center px-2.5 py-1 rounded-badge text-xs font-mono font-medium
-           bg-surface border border-white/[0.08] text-text-secondary;
+           bg-surface text-text-secondary;
+    border: 1px solid var(--card-border);
   }
 }
 
@@ -284,8 +290,8 @@ body {
     @apply rounded-card backdrop-blur-xl backdrop-saturate-150 border p-6
            hover:border-gold/30 hover:shadow-card-hover hover:scale-[1.02]
            transition-all duration-300 cursor-pointer;
-    background: rgba(255,245,230,0.04);
-    border-color: rgba(255,255,255,0.08);
+    background: var(--glass);
+    border-color: var(--card-border);
   }
 
   .quick-action-btn {
@@ -296,7 +302,7 @@ body {
 
   /* Loading spinner */
   .spinner {
-    @apply w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin;
+    @apply w-4 h-4 border-2 border-text-primary/30 border-t-text-primary rounded-full animate-spin;
   }
 
   /* Skeleton loading */
@@ -324,7 +330,7 @@ body {
 /* Thin scrollbar for activity feeds */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #2A2520 transparent;
+  scrollbar-color: var(--stone) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -336,12 +342,12 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #2A2520;
+  background: var(--stone);
   border-radius: 2px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #3A3530;
+  background: var(--text-3);
 }
 
 /* Typography improvements */
@@ -408,8 +414,8 @@ body {
   /* Bottom navigation bar styles — glass */
   .bottom-nav {
     @apply fixed bottom-0 left-0 right-0 border-t backdrop-blur-xl backdrop-saturate-150;
-    background: rgba(14,12,10,0.85);
-    border-color: rgba(255,255,255,0.08);
+    background: rgb(var(--bg-alt-rgb) / 0.85);
+    border-color: var(--card-border);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 

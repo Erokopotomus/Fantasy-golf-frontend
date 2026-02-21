@@ -18,7 +18,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
   return (
     <Card>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold font-display text-white">Survivor Standings</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">Survivor Standings</h3>
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-gold"></div>
@@ -83,7 +83,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-gold' : 'text-white'}`}>
+                      <span className={`font-medium ${isUser ? 'text-gold' : 'text-text-primary'}`}>
                         {team.name}
                         {isUser && <span className="text-xs ml-1">(You)</span>}
                       </span>
@@ -98,7 +98,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                       {team.status === 'buyback' ? 'Buyback' : 'Alive'}
                     </span>
                   </td>
-                  <td className="py-3 text-right pr-2 font-semibold text-white">
+                  <td className="py-3 text-right pr-2 font-semibold text-text-primary">
                     {team.points?.toLocaleString()}
                   </td>
                 </tr>

@@ -69,7 +69,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
     <button
       onClick={() => handleSort(field)}
       className={`flex items-center gap-1 text-xs font-medium transition-colors ${
-        sortBy === field ? 'text-gold' : 'text-text-muted hover:text-white'
+        sortBy === field ? 'text-gold' : 'text-text-muted hover:text-text-primary'
       }`}
     >
       {children}
@@ -87,7 +87,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
       {/* Left Panel - Team Rosters */}
       <div className="xl:col-span-3">
         <Card padding="sm">
-          <h3 className="text-lg font-semibold font-display text-white mb-3">Team Rosters</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary mb-3">Team Rosters</h3>
           <div className="overflow-x-auto">
             <div className="flex gap-3" style={{ minWidth: teams.length > 4 ? `${teams.length * 160}px` : 'auto' }}>
               {teams.map((team) => {
@@ -109,7 +109,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                     }`}>
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-semibold truncate ${
-                          isUser ? 'text-gold' : 'text-white'
+                          isUser ? 'text-gold' : 'text-text-primary'
                         }`}>
                           {team.name}
                         </p>
@@ -135,7 +135,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                         >
                           {pick ? (
                             <div className="flex items-center justify-between gap-1">
-                              <span className="text-white font-medium truncate">{pick.playerName}</span>
+                              <span className="text-text-primary font-medium truncate">{pick.playerName}</span>
                               <span className="text-text-muted flex-shrink-0">#{pick.playerRank}</span>
                             </div>
                           ) : (
@@ -156,7 +156,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
       <div className="xl:col-span-2">
         <Card padding="sm" className="flex flex-col" style={{ maxHeight: 'calc(100vh - 220px)' }}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold font-display text-white">Available</h3>
+            <h3 className="text-lg font-semibold font-display text-text-primary">Available</h3>
             <span className="text-text-muted text-xs">
               {availablePlayers.length} remaining
             </span>
@@ -173,7 +173,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
               placeholder="Search players..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-dark-tertiary border border-dark-border rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-text-muted focus:outline-none focus:border-gold transition-colors"
+              className="w-full bg-dark-tertiary border border-dark-border rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold transition-colors"
             />
           </div>
 
@@ -186,7 +186,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                 className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                   posFilter === f
                     ? 'bg-gold/20 text-gold'
-                    : 'bg-dark-tertiary text-text-muted hover:text-white'
+                    : 'bg-dark-tertiary text-text-muted hover:text-text-primary'
                 }`}
               >
                 {f === 'all' ? 'All' : f}
@@ -212,14 +212,14 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm">{player.countryFlag}</span>
                         <div className="min-w-0">
-                          <p className="text-white text-xs font-medium truncate">{player.name}</p>
+                          <p className="text-text-primary text-xs font-medium truncate">{player.name}</p>
                           <p className="text-text-muted text-[10px]">{player.country}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-1.5 text-right">
                       <span className={`text-xs font-medium ${
-                        (player.stats?.sgTotal || 0) > 1 ? 'text-gold' : 'text-white'
+                        (player.stats?.sgTotal || 0) > 1 ? 'text-gold' : 'text-text-primary'
                       }`}>
                         {player.stats?.sgTotal?.toFixed(2) || '—'}
                       </span>

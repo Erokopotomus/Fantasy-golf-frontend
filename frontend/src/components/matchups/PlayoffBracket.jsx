@@ -32,7 +32,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold font-display text-white mb-2">Playoffs Coming Soon</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Playoffs Coming Soon</h3>
           <p className="text-text-muted text-sm">
             The playoff bracket will be generated after the regular season
           </p>
@@ -49,7 +49,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">
         Playoff Bracket ({processedBracket.numTeams} Teams)
       </h3>
 
@@ -87,7 +87,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                             matchup.team1
                               ? matchup.team1.userId === currentUserId
                                 ? 'text-gold'
-                                : 'text-white'
+                                : 'text-text-primary'
                               : 'text-text-muted'
                           }`}>
                             {matchup.team1
@@ -124,7 +124,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                                 matchup.team2
                                   ? matchup.team2.userId === currentUserId
                                     ? 'text-gold'
-                                    : 'text-white'
+                                    : 'text-text-primary'
                                   : 'text-text-muted'
                               }`}>
                                 {matchup.team2

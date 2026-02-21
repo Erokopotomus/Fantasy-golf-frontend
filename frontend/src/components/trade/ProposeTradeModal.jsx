@@ -89,10 +89,10 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
       <div className="relative bg-dark-secondary rounded-xl border border-dark-border w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-dark-border">
-          <h2 className="text-xl font-bold font-display text-white">Propose Trade</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary">Propose Trade</h2>
           <button
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-white transition-colors"
+            className="p-2 text-text-muted hover:text-text-primary transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -113,7 +113,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                 setSelectedTeam(e.target.value)
                 setTheirPlayersToReceive([])
               }}
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-emerald-400 focus:outline-none"
+              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-emerald-400 focus:outline-none"
             >
               <option value="">Select a team...</option>
               {leagueMembers.map(member => (
@@ -132,7 +132,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a message to your trade proposal..."
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-text-muted focus:border-emerald-400 focus:outline-none"
+              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-emerald-400 focus:outline-none"
             />
           </div>
 
@@ -154,7 +154,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                     `}
                   >
                     <div className="flex-1">
-                      <p className="text-white font-medium">{player.name}</p>
+                      <p className="text-text-primary font-medium">{player.name}</p>
                       {player.owgr && (
                         <p className="text-text-muted text-xs">#{player.owgr} World Ranking</p>
                       )}
@@ -189,7 +189,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                       `}
                     >
                       <div className="flex-1">
-                        <p className="text-white font-medium">{player.name}</p>
+                        <p className="text-text-primary font-medium">{player.name}</p>
                         {player.owgr && (
                           <p className="text-text-muted text-xs">#{player.owgr} World Ranking</p>
                         )}
@@ -227,7 +227,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                         value={senderCurrentDollars || ''}
                         onChange={(e) => setSenderCurrentDollars(parseInt(e.target.value) || 0)}
                         placeholder="0"
-                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
                       />
                     </div>
                     {allowNextYear && (
@@ -239,7 +239,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                           value={senderNextDollars || ''}
                           onChange={(e) => setSenderNextDollars(parseInt(e.target.value) || 0)}
                           placeholder="0"
-                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
                         />
                       </div>
                     )}
@@ -256,7 +256,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                         value={receiverCurrentDollars || ''}
                         onChange={(e) => setReceiverCurrentDollars(parseInt(e.target.value) || 0)}
                         placeholder="0"
-                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
                       />
                     </div>
                     {allowNextYear && (
@@ -268,7 +268,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                           value={receiverNextDollars || ''}
                           onChange={(e) => setReceiverNextDollars(parseInt(e.target.value) || 0)}
                           placeholder="0"
-                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-white text-sm focus:border-emerald-400 focus:outline-none"
+                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
                         />
                       </div>
                     )}
@@ -288,7 +288,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                   {myPlayersToSend.map(id => {
                     const player = myPlayers.find(p => p.id === id)
                     return player ? (
-                      <p key={id} className="text-white text-sm">{player.name}</p>
+                      <p key={id} className="text-text-primary text-sm">{player.name}</p>
                     ) : null
                   })}
                   {dollarsEnabled && senderCurrentDollars > 0 && (
@@ -303,7 +303,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                   {theirPlayersToReceive.map(id => {
                     const player = selectedMember?.roster?.find(p => p.id === id)
                     return player ? (
-                      <p key={id} className="text-white text-sm">{player.name}</p>
+                      <p key={id} className="text-text-primary text-sm">{player.name}</p>
                     ) : null
                   })}
                   {dollarsEnabled && receiverCurrentDollars > 0 && (
@@ -321,12 +321,12 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
         {/* Optional reasoning */}
         {canSubmit && (
           <div className="px-4 pb-2">
-            <label className="block text-[11px] text-white/30 mb-1">Pitch / reasoning <span className="text-white/15">(optional, private to you)</span></label>
+            <label className="block text-[11px] text-text-primary/30 mb-1">Pitch / reasoning <span className="text-text-primary/15">(optional, private to you)</span></label>
             <input
               value={reasoning}
               onChange={e => setReasoning(e.target.value.substring(0, 280))}
               placeholder="e.g. Buying low after a bad week"
-              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-white/20 outline-none focus:border-gold/50"
+              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
             />
           </div>
         )}
@@ -335,14 +335,14 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
         <div className="flex gap-3 p-4 border-t border-dark-border">
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-dark-tertiary text-white rounded-lg font-medium hover:bg-dark-border transition-colors"
+            className="flex-1 py-3 bg-dark-tertiary text-text-primary rounded-lg font-medium hover:bg-dark-border transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || submitting}
-            className="flex-1 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 py-3 bg-emerald-500 text-text-primary rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Sending...' : 'Propose Trade'}
           </button>

@@ -30,7 +30,7 @@ const DraftHeader = ({
           {/* Left - League Info */}
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-lg sm:text-xl font-bold font-display text-white">
+              <h1 className="text-lg sm:text-xl font-bold font-display text-text-primary">
                 {league?.name || 'Draft Room'}
               </h1>
               <span className={`px-2 py-1 rounded text-xs font-mono font-medium uppercase ${
@@ -58,24 +58,24 @@ const DraftHeader = ({
               {isScheduled ? (
                 <>
                   <p className="text-blue-400 text-sm font-medium">DRAFT SCHEDULED</p>
-                  <p className="text-white text-lg font-bold font-display">
+                  <p className="text-text-primary text-lg font-bold font-display">
                     {isCommissioner ? 'Press Start when ready' : 'Waiting for commissioner...'}
                   </p>
                 </>
               ) : currentPick?.complete ? (
                 <>
                   <p className="text-gold text-sm font-medium">DRAFT COMPLETE</p>
-                  <p className="text-white text-lg font-bold font-display">All picks are in!</p>
+                  <p className="text-text-primary text-lg font-bold font-display">All picks are in!</p>
                 </>
               ) : isUserTurn ? (
                 <>
                   <p className="text-gold text-sm font-medium">YOUR PICK!</p>
-                  <p className="text-white text-lg font-bold font-display">Make your selection</p>
+                  <p className="text-text-primary text-lg font-bold font-display">Make your selection</p>
                 </>
               ) : (
                 <>
                   <p className="text-text-muted text-sm">On the Clock</p>
-                  <p className="text-white text-lg font-bold font-display">
+                  <p className="text-text-primary text-lg font-bold font-display">
                     {currentPick?.teamName || 'Waiting...'}
                   </p>
                 </>

@@ -139,7 +139,7 @@ const DraftRoomContent = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold font-display text-white mb-2">Error Loading Draft</h2>
+              <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error Loading Draft</h2>
               <p className="text-text-secondary mb-6">{error}</p>
               <Link
                 to="/dashboard"
@@ -186,7 +186,7 @@ const DraftRoomContent = () => {
                 className={`px-4 py-2 text-sm font-medium capitalize transition-colors relative ${
                   activeTab === tab
                     ? 'text-gold'
-                    : 'text-text-muted hover:text-white'
+                    : 'text-text-muted hover:text-text-primary'
                 }`}
               >
                 {tab === 'draft' ? 'Draft' : 'Dashboard'}
@@ -268,7 +268,7 @@ const DraftRoomContent = () => {
                     className={`flex-1 px-3 py-2 text-xs font-mono font-medium uppercase tracking-wider transition-colors ${
                       sideTab === tab.key
                         ? 'text-gold border-b-2 border-gold'
-                        : 'text-text-secondary hover:text-white'
+                        : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
                     {tab.label}
@@ -305,7 +305,7 @@ const DraftRoomContent = () => {
                                 )}
                                 <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
                                   msg.isUser
-                                    ? 'bg-gold/20 text-white rounded-br-sm'
+                                    ? 'bg-gold/20 text-text-primary rounded-br-sm'
                                     : 'bg-dark-primary text-text-secondary rounded-bl-sm'
                                 }`}>
                                   {msg.text}
@@ -327,12 +327,12 @@ const DraftRoomContent = () => {
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
                           placeholder="Type a message..."
-                          className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                          className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                         />
                         <button
                           type="submit"
                           disabled={!chatInput.trim()}
-                          className="px-3 py-1.5 bg-gold text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-gold/80 transition-colors"
+                          className="px-3 py-1.5 bg-gold text-text-primary rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-gold/80 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

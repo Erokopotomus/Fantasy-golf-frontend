@@ -23,7 +23,7 @@ const BuyBackModal = ({ isOpen, onClose, onConfirm, loading }) => {
           </svg>
         </div>
 
-        <h2 className="text-xl font-bold font-display text-white text-center mb-2">
+        <h2 className="text-xl font-bold font-display text-text-primary text-center mb-2">
           {confirmed ? 'Confirm Buy-Back' : 'Use Your Buy-Back?'}
         </h2>
 
@@ -54,7 +54,7 @@ const BuyBackModal = ({ isOpen, onClose, onConfirm, loading }) => {
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 py-2 bg-dark-tertiary text-white font-medium rounded-lg hover:bg-dark-primary transition-colors disabled:opacity-50"
+            className="flex-1 py-2 bg-dark-tertiary text-text-primary font-medium rounded-lg hover:bg-dark-primary transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -63,8 +63,8 @@ const BuyBackModal = ({ isOpen, onClose, onConfirm, loading }) => {
             disabled={loading}
             className={`flex-1 py-2 font-semibold rounded-lg transition-colors disabled:opacity-50 ${
               confirmed
-                ? 'bg-gold text-white hover:bg-gold/90'
-                : 'bg-yellow-500 text-dark-primary hover:bg-yellow-400'
+                ? 'bg-gold text-text-primary hover:bg-gold/90'
+                : 'bg-yellow-500 text-slate hover:bg-yellow-400'
             }`}
           >
             {loading ? 'Processing...' : confirmed ? 'Confirm' : 'Use Buy-Back'}

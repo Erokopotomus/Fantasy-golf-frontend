@@ -30,7 +30,7 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
             {team.avatar}
           </div>
           <div>
-            <h3 className={`text-lg font-semibold ${isUser ? 'text-gold' : 'text-white'}`}>
+            <h3 className={`text-lg font-semibold ${isUser ? 'text-gold' : 'text-text-primary'}`}>
               {team.name}
               {isUser && <span className="text-sm font-normal ml-2">(You)</span>}
             </h3>
@@ -59,7 +59,7 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
           return (
             <div key={cat} className={`p-3 rounded-lg border ${bgColor}`}>
               <p className="text-xs text-text-muted mb-1">{categoryLabels[cat] || cat}</p>
-              <p className="text-lg font-bold font-display text-white">
+              <p className="text-lg font-bold font-display text-text-primary">
                 {typeof value === 'number'
                   ? cat === 'scoring_avg'
                     ? value.toFixed(1)
@@ -89,7 +89,7 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
           <div className="space-y-2">
             {strengths.map(cat => (
               <div key={cat.id} className="flex items-center justify-between p-2 bg-gold/10 rounded">
-                <span className="text-sm text-white">{cat.label}</span>
+                <span className="text-sm text-text-primary">{cat.label}</span>
                 <span className="text-sm font-semibold text-gold">#{cat.rank}</span>
               </div>
             ))}
@@ -106,7 +106,7 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
           <div className="space-y-2">
             {weaknesses.map(cat => (
               <div key={cat.id} className="flex items-center justify-between p-2 bg-red-400/10 rounded">
-                <span className="text-sm text-white">{cat.label}</span>
+                <span className="text-sm text-text-primary">{cat.label}</span>
                 <span className="text-sm font-semibold text-red-400">#{cat.rank}</span>
               </div>
             ))}

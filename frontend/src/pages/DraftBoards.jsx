@@ -95,7 +95,7 @@ function relativeTime(dateStr) {
 }
 
 function boardStatusCTA(board, cheatSheetId) {
-  if (board.isPublished) return { label: 'Published', color: 'text-white/30', dot: 'bg-white/20' }
+  if (board.isPublished) return { label: 'Published', color: 'text-text-primary/30', dot: 'bg-dark-tertiary/20' }
   if (board.playerCount === 0) return { label: 'Start Ranking →', color: 'text-gold', dot: null }
   if (cheatSheetId) return { label: 'View Cheat Sheet', color: 'text-emerald-400', dot: 'bg-emerald-400', link: `/lab/cheatsheet/${cheatSheetId}` }
   if (board.sport === 'nfl' && board.positionCoverage && board.positionCoverage.covered >= board.positionCoverage.total) {
@@ -247,14 +247,14 @@ export default function DraftBoards() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-display font-bold text-white mb-2">Welcome to The Lab</h1>
-          <p className="text-sm text-white/40 max-w-md mx-auto mb-8">
+          <h1 className="text-2xl font-display font-bold text-text-primary mb-2">Welcome to The Lab</h1>
+          <p className="text-sm text-text-primary/40 max-w-md mx-auto mb-8">
             Build custom draft boards, rank players your way, track your decisions, and develop a draft thesis that gives you an edge.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={openCreateModal}
-              className="px-6 py-3 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-gold text-slate text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -263,7 +263,7 @@ export default function DraftBoards() {
             </button>
             <Link
               to="/mock-draft"
-              className="px-6 py-3 border border-white/10 text-white/50 text-sm font-medium rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
+              className="px-6 py-3 border border-stone/30 text-text-primary/50 text-sm font-medium rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
             >
               Or start with a Mock Draft
             </Link>
@@ -319,12 +319,12 @@ export default function DraftBoards() {
           {/* 1. Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-display font-bold text-white tracking-wide">THE LAB</h1>
-              <p className="text-sm text-white/40 mt-0.5">Where your draft thesis takes shape.</p>
+              <h1 className="text-2xl font-display font-bold text-text-primary tracking-wide">THE LAB</h1>
+              <p className="text-sm text-text-primary/40 mt-0.5">Where your draft thesis takes shape.</p>
             </div>
             <button
               onClick={openCreateModal}
-              className="px-4 py-2 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-gold text-slate text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -341,10 +341,10 @@ export default function DraftBoards() {
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               </div>
-              <p className="text-sm text-white/60 flex-1">{dynamicInsight.text}</p>
+              <p className="text-sm text-text-primary/60 flex-1">{dynamicInsight.text}</p>
               <button
                 onClick={() => { setInsightDismissed(true); api.dismissLabInsight().catch(() => {}) }}
-                className="text-white/20 hover:text-white/50 transition-colors shrink-0"
+                className="text-text-primary/20 hover:text-text-primary/50 transition-colors shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -365,11 +365,11 @@ export default function DraftBoards() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-purple-300/80 mb-0.5">{insight.title}</p>
-                    <p className="text-xs text-white/50 leading-relaxed">{insight.body}</p>
+                    <p className="text-xs text-text-primary/50 leading-relaxed">{insight.body}</p>
                   </div>
                   <button
                     onClick={() => { setAiDismissed(prev => new Set([...prev, insight.id])); api.dismissAiInsight(insight.id).catch(() => {}) }}
-                    className="text-white/20 hover:text-white/50 transition-colors shrink-0"
+                    className="text-text-primary/20 hover:text-text-primary/50 transition-colors shrink-0"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -388,8 +388,8 @@ export default function DraftBoards() {
           {/* 3. Two-column: Readiness Tracker + Recent Captures */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {/* Draft Readiness Tracker */}
-            <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white/30 mb-3">Draft Readiness</h3>
+            <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30 mb-3">Draft Readiness</h3>
               <div className="space-y-2">
                 {boards.slice(0, 5).map(board => {
                   const status = boardStatusCTA(board)
@@ -397,11 +397,11 @@ export default function DraftBoards() {
                     <Link
                       key={board.id}
                       to={`/lab/${board.id}`}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] transition-colors group"
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-dark-tertiary/[0.02] hover:bg-dark-tertiary/[0.05] transition-colors group"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${status.dot || 'bg-transparent'}`} />
-                        <span className="text-sm text-white truncate group-hover:text-gold transition-colors">{board.name}</span>
+                        <span className="text-sm text-text-primary truncate group-hover:text-gold transition-colors">{board.name}</span>
                         <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
                           board.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
                         }`}>
@@ -416,23 +416,23 @@ export default function DraftBoards() {
             </div>
 
             {/* Recent Captures */}
-            <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+            <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Recent Captures</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Recent Captures</h3>
                 <Link to="/lab/captures" className="text-[10px] text-gold hover:underline">View All</Link>
               </div>
               {hubLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map(i => <div key={i} className="h-7 bg-white/[0.03] rounded animate-pulse" />)}
+                  {[1, 2, 3].map(i => <div key={i} className="h-7 bg-dark-tertiary/[0.03] rounded animate-pulse" />)}
                 </div>
               ) : recentCaptures.length === 0 ? (
-                <p className="text-xs text-white/25 py-3">No captures yet — jot down podcast takes and gut feelings.</p>
+                <p className="text-xs text-text-primary/25 py-3">No captures yet — jot down podcast takes and gut feelings.</p>
               ) : (
                 <div className="space-y-1.5">
                   {recentCaptures.slice(0, 5).map((c, i) => (
                     <div key={i} className="flex items-start justify-between text-xs py-1 gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-white/50 truncate">{c.content}</p>
+                        <p className="text-text-primary/50 truncate">{c.content}</p>
                         {c.players && c.players.length > 0 && (
                           <div className="flex gap-1 mt-0.5">
                             {c.players.slice(0, 3).map(lp => (
@@ -446,7 +446,7 @@ export default function DraftBoards() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         {c.sentiment === 'bullish' && <span className="text-emerald-400 text-[10px]">↑</span>}
                         {c.sentiment === 'bearish' && <span className="text-red-400 text-[10px]">↓</span>}
-                        <span className="text-white/20">{relativeTime(c.createdAt)}</span>
+                        <span className="text-text-primary/20">{relativeTime(c.createdAt)}</span>
                       </div>
                     </div>
                   ))}
@@ -463,7 +463,7 @@ export default function DraftBoards() {
 
           {/* 4. My Boards — Enhanced Cards */}
           <div className="mb-6">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-white/30 mb-3">My Boards</h2>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-text-primary/30 mb-3">My Boards</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {boards.map(board => {
                 const status = boardStatusCTA(board, cheatSheetMap[board.id])
@@ -471,11 +471,11 @@ export default function DraftBoards() {
                   <Link
                     key={board.id}
                     to={status.link || `/lab/${board.id}`}
-                    className="block p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl hover:border-gold/30 hover:bg-dark-secondary/80 transition-all group"
+                    className="block p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl hover:border-gold/30 hover:bg-dark-secondary/80 transition-all group"
                   >
                     {/* Top row: Name + sport badge */}
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-base font-semibold text-white group-hover:text-gold transition-colors truncate">
+                      <h3 className="text-base font-semibold text-text-primary group-hover:text-gold transition-colors truncate">
                         {board.name}
                       </h3>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ml-2 ${
@@ -488,22 +488,22 @@ export default function DraftBoards() {
                     {/* League context pills */}
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {board.sport === 'nfl' && (
-                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40">
+                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40">
                           {scoringLabel(board.scoringFormat)}
                         </span>
                       )}
                       {board.leagueType && (
-                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40 capitalize">
+                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40 capitalize">
                           {board.leagueType}
                         </span>
                       )}
                       {board.teamCount && (
-                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40">
+                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40">
                           {board.teamCount}-team
                         </span>
                       )}
                       {board.draftType && (
-                        <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[10px] text-white/40 capitalize">
+                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40 capitalize">
                           {board.draftType}
                         </span>
                       )}
@@ -518,7 +518,7 @@ export default function DraftBoards() {
                             <span
                               key={pos}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                count > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-white/[0.03] text-white/20'
+                                count > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-dark-tertiary/[0.03] text-text-primary/20'
                               }`}
                             >
                               {pos} {count}
@@ -540,7 +540,7 @@ export default function DraftBoards() {
 
                     {/* Bottom row: count + time + status */}
                     <div className="flex items-center justify-between text-[11px]">
-                      <div className="flex items-center gap-2 text-white/30">
+                      <div className="flex items-center gap-2 text-text-primary/30">
                         <span>{board.playerCount} player{board.playerCount !== 1 ? 's' : ''}</span>
                         <span>·</span>
                         <span>{relativeTime(board.updatedAt)}</span>
@@ -567,18 +567,18 @@ export default function DraftBoards() {
 
           {/* 5. Watch List Summary */}
           {!hubLoading && watchListEntries.length > 0 && (
-            <div className="mb-6 p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+            <div className="mb-6 p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Watch List</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Watch List</h3>
                 <Link to="/lab/watch-list" className="text-[10px] text-gold hover:underline">View All</Link>
               </div>
               <div className="flex gap-3">
                 {watchListEntries.slice(0, 3).map((e, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white/[0.03] rounded-lg">
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-dark-tertiary/[0.03] rounded-lg">
                     {e.player?.headshotUrl && (
-                      <img src={e.player.headshotUrl} alt="" className="w-6 h-6 rounded-full bg-white/5" />
+                      <img src={e.player.headshotUrl} alt="" className="w-6 h-6 rounded-full bg-dark-tertiary/5" />
                     )}
-                    <span className="text-xs text-white/70">{e.player?.name || 'Unknown'}</span>
+                    <span className="text-xs text-text-primary/70">{e.player?.name || 'Unknown'}</span>
                     <span className={`px-1 py-0.5 rounded text-[9px] font-bold uppercase ${
                       e.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
                     }`}>
@@ -587,7 +587,7 @@ export default function DraftBoards() {
                   </div>
                 ))}
                 {watchListEntries.length > 3 && (
-                  <Link to="/lab/watch-list" className="flex items-center px-3 py-2 text-xs text-white/30 hover:text-gold transition-colors">
+                  <Link to="/lab/watch-list" className="flex items-center px-3 py-2 text-xs text-text-primary/30 hover:text-gold transition-colors">
                     +{watchListEntries.length - 3} more
                   </Link>
                 )}
@@ -597,16 +597,16 @@ export default function DraftBoards() {
 
           {/* 6. Decision Journal Summary */}
           {!hubLoading && journalEntries.length > 0 && (
-            <div className="p-4 bg-dark-secondary/60 border border-white/[0.06] rounded-xl">
+            <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Decision Journal</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Decision Journal</h3>
                 <Link to="/lab/journal" className="text-[10px] text-gold hover:underline">View All</Link>
               </div>
               <div className="space-y-1.5">
                 {journalEntries.slice(0, 3).map((a, i) => (
                   <div key={i} className="flex items-center justify-between text-xs py-1">
-                    <span className="text-white/50">{activityDescription(a)}</span>
-                    <span className="text-white/20 shrink-0 ml-2">{relativeTime(a.createdAt)}</span>
+                    <span className="text-text-primary/50">{activityDescription(a)}</span>
+                    <span className="text-text-primary/20 shrink-0 ml-2">{relativeTime(a.createdAt)}</span>
                   </div>
                 ))}
               </div>
@@ -656,25 +656,25 @@ export default function DraftBoards() {
             {/* Previous reports */}
             {aiReports.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[10px] text-white/25 uppercase tracking-wider">Previous Reports</p>
+                <p className="text-[10px] text-text-primary/25 uppercase tracking-wider">Previous Reports</p>
                 {aiReports.map(r => (
                   <Link
                     key={r.id}
                     to={`/coach/${r.id}`}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] transition-colors group text-xs"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-dark-tertiary/[0.02] hover:bg-dark-tertiary/[0.05] transition-colors group text-xs"
                   >
-                    <span className="text-white/60 group-hover:text-gold transition-colors">
+                    <span className="text-text-primary/60 group-hover:text-gold transition-colors">
                       {r.reportType === 'pre_draft' ? 'Pre-Draft' : r.reportType === 'mid_season' ? 'Mid-Season' : r.reportType === 'post_season' ? 'Season Retro' : 'Scout'}
-                      {r.sport && <span className="text-white/30 ml-1">({r.sport.toUpperCase()})</span>}
+                      {r.sport && <span className="text-text-primary/30 ml-1">({r.sport.toUpperCase()})</span>}
                     </span>
-                    <span className="text-white/20">{new Date(r.generatedAt).toLocaleDateString()}</span>
+                    <span className="text-text-primary/20">{new Date(r.generatedAt).toLocaleDateString()}</span>
                   </Link>
                 ))}
               </div>
             )}
 
             {/* Sim link */}
-            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+            <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
               <Link to="/sim" className="flex items-center gap-2 text-xs text-gold hover:text-gold/80 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -714,26 +714,26 @@ function CreateModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg bg-dark-secondary border border-white/[0.08] rounded-xl shadow-2xl"
+        className="relative w-full max-w-lg bg-dark-secondary border border-[var(--card-border)] rounded-xl shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-white/[0.06] flex items-center justify-between">
+        <div className="p-5 border-b border-[var(--card-border)] flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-text-primary">
               {step === 1 ? 'New Draft Board' : step === 2 ? 'League Context' : 'Choose Starting Point'}
             </h2>
             {step === 2 && (
-              <p className="text-xs text-white/40 mt-0.5">Optional — helps tailor your board experience</p>
+              <p className="text-xs text-text-primary/40 mt-0.5">Optional — helps tailor your board experience</p>
             )}
             {step === 3 && (
-              <p className="text-xs text-white/40 mt-0.5">You'll customize from here — this is just your starting position</p>
+              <p className="text-xs text-text-primary/40 mt-0.5">You'll customize from here — this is just your starting position</p>
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-gold' : 'bg-white/10'}`} />
-            <div className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-gold' : 'bg-white/10'}`} />
-            <div className={`w-2 h-2 rounded-full ${step >= 3 ? 'bg-gold' : 'bg-white/10'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-gold' : 'bg-dark-tertiary/10'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-gold' : 'bg-dark-tertiary/10'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 3 ? 'bg-gold' : 'bg-dark-tertiary/10'}`} />
           </div>
         </div>
 
@@ -741,18 +741,18 @@ function CreateModal({
         {step === 1 && (
           <form onSubmit={onNext} className="p-5 space-y-4">
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">Board Name</label>
+              <label className="block text-xs font-medium text-text-primary/50 mb-1.5">Board Name</label>
               <input
                 autoFocus
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 placeholder="e.g., 2026 NFL Big Board"
-                className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50"
+                className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">Sport</label>
+              <label className="block text-xs font-medium text-text-primary/50 mb-1.5">Sport</label>
               <div className="flex gap-2">
                 {SPORT_OPTIONS.map(opt => (
                   <button
@@ -765,7 +765,7 @@ function CreateModal({
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
                       newSport === opt.value
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-white/[0.08] bg-dark-primary text-white/50 hover:text-white/70'
+                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/50 hover:text-text-primary/70'
                     }`}
                   >
                     <span>{opt.icon}</span>
@@ -777,11 +777,11 @@ function CreateModal({
 
             {newSport === 'nfl' && (
               <div>
-                <label className="block text-xs font-medium text-white/50 mb-1.5">Scoring Format</label>
+                <label className="block text-xs font-medium text-text-primary/50 mb-1.5">Scoring Format</label>
                 <select
                   value={newScoring}
                   onChange={e => setNewScoring(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white outline-none focus:border-gold/50 cursor-pointer"
+                  className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary outline-none focus:border-gold/50 cursor-pointer"
                 >
                   {SCORING_OPTIONS.map(o => (
                     <option key={o.value} value={o.value}>{o.label}</option>
@@ -794,14 +794,14 @@ function CreateModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+                className="px-4 py-2 text-sm text-text-primary/50 hover:text-text-primary transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!newName.trim()}
-                className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="px-5 py-2 text-sm font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 Next
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -816,7 +816,7 @@ function CreateModal({
         {step === 2 && (
           <div className="p-5 space-y-4">
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-2">League Type</label>
+              <label className="block text-xs font-medium text-text-primary/50 mb-2">League Type</label>
               <div className="flex flex-wrap gap-2">
                 {LEAGUE_TYPE_OPTIONS.map(opt => (
                   <button
@@ -826,7 +826,7 @@ function CreateModal({
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                       leagueType === opt.value
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-white/[0.08] bg-dark-primary text-white/40 hover:text-white/60'
+                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/40 hover:text-text-primary/60'
                     }`}
                   >
                     {opt.label}
@@ -836,7 +836,7 @@ function CreateModal({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-2">Team Count</label>
+              <label className="block text-xs font-medium text-text-primary/50 mb-2">Team Count</label>
               <div className="flex gap-2">
                 {TEAM_COUNT_OPTIONS.map(n => (
                   <button
@@ -846,7 +846,7 @@ function CreateModal({
                     className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                       teamCount === n
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-white/[0.08] bg-dark-primary text-white/40 hover:text-white/60'
+                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/40 hover:text-text-primary/60'
                     }`}
                   >
                     {n}
@@ -856,7 +856,7 @@ function CreateModal({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-2">Draft Type</label>
+              <label className="block text-xs font-medium text-text-primary/50 mb-2">Draft Type</label>
               <div className="flex gap-2">
                 {DRAFT_TYPE_OPTIONS.map(opt => (
                   <button
@@ -866,7 +866,7 @@ function CreateModal({
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                       draftType === opt.value
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-white/[0.08] bg-dark-primary text-white/40 hover:text-white/60'
+                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/40 hover:text-text-primary/60'
                     }`}
                   >
                     {opt.label}
@@ -879,7 +879,7 @@ function CreateModal({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 text-sm text-text-primary/50 hover:text-text-primary transition-colors flex items-center gap-1.5"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -890,14 +890,14 @@ function CreateModal({
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  className="px-4 py-2 text-sm text-white/40 hover:text-white/60 transition-colors"
+                  className="px-4 py-2 text-sm text-text-primary/40 hover:text-text-primary/60 transition-colors"
                 >
                   Skip
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-1.5"
+                  className="px-5 py-2 text-sm font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-1.5"
                 >
                   Next
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -921,18 +921,18 @@ function CreateModal({
                   className={`w-full text-left p-3.5 rounded-lg border transition-all ${
                     startFrom === opt.value
                       ? 'border-gold/50 bg-gold/[0.07]'
-                      : 'border-white/[0.06] bg-dark-primary/50 hover:border-white/[0.12]'
+                      : 'border-[var(--card-border)] bg-dark-primary/50 hover:border-white/[0.12]'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      startFrom === opt.value ? 'border-gold' : 'border-white/20'
+                      startFrom === opt.value ? 'border-gold' : 'border-stone/50'
                     }`}>
                       {startFrom === opt.value && (
                         <div className="w-2 h-2 rounded-full bg-gold" />
                       )}
                     </div>
-                    <span className={`text-sm font-semibold ${startFrom === opt.value ? 'text-gold' : 'text-white'}`}>
+                    <span className={`text-sm font-semibold ${startFrom === opt.value ? 'text-gold' : 'text-text-primary'}`}>
                       {opt.label}
                     </span>
                     {opt.recommended && (
@@ -941,7 +941,7 @@ function CreateModal({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-white/40 ml-6">{opt.description}</p>
+                  <p className="text-xs text-text-primary/40 ml-6">{opt.description}</p>
                 </button>
               ))}
             </div>
@@ -950,7 +950,7 @@ function CreateModal({
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 text-sm text-text-primary/50 hover:text-text-primary transition-colors flex items-center gap-1.5"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -960,7 +960,7 @@ function CreateModal({
               <button
                 onClick={onCreate}
                 disabled={creating}
-                className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
+                className="px-5 py-2 text-sm font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
               >
                 {creating ? (
                   <span className="flex items-center justify-center gap-2">

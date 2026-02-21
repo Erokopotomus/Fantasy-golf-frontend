@@ -51,7 +51,7 @@ const LineupEditor = ({
     <Card>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold font-display text-white">Set Lineup</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Set Lineup</h3>
           <p className="text-text-muted text-sm">
             {tournament?.name || 'Upcoming Tournament'}
           </p>
@@ -79,7 +79,7 @@ const LineupEditor = ({
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-text-muted">Selected</span>
               <span className={`font-medium ${
-                selectedIds.length === maxActive ? 'text-gold' : 'text-white'
+                selectedIds.length === maxActive ? 'text-gold' : 'text-text-primary'
               }`}>
                 {selectedIds.length} / {maxActive}
               </span>
@@ -115,7 +115,7 @@ const LineupEditor = ({
                   <div className="flex items-center gap-2 mb-1">
                     <span>{player.countryFlag}</span>
                     <span className={`text-sm font-medium truncate ${
-                      isSelected ? 'text-gold' : 'text-white'
+                      isSelected ? 'text-gold' : 'text-text-primary'
                     }`}>
                       {player.name.split(' ').pop()}
                     </span>

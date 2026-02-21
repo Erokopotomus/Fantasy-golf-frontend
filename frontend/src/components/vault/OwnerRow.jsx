@@ -57,7 +57,7 @@ export default function OwnerRow({
         className={`w-full group relative overflow-hidden rounded-xl border transition-all duration-250 cursor-pointer
           ${isLeader
             ? 'bg-dark-tertiary/30 border-accent-gold/15'
-            : 'bg-dark-secondary/60 border-dark-border hover:border-white/15'
+            : 'bg-dark-secondary/60 border-dark-border hover:border-stone/40'
           }
           hover:-translate-y-1 hover:shadow-lg`}
         style={{
@@ -140,7 +140,7 @@ export default function OwnerRow({
           {/* Name + meta */}
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-display font-bold truncate ${isLeader ? 'text-accent-gold' : 'text-white'}`}>
+              <span className={`text-sm font-display font-bold truncate ${isLeader ? 'text-accent-gold' : 'text-text-primary'}`}>
                 {owner.name}
               </span>
               {rating && <RatingTrendIndicator trend={rating.trend} />}
@@ -171,7 +171,7 @@ export default function OwnerRow({
 
           {/* Record */}
           <div className="text-right">
-            <div className="text-sm font-mono font-bold text-white">{owner.totalWins}-{owner.totalLosses}</div>
+            <div className="text-sm font-mono font-bold text-text-primary">{owner.totalWins}-{owner.totalLosses}</div>
             <div className="text-[10px] font-mono text-text-muted">Record</div>
           </div>
 
@@ -234,7 +234,7 @@ export default function OwnerRow({
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`text-sm font-display font-bold truncate ${isLeader ? 'text-accent-gold' : 'text-white'}`}>
+                <span className={`text-sm font-display font-bold truncate ${isLeader ? 'text-accent-gold' : 'text-text-primary'}`}>
                   {owner.name}
                 </span>
                 {!owner.isActive && (

@@ -81,7 +81,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
   const getStatColor = (value) => {
     if (value == null) return 'text-text-muted'
     if (value > 0.5) return 'text-emerald-400'
-    if (value > 0) return 'text-white'
+    if (value > 0) return 'text-text-primary'
     if (value > -0.5) return 'text-yellow-400'
     return 'text-red-400'
   }
@@ -102,7 +102,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
     if (pos === 1) return 'text-yellow-400'
     if (pos <= 5) return 'text-emerald-400'
     if (pos <= 10) return 'text-emerald-300'
-    if (pos <= 25) return 'text-white'
+    if (pos <= 25) return 'text-text-primary'
     return 'text-text-secondary'
   }
 
@@ -135,7 +135,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                 </div>
               )}
               <div className="min-w-0">
-                <h2 className="text-xl font-bold font-display text-white truncate">{player?.name || 'Loading...'}</h2>
+                <h2 className="text-xl font-bold font-display text-text-primary truncate">{player?.name || 'Loading...'}</h2>
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
                   {isNfl ? (
                     <>
@@ -175,7 +175,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-text-muted hover:text-white hover:bg-dark-tertiary rounded-lg transition-colors flex-shrink-0"
+              className="p-1.5 text-text-muted hover:text-text-primary hover:bg-dark-tertiary rounded-lg transition-colors flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -191,17 +191,17 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                 <p className="text-[10px] text-text-muted uppercase">Proj</p>
               </div>
               <div className="bg-dark-secondary p-2 text-center">
-                <p className="text-white text-lg font-bold font-display">{projection.avgFantasyPoints}</p>
+                <p className="text-text-primary text-lg font-bold font-display">{projection.avgFantasyPoints}</p>
                 <p className="text-[10px] text-text-muted uppercase">Avg FPts</p>
               </div>
               <div className="bg-dark-secondary p-2 text-center">
-                <p className={`text-lg font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-white'}`}>
+                <p className={`text-lg font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
                   {projection.trend > 0 ? '+' : ''}{projection.trend}%
                 </p>
                 <p className="text-[10px] text-text-muted uppercase">Trend</p>
               </div>
               <div className="bg-dark-secondary p-2 text-center">
-                <p className="text-white text-lg font-bold font-display">{projection.consistency}</p>
+                <p className="text-text-primary text-lg font-bold font-display">{projection.consistency}</p>
                 <p className="text-[10px] text-text-muted uppercase">Consist</p>
               </div>
             </div>
@@ -216,7 +216,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                 className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'text-emerald-400 border-b-2 border-emerald-400'
-                    : 'text-text-muted hover:text-white border-b-2 border-transparent'
+                    : 'text-text-muted hover:text-text-primary border-b-2 border-transparent'
                 }`}
               >
                 {tab.label}
@@ -268,15 +268,15 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                         {/* Stats row */}
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div className="bg-dark-tertiary/50 rounded p-2">
-                            <p className="text-white text-sm font-bold">{projection.totalEvents}</p>
+                            <p className="text-text-primary text-sm font-bold">{projection.totalEvents}</p>
                             <p className="text-[10px] text-text-muted">Events</p>
                           </div>
                           <div className="bg-dark-tertiary/50 rounded p-2">
-                            <p className="text-white text-sm font-bold">{projection.recentAvg}</p>
+                            <p className="text-text-primary text-sm font-bold">{projection.recentAvg}</p>
                             <p className="text-[10px] text-text-muted">Recent Avg</p>
                           </div>
                           <div className="bg-dark-tertiary/50 rounded p-2">
-                            <p className={`text-sm font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-white'}`}>
+                            <p className={`text-sm font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
                               {projection.trend > 0 ? '\u2191' : projection.trend < 0 ? '\u2193' : '\u2192'} {Math.abs(projection.trend)}%
                             </p>
                             <p className="text-[10px] text-text-muted">Trend</p>
@@ -290,19 +290,19 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                   {isNfl ? (
                     <div className="grid grid-cols-2 gap-2">
                       <StatCard label="Position" value={player.nflPosition || '\u2014'} color="text-emerald-400" />
-                      <StatCard label="Team" value={player.nflTeamAbbr || '\u2014'} color="text-white" />
-                      <StatCard label="Games" value={player.gamesPlayed || 0} color="text-white" />
+                      <StatCard label="Team" value={player.nflTeamAbbr || '\u2014'} color="text-text-primary" />
+                      <StatCard label="Games" value={player.gamesPlayed || 0} color="text-text-primary" />
                       <StatCard label="Fantasy Pts" value={player.fantasyPtsHalf?.toFixed(1) || player.seasonFantasyPts?.toFixed(1) || '\u2014'} color="text-emerald-400" />
-                      <StatCard label="Pts/Game" value={player.fantasyPtsPerGame?.toFixed(1) || '\u2014'} color="text-white" />
+                      <StatCard label="Pts/Game" value={player.fantasyPtsPerGame?.toFixed(1) || '\u2014'} color="text-text-primary" />
                       <StatCard label="Status" value={player.injuryStatus || 'Active'} color={player.injuryStatus ? 'text-red-400' : 'text-emerald-400'} />
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       <StatCard label="SG: Total" value={formatStat(player.sgTotal, '+')} color={getStatColor(player.sgTotal)} />
-                      <StatCard label="Avg Score" value={player.avgScore?.toFixed(1) || '\u2014'} color="text-white" />
-                      <StatCard label="Wins" value={player.wins || 0} color={player.wins > 0 ? 'text-yellow-400' : 'text-white'} />
-                      <StatCard label="Top 10s" value={player.top10s || 0} color="text-white" />
-                      <StatCard label="Cuts Made" value={player.cutsMade || 0} color="text-white" />
+                      <StatCard label="Avg Score" value={player.avgScore?.toFixed(1) || '\u2014'} color="text-text-primary" />
+                      <StatCard label="Wins" value={player.wins || 0} color={player.wins > 0 ? 'text-yellow-400' : 'text-text-primary'} />
+                      <StatCard label="Top 10s" value={player.top10s || 0} color="text-text-primary" />
+                      <StatCard label="Cuts Made" value={player.cutsMade || 0} color="text-text-primary" />
                       <StatCard label="Earnings" value={player.earnings > 0 ? `$${(player.earnings / 1e6).toFixed(1)}M` : '\u2014'} color="text-emerald-400" />
                     </div>
                   )}
@@ -332,7 +332,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                     player.performances.map((perf) => (
                       <div key={perf.id} className="bg-dark-secondary rounded-lg border border-dark-border p-3">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-white font-semibold text-sm truncate pr-2">{perf.tournament?.name}</p>
+                          <p className="text-text-primary font-semibold text-sm truncate pr-2">{perf.tournament?.name}</p>
                           <span className={`text-lg font-bold flex-shrink-0 ${getPositionColor(perf.position)}`}>
                             {formatPosition(perf.position, perf.positionTied)}
                           </span>
@@ -341,7 +341,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                           <span>{perf.tournament?.startDate ? formatDate(perf.tournament.startDate) : ''}</span>
                           <div className="flex items-center gap-3">
                             {perf.totalToPar != null && (
-                              <span className={perf.totalToPar < 0 ? 'text-emerald-400' : perf.totalToPar > 0 ? 'text-red-400' : 'text-white'}>
+                              <span className={perf.totalToPar < 0 ? 'text-emerald-400' : perf.totalToPar > 0 ? 'text-red-400' : 'text-text-primary'}>
                                 {perf.totalToPar > 0 ? '+' : ''}{perf.totalToPar}
                               </span>
                             )}
@@ -354,7 +354,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                             <span key={i} className={`text-xs px-2 py-0.5 rounded ${
                               r == null ? 'text-text-muted/30' :
                               r < 70 ? 'bg-emerald-500/15 text-emerald-400' :
-                              r <= 72 ? 'bg-dark-tertiary text-white' :
+                              r <= 72 ? 'bg-dark-tertiary text-text-primary' :
                               'bg-red-500/10 text-red-400'
                             }`}>
                               {r != null ? r : '\u2013'}
@@ -387,7 +387,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                         <div className="flex items-start justify-between">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-white font-semibold text-sm truncate">{t.name}</p>
+                              <p className="text-text-primary font-semibold text-sm truncate">{t.name}</p>
                               {t.isMajor && (
                                 <span className="text-[10px] font-bold bg-yellow-500/15 text-yellow-400 px-1.5 py-0.5 rounded flex-shrink-0">MAJOR</span>
                               )}
@@ -412,11 +412,11 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                       <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 mt-6">Season Summary</h3>
                       <div className="grid grid-cols-3 gap-2">
                         <div className="bg-dark-secondary rounded-lg p-3 text-center border border-dark-border">
-                          <p className="text-white font-bold text-lg">{player.performances.length}</p>
+                          <p className="text-text-primary font-bold text-lg">{player.performances.length}</p>
                           <p className="text-[10px] text-text-muted uppercase">Events</p>
                         </div>
                         <div className="bg-dark-secondary rounded-lg p-3 text-center border border-dark-border">
-                          <p className="text-white font-bold text-lg">
+                          <p className="text-text-primary font-bold text-lg">
                             {player.performances.filter(p => p.status !== 'CUT').length}
                           </p>
                           <p className="text-[10px] text-text-muted uppercase">Cuts Made</p>
@@ -449,7 +449,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                       {player.gameLog.map((g) => (
                         <div key={g.week} className="flex items-center gap-2 py-2 px-2 rounded-lg bg-dark-secondary/50">
                           <div className="w-8 text-sm text-text-muted">{g.week}</div>
-                          <div className="flex-1 text-sm text-white">
+                          <div className="flex-1 text-sm text-text-primary">
                             {g.isHome ? 'vs' : '@'} {g.opponent}
                           </div>
                           <div className="w-16 text-right text-sm font-bold text-emerald-400">
@@ -479,7 +479,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                     <div key={idx} className="bg-dark-secondary rounded-lg border border-dark-border p-3">
                       <div className="flex items-center justify-between mb-1.5">
                         <div>
-                          <p className="text-white font-medium text-sm">{stat.label}</p>
+                          <p className="text-text-primary font-medium text-sm">{stat.label}</p>
                           <p className="text-text-muted text-[11px]">{stat.desc}</p>
                         </div>
                         <p className={`text-xl font-bold ${getStatColor(stat.value)}`}>
@@ -508,7 +508,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                   <div className="bg-dark-secondary rounded-lg border border-emerald-500/20 p-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white font-medium text-sm">SG: Tee-to-Green</p>
+                        <p className="text-text-primary font-medium text-sm">SG: Tee-to-Green</p>
                         <p className="text-text-muted text-[11px]">Combined ball-striking</p>
                       </div>
                       <p className={`text-xl font-bold ${getStatColor(
@@ -538,7 +538,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                       rosterContext.onMovePosition(player.id, rosterContext.position === 'ACTIVE' ? 'BENCH' : 'ACTIVE')
                       onClose()
                     }}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-dark-tertiary text-white hover:bg-dark-border transition-colors"
+                    className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-dark-tertiary text-text-primary hover:bg-dark-border transition-colors"
                   >
                     Move to {rosterContext.position === 'ACTIVE' ? 'Bench' : 'Active'}
                   </button>
@@ -561,7 +561,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                   rosterContext.onAdd(player)
                   onClose()
                 }}
-                className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-emerald-500 text-text-primary hover:bg-emerald-600 transition-colors"
               >
                 Add to Roster
               </button>
@@ -574,7 +574,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
 }
 
 /** Small stat card */
-const StatCard = ({ label, value, color = 'text-white' }) => (
+const StatCard = ({ label, value, color = 'text-text-primary' }) => (
   <div className="bg-dark-secondary rounded-lg border border-dark-border p-3 text-center">
     <p className={`text-lg font-bold ${color}`}>{value}</p>
     <p className="text-[10px] text-text-muted uppercase">{label}</p>
@@ -583,7 +583,7 @@ const StatCard = ({ label, value, color = 'text-white' }) => (
 
 /** Inline SG bar */
 const SGBar = ({ label, value }) => {
-  const color = value == null ? 'text-text-muted' : value > 0.5 ? 'text-emerald-400' : value > 0 ? 'text-white' : value > -0.5 ? 'text-yellow-400' : 'text-red-400'
+  const color = value == null ? 'text-text-muted' : value > 0.5 ? 'text-emerald-400' : value > 0 ? 'text-text-primary' : value > -0.5 ? 'text-yellow-400' : 'text-red-400'
   const barColor = value == null ? '' : value >= 0 ? 'bg-emerald-400' : 'bg-red-400'
   const width = value != null ? Math.min(Math.abs(value) * 30, 50) : 0
 

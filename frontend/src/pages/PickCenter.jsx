@@ -75,7 +75,7 @@ const PickCenter = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold font-display text-white mb-2">Not a One & Done League</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Not a One & Done League</h2>
           <p className="text-text-secondary mb-6">
             The Pick Center is only available for One & Done format leagues.
           </p>
@@ -129,14 +129,14 @@ const PickCenter = () => {
       <div className="mb-6">
         <Link
           to={`/leagues/${leagueId}`}
-          className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+          className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to {league.name}
         </Link>
-        <h1 className="text-2xl font-bold font-display text-white">Pick Center</h1>
+        <h1 className="text-2xl font-bold font-display text-text-primary">Pick Center</h1>
         <p className="text-text-secondary">Pick one player per tournament - use them wisely!</p>
       </div>
 
@@ -149,12 +149,12 @@ const PickCenter = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Picks Made</p>
-          <p className="text-2xl font-bold font-display text-white">{userPicks.picks?.length || 0}</p>
+          <p className="text-2xl font-bold font-display text-text-primary">{userPicks.picks?.length || 0}</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Players Used</p>
-          <p className="text-2xl font-bold font-display text-white">{userPicks.usedPlayers?.length || 0}</p>
+          <p className="text-2xl font-bold font-display text-text-primary">{userPicks.usedPlayers?.length || 0}</p>
         </Card>
 
         <Card className={hasCurrentPick ? 'border border-gold/50' : 'border border-yellow-500/50'}>
@@ -179,8 +179,8 @@ const PickCenter = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-gold text-white'
-                : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                ? 'bg-gold text-text-primary'
+                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -205,20 +205,20 @@ const PickCenter = () => {
           <div>
             {selectedPlayer ? (
               <Card>
-                <h3 className="text-lg font-semibold font-display text-white mb-4">Confirm Pick</h3>
+                <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Confirm Pick</h3>
 
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 rounded-full bg-dark-tertiary flex items-center justify-center mx-auto mb-4 text-4xl">
                     {selectedPlayer.countryFlag || '🏌️'}
                   </div>
-                  <h4 className="text-xl font-bold font-display text-white">{selectedPlayer.name}</h4>
+                  <h4 className="text-xl font-bold font-display text-text-primary">{selectedPlayer.name}</h4>
                   <p className="text-text-muted">World Rank #{selectedPlayer.rank}</p>
                 </div>
 
                 <div className="bg-dark-tertiary rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-text-muted">Tier</span>
-                    <span className="font-semibold text-white">Tier {selectedPlayer.tier?.tier}</span>
+                    <span className="font-semibold text-text-primary">Tier {selectedPlayer.tier?.tier}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-text-muted">Multiplier</span>
@@ -246,7 +246,7 @@ const PickCenter = () => {
                 {confirmPick && (
                   <button
                     onClick={() => setConfirmPick(false)}
-                    className="w-full mt-2 py-2 text-text-muted hover:text-white transition-colors"
+                    className="w-full mt-2 py-2 text-text-muted hover:text-text-primary transition-colors"
                   >
                     Cancel
                   </button>
@@ -260,7 +260,7 @@ const PickCenter = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                     </svg>
                   </div>
-                  <h4 className="text-white font-medium mb-2">Select a Player</h4>
+                  <h4 className="text-text-primary font-medium mb-2">Select a Player</h4>
                   <p className="text-sm text-text-muted">
                     Choose a golfer from the list to make your pick for this tournament.
                   </p>

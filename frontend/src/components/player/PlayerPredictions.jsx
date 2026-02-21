@@ -16,7 +16,7 @@ const ProbRow = ({ label, preRound, live, color = 'bg-gold' }) => {
           {prePct != null && livePct != null ? (
             <>
               <span className="text-text-muted text-xs line-through">{prePct.toFixed(1)}%</span>
-              <span className="text-white font-semibold">{livePct.toFixed(1)}%</span>
+              <span className="text-text-primary font-semibold">{livePct.toFixed(1)}%</span>
               {diff != null && diff !== 0 && (
                 <span className={`text-xs font-medium ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {diff > 0 ? '+' : ''}{diff.toFixed(1)}
@@ -24,7 +24,7 @@ const ProbRow = ({ label, preRound, live, color = 'bg-gold' }) => {
               )}
             </>
           ) : (
-            <span className="text-white font-semibold">{(prePct ?? livePct).toFixed(1)}%</span>
+            <span className="text-text-primary font-semibold">{(prePct ?? livePct).toFixed(1)}%</span>
           )}
         </div>
       </div>
@@ -139,7 +139,7 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
                   style={{ width: `${Math.min(predictions.courseFitScore * 100, 100)}%` }}
                 />
               </div>
-              <span className="text-white font-semibold text-sm">
+              <span className="text-text-primary font-semibold text-sm">
                 {(predictions.courseFitScore * 100).toFixed(0)}%
               </span>
             </div>

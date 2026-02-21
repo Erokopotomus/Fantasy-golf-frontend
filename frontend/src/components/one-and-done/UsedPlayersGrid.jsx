@@ -16,7 +16,7 @@ const UsedPlayersGrid = ({ usedPlayers = [], picks = [], allPlayers = [] }) => {
   if (usedPlayers.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Used Players</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Used Players</h3>
         <div className="text-center py-8 text-text-muted">
           No players used yet. Make your first pick!
         </div>
@@ -27,7 +27,7 @@ const UsedPlayersGrid = ({ usedPlayers = [], picks = [], allPlayers = [] }) => {
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold font-display text-white">Used Players</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">Used Players</h3>
         <span className="text-sm text-text-muted">{usedPlayers.length} players used</span>
       </div>
 
@@ -44,7 +44,7 @@ const UsedPlayersGrid = ({ usedPlayers = [], picks = [], allPlayers = [] }) => {
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">{player?.countryFlag || '🏌️'}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
+                  <p className="text-sm font-medium text-text-primary truncate">
                     {player?.name || 'Unknown'}
                   </p>
                   <p className="text-xs text-text-muted">#{player?.rank || '?'}</p>

@@ -23,7 +23,7 @@ const SearchButton = ({ className = '' }) => {
         onClick={() => setIsOpen(true)}
         className={`
           flex items-center gap-2 px-3 py-2 bg-dark-tertiary rounded-lg
-          text-text-muted hover:text-white hover:bg-dark-border
+          text-text-muted hover:text-text-primary hover:bg-dark-border
           transition-colors ${className}
         `}
       >

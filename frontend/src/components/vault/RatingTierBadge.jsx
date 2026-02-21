@@ -5,9 +5,9 @@ const TIER_STYLES = {
   VETERAN:    { bg: 'bg-gray-300/20', text: 'text-gray-300', border: 'border-gray-400/30' },
   COMPETITOR: { bg: 'bg-orange-400/20', text: 'text-orange-300', border: 'border-orange-400/30' },
   CONTENDER:  { bg: 'bg-green-400/20', text: 'text-green-400', border: 'border-green-400/30' },
-  DEVELOPING: { bg: 'bg-white/10', text: 'text-white/60', border: 'border-white/20' },
-  ROOKIE:     { bg: 'bg-white/5', text: 'text-white/40', border: 'border-white/10' },
-  UNRANKED:   { bg: 'bg-white/5', text: 'text-white/30', border: 'border-white/10' },
+  DEVELOPING: { bg: 'bg-dark-tertiary/10', text: 'text-text-primary/60', border: 'border-stone/50' },
+  ROOKIE:     { bg: 'bg-dark-tertiary/5', text: 'text-text-primary/40', border: 'border-stone/30' },
+  UNRANKED:   { bg: 'bg-dark-tertiary/5', text: 'text-text-primary/30', border: 'border-stone/30' },
 }
 
 export default function RatingTierBadge({ tier = 'UNRANKED', size = 'sm' }) {

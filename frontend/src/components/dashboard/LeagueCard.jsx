@@ -105,7 +105,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
             <FormatIcon format={format} />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-white font-semibold text-base sm:text-lg truncate group-hover:text-gold transition-colors">
+            <h3 className="text-text-primary font-semibold text-base sm:text-lg truncate group-hover:text-gold transition-colors">
               {name}
             </h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -155,7 +155,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-text-muted text-xs">Your Points</p>
-              <p className="text-white font-mono font-semibold text-lg">{userPoints.toLocaleString()}</p>
+              <p className="text-text-primary font-mono font-semibold text-lg">{userPoints.toLocaleString()}</p>
             </div>
             {userTeam && (
               <div className="text-right">
@@ -187,7 +187,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-text-muted text-xs">Your Points</p>
-              <p className="text-white font-semibold text-lg">0</p>
+              <p className="text-text-primary font-semibold text-lg">0</p>
             </div>
             <div className="text-right">
               <p className="text-text-muted text-xs">Team</p>
@@ -219,7 +219,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
                   }`}>
                     {idx + 1}
                   </span>
-                  <span className="text-white text-sm truncate">
+                  <span className="text-text-primary text-sm truncate">
                     {entry.name || entry.user?.name || 'Team'}
                   </span>
                 </div>

@@ -19,7 +19,7 @@ const Button = ({
   `
 
   const variants = {
-    primary: 'bg-gradient-to-r from-gold to-orange text-dark-primary font-display hover:shadow-glow-gold focus:ring-gold shadow-button',
+    primary: 'bg-gradient-to-r from-gold to-orange text-slate font-display hover:shadow-glow-gold focus:ring-gold shadow-button',
     secondary: 'bg-transparent border border-gold/20 text-gold backdrop-blur-sm hover:bg-surface-hover hover:border-gold/40 focus:ring-gold',
     outline: 'bg-transparent hover:bg-dark-tertiary text-text-primary border border-dark-border hover:border-gold/30 focus:ring-dark-border hover:shadow-card',
     ghost: 'bg-transparent hover:bg-dark-tertiary text-text-secondary hover:text-text-primary',

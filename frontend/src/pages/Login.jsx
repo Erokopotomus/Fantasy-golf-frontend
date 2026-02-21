@@ -45,7 +45,7 @@ const Login = () => {
             <span className="text-2xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
           </Link>
 
-          <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">Welcome back</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2">Welcome back</h1>
           <p className="text-text-secondary mb-8 leading-relaxed">
             Sign in to your account to continue
           </p>
@@ -157,7 +157,7 @@ const Login = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold font-display text-white mb-4">
+          <h2 className="text-2xl font-bold font-display text-text-primary mb-4">
             Track Your Season Performance
           </h2>
           <p className="text-text-secondary leading-relaxed">

@@ -48,8 +48,8 @@ const TradeProposal = ({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold font-display text-white">Propose Trade</h2>
-          <button onClick={onClose} className="text-text-muted hover:text-white">
+          <h2 className="text-xl font-bold font-display text-text-primary">Propose Trade</h2>
+          <button onClick={onClose} className="text-text-muted hover:text-text-primary">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -75,7 +75,7 @@ const TradeProposal = ({
                     : 'bg-dark-tertiary hover:bg-dark-border border border-transparent'
                 }`}
               >
-                <p className="text-white font-medium">{member.name}</p>
+                <p className="text-text-primary font-medium">{member.name}</p>
                 <p className="text-text-muted text-sm">
                   {member.roster?.length || 0} players
                 </p>
@@ -88,7 +88,7 @@ const TradeProposal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Your Players */}
             <div>
-              <h3 className="text-white font-medium mb-3">You Send</h3>
+              <h3 className="text-text-primary font-medium mb-3">You Send</h3>
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
                 {roster.map((player) => (
                   <button
@@ -102,7 +102,7 @@ const TradeProposal = ({
                   >
                     <div className="flex items-center gap-2">
                       <span>{player.countryFlag}</span>
-                      <span className="text-white text-sm">{player.name}</span>
+                      <span className="text-text-primary text-sm">{player.name}</span>
                     </div>
                   </button>
                 ))}
@@ -111,7 +111,7 @@ const TradeProposal = ({
 
             {/* Their Players */}
             <div>
-              <h3 className="text-white font-medium mb-3">You Receive</h3>
+              <h3 className="text-text-primary font-medium mb-3">You Receive</h3>
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
                 {(selectedTeam.roster || []).map((player) => (
                   <button
@@ -125,7 +125,7 @@ const TradeProposal = ({
                   >
                     <div className="flex items-center gap-2">
                       <span>{player.countryFlag}</span>
-                      <span className="text-white text-sm">{player.name}</span>
+                      <span className="text-text-primary text-sm">{player.name}</span>
                     </div>
                   </button>
                 ))}
@@ -137,7 +137,7 @@ const TradeProposal = ({
         {/* Trade Summary */}
         {canPropose && (
           <div className="mt-6 p-4 bg-dark-tertiary rounded-lg">
-            <h4 className="text-white font-medium mb-2">Trade Summary</h4>
+            <h4 className="text-text-primary font-medium mb-2">Trade Summary</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-red-400 mb-1">You send:</p>
@@ -158,12 +158,12 @@ const TradeProposal = ({
         {/* Optional reasoning */}
         {canPropose && (
           <div className="mt-4">
-            <label className="block text-[11px] text-white/30 mb-1">Pitch / reasoning <span className="text-white/15">(optional)</span></label>
+            <label className="block text-[11px] text-text-primary/30 mb-1">Pitch / reasoning <span className="text-text-primary/15">(optional)</span></label>
             <input
               value={reasoning}
               onChange={e => setReasoning(e.target.value.substring(0, 280))}
               placeholder="e.g. Buying low after a bad week"
-              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-white/20 outline-none focus:border-gold/50"
+              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
             />
           </div>
         )}

@@ -71,7 +71,7 @@ const Players = () => {
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
-              <h2 className="text-xl font-bold font-display text-white mb-2">Error Loading Players</h2>
+              <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error Loading Players</h2>
               <p className="text-text-secondary mb-6">{error}</p>
             </Card>
           </div>
@@ -90,7 +90,7 @@ const Players = () => {
               {leagueId && (
                 <Link
                   to={`/leagues/${leagueId}`}
-                  className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2 text-sm"
+                  className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2 text-sm"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -98,7 +98,7 @@ const Players = () => {
                   Back to League
                 </Link>
               )}
-              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Players</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary">Players</h1>
               <p className="text-text-secondary mt-1">
                 Browse and compare {totalPlayers} golfers
               </p>
@@ -141,7 +141,7 @@ const Players = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium">Compare Mode Active</p>
+                    <p className="text-text-primary font-medium">Compare Mode Active</p>
                     <p className="text-text-muted text-sm">
                       {selectedPlayers.length === 0
                         ? 'Select 2-3 players to compare'
@@ -154,7 +154,7 @@ const Players = () => {
                     {selectedPlayers.map((p) => (
                       <span
                         key={p.id}
-                        className="px-2 py-1 bg-dark-tertiary rounded text-sm text-white"
+                        className="px-2 py-1 bg-dark-tertiary rounded text-sm text-text-primary"
                       >
                         {p.name.split(' ').pop()}
                       </span>

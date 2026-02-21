@@ -33,14 +33,14 @@ const CreateLeague = () => {
           <div className="mb-6">
             <Link
               to="/dashboard"
-              className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-4"
+              className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-4"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2">
               Create a League
             </h1>
             <p className="text-text-secondary">
@@ -59,7 +59,7 @@ const CreateLeague = () => {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-display font-bold text-white group-hover:text-accent-gold transition-colors">
+              <p className="text-sm font-display font-bold text-text-primary group-hover:text-accent-gold transition-colors">
                 Already have a league on another platform?
               </p>
               <p className="text-xs text-text-secondary mt-0.5">

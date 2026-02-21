@@ -31,7 +31,7 @@ const RotoSettings = ({ settings, onChange }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-2">Scoring Categories</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Scoring Categories</h3>
         <p className="text-sm text-text-muted mb-4">
           Select 4-10 categories. Teams are ranked in each category, and those ranks are summed for final standings.
         </p>
@@ -59,13 +59,13 @@ const RotoSettings = ({ settings, onChange }) => {
                 isSelected(category.id) ? 'border-gold bg-gold' : 'border-dark-border'
               }`}>
                 {isSelected(category.id) && (
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
                 )}
               </div>
               <div className="flex-1">
-                <p className={`font-medium ${isSelected(category.id) ? 'text-white' : 'text-text-secondary'}`}>
+                <p className={`font-medium ${isSelected(category.id) ? 'text-text-primary' : 'text-text-secondary'}`}>
                   {category.name}
                 </p>
                 <p className="text-xs text-text-muted">{category.description}</p>
@@ -81,7 +81,7 @@ const RotoSettings = ({ settings, onChange }) => {
       </Card>
 
       <div className="bg-dark-tertiary rounded-lg p-4 border border-dark-border">
-        <h4 className="text-sm font-medium text-white mb-2">How Roto Scoring Works</h4>
+        <h4 className="text-sm font-medium text-text-primary mb-2">How Roto Scoring Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
           <li>- Teams are ranked 1st to last in each category</li>
           <li>- Points awarded based on rank (1st = most points)</li>

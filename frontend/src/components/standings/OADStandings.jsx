@@ -16,7 +16,7 @@ const OADStandings = ({ standings, currentUserId }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">One & Done Standings</h3>
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">One & Done Standings</h3>
 
       <div className="space-y-2">
         {sortedStandings.map((team, index) => {
@@ -51,7 +51,7 @@ const OADStandings = ({ standings, currentUserId }) => {
 
               {/* Team Info */}
               <div className="flex-1">
-                <p className={`font-semibold ${isUser ? 'text-gold' : 'text-white'}`}>
+                <p className={`font-semibold ${isUser ? 'text-gold' : 'text-text-primary'}`}>
                   {team.name}
                   {isUser && <span className="text-xs font-normal ml-2">(You)</span>}
                 </p>

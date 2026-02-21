@@ -328,7 +328,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               <span className="text-2xl">{player.flag}</span>
             )}
             <div>
-              <h3 className="text-white font-bold text-lg leading-tight">{player.name}</h3>
+              <h3 className="text-text-primary font-bold text-lg leading-tight">{player.name}</h3>
               <div className="flex items-center gap-1.5">
                 {isNflPopup ? (
                   <>
@@ -352,7 +352,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
           </div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 bg-gold/20 text-gold text-xs font-bold rounded">#{player.rank}</span>
-            <button onClick={onClose} className="text-text-muted hover:text-white transition-colors p-1">
+            <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -372,11 +372,11 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                 </div>
                 <div className="bg-dark-primary rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Total Pts</p>
-                  <p className="text-white text-base font-bold">{player.totalPts?.toFixed(1) || '0.0'}</p>
+                  <p className="text-text-primary text-base font-bold">{player.totalPts?.toFixed(1) || '0.0'}</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Games</p>
-                  <p className="text-white text-base font-bold">{player.gamesPlayed || 0}</p>
+                  <p className="text-text-primary text-base font-bold">{player.gamesPlayed || 0}</p>
                 </div>
               </div>
               {/* Position-specific stats */}
@@ -387,7 +387,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                     {getNflPositionStats(player).map(s => (
                       <div key={s.label} className="bg-dark-primary rounded-lg p-2 text-center">
                         <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{s.label}</p>
-                        <p className="text-white text-sm font-bold">{s.value}</p>
+                        <p className="text-text-primary text-sm font-bold">{s.value}</p>
                       </div>
                     ))}
                   </div>
@@ -399,21 +399,21 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-dark-primary rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
-                  <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'}`}>
+                  <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-text-primary' : 'text-red-400'}`}>
                     {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
                   </p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Top 10</p>
-                  <p className="text-white text-base font-bold">{player.top10}%</p>
+                  <p className="text-text-primary text-base font-bold">{player.top10}%</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Cuts</p>
-                  <p className="text-white text-base font-bold">{player.cutsPct || 0}%</p>
+                  <p className="text-text-primary text-base font-bold">{player.cutsPct || 0}%</p>
                 </div>
                 <div className="bg-dark-primary rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Events</p>
-                  <p className="text-white text-base font-bold">{player.tournaments}</p>
+                  <p className="text-text-primary text-base font-bold">{player.tournaments}</p>
                 </div>
               </div>
 
@@ -435,7 +435,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                           style={{ width: `${Math.min(100, Math.abs(value) / 1.0 * 100)}%` }}
                         />
                       </div>
-                      <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-gold' : value >= 0 ? 'text-white' : 'text-red-400'}`}>
+                      <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-gold' : value >= 0 ? 'text-text-primary' : 'text-red-400'}`}>
                         {value > 0 ? '+' : ''}{value?.toFixed(2)}
                       </span>
                     </div>
@@ -478,7 +478,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                 inQueue
                   ? 'bg-orange/20 text-orange border border-orange/30'
-                  : 'bg-dark-primary text-white hover:bg-dark-tertiary border border-dark-border'
+                  : 'bg-dark-primary text-text-primary hover:bg-dark-tertiary border border-dark-border'
               }`}
             >
               {inQueue ? 'Queued' : 'Add to Queue'}
@@ -487,7 +487,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               isUserNominator && (
                 <button
                   onClick={() => { onNominate(player); onClose() }}
-                  className="flex-1 py-2.5 bg-yellow-500 text-dark-primary rounded-lg text-sm font-bold hover:bg-yellow-400 transition-colors"
+                  className="flex-1 py-2.5 bg-yellow-500 text-slate rounded-lg text-sm font-bold hover:bg-yellow-400 transition-colors"
                 >
                   Nominate
                 </button>
@@ -496,7 +496,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               isUserTurn && (
                 <button
                   onClick={() => { onDraft(player); onClose() }}
-                  className="flex-1 py-2.5 bg-gold text-white rounded-lg text-sm font-bold hover:bg-gold/90 transition-colors"
+                  className="flex-1 py-2.5 bg-gold text-text-primary rounded-lg text-sm font-bold hover:bg-gold/90 transition-colors"
                 >
                   Draft Now
                 </button>
@@ -1531,7 +1531,7 @@ const MockDraftRoom = () => {
                 onClick={() => {
                   if (confirm('Leave mock draft? Progress will be lost.')) navigate('/mock-draft')
                 }}
-                className="text-text-secondary hover:text-white transition-colors flex-shrink-0"
+                className="text-text-secondary hover:text-text-primary transition-colors flex-shrink-0"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1539,7 +1539,7 @@ const MockDraftRoom = () => {
               </button>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-white font-bold text-sm sm:text-base leading-tight">Mock Draft</h1>
+                  <h1 className="text-text-primary font-bold text-sm sm:text-base leading-tight">Mock Draft</h1>
                   {apiPlayers && (
                     <span className="px-1.5 py-0.5 bg-gold/15 text-gold text-[9px] font-semibold rounded">
                       LIVE DATA
@@ -1569,7 +1569,7 @@ const MockDraftRoom = () => {
                 {isPaused ? 'PAUSED' : isAuction ? (
                   auctionPhase === 'bidding' && currentNom ? (
                     <>
-                      <span className="text-white">{currentNom.player?.name?.split(' ').pop()}</span>
+                      <span className="text-text-primary">{currentNom.player?.name?.split(' ').pop()}</span>
                       <span className="text-yellow-400 font-bold">${currentNom.currentBid}</span>
                       <span className="text-text-muted">·</span>
                       <span>{config.teams.find(t => t.id === currentNom.highBidderTeamId)?.name}</span>
@@ -1618,7 +1618,7 @@ const MockDraftRoom = () => {
                         className={`px-2 py-1 text-[10px] font-bold transition-colors ${
                           draftSpeed === s.key
                             ? 'bg-gold/20 text-gold'
-                            : 'text-text-muted hover:text-white'
+                            : 'text-text-muted hover:text-text-primary'
                         }`}
                       >
                         {s.label}
@@ -1631,7 +1631,7 @@ const MockDraftRoom = () => {
                     onClick={toggleSound}
                     className={`p-1.5 rounded-lg transition-colors ${
                       soundEnabled
-                        ? 'bg-dark-primary text-text-secondary hover:text-white border border-dark-border'
+                        ? 'bg-dark-primary text-text-secondary hover:text-text-primary border border-dark-border'
                         : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                     }`}
                     title={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
@@ -1654,7 +1654,7 @@ const MockDraftRoom = () => {
                     className={`p-1.5 rounded-lg transition-colors ${
                       isPaused
                         ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
-                        : 'bg-dark-primary text-text-secondary hover:text-white border border-dark-border'
+                        : 'bg-dark-primary text-text-secondary hover:text-text-primary border border-dark-border'
                     }`}
                     title={isPaused ? 'Resume (Space)' : 'Pause (Space)'}
                   >
@@ -1678,11 +1678,11 @@ const MockDraftRoom = () => {
                     ) : (
                       <>
                         <p className="text-text-muted text-[10px] leading-tight">ROUND {pickInfo?.round || 1}</p>
-                        <p className="text-white text-xs font-semibold">{currentPickNumber + 1}/{totalPicks}</p>
+                        <p className="text-text-primary text-xs font-semibold">{currentPickNumber + 1}/{totalPicks}</p>
                       </>
                     )}
                   </div>
-                  <div className="sm:hidden text-white text-xs font-semibold">
+                  <div className="sm:hidden text-text-primary text-xs font-semibold">
                     {isAuction
                       ? <span className="text-yellow-400">${budgets[userTeamId] ?? 0}</span>
                       : <>R{pickInfo?.round} · {currentPickNumber + 1}/{totalPicks}</>
@@ -1791,8 +1791,8 @@ const MockDraftRoom = () => {
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className={`px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 ${
             recentPick.teamId === userTeam?.id
-              ? 'bg-gold text-white'
-              : 'bg-dark-secondary border border-dark-border text-white'
+              ? 'bg-gold text-text-primary'
+              : 'bg-dark-secondary border border-dark-border text-text-primary'
           }`}>
             {isNfl && recentPick.playerPosition ? (
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${NFL_POS_COLORS[recentPick.playerPosition] || ''}`}>
@@ -1815,10 +1815,10 @@ const MockDraftRoom = () => {
       {/* Pick Tag Prompt — appears after user makes a pick */}
       {pickTagPrompt && (
         <div className="fixed bottom-0 left-0 right-0 z-50 animate-fade-in">
-          <div className="bg-dark-secondary/95 backdrop-blur-md border-t border-white/10 px-4 py-3 shadow-lg">
+          <div className="bg-dark-secondary/95 backdrop-blur-md border-t border-stone/30 px-4 py-3 shadow-lg">
             <div className="max-w-2xl mx-auto">
-              <p className="text-[11px] text-white/40 mb-2 text-center">
-                How'd that feel? <span className="text-white/60 font-medium">{pickTagPrompt.playerName}</span>
+              <p className="text-[11px] text-text-primary/40 mb-2 text-center">
+                How'd that feel? <span className="text-text-primary/60 font-medium">{pickTagPrompt.playerName}</span>
               </p>
               <div className="flex items-center justify-center gap-1.5 flex-wrap">
                 {[
@@ -1839,7 +1839,7 @@ const MockDraftRoom = () => {
                 ))}
                 <button
                   onClick={() => setPickTagPrompt(null)}
-                  className="px-2 py-1.5 text-[10px] text-white/20 hover:text-white/40 transition-colors"
+                  className="px-2 py-1.5 text-[10px] text-text-primary/20 hover:text-text-primary/40 transition-colors"
                 >
                   Skip
                 </button>
@@ -1870,7 +1870,7 @@ const MockDraftRoom = () => {
               )}
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-white font-bold text-sm truncate group-hover:text-yellow-400 transition-colors">{enriched?.name}</p>
+                  <p className="text-text-primary font-bold text-sm truncate group-hover:text-yellow-400 transition-colors">{enriched?.name}</p>
                   {enriched?.primaryTour && (
                     <span className={`text-[8px] px-1 py-0.5 rounded font-medium flex-shrink-0 ${
                       enriched.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
@@ -1915,17 +1915,17 @@ const MockDraftRoom = () => {
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
                   onClick={() => setNomBidInput(prev => Math.max(currentNom.currentBid + 1, prev - 1))}
-                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-white flex items-center justify-center text-sm font-bold"
+                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-text-primary flex items-center justify-center text-sm font-bold"
                 >-</button>
-                <span className="text-white font-bold text-sm w-8 text-center tabular-nums">${nomBidInput}</span>
+                <span className="text-text-primary font-bold text-sm w-8 text-center tabular-nums">${nomBidInput}</span>
                 <button
                   onClick={() => setNomBidInput(prev => Math.min(budgets[userTeamId] || 0, prev + 1))}
-                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-white flex items-center justify-center text-sm font-bold"
+                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-text-primary flex items-center justify-center text-sm font-bold"
                 >+</button>
                 <button
                   onClick={() => handlePlaceBid(nomBidInput)}
                   disabled={nomBidInput <= currentNom.currentBid || nomBidInput > (budgets[userTeamId] || 0)}
-                  className="px-3 py-1.5 bg-yellow-500 text-dark-primary rounded-lg text-xs font-bold hover:bg-yellow-400 transition-colors disabled:opacity-30"
+                  className="px-3 py-1.5 bg-yellow-500 text-slate rounded-lg text-xs font-bold hover:bg-yellow-400 transition-colors disabled:opacity-30"
                 >
                   BID
                 </button>
@@ -1953,7 +1953,7 @@ const MockDraftRoom = () => {
                   ].map(stat => (
                     <div key={stat.label} className="text-center py-1.5">
                       <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{stat.label}</p>
-                      <p className={`text-sm font-bold tabular-nums ${stat.highlight ? 'text-yellow-400' : 'text-white'}`}>{stat.value}</p>
+                      <p className={`text-sm font-bold tabular-nums ${stat.highlight ? 'text-yellow-400' : 'text-text-primary'}`}>{stat.value}</p>
                     </div>
                   ))}
                 </div>
@@ -1970,7 +1970,7 @@ const MockDraftRoom = () => {
                     ].map(stat => (
                       <div key={stat.label} className="text-center py-1">
                         <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{stat.label}</p>
-                        <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-gold' : stat.value >= 0 ? 'text-white' : 'text-red-400'}`}>
+                        <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-gold' : stat.value >= 0 ? 'text-text-primary' : 'text-red-400'}`}>
                           {stat.value > 0 ? '+' : ''}{stat.value?.toFixed(2)}
                         </p>
                       </div>
@@ -2201,7 +2201,7 @@ const MockDraftRoom = () => {
                         placeholder="Search players..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                        className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                       />
                     </div>
                     <button
@@ -2209,7 +2209,7 @@ const MockDraftRoom = () => {
                       className={`flex-shrink-0 px-3 py-2 rounded-lg text-[11px] font-medium transition-colors border ${
                         showDrafted
                           ? 'bg-gold/15 border-gold/30 text-gold'
-                          : 'bg-dark-primary border-dark-border text-text-muted hover:text-white hover:border-dark-border'
+                          : 'bg-dark-primary border-dark-border text-text-muted hover:text-text-primary hover:border-dark-border'
                       }`}
                     >
                       {showDrafted ? 'Hide Drafted' : 'Show Drafted'}
@@ -2227,7 +2227,7 @@ const MockDraftRoom = () => {
                         className={`px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap transition-colors ${
                           posFilter === pos
                             ? pos === 'ALL' ? 'bg-gold/20 text-gold' : (NFL_POS_COLORS[pos] || 'bg-gold/20 text-gold')
-                            : 'bg-dark-primary text-text-muted hover:text-white'
+                            : 'bg-dark-primary text-text-muted hover:text-text-primary'
                         }`}
                       >
                         {pos}
@@ -2242,34 +2242,34 @@ const MockDraftRoom = () => {
                   <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
                     {isNfl ? (
                       <div className="grid grid-cols-[30px_1fr_36px_36px_48px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-                        <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
+                        <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
                           Rk <SortIcon field="rank" />
                         </button>
-                        <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
+                        <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
                           Player <SortIcon field="name" />
                         </button>
                         <span className="text-center">Pos</span>
                         <span className="text-center">Team</span>
-                        <button onClick={() => handleSort('ppg')} className="text-right hover:text-white transition-colors">
+                        <button onClick={() => handleSort('ppg')} className="text-right hover:text-text-primary transition-colors">
                           PPG <SortIcon field="ppg" />
                         </button>
-                        <button onClick={() => handleSort('totalPts')} className="text-right hover:text-white transition-colors">
+                        <button onClick={() => handleSort('totalPts')} className="text-right hover:text-text-primary transition-colors">
                           Pts <SortIcon field="totalPts" />
                         </button>
                         <div />
                       </div>
                     ) : (
                       <div className="grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-                        <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
+                        <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
                           Rk <SortIcon field="rank" />
                         </button>
-                        <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
+                        <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
                           Player <SortIcon field="name" />
                         </button>
-                        <button onClick={() => handleSort('sg')} className="text-right hover:text-white transition-colors">
+                        <button onClick={() => handleSort('sg')} className="text-right hover:text-text-primary transition-colors">
                           SG <SortIcon field="sg" />
                         </button>
-                        <button onClick={() => handleSort('top10')} className="text-right hover:text-white transition-colors">
+                        <button onClick={() => handleSort('top10')} className="text-right hover:text-text-primary transition-colors">
                           T10 <SortIcon field="top10" />
                         </button>
                         <span className="text-center" title="Tournaments played">Evt</span>
@@ -2310,7 +2310,7 @@ const MockDraftRoom = () => {
                             )
                           )}
                           <div className="flex items-center gap-1 min-w-0">
-                            <span className="text-white text-sm truncate">{player.name}</span>
+                            <span className="text-text-primary text-sm truncate">{player.name}</span>
                             {getBoardEntry(player) && (
                               <>
                                 <span className="text-[9px] text-gold/50 font-mono shrink-0">B{getBoardEntry(player).rank}</span>
@@ -2340,7 +2340,7 @@ const MockDraftRoom = () => {
                         ) : (
                           <>
                             <span className={`text-xs text-right font-medium tabular-nums ${
-                              player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-white' : 'text-red-400'
+                              player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-text-primary' : 'text-red-400'
                             }`}>
                               {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
                             </span>
@@ -2377,7 +2377,7 @@ const MockDraftRoom = () => {
                                 isUserNominator && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleNominate(player, 1) }}
-                                    className="px-2 py-1 bg-yellow-500 text-dark-primary text-[10px] rounded font-semibold hover:bg-yellow-400 transition-colors"
+                                    className="px-2 py-1 bg-yellow-500 text-slate text-[10px] rounded font-semibold hover:bg-yellow-400 transition-colors"
                                   >
                                     Nom
                                   </button>
@@ -2386,7 +2386,7 @@ const MockDraftRoom = () => {
                                 isUserTurn && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
-                                    className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
+                                    className="px-2 py-1 bg-gold text-text-primary text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
                                   >
                                     Draft
                                   </button>
@@ -2440,7 +2440,7 @@ const MockDraftRoom = () => {
                   className={`flex-1 px-3 py-2 text-xs font-mono font-medium uppercase tracking-wider transition-colors ${
                     bottomTab === tab.key
                       ? 'text-gold border-b-2 border-gold'
-                      : 'text-text-secondary hover:text-white'
+                      : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   {tab.label}
@@ -2512,7 +2512,7 @@ const MockDraftRoom = () => {
                           autoPick ? 'bg-gold' : autoPickCountdown > 0 ? 'bg-yellow-500/50' : 'bg-dark-tertiary border border-dark-border'
                         }`}
                       >
-                        <span className={`inline-block w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform ${
+                        <span className={`inline-block w-3.5 h-3.5 rounded-full bg-dark-tertiary shadow-sm transition-transform ${
                           autoPick || autoPickCountdown > 0 ? 'translate-x-[18px]' : 'translate-x-[3px]'
                         }`} />
                       </button>
@@ -2542,7 +2542,7 @@ const MockDraftRoom = () => {
                               <span className="text-sm">{player.flag}</span>
                             )}
                             <div className="min-w-0">
-                              <p className="text-white text-sm font-medium truncate">{player.name}</p>
+                              <p className="text-text-primary text-sm font-medium truncate">{player.name}</p>
                               <p className="text-text-muted text-xs">
                                 {isNfl
                                   ? `#${player.rank} · ${player.team} · ${player.ppg?.toFixed(1)} PPG`
@@ -2555,7 +2555,7 @@ const MockDraftRoom = () => {
                               isUserNominator && (
                                 <button
                                   onClick={() => handleNominate(player, 1)}
-                                  className="px-2 py-1 bg-yellow-500 text-dark-primary text-[10px] rounded font-semibold hover:bg-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="px-2 py-1 bg-yellow-500 text-slate text-[10px] rounded font-semibold hover:bg-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   Nom
                                 </button>
@@ -2564,7 +2564,7 @@ const MockDraftRoom = () => {
                               isUserTurn && (
                                 <button
                                   onClick={() => handleMakePick(player)}
-                                  className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="px-2 py-1 bg-gold text-text-primary text-[10px] rounded font-semibold hover:bg-gold/80 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   Draft
                                 </button>
@@ -2604,7 +2604,7 @@ const MockDraftRoom = () => {
                       return (
                         <div key={entry.id}>
                           {showTierDivider && (
-                            <div className="text-[10px] font-bold uppercase text-white/20 tracking-wider mt-3 mb-1 px-2">
+                            <div className="text-[10px] font-bold uppercase text-text-primary/20 tracking-wider mt-3 mb-1 px-2">
                               Tier {tier}
                             </div>
                           )}
@@ -2617,7 +2617,7 @@ const MockDraftRoom = () => {
                                 {entry.player.nflPosition}
                               </span>
                             )}
-                            <span className={`text-sm flex-1 truncate ${isDrafted ? 'text-text-muted line-through' : 'text-white'}`}>
+                            <span className={`text-sm flex-1 truncate ${isDrafted ? 'text-text-muted line-through' : 'text-text-primary'}`}>
                               {entry.player?.name || 'Unknown'}
                             </span>
                             {tag && (
@@ -2669,7 +2669,7 @@ const MockDraftRoom = () => {
                               <span className="text-sm">{pick.playerFlag}</span>
                             )}
                             <div className="min-w-0 flex-1">
-                              <p className="text-white text-sm font-medium truncate">{pick.playerName}</p>
+                              <p className="text-text-primary text-sm font-medium truncate">{pick.playerName}</p>
                               <p className="text-text-muted text-xs">
                                 {isNfl && pick.playerTeam ? `${pick.playerTeam} · ` : ''}
                                 Pick #{pick.pickNumber} · Rank #{pick.playerRank}
@@ -2683,7 +2683,7 @@ const MockDraftRoom = () => {
                                 pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
                                 pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                                 pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
-                                'bg-white/10 text-white/40'
+                                'bg-dark-tertiary/10 text-text-primary/40'
                               }`}>
                                 {pick.pickTag}
                               </span>
@@ -2728,7 +2728,7 @@ const MockDraftRoom = () => {
                               <span className="text-sm">{pick.playerFlag}</span>
                             )}
                             <div className="min-w-0">
-                              <p className="text-white text-sm truncate">{pick.playerName}</p>
+                              <p className="text-text-primary text-sm truncate">{pick.playerName}</p>
                               <p className="text-text-muted text-xs">R{pick.round} · {pick.teamName}</p>
                             </div>
                           </div>
@@ -2763,7 +2763,7 @@ const MockDraftRoom = () => {
                               )}
                               <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
                                 msg.isUser
-                                  ? 'bg-gold/20 text-white rounded-br-sm'
+                                  ? 'bg-gold/20 text-text-primary rounded-br-sm'
                                   : 'bg-dark-primary text-text-secondary rounded-bl-sm'
                               }`}>
                                 {msg.text}
@@ -2786,12 +2786,12 @@ const MockDraftRoom = () => {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                      className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     />
                     <button
                       type="submit"
                       disabled={!chatInput.trim()}
-                      className="px-3 py-1.5 bg-gold text-white rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-gold/80 transition-colors"
+                      className="px-3 py-1.5 bg-gold text-text-primary rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-gold/80 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -2828,7 +2828,7 @@ const MockDraftRoom = () => {
 
       {/* Tier depletion alert toast */}
       {tierAlert && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-orange/90 text-white text-sm font-semibold rounded-lg shadow-lg animate-pulse">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-orange/90 text-text-primary text-sm font-semibold rounded-lg shadow-lg animate-pulse">
           {tierAlert}
         </div>
       )}
@@ -2842,9 +2842,9 @@ const MockDraftRoom = () => {
             </svg>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-purple-300 font-semibold">Clutch Coach</p>
-              <p className="text-xs text-white/70 leading-relaxed">{draftNudge.nudgeText}</p>
+              <p className="text-xs text-text-primary/70 leading-relaxed">{draftNudge.nudgeText}</p>
             </div>
-            <button onClick={() => setDraftNudge(null)} className="text-white/30 hover:text-white/60 flex-shrink-0">
+            <button onClick={() => setDraftNudge(null)} className="text-text-primary/30 hover:text-text-primary/60 flex-shrink-0">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>

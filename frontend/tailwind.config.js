@@ -8,37 +8,37 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Aurora Ember dark theme (legacy — keep until pages migrated)
+        // Theme-aware colors — all reference CSS variables
         dark: {
-          primary: '#0A0908',
-          secondary: '#151210',
-          tertiary: '#221F1B',
-          border: '#3D3730',
+          primary: 'rgb(var(--bg-rgb) / <alpha-value>)',
+          secondary: 'rgb(var(--bg-alt-rgb) / <alpha-value>)',
+          tertiary: 'rgb(var(--surface-rgb) / <alpha-value>)',
+          border: 'rgb(var(--stone-rgb) / <alpha-value>)',
         },
         text: {
-          primary: '#F2EDE8',
-          secondary: '#958E84',
-          muted: '#5E5850',
+          primary: 'rgb(var(--text-1-rgb) / <alpha-value>)',
+          secondary: 'rgb(var(--text-2-rgb) / <alpha-value>)',
+          muted: 'rgb(var(--text-3-rgb) / <alpha-value>)',
         },
         accent: {
-          green: '#6ABF8A',
-          'green-hover': '#5AAF7A',
-          blue: '#E07838',
-          'blue-hover': '#D06828',
+          green: 'rgb(var(--field-rgb) / <alpha-value>)',
+          'green-hover': 'var(--field-bright)',
+          blue: 'rgb(var(--blaze-rgb) / <alpha-value>)',
+          'blue-hover': 'var(--blaze-deep)',
         },
         gold: {
-          DEFAULT: '#E8B84D',
-          bright: '#F5CC65',
-          muted: '#C49A3A',
+          DEFAULT: 'rgb(var(--crown-rgb) / <alpha-value>)',
+          bright: 'rgb(var(--crown-bright-rgb) / <alpha-value>)',
+          muted: 'var(--crown)',
         },
-        orange: '#E07838',
-        rose: '#D4607A',
+        orange: 'rgb(var(--blaze-rgb) / <alpha-value>)',
+        rose: 'rgb(var(--live-red-rgb) / <alpha-value>)',
         surface: {
-          DEFAULT: 'rgba(255,245,230,0.10)',
-          hover: 'rgba(255,245,230,0.14)',
-          bright: 'rgba(255,245,230,0.18)',
+          DEFAULT: 'var(--glass)',
+          hover: 'var(--glass-hover)',
+          bright: 'var(--glass-bright)',
         },
-        // New brand colors
+        // New brand colors (explicit)
         blaze: { DEFAULT: '#F06820', hot: '#FF8828', deep: '#D45A10' },
         slate: { DEFAULT: '#1E2A3A', mid: '#2C3E50', light: '#3D5166' },
         field: { DEFAULT: '#0D9668', bright: '#14B880' },

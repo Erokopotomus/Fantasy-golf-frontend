@@ -123,7 +123,7 @@ const OnboardingModal = () => {
           <div className="flex justify-end mb-4">
             <button
               onClick={skipOnboarding}
-              className="text-sm text-text-muted hover:text-white transition-colors"
+              className="text-sm text-text-muted hover:text-text-primary transition-colors"
             >
               Skip
             </button>
@@ -135,7 +135,7 @@ const OnboardingModal = () => {
           </div>
 
           {/* Title & Description */}
-          <h2 className="text-2xl font-bold font-display text-white text-center mb-3">
+          <h2 className="text-2xl font-bold font-display text-text-primary text-center mb-3">
             {currentStepData.title}
           </h2>
           <p className="text-text-secondary text-center mb-6">
@@ -155,7 +155,7 @@ const OnboardingModal = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <span className="text-white text-sm">{feature}</span>
+                  <span className="text-text-primary text-sm">{feature}</span>
                 </div>
               ))}
             </div>
@@ -179,7 +179,7 @@ const OnboardingModal = () => {
               </Button>
               <button
                 onClick={handleExplore}
-                className="w-full py-2 text-text-muted hover:text-white transition-colors text-sm"
+                className="w-full py-2 text-text-muted hover:text-text-primary transition-colors text-sm"
               >
                 Just explore for now
               </button>
@@ -194,7 +194,7 @@ const OnboardingModal = () => {
                 disabled={isFirstStep}
                 className={`
                   flex items-center gap-1 text-sm font-medium transition-colors
-                  ${isFirstStep ? 'text-dark-border cursor-not-allowed' : 'text-text-muted hover:text-white'}
+                  ${isFirstStep ? 'text-dark-border cursor-not-allowed' : 'text-text-muted hover:text-text-primary'}
                 `}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

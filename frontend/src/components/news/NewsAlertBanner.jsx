@@ -36,7 +36,7 @@ const NewsAlertBanner = () => {
       {/* Close button */}
       <button
         onClick={() => setIsVisible(false)}
-        className="absolute top-2 right-2 text-text-muted hover:text-white transition-colors"
+        className="absolute top-2 right-2 text-text-muted hover:text-text-primary transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -55,7 +55,7 @@ const NewsAlertBanner = () => {
             {currentNews.playerFlag && (
               <span>{currentNews.playerFlag}</span>
             )}
-            <p className="text-sm font-medium text-white truncate">
+            <p className="text-sm font-medium text-text-primary truncate">
               {currentNews.headline}
             </p>
           </div>
@@ -72,7 +72,7 @@ const NewsAlertBanner = () => {
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                  idx === currentIndex ? 'bg-white' : 'bg-white/30'
+                  idx === currentIndex ? 'bg-dark-tertiary' : 'bg-dark-tertiary/30'
                 }`}
               />
             ))}

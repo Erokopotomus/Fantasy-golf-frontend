@@ -25,7 +25,7 @@ const ScoreCell = ({ score, par }) => {
       <span className="text-emerald-400 font-semibold text-[11px] relative z-10">{score}</span>
     </span>
   )
-  if (diff === 0) return <span className="inline-flex items-center justify-center w-7 h-7 text-white text-[11px] font-mono">{score}</span>
+  if (diff === 0) return <span className="inline-flex items-center justify-center w-7 h-7 text-text-primary text-[11px] font-mono">{score}</span>
   if (diff === 1) return (
     <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
       <span className="absolute inset-0 rounded-sm border-2 border-red-400" />
@@ -154,7 +154,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     const num = parseInt(score)
     if (num < 0) return 'text-emerald-400'
     if (num > 0) return 'text-red-400'
-    return 'text-white'
+    return 'text-text-primary'
   }
 
   const getMedalStyle = (pos) => {
@@ -266,7 +266,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`font-semibold text-sm truncate ${isMyPlayer ? 'text-emerald-400' : 'text-white'}`}>
+                <span className={`font-semibold text-sm truncate ${isMyPlayer ? 'text-emerald-400' : 'text-text-primary'}`}>
                   {player.name}
                 </span>
                 {hasRecentChange && (
@@ -360,7 +360,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                       ${isActive
                         ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30'
                         : isReachable
-                          ? 'bg-dark-secondary/60 text-text-secondary hover:text-white hover:bg-dark-secondary'
+                          ? 'bg-dark-secondary/60 text-text-secondary hover:text-text-primary hover:bg-dark-secondary'
                           : 'bg-dark-secondary/30 text-text-muted/40 cursor-not-allowed'}
                     `}
                   >
@@ -421,7 +421,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                       {/* Round label + status */}
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-white">Round {expandedRound}</span>
+                          <span className="text-xs font-semibold text-text-primary">Round {expandedRound}</span>
                           {isInProgress && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 font-medium">
                               {player.thru > 0 ? `Thru ${player.thru}` : 'Not started'}
@@ -438,7 +438,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                             <span className={`text-sm font-bold ${getScoreColor(player.today)}`}>{formatScore(player.today)}</span>
                           )}
                           {roundScore && (
-                            <span className={`text-sm font-bold ${roundScore < front9Par + back9Par ? 'text-emerald-400' : roundScore > front9Par + back9Par ? 'text-red-400' : 'text-white'}`}>
+                            <span className={`text-sm font-bold ${roundScore < front9Par + back9Par ? 'text-emerald-400' : roundScore > front9Par + back9Par ? 'text-red-400' : 'text-text-primary'}`}>
                               {roundScore} ({roundScore - (front9Par + back9Par) > 0 ? '+' : ''}{roundScore - (front9Par + back9Par)})
                             </span>
                           )}
@@ -475,7 +475,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
                                 </td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-white text-[11px]">
+                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-text-primary text-[11px]">
                                 {front9Score != null ? front9Score : '–'}
                               </td>
                               <td className="p-1.5 bg-dark-secondary/60"></td>
@@ -512,10 +512,10 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i + 9]} />
                                 </td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-white text-[11px]">
+                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-text-primary text-[11px]">
                                 {back9Score != null ? back9Score : '–'}
                               </td>
-                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-white text-[11px]">
+                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-text-primary text-[11px]">
                                 {roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : '–')}
                               </td>
                             </tr>
@@ -575,7 +575,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-dark-tertiary to-dark-secondary border-b border-dark-border">
         <div className="flex items-center gap-3">
-          <h3 className="text-base font-bold text-white tracking-tight">Leaderboard</h3>
+          <h3 className="text-base font-bold text-text-primary tracking-tight">Leaderboard</h3>
           {cut != null && (
             <span className="text-xs text-red-400/80 bg-red-500/10 px-2 py-0.5 rounded-full font-medium">
               Cut {formatScore(cut)}
@@ -593,12 +593,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="w-32 sm:w-40 pl-7 pr-2 py-1 text-xs rounded-full bg-dark-tertiary border border-dark-border text-white placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-32 sm:w-40 pl-7 pr-2 py-1 text-xs rounded-full bg-dark-tertiary border border-dark-border text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-white"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -609,7 +609,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           <button
             onClick={() => setShowRounds(!showRounds)}
             className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
-              showRounds ? 'bg-emerald-500/15 text-emerald-400' : 'bg-dark-tertiary text-text-muted hover:text-white'
+              showRounds ? 'bg-emerald-500/15 text-emerald-400' : 'bg-dark-tertiary text-text-muted hover:text-text-primary'
             }`}
           >
             Rounds

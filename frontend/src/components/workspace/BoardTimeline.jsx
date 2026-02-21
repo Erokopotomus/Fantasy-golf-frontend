@@ -60,7 +60,7 @@ export default function BoardTimeline({ boardId }) {
   if (timeline.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-sm text-white/30">No activity yet. Start ranking players to build your timeline.</p>
+        <p className="text-sm text-text-primary/30">No activity yet. Start ranking players to build your timeline.</p>
       </div>
     )
   }
@@ -68,7 +68,7 @@ export default function BoardTimeline({ boardId }) {
   return (
     <div className="relative">
       {/* Vertical line */}
-      <div className="absolute left-4 top-0 bottom-0 w-px bg-white/[0.06]" />
+      <div className="absolute left-4 top-0 bottom-0 w-px bg-dark-tertiary/[0.06]" />
 
       <div className="space-y-4">
         {timeline.map((day, i) => {
@@ -89,13 +89,13 @@ export default function BoardTimeline({ boardId }) {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-medium text-white/50">{dateLabel}</span>
-                    <p className="text-sm text-white/70 mt-0.5">{day.summary}</p>
+                    <span className="text-xs font-medium text-text-primary/50">{dateLabel}</span>
+                    <p className="text-sm text-text-primary/70 mt-0.5">{day.summary}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-white/20">{day.activityCount} action{day.activityCount !== 1 ? 's' : ''}</span>
+                    <span className="text-[10px] text-text-primary/20">{day.activityCount} action{day.activityCount !== 1 ? 's' : ''}</span>
                     <svg
-                      className={`w-4 h-4 text-white/20 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      className={`w-4 h-4 text-text-primary/20 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -116,21 +116,21 @@ export default function BoardTimeline({ boardId }) {
                 <div className="mt-2 space-y-1 ml-1">
                   {day.activities.map(a => (
                     <div key={a.id} className="flex items-start gap-2 py-1.5 text-xs">
-                      <span className="w-5 text-center text-white/30 shrink-0">{actionIcon(a.action)}</span>
+                      <span className="w-5 text-center text-text-primary/30 shrink-0">{actionIcon(a.action)}</span>
                       <div className="flex-1 min-w-0">
-                        <span className="text-white/50">{activityLabel(a)}</span>
+                        <span className="text-text-primary/50">{activityLabel(a)}</span>
                         {a.details?.note && (
-                          <p className="text-white/25 mt-0.5 italic truncate">"{a.details.note}"</p>
+                          <p className="text-text-primary/25 mt-0.5 italic truncate">"{a.details.note}"</p>
                         )}
                         {a.details?.reasonChips && a.details.reasonChips.length > 0 && (
                           <div className="flex gap-1 mt-1">
                             {a.details.reasonChips.map((c, ci) => (
-                              <span key={ci} className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[9px] text-white/30">{c}</span>
+                              <span key={ci} className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[9px] text-text-primary/30">{c}</span>
                             ))}
                           </div>
                         )}
                       </div>
-                      <span className="text-white/15 shrink-0">
+                      <span className="text-text-primary/15 shrink-0">
                         {new Date(a.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                       </span>
                     </div>

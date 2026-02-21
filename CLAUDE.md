@@ -1152,37 +1152,45 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 
 ---
 
-## DESIGN SYSTEM: AURORA EMBER
+## DESIGN SYSTEM: CLUTCH BRAND (Light-First + Dark Mode)
 
-> **Full specification:** See `CLUTCH_BRAND_SYSTEM.md` for complete implementation details including CSS variables, component code, SVG logo, and usage rules.
+> **Brand spec:** See `ClutchBrandSpec.docx` for full brand direction. Legacy spec in `CLUTCH_BRAND_SYSTEM.md`.
+> **Wave 1 (foundation) deployed.** ThemeContext, dual-mode CSS variables, new fonts, Tailwind brand colors. Pages migrate individually in subsequent waves.
 
-**Brand direction:** Aurora Ember — warm glassmorphic dark theme, living aurora background, gold/orange accents.
+**Brand direction:** Light-first (Clutch is the only fantasy platform defaulting to light mode). Dark mode via user toggle. Warm, premium, editorial feel.
 
-**Key tokens:**
-- Background: `#0A0908` (warm charcoal, NOT cool gray, NOT blue)
-- Primary accent: `#E8B84D` (gold)
-- Secondary accent: `#E07838` (burnt orange)
-- Alert/danger: `#D4607A` (warm rose)
-- Success/active: `#6ABF8A` (green — status only, never as brand color)
-- Cards: Glassmorphic (translucent + backdrop-blur over aurora background)
-- Primary gradient: `linear-gradient(135deg, #E8B84D, #E07838)`
+**Theme system:**
+- `ThemeContext.jsx` — `useTheme()` hook, `toggleTheme()`, localStorage key `clutch-theme`, manages `class="dark"` on `<html>`
+- Light default: cream `#FAFAF6` background, dark text
+- Dark mode: deep navy `#0E1015` background, AuroraBackground re-enabled
+- CSS variables in `index.css`: `:root` (light) + `.dark` (dark) with legacy mappings
+- Tailwind: `darkMode: 'class'` enabled, `dark:` prefix works
+
+**Key color tokens (CSS vars + Tailwind):**
+| Token | Light | Dark | Tailwind |
+|-------|-------|------|----------|
+| `--bg` | `#FAFAF6` | `#0E1015` | `bg-[var(--bg)]` |
+| `--surface` | `#FFFFFF` | `#1A1D26` | — |
+| `--text-1` | `#1A1A1A` | `#EEEAE2` | — |
+| Blaze (primary) | `#F06820` | same | `blaze`, `blaze-hot`, `blaze-deep` |
+| Slate (nav/headers) | `#1E2A3A` | same | `slate`, `slate-mid`, `slate-light` |
+| Field (success) | `#0D9668` | same | `field`, `field-bright` |
+| Crown (premium) | `#D4930D` | same | `crown`, `crown-bright` |
+| Live red | `#E83838` | same | `live-red` |
 
 **Typography:**
-| Role | Font | Rule |
-|------|------|------|
-| Display | Syne 700-800 | 18px+ ONLY. Headlines, titles, wordmark, primary CTAs |
-| Body | DM Sans 400-700 | Everything people read. Nav, descriptions, player names |
-| Data | JetBrains Mono 400-700 | Scores, stats, badges, tags, numbers, timestamps |
+| Role | Font | CSS var | Tailwind | Rule |
+|------|------|---------|----------|------|
+| Display | Bricolage Grotesque 700-800 | `--font-display` | `font-display` | Headlines, titles, wordmark, primary CTAs |
+| Body | DM Sans 400-700 | `--font-body` | `font-body` | Everything people read |
+| Data | JetBrains Mono 400-700 | `--font-data` | `font-mono` | Scores, stats, badges, tags, numbers |
+| Editorial | Instrument Serif 400i | `--font-editorial` | `font-editorial` | Pull quotes, accent text (always italic) |
+
+**Legacy Aurora Ember tokens:** Still present in Tailwind (`dark-primary`, `gold`, `surface`, etc.) and CSS vars (`--gold`, `--text`, `--surface-hover`). These map to new-brand equivalents so existing components don't break. Will be removed page-by-page during migration waves.
+
+**Migration status:** Wave 1 (foundation) complete. Individual pages still use Aurora Ember classes — they render with old dark-theme colors in dark mode and partially styled in light mode. Each page gets migrated in subsequent waves.
 
 **Logo:** "The Spark" — lightning bolt in a gold-gradient rounded square. SVG component at `src/components/ui/ClutchLogo.tsx`.
-
-**Critical anti-Sleeper rules:**
-1. No cyan/teal/blue as accent colors
-2. No robot mascots or cartoon characters
-3. Warm charcoal background, not cool gray or dark blue
-4. Glass cards (translucent + blur), not solid-fill cards with gray borders
-5. Gold gradient primary buttons, never green
-6. JetBrains Mono for all data — this is the key differentiator
 
 ---
 
@@ -1260,7 +1268,7 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │   │   ├── utils/
 │   │   │   ├── commonNames.js   ← 400+ census names for owner detection
 │   │   │   └── uploadImage.js   ← Cloudinary resize + upload pipeline
-│   │   ├── context/             ← AuthContext
+│   │   ├── context/             ← AuthContext, ThemeContext
 │   │   └── services/            ← api.js, socket.js, analytics.js, webPush.js
 │   └── public/
 │       └── service-worker.js
@@ -1481,7 +1489,7 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 ---
 
 *Last updated: February 21, 2026*
-*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine). Import Intelligence Pipeline complete. League Vault V2 complete (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing). Commissioner blog system complete (TipTap, reactions, comments, cover images). Season range picker + segment scoring for Full League format. Prisma singleton + connection pooling deployed (fixed pool exhaustion). All route files use shared client. Automatic tournament status transition added. 330+ commits. 91+ database models. 160+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
+*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine). Import Intelligence Pipeline complete. League Vault V2 complete (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing). Commissioner blog system complete (TipTap, reactions, comments, cover images). Season range picker + segment scoring for Full League format. Prisma singleton + connection pooling deployed (fixed pool exhaustion). All route files use shared client. Automatic tournament status transition added. **Brand System Wave 1 deployed** (light-first theme, ThemeContext, dual-mode CSS vars, Bricolage Grotesque + Instrument Serif fonts, Tailwind brand colors, dark mode toggle). 330+ commits. 91+ database models. 160+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
 
 **Pending deployment:** Migrations 43 (Clutch Rating V2) and 44 (League Posts blog upgrade) need `prisma migrate deploy` on Railway.
 

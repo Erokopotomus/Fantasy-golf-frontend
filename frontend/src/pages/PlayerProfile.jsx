@@ -102,7 +102,7 @@ const PlayerProfile = () => {
             <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
             <Link
               to="/players"
-              className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold/90 transition-colors"
+              className="px-4 py-2 bg-gold text-text-primary rounded-lg hover:bg-gold/90 transition-colors"
             >
               Back to Players
             </Link>
@@ -117,7 +117,7 @@ const PlayerProfile = () => {
       {/* Back Link */}
       <Link
         to="/players"
-        className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-4"
+        className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-4"
       >
         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -149,7 +149,7 @@ const PlayerProfile = () => {
             <button
               onClick={() => toggleWatch(playerId, 'golf')}
               className={`inline-flex items-center gap-1 px-3 py-1.5 border rounded-lg text-sm font-semibold transition-colors
-                ${isWatched(playerId) ? 'border-gold/40 text-gold bg-gold/10' : 'border-white/20 text-white/40 hover:border-gold/30 hover:text-gold'}`}
+                ${isWatched(playerId) ? 'border-gold/40 text-gold bg-gold/10' : 'border-stone/50 text-text-primary/40 hover:border-gold/30 hover:text-gold'}`}
             >
               <svg className="w-4 h-4" fill={isWatched(playerId) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -191,7 +191,7 @@ const PlayerProfile = () => {
           {user && (
             <div className="bg-dark-secondary border border-dark-border rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between">
-                <h3 className="text-sm font-display font-bold text-white">Your Notes</h3>
+                <h3 className="text-sm font-display font-bold text-text-primary">Your Notes</h3>
                 <button
                   onClick={() => setShowCaptureForm(true)}
                   className="text-xs text-gold hover:text-gold/80 transition-colors flex items-center gap-1"
@@ -204,9 +204,9 @@ const PlayerProfile = () => {
               </div>
               <div className="p-4">
                 {capturesLoading ? (
-                  <div className="text-xs text-white/20 text-center py-4">Loading...</div>
+                  <div className="text-xs text-text-primary/20 text-center py-4">Loading...</div>
                 ) : playerCaptures.length === 0 ? (
-                  <p className="text-xs text-white/30 text-center py-4">
+                  <p className="text-xs text-text-primary/30 text-center py-4">
                     No notes yet.{' '}
                     <button onClick={() => setShowCaptureForm(true)} className="text-gold hover:underline">Add Note</button>
                   </p>
@@ -215,24 +215,24 @@ const PlayerProfile = () => {
                     {playerCaptures.map(c => {
                       const verdict = c.outcomeLinked && c.outcomeData?.players?.[0]?.verdict
                       return (
-                        <div key={c.id} className="px-3 py-2 bg-dark-primary/50 rounded-lg border border-white/[0.04]">
-                          <p className="text-xs text-white/70 line-clamp-3">{c.content}</p>
+                        <div key={c.id} className="px-3 py-2 bg-dark-primary/50 rounded-lg border border-[var(--card-border)]">
+                          <p className="text-xs text-text-primary/70 line-clamp-3">{c.content}</p>
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                             {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; Called it</span>}
                             {verdict === 'INCORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed</span>}
                             {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending</span>}
                             {(verdict === 'TRENDING_INCORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending</span>}
                             {c.sourceType && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.06] text-white/30">{c.sourceType}</span>
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-dark-tertiary/[0.06] text-text-primary/30">{c.sourceType}</span>
                             )}
                             {c.sentiment && (
                               <span className={`text-[10px] font-medium ${
-                                c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-white/30'
+                                c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-text-primary/30'
                               }`}>
                                 {c.sentiment === 'bullish' ? '↑' : c.sentiment === 'bearish' ? '↓' : '–'} {c.sentiment}
                               </span>
                             )}
-                            <span className="text-[10px] text-white/15">
+                            <span className="text-[10px] text-text-primary/15">
                               {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
                           </div>
@@ -288,34 +288,34 @@ const PlayerProfile = () => {
                       .finally(() => setBriefLoading(false))
                   }
                 }}
-                className="w-full px-4 py-3 border-b border-dark-border flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                className="w-full px-4 py-3 border-b border-dark-border flex items-center justify-between hover:bg-dark-tertiary/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
-                  <h3 className="text-sm font-display font-bold text-white">Clutch Brief</h3>
+                  <h3 className="text-sm font-display font-bold text-text-primary">Clutch Brief</h3>
                 </div>
-                <svg className={`w-4 h-4 text-white/30 transition-transform ${showBrief ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-4 h-4 text-text-primary/30 transition-transform ${showBrief ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               {showBrief && (
                 <div className="p-4">
                   {briefLoading ? (
-                    <div className="flex items-center gap-2 text-xs text-white/40">
+                    <div className="flex items-center gap-2 text-xs text-text-primary/40">
                       <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
                       Generating AI brief...
                     </div>
                   ) : clutchBrief ? (
                     <div>
-                      <p className="text-sm text-white/60 leading-relaxed whitespace-pre-line">{clutchBrief.brief}</p>
+                      <p className="text-sm text-text-primary/60 leading-relaxed whitespace-pre-line">{clutchBrief.brief}</p>
                       {clutchBrief.keyInsight && (
                         <p className="mt-3 text-xs text-gold font-semibold">{clutchBrief.keyInsight}</p>
                       )}
                     </div>
                   ) : (
-                    <p className="text-xs text-white/30">Unable to generate brief. Try again later.</p>
+                    <p className="text-xs text-text-primary/30">Unable to generate brief. Try again later.</p>
                   )}
                 </div>
               )}
@@ -327,12 +327,12 @@ const PlayerProfile = () => {
             <div className="bg-dark-secondary border border-dark-border rounded-xl overflow-hidden">
               <button
                 onClick={() => setShowTimeline(!showTimeline)}
-                className="w-full px-4 py-3 border-b border-dark-border flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                className="w-full px-4 py-3 border-b border-dark-border flex items-center justify-between hover:bg-dark-tertiary/[0.02] transition-colors"
               >
-                <h3 className="text-sm font-display font-bold text-white">Your History with {player.name}</h3>
+                <h3 className="text-sm font-display font-bold text-text-primary">Your History with {player.name}</h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-white/30">{timeline.length} events</span>
-                  <svg className={`w-4 h-4 text-white/30 transition-transform ${showTimeline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="text-[10px] text-text-primary/30">{timeline.length} events</span>
+                  <svg className={`w-4 h-4 text-text-primary/30 transition-transform ${showTimeline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
@@ -349,14 +349,14 @@ const PlayerProfile = () => {
                         <span className="text-sm mt-0.5 w-5 text-center shrink-0">{icon}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-white/70">{label}</span>
+                            <span className="text-xs font-medium text-text-primary/70">{label}</span>
                             {ev.sentiment && (
-                              <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-emerald-400' : ev.sentiment === 'negative' ? 'text-red-400' : 'text-white/30'}`}>{ev.sentiment}</span>
+                              <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-emerald-400' : ev.sentiment === 'negative' ? 'text-red-400' : 'text-text-primary/30'}`}>{ev.sentiment}</span>
                             )}
                           </div>
-                          {detail && <p className="text-[10px] text-white/30 truncate">{detail}</p>}
+                          {detail && <p className="text-[10px] text-text-primary/30 truncate">{detail}</p>}
                         </div>
-                        <span className="text-[10px] text-white/15 shrink-0">
+                        <span className="text-[10px] text-text-primary/15 shrink-0">
                           {new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
@@ -371,7 +371,7 @@ const PlayerProfile = () => {
           {playerSchedule.length > 0 && (
             <div className="bg-dark-secondary border border-dark-border rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-dark-border">
-                <h3 className="text-sm font-display font-bold text-white">Upcoming Schedule</h3>
+                <h3 className="text-sm font-display font-bold text-text-primary">Upcoming Schedule</h3>
               </div>
               <div className="divide-y divide-dark-border/30">
                 {playerSchedule.map(t => {
@@ -386,7 +386,7 @@ const PlayerProfile = () => {
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white truncate">{t.shortName || t.name}</span>
+                          <span className="text-sm font-semibold text-text-primary truncate">{t.shortName || t.name}</span>
                           {t.isMajor && <span className="text-[9px] font-mono font-bold text-gold bg-gold/15 px-1 rounded">MAJOR</span>}
                           {t.isSignature && <span className="text-[9px] font-mono font-bold text-orange bg-orange/15 px-1 rounded">SIG</span>}
                         </div>
@@ -401,9 +401,9 @@ const PlayerProfile = () => {
                         ) : t.inField ? (
                           <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">CONFIRMED</span>
                         ) : t.fieldAnnounced ? (
-                          <span className="text-[10px] font-mono text-text-muted/60 bg-white/[0.04] px-2 py-0.5 rounded">NOT IN FIELD</span>
+                          <span className="text-[10px] font-mono text-text-muted/60 bg-dark-tertiary/[0.04] px-2 py-0.5 rounded">NOT IN FIELD</span>
                         ) : (
-                          <span className="text-[10px] font-mono text-text-muted bg-white/[0.06] px-2 py-0.5 rounded">TBD</span>
+                          <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary/[0.06] px-2 py-0.5 rounded">TBD</span>
                         )}
                       </div>
                     </Link>

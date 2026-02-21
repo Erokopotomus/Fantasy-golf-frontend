@@ -56,7 +56,7 @@ const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam,
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between mb-2">
         <h4 className={`text-xs font-bold uppercase tracking-wider ${color}`}>{teamName}</h4>
-        <span className="text-sm font-bold font-mono text-white">
+        <span className="text-sm font-bold font-mono text-text-primary">
           {(totalPoints || 0).toFixed(1)}
         </span>
       </div>
@@ -76,10 +76,10 @@ const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam,
                     {p.nflPos}
                   </span>
                 )}
-                <span className="flex-1 text-sm text-white truncate">{p.playerName}</span>
+                <span className="flex-1 text-sm text-text-primary truncate">{p.playerName}</span>
                 <span className={`text-xs font-bold font-mono w-10 text-right ${
                   p.points > 15 ? 'text-emerald-400' :
-                  p.points > 5 ? 'text-white' : 'text-text-muted'
+                  p.points > 5 ? 'text-text-primary' : 'text-text-muted'
                 }`}>
                   {(p.points || 0).toFixed(1)}
                 </span>
@@ -99,7 +99,7 @@ const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam,
         <span className="text-xs text-text-muted">Roster Breakdown</span>
         <button
           onClick={onClose}
-          className="text-text-muted hover:text-white text-xs"
+          className="text-text-muted hover:text-text-primary text-xs"
         >
           Close
         </button>

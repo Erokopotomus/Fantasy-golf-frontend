@@ -62,13 +62,13 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-white'}`}>
+                      <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
                         {team.name}
                         {isUser && <span className="text-xs ml-1">(You)</span>}
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 text-center font-mono text-white font-semibold">{team.wins || 0}</td>
+                  <td className="py-3 text-center font-mono text-text-primary font-semibold">{team.wins || 0}</td>
                   <td className="py-3 text-center font-mono text-text-secondary">{team.losses || 0}</td>
                   <td className="py-3 text-center font-mono text-text-muted">{team.ties || 0}</td>
                   <td className="py-3 text-center font-mono text-text-secondary">
@@ -79,7 +79,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                       {team.divWins != null ? `${team.divWins}-${team.divLosses}${team.divTies ? `-${team.divTies}` : ''}` : '-'}
                     </td>
                   )}
-                  <td className="py-3 text-right font-mono text-white">{(team.pointsFor || 0).toFixed(1)}</td>
+                  <td className="py-3 text-right font-mono text-text-primary">{(team.pointsFor || 0).toFixed(1)}</td>
                   <td className="py-3 text-right font-mono text-text-secondary">{(team.pointsAgainst || 0).toFixed(1)}</td>
                   <td className={`py-3 text-right pr-2 font-mono font-semibold ${
                     diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-text-muted'
@@ -120,12 +120,12 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                   }`}>
                     {team.avatar}
                   </div>
-                  <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-white'}`}>
+                  <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
                     {team.name}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-white font-mono font-semibold">
+                  <span className="text-text-primary font-mono font-semibold">
                     {team.wins || 0}-{team.losses || 0}{team.ties ? `-${team.ties}` : ''}
                   </span>
                 </div>
@@ -156,7 +156,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">Head-to-Head Standings</h3>
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Head-to-Head Standings</h3>
 
       {hasDivisions ? (
         <div className="space-y-6">

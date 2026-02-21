@@ -85,8 +85,8 @@ const ClutchSim = () => {
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-display text-white">Clutch Sim</h1>
-            <p className="text-xs text-white/30">AI-powered head-to-head matchup simulator</p>
+            <h1 className="text-2xl font-bold font-display text-text-primary">Clutch Sim</h1>
+            <p className="text-xs text-text-primary/30">AI-powered head-to-head matchup simulator</p>
           </div>
         </div>
 
@@ -97,7 +97,7 @@ const ClutchSim = () => {
               key={s}
               onClick={() => { setSport(s); reset() }}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                sport === s ? 'bg-gold text-dark-primary' : 'bg-white/[0.06] text-white/50 hover:text-white/80'
+                sport === s ? 'bg-gold text-slate' : 'bg-dark-tertiary/[0.06] text-text-primary/50 hover:text-text-primary/80'
               }`}
             >
               {s.toUpperCase()}
@@ -110,14 +110,14 @@ const ClutchSim = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {/* Player 1 */}
         <Card>
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Player 1</h3>
+          <h3 className="text-xs font-semibold text-text-primary/40 uppercase tracking-wider mb-2">Player 1</h3>
           {player1 ? (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white font-semibold">{player1.name}</p>
-                <p className="text-xs text-white/40">{player1.nflPosition || ''} {player1.nflTeam || ''}</p>
+                <p className="text-text-primary font-semibold">{player1.name}</p>
+                <p className="text-xs text-text-primary/40">{player1.nflPosition || ''} {player1.nflTeam || ''}</p>
               </div>
-              <button onClick={() => { setPlayer1(null); setResult(null) }} className="text-white/30 hover:text-white/60 text-xs">Change</button>
+              <button onClick={() => { setPlayer1(null); setResult(null) }} className="text-text-primary/30 hover:text-text-primary/60 text-xs">Change</button>
             </div>
           ) : (
             <div className="relative">
@@ -126,17 +126,17 @@ const ClutchSim = () => {
                 value={searchQuery1}
                 onChange={e => setSearchQuery1(e.target.value)}
                 placeholder="Search player..."
-                className="w-full bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold/50"
+                className="w-full bg-dark-tertiary/[0.06] border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
               />
               {searchResults1.length > 0 && (
-                <div className="absolute z-20 top-full mt-1 w-full bg-dark-card border border-white/10 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-20 top-full mt-1 w-full bg-dark-card border border-stone/30 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
                   {searchResults1.map(p => (
                     <button
                       key={p.id}
                       onClick={() => selectPlayer(p, 1)}
-                      className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/[0.06] transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm text-text-primary/70 hover:bg-dark-tertiary/[0.06] transition-colors"
                     >
-                      {p.name} <span className="text-white/30">{p.nflPosition || ''} {p.nflTeam || ''}</span>
+                      {p.name} <span className="text-text-primary/30">{p.nflPosition || ''} {p.nflTeam || ''}</span>
                     </button>
                   ))}
                 </div>
@@ -147,14 +147,14 @@ const ClutchSim = () => {
 
         {/* Player 2 */}
         <Card>
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Player 2</h3>
+          <h3 className="text-xs font-semibold text-text-primary/40 uppercase tracking-wider mb-2">Player 2</h3>
           {player2 ? (
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white font-semibold">{player2.name}</p>
-                <p className="text-xs text-white/40">{player2.nflPosition || ''} {player2.nflTeam || ''}</p>
+                <p className="text-text-primary font-semibold">{player2.name}</p>
+                <p className="text-xs text-text-primary/40">{player2.nflPosition || ''} {player2.nflTeam || ''}</p>
               </div>
-              <button onClick={() => { setPlayer2(null); setResult(null) }} className="text-white/30 hover:text-white/60 text-xs">Change</button>
+              <button onClick={() => { setPlayer2(null); setResult(null) }} className="text-text-primary/30 hover:text-text-primary/60 text-xs">Change</button>
             </div>
           ) : (
             <div className="relative">
@@ -163,17 +163,17 @@ const ClutchSim = () => {
                 value={searchQuery2}
                 onChange={e => setSearchQuery2(e.target.value)}
                 placeholder="Search player..."
-                className="w-full bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-gold/50"
+                className="w-full bg-dark-tertiary/[0.06] border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
               />
               {searchResults2.length > 0 && (
-                <div className="absolute z-20 top-full mt-1 w-full bg-dark-card border border-white/10 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-20 top-full mt-1 w-full bg-dark-card border border-stone/30 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
                   {searchResults2.map(p => (
                     <button
                       key={p.id}
                       onClick={() => selectPlayer(p, 2)}
-                      className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/[0.06] transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm text-text-primary/70 hover:bg-dark-tertiary/[0.06] transition-colors"
                     >
-                      {p.name} <span className="text-white/30">{p.nflPosition || ''} {p.nflTeam || ''}</span>
+                      {p.name} <span className="text-text-primary/30">{p.nflPosition || ''} {p.nflTeam || ''}</span>
                     </button>
                   ))}
                 </div>
@@ -186,13 +186,13 @@ const ClutchSim = () => {
       {/* VS + Simulate Button */}
       {player1 && player2 && !result && (
         <div className="text-center mb-6">
-          <p className="text-white/30 text-lg font-display mb-3">
+          <p className="text-text-primary/30 text-lg font-display mb-3">
             {player1.name} <span className="text-gold">vs</span> {player2.name}
           </p>
           <button
             onClick={simulate}
             disabled={loading}
-            className="px-8 py-3 bg-gold text-dark-primary font-bold rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-50"
+            className="px-8 py-3 bg-gold text-slate font-bold rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-50"
           >
             {loading ? 'Simulating...' : 'Simulate Matchup'}
           </button>
@@ -211,14 +211,14 @@ const ClutchSim = () => {
           {/* Winner Card */}
           <Card className="bg-gradient-to-r from-gold/10 to-blue-500/10 border-gold/20">
             <div className="text-center mb-4">
-              <p className="text-xs text-white/30 uppercase tracking-wider mb-1">Winner</p>
+              <p className="text-xs text-text-primary/30 uppercase tracking-wider mb-1">Winner</p>
               <h2 className="text-2xl font-bold font-display text-gold">{result.winner}</h2>
-              <p className={`text-xs font-semibold mt-1 ${CONFIDENCE_COLORS[result.confidence] || 'text-white/50'}`}>
+              <p className={`text-xs font-semibold mt-1 ${CONFIDENCE_COLORS[result.confidence] || 'text-text-primary/50'}`}>
                 {result.confidence} Confidence
               </p>
             </div>
 
-            <p className="text-sm text-white/60 leading-relaxed text-center mb-4">
+            <p className="text-sm text-text-primary/60 leading-relaxed text-center mb-4">
               {result.analysis}
             </p>
 
@@ -232,12 +232,12 @@ const ClutchSim = () => {
           {/* Key Factors */}
           {result.keyFactors?.length > 0 && (
             <Card>
-              <h3 className="text-sm font-semibold text-white/70 mb-3">Key Factors</h3>
+              <h3 className="text-sm font-semibold text-text-primary/70 mb-3">Key Factors</h3>
               <div className="space-y-2">
                 {result.keyFactors.map((factor, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="text-gold text-xs mt-0.5">{i + 1}.</span>
-                    <p className="text-sm text-white/60">{factor}</p>
+                    <p className="text-sm text-text-primary/60">{factor}</p>
                   </div>
                 ))}
               </div>
@@ -251,7 +251,7 @@ const ClutchSim = () => {
                 <svg className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
-                <p className="text-sm text-white/60">{result.personalNote}</p>
+                <p className="text-sm text-text-primary/60">{result.personalNote}</p>
               </div>
             </Card>
           )}

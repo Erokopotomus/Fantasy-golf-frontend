@@ -43,7 +43,7 @@ const Profile = () => {
     <div className="min-h-screen bg-dark-primary">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-6">My Profile</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-6">My Profile</h1>
 
           {saved && (
             <Card className="mb-6 border-gold bg-gold/10">
@@ -59,11 +59,11 @@ const Profile = () => {
           {/* Profile Card */}
           <Card className="mb-6">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-20 h-20 bg-gold rounded-full flex items-center justify-center text-white text-3xl font-bold font-display shadow-button">
+              <div className="w-20 h-20 bg-gold rounded-full flex items-center justify-center text-text-primary text-3xl font-bold font-display shadow-button">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold font-display text-white">{user?.name || 'User'}</h2>
+                <h2 className="text-xl font-bold font-display text-text-primary">{user?.name || 'User'}</h2>
                 <p className="text-text-secondary">{user?.email}</p>
                 <p className="text-text-muted text-sm mt-1">Member since {memberSince}</p>
               </div>
@@ -107,7 +107,7 @@ const Profile = () => {
                 ) : (
                   <>
                     <div className="bg-dark-primary rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold font-display text-white">{stats?.activeLeagues ?? 0}</p>
+                      <p className="text-2xl font-bold font-display text-text-primary">{stats?.activeLeagues ?? 0}</p>
                       <p className="text-text-muted text-sm">Leagues</p>
                     </div>
                     <div className="bg-dark-primary rounded-lg p-4 text-center">
@@ -123,7 +123,7 @@ const Profile = () => {
                       <p className="text-text-muted text-sm">Best Finish</p>
                     </div>
                     <div className="bg-dark-primary rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold font-display text-white">
+                      <p className="text-2xl font-bold font-display text-text-primary">
                         {stats?.winRate !== undefined ? `${stats.winRate}%` : '—'}
                       </p>
                       <p className="text-text-muted text-sm">Win Rate</p>
@@ -152,7 +152,7 @@ const Profile = () => {
           {/* Preferences */}
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold font-display text-white">Preferences</h3>
+              <h3 className="text-lg font-semibold font-display text-text-primary">Preferences</h3>
               <Link
                 to="/settings/notifications"
                 className="text-gold text-sm hover:text-gold/80 transition-colors"
@@ -172,7 +172,7 @@ const Profile = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium text-sm">Notification Settings</p>
+                    <p className="text-text-primary font-medium text-sm">Notification Settings</p>
                     <p className="text-text-muted text-xs">Trades, drafts, waivers, scores & more</p>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ const Profile = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium text-sm">Player News</p>
+                    <p className="text-text-primary font-medium text-sm">Player News</p>
                     <p className="text-text-muted text-xs">Injuries, withdrawals & trending players</p>
                   </div>
                 </div>
@@ -210,7 +210,7 @@ const Profile = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium text-sm">Import League</p>
+                    <p className="text-text-primary font-medium text-sm">Import League</p>
                     <p className="text-text-muted text-xs">Bring history from Sleeper & more</p>
                   </div>
                 </div>
@@ -223,10 +223,10 @@ const Profile = () => {
 
           {/* Danger Zone */}
           <Card className="border-red-500/30">
-            <h3 className="text-lg font-semibold font-display text-white mb-4">Danger Zone</h3>
+            <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Danger Zone</h3>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white font-medium">Delete Account</p>
+                <p className="text-text-primary font-medium">Delete Account</p>
                 <p className="text-text-muted text-sm">Permanently delete your account and data</p>
               </div>
               <Button variant="outline" size="sm" className="text-red-400 border-red-400 hover:bg-red-400/10">

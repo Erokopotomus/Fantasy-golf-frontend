@@ -4,7 +4,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
   if (!results || results.length === 0) {
     return (
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Weekly Results</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Weekly Results</h3>
         <p className="text-text-muted text-center py-8">No tournament results yet</p>
       </Card>
     )
@@ -12,7 +12,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">Tournament Results</h3>
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Tournament Results</h3>
 
       <div className="space-y-4">
         {results.map((week) => (
@@ -21,7 +21,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
             <div className="p-3 bg-dark-secondary border-b border-dark-border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-white">{week.tournamentName}</p>
+                  <p className="font-medium text-text-primary">{week.tournamentName}</p>
                   <p className="text-xs text-text-muted">{week.dates}</p>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -64,7 +64,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
                           {idx === 2 && <span className="text-amber-600">🥉</span>}
                           {idx > 2 && <span className="text-text-muted">{idx + 1}</span>}
                         </td>
-                        <td className={`p-2 font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-white'}`}>
+                        <td className={`p-2 font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-text-primary'}`}>
                           {result.teamName}
                         </td>
                         <td className="p-2 text-right font-bold text-emerald-400">

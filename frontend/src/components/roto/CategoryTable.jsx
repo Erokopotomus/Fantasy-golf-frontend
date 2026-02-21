@@ -31,7 +31,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">Roto Category Standings</h3>
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Roto Category Standings</h3>
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[800px]">
@@ -77,7 +77,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-gold' : 'text-white'}`}>
+                      <span className={`font-medium ${isUser ? 'text-gold' : 'text-text-primary'}`}>
                         {team.name}
                       </span>
                     </div>
@@ -91,7 +91,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
                     return (
                       <td key={cat} className="py-3 text-center px-2">
                         <div className="flex flex-col items-center">
-                          <span className="text-white text-sm">
+                          <span className="text-text-primary text-sm">
                             {typeof value === 'number'
                               ? cat === 'scoring_avg'
                                 ? value.toFixed(1)

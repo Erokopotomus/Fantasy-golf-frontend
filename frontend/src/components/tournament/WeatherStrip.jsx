@@ -34,7 +34,7 @@ function getWindColor(speed) {
 function getWindBg(speed) {
   if (speed >= 25) return 'bg-red-500/20'
   if (speed >= 15) return 'bg-orange-500/20'
-  return 'bg-white/5'
+  return 'bg-dark-tertiary/5'
 }
 
 function getPrecipColor(chance) {
@@ -147,7 +147,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isWorst = showBestWorst && i === worstIdx
                 return (
                   <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
-                    <span className="text-sm font-mono font-bold text-white">{h.temp}°</span>
+                    <span className="text-sm font-mono font-bold text-text-primary">{h.temp}°</span>
                   </td>
                 )
               })}
@@ -330,7 +330,7 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
 
               {/* Temp */}
               <div className="flex items-baseline gap-1">
-                <span className="text-lg font-mono font-bold text-white">
+                <span className="text-lg font-mono font-bold text-text-primary">
                   {day.temperature != null ? `${Math.round(day.temperature)}°` : '--'}
                 </span>
                 {day.feelsLike != null && (

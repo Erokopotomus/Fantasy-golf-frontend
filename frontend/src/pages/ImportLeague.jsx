@@ -59,7 +59,7 @@ const StepIndicator = ({ current, total }) => (
     {Array.from({ length: total }, (_, i) => (
       <div key={i} className="flex items-center">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-mono font-bold transition-colors ${
-          i < current ? 'bg-accent-gold text-dark-primary' :
+          i < current ? 'bg-accent-gold text-slate' :
           i === current ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold' :
           'bg-dark-tertiary text-text-secondary'
         }`}>
@@ -385,14 +385,14 @@ const ImportLeague = () => {
           <div className="mb-6">
             <Link
               to="/dashboard"
-              className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-4"
+              className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-4"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to Dashboard
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2">
               Import League History
             </h1>
             <p className="text-text-secondary">
@@ -409,7 +409,7 @@ const ImportLeague = () => {
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm font-bold text-white">Custom Data Import</p>
+                <p className="text-sm font-bold text-text-primary">Custom Data Import</p>
                 <p className="text-xs text-text-secondary">
                   Upload spreadsheets, paste from Google Sheets, or let us scrape your league website. Import trophies, punishments, records — anything your platform doesn't track.
                 </p>
@@ -425,7 +425,7 @@ const ImportLeague = () => {
           {/* Step 0: Choose Platform */}
           {step === 0 && (
             <div className="space-y-3">
-              <h2 className="text-lg font-display font-bold text-white mb-4">Choose your platform</h2>
+              <h2 className="text-lg font-display font-bold text-text-primary mb-4">Choose your platform</h2>
               {PLATFORMS.map(p => (
                 <Card
                   key={p.id}
@@ -437,7 +437,7 @@ const ImportLeague = () => {
                   <div className="flex items-center gap-4">
                     <span className="text-2xl">{p.icon}</span>
                     <div className="flex-1">
-                      <h3 className="font-display font-bold text-white">{p.name}</h3>
+                      <h3 className="font-display font-bold text-text-primary">{p.name}</h3>
                       <p className="text-sm text-text-secondary">{p.description}</p>
                     </div>
                     {p.available ? (
@@ -459,7 +459,7 @@ const ImportLeague = () => {
                     <Card key={imp.id} className="mb-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-display font-bold text-white text-sm">
+                          <p className="font-display font-bold text-text-primary text-sm">
                             {imp.sourceLeagueName || imp.sourceLeagueId}
                           </p>
                           <p className="text-xs text-text-secondary font-mono">
@@ -485,7 +485,7 @@ const ImportLeague = () => {
           {/* Step 1: Connect / Enter credentials */}
           {step === 1 && (
             <Card>
-              <h2 className="text-lg font-display font-bold text-white mb-4">
+              <h2 className="text-lg font-display font-bold text-text-primary mb-4">
                 Connect to {platform?.name}
               </h2>
 
@@ -513,7 +513,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 784462345678901234"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       onKeyDown={e => e.key === 'Enter' && handleDiscover()}
                     />
                   </div>
@@ -543,7 +543,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 12345678"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
                   </div>
 
@@ -568,7 +568,7 @@ const ImportLeague = () => {
                         value={espnS2}
                         onChange={e => setEspnS2(e.target.value)}
                         placeholder="AEB... (leave blank for public leagues)"
-                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -578,7 +578,7 @@ const ImportLeague = () => {
                         value={espnSwid}
                         onChange={e => setEspnSwid(e.target.value)}
                         placeholder="{XXXXXXXX-XXXX-...} (leave blank for public leagues)"
-                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                   </div>
@@ -618,7 +618,7 @@ const ImportLeague = () => {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-white">Connected to Yahoo</p>
+                          <p className="text-sm font-medium text-text-primary">Connected to Yahoo</p>
                           <p className="text-xs text-text-muted">
                             {yahooOAuth.status.isExpired
                               ? 'Token expired — will auto-refresh on import'
@@ -641,7 +641,7 @@ const ImportLeague = () => {
                       </p>
                       <button
                         onClick={yahooOAuth.connect}
-                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors mb-3"
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-text-primary font-medium rounded-lg transition-colors mb-3"
                       >
                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12.572 6.854L8.895 13.5h2.112l-1.253 3.646L14.23 10.5h-2.112l.454-3.646zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
@@ -672,7 +672,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 123456"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       onKeyDown={e => e.key === 'Enter' && canDiscover() && handleDiscover()}
                     />
                   </div>
@@ -716,7 +716,7 @@ const ImportLeague = () => {
                             onChange={e => setYahooToken(e.target.value)}
                             placeholder="Paste your Yahoo OAuth access token here..."
                             rows={3}
-                            className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors resize-none"
+                            className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors resize-none"
                           />
                         </div>
                       )}
@@ -752,7 +752,7 @@ const ImportLeague = () => {
                         value={fantraxName}
                         onChange={e => setFantraxName(e.target.value)}
                         placeholder="e.g. The Gridiron Gang"
-                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -763,7 +763,7 @@ const ImportLeague = () => {
                         onChange={e => setFantraxYear(e.target.value)}
                         min="2000"
                         max="2030"
-                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -780,7 +780,7 @@ const ImportLeague = () => {
                         className={`w-full px-4 py-3 border border-dashed rounded-lg text-sm transition-colors flex items-center justify-center gap-2 ${
                           standingsCSV
                             ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
-                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-white hover:border-text-muted'
+                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-text-primary hover:border-text-muted'
                         }`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -803,7 +803,7 @@ const ImportLeague = () => {
                         className={`w-full px-4 py-3 border border-dashed rounded-lg text-sm transition-colors flex items-center justify-center gap-2 ${
                           draftCSV
                             ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
-                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-white hover:border-text-muted'
+                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-text-primary hover:border-text-muted'
                         }`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -839,7 +839,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 12345"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
                   </div>
                   <div className="mb-4">
@@ -849,7 +849,7 @@ const ImportLeague = () => {
                       value={mflApiKey}
                       onChange={e => setMflApiKey(e.target.value)}
                       placeholder="Your MFL API key"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-white font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
                   </div>
                 </div>
@@ -875,7 +875,7 @@ const ImportLeague = () => {
           {step === 2 && activeHook.discovery && (
             <div className="space-y-4">
               <Card>
-                <h2 className="text-lg font-display font-bold text-white mb-1">
+                <h2 className="text-lg font-display font-bold text-text-primary mb-1">
                   {activeHook.discovery.name}
                 </h2>
                 <p className="text-sm text-text-secondary mb-4 font-mono">
@@ -902,7 +902,7 @@ const ImportLeague = () => {
                             className="w-4 h-4 rounded border-dark-border text-accent-gold focus:ring-accent-gold/50 bg-dark-tertiary cursor-pointer"
                           />
                           <span className="font-mono font-bold text-accent-gold">{s.season || s.year}</span>
-                          <span className="text-sm text-white">{s.name}</span>
+                          <span className="text-sm text-text-primary">{s.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           {platform?.id === 'yahoo' && s.leagueKey && (
@@ -925,12 +925,12 @@ const ImportLeague = () => {
                     <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <label className="text-sm font-display font-bold text-white">Where should this go?</label>
+                    <label className="text-sm font-display font-bold text-text-primary">Where should this go?</label>
                   </div>
                   <select
                     value={targetLeagueId}
                     onChange={e => setTargetLeagueId(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm font-medium focus:outline-none focus:border-accent-gold transition-colors"
+                    className="w-full px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm font-medium focus:outline-none focus:border-accent-gold transition-colors"
                   >
                     <option value="">+ Create new league</option>
                     {existingLeagues.map(l => (
@@ -987,7 +987,7 @@ const ImportLeague = () => {
                   <div className="absolute inset-0 rounded-full border-4 border-accent-gold/20" />
                   <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-accent-gold animate-spin" />
                 </div>
-                <h2 className="text-xl font-display font-bold text-white mb-2">
+                <h2 className="text-xl font-display font-bold text-text-primary mb-2">
                   Importing {seasonCount} season{seasonCount !== 1 ? 's' : ''} of history...
                 </h2>
                 <p className="text-sm text-text-secondary mb-6">
@@ -1024,7 +1024,7 @@ const ImportLeague = () => {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-lg font-display font-bold text-white">Confirm Your League</h2>
+                    <h2 className="text-lg font-display font-bold text-text-primary">Confirm Your League</h2>
                     <p className="text-xs text-text-secondary">We detected these settings from your import. Review and adjust if needed.</p>
                   </div>
                 </div>
@@ -1040,7 +1040,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.format}
                         onChange={e => setEditSettings(s => ({ ...s, format: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="HEAD_TO_HEAD">Head-to-Head</option>
@@ -1057,7 +1057,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.draftType}
                         onChange={e => setEditSettings(s => ({ ...s, draftType: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="SNAKE">Snake</option>
@@ -1076,7 +1076,7 @@ const ImportLeague = () => {
                         placeholder="Not detected"
                         min={2}
                         max={32}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       />
                     </div>
 
@@ -1086,7 +1086,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.scoringType}
                         onChange={e => setEditSettings(s => ({ ...s, scoringType: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="standard">Standard</option>
@@ -1105,7 +1105,7 @@ const ImportLeague = () => {
                         placeholder="Not detected"
                         min={5}
                         max={53}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       />
                     </div>
 
@@ -1115,7 +1115,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.waiverType}
                         onChange={e => setEditSettings(s => ({ ...s, waiverType: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="faab">FAAB</option>
@@ -1133,7 +1133,7 @@ const ImportLeague = () => {
                           onChange={e => setEditSettings(s => ({ ...s, faabBudget: e.target.value }))}
                           placeholder="100"
                           min={0}
-                          className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                          className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                         />
                       </div>
                     )}
@@ -1148,7 +1148,7 @@ const ImportLeague = () => {
                         placeholder="Not detected"
                         min={2}
                         max={16}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1198,7 +1198,7 @@ const ImportLeague = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="text-sm text-white font-medium truncate">{owner.ownerName}</p>
+                                <p className="text-sm text-text-primary font-medium truncate">{owner.ownerName}</p>
                                 {isAutoMatched && (
                                   <span className="text-[10px] font-mono text-accent-gold/60 bg-accent-gold/10 px-1.5 py-0.5 rounded">Auto-detected</span>
                                 )}
@@ -1280,7 +1280,7 @@ const ImportLeague = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-display font-bold text-white mb-2">
+                <h2 className="text-xl font-display font-bold text-text-primary mb-2">
                   Import Complete!
                 </h2>
                 <p className="text-sm text-text-secondary mb-1">
@@ -1335,12 +1335,12 @@ const ImportLeague = () => {
 
                 {/* Next Steps */}
                 <div className="bg-accent-gold/5 border border-accent-gold/20 rounded-xl p-4 max-w-md mx-auto mb-6 text-left">
-                  <p className="text-sm font-display font-bold text-white mb-3">What's next?</p>
+                  <p className="text-sm font-display font-bold text-text-primary mb-3">What's next?</p>
                   <div className="space-y-2.5">
                     <div className="flex items-start gap-2.5">
                       <span className="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center text-[10px] font-mono font-bold text-accent-gold flex-shrink-0 mt-0.5">1</span>
                       <div>
-                        <p className="text-xs text-white font-bold">Assign teams to owners</p>
+                        <p className="text-xs text-text-primary font-bold">Assign teams to owners</p>
                         <p className="text-[11px] text-text-muted">
                           Your history has fantasy team names — connect them to real people so we can build accurate all-time records.
                         </p>
@@ -1349,7 +1349,7 @@ const ImportLeague = () => {
                     <div className="flex items-start gap-2.5">
                       <span className="w-5 h-5 rounded-full bg-accent-gold/20 flex items-center justify-center text-[10px] font-mono font-bold text-accent-gold flex-shrink-0 mt-0.5">2</span>
                       <div>
-                        <p className="text-xs text-white font-bold">Explore your League Vault</p>
+                        <p className="text-xs text-text-primary font-bold">Explore your League Vault</p>
                         <p className="text-[11px] text-text-muted">
                           All-time standings, head-to-head records, championship counts, and more — all computed from your imported history.
                         </p>
@@ -1369,7 +1369,7 @@ const ImportLeague = () => {
               {/* Issue List */}
               {health && health.issues && health.issues.length > 0 && health.overallStatus !== 'green' && (
                 <Card>
-                  <h3 className="font-display font-bold text-white mb-3 flex items-center gap-2">
+                  <h3 className="font-display font-bold text-text-primary mb-3 flex items-center gap-2">
                     <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
@@ -1379,7 +1379,7 @@ const ImportLeague = () => {
                   {/* Group missing seasons together */}
                   {health.missingYears?.length > 0 && (
                     <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-3">
-                      <p className="text-sm text-white font-medium mb-1">
+                      <p className="text-sm text-text-primary font-medium mb-1">
                         Missing: {health.missingYears.join(', ')}
                       </p>
                       <p className="text-xs text-text-secondary mb-2">
@@ -1403,7 +1403,7 @@ const ImportLeague = () => {
                         issue.severity === 'medium' ? 'bg-accent-gold/10 border border-accent-gold/20' :
                         'bg-dark-tertiary/50 border border-dark-border'
                       }`}>
-                        <p className="text-sm text-white">{issue.message}</p>
+                        <p className="text-sm text-text-primary">{issue.message}</p>
                         {issue.repairLabel && (
                           <button
                             onClick={() => navigate(`/leagues/${activeHook.result.leagueId}/vault?editYear=${issue.seasonYear}`)}
@@ -1436,12 +1436,12 @@ const ImportLeague = () => {
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">👥</span>
                       <div className="flex-1">
-                        <h3 className="font-display font-bold text-white mb-1">One Quick Step: Map Your Owners</h3>
+                        <h3 className="font-display font-bold text-text-primary mb-1">One Quick Step: Map Your Owners</h3>
                         <p className="text-sm text-text-secondary mb-2">
                           Yahoo hides manager names on older seasons (pre-2013), so we imported them
                           using team names instead. This is a Yahoo limitation, not a bug — we pulled
                           all the data we could.
-                          Just tap <strong className="text-white">Manage Owners</strong> in the Vault to
+                          Just tap <strong className="text-text-primary">Manage Owners</strong> in the Vault to
                           match team names to real people. Takes about a minute, and you only have to do it once.
                         </p>
                         <p className="text-xs text-text-secondary/60 font-mono mb-3">

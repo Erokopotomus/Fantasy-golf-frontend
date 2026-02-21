@@ -83,16 +83,16 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative bg-dark-secondary border border-white/10 rounded-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+        className="relative bg-dark-secondary border border-stone/30 rounded-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between shrink-0">
+        <div className="px-5 py-4 border-b border-[var(--card-border)] flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-lg font-display font-bold text-white">Add to Board</h2>
-            <p className="text-white/40 text-sm mt-0.5">{playerName}</p>
+            <h2 className="text-lg font-display font-bold text-text-primary">Add to Board</h2>
+            <p className="text-text-primary/40 text-sm mt-0.5">{playerName}</p>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white/60 transition-colors">
+          <button onClick={onClose} className="text-text-primary/30 hover:text-text-primary/60 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -104,11 +104,11 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
           {loading ? (
             <div className="space-y-3 py-4">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-12 bg-white/5 rounded-lg animate-pulse" />
+                <div key={i} className="h-12 bg-dark-tertiary/5 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : boards.length === 0 ? (
-            <p className="text-white/30 text-sm text-center py-8">No boards yet. Create one below.</p>
+            <p className="text-text-primary/30 text-sm text-center py-8">No boards yet. Create one below.</p>
           ) : (
             <div className="space-y-2">
               {boards.map(board => {
@@ -118,15 +118,15 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
                 return (
                   <div
                     key={board.id}
-                    className="flex items-center justify-between px-3 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-lg"
+                    className="flex items-center justify-between px-3 py-2.5 bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-lg"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${SPORT_BADGE[board.sport] || SPORT_BADGE.golf}`}>
                         {board.sport}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-sm text-white font-medium truncate">{board.name}</p>
-                        <p className="text-[11px] text-white/30 font-mono">{board.playerCount} player{board.playerCount !== 1 ? 's' : ''}</p>
+                        <p className="text-sm text-text-primary font-medium truncate">{board.name}</p>
+                        <p className="text-[11px] text-text-primary/30 font-mono">{board.playerCount} player{board.playerCount !== 1 ? 's' : ''}</p>
                       </div>
                     </div>
                     {isSuccess ? (
@@ -137,7 +137,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
                         Added
                       </span>
                     ) : onBoard ? (
-                      <span className="text-white/20 text-xs font-mono">On board</span>
+                      <span className="text-text-primary/20 text-xs font-mono">On board</span>
                     ) : (
                       <button
                         onClick={() => handleAdd(board.id)}
@@ -155,7 +155,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
         </div>
 
         {/* Create new board */}
-        <div className="px-5 py-4 border-t border-white/[0.06] shrink-0">
+        <div className="px-5 py-4 border-t border-[var(--card-border)] shrink-0">
           {error && (
             <p className="text-red-400 text-xs mb-2">{error}</p>
           )}
@@ -165,12 +165,12 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
               onChange={e => setNewName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCreateAndAdd()}
               placeholder="New board name..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-gold/40"
+              className="flex-1 bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/40"
             />
             <button
               onClick={handleCreateAndAdd}
               disabled={!newName.trim() || creating}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-gold to-orange text-white disabled:opacity-40 hover:opacity-90 transition-opacity whitespace-nowrap"
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-gold to-orange text-text-primary disabled:opacity-40 hover:opacity-90 transition-opacity whitespace-nowrap"
             >
               {creating ? '...' : 'Create + Add'}
             </button>

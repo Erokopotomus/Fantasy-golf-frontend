@@ -26,7 +26,7 @@ const MatchupList = ({ week, teams, leagueId, currentUserId }) => {
       {/* Week Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold font-display text-white">Week {week.week}</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary">Week {week.week}</h3>
           {week.tournament && (
             <p className="text-sm text-text-muted">{week.tournament}</p>
           )}

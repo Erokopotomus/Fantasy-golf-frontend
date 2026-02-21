@@ -82,7 +82,7 @@ const PlayerPool = ({
   return (
     <Card className="h-full flex flex-col" padding="none">
       <div className="flex items-center justify-between px-3 pt-3 pb-2">
-        <h3 className="text-sm font-semibold text-white">Available Players</h3>
+        <h3 className="text-sm font-semibold text-text-primary">Available Players</h3>
         <span className="text-text-muted text-xs">
           {filteredPlayers.length} available
         </span>
@@ -99,7 +99,7 @@ const PlayerPool = ({
             placeholder="Search players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+            className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
           />
         </div>
       </div>
@@ -109,19 +109,19 @@ const PlayerPool = ({
         {/* Header */}
         <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
           <div className="grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-            <button onClick={() => handleSort('rank')} className="text-left hover:text-white transition-colors">
+            <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
               Rk <SortIcon field="rank" />
             </button>
-            <button onClick={() => handleSort('name')} className="text-left hover:text-white transition-colors">
+            <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
               Player <SortIcon field="name" />
             </button>
-            <button onClick={() => handleSort('cpi')} className="text-right hover:text-white transition-colors">
+            <button onClick={() => handleSort('cpi')} className="text-right hover:text-text-primary transition-colors">
               CPI <SortIcon field="cpi" />
             </button>
-            <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-white transition-colors">
+            <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-text-primary transition-colors">
               SG <SortIcon field="sgTotal" />
             </button>
-            <button onClick={() => handleSort('top10')} className="text-right hover:text-white transition-colors">
+            <button onClick={() => handleSort('top10')} className="text-right hover:text-text-primary transition-colors">
               T10 <SortIcon field="top10" />
             </button>
             <span className="text-center">Evt</span>
@@ -152,7 +152,7 @@ const PlayerPool = ({
                   <span className="text-sm flex-shrink-0">{player.countryFlag || '🏳️'}</span>
                 )}
                 <div className="min-w-0">
-                  <span className="text-white text-sm truncate block">{player.name}</span>
+                  <span className="text-text-primary text-sm truncate block">{player.name}</span>
                   {player.primaryTour && (
                     <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
                       player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
@@ -173,7 +173,7 @@ const PlayerPool = ({
                   : '—'}
               </span>
               <span className={`text-xs text-right font-medium tabular-nums ${
-                sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-white' : 'text-red-400'
+                sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-text-primary' : 'text-red-400'
               }`}>
                 {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '—'}
               </span>
@@ -201,7 +201,7 @@ const PlayerPool = ({
                 {isUserTurn && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onSelectPlayer(player) }}
-                    className="px-2 py-1 bg-gold text-white text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
+                    className="px-2 py-1 bg-gold text-text-primary text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
                   >
                     {draftType === 'auction' ? 'Nom' : 'Draft'}
                   </button>

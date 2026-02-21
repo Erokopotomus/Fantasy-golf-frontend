@@ -25,7 +25,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
   return (
     <div className="space-y-6">
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Elimination Rules</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Elimination Rules</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
@@ -39,7 +39,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
                   onClick={() => handleChange('eliminationsPerWeek', num)}
                   className={`p-3 rounded-lg border-2 font-semibold transition-all ${
                     localSettings.eliminationsPerWeek === num
-                      ? 'border-gold bg-gold/10 text-white'
+                      ? 'border-gold bg-gold/10 text-text-primary'
                       : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
                   }`}
                 >
@@ -55,11 +55,11 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
       </Card>
 
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Buy-Back Options</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Buy-Back Options</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-dark-tertiary rounded-lg">
             <div>
-              <p className="text-white font-medium">Allow Buy-Backs</p>
+              <p className="text-text-primary font-medium">Allow Buy-Backs</p>
               <p className="text-xs text-text-muted">Eliminated teams can re-enter the competition</p>
             </div>
             <button
@@ -70,7 +70,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-dark-tertiary transition-transform ${
                   localSettings.buyBacks.allowed ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
@@ -91,7 +91,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
                       onClick={() => handleBuyBackChange('max', num)}
                       className={`p-3 rounded-lg border-2 font-semibold transition-all ${
                         localSettings.buyBacks.max === num
-                          ? 'border-gold bg-gold/10 text-white'
+                          ? 'border-gold bg-gold/10 text-text-primary'
                           : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
                       }`}
                     >
@@ -109,7 +109,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
                   <select
                     value={localSettings.buyBacks.faabCost || 0}
                     onChange={(e) => handleBuyBackChange('faabCost', parseInt(e.target.value))}
-                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
                   >
                     {[0, 5, 10, 15, 20, 25].map(cost => (
                       <option key={cost} value={cost}>
@@ -128,7 +128,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
       </Card>
 
       <div className="bg-dark-tertiary rounded-lg p-4 border border-dark-border">
-        <h4 className="text-sm font-medium text-white mb-2">How Survivor Works</h4>
+        <h4 className="text-sm font-medium text-text-primary mb-2">How Survivor Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
           <li>- After each tournament, the lowest-scoring team is eliminated</li>
           <li>- Eliminations continue weekly until one team remains</li>
@@ -141,7 +141,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
 
       {/* Visual representation of survivor progression */}
       <Card>
-        <h3 className="text-lg font-semibold font-display text-white mb-4">Season Preview</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Season Preview</h3>
         <div className="flex items-center justify-between text-xs">
           <div className="flex flex-col items-center">
             <div className="w-10 h-10 rounded-full bg-gold/20 border border-gold flex items-center justify-center mb-1">

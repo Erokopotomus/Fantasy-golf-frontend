@@ -32,13 +32,13 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
   const saveStatus = isSaving
     ? <span className="text-xs text-amber-400 animate-pulse">Saving...</span>
     : lastSaved
-      ? <span className="text-xs text-white/30">Saved</span>
+      ? <span className="text-xs text-text-primary/30">Saved</span>
       : null
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-white/[0.06] bg-dark-secondary/60">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-[var(--card-border)] bg-dark-secondary/60">
       <div className="flex items-center gap-3 min-w-0">
-        <button onClick={() => navigate('/lab')} className="text-white/40 hover:text-white transition-colors shrink-0">
+        <button onClick={() => navigate('/lab')} className="text-text-primary/40 hover:text-text-primary transition-colors shrink-0">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -51,12 +51,12 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
             onChange={e => setNameValue(e.target.value)}
             onBlur={handleNameBlur}
             onKeyDown={e => { if (e.key === 'Enter') handleNameBlur() }}
-            className="text-lg font-semibold bg-transparent border-b border-gold/50 text-white outline-none min-w-0"
+            className="text-lg font-semibold bg-transparent border-b border-gold/50 text-text-primary outline-none min-w-0"
           />
         ) : (
           <button
             onClick={() => { setNameValue(board?.name || ''); setEditingName(true) }}
-            className="text-lg font-semibold text-white truncate hover:text-gold transition-colors"
+            className="text-lg font-semibold text-text-primary truncate hover:text-gold transition-colors"
           >
             {board?.name || 'Untitled Board'}
           </button>
@@ -64,7 +64,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
 
         {sportBadge}
 
-        <span className="text-xs text-white/30">{entryCount} player{entryCount !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-text-primary/30">{entryCount} player{entryCount !== 1 ? 's' : ''}</span>
 
         {saveStatus}
       </div>
@@ -74,7 +74,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
           <select
             value={board?.scoringFormat || 'ppr'}
             onChange={e => onUpdateMeta({ scoringFormat: e.target.value })}
-            className="text-xs bg-dark-primary border border-white/[0.08] rounded px-2 py-1.5 text-white/70 outline-none cursor-pointer"
+            className="text-xs bg-dark-primary border border-[var(--card-border)] rounded px-2 py-1.5 text-text-primary/70 outline-none cursor-pointer"
           >
             {SCORING_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -86,12 +86,12 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
           <div className="flex items-center gap-2">
             <span className="text-xs text-red-400">Delete?</span>
             <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-300 font-medium">Yes</button>
-            <button onClick={() => setShowDeleteConfirm(false)} className="text-xs text-white/40 hover:text-white/60">No</button>
+            <button onClick={() => setShowDeleteConfirm(false)} className="text-xs text-text-primary/40 hover:text-text-primary/60">No</button>
           </div>
         ) : (
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="p-1.5 text-white/30 hover:text-red-400 transition-colors rounded hover:bg-white/[0.04]"
+            className="p-1.5 text-text-primary/30 hover:text-red-400 transition-colors rounded hover:bg-dark-tertiary/[0.04]"
             title="Delete board"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

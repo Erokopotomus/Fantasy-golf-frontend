@@ -87,7 +87,7 @@ const SegmentStandings = ({ leagueId }) => {
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold font-display text-white">Segment Standings</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">Segment Standings</h3>
         <span className="text-xs text-text-muted font-mono">
           +{data.segmentBonus} pts per segment win
         </span>
@@ -105,7 +105,7 @@ const SegmentStandings = ({ leagueId }) => {
               className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                 isActive
                   ? (color ? color.badge : 'bg-gold/20 text-gold')
-                  : 'text-text-muted hover:text-white hover:bg-dark-tertiary'
+                  : 'text-text-muted hover:text-text-primary hover:bg-dark-tertiary'
               }`}
             >
               {tab.label}
@@ -136,7 +136,7 @@ const SegmentStandings = ({ leagueId }) => {
                 <tr key={s.teamId} className="border-b border-dark-border/50">
                   <td className="py-2 pr-2 font-mono text-text-muted">{s.rank}</td>
                   <td className="py-2">
-                    <span className="text-white font-medium">{s.teamName}</span>
+                    <span className="text-text-primary font-medium">{s.teamName}</span>
                     {s.userName && (
                       <span className="text-text-muted text-xs ml-2">{s.userName}</span>
                     )}
@@ -148,7 +148,7 @@ const SegmentStandings = ({ leagueId }) => {
                   </td>
                   <td className="py-2 text-right font-mono text-text-secondary">{s.totalPoints.toFixed(1)}</td>
                   <td className="py-2 text-right font-mono text-gold">{s.bonus > 0 ? `+${s.bonus}` : '-'}</td>
-                  <td className="py-2 text-right font-mono font-semibold text-white">
+                  <td className="py-2 text-right font-mono font-semibold text-text-primary">
                     {(s.totalPoints + s.bonus).toFixed(1)}
                   </td>
                 </tr>
@@ -197,7 +197,7 @@ const SegmentStandings = ({ leagueId }) => {
                       >
                         <td className="py-2 pr-2 font-mono text-text-muted">{s.rank}</td>
                         <td className="py-2">
-                          <span className={`font-medium ${isWinner ? color.text : 'text-white'}`}>
+                          <span className={`font-medium ${isWinner ? color.text : 'text-text-primary'}`}>
                             {s.teamName}
                           </span>
                           {s.userName && (

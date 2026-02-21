@@ -55,7 +55,7 @@ const NflPlayerRow = ({ ps, isBench, benchOutscoredStarter }) => {
         {/* Name + team */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-sm font-medium text-white truncate">{ps.playerName}</p>
+            <p className="text-sm font-medium text-text-primary truncate">{ps.playerName}</p>
             {ps.nflTeam && (
               <span className="text-[10px] text-text-muted flex-shrink-0">{ps.nflTeam}</span>
             )}
@@ -70,7 +70,7 @@ const NflPlayerRow = ({ ps, isBench, benchOutscoredStarter }) => {
         {/* Points */}
         <span className={`text-sm font-bold font-mono w-12 text-right flex-shrink-0 ${
           ps.points > 20 ? 'text-emerald-400' :
-          ps.points > 10 ? 'text-white' :
+          ps.points > 10 ? 'text-text-primary' :
           ps.points > 0 ? 'text-text-secondary' : 'text-text-muted'
         }`}>
           {(ps.points || 0).toFixed(1)}
@@ -124,7 +124,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
       <div className="min-h-screen bg-dark-primary pt-8 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="text-center py-12">
-            <h2 className="text-xl font-bold font-display text-white mb-2">Error</h2>
+            <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error</h2>
             <p className="text-text-secondary mb-4">{error}</p>
             <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">Back to League</Link>
           </Card>
@@ -174,12 +174,12 @@ const NflWeeklyScoring = ({ leagueId }) => {
           <div className="flex items-center gap-3">
             <span className={`text-2xl font-bold ${
               team.weekRank === 1 ? 'text-yellow-400' :
-              team.weekRank <= 3 ? 'text-emerald-400' : 'text-white'
+              team.weekRank <= 3 ? 'text-emerald-400' : 'text-text-primary'
             }`}>
               #{team.weekRank}
             </span>
             <div>
-              <h3 className="text-lg font-semibold font-display text-white">{team.teamName}</h3>
+              <h3 className="text-lg font-semibold font-display text-text-primary">{team.teamName}</h3>
               <p className="text-xs text-text-muted">
                 {starters.length} starters, {bench.length} bench
               </p>
@@ -243,13 +243,13 @@ const NflWeeklyScoring = ({ leagueId }) => {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-white">
+            <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-text-primary">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back to League
             </Link>
-            <h1 className="text-xl font-bold font-display text-white">NFL Scoring</h1>
+            <h1 className="text-xl font-bold font-display text-text-primary">NFL Scoring</h1>
           </div>
 
           {/* Week Selector */}
@@ -260,8 +260,8 @@ const NflWeeklyScoring = ({ leagueId }) => {
                 onClick={() => setWeekNumber(w)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   weekNumber === w
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-dark-tertiary text-text-muted hover:text-white'
+                    ? 'bg-emerald-500 text-text-primary'
+                    : 'bg-dark-tertiary text-text-muted hover:text-text-primary'
                 }`}
               >
                 Wk {w}
@@ -273,7 +273,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
           <Card className="mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold font-display text-white">
+                <h2 className="text-lg font-bold font-display text-text-primary">
                   {week?.name || `Week ${weekNumber}`}
                 </h2>
                 <p className="text-sm text-text-muted">
@@ -291,7 +291,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
               <svg className="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h2 className="text-xl font-bold font-display text-white mb-2">No Scores Yet</h2>
+              <h2 className="text-xl font-bold font-display text-text-primary mb-2">No Scores Yet</h2>
               <p className="text-text-secondary">Week {weekNumber} hasn't been scored yet.</p>
             </Card>
           ) : (
@@ -299,7 +299,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
               {/* Your Team */}
               <Card>
                 <div className="mb-4">
-                  <h3 className="text-base font-semibold text-white">Your Team</h3>
+                  <h3 className="text-base font-semibold text-text-primary">Your Team</h3>
                 </div>
                 {userTeam ? renderTeamDetail(userTeam) : (
                   <div className="text-center py-8 text-text-muted">
@@ -312,7 +312,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
               <div className="space-y-6">
                 {/* League Scoreboard */}
                 <Card>
-                  <h3 className="text-base font-semibold text-white mb-4">League Scoreboard</h3>
+                  <h3 className="text-base font-semibold text-text-primary mb-4">League Scoreboard</h3>
                   <div className="space-y-2">
                     {teams.map(team => {
                       const isUser = team.userId === user?.id
@@ -338,13 +338,13 @@ const NflWeeklyScoring = ({ leagueId }) => {
                               {team.weekRank}
                             </span>
                             <div className="flex-1 min-w-0">
-                              <p className={`font-medium truncate ${isUser ? 'text-emerald-400' : 'text-white'}`}>
+                              <p className={`font-medium truncate ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
                                 {team.teamName}
                                 {isUser && <span className="text-xs ml-1 text-emerald-400/60">(You)</span>}
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="text-lg font-bold font-display text-white">
+                              <p className="text-lg font-bold font-display text-text-primary">
                                 {team.totalPoints?.toFixed(1)}
                               </p>
                             </div>
@@ -377,7 +377,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                                             {ps.nflPos}
                                           </span>
                                         )}
-                                        <span className="flex-1 text-white truncate">{ps.playerName}</span>
+                                        <span className="flex-1 text-text-primary truncate">{ps.playerName}</span>
                                         <span className="font-bold text-emerald-400 w-12 text-right">{(ps.points || 0).toFixed(1)}</span>
                                       </div>
                                       {statLine && (
@@ -397,7 +397,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                 {/* Matchups */}
                 {matchups.length > 0 && (
                   <Card>
-                    <h3 className="text-base font-semibold text-white mb-4">Matchups</h3>
+                    <h3 className="text-base font-semibold text-text-primary mb-4">Matchups</h3>
                     <div className="space-y-3">
                       {matchups.map(m => {
                         const homeWon = m.isComplete && m.homeScore > m.awayScore
@@ -409,21 +409,21 @@ const NflWeeklyScoring = ({ leagueId }) => {
                           >
                             <div className="flex items-center gap-3">
                               <div className="flex-1 text-right">
-                                <p className={`font-medium text-sm truncate ${homeWon ? 'text-emerald-400' : 'text-white'}`}>
+                                <p className={`font-medium text-sm truncate ${homeWon ? 'text-emerald-400' : 'text-text-primary'}`}>
                                   {m.homeTeam?.name}
                                 </p>
                               </div>
                               <div className="flex items-center gap-2 px-3">
-                                <span className={`text-lg font-bold font-mono ${homeWon ? 'text-emerald-400' : 'text-white'}`}>
+                                <span className={`text-lg font-bold font-mono ${homeWon ? 'text-emerald-400' : 'text-text-primary'}`}>
                                   {m.homeScore?.toFixed(1) || '0.0'}
                                 </span>
                                 <span className="text-text-muted text-xs">vs</span>
-                                <span className={`text-lg font-bold font-mono ${awayWon ? 'text-emerald-400' : 'text-white'}`}>
+                                <span className={`text-lg font-bold font-mono ${awayWon ? 'text-emerald-400' : 'text-text-primary'}`}>
                                   {m.awayScore?.toFixed(1) || '0.0'}
                                 </span>
                               </div>
                               <div className="flex-1">
-                                <p className={`font-medium text-sm truncate ${awayWon ? 'text-emerald-400' : 'text-white'}`}>
+                                <p className={`font-medium text-sm truncate ${awayWon ? 'text-emerald-400' : 'text-text-primary'}`}>
                                   {m.awayTeam?.name}
                                 </p>
                               </div>

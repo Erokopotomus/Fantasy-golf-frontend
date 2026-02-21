@@ -64,14 +64,14 @@ const TradeCenter = () => {
         <div>
           <Link
             to={`/leagues/${leagueId}`}
-            className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+            className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to League
           </Link>
-          <h1 className="text-2xl font-bold font-display text-white">Trade Center</h1>
+          <h1 className="text-2xl font-bold font-display text-text-primary">Trade Center</h1>
           <p className="text-text-secondary">Manage trades with other teams</p>
         </div>
         <button
@@ -80,7 +80,7 @@ const TradeCenter = () => {
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             isDeadlinePassed
               ? 'bg-dark-tertiary text-text-muted cursor-not-allowed'
-              : 'bg-emerald-500 text-white hover:bg-emerald-500/90'
+              : 'bg-emerald-500 text-text-primary hover:bg-emerald-500/90'
           }`}
         >
           Propose Trade
@@ -126,7 +126,7 @@ const TradeCenter = () => {
           <p className="text-xs text-text-muted">Pending</p>
         </Card>
         <Card className="text-center">
-          <p className="text-2xl font-bold font-display text-white">{tradeHistory.length}</p>
+          <p className="text-2xl font-bold font-display text-text-primary">{tradeHistory.length}</p>
           <p className="text-xs text-text-muted">Completed</p>
         </Card>
       </div>
@@ -137,8 +137,8 @@ const TradeCenter = () => {
           onClick={() => setActiveTab('pending')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'pending'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-dark-tertiary text-text-secondary hover:text-white'
+              ? 'bg-emerald-500 text-text-primary'
+              : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
           }`}
         >
           Pending ({pendingTrades.length})
@@ -147,8 +147,8 @@ const TradeCenter = () => {
           onClick={() => setActiveTab('history')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'history'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-dark-tertiary text-text-secondary hover:text-white'
+              ? 'bg-emerald-500 text-text-primary'
+              : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
           }`}
         >
           History ({tradeHistory.length})
@@ -165,11 +165,11 @@ const TradeCenter = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">No Pending Trades</h3>
+              <h3 className="text-lg font-medium text-text-primary mb-2">No Pending Trades</h3>
               <p className="text-text-secondary mb-4">Start trading with other teams to improve your roster</p>
               <button
                 onClick={() => setShowPropose(true)}
-                className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-500/90 transition-colors"
+                className="px-4 py-2 bg-emerald-500 text-text-primary rounded-lg font-medium hover:bg-emerald-500/90 transition-colors"
               >
                 Propose a Trade
               </button>
@@ -221,7 +221,7 @@ const TradeCenter = () => {
               <Card key={trade.id}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white font-medium">{trade.description}</p>
+                    <p className="text-text-primary font-medium">{trade.description}</p>
                     <p className="text-text-muted text-sm">{trade.date}</p>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${

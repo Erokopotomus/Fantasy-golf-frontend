@@ -81,7 +81,7 @@ const Matchups = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold font-display text-white mb-2">Not a Head-to-Head League</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Not a Head-to-Head League</h2>
           <p className="text-text-secondary mb-6">
             Matchups are only available for Head-to-Head format leagues.
           </p>
@@ -118,14 +118,14 @@ const Matchups = () => {
       <div className="mb-6">
         <Link
           to={`/leagues/${leagueId}`}
-          className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+          className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to {league.name}
         </Link>
-        <h1 className="text-2xl font-bold font-display text-white">Matchups</h1>
+        <h1 className="text-2xl font-bold font-display text-text-primary">Matchups</h1>
         <p className="text-text-secondary">Head-to-Head competition</p>
       </div>
 
@@ -137,8 +137,8 @@ const Matchups = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-emerald-500 text-white'
-                : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                ? 'bg-emerald-500 text-text-primary'
+                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -153,7 +153,7 @@ const Matchups = () => {
           {userMatchup && heroWeek && (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold font-display text-white">
+                <h2 className="text-lg font-semibold font-display text-text-primary">
                   Your Matchup — Week {heroWeek.week}
                 </h2>
                 {isNfl && (
@@ -166,7 +166,7 @@ const Matchups = () => {
                     </Link>
                     <Link
                       to={`/leagues/${leagueId}/scoring`}
-                      className="text-sm text-white/40 hover:text-white/60 font-medium"
+                      className="text-sm text-text-primary/40 hover:text-text-primary/60 font-medium"
                     >
                       Scoring →
                     </Link>
@@ -234,10 +234,10 @@ const Matchups = () => {
                 onClick={() => setSelectedWeek(week.week)}
                 className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                   selectedWeek === week.week || (!selectedWeek && week.week === primaryWeek?.week)
-                    ? 'bg-emerald-500 text-white'
+                    ? 'bg-emerald-500 text-text-primary'
                     : week.matchups?.every(m => m.completed)
                     ? 'bg-dark-tertiary text-text-secondary'
-                    : 'bg-dark-tertiary text-white border border-yellow-500/50'
+                    : 'bg-dark-tertiary text-text-primary border border-yellow-500/50'
                 }`}
               >
                 Week {week.week}

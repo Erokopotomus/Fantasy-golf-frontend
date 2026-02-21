@@ -27,7 +27,7 @@ const InsightSection = ({ title, emoji, players }) => {
             ) : (
               <span className="text-xs">{p.countryFlag || '?'}</span>
             )}
-            <span className="text-xs font-medium text-white truncate">{p.name}</span>
+            <span className="text-xs font-medium text-text-primary truncate">{p.name}</span>
           </div>
           <span className="text-xs font-mono text-gold ml-2 flex-shrink-0">{p.value}</span>
         </Link>
@@ -79,7 +79,7 @@ const QuickInsights = ({ leaderboard = [] }) => {
   return (
     <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
       <div className="px-4 py-3 border-b border-dark-border bg-gradient-to-r from-gold/5 to-transparent">
-        <h3 className="text-sm font-bold text-white">Quick Insights</h3>
+        <h3 className="text-sm font-bold text-text-primary">Quick Insights</h3>
       </div>
       <div className="p-4 space-y-4">
         <InsightSection title="Best Course Fit" emoji="🎯" players={bestFit} />

@@ -11,15 +11,15 @@ export default function RatingConfidenceIndicator({ confidence = 0, dataSourceSu
     ? 'bg-green-400/60'
     : confidence >= 40
     ? 'bg-yellow-400/60'
-    : 'bg-white/20'
+    : 'bg-dark-tertiary/20'
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-white/40 font-sans">{label}</span>
-        <span className="text-[10px] font-mono text-white/30">{confidence}%</span>
+        <span className="text-[10px] text-text-primary/40 font-sans">{label}</span>
+        <span className="text-[10px] font-mono text-text-primary/30">{confidence}%</span>
       </div>
-      <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+      <div className="h-1 rounded-full bg-dark-tertiary/5 overflow-hidden">
         <div
           className={`h-full rounded-full ${barColor} transition-all duration-500`}
           style={{ width: `${confidence}%` }}

@@ -18,7 +18,7 @@ const PlayerComparison = ({
                 d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-white mb-2">Compare Players</h3>
+          <h3 className="text-lg font-medium text-text-primary mb-2">Compare Players</h3>
           <p className="text-text-muted text-sm">
             Select 2-3 players from the table to compare their stats side by side
           </p>
@@ -49,7 +49,7 @@ const PlayerComparison = ({
   return (
     <Card>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold font-display text-white">Player Comparison</h3>
+        <h3 className="text-lg font-semibold font-display text-text-primary">Player Comparison</h3>
         <Button variant="ghost" size="sm" onClick={onClear}>
           Clear All
         </Button>
@@ -71,7 +71,7 @@ const PlayerComparison = ({
               </svg>
             </button>
             <span className="text-3xl mb-2 block">{player.countryFlag}</span>
-            <p className="text-white font-bold">{player.name}</p>
+            <p className="text-text-primary font-bold">{player.name}</p>
             <p className="text-text-muted text-sm">Rank #{player.rank}</p>
           </div>
         ))}
@@ -92,7 +92,7 @@ const PlayerComparison = ({
                         {player?.name.split(' ').pop()}
                       </span>
                       <span className={`text-sm font-medium ${
-                        item.isBest ? 'text-gold' : 'text-white'
+                        item.isBest ? 'text-gold' : 'text-text-primary'
                       }`}>
                         {formatStatValue(stat, item.value)}
                       </span>
@@ -113,7 +113,7 @@ const PlayerComparison = ({
 
       {/* Summary */}
       <div className="mt-6 p-4 bg-dark-tertiary rounded-lg">
-        <h4 className="text-white font-medium mb-2">Summary</h4>
+        <h4 className="text-text-primary font-medium mb-2">Summary</h4>
         <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${players.length}, minmax(0, 1fr))` }}>
           {players.map((player) => {
             const wins = Object.values(comparisonData).filter(data =>

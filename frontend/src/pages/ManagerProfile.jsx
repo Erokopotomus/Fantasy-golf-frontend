@@ -106,7 +106,7 @@ const SOCIAL_LABELS = {
   tiktok: 'TikTok',
 }
 
-const StatBox = ({ label, value, color = 'text-white' }) => (
+const StatBox = ({ label, value, color = 'text-text-primary' }) => (
   <div className="bg-dark-primary rounded-lg p-4 text-center">
     <p className={`text-2xl font-bold ${color}`}>{value}</p>
     <p className="text-text-muted text-sm">{label}</p>
@@ -119,7 +119,7 @@ const ComponentBar = ({ label, value, max = 100 }) => {
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
         <span className="text-text-secondary">{label}</span>
-        <span className="text-white font-mono">{value != null ? Math.round(value) : '—'}</span>
+        <span className="text-text-primary font-mono">{value != null ? Math.round(value) : '—'}</span>
       </div>
       <div className="h-1.5 bg-dark-primary rounded-full overflow-hidden">
         <div
@@ -152,7 +152,7 @@ const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
         style={unlocked ? { borderColor: tierColor } : undefined}
       >
         <div className="text-2xl mb-1">{achievement.icon || '?'}</div>
-        <p className="text-xs font-medium text-white truncate">{achievement.name}</p>
+        <p className="text-xs font-medium text-text-primary truncate">{achievement.name}</p>
         <p className="text-[10px] text-text-muted mt-0.5 capitalize">{achievement.tier?.toLowerCase()}</p>
         {!unlocked && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -164,7 +164,7 @@ const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
         {/* Pin indicator */}
         {isPinned && !editing && (
           <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center">
-            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-2.5 h-2.5 text-text-primary" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 2l1.5 4.5H16l-3.5 2.5L14 13.5 10 11l-4 2.5 1.5-4.5L4 6.5h4.5z" />
             </svg>
           </div>
@@ -174,7 +174,7 @@ const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
           <button
             onClick={() => onTogglePin(badgeSlug)}
             className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] transition-colors ${
-              isPinned ? 'bg-amber-500 text-white' : 'bg-white/10 text-white/40 hover:bg-white/20'
+              isPinned ? 'bg-amber-500 text-text-primary' : 'bg-dark-tertiary/10 text-text-primary/40 hover:bg-dark-tertiary/20'
             }`}
             title={isPinned ? 'Unpin badge' : 'Pin badge (max 3)'}
           >
@@ -274,7 +274,7 @@ const ManagerProfile = () => {
     return (
       <div className="min-h-screen bg-dark-primary">
         <div className="max-w-5xl mx-auto px-4 py-6">
-          <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-white mb-4">
+          <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-4">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -373,7 +373,7 @@ const ManagerProfile = () => {
     <div className="min-h-screen bg-dark-primary">
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Back Link */}
-        <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-white mb-6 transition-colors">
+        <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-6 transition-colors">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
@@ -384,14 +384,14 @@ const ManagerProfile = () => {
         <Card className="mb-6">
           <div className="flex items-start gap-4 mb-4">
             {/* Avatar */}
-            <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-white text-2xl font-bold font-display shadow-button shrink-0">
+            <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-text-primary text-2xl font-bold font-display shadow-button shrink-0">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
 
             {/* Name + bio */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold font-display text-white truncate">{user?.name || 'Manager'}</h1>
+                <h1 className="text-2xl font-bold font-display text-text-primary truncate">{user?.name || 'Manager'}</h1>
                 {effectivePinnedBadges.length > 0 && (
                   <span className="flex items-center gap-1 ml-1">
                     {effectivePinnedBadges.slice(0, 3).map((badge, i) => (
@@ -404,7 +404,7 @@ const ManagerProfile = () => {
                 {isOwnProfile && !editing && (
                   <button
                     onClick={startEdit}
-                    className="text-text-secondary hover:text-white transition-colors"
+                    className="text-text-secondary hover:text-text-primary transition-colors"
                     title="Edit profile"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -479,7 +479,7 @@ const ManagerProfile = () => {
                         href={url.startsWith('http') ? url : `https://${url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-text-secondary hover:text-white transition-colors"
+                        className="text-text-secondary hover:text-text-primary transition-colors"
                         title={key.charAt(0).toUpperCase() + key.slice(1)}
                       >
                         {SOCIAL_ICONS[key] || key}
@@ -519,7 +519,7 @@ const ManagerProfile = () => {
                     type="text"
                     value={editUsername}
                     onChange={e => setEditUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30))}
-                    className="flex-1 bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm font-mono"
+                    className="flex-1 bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm font-mono"
                     placeholder="your-username"
                   />
                 </div>
@@ -535,7 +535,7 @@ const ManagerProfile = () => {
                   type="text"
                   value={editTagline}
                   onChange={e => setEditTagline(e.target.value.slice(0, 280))}
-                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm"
                   placeholder="Your one-liner..."
                 />
                 <span className="text-[10px] text-text-muted font-mono">{editTagline.length}/280</span>
@@ -546,7 +546,7 @@ const ManagerProfile = () => {
                   value={editBio}
                   onChange={e => setEditBio(e.target.value.slice(0, 2000))}
                   rows={3}
-                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm resize-none"
+                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm resize-none"
                   placeholder="Tell us about yourself..."
                 />
               </div>
@@ -558,7 +558,7 @@ const ManagerProfile = () => {
                       type="text"
                       value={editSocial[key] || ''}
                       onChange={e => setEditSocial(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-sm"
+                      className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm"
                       placeholder={`https://...`}
                     />
                   </div>
@@ -567,14 +567,14 @@ const ManagerProfile = () => {
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => setEditing(false)}
-                  className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
+                  className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={saveProfile}
                   disabled={saving}
-                  className="px-4 py-2 text-sm bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm bg-gold text-text-primary rounded-lg font-medium hover:bg-gold/90 transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save'}
                 </button>
@@ -596,7 +596,7 @@ const ManagerProfile = () => {
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold font-display text-white">Clutch Rating</h2>
+                <h2 className="text-lg font-semibold font-display text-text-primary">Clutch Rating</h2>
                 <RatingTierBadge tier={clutchRating.tier || 'UNRANKED'} size="sm" />
                 <RatingTrendIndicator trend={clutchRating.trend || 'stable'} />
               </div>
@@ -621,7 +621,7 @@ const ManagerProfile = () => {
                 size="md"
               />
               <div className="flex-1">
-                <div className="text-2xl font-mono font-bold text-white mb-1">{clutchRating.overall}</div>
+                <div className="text-2xl font-mono font-bold text-text-primary mb-1">{clutchRating.overall}</div>
                 <RatingConfidenceIndicator
                   confidence={clutchRating.confidence || 0}
                   dataSourceSummary={clutchRating.dataSourceSummary}
@@ -642,7 +642,7 @@ const ManagerProfile = () => {
         {reputation && (
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold font-display text-white">Prove It Track Record</h2>
+              <h2 className="text-lg font-semibold font-display text-text-primary">Prove It Track Record</h2>
               <span className={`text-xs font-mono font-bold px-2 py-1 rounded capitalize ${
                 reputation.tier === 'elite' ? 'bg-purple-500/20 text-purple-400' :
                 reputation.tier === 'expert' ? 'bg-accent-gold/20 text-accent-gold' :
@@ -715,7 +715,7 @@ const ManagerProfile = () => {
           /* Empty State */
           <Card className="text-center py-12">
             <div className="text-4xl mb-4">&#127942;</div>
-            <h2 className="text-xl font-bold font-display text-white mb-2">
+            <h2 className="text-xl font-bold font-display text-text-primary mb-2">
               {isOwnProfile ? 'Your Manager Journey Starts Here' : 'No Stats Yet'}
             </h2>
             <p className="text-text-secondary mb-6 max-w-md mx-auto">
@@ -726,7 +726,7 @@ const ManagerProfile = () => {
             {isOwnProfile && (
               <Link
                 to="/leagues"
-                className="inline-flex items-center px-6 py-3 bg-gold text-white rounded-lg font-medium hover:bg-gold/90 transition-colors"
+                className="inline-flex items-center px-6 py-3 bg-gold text-text-primary rounded-lg font-medium hover:bg-gold/90 transition-colors"
               >
                 Browse Leagues
               </Link>
@@ -739,7 +739,7 @@ const ManagerProfile = () => {
             <div className="space-y-6">
               {/* Lifetime Stats */}
               <Card>
-                <h2 className="text-lg font-semibold font-display text-white mb-4">Lifetime Stats</h2>
+                <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Lifetime Stats</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
                   <StatBox label="Seasons" value={formatNum(p.totalSeasons)} />
@@ -757,22 +757,22 @@ const ManagerProfile = () => {
               {/* Per-Sport Breakdown */}
               {bySport.length > 0 && (
                 <Card>
-                  <h2 className="text-lg font-semibold font-display text-white mb-4">By Sport</h2>
+                  <h2 className="text-lg font-semibold font-display text-text-primary mb-4">By Sport</h2>
                   <div className="space-y-4">
                     {bySport.map((sp) => (
                       <div key={sp.id} className="bg-dark-primary rounded-lg p-4">
-                        <h3 className="text-white font-medium mb-2">{sp.sport?.name || 'Unknown'}</h3>
+                        <h3 className="text-text-primary font-medium mb-2">{sp.sport?.name || 'Unknown'}</h3>
                         <div className="grid grid-cols-3 gap-2 text-center text-sm">
                           <div>
-                            <p className="text-white font-semibold">{formatNum(sp.wins)}</p>
+                            <p className="text-text-primary font-semibold">{formatNum(sp.wins)}</p>
                             <p className="text-text-muted">Wins</p>
                           </div>
                           <div>
-                            <p className="text-white font-semibold">{formatNum(sp.championships)}</p>
+                            <p className="text-text-primary font-semibold">{formatNum(sp.championships)}</p>
                             <p className="text-text-muted">Titles</p>
                           </div>
                           <div>
-                            <p className="text-white font-semibold">{formatPct(sp.winPct)}</p>
+                            <p className="text-text-primary font-semibold">{formatPct(sp.winPct)}</p>
                             <p className="text-text-muted">Win %</p>
                           </div>
                         </div>
@@ -787,7 +787,7 @@ const ManagerProfile = () => {
             <div>
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold font-display text-white">Achievements</h2>
+                  <h2 className="text-lg font-semibold font-display text-text-primary">Achievements</h2>
                   {achievementStats && (
                     <span className="text-sm text-text-secondary">
                       {achievementStats.unlocked}/{achievementStats.total}

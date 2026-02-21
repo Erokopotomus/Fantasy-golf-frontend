@@ -35,8 +35,8 @@ export default function WatchList() {
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-white">Watch List</h1>
-          <p className="text-xs text-white/40 mt-0.5">{entries.length} players tracked</p>
+          <h1 className="text-xl font-bold text-text-primary">Watch List</h1>
+          <p className="text-xs text-text-primary/40 mt-0.5">{entries.length} players tracked</p>
         </div>
         <Link to="/lab" className="text-xs text-gold hover:underline">The Lab</Link>
       </div>
@@ -52,7 +52,7 @@ export default function WatchList() {
             key={f.key}
             onClick={() => setSportFilter(f.key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors
-              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-white/40 border border-white/10 hover:border-white/20'}`}
+              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-text-primary/40 border border-stone/30 hover:border-stone/50'}`}
           >
             {f.label} ({f.count})
           </button>
@@ -65,11 +65,11 @@ export default function WatchList() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
-          <svg className="w-12 h-12 text-white/10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-12 h-12 text-text-primary/10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
           </svg>
-          <p className="text-sm text-white/40">No players on your watch list yet</p>
-          <p className="text-xs text-white/25 mt-1">Star players from their profile pages or board editor</p>
+          <p className="text-sm text-text-primary/40">No players on your watch list yet</p>
+          <p className="text-xs text-text-primary/25 mt-1">Star players from their profile pages or board editor</p>
         </div>
       ) : (
         <div className="space-y-1">
@@ -82,19 +82,19 @@ export default function WatchList() {
                   {p.headshotUrl ? (
                     <img src={p.headshotUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white/20 text-xs font-bold">
+                    <div className="w-full h-full flex items-center justify-center text-text-primary/20 text-xs font-bold">
                       {p.name?.charAt(0) || '?'}
                     </div>
                   )}
                 </div>
                 <Link to={profileUrl} className="flex-1 min-w-0">
-                  <span className="text-sm text-white font-medium truncate block">{p.name || 'Unknown'}</span>
-                  <span className="text-[10px] text-white/40">
+                  <span className="text-sm text-text-primary font-medium truncate block">{p.name || 'Unknown'}</span>
+                  <span className="text-[10px] text-text-primary/40">
                     {p.position && `${p.position} `}{p.team && `${p.team} `}
                     {entry.sport === 'nfl' ? 'NFL' : 'Golf'}
                   </span>
                 </Link>
-                <span className="text-[10px] text-white/20">{new Date(entry.createdAt).toLocaleDateString()}</span>
+                <span className="text-[10px] text-text-primary/20">{new Date(entry.createdAt).toLocaleDateString()}</span>
                 <button
                   onClick={() => handleRemove(entry.playerId)}
                   className="p-1 text-gold hover:text-gold/60 transition-colors shrink-0"

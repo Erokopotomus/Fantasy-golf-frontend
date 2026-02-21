@@ -50,14 +50,14 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 px-3 py-2 border-b border-white/[0.04] transition-colors group
+      className={`flex items-center gap-2 px-3 py-2 border-b border-[var(--card-border)] transition-colors group
         ${isDragging ? 'bg-dark-secondary/80 shadow-lg' : 'bg-dark-secondary/40 hover:bg-dark-secondary/80'}`}
     >
       {/* Drag handle */}
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing text-white/20 hover:text-white/50 touch-none shrink-0"
+        className="cursor-grab active:cursor-grabbing text-text-primary/20 hover:text-text-primary/50 touch-none shrink-0"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
@@ -65,7 +65,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       </button>
 
       {/* Rank + Divergence */}
-      <span className="w-8 text-center text-sm font-mono text-white/40 shrink-0">{index + 1}</span>
+      <span className="w-8 text-center text-sm font-mono text-text-primary/40 shrink-0">{index + 1}</span>
       {entry.baselineRank != null && (() => {
         const delta = entry.baselineRank - (index + 1)
         if (Math.abs(delta) < 2) return null
@@ -81,14 +81,14 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
         {player.headshotUrl ? (
           <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-white/20 text-xs font-bold">
+          <div className="w-full h-full flex items-center justify-center text-text-primary/20 text-xs font-bold">
             {player.name?.charAt(0) || '?'}
           </div>
         )}
       </div>
 
       {/* Name */}
-      <span className="text-sm text-white font-medium truncate min-w-0 flex-1">{player.name || 'Unknown'}</span>
+      <span className="text-sm text-text-primary font-medium truncate min-w-0 flex-1">{player.name || 'Unknown'}</span>
 
       {/* Tag pills */}
       <div className="hidden sm:flex items-center gap-1 shrink-0">
@@ -111,16 +111,16 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       {sport === 'nfl' ? (
         <div className="hidden sm:flex items-center gap-2 shrink-0">
           {player.position && (
-            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${POSITION_COLORS[player.position] || 'bg-white/10 text-white/60'}`}>
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${POSITION_COLORS[player.position] || 'bg-dark-tertiary/10 text-text-primary/60'}`}>
               {player.position}{positionRank || ''}
             </span>
           )}
-          {player.team && <span className="text-xs text-white/40">{player.team}</span>}
+          {player.team && <span className="text-xs text-text-primary/40">{player.team}</span>}
           {player.fantasyPtsPerGame != null && (
             <span className="text-xs font-mono text-gold">{player.fantasyPtsPerGame} ppg</span>
           )}
           {player.fantasyPts != null && (
-            <span className="text-[10px] font-mono text-white/30">{player.fantasyPts} tot</span>
+            <span className="text-[10px] font-mono text-text-primary/30">{player.fantasyPts} tot</span>
           )}
         </div>
       ) : (
@@ -131,9 +131,9 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
             </span>
           )}
           {player.formScore != null && (
-            <span className="text-xs font-mono text-white/50">Form {Math.round(player.formScore)}</span>
+            <span className="text-xs font-mono text-text-primary/50">Form {Math.round(player.formScore)}</span>
           )}
-          {player.owgrRank && <span className="text-xs text-white/40">#{player.owgrRank}</span>}
+          {player.owgrRank && <span className="text-xs text-text-primary/40">#{player.owgrRank}</span>}
           {player.sgTotal != null && (
             <span className={`text-xs ${player.sgTotal > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               SG {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}
@@ -146,7 +146,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       {onToggleWatch && (
         <button
           onClick={() => onToggleWatch(entry.playerId, sport)}
-          className={`p-1 rounded transition-colors shrink-0 ${isWatched ? 'text-gold' : 'text-white/15 hover:text-gold/50 opacity-0 group-hover:opacity-100'}`}
+          className={`p-1 rounded transition-colors shrink-0 ${isWatched ? 'text-gold' : 'text-text-primary/15 hover:text-gold/50 opacity-0 group-hover:opacity-100'}`}
           title={isWatched ? 'Remove from watch list' : 'Add to watch list'}
         >
           <svg className="w-3.5 h-3.5" fill={isWatched ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +158,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       {/* Notes indicator */}
       <button
         onClick={() => onClickNotes(entry)}
-        className={`p-1 rounded transition-colors shrink-0 ${entry.notes ? 'text-gold hover:text-gold/80' : 'text-white/20 hover:text-white/40 opacity-0 group-hover:opacity-100'}`}
+        className={`p-1 rounded transition-colors shrink-0 ${entry.notes ? 'text-gold hover:text-gold/80' : 'text-text-primary/20 hover:text-text-primary/40 opacity-0 group-hover:opacity-100'}`}
         title={entry.notes ? 'Edit notes' : 'Add notes'}
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       {/* Remove */}
       <button
         onClick={() => onRemove(entry.playerId)}
-        className="p-1 text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+        className="p-1 text-text-primary/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
         title="Remove"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

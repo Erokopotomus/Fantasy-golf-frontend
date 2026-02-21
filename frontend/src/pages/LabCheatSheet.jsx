@@ -10,9 +10,9 @@ function scoringLabel(fmt) {
 }
 
 function GapBadge({ gap }) {
-  if (gap === null || gap === undefined) return <span className="text-white/15">—</span>
+  if (gap === null || gap === undefined) return <span className="text-text-primary/15">—</span>
   const isValue = gap > 0
-  const color = isValue ? 'text-emerald-400' : gap < 0 ? 'text-red-400' : 'text-white/30'
+  const color = isValue ? 'text-emerald-400' : gap < 0 ? 'text-red-400' : 'text-text-primary/30'
   return <span className={`font-mono text-xs ${color}`}>{isValue ? '+' : ''}{gap}</span>
 }
 
@@ -26,7 +26,7 @@ function PosBadge({ pos }) {
     K: 'bg-purple-500/20 text-purple-400',
     DEF: 'bg-yellow-500/20 text-yellow-400',
   }
-  return <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colors[pos] || 'bg-white/10 text-white/40'}`}>{pos}</span>
+  return <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colors[pos] || 'bg-dark-tertiary/10 text-text-primary/40'}`}>{pos}</span>
 }
 
 export default function LabCheatSheet() {
@@ -137,23 +137,23 @@ export default function LabCheatSheet() {
       <div className="flex items-center justify-between mb-6 print:mb-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Link to="/lab" className="text-white/30 hover:text-white/60 transition-colors print:hidden">
+            <Link to="/lab" className="text-text-primary/30 hover:text-text-primary/60 transition-colors print:hidden">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className="text-xl font-display font-bold text-white print:text-black">{sheet.title}</h1>
+            <h1 className="text-xl font-display font-bold text-text-primary print:text-black">{sheet.title}</h1>
           </div>
           {board && (
             <div className="flex items-center gap-2 ml-8 print:ml-0">
-              <span className="text-xs text-white/30 print:text-gray-500">Generated from: {board.name}</span>
+              <span className="text-xs text-text-primary/30 print:text-gray-500">Generated from: {board.name}</span>
               <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
                 board.sport === 'nfl' ? 'bg-orange/20 text-orange print:bg-orange-100 print:text-orange-700' : 'bg-emerald-500/20 text-emerald-400'
               }`}>
                 {board.sport}
               </span>
               {board.scoringFormat && (
-                <span className="px-1.5 py-0.5 bg-white/[0.04] rounded text-[9px] text-white/40 print:bg-gray-100 print:text-gray-600">
+                <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[9px] text-text-primary/40 print:bg-gray-100 print:text-gray-600">
                   {scoringLabel(board.scoringFormat)}
                 </span>
               )}
@@ -167,14 +167,14 @@ export default function LabCheatSheet() {
             <>
               <button
                 onClick={cancelEdit}
-                className="px-3 py-1.5 text-sm text-white/50 border border-white/10 rounded-lg hover:text-white/70 hover:border-white/20 transition-colors"
+                className="px-3 py-1.5 text-sm text-text-primary/50 border border-stone/30 rounded-lg hover:text-text-primary/70 hover:border-stone/50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={!hasChanges || saving}
-                className="px-3 py-1.5 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="px-3 py-1.5 text-sm font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 {saving && <div className="w-3.5 h-3.5 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />}
                 Save
@@ -184,7 +184,7 @@ export default function LabCheatSheet() {
             <>
               <button
                 onClick={enterEdit}
-                className="px-3 py-1.5 text-sm text-white/50 border border-white/10 rounded-lg hover:text-white/70 hover:border-white/20 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 text-sm text-text-primary/50 border border-stone/30 rounded-lg hover:text-text-primary/70 hover:border-stone/50 transition-colors flex items-center gap-1.5"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -193,14 +193,14 @@ export default function LabCheatSheet() {
               </button>
               <button
                 onClick={() => window.print()}
-                className="px-3 py-1.5 text-sm text-white/50 border border-white/10 rounded-lg hover:text-white/70 hover:border-white/20 transition-colors"
+                className="px-3 py-1.5 text-sm text-text-primary/50 border border-stone/30 rounded-lg hover:text-text-primary/70 hover:border-stone/50 transition-colors"
               >
                 Export PDF
               </button>
               {!sheet.publishedAt && (
                 <button
                   onClick={handlePublish}
-                  className="px-3 py-1.5 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors"
+                  className="px-3 py-1.5 text-sm font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors"
                 >
                   Publish to Prove It
                 </button>
@@ -225,11 +225,11 @@ export default function LabCheatSheet() {
                   <div key={p.playerId} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <PosBadge pos={p.position} />
-                      <span className="text-white/70 print:text-black">{p.name}</span>
+                      <span className="text-text-primary/70 print:text-black">{p.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-white/25 print:text-gray-400">ADP {p.adp}</span>
-                      <span className="text-xs text-white/25 print:text-gray-400">You: #{p.rank}</span>
+                      <span className="text-xs text-text-primary/25 print:text-gray-400">ADP {p.adp}</span>
+                      <span className="text-xs text-text-primary/25 print:text-gray-400">You: #{p.rank}</span>
                       <GapBadge gap={p.gap} />
                     </div>
                   </div>
@@ -247,11 +247,11 @@ export default function LabCheatSheet() {
                   <div key={p.playerId} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <PosBadge pos={p.position} />
-                      <span className="text-white/70 print:text-black">{p.name}</span>
+                      <span className="text-text-primary/70 print:text-black">{p.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-white/25 print:text-gray-400">ADP {p.adp}</span>
-                      <span className="text-xs text-white/25 print:text-gray-400">You: #{p.rank}</span>
+                      <span className="text-xs text-text-primary/25 print:text-gray-400">ADP {p.adp}</span>
+                      <span className="text-xs text-text-primary/25 print:text-gray-400">You: #{p.rank}</span>
                       <GapBadge gap={p.gap} />
                     </div>
                   </div>
@@ -265,7 +265,7 @@ export default function LabCheatSheet() {
       {/* Column Toggles (edit mode only) */}
       {editMode && editedSettings && (
         <div className="flex items-center gap-4 mb-3 px-1">
-          <span className="text-xs font-bold text-white/30 uppercase tracking-wider">Show columns:</span>
+          <span className="text-xs font-bold text-text-primary/30 uppercase tracking-wider">Show columns:</span>
           {[
             { key: 'showADP', label: 'ADP' },
             { key: 'showNotes', label: 'Notes' },
@@ -276,9 +276,9 @@ export default function LabCheatSheet() {
                 type="checkbox"
                 checked={editedSettings[col.key] ?? true}
                 onChange={e => setEditedSettings(prev => ({ ...prev, [col.key]: e.target.checked }))}
-                className="w-3.5 h-3.5 rounded border-white/20 bg-dark-secondary text-gold focus:ring-gold/30"
+                className="w-3.5 h-3.5 rounded border-stone/50 bg-dark-secondary text-gold focus:ring-gold/30"
               />
-              <span className="text-xs text-white/50">{col.label}</span>
+              <span className="text-xs text-text-primary/50">{col.label}</span>
             </label>
           ))}
         </div>
@@ -290,14 +290,14 @@ export default function LabCheatSheet() {
         const displaySettings = editMode && editedSettings ? editedSettings : settings
         const colCount = 4 + (displaySettings.showADP ? 1 : 0) + 1 + (displaySettings.showNotes ? 1 : 0) + (editMode ? 1 : 0)
         return (
-          <div className="bg-dark-secondary/60 border border-white/[0.06] rounded-xl overflow-hidden print:border-gray-200 mb-6">
-            <div className="p-4 border-b border-white/[0.06] print:border-gray-200">
-              <h3 className="text-sm font-bold text-white print:text-black">Overall Rankings</h3>
+          <div className="bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl overflow-hidden print:border-gray-200 mb-6">
+            <div className="p-4 border-b border-[var(--card-border)] print:border-gray-200">
+              <h3 className="text-sm font-bold text-text-primary print:text-black">Overall Rankings</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-white/30 print:text-gray-500 border-b border-white/[0.06]">
+                  <tr className="text-left text-[10px] font-bold uppercase tracking-wider text-text-primary/30 print:text-gray-500 border-b border-[var(--card-border)]">
                     <th className="px-4 py-2 w-12">#</th>
                     <th className="px-4 py-2">Player</th>
                     <th className="px-4 py-2 w-16">Pos</th>
@@ -319,22 +319,22 @@ export default function LabCheatSheet() {
                           </td>
                         </tr>
                       )}
-                      <tr className="border-b border-white/[0.03] hover:bg-white/[0.02] print:border-gray-100">
-                        <td className="px-4 py-2 text-white/30 print:text-gray-400 font-mono">{i + 1}</td>
-                        <td className="px-4 py-2 text-white print:text-black font-medium">{r.name}</td>
+                      <tr className="border-b border-white/[0.03] hover:bg-dark-tertiary/[0.02] print:border-gray-100">
+                        <td className="px-4 py-2 text-text-primary/30 print:text-gray-400 font-mono">{i + 1}</td>
+                        <td className="px-4 py-2 text-text-primary print:text-black font-medium">{r.name}</td>
                         <td className="px-4 py-2"><PosBadge pos={r.position} /></td>
-                        <td className="px-4 py-2 text-white/40 print:text-gray-500">{r.team || ''}</td>
-                        {displaySettings.showADP && <td className="px-4 py-2 text-right text-white/30 print:text-gray-400">{r.adp || '—'}</td>}
+                        <td className="px-4 py-2 text-text-primary/40 print:text-gray-500">{r.team || ''}</td>
+                        {displaySettings.showADP && <td className="px-4 py-2 text-right text-text-primary/30 print:text-gray-400">{r.adp || '—'}</td>}
                         <td className="px-4 py-2 text-right"><GapBadge gap={r.gap} /></td>
                         {displaySettings.showNotes && (
-                          <td className="px-4 py-2 text-white/25 print:text-gray-400 text-xs max-w-[200px]">
+                          <td className="px-4 py-2 text-text-primary/25 print:text-gray-400 text-xs max-w-[200px]">
                             {editMode ? (
                               <input
                                 type="text"
                                 value={r.note || ''}
                                 onChange={e => updateNote(i, e.target.value)}
                                 placeholder="Add note..."
-                                className="w-full bg-transparent border-b border-white/10 focus:border-gold/40 text-white/60 text-xs outline-none py-0.5 placeholder-white/15"
+                                className="w-full bg-transparent border-b border-stone/30 focus:border-gold/40 text-text-primary/60 text-xs outline-none py-0.5 placeholder-white/15"
                               />
                             ) : (
                               <span className="truncate block">{r.note || ''}</span>
@@ -347,7 +347,7 @@ export default function LabCheatSheet() {
                               <button
                                 onClick={() => moveRow(i, -1)}
                                 disabled={i === 0}
-                                className="p-1 text-white/30 hover:text-white/70 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                                className="p-1 text-text-primary/30 hover:text-text-primary/70 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                                 title="Move up"
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,7 +357,7 @@ export default function LabCheatSheet() {
                               <button
                                 onClick={() => moveRow(i, 1)}
                                 disabled={i === displayRankings.length - 1}
-                                className="p-1 text-white/30 hover:text-white/70 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                                className="p-1 text-text-primary/30 hover:text-text-primary/70 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                                 title="Move down"
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,20 +379,20 @@ export default function LabCheatSheet() {
 
       {/* Position Tiers Quick Reference */}
       {Object.keys(positionTiers).length > 0 && (
-        <div className="bg-dark-secondary/60 border border-white/[0.06] rounded-xl p-4 print:border-gray-200">
-          <h3 className="text-sm font-bold text-white print:text-black mb-4">Position Tiers Quick Reference</h3>
+        <div className="bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl p-4 print:border-gray-200">
+          <h3 className="text-sm font-bold text-text-primary print:text-black mb-4">Position Tiers Quick Reference</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(positionTiers).map(([pos, tiers]) => (
               <div key={pos}>
-                <h4 className="text-xs font-bold text-white/40 print:text-gray-500 mb-2"><PosBadge pos={pos} /></h4>
+                <h4 className="text-xs font-bold text-text-primary/40 print:text-gray-500 mb-2"><PosBadge pos={pos} /></h4>
                 {Object.entries(tiers).sort(([a], [b]) => Number(a) - Number(b)).map(([tier, players]) => (
                   <div key={tier} className="mb-2">
                     <span className="text-[9px] font-bold uppercase text-gold/40 print:text-gold">Tier {tier}</span>
                     <div className="space-y-0.5">
                       {players.map(p => (
                         <div key={p.playerId} className="flex items-center justify-between text-xs">
-                          <span className="text-white/60 print:text-gray-700">{p.name}</span>
-                          <span className="text-white/20 print:text-gray-400">#{p.rank}</span>
+                          <span className="text-text-primary/60 print:text-gray-700">{p.name}</span>
+                          <span className="text-text-primary/20 print:text-gray-400">#{p.rank}</span>
                         </div>
                       ))}
                     </div>

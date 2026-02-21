@@ -30,7 +30,7 @@ const ToolBtn = ({ onClick, active, disabled, title, children, className = '' })
   <button
     onMouseDown={e => { e.preventDefault(); onClick?.() }}
     className={`p-1.5 rounded transition-colors ${
-      active ? 'bg-gold/20 text-gold' : 'text-text-muted hover:text-white'
+      active ? 'bg-gold/20 text-gold' : 'text-text-muted hover:text-text-primary'
     } ${disabled ? 'opacity-30 cursor-not-allowed' : ''} ${className}`}
     title={title}
     disabled={disabled}
@@ -88,7 +88,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
     ],
     editorProps: {
       attributes: {
-        class: 'prose prose-invert prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3 text-sm text-white leading-relaxed [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-2 [&_strong]:text-white [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-dark-border/50 [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline',
+        class: 'prose prose-invert prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3 text-sm text-text-primary leading-relaxed [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-text-primary [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-2 [&_strong]:text-text-primary [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-dark-border/50 [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline',
       },
     },
     content: '',
@@ -219,10 +219,10 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
         <div className="p-5">
           {/* Modal header */}
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-display font-bold text-white">
+            <h3 className="text-lg font-display font-bold text-text-primary">
               {editingPost ? 'Edit Post' : 'New Post'}
             </h3>
-            <button onClick={onClose} className="text-text-muted hover:text-white transition-colors">
+            <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -236,7 +236,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
               <img src={coverImage} alt="Cover" className="w-full h-40 object-cover" />
               <button
                 onClick={() => setCoverImage(null)}
-                className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-white hover:bg-black/80 transition-colors"
+                className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-text-primary hover:bg-black/80 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -261,7 +261,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Post title..."
-            className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-2.5 text-white text-sm placeholder-text-muted focus:outline-none focus:border-gold/50 mb-3"
+            className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-2.5 text-text-primary text-sm placeholder-text-muted focus:outline-none focus:border-gold/50 mb-3"
           />
 
           {/* Category pills */}
@@ -354,7 +354,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                         value={linkUrl}
                         onChange={e => setLinkUrl(e.target.value)}
                         placeholder="https://..."
-                        className="w-full bg-dark-tertiary border border-dark-border rounded px-2 py-1.5 text-xs text-white placeholder-text-muted focus:outline-none focus:border-gold/50 mb-2"
+                        className="w-full bg-dark-tertiary border border-dark-border rounded px-2 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 mb-2"
                         autoFocus
                         onKeyDown={e => e.key === 'Enter' && handleAddLink()}
                       />
@@ -363,7 +363,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                         {editor.isActive('link') && (
                           <button onClick={() => { editor.chain().focus().unsetLink().run(); setShowLinkPopover(false) }} className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded hover:bg-red-500/30">Remove</button>
                         )}
-                        <button onClick={() => setShowLinkPopover(false)} className="px-2 py-1 text-text-muted text-xs hover:text-white">Cancel</button>
+                        <button onClick={() => setShowLinkPopover(false)} className="px-2 py-1 text-text-muted text-xs hover:text-text-primary">Cancel</button>
                       </div>
                     </div>
                   )}
@@ -384,7 +384,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                       <button
                         onClick={() => imageFileRef.current?.click()}
                         disabled={imageUploading}
-                        className="w-full mb-2 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-xs text-text-secondary hover:text-white hover:border-gold/30 transition-colors flex items-center justify-center gap-2"
+                        className="w-full mb-2 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-gold/30 transition-colors flex items-center justify-center gap-2"
                       >
                         {imageUploading ? (
                           <><div className="w-3 h-3 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /> Uploading...</>
@@ -398,13 +398,13 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                           value={imageUrl}
                           onChange={e => setImageUrl(e.target.value)}
                           placeholder="Or paste image URL..."
-                          className="w-full bg-dark-tertiary border border-dark-border rounded px-2 py-1.5 text-xs text-white placeholder-text-muted focus:outline-none focus:border-gold/50"
+                          className="w-full bg-dark-tertiary border border-dark-border rounded px-2 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
                           onKeyDown={e => e.key === 'Enter' && handleImageUrl()}
                         />
                       </div>
                       <div className="flex gap-1.5 mt-2">
                         <button onClick={handleImageUrl} disabled={!imageUrl.trim()} className="flex-1 px-2 py-1 bg-gold/20 text-gold text-xs rounded hover:bg-gold/30 disabled:opacity-40">Insert</button>
-                        <button onClick={() => setShowImagePopover(false)} className="px-2 py-1 text-text-muted text-xs hover:text-white">Cancel</button>
+                        <button onClick={() => setShowImagePopover(false)} className="px-2 py-1 text-text-muted text-xs hover:text-text-primary">Cancel</button>
                       </div>
                     </div>
                   )}
@@ -448,7 +448,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                 value={aiTopic}
                 onChange={e => setAiTopic(e.target.value)}
                 placeholder="e.g., New trade deadline rule, Week 5 recap, Draft prep reminder..."
-                className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-white text-xs placeholder-text-muted focus:outline-none focus:border-purple-500/50 mb-2"
+                className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-xs placeholder-text-muted focus:outline-none focus:border-purple-500/50 mb-2"
               />
               <div className="flex items-center justify-between">
                 <div className="flex gap-1.5">
@@ -496,14 +496,14 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-medium text-text-secondary hover:text-white transition-colors"
+                className="px-4 py-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !title.trim()}
-                className="px-4 py-2 bg-gradient-to-r from-gold to-accent-orange text-dark-primary text-xs font-bold rounded-lg hover:shadow-gold/30 hover:shadow-lg transition-all disabled:opacity-40"
+                className="px-4 py-2 bg-gradient-to-r from-gold to-accent-orange text-slate text-xs font-bold rounded-lg hover:shadow-gold/30 hover:shadow-lg transition-all disabled:opacity-40"
               >
                 {saving ? 'Saving...' : editingPost ? 'Save Changes' : 'Publish'}
               </button>

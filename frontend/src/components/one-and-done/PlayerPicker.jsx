@@ -57,7 +57,7 @@ const PlayerPicker = ({
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold font-display text-white mb-4">Select Your Pick</h3>
+      <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Select Your Pick</h3>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -67,14 +67,14 @@ const PlayerPicker = ({
             placeholder="Search players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white placeholder-text-muted focus:border-gold focus:outline-none"
+            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-gold focus:outline-none"
           />
         </div>
 
         <select
           value={tierFilter}
           onChange={(e) => setTierFilter(e.target.value)}
-          className="p-2 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none"
+          className="p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
         >
           <option value="all">All Tiers</option>
           {tiers.map(tier => (
@@ -130,7 +130,7 @@ const PlayerPicker = ({
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <span className="text-xl">{player.countryFlag || '🏌️'}</span>
                   <div className="min-w-0">
-                    <p className={`font-medium truncate ${isUsed ? 'text-text-muted' : 'text-white'}`}>
+                    <p className={`font-medium truncate ${isUsed ? 'text-text-muted' : 'text-text-primary'}`}>
                       {player.name}
                     </p>
                     <p className="text-xs text-text-muted">{player.country}</p>
@@ -168,11 +168,11 @@ const PlayerPicker = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-muted">Selected:</p>
-              <p className="text-white font-medium">{selectedPlayer.name}</p>
+              <p className="text-text-primary font-medium">{selectedPlayer.name}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-text-muted">Multiplier:</p>
-              <p className={`font-bold ${tierColors[selectedPlayer.tier?.index || 0]?.text || 'text-white'}`}>
+              <p className={`font-bold ${tierColors[selectedPlayer.tier?.index || 0]?.text || 'text-text-primary'}`}>
                 {selectedPlayer.tier?.multiplier || 1}x
               </p>
             </div>

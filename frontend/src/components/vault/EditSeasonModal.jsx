@@ -148,13 +148,13 @@ const EditSeasonModal = ({ leagueId, seasonYear, existingTeams, onClose, onSaved
       >
         <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-display font-bold text-white">Edit {seasonYear} Season</h2>
+            <h2 className="text-lg font-display font-bold text-text-primary">Edit {seasonYear} Season</h2>
             <p className="text-xs text-text-secondary mt-1">
               {teams.length} teams &middot; {changedTeams.length > 0 ? `${changedTeams.length} modified` : 'No changes'}
               {newTeams.length > 0 && ` (${newTeams.length} new)`}
             </p>
           </div>
-          <button onClick={onClose} className="text-text-secondary hover:text-white text-xl">&times;</button>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-xl">&times;</button>
         </div>
 
         <div className="p-5 overflow-y-auto flex-1">
@@ -190,44 +190,44 @@ const EditSeasonModal = ({ leagueId, seasonYear, existingTeams, onClose, onSaved
                     value={team.ownerName}
                     onChange={e => updateTeam(idx, 'ownerName', e.target.value)}
                     placeholder={team._isNew ? 'Owner name...' : ''}
-                    className="flex-1 min-w-0 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm focus:outline-none focus:border-accent-gold"
+                    className="flex-1 min-w-0 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     value={team.wins}
                     onChange={e => updateTeam(idx, 'wins', e.target.value)}
-                    className="w-14 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
+                    className="w-14 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     value={team.losses}
                     onChange={e => updateTeam(idx, 'losses', e.target.value)}
-                    className="w-14 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
+                    className="w-14 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     value={team.ties}
                     onChange={e => updateTeam(idx, 'ties', e.target.value)}
-                    className="w-14 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
+                    className="w-14 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     step="0.1"
                     value={team.pointsFor}
                     onChange={e => updateTeam(idx, 'pointsFor', e.target.value)}
-                    className="w-20 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
+                    className="w-20 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     step="0.1"
                     value={team.pointsAgainst}
                     onChange={e => updateTeam(idx, 'pointsAgainst', e.target.value)}
-                    className="w-20 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
+                    className="w-20 px-1.5 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center font-mono focus:outline-none focus:border-accent-gold"
                   />
                   <select
                     value={team.playoffResult}
                     onChange={e => updateTeam(idx, 'playoffResult', e.target.value)}
-                    className="w-28 px-1 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-white text-xs font-mono focus:outline-none focus:border-accent-gold"
+                    className="w-28 px-1 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-xs font-mono focus:outline-none focus:border-accent-gold"
                   >
                     {PLAYOFF_OPTIONS.map(o => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -271,14 +271,14 @@ const EditSeasonModal = ({ leagueId, seasonYear, existingTeams, onClose, onSaved
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-text-secondary hover:text-white transition-colors"
+              className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving || changedTeams.length === 0}
-              className="px-5 py-2.5 bg-gold text-dark-primary rounded-lg font-display font-bold text-sm hover:bg-gold-bright disabled:opacity-50 shadow-lg shadow-gold/30 transition-colors"
+              className="px-5 py-2.5 bg-gold text-slate rounded-lg font-display font-bold text-sm hover:bg-gold-bright disabled:opacity-50 shadow-lg shadow-gold/30 transition-colors"
             >
               {saving ? 'Saving...' : changedTeams.length === 0 ? 'No Changes' : `Save ${changedTeams.length} Change${changedTeams.length !== 1 ? 's' : ''}`}
             </button>

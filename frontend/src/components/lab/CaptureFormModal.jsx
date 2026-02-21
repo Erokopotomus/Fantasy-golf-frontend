@@ -123,13 +123,13 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg bg-dark-secondary border border-white/[0.08] rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg bg-dark-secondary border border-[var(--card-border)] rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-white/[0.06] flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Quick Capture</h2>
-          <button onClick={onClose} className="text-white/30 hover:text-white/60 transition-colors">
+        <div className="p-5 border-b border-[var(--card-border)] flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-text-primary">Quick Capture</h2>
+          <button onClick={onClose} className="text-text-primary/30 hover:text-text-primary/60 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -146,10 +146,10 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
               placeholder="What's on your mind? A podcast take, gut feeling, stat insight..."
               maxLength={2000}
               rows={4}
-              className="w-full px-3 py-2.5 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50 resize-none"
+              className="w-full px-3 py-2.5 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
             />
             <div className="flex justify-end mt-1">
-              <span className={`text-[10px] ${content.length > 1800 ? 'text-orange' : 'text-white/20'}`}>
+              <span className={`text-[10px] ${content.length > 1800 ? 'text-orange' : 'text-text-primary/20'}`}>
                 {content.length}/2000
               </span>
             </div>
@@ -162,7 +162,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                 <span
                   key={p.id}
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                    p.autoDetected ? 'bg-gold/15 text-gold border border-gold/20' : 'bg-white/10 text-white/70 border border-white/15'
+                    p.autoDetected ? 'bg-gold/15 text-gold border border-gold/20' : 'bg-dark-tertiary/10 text-text-primary/70 border border-stone/40'
                   }`}
                 >
                   {p.name}
@@ -185,16 +185,16 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search player name..."
-                  className="w-full px-3 py-2 text-sm bg-dark-primary border border-gold/30 rounded-lg text-white placeholder-white/30 outline-none"
+                  className="w-full px-3 py-2 text-sm bg-dark-primary border border-gold/30 rounded-lg text-text-primary placeholder-text-muted outline-none"
                   onKeyDown={e => { if (e.key === 'Escape') { setPlayerSearchOpen(false); setSearchQuery('') } }}
                 />
                 {searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-dark-secondary border border-white/10 rounded-lg overflow-hidden z-10 max-h-48 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-dark-secondary border border-stone/30 rounded-lg overflow-hidden z-10 max-h-48 overflow-y-auto">
                     {searchResults.map(p => (
                       <button
                         key={p.id}
                         onClick={() => addManualTag(p)}
-                        className="w-full px-3 py-2 text-sm text-white/70 hover:bg-white/[0.05] text-left transition-colors"
+                        className="w-full px-3 py-2 text-sm text-text-primary/70 hover:bg-dark-tertiary/[0.05] text-left transition-colors"
                       >
                         {p.name}
                       </button>
@@ -217,7 +217,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
 
           {/* Source type pills */}
           <div>
-            <label className="block text-xs font-medium text-white/40 mb-2">Source</label>
+            <label className="block text-xs font-medium text-text-primary/40 mb-2">Source</label>
             <div className="flex flex-wrap gap-1.5">
               {SOURCE_TYPES.map(s => (
                 <button
@@ -226,7 +226,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border ${
                     sourceType === s.value
                       ? 'border-gold/40 bg-gold/10 text-gold'
-                      : 'border-white/[0.08] text-white/30 hover:text-white/50'
+                      : 'border-[var(--card-border)] text-text-primary/30 hover:text-text-primary/50'
                   }`}
                 >
                   {s.label}
@@ -241,13 +241,13 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
               value={sourceName}
               onChange={e => setSourceName(e.target.value)}
               placeholder={`e.g., "${sourceType === 'podcast' ? 'Fantasy Footballers Ep. 412' : sourceType === 'article' ? 'ESPN article on RB rankings' : 'Source details...'  }"`}
-              className="w-full px-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50"
+              className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
             />
           )}
 
           {/* Sentiment */}
           <div>
-            <label className="block text-xs font-medium text-white/40 mb-2">Sentiment</label>
+            <label className="block text-xs font-medium text-text-primary/40 mb-2">Sentiment</label>
             <div className="flex gap-2">
               {SENTIMENTS.map(s => (
                 <button
@@ -257,8 +257,8 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                     sentiment === s.value
                       ? s.color === 'emerald' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
                         : s.color === 'red' ? 'border-red-500/40 bg-red-500/10 text-red-400'
-                        : 'border-white/30 bg-white/10 text-white/70'
-                      : 'border-white/[0.08] text-white/30 hover:text-white/50'
+                        : 'border-stone/60 bg-dark-tertiary/10 text-text-primary/70'
+                      : 'border-[var(--card-border)] text-text-primary/30 hover:text-text-primary/50'
                   }`}
                 >
                   <span>{s.icon}</span>
@@ -272,14 +272,14 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
           <div className="flex justify-end gap-2 pt-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm text-text-primary/50 hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!content.trim() || saving}
-              className="px-5 py-2 text-sm font-semibold bg-gold text-dark-primary rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="px-5 py-2 text-sm font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               {saving ? (
                 <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />

@@ -97,7 +97,7 @@ const ImageUpload = ({
               className="w-full aspect-square object-cover rounded-lg"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm font-medium">Change Image</span>
+              <span className="text-text-primary text-sm font-medium">Change Image</span>
             </div>
             {uploading && (
               <div className="absolute inset-0 bg-dark-primary/80 flex items-center justify-center rounded-lg">

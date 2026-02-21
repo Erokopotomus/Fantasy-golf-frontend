@@ -77,7 +77,7 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
     <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-dark-secondary border border-dark-border rounded-xl shadow-lg z-30 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-dark-border">
-        <h3 className="text-white font-semibold text-sm">Notifications</h3>
+        <h3 className="text-text-primary font-semibold text-sm">Notifications</h3>
         {unreadCount > 0 && (
           <button
             onClick={onMarkAllRead}
@@ -111,7 +111,7 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
               {getTypeIcon(notif.type)}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                  <p className={`text-sm font-medium truncate ${!notif.read ? 'text-white' : 'text-text-secondary'}`}>
+                  <p className={`text-sm font-medium truncate ${!notif.read ? 'text-text-primary' : 'text-text-secondary'}`}>
                     {notif.title}
                   </p>
                   {!notif.read && (

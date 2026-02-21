@@ -45,7 +45,7 @@ const ChatInput = ({ onSend, disabled = false, placeholder = 'Type a message...'
           rows={1}
           className="
             w-full px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-xl
-            text-sm text-white placeholder-text-muted resize-none
+            text-sm text-text-primary placeholder-text-muted resize-none
             focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold
             disabled:opacity-50 disabled:cursor-not-allowed
             scrollbar-thin
@@ -57,7 +57,7 @@ const ChatInput = ({ onSend, disabled = false, placeholder = 'Type a message...'
         type="submit"
         disabled={!message.trim() || disabled}
         className="
-          p-2.5 bg-gold rounded-xl text-white flex-shrink-0
+          p-2.5 bg-gold rounded-xl text-text-primary flex-shrink-0
           hover:bg-gold-bright active:scale-95
           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gold
           transition-all duration-200

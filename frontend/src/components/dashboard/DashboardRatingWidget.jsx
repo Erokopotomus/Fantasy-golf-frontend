@@ -53,7 +53,7 @@ export default function DashboardRatingWidget() {
       <div className="px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm">&#9889;</span>
-          <span className="text-sm font-display font-bold text-white">Clutch Rating</span>
+          <span className="text-sm font-display font-bold text-text-primary">Clutch Rating</span>
         </div>
         {isActive && rating.tier && (
           <RatingTierBadge tier={rating.tier} size="sm" />
@@ -74,7 +74,7 @@ export default function DashboardRatingWidget() {
               />
               <div className="flex-1">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-2xl font-mono font-bold text-white">{rating.overall}</span>
+                  <span className="text-2xl font-mono font-bold text-text-primary">{rating.overall}</span>
                   <RatingTrendIndicator trend={rating.trend} />
                 </div>
                 <RatingConfidenceIndicator
@@ -104,7 +104,7 @@ export default function DashboardRatingWidget() {
                 size="lg"
               />
               <div className="flex-1">
-                <div className="text-sm font-display font-semibold text-white mb-1">
+                <div className="text-sm font-display font-semibold text-text-primary mb-1">
                   Almost There!
                 </div>
                 <div className="text-xs font-mono text-text-muted">
@@ -134,8 +134,8 @@ export default function DashboardRatingWidget() {
         {isLocked && (
           <>
             <div className="text-center py-2 mb-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-dashed border-white/10 mb-3">
-                <span className="text-2xl text-white/20">🔒</span>
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border-2 border-dashed border-stone/30 mb-3">
+                <span className="text-2xl text-text-primary/20">🔒</span>
               </div>
               <div className="text-xs font-mono text-text-muted mb-1">
                 {activeCount > 0

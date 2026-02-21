@@ -2,15 +2,15 @@ import { Link } from 'react-router-dom'
 import FeedCard from './FeedCard'
 
 const SkeletonCard = () => (
-  <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 animate-pulse">
+  <div className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-xl p-4 animate-pulse">
     <div className="flex items-center gap-2 mb-2">
-      <div className="w-2 h-2 rounded-full bg-white/10" />
-      <div className="h-3 w-20 bg-white/10 rounded" />
+      <div className="w-2 h-2 rounded-full bg-dark-tertiary/10" />
+      <div className="h-3 w-20 bg-dark-tertiary/10 rounded" />
     </div>
-    <div className="h-4 w-3/4 bg-white/10 rounded mb-2" />
-    <div className="h-3 w-full bg-white/10 rounded mb-1" />
-    <div className="h-3 w-2/3 bg-white/10 rounded mb-3" />
-    <div className="h-3 w-16 bg-white/10 rounded" />
+    <div className="h-4 w-3/4 bg-dark-tertiary/10 rounded mb-2" />
+    <div className="h-3 w-full bg-dark-tertiary/10 rounded mb-1" />
+    <div className="h-3 w-2/3 bg-dark-tertiary/10 rounded mb-3" />
+    <div className="h-3 w-16 bg-dark-tertiary/10 rounded" />
   </div>
 )
 
@@ -28,7 +28,7 @@ const FeedList = ({ cards, loading, viewAllHref, emptyMessage = 'No updates yet.
   if (!cards || cards.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-white/30 text-sm">{emptyMessage}</p>
+        <p className="text-text-primary/30 text-sm">{emptyMessage}</p>
       </div>
     )
   }

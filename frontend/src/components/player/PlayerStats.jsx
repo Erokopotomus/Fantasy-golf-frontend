@@ -181,7 +181,7 @@ const PlayerStats = ({ player, clutchMetrics }) => {
           <div className="grid grid-cols-2 gap-3">
             {seasonStats.map((stat) => (
               <div key={stat.label} className="bg-dark-primary rounded-lg p-3 text-center">
-                <p className="text-lg font-bold font-display text-white">{stat.value}</p>
+                <p className="text-lg font-bold font-display text-text-primary">{stat.value}</p>
                 <p className="text-xs text-text-muted">{stat.label}</p>
               </div>
             ))}
@@ -197,11 +197,11 @@ const PlayerStats = ({ player, clutchMetrics }) => {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-text-secondary text-sm">OWGR</span>
-            <span className="font-semibold text-white">{formatRankValue(player.owgrRank)}</span>
+            <span className="font-semibold text-text-primary">{formatRankValue(player.owgrRank)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-text-secondary text-sm">DataGolf Rank</span>
-            <span className="font-semibold text-white">{formatRankValue(player.datagolfRank)}</span>
+            <span className="font-semibold text-text-primary">{formatRankValue(player.datagolfRank)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-text-secondary text-sm">DataGolf Skill</span>

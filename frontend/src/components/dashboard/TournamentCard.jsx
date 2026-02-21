@@ -36,7 +36,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
   if (!tournament) {
     return (
       <Card>
-        <h3 className="text-base sm:text-lg font-semibold font-display text-white mb-4">Next Tournament</h3>
+        <h3 className="text-base sm:text-lg font-semibold font-display text-text-primary mb-4">Next Tournament</h3>
         <div className="text-center py-6">
           <p className="text-text-muted text-sm">No upcoming tournaments</p>
         </div>
@@ -70,7 +70,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
     if (tournament.isSignature) return { label: 'Signature', color: 'text-purple-400' }
     if (tournament.isPlayoff) return { label: 'Playoff', color: 'text-orange-400' }
     const tour = tournament.tour
-    if (tour) return { label: tour === 'PGA' ? 'PGA Tour' : tour, color: 'text-white' }
+    if (tour) return { label: tour === 'PGA' ? 'PGA Tour' : tour, color: 'text-text-primary' }
     return null
   }
 
@@ -86,7 +86,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
       <Card hover>
         {/* Header row */}
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-base sm:text-lg font-semibold font-display text-white">
+          <h3 className="text-base sm:text-lg font-semibold font-display text-text-primary">
             {isLive ? 'Live Tournament' : isCompleted ? 'Recent Tournament' : 'Next Tournament'}
           </h3>
           {isLive && (
@@ -122,7 +122,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-white font-semibold truncate">{name}</p>
+            <p className="text-text-primary font-semibold truncate">{name}</p>
             {venue && <p className="text-text-secondary text-sm truncate">{venue}</p>}
           </div>
         </div>
@@ -138,7 +138,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
                   <div
                     key={r}
                     className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                      isCurrent ? 'bg-emerald-500 text-white ring-2 ring-emerald-400/50 scale-110' :
+                      isCurrent ? 'bg-emerald-500 text-text-primary ring-2 ring-emerald-400/50 scale-110' :
                       isPast ? 'bg-dark-tertiary text-emerald-400' :
                       'bg-dark-tertiary/50 text-text-muted'
                     }`}
@@ -159,17 +159,17 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
             <p className="text-text-muted text-xs mb-2 text-center">Starts In</p>
             <div className="flex justify-center gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold font-display text-white">{countdown.days}</p>
+                <p className="text-2xl font-bold font-display text-text-primary">{countdown.days}</p>
                 <p className="text-text-muted text-xs">days</p>
               </div>
               <div className="text-text-muted text-2xl font-light">:</div>
               <div className="text-center">
-                <p className="text-2xl font-bold font-display text-white">{countdown.hours}</p>
+                <p className="text-2xl font-bold font-display text-text-primary">{countdown.hours}</p>
                 <p className="text-text-muted text-xs">hrs</p>
               </div>
               <div className="text-text-muted text-2xl font-light">:</div>
               <div className="text-center">
-                <p className="text-2xl font-bold font-display text-white">{countdown.mins}</p>
+                <p className="text-2xl font-bold font-display text-text-primary">{countdown.mins}</p>
                 <p className="text-text-muted text-xs">min</p>
               </div>
             </div>
@@ -205,7 +205,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
           <div className="bg-dark-primary rounded-lg p-2">
             {isLive && cutLine != null ? (
               <>
-                <p className={`font-semibold text-sm ${cutLine > 0 ? 'text-red-400' : cutLine < 0 ? 'text-emerald-400' : 'text-white'}`}>
+                <p className={`font-semibold text-sm ${cutLine > 0 ? 'text-red-400' : cutLine < 0 ? 'text-emerald-400' : 'text-text-primary'}`}>
                   {formatCutLine(cutLine)}
                 </p>
                 <p className="text-text-muted text-xs">Cut Line</p>
@@ -219,7 +219,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
                 </>
               ) : (
                 <>
-                  <p className="text-white font-semibold text-sm">R{currentRound || 1}</p>
+                  <p className="text-text-primary font-semibold text-sm">R{currentRound || 1}</p>
                   <p className="text-text-muted text-xs">Round</p>
                 </>
               )
@@ -227,7 +227,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
           </div>
 
           <div className="bg-dark-primary rounded-lg p-2">
-            <p className="text-white font-semibold text-sm">{formatDateRange()}</p>
+            <p className="text-text-primary font-semibold text-sm">{formatDateRange()}</p>
             <p className="text-text-muted text-xs">Dates</p>
           </div>
         </div>

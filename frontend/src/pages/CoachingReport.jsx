@@ -45,10 +45,10 @@ const CoachingReport = () => {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-white/5 rounded w-2/3" />
-          <div className="h-4 bg-white/5 rounded w-1/3" />
+          <div className="h-8 bg-dark-tertiary/5 rounded w-2/3" />
+          <div className="h-4 bg-dark-tertiary/5 rounded w-1/3" />
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 bg-white/5 rounded-xl" />
+            <div key={i} className="h-32 bg-dark-tertiary/5 rounded-xl" />
           ))}
         </div>
       </div>
@@ -58,7 +58,7 @@ const CoachingReport = () => {
   if (error || !report) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8 text-center">
-        <p className="text-white/50">{error || 'Report not found'}</p>
+        <p className="text-text-primary/50">{error || 'Report not found'}</p>
         <Link to="/lab" className="text-gold text-sm mt-4 inline-block">Back to The Lab</Link>
       </div>
     )
@@ -79,8 +79,8 @@ const CoachingReport = () => {
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-display text-white">{reportLabel}</h1>
-            <p className="text-xs text-white/30">
+            <h1 className="text-2xl font-bold font-display text-text-primary">{reportLabel}</h1>
+            <p className="text-xs text-text-primary/30">
               Powered by Clutch Coach
               {report.generatedAt && ` · ${new Date(report.generatedAt).toLocaleDateString()}`}
             </p>
@@ -89,12 +89,12 @@ const CoachingReport = () => {
 
         {/* Data confidence indicator */}
         {content.dataConfidence && (
-          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-white/[0.04] rounded-lg">
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-dark-tertiary/[0.04] rounded-lg">
             <div className={`w-2 h-2 rounded-full ${
               content.dataConfidence === 'HIGH' ? 'bg-emerald-400' :
               content.dataConfidence === 'MEDIUM' ? 'bg-yellow-400' : 'bg-orange-400'
             }`} />
-            <span className="text-xs text-white/40">
+            <span className="text-xs text-text-primary/40">
               {content.dataConfidence === 'HIGH' ? 'High confidence — multiple seasons of data' :
                content.dataConfidence === 'MEDIUM' ? 'Medium confidence — building your profile' :
                'Low confidence — more data needed for stronger insights'}
@@ -103,7 +103,7 @@ const CoachingReport = () => {
         )}
 
         {content.caveat && (
-          <p className="text-xs text-white/25 mt-2 italic">{content.caveat}</p>
+          <p className="text-xs text-text-primary/25 mt-2 italic">{content.caveat}</p>
         )}
       </div>
 
@@ -115,16 +115,16 @@ const CoachingReport = () => {
               onClick={() => toggleSection(i)}
               className="w-full flex items-center justify-between text-left"
             >
-              <h3 className="text-base font-semibold font-display text-white">{section.title}</h3>
+              <h3 className="text-base font-semibold font-display text-text-primary">{section.title}</h3>
               <svg
-                className={`w-5 h-5 text-white/30 transition-transform ${expandedSections.has(i) ? 'rotate-180' : ''}`}
+                className={`w-5 h-5 text-text-primary/30 transition-transform ${expandedSections.has(i) ? 'rotate-180' : ''}`}
                 fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             {expandedSections.has(i) && (
-              <div className="mt-3 text-sm text-white/60 leading-relaxed whitespace-pre-line">
+              <div className="mt-3 text-sm text-text-primary/60 leading-relaxed whitespace-pre-line">
                 {section.body}
               </div>
             )}
@@ -135,24 +135,24 @@ const CoachingReport = () => {
       {/* Shareable Card */}
       {content.shareableCard && (
         <Card className="mt-6 bg-gradient-to-r from-purple-500/10 to-gold/10 border-purple-400/20">
-          <h4 className="text-sm font-semibold text-white/70 mb-2">Season Summary</h4>
+          <h4 className="text-sm font-semibold text-text-primary/70 mb-2">Season Summary</h4>
           <div className="grid grid-cols-3 gap-4 text-center">
             {content.shareableCard.accuracy && (
               <div>
                 <p className="text-lg font-bold text-gold">{content.shareableCard.accuracy}</p>
-                <p className="text-[10px] text-white/30">Accuracy</p>
+                <p className="text-[10px] text-text-primary/30">Accuracy</p>
               </div>
             )}
             {content.shareableCard.bestCall && (
               <div>
                 <p className="text-sm font-bold text-emerald-400">{content.shareableCard.bestCall}</p>
-                <p className="text-[10px] text-white/30">Best Call</p>
+                <p className="text-[10px] text-text-primary/30">Best Call</p>
               </div>
             )}
             {content.shareableCard.topStrength && (
               <div>
                 <p className="text-sm font-bold text-purple-400">{content.shareableCard.topStrength}</p>
-                <p className="text-[10px] text-white/30">Strength</p>
+                <p className="text-[10px] text-text-primary/30">Strength</p>
               </div>
             )}
           </div>

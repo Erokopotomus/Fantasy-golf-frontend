@@ -229,7 +229,7 @@ const AdminDashboard = () => {
         enabled ? 'bg-emerald-500' : 'bg-gray-600'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-dark-tertiary rounded-full transition-transform ${
         enabled ? 'translate-x-6' : 'translate-x-0'
       }`} />
     </button>
@@ -238,7 +238,7 @@ const AdminDashboard = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold font-display text-white">Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold font-display text-text-primary">Admin Dashboard</h1>
         <p className="text-text-secondary">System overview and management</p>
       </div>
 
@@ -264,8 +264,8 @@ const AdminDashboard = () => {
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === tab
-                ? 'bg-gold text-white'
-                : 'bg-dark-tertiary text-text-secondary hover:text-white'
+                ? 'bg-gold text-text-primary'
+                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab === 'ai' ? 'AI Engine' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -277,13 +277,13 @@ const AdminDashboard = () => {
       {activeTab === 'users' && (
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Users ({userTotal})</h3>
+            <h3 className="text-lg font-semibold text-text-primary">Users ({userTotal})</h3>
             <input
               type="text"
               placeholder="Search users..."
               value={userSearch}
               onChange={e => { setUserSearch(e.target.value); setUserPage(1) }}
-              className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm w-64 focus:border-gold focus:outline-none"
+              className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm w-64 focus:border-gold focus:outline-none"
             />
           </div>
           <div className="overflow-x-auto">
@@ -302,7 +302,7 @@ const AdminDashboard = () => {
               <tbody>
                 {users.map(u => (
                   <tr key={u.id} className="border-b border-dark-border/50 hover:bg-surface-hover">
-                    <td className="py-2 px-3 text-white">{u.name}</td>
+                    <td className="py-2 px-3 text-text-primary">{u.name}</td>
                     <td className="py-2 px-3 text-text-muted font-mono text-xs">{u.username ? `@${u.username}` : '—'}</td>
                     <td className="py-2 px-3 text-text-secondary">{u.email}</td>
                     <td className="py-2 px-3">
@@ -347,13 +347,13 @@ const AdminDashboard = () => {
       {activeTab === 'leagues' && (
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Leagues ({leagueTotal})</h3>
+            <h3 className="text-lg font-semibold text-text-primary">Leagues ({leagueTotal})</h3>
             <input
               type="text"
               placeholder="Search leagues..."
               value={leagueSearch}
               onChange={e => { setLeagueSearch(e.target.value); setLeaguePage(1) }}
-              className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm w-64 focus:border-gold focus:outline-none"
+              className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm w-64 focus:border-gold focus:outline-none"
             />
           </div>
           <div className="overflow-x-auto">
@@ -371,7 +371,7 @@ const AdminDashboard = () => {
               <tbody>
                 {leagues.map(l => (
                   <tr key={l.id} className="border-b border-dark-border/50 hover:bg-surface-hover">
-                    <td className="py-2 px-3 text-white">{l.name}</td>
+                    <td className="py-2 px-3 text-text-primary">{l.name}</td>
                     <td className="py-2 px-3 text-text-secondary">{l.owner?.name || 'N/A'}</td>
                     <td className="py-2 px-3 text-text-secondary capitalize">{l.format?.replace(/_/g, ' ').toLowerCase()}</td>
                     <td className="py-2 px-3">
@@ -404,12 +404,12 @@ const AdminDashboard = () => {
       {activeTab === 'tournaments' && (
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Tournaments ({tournamentTotal})</h3>
+            <h3 className="text-lg font-semibold text-text-primary">Tournaments ({tournamentTotal})</h3>
             <div className="flex gap-2">
               <select
                 value={tournamentFilter}
                 onChange={e => { setTournamentFilter(e.target.value); setTournamentPage(1) }}
-                className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
               >
                 <option value="">All Statuses</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -422,7 +422,7 @@ const AdminDashboard = () => {
                 placeholder="Search tournaments..."
                 value={tournamentSearch}
                 onChange={e => { setTournamentSearch(e.target.value); setTournamentPage(1) }}
-                className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm w-56 focus:border-gold focus:outline-none"
+                className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm w-56 focus:border-gold focus:outline-none"
               />
             </div>
           </div>
@@ -448,7 +448,7 @@ const AdminDashboard = () => {
                   >
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-white">{t.name}</span>
+                        <span className="text-text-primary">{t.name}</span>
                         {t.isMajor && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gold/20 text-gold">MAJOR</span>}
                         {t.isSignature && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400">SIG</span>}
                       </div>
@@ -494,7 +494,7 @@ const AdminDashboard = () => {
           <Card>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-white">AI Engine Kill Switch</h3>
+                <h3 className="text-lg font-semibold text-text-primary">AI Engine Kill Switch</h3>
                 <p className="text-text-secondary text-sm mt-1">
                   {aiConfig?.enabled
                     ? 'AI Engine is ON. Claude API calls are active.'
@@ -512,7 +512,7 @@ const AdminDashboard = () => {
 
           {/* Feature Toggles */}
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Feature Toggles</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Feature Toggles</h3>
             <p className="text-text-secondary text-sm mb-4">
               Control which AI features are active. The kill switch must be ON for any feature to work.
             </p>
@@ -520,7 +520,7 @@ const AdminDashboard = () => {
               {Object.entries(FEATURE_LABELS).map(([key, label]) => (
                 <div key={key} className="flex items-center justify-between py-3 border-t border-dark-border first:border-t-0">
                   <div>
-                    <p className="text-white font-medium">{label}</p>
+                    <p className="text-text-primary font-medium">{label}</p>
                     <p className="text-text-muted text-xs">{key}</p>
                   </div>
                   <Toggle
@@ -535,7 +535,7 @@ const AdminDashboard = () => {
 
           {/* Token Budget */}
           <Card>
-            <h3 className="text-lg font-semibold text-white mb-4">Daily Token Budget</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Daily Token Budget</h3>
             <p className="text-text-secondary text-sm mb-4">
               When daily token usage hits this limit, all AI calls are automatically paused until midnight reset.
             </p>
@@ -544,14 +544,14 @@ const AdminDashboard = () => {
                 type="number"
                 value={budgetInput}
                 onChange={e => setBudgetInput(e.target.value)}
-                className="w-48 px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm focus:border-gold focus:outline-none"
+                className="w-48 px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 min="0"
               />
               <span className="text-text-muted text-sm">tokens/day</span>
               <button
                 onClick={saveBudget}
                 disabled={aiSaving || budgetInput === String(aiConfig?.dailyTokenBudget)}
-                className="px-4 py-2 bg-gold text-dark-primary text-sm font-semibold rounded-lg hover:bg-gold/90 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-gold text-slate text-sm font-semibold rounded-lg hover:bg-gold/90 disabled:opacity-50 transition-colors"
               >
                 Save
               </button>
@@ -578,7 +578,7 @@ const AdminDashboard = () => {
           {/* Spend Dashboard */}
           {aiSpend && (
             <Card>
-              <h3 className="text-lg font-semibold text-white mb-4">Spend Dashboard</h3>
+              <h3 className="text-lg font-semibold text-text-primary mb-4">Spend Dashboard</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold font-display text-gold">{formatTokens(aiSpend.tokensUsedToday)}</p>
@@ -599,7 +599,7 @@ const AdminDashboard = () => {
               </div>
               <div className="mt-4 pt-4 border-t border-dark-border text-center">
                 <p className="text-text-muted text-sm">
-                  Total API calls: <span className="text-white font-semibold">{aiSpend.totalCallsAllTime?.toLocaleString() || 0}</span>
+                  Total API calls: <span className="text-text-primary font-semibold">{aiSpend.totalCallsAllTime?.toLocaleString() || 0}</span>
                 </p>
               </div>
             </Card>

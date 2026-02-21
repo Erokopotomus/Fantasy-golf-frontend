@@ -62,8 +62,8 @@ const CourseDetail = () => {
     if (val == null) return null
     if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
     if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-    if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-white/30' }
-    return { text: 'Low', color: 'text-text-muted', bar: 'bg-white/10' }
+    if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
+    return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
   }
 
   const dnaCategories = [
@@ -105,7 +105,7 @@ const CourseDetail = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-dark-secondary via-transparent to-transparent" />
 
         <div className="relative p-6">
-          <h1 className="text-3xl font-bold font-display text-white mb-1 tracking-tight">
+          <h1 className="text-3xl font-bold font-display text-text-primary mb-1 tracking-tight">
             {course.name}
           </h1>
           {course.nickname && course.nickname !== course.name && (
@@ -122,37 +122,37 @@ const CourseDetail = () => {
             {course.par && (
               <div>
                 <span className="text-text-muted text-xs uppercase tracking-wide">Par</span>
-                <p className="text-white font-mono font-bold">{course.par}</p>
+                <p className="text-text-primary font-mono font-bold">{course.par}</p>
               </div>
             )}
             {course.yardage && (
               <div>
                 <span className="text-text-muted text-xs uppercase tracking-wide">Yardage</span>
-                <p className="text-white font-mono font-bold">{course.yardage.toLocaleString()}</p>
+                <p className="text-text-primary font-mono font-bold">{course.yardage.toLocaleString()}</p>
               </div>
             )}
             {course.grassType && (
               <div>
                 <span className="text-text-muted text-xs uppercase tracking-wide">Grass</span>
-                <p className="text-white font-mono font-bold">{course.grassType}</p>
+                <p className="text-text-primary font-mono font-bold">{course.grassType}</p>
               </div>
             )}
             {course.architect && (
               <div>
                 <span className="text-text-muted text-xs uppercase tracking-wide">Architect</span>
-                <p className="text-white font-medium">{course.architect}</p>
+                <p className="text-text-primary font-medium">{course.architect}</p>
               </div>
             )}
             {course.yearBuilt && (
               <div>
                 <span className="text-text-muted text-xs uppercase tracking-wide">Year Built</span>
-                <p className="text-white font-mono font-bold">{course.yearBuilt}</p>
+                <p className="text-text-primary font-mono font-bold">{course.yearBuilt}</p>
               </div>
             )}
             {course.elevation && (
               <div>
                 <span className="text-text-muted text-xs uppercase tracking-wide">Elevation</span>
-                <p className="text-white font-mono font-bold">{course.elevation.toLocaleString()} ft</p>
+                <p className="text-text-primary font-mono font-bold">{course.elevation.toLocaleString()} ft</p>
               </div>
             )}
           </div>
@@ -181,10 +181,10 @@ const CourseDetail = () => {
                   <td className="px-2 py-2 text-text-muted font-medium">Par</td>
                   {course.holes.filter(h => h.number <= 9).map(h => (
                     <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
-                      h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-white'
+                      h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-text-primary'
                     }`}>{h.par}</td>
                   ))}
-                  <td className="px-2 py-2 text-center font-mono font-bold text-white">
+                  <td className="px-2 py-2 text-center font-mono font-bold text-text-primary">
                     {course.holes.filter(h => h.number <= 9).reduce((sum, h) => sum + h.par, 0)}
                   </td>
                 </tr>
@@ -220,10 +220,10 @@ const CourseDetail = () => {
                     <td className="px-2 py-2 text-text-muted font-medium">Par</td>
                     {course.holes.filter(h => h.number > 9).map(h => (
                       <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
-                        h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-white'
+                        h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-text-primary'
                       }`}>{h.par}</td>
                     ))}
-                    <td className="px-2 py-2 text-center font-mono font-bold text-white">
+                    <td className="px-2 py-2 text-center font-mono font-bold text-text-primary">
                       {course.holes.filter(h => h.number > 9).reduce((sum, h) => sum + h.par, 0)}
                     </td>
                     <td className="px-2 py-2 text-center font-mono font-bold text-gold">
@@ -272,7 +272,7 @@ const CourseDetail = () => {
           )}
           <Card>
             <p className="text-text-muted text-[10px] uppercase tracking-wider mb-1">Events Played</p>
-            <p className="text-xl font-mono font-bold text-white">{course.courseStats.tournamentsPlayed}</p>
+            <p className="text-xl font-mono font-bold text-text-primary">{course.courseStats.tournamentsPlayed}</p>
           </Card>
         </div>
       )}
@@ -281,7 +281,7 @@ const CourseDetail = () => {
       {dnaCategories.length > 0 && (
         <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
           <div className="p-4 border-b border-dark-border flex items-center justify-between">
-            <h4 className="text-sm font-bold text-white">What Wins Here</h4>
+            <h4 className="text-sm font-bold text-text-primary">What Wins Here</h4>
             {upcomingTournament && (
               <Link
                 to={`/tournaments/${upcomingTournament.id}`}
@@ -303,7 +303,7 @@ const CourseDetail = () => {
                         {cat.rating.text}
                       </span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden mb-1.5">
+                    <div className="h-2 rounded-full bg-dark-tertiary/[0.06] overflow-hidden mb-1.5">
                       <div
                         className={`h-full rounded-full ${cat.rating.bar} transition-all`}
                         style={{ width: `${barPct}%` }}
@@ -330,7 +330,7 @@ const CourseDetail = () => {
         <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
           <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-bold text-white">Best Course Fits</h4>
+              <h4 className="text-sm font-bold text-text-primary">Best Course Fits</h4>
               <p className="text-[10px] text-text-muted mt-0.5">Players whose skills best match this course's DNA</p>
             </div>
             {upcomingTournament && (
@@ -361,7 +361,7 @@ const CourseDetail = () => {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-white group-hover:text-gold transition-colors truncate">
+                    <p className="text-xs font-semibold text-text-primary group-hover:text-gold transition-colors truncate">
                       {p.name}
                     </p>
                     {p.owgr && (
@@ -432,7 +432,7 @@ const CourseDetail = () => {
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-white group-hover:text-gold transition-colors line-clamp-2 leading-snug">
+                    <p className="text-xs font-semibold text-text-primary group-hover:text-gold transition-colors line-clamp-2 leading-snug">
                       {article.headline}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
@@ -491,7 +491,7 @@ const CourseDetail = () => {
                               {ph.player.countryFlag && (
                                 <span className="text-sm">{ph.player.countryFlag}</span>
                               )}
-                              <span className="text-white font-medium text-xs">{ph.player.name}</span>
+                              <span className="text-text-primary font-medium text-xs">{ph.player.name}</span>
                             </Link>
                           </td>
                           <td className="p-3 text-center text-text-secondary font-mono">{ph.rounds}</td>
@@ -549,7 +549,7 @@ const CourseDetail = () => {
                         <td className="p-3">
                           <Link
                             to={`/tournaments/${t.id}`}
-                            className="text-white font-medium hover:text-gold transition-colors"
+                            className="text-text-primary font-medium hover:text-gold transition-colors"
                           >
                             {t.name}
                           </Link>

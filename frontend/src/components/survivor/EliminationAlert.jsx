@@ -21,7 +21,7 @@ const EliminationAlert = ({ isEliminated, eliminatedWeek, canBuyBack, onBuyBack,
           </svg>
         </div>
 
-        <h2 className="text-2xl font-bold font-display text-white text-center mb-2">You've Been Eliminated!</h2>
+        <h2 className="text-2xl font-bold font-display text-text-primary text-center mb-2">You've Been Eliminated!</h2>
         <p className="text-text-secondary text-center mb-6">
           Your team had the lowest score in Week {eliminatedWeek} and has been eliminated from the survivor pool.
         </p>
@@ -40,7 +40,7 @@ const EliminationAlert = ({ isEliminated, eliminatedWeek, canBuyBack, onBuyBack,
             <button
               onClick={onBuyBack}
               disabled={loading}
-              className="w-full py-2 bg-yellow-500 text-dark-primary font-semibold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
+              className="w-full py-2 bg-yellow-500 text-slate font-semibold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
             >
               {loading ? 'Processing...' : 'Use Buy-Back'}
             </button>
@@ -55,7 +55,7 @@ const EliminationAlert = ({ isEliminated, eliminatedWeek, canBuyBack, onBuyBack,
 
         <button
           onClick={() => setShow(false)}
-          className="w-full py-2 bg-dark-tertiary text-white font-medium rounded-lg hover:bg-dark-primary transition-colors"
+          className="w-full py-2 bg-dark-tertiary text-text-primary font-medium rounded-lg hover:bg-dark-primary transition-colors"
         >
           {canBuyBack ? 'Maybe Later' : 'Close'}
         </button>

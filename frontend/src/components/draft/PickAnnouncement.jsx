@@ -43,7 +43,7 @@ const PickAnnouncement = ({ pick, isUserPick }) => {
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="text-4xl">{pick.playerFlag}</span>
             <div>
-              <p className="text-2xl font-bold font-display text-white">{pick.playerName}</p>
+              <p className="text-2xl font-bold font-display text-text-primary">{pick.playerName}</p>
               <p className="text-text-muted">Rank #{pick.playerRank}</p>
             </div>
           </div>

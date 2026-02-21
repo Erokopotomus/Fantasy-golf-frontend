@@ -31,7 +31,7 @@ const Draft = () => {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">Draft Center</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary">Draft Center</h1>
             <p className="text-text-secondary mt-1">
               Access your league drafts or practice with a mock draft
             </p>
@@ -48,7 +48,7 @@ const Draft = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">Draft History & Grades</h3>
+                    <h3 className="text-text-primary font-bold text-lg">Draft History & Grades</h3>
                     <p className="text-text-secondary text-sm">Review past drafts with pick-by-pick grades</p>
                   </div>
                 </div>
@@ -70,7 +70,7 @@ const Draft = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">Mock Draft</h3>
+                    <h3 className="text-text-primary font-bold text-lg">Mock Draft</h3>
                     <p className="text-text-secondary text-sm">Practice your strategy against AI opponents</p>
                   </div>
                 </div>
@@ -82,7 +82,7 @@ const Draft = () => {
           </Link>
 
           {/* League Drafts */}
-          <h2 className="text-lg font-semibold font-display text-white mb-4">League Drafts</h2>
+          <h2 className="text-lg font-semibold font-display text-text-primary mb-4">League Drafts</h2>
 
           {leagues.length === 0 ? (
             <Card className="text-center py-12">
@@ -91,7 +91,7 @@ const Draft = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">No Leagues Yet</h3>
+              <h3 className="text-lg font-medium text-text-primary mb-2">No Leagues Yet</h3>
               <p className="text-text-secondary mb-6">
                 Join or create a league to access draft rooms
               </p>
@@ -122,7 +122,7 @@ const Draft = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          <h3 className="text-lg font-semibold font-display text-white">{league.name}</h3>
+                          <h3 className="text-lg font-semibold font-display text-text-primary">{league.name}</h3>
                           {isDraftReady && (
                             <span className="px-2 py-0.5 rounded text-xs font-medium bg-gold/20 text-gold">
                               {memberCount >= maxMembers ? 'Ready to Draft' : 'Pre-Draft'}
@@ -163,17 +163,17 @@ const Draft = () => {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                         <div>
                           <p className="text-text-muted text-xs">Type</p>
-                          <p className="text-white font-medium">{typeLabel}</p>
+                          <p className="text-text-primary font-medium">{typeLabel}</p>
                         </div>
                         <div>
                           <p className="text-text-muted text-xs">Scoring</p>
-                          <p className="text-white font-medium">
+                          <p className="text-text-primary font-medium">
                             {league.settings?.scoringType === 'strokes-gained' ? 'Strokes Gained' : 'Standard'}
                           </p>
                         </div>
                         <div>
                           <p className="text-text-muted text-xs">Roster Size</p>
-                          <p className="text-white font-medium">{league.settings?.rosterSize || 6}</p>
+                          <p className="text-text-primary font-medium">{league.settings?.rosterSize || 6}</p>
                         </div>
                         <div>
                           <p className="text-text-muted text-xs">Status</p>
@@ -207,7 +207,7 @@ const Draft = () => {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-medium mb-1">Draft Tips</h3>
+                <h3 className="text-text-primary font-medium mb-1">Draft Tips</h3>
                 <ul className="text-text-muted text-sm space-y-1">
                   <li>Build your draft queue before the draft starts</li>
                   <li>Queue players auto-pick if you run out of time</li>

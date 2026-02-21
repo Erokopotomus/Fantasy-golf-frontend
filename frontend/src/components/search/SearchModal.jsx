@@ -123,12 +123,12 @@ const SearchModal = ({ isOpen, onClose }) => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search players, leagues, tournaments..."
-              className="flex-1 bg-transparent text-white placeholder-text-muted outline-none text-lg"
+              className="flex-1 bg-transparent text-text-primary placeholder-text-muted outline-none text-lg"
             />
             {query && (
               <button
                 onClick={clearSearch}
-                className="text-text-muted hover:text-white transition-colors"
+                className="text-text-muted hover:text-text-primary transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -234,7 +234,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                   </p>
                   <button
                     onClick={clearRecentSearches}
-                    className="text-xs text-text-muted hover:text-white transition-colors"
+                    className="text-xs text-text-muted hover:text-text-primary transition-colors"
                   >
                     Clear
                   </button>
@@ -293,7 +293,7 @@ const SearchResultItem = ({ item, isSelected, onClick, getTypeBadgeColor, showTy
     >
       <span className="text-xl flex-shrink-0">{item.icon}</span>
       <div className="flex-1 min-w-0">
-        <p className={`font-medium truncate ${isSelected ? 'text-gold' : 'text-white'}`}>
+        <p className={`font-medium truncate ${isSelected ? 'text-gold' : 'text-text-primary'}`}>
           {item.name}
         </p>
         <p className="text-text-muted text-sm truncate">{item.subtitle}</p>

@@ -51,16 +51,16 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
   return (
     <div className="flex flex-col h-full">
       {/* Search */}
-      <div className="p-3 border-b border-white/[0.06] space-y-2">
+      <div className="p-3 border-b border-[var(--card-border)] space-y-2">
         <div className="relative">
-          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-primary/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search players..."
-            className="w-full pl-8 pr-3 py-2 text-sm bg-dark-primary border border-white/[0.08] rounded-lg text-white placeholder-white/30 outline-none focus:border-gold/50"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
           />
         </div>
 
@@ -70,7 +70,7 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
             <button
               onClick={() => setPosition(null)}
               className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors ${
-                !position ? 'bg-gold/20 text-gold' : 'bg-white/[0.04] text-white/40 hover:text-white/60'
+                !position ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary/[0.04] text-text-primary/40 hover:text-text-primary/60'
               }`}
             >
               All
@@ -80,7 +80,7 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
                 key={pos}
                 onClick={() => setPosition(position === pos ? null : pos)}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors ${
-                  position === pos ? 'bg-gold/20 text-gold' : 'bg-white/[0.04] text-white/40 hover:text-white/60'
+                  position === pos ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary/[0.04] text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {pos}
@@ -97,21 +97,21 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
             <div className="w-5 h-5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
           </div>
         ) : filteredPlayers.length === 0 ? (
-          <div className="text-center py-8 text-white/30 text-sm">
+          <div className="text-center py-8 text-text-primary/30 text-sm">
             {search ? 'No players found' : 'All players on board'}
           </div>
         ) : (
           filteredPlayers.map(player => (
             <div
               key={player.id}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-white/[0.04] transition-colors group"
+              className="flex items-center gap-2 px-3 py-2 hover:bg-dark-tertiary/[0.04] transition-colors group"
             >
               {/* Headshot */}
               <div className="w-7 h-7 rounded-full bg-dark-primary overflow-hidden shrink-0">
                 {player.headshotUrl ? (
                   <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white/20 text-[10px] font-bold">
+                  <div className="w-full h-full flex items-center justify-center text-text-primary/20 text-[10px] font-bold">
                     {player.name?.charAt(0) || '?'}
                   </div>
                 )}
@@ -119,8 +119,8 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-white truncate">{player.name}</div>
-                <div className="text-[11px] text-white/40">
+                <div className="text-sm text-text-primary truncate">{player.name}</div>
+                <div className="text-[11px] text-text-primary/40">
                   {sport === 'nfl' ? (
                     <>{player.nflPosition || player.position} {player.nflTeamAbbr || player.team && `· ${player.nflTeamAbbr || player.team}`}</>
                   ) : (

@@ -183,7 +183,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
               onClick={() => s < step && setStep(s)}
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                 s === step
-                  ? 'bg-gold text-white'
+                  ? 'bg-gold text-text-primary'
                   : s < step
                   ? 'bg-gold/20 text-gold cursor-pointer hover:bg-gold/30'
                   : 'bg-dark-tertiary text-text-muted'
@@ -231,7 +231,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
               >
                 <span className="text-2xl">{'\u26F3'}</span>
                 <div>
-                  <span className="text-white font-medium block">Golf</span>
+                  <span className="text-text-primary font-medium block">Golf</span>
                   <span className="text-text-muted text-xs">PGA Tour</span>
                 </div>
               </button>
@@ -248,7 +248,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
               >
                 <span className="text-2xl">{'\uD83C\uDFC8'}</span>
                 <div>
-                  <span className="text-white font-medium block">NFL</span>
+                  <span className="text-text-primary font-medium block">NFL</span>
                   <span className="text-text-muted text-xs">Football</span>
                 </div>
               </button>
@@ -278,7 +278,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
             {isNfl ? (
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Roster Size</label>
-                <div className="px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-white text-sm">
+                <div className="px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm">
                   17 players <span className="text-text-muted">(QB, 2 RB, 3 WR, TE, FLEX, K, DEF, 6 BN, IR)</span>
                 </div>
               </div>
@@ -321,7 +321,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                           <div className="w-2 h-2 rounded-full bg-gold" />
                         )}
                       </div>
-                      <span className="text-white font-medium">{opt.label}</span>
+                      <span className="text-text-primary font-medium">{opt.label}</span>
                     </div>
                     <p className="text-text-muted text-sm">{opt.desc}</p>
                   </button>
@@ -347,7 +347,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                         <div className="w-2 h-2 rounded-full bg-gold" />
                       )}
                     </div>
-                    <span className="text-white font-medium">Standard</span>
+                    <span className="text-text-primary font-medium">Standard</span>
                   </div>
                   <p className="text-text-muted text-sm">
                     Points based on tournament finish
@@ -372,7 +372,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                         <div className="w-2 h-2 rounded-full bg-gold" />
                       )}
                     </div>
-                    <span className="text-white font-medium">Strokes Gained</span>
+                    <span className="text-text-primary font-medium">Strokes Gained</span>
                   </div>
                   <p className="text-text-muted text-sm">
                     Advanced stats-based scoring
@@ -434,7 +434,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
               </svg>
             </div>
             <div>
-              <p className="text-white font-medium">{selectedFormat?.name}</p>
+              <p className="text-text-primary font-medium">{selectedFormat?.name}</p>
               <p className="text-sm text-text-muted">{selectedFormat?.description}</p>
             </div>
           </div>
@@ -443,29 +443,29 @@ const LeagueForm = ({ onSubmit, loading }) => {
 
           {/* League Summary */}
           <Card className="bg-dark-primary">
-            <h3 className="text-white font-medium mb-3">League Summary</h3>
+            <h3 className="text-text-primary font-medium mb-3">League Summary</h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-text-muted">League Name:</span>
-                <span className="text-white ml-2">{formData.name}</span>
+                <span className="text-text-primary ml-2">{formData.name}</span>
               </div>
               <div>
                 <span className="text-text-muted">Format:</span>
-                <span className="text-white ml-2">{selectedFormat?.name}</span>
+                <span className="text-text-primary ml-2">{selectedFormat?.name}</span>
               </div>
               <div>
                 <span className="text-text-muted">Draft Type:</span>
-                <span className="text-white ml-2 capitalize">
+                <span className="text-text-primary ml-2 capitalize">
                   {formData.format === 'one-and-done' ? 'None' : formData.draftType}
                 </span>
               </div>
               <div>
                 <span className="text-text-muted">Sport:</span>
-                <span className="text-white ml-2 capitalize">{formData.sport === 'nfl' ? 'NFL' : 'Golf'}</span>
+                <span className="text-text-primary ml-2 capitalize">{formData.sport === 'nfl' ? 'NFL' : 'Golf'}</span>
               </div>
               <div>
                 <span className="text-text-muted">Scoring:</span>
-                <span className="text-white ml-2">
+                <span className="text-text-primary ml-2">
                   {isNfl
                     ? NFL_SCORING_OPTIONS.find(o => o.key === formData.scoringType)?.label || formData.scoringType
                     : formData.scoringType === 'strokes-gained' ? 'Strokes Gained' : 'Standard'
@@ -475,17 +475,17 @@ const LeagueForm = ({ onSubmit, loading }) => {
               {formData.format !== 'one-and-done' && (
                 <div>
                   <span className="text-text-muted">Roster Size:</span>
-                  <span className="text-white ml-2">{formData.rosterSize} players</span>
+                  <span className="text-text-primary ml-2">{formData.rosterSize} players</span>
                 </div>
               )}
               <div>
                 <span className="text-text-muted">Max Members:</span>
-                <span className="text-white ml-2">{formData.maxMembers} teams</span>
+                <span className="text-text-primary ml-2">{formData.maxMembers} teams</span>
               </div>
               {formData.draftType === 'auction' && formData.format !== 'one-and-done' && (
                 <div className="col-span-2">
                   <span className="text-text-muted">Budget:</span>
-                  <span className="text-white ml-2">${formData.budget}</span>
+                  <span className="text-text-primary ml-2">${formData.budget}</span>
                 </div>
               )}
             </div>

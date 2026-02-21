@@ -8,7 +8,7 @@ export default function TierBreak({ tier, onRemove }) {
       <div className="flex-1 h-px bg-gradient-to-l from-gold/60 via-gold/30 to-transparent" />
       <button
         onClick={onRemove}
-        className="p-0.5 text-white/0 group-hover:text-white/30 hover:!text-red-400 transition-colors shrink-0"
+        className="p-0.5 text-text-primary/0 group-hover:text-text-primary/30 hover:!text-red-400 transition-colors shrink-0"
         title="Remove tier break"
       >
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

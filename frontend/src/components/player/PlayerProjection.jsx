@@ -77,7 +77,7 @@ const PlayerProjection = ({ projection }) => {
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/30 via-yellow-500/30 to-green-500/30 rounded-full" />
           {/* Projected marker */}
           <div
-            className="absolute top-0 h-full w-1.5 bg-white rounded-full shadow-lg"
+            className="absolute top-0 h-full w-1.5 bg-dark-tertiary rounded-full shadow-lg"
             style={{ left: `${Math.min(Math.max(projectedPct, 2), 98)}%`, transform: 'translateX(-50%)' }}
           />
         </div>
@@ -103,7 +103,7 @@ const PlayerProjection = ({ projection }) => {
 
         {/* Recent Avg */}
         <div className="bg-dark-primary rounded-lg p-3 text-center">
-          <p className="text-lg font-bold font-display text-white">{recentAvg.toFixed(1)}</p>
+          <p className="text-lg font-bold font-display text-text-primary">{recentAvg.toFixed(1)}</p>
           <p className="text-xs text-text-muted">Recent Avg</p>
         </div>
       </div>

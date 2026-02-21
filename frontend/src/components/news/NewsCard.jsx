@@ -134,7 +134,7 @@ const NewsCard = ({ item, compact = false }) => {
         <div className="flex items-start gap-3">
           <span className={`text-lg ${config.text}`}>{config.icon}</span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white font-medium line-clamp-2">{item.headline}</p>
+            <p className="text-sm text-text-primary font-medium line-clamp-2">{item.headline}</p>
             <div className="flex items-center gap-2 mt-1 text-xs text-text-muted">
               {item.playerFlag && <span>{item.playerFlag}</span>}
               <span>{formatTimeAgo(item.timestamp || item.published)}</span>
@@ -196,12 +196,12 @@ const NewsCard = ({ item, compact = false }) => {
               className="flex items-center gap-2 mb-1 hover:text-gold transition-colors"
             >
               <span className="text-lg">{item.playerFlag}</span>
-              <span className="font-medium text-white text-sm">{item.playerName}</span>
+              <span className="font-medium text-text-primary text-sm">{item.playerName}</span>
             </button>
           )}
 
           {/* Content */}
-          <h4 className="text-white font-semibold text-sm leading-snug mb-1">{item.headline}</h4>
+          <h4 className="text-text-primary font-semibold text-sm leading-snug mb-1">{item.headline}</h4>
           {(item.summary || item.description) && (
             <p className="text-xs text-text-secondary mb-2 line-clamp-2">{item.summary || item.description}</p>
           )}

@@ -173,13 +173,13 @@ export default function VaultPublicLanding() {
             <>
               <Link
                 to="/login"
-                className="px-3.5 py-1.5 rounded-md border border-dark-border text-[11px] font-mono font-medium text-text-muted hover:text-white transition-colors"
+                className="px-3.5 py-1.5 rounded-md border border-dark-border text-[11px] font-mono font-medium text-text-muted hover:text-text-primary transition-colors"
               >
                 Log In
               </Link>
               <button
                 onClick={handleCTA}
-                className="px-3.5 py-1.5 rounded-md text-[11px] font-mono font-bold bg-accent-gold text-dark-primary hover:bg-accent-gold/90 transition-colors"
+                className="px-3.5 py-1.5 rounded-md text-[11px] font-mono font-bold bg-accent-gold text-slate hover:bg-accent-gold/90 transition-colors"
               >
                 Sign Up Free
               </button>
@@ -275,7 +275,7 @@ export default function VaultPublicLanding() {
 
               {/* Clutch Rating display */}
               {ratings[memberOwner.name] && (
-                <div className="flex items-center justify-center gap-3 mt-5 pt-5 border-t border-white/5">
+                <div className="flex items-center justify-center gap-3 mt-5 pt-5 border-t border-stone/20">
                   <RatingRing
                     rating={ratings[memberOwner.name].overall}
                     confidence={ratings[memberOwner.name].confidence}
@@ -285,7 +285,7 @@ export default function VaultPublicLanding() {
                   />
                   <div className="text-left">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-lg font-mono font-bold text-white">{ratings[memberOwner.name].overall}</span>
+                      <span className="text-lg font-mono font-bold text-text-primary">{ratings[memberOwner.name].overall}</span>
                       <RatingTierBadge tier={ratings[memberOwner.name].tier} size="sm" />
                     </div>
                     <div className="text-[10px] font-mono text-text-muted">Clutch Rating</div>

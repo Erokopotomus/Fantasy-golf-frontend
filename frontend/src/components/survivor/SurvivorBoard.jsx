@@ -33,7 +33,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
       {/* Alive Teams */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold font-display text-white flex items-center gap-2">
+          <h3 className="text-lg font-semibold font-display text-text-primary flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-gold animate-pulse"></div>
             Still Alive
           </h3>
@@ -71,7 +71,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className={`font-medium ${isUser ? 'text-gold' : 'text-white'}`}>
+                      <p className={`font-medium ${isUser ? 'text-gold' : 'text-text-primary'}`}>
                         {team.name}
                       </p>
                       {getStatusBadge(team.status)}
@@ -98,7 +98,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
       {eliminatedTeams.length > 0 && (
         <Card>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold font-display text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold font-display text-text-primary flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-red-400"></div>
               Eliminated
             </h3>
@@ -127,7 +127,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className={`font-medium ${isUser ? 'text-red-400' : 'text-white'}`}>
+                        <p className={`font-medium ${isUser ? 'text-red-400' : 'text-text-primary'}`}>
                           {team.name}
                         </p>
                         {getStatusBadge(team.status)}
@@ -141,7 +141,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
                     {isUser && canBuyBack && onBuyBack && (
                       <button
                         onClick={() => onBuyBack(team.userId)}
-                        className="px-3 py-1 bg-yellow-500 text-dark-primary text-sm font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
+                        className="px-3 py-1 bg-yellow-500 text-slate text-sm font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
                       >
                         Use Buy-Back
                       </button>
@@ -156,7 +156,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
       {/* Elimination History */}
       {survivorData?.eliminations?.length > 0 && (
         <Card>
-          <h3 className="text-lg font-semibold font-display text-white mb-4">Elimination History</h3>
+          <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Elimination History</h3>
           <div className="space-y-2">
             {survivorData.eliminations
               .sort((a, b) => b.week - a.week)
@@ -164,7 +164,7 @@ const SurvivorBoard = ({ standings, survivorData, currentUserId, onBuyBack }) =>
                 <div key={index} className="flex items-center justify-between p-3 bg-dark-tertiary rounded-lg">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-text-muted">Week {elimination.week}</span>
-                    <span className="text-white font-medium">{elimination.name}</span>
+                    <span className="text-text-primary font-medium">{elimination.name}</span>
                   </div>
                   <span className="text-sm text-red-400">{elimination.points} pts</span>
                 </div>

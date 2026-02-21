@@ -167,7 +167,7 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
                 endWeekNumber: endWeekId ? weeks.find(w => w.id === endWeekId)?.weekNumber : null,
               })
             }}
-            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none text-sm"
+            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none text-sm"
           >
             <option value="">First tournament of season</option>
             {weeks.map((w) => (
@@ -195,7 +195,7 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
                 endWeekNumber: week?.weekNumber || null,
               })
             }}
-            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-white focus:border-gold focus:outline-none text-sm"
+            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none text-sm"
           >
             <option value="">Last tournament of season</option>
             {endOptions.map((opt, i) => {

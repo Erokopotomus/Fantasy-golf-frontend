@@ -107,9 +107,9 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
           <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
-          <h3 className="text-sm font-bold text-white">Lineup Optimizer</h3>
+          <h3 className="text-sm font-bold text-text-primary">Lineup Optimizer</h3>
         </div>
-        <button onClick={onClose} className="text-text-muted hover:text-white text-xs">
+        <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xs">
           Close
         </button>
       </div>
@@ -131,7 +131,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                 className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
                   sortBy === opt.id
                     ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'text-text-muted hover:text-white'
+                    : 'text-text-muted hover:text-text-primary'
                 }`}
               >
                 {opt.label}
@@ -174,7 +174,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-sm flex-shrink-0">{p.countryFlag || '?'}</span>
                       <div className="min-w-0">
-                        <p className="text-white text-xs font-medium truncate">{p.name}</p>
+                        <p className="text-text-primary text-xs font-medium truncate">{p.name}</p>
                         <div className="flex items-center gap-1.5 text-[10px] text-text-muted">
                           {isCurrent && <span className="text-emerald-400">Active</span>}
                           {isOptimal && !isCurrent && <span className="text-yellow-400">Suggested</span>}
@@ -187,7 +187,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     <div className="text-center">
                       <span className={`text-xs font-bold ${
                         (p.projection?.projected || 0) > 30 ? 'text-emerald-400' :
-                        (p.projection?.projected || 0) > 20 ? 'text-white' : 'text-text-muted'
+                        (p.projection?.projected || 0) > 20 ? 'text-text-primary' : 'text-text-muted'
                       }`}>
                         {p.projection?.projected?.toFixed(1) || '\u2014'}
                       </span>
@@ -197,7 +197,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     <div className="text-center">
                       <span className={`text-xs font-medium ${
                         (p.sgTotal || 0) > 1 ? 'text-emerald-400' :
-                        (p.sgTotal || 0) > 0 ? 'text-white' : 'text-red-400'
+                        (p.sgTotal || 0) > 0 ? 'text-text-primary' : 'text-red-400'
                       }`}>
                         {p.sgTotal != null ? (p.sgTotal > 0 ? '+' : '') + p.sgTotal.toFixed(1) : '\u2014'}
                       </span>
@@ -219,7 +219,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     <div className="text-center">
                       <span className={`text-xs font-medium ${
                         (p.projection?.consistency || 0) > 70 ? 'text-emerald-400' :
-                        (p.projection?.consistency || 0) > 40 ? 'text-white' : 'text-yellow-400'
+                        (p.projection?.consistency || 0) > 40 ? 'text-text-primary' : 'text-yellow-400'
                       }`}>
                         {p.projection?.consistency?.toFixed(0) || '\u2014'}
                       </span>
@@ -235,7 +235,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
             <div className="px-3 pb-3">
               <button
                 onClick={() => onApply([...optimalIds])}
-                className="w-full py-2.5 rounded-lg text-sm font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                className="w-full py-2.5 rounded-lg text-sm font-medium bg-emerald-500 text-text-primary hover:bg-emerald-600 transition-colors"
               >
                 Apply Suggested Lineup
               </button>

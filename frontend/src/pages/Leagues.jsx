@@ -25,7 +25,7 @@ const Leagues = () => {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-display text-white">My Leagues</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary">My Leagues</h1>
               <p className="text-text-secondary mt-1">
                 Manage your fantasy leagues
               </p>
@@ -57,7 +57,7 @@ const Leagues = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">No Leagues Yet</h3>
+              <h3 className="text-lg font-medium text-text-primary mb-2">No Leagues Yet</h3>
               <p className="text-text-secondary mb-6">
                 Create your first league or join an existing one to start competing!
               </p>
@@ -83,7 +83,7 @@ const Leagues = () => {
                     {/* League Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold font-display text-white">{league.name}</h3>
+                        <h3 className="text-lg font-semibold font-display text-text-primary">{league.name}</h3>
                         {league.settings?.importedFrom ? (
                           <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400">
                             Imported from {league.settings.importedFrom.charAt(0).toUpperCase() + league.settings.importedFrom.slice(1)}

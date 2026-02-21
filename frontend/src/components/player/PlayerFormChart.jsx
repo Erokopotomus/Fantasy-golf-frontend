@@ -42,7 +42,7 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
                 className={`w-full rounded-t ${getPositionColor(pos)} transition-all`}
                 style={{ height: `${height}%` }}
               />
-              <span className="text-xs text-white font-medium mt-1">{pos}</span>
+              <span className="text-xs text-text-primary font-medium mt-1">{pos}</span>
             </div>
           )
         })}
@@ -56,7 +56,7 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
             {tournamentHistory.slice(0, 5).map((t, index) => (
               <div key={index} className="flex items-center justify-between text-sm">
                 <span className="text-text-secondary truncate flex-1 mr-2">{t.name}</span>
-                <span className={`font-medium ${getPositionValue(t.position) <= 10 ? 'text-gold' : 'text-white'}`}>
+                <span className={`font-medium ${getPositionValue(t.position) <= 10 ? 'text-gold' : 'text-text-primary'}`}>
                   {t.position}
                 </span>
               </div>

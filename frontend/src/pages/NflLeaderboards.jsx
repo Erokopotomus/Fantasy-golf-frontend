@@ -142,18 +142,18 @@ export default function NflLeaderboards() {
   return (
     <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-display font-bold text-white mb-1">NFL Stat Leaderboards</h1>
-        <p className="text-white/40 text-sm">Season leaders across every category</p>
+        <h1 className="text-3xl font-display font-bold text-text-primary mb-1">NFL Stat Leaderboards</h1>
+        <p className="text-text-primary/40 text-sm">Season leaders across every category</p>
       </div>
 
       {/* Category tabs */}
-      <div className="flex gap-1 bg-white/5 rounded-lg p-1 mb-4 overflow-x-auto">
+      <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1 mb-4 overflow-x-auto">
         {CATEGORIES.map(cat => (
           <button
             key={cat.key}
             onClick={() => selectCategory(cat.key)}
             className={`px-4 py-2 rounded-md text-sm font-bold whitespace-nowrap transition-colors ${
-              activeCat === cat.key ? 'bg-gold/20 text-gold' : 'text-white/40 hover:text-white/60'
+              activeCat === cat.key ? 'bg-gold/20 text-gold' : 'text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             {cat.label}
@@ -170,7 +170,7 @@ export default function NflLeaderboards() {
               key={s.value}
               onClick={() => updateParam('stat', s.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-colors ${
-                activeStat === s.value ? 'bg-gold text-dark-primary' : 'bg-white/5 text-white/40 hover:text-white/60'
+                activeStat === s.value ? 'bg-gold text-slate' : 'bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary/60'
               }`}
             >
               {s.label}
@@ -178,13 +178,13 @@ export default function NflLeaderboards() {
           ))}
         </div>
 
-        <div className="h-4 w-px bg-white/10 hidden sm:block" />
+        <div className="h-4 w-px bg-dark-tertiary/10 hidden sm:block" />
 
         {/* Position filter */}
         <select
           value={position || 'ALL'}
           onChange={e => updateParam('position', e.target.value === 'ALL' ? '' : e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white font-mono appearance-none cursor-pointer"
+          className="bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
         >
           {POSITIONS.map(p => (
             <option key={p} value={p} className="bg-dark-primary">{p === 'ALL' ? 'All Positions' : p}</option>
@@ -195,7 +195,7 @@ export default function NflLeaderboards() {
         <select
           value={team}
           onChange={e => updateParam('team', e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white font-mono appearance-none cursor-pointer"
+          className="bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
         >
           <option value="" className="bg-dark-primary">All Teams</option>
           {NFL_TEAMS.map(t => (
@@ -207,7 +207,7 @@ export default function NflLeaderboards() {
         <select
           value={season}
           onChange={e => updateParam('season', e.target.value)}
-          className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white font-mono appearance-none cursor-pointer"
+          className="bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
         >
           {[2024, 2023, 2022, 2021, 2020].map(s => (
             <option key={s} value={s} className="bg-dark-primary">{s}</option>
@@ -217,57 +217,57 @@ export default function NflLeaderboards() {
 
       {/* Results count */}
       {data && !loading && (
-        <div className="text-white/30 text-xs font-mono mb-3">
+        <div className="text-text-primary/30 text-xs font-mono mb-3">
           {data.total} players | {data.statLabel} | {data.season} season
         </div>
       )}
 
       {/* Leaderboard table */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden">
+      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-center px-3 py-3 text-white/40 text-xs font-mono uppercase w-12">#</th>
-                <th className="text-left px-3 py-3 text-white/40 text-xs font-mono uppercase">Player</th>
-                <th className="text-center px-3 py-3 text-white/40 text-xs font-mono uppercase w-16">Pos</th>
-                <th className="text-center px-3 py-3 text-white/40 text-xs font-mono uppercase w-16 hidden sm:table-cell">Team</th>
-                <th className="text-center px-3 py-3 text-white/40 text-xs font-mono uppercase w-12">GP</th>
+              <tr className="border-b border-stone/30">
+                <th className="text-center px-3 py-3 text-text-primary/40 text-xs font-mono uppercase w-12">#</th>
+                <th className="text-left px-3 py-3 text-text-primary/40 text-xs font-mono uppercase">Player</th>
+                <th className="text-center px-3 py-3 text-text-primary/40 text-xs font-mono uppercase w-16">Pos</th>
+                <th className="text-center px-3 py-3 text-text-primary/40 text-xs font-mono uppercase w-16 hidden sm:table-cell">Team</th>
+                <th className="text-center px-3 py-3 text-text-primary/40 text-xs font-mono uppercase w-12">GP</th>
                 {columns.map(c => (
-                  <th key={c.key} className="text-right px-3 py-3 text-white/40 text-xs font-mono uppercase hidden md:table-cell">{c.label}</th>
+                  <th key={c.key} className="text-right px-3 py-3 text-text-primary/40 text-xs font-mono uppercase hidden md:table-cell">{c.label}</th>
                 ))}
                 <th className="text-right px-3 py-3 text-gold text-xs font-mono uppercase font-bold">{data?.statLabel || 'Value'}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6 + columns.length} className="text-center py-12 text-white/20">Loading...</td></tr>
+                <tr><td colSpan={6 + columns.length} className="text-center py-12 text-text-primary/20">Loading...</td></tr>
               ) : data?.players?.length === 0 ? (
-                <tr><td colSpan={6 + columns.length} className="text-center py-12 text-white/20">No data for these filters</td></tr>
+                <tr><td colSpan={6 + columns.length} className="text-center py-12 text-text-primary/20">No data for these filters</td></tr>
               ) : data?.players?.map(p => (
-                <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <tr key={p.id} className="border-b border-stone/20 hover:bg-dark-tertiary/5 transition-colors">
                   <td className="px-3 py-2.5 text-center">
                     <span className={`font-mono text-sm font-bold ${
-                      p.rank === 1 ? 'text-yellow-400' : p.rank === 2 ? 'text-gray-300' : p.rank === 3 ? 'text-amber-600' : 'text-white/30'
+                      p.rank === 1 ? 'text-yellow-400' : p.rank === 2 ? 'text-gray-300' : p.rank === 3 ? 'text-amber-600' : 'text-text-primary/30'
                     }`}>{p.rank}</span>
                   </td>
                   <td className="px-3 py-2.5">
                     <Link to={`/nfl/players/${p.id}`} className="flex items-center gap-2 hover:text-gold group">
                       {p.headshotUrl ? (
-                        <img src={p.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-white/10 flex-shrink-0" />
+                        <img src={p.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-dark-tertiary/10 flex-shrink-0" />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-white/10 flex-shrink-0" />
+                        <div className="w-7 h-7 rounded-full bg-dark-tertiary/10 flex-shrink-0" />
                       )}
-                      <span className="text-white text-sm font-medium group-hover:text-gold truncate">{p.name}</span>
+                      <span className="text-text-primary text-sm font-medium group-hover:text-gold truncate">{p.name}</span>
                     </Link>
                   </td>
-                  <td className="px-3 py-2.5 text-center text-white/40 text-xs font-mono">{p.position}</td>
+                  <td className="px-3 py-2.5 text-center text-text-primary/40 text-xs font-mono">{p.position}</td>
                   <td className="px-3 py-2.5 text-center hidden sm:table-cell">
-                    <Link to={`/nfl/teams/${p.teamAbbr}`} className="text-white/40 text-xs font-mono hover:text-gold">{p.teamAbbr}</Link>
+                    <Link to={`/nfl/teams/${p.teamAbbr}`} className="text-text-primary/40 text-xs font-mono hover:text-gold">{p.teamAbbr}</Link>
                   </td>
-                  <td className="px-3 py-2.5 text-center text-white/40 text-sm font-mono">{p.games}</td>
+                  <td className="px-3 py-2.5 text-center text-text-primary/40 text-sm font-mono">{p.games}</td>
                   {columns.map(c => (
-                    <td key={c.key} className="px-3 py-2.5 text-right text-white/50 text-sm font-mono hidden md:table-cell">
+                    <td key={c.key} className="px-3 py-2.5 text-right text-text-primary/50 text-sm font-mono hidden md:table-cell">
                       {(p[c.key] || 0).toLocaleString()}
                     </td>
                   ))}
@@ -287,22 +287,22 @@ export default function NflLeaderboards() {
           <button
             onClick={() => updateParam('page', String(page - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-white/5 text-white/40 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Prev
           </button>
-          <span className="text-white/40 text-sm font-mono">Page {page} of {totalPages}</span>
+          <span className="text-text-primary/40 text-sm font-mono">Page {page} of {totalPages}</span>
           <button
             onClick={() => updateParam('page', String(page + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-white/5 text-white/40 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Next
           </button>
         </div>
       )}
 
-      <p className="text-center text-white/20 text-xs font-mono mt-6">Data via nflverse</p>
+      <p className="text-center text-text-primary/20 text-xs font-mono mt-6">Data via nflverse</p>
     </div>
   )
 }

@@ -117,13 +117,13 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-20 left-4 md:bottom-6 md:left-6 z-40 w-12 h-12 rounded-full bg-purple-600 text-white shadow-lg shadow-purple-600/20 hover:bg-purple-500 hover:scale-105 transition-all flex items-center justify-center group"
+          className="fixed bottom-20 left-4 md:bottom-6 md:left-6 z-40 w-12 h-12 rounded-full bg-purple-600 text-text-primary shadow-lg shadow-purple-600/20 hover:bg-purple-500 hover:scale-105 transition-all flex items-center justify-center group"
           title="Ask about your league"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
-          <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-dark-secondary border border-white/10 text-[10px] font-medium text-white/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-dark-secondary border border-stone/30 text-[10px] font-medium text-text-primary/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             League Intel
           </span>
         </button>
@@ -140,13 +140,13 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
       {/* Chat Drawer */}
       {isOpen && (
         <div
-          className="fixed z-50 bg-dark-primary border border-white/10 shadow-2xl flex flex-col
+          className="fixed z-50 bg-dark-primary border border-stone/30 shadow-2xl flex flex-col
             bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl
             md:bottom-4 md:left-4 md:right-auto md:top-auto md:w-[400px] md:h-[600px] md:rounded-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-stone/30 shrink-0">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-7 h-7 rounded-full bg-purple-600/20 flex items-center justify-center shrink-0">
                 <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,15 +154,15 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">League Intelligence</p>
-                <p className="text-[10px] text-white/40 truncate">{leagueName || 'Your League'}</p>
+                <p className="text-sm font-medium text-text-primary truncate">League Intelligence</p>
+                <p className="text-[10px] text-text-primary/40 truncate">{leagueName || 'Your League'}</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
               {messages.length > 0 && (
                 <button
                   onClick={startNewConversation}
-                  className="text-[10px] text-white/40 hover:text-white/60 px-2 py-1 rounded hover:bg-white/5 transition-colors"
+                  className="text-[10px] text-text-primary/40 hover:text-text-primary/60 px-2 py-1 rounded hover:bg-dark-tertiary/5 transition-colors"
                   title="New conversation"
                 >
                   New
@@ -170,7 +170,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white/40 hover:text-white p-1 rounded hover:bg-white/5 transition-colors"
+                className="text-text-primary/40 hover:text-text-primary p-1 rounded hover:bg-dark-tertiary/5 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -188,8 +188,8 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
                 </div>
-                <p className="text-sm text-white/60 mb-1">Ask anything about your league</p>
-                <p className="text-xs text-white/30 mb-4">Powered by your imported league data</p>
+                <p className="text-sm text-text-primary/60 mb-1">Ask anything about your league</p>
+                <p className="text-xs text-text-primary/30 mb-4">Powered by your imported league data</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {suggestions.map((s, i) => (
                     <button
@@ -208,12 +208,12 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
                   msg.role === 'user'
-                    ? 'bg-purple-600/20 border border-purple-500/20 text-white'
-                    : 'bg-white/5 border border-white/5 text-white/80'
+                    ? 'bg-purple-600/20 border border-purple-500/20 text-text-primary'
+                    : 'bg-dark-tertiary/5 border border-stone/20 text-text-primary/80'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                   {msg.sources && msg.sources.length > 0 && (
-                    <p className="text-[10px] text-white/30 mt-1">
+                    <p className="text-[10px] text-text-primary/30 mt-1">
                       Sources: {msg.sources.join(', ')}
                     </p>
                   )}
@@ -236,7 +236,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
 
             {loading && (
               <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-xl px-3 py-2 bg-white/5 border border-white/5">
+                <div className="max-w-[85%] rounded-xl px-3 py-2 bg-dark-tertiary/5 border border-stone/20">
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -254,7 +254,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSubmit} className="shrink-0 px-4 py-3 border-t border-white/10">
+          <form onSubmit={handleSubmit} className="shrink-0 px-4 py-3 border-t border-stone/30">
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
@@ -262,14 +262,14 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about your league..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-purple-500/40"
+                className="flex-1 bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-primary/30 focus:outline-none focus:border-purple-500/40"
                 maxLength={500}
                 disabled={loading}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center hover:bg-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                className="w-8 h-8 rounded-lg bg-purple-600 text-text-primary flex items-center justify-center hover:bg-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -277,7 +277,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
               </button>
             </div>
             {messages.length > 0 && (
-              <p className="text-[10px] text-white/20 mt-1 text-center">
+              <p className="text-[10px] text-text-primary/20 mt-1 text-center">
                 {messages.length} messages {sessionId ? '(session saved)' : ''}
               </p>
             )}

@@ -35,7 +35,7 @@ const SANITIZE_CONFIG = {
 
 const sanitize = (html) => DOMPurify.sanitize(html || '', SANITIZE_CONFIG)
 
-const CONTENT_CLASSES = 'text-text-secondary text-sm leading-relaxed [&_p]:mb-2 [&_strong]:text-white [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_h2]:text-lg [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-white [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-display [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-3 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-dark-border/50 [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline [&_a]:hover:text-gold/80'
+const CONTENT_CLASSES = 'text-text-secondary text-sm leading-relaxed [&_p]:mb-2 [&_strong]:text-text-primary [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_h2]:text-lg [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-text-primary [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-display [&_h3]:font-semibold [&_h3]:text-text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-dark-border/50 [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline [&_a]:hover:text-gold/80'
 
 const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
   const [posts, setPosts] = useState([])
@@ -199,7 +199,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
           <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
           </svg>
-          <h3 className="text-base font-display font-bold text-white">Commissioner Blog</h3>
+          <h3 className="text-base font-display font-bold text-text-primary">Commissioner Blog</h3>
         </div>
         <div className="flex justify-center py-6">
           <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
@@ -217,7 +217,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
             <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
             </svg>
-            <h3 className="text-base font-display font-bold text-white">Commissioner Blog</h3>
+            <h3 className="text-base font-display font-bold text-text-primary">Commissioner Blog</h3>
           </div>
           {isCommissioner && (
             <button
@@ -305,7 +305,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                 </div>
 
                 {/* Title — larger blog style */}
-                <h4 className="text-white font-display font-bold text-lg mb-1.5 leading-tight">{post.title}</h4>
+                <h4 className="text-text-primary font-display font-bold text-lg mb-1.5 leading-tight">{post.title}</h4>
 
                 {/* Content preview or full content */}
                 {expandedContent === post.id ? (
@@ -434,7 +434,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-medium text-white">{comment.user?.name || 'Member'}</span>
+                                  <span className="text-xs font-medium text-text-primary">{comment.user?.name || 'Member'}</span>
                                   <span className="text-[10px] text-text-muted">{timeAgo(comment.createdAt)}</span>
                                   {(comment.user?.id === post.authorId || isCommissioner) && (
                                     <button
@@ -460,7 +460,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                             onChange={e => setCommentInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddComment(post.id)}
                             placeholder="Add a comment..."
-                            className="flex-1 bg-dark-tertiary border border-dark-border rounded-lg px-3 py-1.5 text-xs text-white placeholder-text-muted focus:outline-none focus:border-gold/50"
+                            className="flex-1 bg-dark-tertiary border border-dark-border rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
                           />
                           <button
                             onClick={() => handleAddComment(post.id)}

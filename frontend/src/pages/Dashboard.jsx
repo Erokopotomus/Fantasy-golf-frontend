@@ -122,7 +122,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto">
           {/* Welcome Header */}
           <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-2 leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-primary mb-2 leading-tight">
               Welcome back, {user?.name || 'Player'}!
             </h1>
             <p className="text-text-secondary leading-relaxed">
@@ -132,13 +132,13 @@ const Dashboard = () => {
 
           {/* Latest Updates Tease */}
           {(feedLoading || feedCards.length > 0) && (
-            <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 mb-6 sm:mb-8">
+            <div className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-xl p-4 mb-6 sm:mb-8">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  <h2 className="text-sm font-semibold font-display text-white">Latest Updates</h2>
+                  <h2 className="text-sm font-semibold font-display text-text-primary">Latest Updates</h2>
                 </div>
                 <Link
                   to="/feed"
@@ -154,8 +154,8 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   {[1, 2, 3].map(i => (
                     <div key={i} className="flex items-center gap-3 animate-pulse">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/10 flex-shrink-0" />
-                      <div className="h-3 bg-white/10 rounded flex-1" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-dark-tertiary/10 flex-shrink-0" />
+                      <div className="h-3 bg-dark-tertiary/10 rounded flex-1" />
                     </div>
                   ))}
                 </div>
@@ -171,7 +171,7 @@ const Dashboard = () => {
                         className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
                         style={{ backgroundColor: card.category === 'Big Performance' ? '#EF4444' : card.category === 'Stat Leader' ? '#F59E0B' : card.category === 'Team Trend' ? '#3B82F6' : card.category === 'Game Result' ? '#10B981' : '#F59E0B' }}
                       />
-                      <span className="text-white/70 text-xs leading-snug group-hover:text-white transition-colors line-clamp-1">
+                      <span className="text-text-primary/70 text-xs leading-snug group-hover:text-text-primary transition-colors line-clamp-1">
                         {card.headline}
                       </span>
                     </Link>
@@ -187,9 +187,9 @@ const Dashboard = () => {
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-lg sm:text-xl font-semibold font-display text-white">My Leagues</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary">My Leagues</h2>
                   {hasMultipleSports && (
-                    <div className="flex items-center bg-white/5 rounded-lg p-0.5">
+                    <div className="flex items-center bg-dark-tertiary/5 rounded-lg p-0.5">
                       {[
                         { key: 'all', label: 'All' },
                         { key: 'golf', label: '\u26F3' },
@@ -201,7 +201,7 @@ const Dashboard = () => {
                           className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
                             sportFilter === opt.key
                               ? 'bg-gold/20 text-gold'
-                              : 'text-white/30 hover:text-white/50'
+                              : 'text-text-primary/30 hover:text-text-primary/50'
                           }`}
                         >
                           {opt.label}
@@ -240,7 +240,7 @@ const Dashboard = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </div>
-                    <h3 className="text-base sm:text-lg font-medium text-white mb-2">No Leagues Yet</h3>
+                    <h3 className="text-base sm:text-lg font-medium text-text-primary mb-2">No Leagues Yet</h3>
                     <p className="text-text-secondary mb-6 max-w-sm mx-auto text-sm sm:text-base leading-relaxed">
                       Create your first league or join an existing one to start competing!
                     </p>
@@ -265,7 +265,7 @@ const Dashboard = () => {
                             <span className="text-lg">&#x26f3;</span>
                           </div>
                           <div className="text-left">
-                            <p className="text-white font-semibold text-sm">Golf Hub</p>
+                            <p className="text-text-primary font-semibold text-sm">Golf Hub</p>
                             <p className="text-emerald-400/70 text-xs">PGA Tour, stats & previews</p>
                           </div>
                         </Link>
@@ -277,7 +277,7 @@ const Dashboard = () => {
                             <span className="text-lg">&#x1f3c8;</span>
                           </div>
                           <div className="text-left">
-                            <p className="text-white font-semibold text-sm">NFL Hub</p>
+                            <p className="text-text-primary font-semibold text-sm">NFL Hub</p>
                             <p className="text-blue-400/70 text-xs">Players, teams & leaderboards</p>
                           </div>
                         </Link>
@@ -328,14 +328,14 @@ const Dashboard = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                       </div>
-                      <h3 className="text-base font-semibold font-display text-white">Coaching Corner</h3>
+                      <h3 className="text-base font-semibold font-display text-text-primary">Coaching Corner</h3>
                     </div>
                   </div>
                   <div className="space-y-2">
                     {coachingInsights.map(insight => (
                       <div key={insight.id} className="px-3 py-2.5 bg-purple-500/[0.05] border border-purple-400/10 rounded-lg">
                         <p className="text-xs font-semibold text-purple-300/70 mb-0.5">{insight.title}</p>
-                        <p className="text-[11px] text-white/45 leading-relaxed line-clamp-2">{insight.body}</p>
+                        <p className="text-[11px] text-text-primary/45 leading-relaxed line-clamp-2">{insight.body}</p>
                       </div>
                     ))}
                   </div>
@@ -345,7 +345,7 @@ const Dashboard = () => {
               {/* My Boards Widget */}
               <Card>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-base sm:text-lg font-semibold font-display text-white">My Boards</h3>
+                  <h3 className="text-base sm:text-lg font-semibold font-display text-text-primary">My Boards</h3>
                   {boards.length > 0 && (
                     <Link to="/lab" className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors">
                       View All &rarr;
@@ -355,13 +355,13 @@ const Dashboard = () => {
                 {boardsLoading ? (
                   <div className="space-y-2">
                     {[1, 2].map(i => (
-                      <div key={i} className="h-10 bg-white/5 rounded-lg animate-pulse" />
+                      <div key={i} className="h-10 bg-dark-tertiary/5 rounded-lg animate-pulse" />
                     ))}
                   </div>
                 ) : boards.length === 0 ? (
                   <Link
                     to="/lab"
-                    className="block text-center py-4 text-white/30 text-sm hover:text-white/50 transition-colors"
+                    className="block text-center py-4 text-text-primary/30 text-sm hover:text-text-primary/50 transition-colors"
                   >
                     Create your first draft board &rarr;
                   </Link>
@@ -371,7 +371,7 @@ const Dashboard = () => {
                       <Link
                         key={board.id}
                         to={`/lab/${board.id}`}
-                        className="flex items-center justify-between px-3 py-2 bg-white/[0.03] border border-white/[0.06] rounded-lg hover:bg-white/[0.06] transition-colors group"
+                        className="flex items-center justify-between px-3 py-2 bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-lg hover:bg-dark-tertiary/[0.06] transition-colors group"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
@@ -379,9 +379,9 @@ const Dashboard = () => {
                           }`}>
                             {board.sport}
                           </span>
-                          <span className="text-sm text-white font-medium truncate">{board.name}</span>
+                          <span className="text-sm text-text-primary font-medium truncate">{board.name}</span>
                         </div>
-                        <span className="text-[11px] text-white/30 font-mono shrink-0 ml-2">{board.playerCount} players</span>
+                        <span className="text-[11px] text-text-primary/30 font-mono shrink-0 ml-2">{board.playerCount} players</span>
                       </Link>
                     ))}
                   </div>
@@ -390,7 +390,7 @@ const Dashboard = () => {
 
               {/* Quick Actions */}
               <Card>
-                <h3 className="text-base sm:text-lg font-semibold font-display text-white mb-4">Quick Actions</h3>
+                <h3 className="text-base sm:text-lg font-semibold font-display text-text-primary mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <Link to="/leagues/create" className="quick-action-btn group">
                     <div className="w-10 h-10 bg-gold/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
@@ -399,7 +399,7 @@ const Dashboard = () => {
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm">Create League</p>
+                      <p className="text-text-primary font-medium text-sm">Create League</p>
                       <p className="text-text-muted text-xs">Start a new competition</p>
                     </div>
                   </Link>
@@ -411,7 +411,7 @@ const Dashboard = () => {
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm">Join League</p>
+                      <p className="text-text-primary font-medium text-sm">Join League</p>
                       <p className="text-text-muted text-xs">Enter with a code</p>
                     </div>
                   </Link>
@@ -423,7 +423,7 @@ const Dashboard = () => {
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm">Mock Draft</p>
+                      <p className="text-text-primary font-medium text-sm">Mock Draft</p>
                       <p className="text-text-muted text-xs">Practice against AI</p>
                     </div>
                   </Link>
@@ -435,7 +435,7 @@ const Dashboard = () => {
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm">View Players</p>
+                      <p className="text-text-primary font-medium text-sm">View Players</p>
                       <p className="text-text-muted text-xs">Browse and compare</p>
                     </div>
                   </Link>
@@ -447,7 +447,7 @@ const Dashboard = () => {
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm">Import League</p>
+                      <p className="text-text-primary font-medium text-sm">Import League</p>
                       <p className="text-text-muted text-xs">Bring history from Sleeper</p>
                     </div>
                   </Link>
@@ -459,7 +459,7 @@ const Dashboard = () => {
                       </svg>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm">The Lab</p>
+                      <p className="text-text-primary font-medium text-sm">The Lab</p>
                       <p className="text-text-muted text-xs">Draft boards & rankings</p>
                     </div>
                   </Link>
@@ -470,7 +470,7 @@ const Dashboard = () => {
               {/* Recent Activity */}
               <Card>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base sm:text-lg font-semibold font-display text-white">Recent Activity</h3>
+                  <h3 className="text-base sm:text-lg font-semibold font-display text-text-primary">Recent Activity</h3>
                   {activity && activity.length > 0 && (
                     <button className="text-gold text-xs hover:underline">
                       View All

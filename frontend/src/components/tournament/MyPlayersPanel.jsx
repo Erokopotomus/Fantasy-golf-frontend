@@ -15,7 +15,7 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
     <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-dark-secondary border-b border-dark-border">
-        <h3 className="text-base font-bold text-white">My Team</h3>
+        <h3 className="text-base font-bold text-text-primary">My Team</h3>
         <div className="text-right">
           <span className="text-[10px] text-text-muted uppercase tracking-wide">Fantasy Pts</span>
           <p className="text-xl font-bold font-display text-emerald-400 leading-tight">{totalPoints}</p>
@@ -44,7 +44,7 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
                 </div>
               )}
               <div>
-                <p className="font-semibold text-sm text-white">{player.name}</p>
+                <p className="font-semibold text-sm text-text-primary">{player.name}</p>
                 <div className="flex items-center gap-2 text-[11px] text-text-muted">
                   <span>{player.position}</span>
                   <span className="text-text-muted/50">|</span>
@@ -53,7 +53,7 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
               </div>
             </div>
             <div className="text-right">
-              <p className={`font-bold text-sm ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-white'}`}>
+              <p className={`font-bold text-sm ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
                 {formatScore(player.score)}
               </p>
               <p className="text-[11px] text-emerald-400 font-medium">

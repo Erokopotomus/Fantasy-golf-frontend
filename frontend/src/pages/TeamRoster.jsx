@@ -329,14 +329,14 @@ const TeamRoster = () => {
         <div className="mb-6">
           <Link
             to={`/leagues/${leagueId}`}
-            className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-2"
+            className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-2"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to League
           </Link>
-          <h1 className="text-2xl font-bold font-display text-white">My Roster</h1>
+          <h1 className="text-2xl font-bold font-display text-text-primary">My Roster</h1>
           <p className="text-text-secondary">{league?.name}</p>
         </div>
 
@@ -346,7 +346,7 @@ const TeamRoster = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold font-display text-white mb-2">Empty Roster</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Empty Roster</h2>
           <p className="text-text-secondary mb-6 max-w-sm mx-auto">
             Your roster is empty. Draft players or browse free agents to build your team.
           </p>
@@ -367,7 +367,7 @@ const TeamRoster = () => {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="text-center py-12">
-          <h2 className="text-xl font-bold font-display text-white mb-2">Error Loading Roster</h2>
+          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error Loading Roster</h2>
           <p className="text-text-secondary mb-6">{rosterError}</p>
           <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
             Return to League
@@ -387,14 +387,14 @@ const TeamRoster = () => {
         <div>
           <Link
             to={`/leagues/${leagueId}`}
-            className="inline-flex items-center text-text-secondary hover:text-white transition-colors mb-1"
+            className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-1"
           >
             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             {league?.name}
           </Link>
-          <h1 className="text-2xl font-bold font-display text-white">My Roster</h1>
+          <h1 className="text-2xl font-bold font-display text-text-primary">My Roster</h1>
           <p className="text-text-muted text-sm">{roster.length} / {rosterSize} players</p>
         </div>
         <div className="flex gap-2">
@@ -469,7 +469,7 @@ const TeamRoster = () => {
         <div className="mb-4 p-3 rounded-lg bg-dark-secondary border border-dark-border">
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-text-muted">Active lineup — drag or tap players to move</span>
-            <span className={`font-medium ${activeSet.size === maxActive ? 'text-emerald-400' : 'text-white'}`}>
+            <span className={`font-medium ${activeSet.size === maxActive ? 'text-emerald-400' : 'text-text-primary'}`}>
               {activeSet.size} / {maxActive}
             </span>
           </div>
@@ -517,11 +517,11 @@ const TeamRoster = () => {
 
       {/* Golf Schedule Summary */}
       {scheduleSummary && (
-        <div className="mb-4 p-3 bg-white/[0.03] border border-white/[0.08] rounded-lg">
+        <div className="mb-4 p-3 bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-emerald-400">⛳ This Week:</span>
-              <span className="text-xs text-white font-semibold">{scheduleSummary.tournament.shortName || scheduleSummary.tournament.name}</span>
+              <span className="text-xs text-text-primary font-semibold">{scheduleSummary.tournament.shortName || scheduleSummary.tournament.name}</span>
             </div>
             {scheduleSummary.announced ? (
               <span className="text-xs font-mono text-emerald-400">
@@ -767,7 +767,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-white font-semibold text-sm truncate">{player.name}</span>
+          <span className="text-text-primary font-semibold text-sm truncate">{player.name}</span>
           {isActive && !isEditing && (
             <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 rounded">ACTIVE</span>
           )}
@@ -788,7 +788,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
                   <div
                     key={t.id || i}
                     className={`w-2 h-2 rounded-full ${
-                      inField ? 'bg-emerald-500' : fieldAnnounced ? 'bg-white/10' : 'border border-white/20 bg-transparent'
+                      inField ? 'bg-emerald-500' : fieldAnnounced ? 'bg-dark-tertiary/10' : 'border border-stone/50 bg-transparent'
                     }`}
                     title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
                   />

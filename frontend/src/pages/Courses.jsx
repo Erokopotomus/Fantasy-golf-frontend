@@ -7,8 +7,8 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-white/30' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-white/10' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
 }
 
 const Courses = () => {
@@ -29,7 +29,7 @@ const Courses = () => {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-white">Courses</h1>
+        <h1 className="text-2xl font-display font-bold text-text-primary">Courses</h1>
         <p className="text-text-muted text-sm mt-1">PGA Tour venues — course DNA, stats, and history</p>
       </div>
 
@@ -43,7 +43,7 @@ const Courses = () => {
           placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-dark-secondary border border-dark-border rounded-lg text-sm text-white placeholder-text-muted focus:outline-none focus:border-gold/50 transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 bg-dark-secondary border border-dark-border rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 transition-colors"
         />
       </div>
 
@@ -85,7 +85,7 @@ const Courses = () => {
                     <Card hover className="h-full">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="text-sm font-display font-semibold text-white">{course.name}</h3>
+                          <h3 className="text-sm font-display font-semibold text-text-primary">{course.name}</h3>
                           {course.nickname && course.nickname !== course.name && (
                             <p className="text-xs text-gold mt-0.5">"{course.nickname}"</p>
                           )}
@@ -122,7 +122,7 @@ const Courses = () => {
                                   <span className="text-[9px] text-text-muted">{cat.label}</span>
                                   <span className={`text-[8px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
                                 </div>
-                                <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                                <div className="h-1 rounded-full bg-dark-tertiary/[0.06] overflow-hidden">
                                   <div className={`h-full rounded-full ${cat.rating.bar}`} style={{ width: `${barPct}%` }} />
                                 </div>
                               </div>

@@ -54,9 +54,9 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
       {/* Header */}
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold font-display text-white">Week {weekNumber} in Review</h2>
+          <h2 className="text-lg font-bold font-display text-text-primary">Week {weekNumber} in Review</h2>
           {onClose && (
-            <button onClick={onClose} className="text-text-muted hover:text-white text-sm">Close</button>
+            <button onClick={onClose} className="text-text-muted hover:text-text-primary text-sm">Close</button>
           )}
         </div>
 
@@ -70,7 +70,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-bold font-mono text-white">{(result.yourScore || 0).toFixed(1)}</span>
+                <span className="text-2xl font-bold font-mono text-text-primary">{(result.yourScore || 0).toFixed(1)}</span>
                 <span className="text-text-muted mx-2">—</span>
                 <span className="text-xl font-mono text-text-secondary">{(result.oppScore || 0).toFixed(1)}</span>
               </div>
@@ -82,7 +82,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-xs text-text-muted mb-1">Your Lineup</p>
-            <p className="text-xl font-bold font-mono text-white">{lineup.actualPoints}</p>
+            <p className="text-xl font-bold font-mono text-text-primary">{lineup.actualPoints}</p>
           </div>
           <div>
             <p className="text-xs text-text-muted mb-1">Optimal</p>
@@ -92,7 +92,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
             <p className="text-xs text-text-muted mb-1">Efficiency</p>
             <p className={`text-xl font-bold font-mono ${
               lineup.efficiency >= 95 ? 'text-emerald-400' :
-              lineup.efficiency >= 85 ? 'text-white' :
+              lineup.efficiency >= 85 ? 'text-text-primary' :
               'text-yellow-400'
             }`}>
               {lineup.efficiency}%
@@ -112,7 +112,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
       {/* Lineup Decisions */}
       {decisions && decisions.length > 0 && (
         <Card>
-          <h3 className="text-sm font-bold font-display text-white uppercase tracking-wider mb-3">Lineup Decisions</h3>
+          <h3 className="text-sm font-bold font-display text-text-primary uppercase tracking-wider mb-3">Lineup Decisions</h3>
           <div className="space-y-2">
             {decisions.map((d, i) => (
               <div
@@ -128,7 +128,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                 </span>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white">
+                  <p className="text-sm text-text-primary">
                     Started <span className="font-medium">{d.starter.name}</span>
                     <span className="text-text-muted font-mono text-xs ml-1">({(d.starter.points || 0).toFixed(1)})</span>
                     {' '}over{' '}
@@ -151,7 +151,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
       {/* Optimal Lineup */}
       {lineup.optimalLineup && lineup.optimalLineup.length > 0 && (
         <Card>
-          <h3 className="text-sm font-bold font-display text-white uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-bold font-display text-text-primary uppercase tracking-wider mb-3">
             Optimal Lineup ({lineup.optimalPoints} pts)
           </h3>
           <div className="space-y-1">
@@ -170,11 +170,11 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                     }`}>{p.nflPos}</span>
                   )}
                   <span className="text-xs text-text-muted w-8 flex-shrink-0">{p.optimalSlot}</span>
-                  <span className={`text-sm flex-1 truncate ${wasStarted ? 'text-white' : 'text-yellow-400'}`}>
+                  <span className={`text-sm flex-1 truncate ${wasStarted ? 'text-text-primary' : 'text-yellow-400'}`}>
                     {p.playerName}
                     {!wasStarted && <span className="text-[10px] text-yellow-400/60 ml-1">(bench)</span>}
                   </span>
-                  <span className="text-sm font-bold font-mono text-white w-12 text-right">
+                  <span className="text-sm font-bold font-mono text-text-primary w-12 text-right">
                     {(p.points || 0).toFixed(1)}
                   </span>
                 </div>
@@ -187,14 +187,14 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
       {/* Season Trends */}
       {seasonTrends && (
         <Card>
-          <h3 className="text-sm font-bold font-display text-white uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-bold font-display text-text-primary uppercase tracking-wider mb-3">
             Season Trends ({seasonTrends.weeksAnalyzed} weeks)
           </h3>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-xs text-text-muted">Avg Lineup Efficiency</p>
               <p className={`text-xl font-bold font-mono ${
-                seasonTrends.avgEfficiency >= 90 ? 'text-emerald-400' : 'text-white'
+                seasonTrends.avgEfficiency >= 90 ? 'text-emerald-400' : 'text-text-primary'
               }`}>{seasonTrends.avgEfficiency}%</p>
             </div>
             <div>
