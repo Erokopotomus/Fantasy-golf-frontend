@@ -20,20 +20,20 @@ const LeagueCardSkeleton = () => (
   <Card className="animate-pulse">
     <div className="flex items-start justify-between mb-4">
       <div className="flex-1">
-        <div className="h-5 bg-dark-tertiary rounded w-3/4 mb-2" />
-        <div className="h-3 bg-dark-tertiary rounded w-1/2" />
+        <div className="h-5 bg-[var(--stone)] rounded w-3/4 mb-2" />
+        <div className="h-3 bg-[var(--stone)] rounded w-1/2" />
       </div>
-      <div className="h-10 w-10 bg-dark-tertiary rounded" />
+      <div className="h-10 w-10 bg-[var(--stone)] rounded" />
     </div>
-    <div className="h-16 bg-dark-primary rounded-lg mb-4" />
+    <div className="h-16 bg-[var(--bg)] rounded-lg mb-4" />
     <div className="space-y-2 mb-4">
       {[1, 2, 3].map(i => (
-        <div key={i} className="h-8 bg-dark-tertiary rounded" />
+        <div key={i} className="h-8 bg-[var(--stone)] rounded" />
       ))}
     </div>
     <div className="flex gap-2">
-      <div className="h-9 bg-dark-tertiary rounded flex-1" />
-      <div className="h-9 bg-dark-tertiary rounded flex-1" />
+      <div className="h-9 bg-[var(--stone)] rounded flex-1" />
+      <div className="h-9 bg-[var(--stone)] rounded flex-1" />
     </div>
   </Card>
 )
@@ -117,7 +117,7 @@ const Dashboard = () => {
   const hasMultipleSports = hasLeagues && new Set(leagues.map(l => (l.sport || 'GOLF').toLowerCase())).size > 1
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Welcome Header */}
@@ -132,7 +132,7 @@ const Dashboard = () => {
 
           {/* Latest Updates Tease */}
           {(feedLoading || feedCards.length > 0) && (
-            <div className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-xl p-4 mb-6 sm:mb-8">
+            <div className="bg-[var(--surface-alt)] border border-[var(--card-border)] rounded-xl p-4 mb-6 sm:mb-8">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,8 +154,8 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   {[1, 2, 3].map(i => (
                     <div key={i} className="flex items-center gap-3 animate-pulse">
-                      <div className="w-1.5 h-1.5 rounded-full bg-dark-tertiary/10 flex-shrink-0" />
-                      <div className="h-3 bg-dark-tertiary/10 rounded flex-1" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--stone)] flex-shrink-0" />
+                      <div className="h-3 bg-[var(--stone)] rounded flex-1" />
                     </div>
                   ))}
                 </div>
@@ -189,7 +189,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary">My Leagues</h2>
                   {hasMultipleSports && (
-                    <div className="flex items-center bg-dark-tertiary/5 rounded-lg p-0.5">
+                    <div className="flex items-center bg-[var(--surface-alt)] rounded-lg p-0.5">
                       {[
                         { key: 'all', label: 'All' },
                         { key: 'golf', label: '\u26F3' },
@@ -235,7 +235,7 @@ const Dashboard = () => {
                 <Card>
                   {/* Empty State */}
                   <div className="text-center py-8 sm:py-12">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[var(--stone)] rounded-full flex items-center justify-center mx-auto mb-4">
                       <svg className="w-8 h-8 sm:w-10 sm:h-10 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
@@ -254,7 +254,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* Sport Hub shortcuts */}
-                    <div className="border-t border-dark-border pt-6">
+                    <div className="border-t border-[var(--stone)] pt-6">
                       <p className="text-text-muted text-xs uppercase tracking-wider font-semibold mb-4">Explore while you wait</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
                         <Link
@@ -293,16 +293,16 @@ const Dashboard = () => {
               {/* Upcoming Tournament */}
               {tournamentsLoading ? (
                 <Card className="animate-pulse">
-                  <div className="h-5 bg-dark-tertiary rounded w-1/2 mb-4" />
+                  <div className="h-5 bg-[var(--stone)] rounded w-1/2 mb-4" />
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-dark-tertiary rounded-xl" />
+                    <div className="w-14 h-14 bg-[var(--stone)] rounded-xl" />
                     <div className="flex-1">
-                      <div className="h-4 bg-dark-tertiary rounded w-3/4 mb-2" />
-                      <div className="h-3 bg-dark-tertiary rounded w-1/2" />
+                      <div className="h-4 bg-[var(--stone)] rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-[var(--stone)] rounded w-1/2" />
                     </div>
                   </div>
-                  <div className="h-20 bg-dark-primary rounded-lg mb-4" />
-                  <div className="h-9 bg-dark-tertiary rounded" />
+                  <div className="h-20 bg-[var(--bg)] rounded-lg mb-4" />
+                  <div className="h-9 bg-[var(--stone)] rounded" />
                 </Card>
               ) : (
                 <TournamentCard
@@ -355,7 +355,7 @@ const Dashboard = () => {
                 {boardsLoading ? (
                   <div className="space-y-2">
                     {[1, 2].map(i => (
-                      <div key={i} className="h-10 bg-dark-tertiary/5 rounded-lg animate-pulse" />
+                      <div key={i} className="h-10 bg-[var(--surface-alt)] rounded-lg animate-pulse" />
                     ))}
                   </div>
                 ) : boards.length === 0 ? (
@@ -371,7 +371,7 @@ const Dashboard = () => {
                       <Link
                         key={board.id}
                         to={`/lab/${board.id}`}
-                        className="flex items-center justify-between px-3 py-2 bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-lg hover:bg-dark-tertiary/[0.06] transition-colors group"
+                        className="flex items-center justify-between px-3 py-2 bg-[var(--surface-alt)] border border-[var(--card-border)] rounded-lg hover:bg-[var(--stone)] transition-colors group"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${

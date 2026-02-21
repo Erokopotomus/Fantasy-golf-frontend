@@ -129,7 +129,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
 
         {/* Live: show round status | Upcoming: show countdown */}
         {isLive && (
-          <div className="bg-dark-primary rounded-lg p-3 mb-4">
+          <div className="bg-[var(--surface-alt)] rounded-lg p-3 mb-4">
             <div className="flex items-center justify-center gap-2">
               {[1, 2, 3, 4].map(r => {
                 const isCurrent = currentRound === r
@@ -139,8 +139,8 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
                     key={r}
                     className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       isCurrent ? 'bg-emerald-500 text-text-primary ring-2 ring-emerald-400/50 scale-110' :
-                      isPast ? 'bg-dark-tertiary text-emerald-400' :
-                      'bg-dark-tertiary/50 text-text-muted'
+                      isPast ? 'bg-[var(--surface-alt)] text-emerald-400' :
+                      'bg-[var(--surface-alt)] text-text-muted'
                     }`}
                   >
                     R{r}
@@ -155,7 +155,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
         )}
 
         {isUpcoming && (
-          <div className="bg-dark-primary rounded-lg p-3 mb-4">
+          <div className="bg-[var(--surface-alt)] rounded-lg p-3 mb-4">
             <p className="text-text-muted text-xs mb-2 text-center">Starts In</p>
             <div className="flex justify-center gap-4">
               <div className="text-center">
@@ -179,7 +179,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
         {/* Info chips */}
         <div className="grid grid-cols-3 gap-2 mb-4 text-center">
           {/* Purse or event type fallback */}
-          <div className="bg-dark-primary rounded-lg p-2">
+          <div className="bg-[var(--surface-alt)] rounded-lg p-2">
             {purse ? (
               <>
                 <p className="text-gold font-semibold text-sm">{formatPurse(purse)}</p>
@@ -202,7 +202,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
           </div>
 
           {/* Cut line (live) or event type (upcoming) */}
-          <div className="bg-dark-primary rounded-lg p-2">
+          <div className="bg-[var(--surface-alt)] rounded-lg p-2">
             {isLive && cutLine != null ? (
               <>
                 <p className={`font-semibold text-sm ${cutLine > 0 ? 'text-red-400' : cutLine < 0 ? 'text-emerald-400' : 'text-text-primary'}`}>
@@ -226,7 +226,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
             })()}
           </div>
 
-          <div className="bg-dark-primary rounded-lg p-2">
+          <div className="bg-[var(--surface-alt)] rounded-lg p-2">
             <p className="text-text-primary font-semibold text-sm">{formatDateRange()}</p>
             <p className="text-text-muted text-xs">Dates</p>
           </div>
@@ -236,7 +236,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
         <div className={`w-full py-2.5 rounded-lg text-center text-sm font-semibold transition-colors ${
           isLive
             ? 'bg-emerald-500/15 text-emerald-400 group-hover:bg-emerald-500/25'
-            : 'bg-dark-tertiary text-text-secondary'
+            : 'bg-[var(--surface-alt)] text-text-secondary'
         }`}>
           {isLive ? 'View Leaderboard' : 'View Details'}
         </div>
