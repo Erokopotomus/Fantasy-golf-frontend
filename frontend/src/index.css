@@ -56,12 +56,12 @@
   --live-red: #E83838;
   --live-red-rgb: 232 56 56;
 
-  /* Tinted card backgrounds (light mode) — visible against #FAFAF6 */
-  --tint-golf: #E6F7F0;
-  --tint-nfl: #FFF0E6;
-  --tint-news: #EEECEA;
-  --tint-rating: #FAF2E0;
-  --tint-ai: #EAECF2;
+  /* Tinted card backgrounds (light mode) — clearly visible against #FAFAF6 */
+  --tint-golf: #D6F0E5;
+  --tint-nfl: #FDEBD8;
+  --tint-news: #E8E5E0;
+  --tint-rating: #F5EACC;
+  --tint-ai: #DFE3EC;
 
   /* Font families */
   --font-display: 'Bricolage Grotesque', sans-serif;

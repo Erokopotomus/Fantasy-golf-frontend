@@ -272,12 +272,12 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[
-              { icon: '🎯', title: 'Prove It Predictions', desc: 'Lock in calls before kickoff. Your accuracy is tracked, rated, and public.', c: BZ, ltTint: '#FFF0E6', dkTint: `${BZ}0A` },
-              { icon: '✦', title: 'AI Research Lab', desc: 'Matchup analysis, trend detection, and draft strategy powered by AI.', c: SL_L, ltTint: '#EAECF2', dkTint: 'rgba(61,81,102,0.12)' },
-              { icon: '🏆', title: 'Fantasy Leagues', desc: 'Auction drafts, FAAB waivers, H2H. Golf live, NFL Spring 2026.', c: FD, ltTint: '#E6F7F0', dkTint: `${FD}0A` },
-              { icon: '📊', title: 'Clutch Rating', desc: 'One score proving your sports IQ. Every pick, every bold call feeds it.', c: CR, ltTint: '#FAF2E0', dkTint: `${CR}0A` },
-              { icon: '⚡', title: 'Live Tournaments', desc: 'Real-time leaderboards as PGA events unfold. Shot by shot.', c: FD, ltTint: '#E6F7F0', dkTint: `${FD}0A` },
-              { icon: '🧠', title: 'Year-Round', desc: 'Not a September app. Your brain stays sharp and your rating builds all year.', c: SL_L, ltTint: '#EAECF2', dkTint: 'rgba(61,81,102,0.12)' },
+              { icon: '🎯', title: 'Prove It Predictions', desc: 'Lock in calls before kickoff. Your accuracy is tracked, rated, and public.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
+              { icon: '✦', title: 'AI Research Lab', desc: 'Matchup analysis, trend detection, and draft strategy powered by AI.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
+              { icon: '🏆', title: 'Fantasy Leagues', desc: 'Auction drafts, FAAB waivers, H2H. Golf live, NFL Spring 2026.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
+              { icon: '📊', title: 'Clutch Rating', desc: 'One score proving your sports IQ. Every pick, every bold call feeds it.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
+              { icon: '⚡', title: 'Live Tournaments', desc: 'Real-time leaderboards as PGA events unfold. Shot by shot.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
+              { icon: '🧠', title: 'Year-Round', desc: 'Not a September app. Your brain stays sharp and your rating builds all year.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
             ].map((f, i) => (
               <div
                 key={i}
@@ -363,9 +363,9 @@ const Landing = () => {
           <div
             className="p-8 rounded-[18px]"
             style={{
-              background: isLight ? '#FBF6EC' : 'var(--surface)',
-              border: `1.5px solid ${isLight ? `${CR}20` : 'var(--card-border)'}`,
-              boxShadow: isLight ? `0 2px 16px ${CR}0C` : 'var(--card-shadow)',
+              background: isLight ? '#F7EDDA' : 'var(--surface)',
+              border: `1.5px solid ${isLight ? `${CR}30` : 'var(--card-border)'}`,
+              boxShadow: isLight ? `0 4px 20px ${CR}14` : 'var(--card-shadow)',
             }}
           >
             <h3 className="font-display text-lg font-extrabold text-[var(--text-1)] mb-6">Score Breakdown</h3>
@@ -511,14 +511,14 @@ const Landing = () => {
                 key={f.title}
                 className="rounded-[14px] p-6 pl-[22px] cursor-pointer group"
                 style={{
-                  background: isLight ? `${f.color}0F` : 'var(--surface)',
-                  border: `1.5px solid ${isLight ? `${f.color}22` : 'var(--card-border)'}`,
-                  borderLeft: `3px solid ${f.color}`,
-                  boxShadow: isLight ? `0 2px 12px ${f.color}0A` : 'var(--card-shadow)',
+                  background: isLight ? `${f.color}14` : 'var(--surface)',
+                  border: `1.5px solid ${isLight ? `${f.color}30` : 'var(--card-border)'}`,
+                  borderLeft: `3.5px solid ${f.color}`,
+                  boxShadow: isLight ? `0 2px 12px ${f.color}10` : 'var(--card-shadow)',
                   transition: 'all 0.3s ease',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = isLight ? `0 8px 30px ${f.color}14` : 'var(--card-shadow-hover)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = isLight ? `0 2px 12px ${f.color}0A` : 'var(--card-shadow)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = isLight ? `0 8px 30px ${f.color}1A` : 'var(--card-shadow-hover)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = isLight ? `0 2px 12px ${f.color}10` : 'var(--card-shadow)' }}
               >
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: `${f.color}20` }}>
                   <svg className="w-6 h-6" style={{ color: f.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
