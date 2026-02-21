@@ -10,7 +10,7 @@
 /* LIGHT MODE (default) */
 :root {
   --bg: #FAFAF6;
-  --bg-alt: #F0EDE6;
+  --bg-alt: #E8E3DA;
   --surface: #FFFFFF;
   --surface-alt: #F7F5F0;
   --stone: #E0DBD2;
@@ -25,7 +25,7 @@
 
   /* RGB channels for Tailwind opacity modifier support */
   --bg-rgb: 250 250 246;
-  --bg-alt-rgb: 240 237 230;
+  --bg-alt-rgb: 232 227 218;
   --surface-rgb: 255 255 255;
   --surface-alt-rgb: 247 245 240;
   --stone-rgb: 224 219 210;
