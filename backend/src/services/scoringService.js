@@ -404,7 +404,8 @@ async function calculateLiveTournamentScoring(tournamentId, leagueId, prisma) {
       where: { id: tournamentId },
       select: {
         id: true, name: true, status: true, currentRound: true,
-        startDate: true, endDate: true, courseName: true, purse: true,
+        startDate: true, endDate: true, purse: true,
+        course: { select: { name: true } },
       },
     }),
     prisma.league.findUnique({
@@ -431,6 +432,10 @@ async function calculateLiveTournamentScoring(tournamentId, leagueId, prisma) {
   ])
 
   if (!tournament || !league) return { tournament: null, isLive: false, teams: [] }
+
+  // Flatten course name for frontend compatibility
+  tournament.courseName = tournament.course?.name || null
+  delete tournament.course
 
   const isLive = tournament.status === 'IN_PROGRESS'
 
