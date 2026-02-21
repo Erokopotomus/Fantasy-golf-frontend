@@ -363,8 +363,8 @@ const Landing = () => {
           <div
             className="p-8 rounded-[18px]"
             style={{
-              background: isLight ? '#FDFCF9' : 'var(--surface)',
-              border: '1px solid var(--card-border)',
+              background: isLight ? 'var(--tint-rating)' : 'var(--surface)',
+              border: `1px solid ${isLight ? `${CR}12` : 'var(--card-border)'}`,
               boxShadow: 'var(--card-shadow)',
             }}
           >
@@ -407,9 +407,9 @@ const Landing = () => {
                   key={i}
                   className="flex-1 p-2.5 rounded-[10px] text-center font-mono text-[10px] font-semibold"
                   style={{
-                    border: `1px solid ${x.active ? x.c : 'var(--stone)'}`,
-                    background: x.active ? `${x.c}${isLight ? '0C' : '18'}` : 'transparent',
-                    color: x.active ? x.c : 'var(--text-3)',
+                    border: `1.5px solid ${x.active ? x.c : 'var(--stone)'}`,
+                    background: x.active ? `${x.c}${isLight ? '10' : '18'}` : isLight ? 'var(--surface-alt)' : 'transparent',
+                    color: x.active ? x.c : 'var(--text-2)',
                   }}
                 >
                   <span className="block text-[13px] font-bold mb-px">{x.range}</span>
@@ -509,9 +509,15 @@ const Landing = () => {
             ].map(f => (
               <div
                 key={f.title}
-                className="bg-[var(--surface)] rounded-[14px] p-6 border border-[var(--card-border)] cursor-pointer group"
-                style={{ boxShadow: 'var(--card-shadow)', transition: 'all 0.3s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = isLight ? '0 12px 40px rgba(0,0,0,0.07)' : '0 12px 40px rgba(0,0,0,0.3)' }}
+                className="rounded-[14px] p-6 pl-[22px] cursor-pointer group"
+                style={{
+                  background: isLight ? `${f.color}06` : 'var(--surface)',
+                  border: `1px solid ${isLight ? `${f.color}10` : 'var(--card-border)'}`,
+                  borderLeft: `3px solid ${f.color}`,
+                  boxShadow: 'var(--card-shadow)',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--card-shadow-hover)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--card-shadow)' }}
               >
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: `${f.color}20` }}>
@@ -726,7 +732,16 @@ const Landing = () => {
               { num: '2', title: 'Your Self-Scouting Report', desc: "AI surfaces patterns you can't see yourself: positional biases, accuracy trends, draft tendencies. Evaluate your own thinking over time." },
               { num: '3', title: 'Your Public Resume', desc: 'A shareable profile with your verified Clutch Rating, accuracy stats, badges, and bold calls that hit. Link it from your Twitter, your podcast.' },
             ].map(card => (
-              <div key={card.num} className="bg-[var(--surface)] rounded-[14px] p-6 border border-[var(--card-border)]" style={{ boxShadow: 'var(--card-shadow)' }}>
+              <div
+                key={card.num}
+                className="rounded-[14px] p-6 pl-[22px]"
+                style={{
+                  background: isLight ? 'var(--tint-nfl)' : 'var(--surface)',
+                  border: `1px solid ${isLight ? `${BZ}10` : 'var(--card-border)'}`,
+                  borderLeft: `3px solid ${BZ}`,
+                  boxShadow: 'var(--card-shadow)',
+                }}
+              >
                 <div className="text-3xl font-bold font-mono mb-2" style={{ color: BZ }}>{card.num}</div>
                 <h3 className="text-sm font-semibold font-display text-[var(--text-1)] mb-2 uppercase tracking-wider">{card.title}</h3>
                 <p className="text-[var(--text-2)] text-sm leading-relaxed">{card.desc}</p>
