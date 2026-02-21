@@ -236,9 +236,13 @@ async function computeWeeklyResults(fantasyWeekId, prisma) {
         }
       }
 
-      // Compute optimal (best possible lineup)
+      // Compute optimal (best possible lineup) — check for per-week override
       const allPlayerPoints = playerScores.map((ps) => ps.points).sort((a, b) => b - a)
-      const maxActive = ls.league.settings?.maxActiveLineup || 4
+      const weekOverride = await prisma.weeklyRosterOverride.findUnique({
+        where: { leagueId_fantasyWeekId: { leagueId: ls.league.id, fantasyWeekId } },
+        select: { starterCount: true },
+      })
+      const maxActive = weekOverride?.starterCount || ls.league.settings?.maxActiveLineup || 4
       const optimalPoints = allPlayerPoints.slice(0, maxActive).reduce((s, p) => s + p, 0)
 
       totalPoints = Math.round(totalPoints * 100) / 100

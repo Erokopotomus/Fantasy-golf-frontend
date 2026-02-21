@@ -106,4 +106,27 @@ async function getCurrentFantasyWeek(leagueId, prisma) {
   }
 }
 
-module.exports = { getCurrentFantasyWeek }
+/**
+ * Get the effective starter count for a league + fantasy week.
+ * Checks for a WeeklyRosterOverride first, falls back to league default.
+ *
+ * @param {string} leagueId
+ * @param {string} fantasyWeekId
+ * @param {import('@prisma/client').PrismaClient} prisma
+ * @returns {Promise<number>}
+ */
+async function getEffectiveStarterCount(leagueId, fantasyWeekId, prisma) {
+  const override = await prisma.weeklyRosterOverride.findUnique({
+    where: { leagueId_fantasyWeekId: { leagueId, fantasyWeekId } },
+    select: { starterCount: true },
+  })
+  if (override) return override.starterCount
+
+  const league = await prisma.league.findUnique({
+    where: { id: leagueId },
+    select: { settings: true },
+  })
+  return league?.settings?.maxActiveLineup || 4
+}
+
+module.exports = { getCurrentFantasyWeek, getEffectiveStarterCount }

@@ -118,9 +118,11 @@ const TeamRoster = () => {
 
   const isLineupsLocked = lockInfo?.isLocked || false
 
-  const maxActive = league?.settings?.maxActiveLineup || 4
+  const defaultMaxActive = league?.settings?.maxActiveLineup || 4
+  const maxActive = lockInfo?.effectiveStarterCount || defaultMaxActive
   const rosterSize = league?.settings?.rosterSize || 6
   const irSlots = league?.settings?.irSlots || 0
+  const hasStarterOverride = maxActive < defaultMaxActive
 
   const irPlayers = roster.filter(p => p.rosterPosition === 'IR')
 
@@ -450,6 +452,15 @@ const TeamRoster = () => {
             </p>
           </div>
           <span className="font-mono text-yellow-400 text-lg font-bold">{countdown}</span>
+        </div>
+      )}
+
+      {/* Reduced roster banner */}
+      {hasStarterOverride && (
+        <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2">
+          <span className="text-amber-400 text-sm">
+            Reduced roster this week — <span className="font-bold">{maxActive} starters</span> (normally {defaultMaxActive})
+          </span>
         </div>
       )}
 

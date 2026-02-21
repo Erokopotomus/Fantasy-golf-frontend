@@ -1507,6 +1507,22 @@ class ApiService {
   async deleteLeagueQuerySession(sessionId) {
     return this.request(`/ai/league-query/sessions/${sessionId}`, { method: 'DELETE' })
   }
+
+  // ── Roster Overrides (Per-Week Starter Adjustments) ──
+  async getRosterOverrides(leagueId) {
+    return this.request(`/leagues/${leagueId}/roster-overrides`)
+  }
+
+  async setRosterOverride(leagueId, fantasyWeekId, starterCount) {
+    return this.request(`/leagues/${leagueId}/roster-overrides/${fantasyWeekId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ starterCount }),
+    })
+  }
+
+  async deleteRosterOverride(leagueId, fantasyWeekId) {
+    return this.request(`/leagues/${leagueId}/roster-overrides/${fantasyWeekId}`, { method: 'DELETE' })
+  }
 }
 
 export const api = new ApiService()

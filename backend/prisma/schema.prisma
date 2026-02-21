@@ -157,6 +157,9 @@ model League {
   // Commissioner posts
   posts           LeaguePost[]
 
+  // Per-week roster overrides (commissioner adjustments)
+  weeklyRosterOverrides WeeklyRosterOverride[]
+
   @@map("leagues")
 }
 
@@ -1185,9 +1188,26 @@ model FantasyWeek {
   rosterTransactions RosterTransaction[]
   ownershipRates     OwnershipRate[]
   slotAssignments    RosterSlotAssignment[]
+  rosterOverrides    WeeklyRosterOverride[]
 
   @@unique([seasonId, weekNumber])
   @@map("fantasy_weeks")
+}
+
+model WeeklyRosterOverride {
+  id            String   @id @default(cuid())
+  leagueId      String
+  fantasyWeekId String
+  starterCount  Int      // override value for maxActiveLineup
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  league      League      @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  fantasyWeek FantasyWeek @relation(fields: [fantasyWeekId], references: [id], onDelete: Restrict)
+
+  @@unique([leagueId, fantasyWeekId])
+  @@map("weekly_roster_overrides")
 }
 
 model ScoringSystem {

@@ -2,7 +2,7 @@ const express = require('express')
 const { authenticate } = require('../middleware/auth')
 const { recordTransaction } = require('../services/fantasyTracker')
 const { notifyLeague } = require('../services/notificationService')
-const { getCurrentFantasyWeek } = require('../services/fantasyWeekHelper')
+const { getCurrentFantasyWeek, getEffectiveStarterCount } = require('../services/fantasyWeekHelper')
 const { validatePositionLimits } = require('../services/positionLimitValidator')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
 
@@ -312,8 +312,9 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
     }
 
     // Check lineup lock
+    let weekInfo = null
     try {
-      const weekInfo = await getCurrentFantasyWeek(team.leagueId, prisma)
+      weekInfo = await getCurrentFantasyWeek(team.leagueId, prisma)
       if (weekInfo?.isLocked) {
         const tournamentName = weekInfo.tournament?.name || weekInfo.fantasyWeek?.name || 'the tournament'
         return res.status(403).json({
@@ -326,8 +327,10 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
       console.error('Lineup lock check failed:', lockErr.message)
     }
 
-    // Check max active from league settings
-    const maxActive = team.league.settings?.maxActiveLineup || 4
+    // Check max active — use per-week override if available, else league default
+    const maxActive = weekInfo?.fantasyWeek?.id
+      ? await getEffectiveStarterCount(team.leagueId, weekInfo.fantasyWeek.id, prisma)
+      : (team.league.settings?.maxActiveLineup || 4)
     if (activePlayerIds.length > maxActive) {
       return res.status(400).json({ error: { message: `Maximum ${maxActive} active players allowed` } })
     }

@@ -1512,18 +1512,26 @@ router.get('/:id/activity', authenticate, async (req, res, next) => {
 // GET /api/leagues/:id/current-week - Get current fantasy week and lock status
 router.get('/:id/current-week', authenticate, async (req, res, next) => {
   try {
-    const { getCurrentFantasyWeek } = require('../services/fantasyWeekHelper')
+    const { getCurrentFantasyWeek, getEffectiveStarterCount } = require('../services/fantasyWeekHelper')
     const weekInfo = await getCurrentFantasyWeek(req.params.id, prisma)
 
     if (!weekInfo) {
       return res.json({ currentWeek: null, isLocked: false, lockTime: null })
     }
 
+    // Include effective starter count (checks for per-week override)
+    const effectiveStarterCount = await getEffectiveStarterCount(
+      req.params.id,
+      weekInfo.fantasyWeek.id,
+      prisma
+    )
+
     res.json({
       currentWeek: weekInfo.fantasyWeek,
       tournament: weekInfo.tournament,
       isLocked: weekInfo.isLocked,
       lockTime: weekInfo.lockTime,
+      effectiveStarterCount,
     })
   } catch (error) {
     next(error)
@@ -2000,6 +2008,170 @@ Write a league post about this topic.`
 
     res.json({ draft: { title: result.data.title || '', content: result.data.content || '' } })
   } catch (error) { next(error) }
+})
+
+// ─── Per-Week Roster Overrides (Commissioner) ─────────────────────────────
+
+// GET /api/leagues/:id/roster-overrides - Get all roster overrides + upcoming weeks for a league
+router.get('/:id/roster-overrides', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, settings: true, sportId: true },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+
+    const overrides = await prisma.weeklyRosterOverride.findMany({
+      where: { leagueId: req.params.id },
+      include: {
+        fantasyWeek: {
+          select: { id: true, name: true, weekNumber: true, startDate: true, status: true },
+        },
+      },
+      orderBy: { fantasyWeek: { weekNumber: 'asc' } },
+    })
+
+    // Also return all fantasy weeks for the league's active season (so UI has IDs for all weeks)
+    let fantasyWeeks = []
+    const leagueSeason = await prisma.leagueSeason.findFirst({
+      where: { leagueId: req.params.id, status: 'ACTIVE' },
+      select: { seasonId: true },
+    })
+    if (leagueSeason) {
+      fantasyWeeks = await prisma.fantasyWeek.findMany({
+        where: { seasonId: leagueSeason.seasonId },
+        select: { id: true, name: true, weekNumber: true, startDate: true, status: true },
+        orderBy: { weekNumber: 'asc' },
+      })
+    }
+
+    res.json({
+      overrides,
+      fantasyWeeks,
+      defaultStarterCount: league.settings?.maxActiveLineup || 4,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// PUT /api/leagues/:id/roster-overrides/:fantasyWeekId - Set starter override for a week
+router.put('/:id/roster-overrides/:fantasyWeekId', authenticate, async (req, res, next) => {
+  try {
+    const { starterCount } = req.body
+    const leagueId = req.params.id
+    const fantasyWeekId = req.params.fantasyWeekId
+
+    // Validate starterCount
+    if (!Number.isInteger(starterCount) || starterCount < 1) {
+      return res.status(400).json({ error: { message: 'starterCount must be a positive integer' } })
+    }
+
+    // Fetch league + verify commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, ownerId: true, settings: true },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can set roster overrides' } })
+    }
+
+    const defaultMax = league.settings?.maxActiveLineup || 4
+    const rosterSize = league.settings?.rosterSize || 6
+    const irSlots = league.settings?.irSlots || 0
+    const maxAllowed = Math.min(defaultMax, rosterSize - irSlots)
+
+    if (starterCount > maxAllowed) {
+      return res.status(400).json({
+        error: { message: `starterCount cannot exceed ${maxAllowed} (default max or roster size minus IR)` },
+      })
+    }
+
+    // Verify fantasy week exists and is UPCOMING
+    const fantasyWeek = await prisma.fantasyWeek.findUnique({
+      where: { id: fantasyWeekId },
+      select: { id: true, status: true, name: true, weekNumber: true, startDate: true, seasonId: true },
+    })
+    if (!fantasyWeek) {
+      return res.status(404).json({ error: { message: 'Fantasy week not found' } })
+    }
+    if (fantasyWeek.status !== 'UPCOMING') {
+      return res.status(400).json({
+        error: { message: 'Can only set overrides for UPCOMING weeks' },
+      })
+    }
+
+    // Verify the fantasy week belongs to the league's current season
+    const leagueSeason = await prisma.leagueSeason.findFirst({
+      where: { leagueId, seasonId: fantasyWeek.seasonId, status: 'ACTIVE' },
+    })
+    if (!leagueSeason) {
+      return res.status(400).json({
+        error: { message: 'Fantasy week does not belong to this league\'s active season' },
+      })
+    }
+
+    // Upsert the override
+    const override = await prisma.weeklyRosterOverride.upsert({
+      where: { leagueId_fantasyWeekId: { leagueId, fantasyWeekId } },
+      update: { starterCount },
+      create: { leagueId, fantasyWeekId, starterCount },
+      include: {
+        fantasyWeek: {
+          select: { id: true, name: true, weekNumber: true, startDate: true, status: true },
+        },
+      },
+    })
+
+    res.json({
+      override,
+      defaultStarterCount: defaultMax,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// DELETE /api/leagues/:id/roster-overrides/:fantasyWeekId - Remove override (revert to default)
+router.delete('/:id/roster-overrides/:fantasyWeekId', authenticate, async (req, res, next) => {
+  try {
+    const leagueId = req.params.id
+    const fantasyWeekId = req.params.fantasyWeekId
+
+    // Verify commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { ownerId: true },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can remove roster overrides' } })
+    }
+
+    // Verify fantasy week is UPCOMING
+    const fantasyWeek = await prisma.fantasyWeek.findUnique({
+      where: { id: fantasyWeekId },
+      select: { status: true },
+    })
+    if (!fantasyWeek) {
+      return res.status(404).json({ error: { message: 'Fantasy week not found' } })
+    }
+    if (fantasyWeek.status !== 'UPCOMING') {
+      return res.status(400).json({
+        error: { message: 'Can only remove overrides for UPCOMING weeks' },
+      })
+    }
+
+    // Delete if exists
+    await prisma.weeklyRosterOverride.deleteMany({
+      where: { leagueId, fantasyWeekId },
+    })
+
+    res.json({ success: true })
+  } catch (error) {
+    next(error)
+  }
 })
 
 module.exports = router

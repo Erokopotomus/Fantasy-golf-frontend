@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Card from '../../common/Card'
 import useMatchups from '../../../hooks/useMatchups'
+import { useAuth } from '../../../context/AuthContext'
 import api from '../../../services/api'
 
 const ScheduleManager = ({ leagueId, league, notify }) => {
   const { schedule, standings, loading, refetch } = useMatchups(leagueId)
+  const { user } = useAuth()
   const [generating, setGenerating] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -18,6 +20,41 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
   const [qualifiedTeams, setQualifiedTeams] = useState([])
   const [matchupSlots, setMatchupSlots] = useState([])
   const [submittingMatchups, setSubmittingMatchups] = useState(false)
+
+  // Roster override state
+  const [overrides, setOverrides] = useState([])
+  const [fantasyWeeks, setFantasyWeeks] = useState([])
+  const [defaultStarterCount, setDefaultStarterCount] = useState(4)
+  const [overridesLoading, setOverridesLoading] = useState(false)
+  const [editingOverrideWeek, setEditingOverrideWeek] = useState(null)
+  const [overrideValue, setOverrideValue] = useState('')
+  const [savingOverride, setSavingOverride] = useState(false)
+  const isCommissioner = league?.ownerId === user?.id
+
+  const fetchOverrides = useCallback(async () => {
+    if (!leagueId) return
+    try {
+      setOverridesLoading(true)
+      const data = await api.getRosterOverrides(leagueId)
+      setOverrides(data.overrides || [])
+      setFantasyWeeks(data.fantasyWeeks || [])
+      setDefaultStarterCount(data.defaultStarterCount || league?.settings?.maxActiveLineup || 4)
+    } catch {
+      // Silently fail — feature just won't show data
+    } finally {
+      setOverridesLoading(false)
+    }
+  }, [leagueId, league?.settings?.maxActiveLineup])
+
+  useEffect(() => {
+    if (isCommissioner) fetchOverrides()
+  }, [isCommissioner, fetchOverrides])
+
+  // Build lookup: weekNumber → fantasyWeek (for getting IDs)
+  const weekToFantasyWeek = fantasyWeeks.reduce((acc, fw) => {
+    acc[fw.weekNumber] = fw
+    return acc
+  }, {})
 
   const playoffSeeding = league?.settings?.formatSettings?.playoffSeeding || 'default'
 
@@ -301,6 +338,179 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
               Cancel
             </button>
           </div>
+        </Card>
+      )}
+
+      {/* Roster Adjustments — Commissioner only */}
+      {isCommissioner && (
+        <Card>
+          <h3 className="text-lg font-semibold font-display text-white mb-2">Roster Adjustments</h3>
+          <p className="text-text-secondary text-sm mb-4">
+            Reduce the number of active starters for weeks with smaller tournament fields.
+            Default: <span className="text-white font-medium">{defaultStarterCount} starters</span>
+          </p>
+
+          {overridesLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-400"></div>
+            </div>
+          ) : schedule.length === 0 ? (
+            <p className="text-text-muted text-sm py-4">Generate a schedule first to configure per-week roster adjustments.</p>
+          ) : (
+            <div className="space-y-2">
+              {schedule.map(week => {
+                const fw = weekToFantasyWeek[week.week]
+                const override = overrides.find(o => o.fantasyWeek?.weekNumber === week.week)
+                const hasOverride = !!override
+                const effectiveCount = hasOverride ? override.starterCount : defaultStarterCount
+                const isUpcoming = fw ? fw.status === 'UPCOMING' : true
+                const isEditingThis = editingOverrideWeek === week.week
+
+                return (
+                  <div
+                    key={week.week}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      hasOverride ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-dark-tertiary'
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white text-sm font-medium">Week {week.week}</span>
+                        {week.tournament && (
+                          <span className="text-text-muted text-xs truncate">{week.tournament}</span>
+                        )}
+                        {hasOverride && (
+                          <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs font-medium rounded">
+                            Reduced
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-text-secondary text-xs mt-0.5">
+                        {effectiveCount} starter{effectiveCount !== 1 ? 's' : ''}
+                        {hasOverride && ` (default: ${defaultStarterCount})`}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 ml-3 shrink-0">
+                      {isEditingThis ? (
+                        <>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setOverrideValue(v => String(Math.max(1, (parseInt(v) || defaultStarterCount) - 1)))}
+                              className="w-7 h-7 flex items-center justify-center bg-dark-primary border border-dark-border rounded text-white text-sm hover:bg-dark-border"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              value={overrideValue}
+                              onChange={(e) => setOverrideValue(e.target.value)}
+                              min={1}
+                              max={defaultStarterCount}
+                              className="w-12 px-1 py-1 bg-dark-primary border border-dark-border rounded text-white text-center text-sm"
+                            />
+                            <button
+                              onClick={() => setOverrideValue(v => String(Math.min(defaultStarterCount, (parseInt(v) || 1) + 1)))}
+                              className="w-7 h-7 flex items-center justify-center bg-dark-primary border border-dark-border rounded text-white text-sm hover:bg-dark-border"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const val = parseInt(overrideValue)
+                              if (!val || val < 1 || val > defaultStarterCount) {
+                                notify?.error('Invalid', `Must be between 1 and ${defaultStarterCount}`)
+                                return
+                              }
+                              const fwId = fw?.id
+                              if (!fwId) {
+                                notify?.error('Error', 'No fantasy week found for this week. Season may not be set up.')
+                                return
+                              }
+                              if (val === defaultStarterCount) {
+                                // If setting to default, just delete the override
+                                if (hasOverride) {
+                                  try {
+                                    setSavingOverride(true)
+                                    await api.deleteRosterOverride(leagueId, fwId)
+                                    notify?.success('Reset', `Week ${week.week} reverted to default`)
+                                    fetchOverrides()
+                                  } catch (err) {
+                                    notify?.error('Error', err.message)
+                                  } finally {
+                                    setSavingOverride(false)
+                                  }
+                                }
+                                setEditingOverrideWeek(null)
+                                return
+                              }
+                              try {
+                                setSavingOverride(true)
+                                await api.setRosterOverride(leagueId, fwId, val)
+                                notify?.success('Saved', `Week ${week.week} set to ${val} starters`)
+                                fetchOverrides()
+                              } catch (err) {
+                                notify?.error('Error', err.message)
+                              } finally {
+                                setSavingOverride(false)
+                                setEditingOverrideWeek(null)
+                              }
+                            }}
+                            disabled={savingOverride}
+                            className="px-2 py-1 bg-emerald-500 text-white rounded text-xs font-medium hover:bg-emerald-600 disabled:opacity-50"
+                          >
+                            {savingOverride ? '...' : 'Save'}
+                          </button>
+                          <button
+                            onClick={() => setEditingOverrideWeek(null)}
+                            className="px-2 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-white"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : isUpcoming ? (
+                        hasOverride ? (
+                          <button
+                            onClick={async () => {
+                              try {
+                                setSavingOverride(true)
+                                await api.deleteRosterOverride(leagueId, fw?.id || override.fantasyWeekId)
+                                notify?.success('Reset', `Week ${week.week} reverted to ${defaultStarterCount} starters`)
+                                fetchOverrides()
+                              } catch (err) {
+                                notify?.error('Error', err.message)
+                              } finally {
+                                setSavingOverride(false)
+                              }
+                            }}
+                            disabled={savingOverride}
+                            className="px-2.5 py-1 bg-amber-500/20 text-amber-400 rounded text-xs font-medium hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+                          >
+                            Reset
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingOverrideWeek(week.week)
+                              setOverrideValue(String(defaultStarterCount - 1))
+                            }}
+                            className="px-2.5 py-1 bg-dark-border text-text-secondary rounded text-xs font-medium hover:text-white transition-colors"
+                          >
+                            Adjust
+                          </button>
+                        )
+                      ) : (
+                        <span className="text-text-muted text-xs">
+                          {hasOverride ? `${effectiveCount} starters` : ''}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </Card>
       )}
 
