@@ -884,6 +884,18 @@ async function syncTournamentResults(tournamentDgId, prisma) {
     data: { status: 'COMPLETED' },
   })
 
+  // Also transition the linked FantasyWeek to COMPLETED
+  const linkedWeek = await prisma.fantasyWeek.findFirst({
+    where: { tournamentId: tournament.id, status: { not: 'COMPLETED' } },
+  })
+  if (linkedWeek) {
+    await prisma.fantasyWeek.update({
+      where: { id: linkedWeek.id },
+      data: { status: 'COMPLETED' },
+    })
+    console.log(`[Sync] FantasyWeek ${linkedWeek.name} → COMPLETED`)
+  }
+
   console.log(`[Sync] Tournament finalized: ${players.length} players processed`)
   return { finalized: players.length }
 }

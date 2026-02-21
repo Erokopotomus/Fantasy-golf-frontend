@@ -582,6 +582,21 @@ httpServer.listen(PORT, () => {
             cronLog('weekTransition', `${week.name}: LOCKED → IN_PROGRESS`)
           }
         }
+
+        // Transition IN_PROGRESS/LOCKED → COMPLETED when tournament is COMPLETED
+        const activeWeeks = await cronPrisma.fantasyWeek.findMany({
+          where: { status: { in: ['IN_PROGRESS', 'LOCKED'] } },
+          include: { tournament: { select: { id: true, status: true } } },
+        })
+        for (const week of activeWeeks) {
+          if (week.tournament?.status === 'COMPLETED') {
+            await cronPrisma.fantasyWeek.update({
+              where: { id: week.id },
+              data: { status: 'COMPLETED' },
+            })
+            cronLog('weekTransition', `${week.name}: ${week.status} → COMPLETED`)
+          }
+        }
       } catch (e) { cronLog('weekTransition', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
