@@ -146,7 +146,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
   - Format-aware standings (H2H, Roto, Survivor, One-and-Done)
   - Quick stats cards (rank, points, points behind)
   - Weekly breakdown with tournament-by-tournament results
-  - StandingsTable, H2HStandings, RotoStandings, SurvivorStandings, OADStandings components
+  - StandingsTable, H2HStandings, RotoStandings, SurvivorStandings, OADStandings, SegmentStandings components
 
 ### Remaining Phase 1 items:
 - [x] Playoff bracket generation, seeding, and auto-advancement — playoffService.js (generate, advance, getBracket), commissioner endpoint, auto-advance from fantasyTracker
@@ -1222,6 +1222,8 @@ These are research-backed pain points from Reddit, forums, and app reviews that 
 │       └── services/            ← Business logic (25+ service files)
 │           ├── datagolfClient.js, datagolfSync.js
 │           ├── scoringService.js, fantasyTracker.js
+│           ├── seasonRangeService.js    ← Season range filtering + segment boundaries
+│           ├── segmentScoringService.js ← Segment completion + bonus awards
 │           ├── nflFantasyTracker.js, nflScoringService.js
 │           ├── clutchRatingService.js  ← Clutch Rating V2 (7 components, 833 lines)
 │           ├── settingsMapper.js       ← Import settings auto-detection
@@ -1478,8 +1480,8 @@ All detailed spec documents live in `docs/` and are version-controlled with the 
 
 ---
 
-*Last updated: February 14, 2026*
-*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine). Import Intelligence Pipeline complete. League Vault V2 complete (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing). Commissioner blog system complete (TipTap, reactions, comments, cover images). Prisma singleton + connection pooling deployed (fixed pool exhaustion). All route files use shared client. Automatic tournament status transition added. 330+ commits. 91+ database models. 150+ API endpoints. 65+ frontend pages. 33 cron jobs. 25+ backend services. 44 migrations. 2 sports live.*
+*Last updated: February 21, 2026*
+*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine). Import Intelligence Pipeline complete. League Vault V2 complete (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing). Commissioner blog system complete (TipTap, reactions, comments, cover images). Season range picker + segment scoring for Full League format. Prisma singleton + connection pooling deployed (fixed pool exhaustion). All route files use shared client. Automatic tournament status transition added. 330+ commits. 91+ database models. 160+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
 
 **Pending deployment:** Migrations 43 (Clutch Rating V2) and 44 (League Posts blog upgrade) need `prisma migrate deploy` on Railway.
 

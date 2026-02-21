@@ -66,6 +66,19 @@ const LeagueSettings = () => {
   })
 
   const [activeTab, setActiveTab] = useState('general')
+  const [seasonWeeks, setSeasonWeeks] = useState([])
+
+  // Fetch available weeks for full league golf
+  useEffect(() => {
+    if (league && format?.id === 'full-league') {
+      const isGolf = (league.sport || 'GOLF').toUpperCase() === 'GOLF'
+      if (isGolf) {
+        api.getAvailableWeeks(leagueId)
+          .then(data => setSeasonWeeks(data.weeks || []))
+          .catch(() => setSeasonWeeks([]))
+      }
+    }
+  }, [league, format, leagueId])
 
   // Update settings when league loads
   useEffect(() => {
@@ -217,7 +230,7 @@ const LeagueSettings = () => {
   const renderFormatSettings = () => {
     switch (format?.id) {
       case 'full-league':
-        return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+        return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={seasonWeeks} />
       case 'head-to-head':
         return <HeadToHeadSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} teams={league?.teams} />
       case 'roto':

@@ -122,6 +122,79 @@ router.get('/upcoming-with-fields', optionalAuth, async (req, res, next) => {
   }
 })
 
+// GET /api/tournaments/season-weeks - Get fantasy weeks for current season schedule
+router.get('/season-weeks', async (req, res, next) => {
+  try {
+    const sportSlug = (req.query.sport || 'golf').toLowerCase()
+
+    const sport = await prisma.sport.findUnique({ where: { slug: sportSlug } })
+    if (!sport) {
+      return res.status(404).json({ error: { message: `Sport '${sportSlug}' not found` } })
+    }
+
+    const season = await prisma.season.findFirst({
+      where: { sportId: sport.id, isCurrent: true },
+      select: { id: true, name: true, year: true },
+    })
+    if (!season) {
+      return res.status(404).json({ error: { message: 'No current season found' } })
+    }
+
+    const weeks = await prisma.fantasyWeek.findMany({
+      where: { seasonId: season.id },
+      include: {
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+            tour: true,
+            isMajor: true,
+            isSignature: true,
+            isPlayoff: true,
+            fieldSize: true,
+          },
+        },
+      },
+      orderBy: { weekNumber: 'asc' },
+    })
+
+    // Filter to PGA Tour events only (weeks with a tournament that's PGA)
+    const pgaWeeks = weeks
+      .filter(w => w.tournament && (w.tournament.tour === 'PGA' || w.tournament.tour === 'PGA TOUR'))
+      .map(w => ({
+        id: w.id,
+        weekNumber: w.weekNumber,
+        name: w.name,
+        status: w.status,
+        tournamentId: w.tournamentId,
+        tournament: {
+          id: w.tournament.id,
+          name: w.tournament.name,
+          shortName: w.tournament.shortName,
+          startDate: w.tournament.startDate,
+          endDate: w.tournament.endDate,
+          status: w.tournament.status,
+          isMajor: w.tournament.isMajor || false,
+          isSignature: w.tournament.isSignature || false,
+          isPlayoff: w.tournament.isPlayoff || false,
+          fieldSize: w.tournament.fieldSize,
+        },
+      }))
+
+    res.json({
+      weeks: pgaWeeks,
+      seasonId: season.id,
+      seasonName: season.name,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/tournaments/:id - Get tournament details
 router.get('/:id', async (req, res, next) => {
   try {

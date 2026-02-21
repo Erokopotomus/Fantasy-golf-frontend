@@ -1,6 +1,6 @@
 # CLUTCH FANTASY SPORTS — Project Status Report
 
-> Generated: February 14, 2026
+> Generated: February 21, 2026
 > Repository: github.com/Erokopotomus/Clutch
 > Branch: master (330+ commits)
 > Codebase: 270+ frontend files, 95+ backend files, ~2,800-line Prisma schema
@@ -340,8 +340,8 @@
 - GET `/me`, `/:id`, `/by-username/:username`
 - PATCH `/me`
 
-### Leagues (`/api/leagues`) — 10+ routes
-- GET `/`, `/:id`, `/:id/scoring-schema`
+### Leagues (`/api/leagues`) — 12+ routes
+- GET `/`, `/:id`, `/:id/scoring-schema`, `/:id/available-weeks`, `/:id/segment-standings`
 - POST `/`, `/:id/join`
 - PATCH `/:id`, `/:id/scoring`
 - DELETE `/:id`
@@ -374,8 +374,8 @@
 ### Players (`/api/players`) — 4 routes
 - GET `/`, `/:id`, `/:id/stats`, `/:id/schedule`
 
-### Tournaments (`/api/tournaments`) — 6 routes
-- GET `/`, `/current`, `/upcoming-with-fields`, `/:id`, `/:id/leaderboard`, `/:id/scorecards/:playerId`
+### Tournaments (`/api/tournaments`) — 8 routes
+- GET `/`, `/current`, `/upcoming-with-fields`, `/season-weeks`, `/:id`, `/:id/leaderboard`, `/:id/scorecards/:playerId`, `/:id/weather`
 
 ### Courses (`/api/courses`) — 2 routes
 - GET `/`, `/:id`
@@ -595,7 +595,9 @@
 | `settingsMapper.js` | Auto-detect league settings from imported data (5 platforms) |
 | `nflScoringService.js` | NFL fantasy point calculation (3 formats + custom) |
 | `nflFantasyTracker.js` | NFL weekly scoring pipeline |
-| `fantasyTracker.js` | Golf fantasy scoring pipeline |
+| `fantasyTracker.js` | Golf fantasy scoring pipeline (+ segment scoring hook) |
+| `seasonRangeService.js` | Season range filtering + segment boundary computation |
+| `segmentScoringService.js` | Segment completion detection + bonus point awards |
 | `fantasyWeekHelper.js` | Fantasy week creation + lock logic |
 | `playoffService.js` | Playoff bracket generation + advancement |
 | `predictionService.js` | Prediction submission + resolution |
@@ -635,6 +637,8 @@
 - Commissioner tools (pause/resume/undo draft, manage members)
 - Commissioner blog system (TipTap rich text, reactions, comments, cover images)
 - Season recap and auto-generated awards
+- Season range selection for Full League (pick start/end tournaments from PGA schedule)
+- Segment scoring with bonus point awards for quarterly segment winners
 
 ### League Vault & Import
 - 5-platform import (Sleeper, Yahoo, ESPN, Fantrax, MFL)
@@ -697,6 +701,9 @@
 - Course database with skill importance weights
 - Early field sync (Tue 8PM + Wed 8AM crons)
 - Automatic tournament status transition (UPCOMING → IN_PROGRESS)
+- Season range picker (commissioners choose start/end tournaments)
+- Segment scoring (quarterly standings, bonus points for segment winners)
+- Segment standings UI (tabbed Q1-Q4 with overall + bonus column)
 
 ### NFL Features
 - NFL player database + detail pages

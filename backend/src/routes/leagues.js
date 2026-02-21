@@ -2174,4 +2174,201 @@ router.delete('/:id/roster-overrides/:fantasyWeekId', authenticate, async (req, 
   }
 })
 
+// GET /api/leagues/:id/available-weeks - Get fantasy weeks for this league's sport/season
+router.get('/:id/available-weeks', authenticate, async (req, res, next) => {
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      select: { sportId: true, sport: true },
+    })
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const sportSlug = league.sportId
+      ? (await prisma.sport.findUnique({ where: { id: league.sportId }, select: { slug: true } }))?.slug
+      : (league.sport || 'GOLF').toLowerCase()
+
+    const sport = await prisma.sport.findUnique({ where: { slug: sportSlug } })
+    if (!sport) {
+      return res.status(404).json({ error: { message: 'Sport not found' } })
+    }
+
+    const season = await prisma.season.findFirst({
+      where: { sportId: sport.id, isCurrent: true },
+      select: { id: true, name: true, year: true },
+    })
+    if (!season) {
+      return res.status(404).json({ error: { message: 'No current season found' } })
+    }
+
+    const weeks = await prisma.fantasyWeek.findMany({
+      where: { seasonId: season.id },
+      include: {
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+            tour: true,
+            isMajor: true,
+            isSignature: true,
+            isPlayoff: true,
+            fieldSize: true,
+          },
+        },
+      },
+      orderBy: { weekNumber: 'asc' },
+    })
+
+    const pgaWeeks = weeks
+      .filter(w => w.tournament && (w.tournament.tour === 'PGA' || w.tournament.tour === 'PGA TOUR'))
+      .map(w => ({
+        id: w.id,
+        weekNumber: w.weekNumber,
+        name: w.name,
+        status: w.status,
+        tournamentId: w.tournamentId,
+        tournament: {
+          id: w.tournament.id,
+          name: w.tournament.name,
+          shortName: w.tournament.shortName,
+          startDate: w.tournament.startDate,
+          endDate: w.tournament.endDate,
+          status: w.tournament.status,
+          isMajor: w.tournament.isMajor || false,
+          isSignature: w.tournament.isSignature || false,
+          isPlayoff: w.tournament.isPlayoff || false,
+          fieldSize: w.tournament.fieldSize,
+        },
+      }))
+
+    res.json({
+      weeks: pgaWeeks,
+      seasonId: season.id,
+      seasonName: season.name,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/leagues/:id/segment-standings - Get per-segment standings
+router.get('/:id/segment-standings', authenticate, async (req, res, next) => {
+  try {
+    const { getLeagueSeasonWeeks, computeSegmentBoundaries } = require('../services/seasonRangeService')
+
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      select: { settings: true },
+    })
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    const segmentCount = league.settings?.segments || league.settings?.formatSettings?.segments || 1
+    const segmentBonus = league.settings?.segmentBonus ?? league.settings?.formatSettings?.segmentBonus ?? 25
+
+    if (segmentCount <= 1) {
+      return res.json({ segments: [], segmentCount: 1 })
+    }
+
+    const weeks = await getLeagueSeasonWeeks(req.params.id, prisma)
+    const boundaries = computeSegmentBoundaries(weeks, segmentCount)
+
+    // Find the league season
+    const leagueSeason = await prisma.leagueSeason.findFirst({
+      where: { leagueId: req.params.id, status: 'ACTIVE' },
+      include: {
+        teamSeasons: {
+          include: {
+            team: {
+              include: {
+                user: { select: { id: true, name: true, avatar: true } },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!leagueSeason) {
+      return res.json({ segments: boundaries.map(b => ({ ...b, standings: [] })), segmentCount })
+    }
+
+    // For each segment, compute standings from WeeklyTeamResults
+    const segmentResults = []
+    for (const seg of boundaries) {
+      const segWeekIds = seg.weeks.map(w => w.id)
+      const completedWeekIds = seg.weeks.filter(w => w.status === 'COMPLETED').map(w => w.id)
+      const isComplete = completedWeekIds.length === segWeekIds.length && completedWeekIds.length > 0
+      const isActive = !isComplete && completedWeekIds.length > 0
+
+      // Get weekly results for this segment's weeks
+      const weeklyResults = completedWeekIds.length > 0
+        ? await prisma.weeklyTeamResult.findMany({
+            where: {
+              leagueSeasonId: leagueSeason.id,
+              fantasyWeekId: { in: completedWeekIds },
+            },
+          })
+        : []
+
+      // Sum points per team
+      const teamPointsMap = new Map()
+      const teamBestWeekMap = new Map()
+      for (const wr of weeklyResults) {
+        const prev = teamPointsMap.get(wr.teamId) || 0
+        teamPointsMap.set(wr.teamId, prev + wr.totalPoints)
+        const prevBest = teamBestWeekMap.get(wr.teamId) || 0
+        if (wr.totalPoints > prevBest) {
+          teamBestWeekMap.set(wr.teamId, wr.totalPoints)
+        }
+      }
+
+      const standings = leagueSeason.teamSeasons.map(ts => ({
+        teamId: ts.teamId,
+        teamName: ts.team.name,
+        userId: ts.team.userId,
+        userName: ts.team.user?.name,
+        userAvatar: ts.team.user?.avatar,
+        segmentPoints: Math.round((teamPointsMap.get(ts.teamId) || 0) * 100) / 100,
+        bestWeek: teamBestWeekMap.get(ts.teamId) || 0,
+      }))
+
+      standings.sort((a, b) => b.segmentPoints - a.segmentPoints)
+      standings.forEach((s, i) => { s.rank = i + 1 })
+
+      // Check if winner got bonus
+      const winner = standings[0]
+      const teamSeason = winner ? leagueSeason.teamSeasons.find(ts => ts.teamId === winner.teamId) : null
+      const segWins = teamSeason?.stats?.segmentWins || []
+      const wonThisSegment = segWins.some(sw => sw.segmentNumber === seg.segmentNumber)
+
+      segmentResults.push({
+        segmentNumber: seg.segmentNumber,
+        startWeekNumber: seg.startWeekNumber,
+        endWeekNumber: seg.endWeekNumber,
+        weekCount: segWeekIds.length,
+        completedWeeks: completedWeekIds.length,
+        isComplete,
+        isActive,
+        bonusAwarded: wonThisSegment,
+        standings,
+      })
+    }
+
+    res.json({
+      segments: segmentResults,
+      segmentCount,
+      segmentBonus,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router

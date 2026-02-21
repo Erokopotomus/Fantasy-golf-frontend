@@ -150,6 +150,15 @@ function calculateFantasyPoints(performance, scoringConfig) {
  * Calculate league standings across all completed tournaments
  */
 async function calculateLeagueStandings(leagueId, prisma) {
+  // Get season range tournament IDs for filtering (empty = no filter)
+  const { getLeagueTournamentIds } = require('./seasonRangeService')
+  const rangeIds = await getLeagueTournamentIds(leagueId, prisma)
+
+  const performancesWhere = {
+    tournament: { status: 'COMPLETED' },
+    ...(rangeIds.length > 0 && { tournamentId: { in: rangeIds } }),
+  }
+
   const league = await prisma.league.findUnique({
     where: { id: leagueId },
     include: {
@@ -162,9 +171,7 @@ async function calculateLeagueStandings(leagueId, prisma) {
               player: {
                 include: {
                   performances: {
-                    where: {
-                      tournament: { status: 'COMPLETED' },
-                    },
+                    where: performancesWhere,
                     include: {
                       tournament: { select: { id: true, name: true, startDate: true } },
                     },

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import Card from '../../common/Card'
+import SeasonRangePicker from './SeasonRangePicker'
 
-const FullLeagueSettings = ({ settings, onChange }) => {
+const FullLeagueSettings = ({ settings, onChange, seasonWeeks }) => {
   const [localSettings, setLocalSettings] = useState({
     segments: settings?.segments || 4,
     segmentBonus: settings?.segmentBonus ?? 25,
+    seasonRange: settings?.seasonRange || null,
     pointsPerPosition: settings?.pointsPerPosition || {
       1: 100,
       2: 75,
@@ -35,6 +37,13 @@ const FullLeagueSettings = ({ settings, onChange }) => {
     onChange?.(updated)
   }
 
+  const handleSeasonRangeChange = (range) => {
+    const hasRange = range.startFantasyWeekId || range.endFantasyWeekId
+    const updated = { ...localSettings, seasonRange: hasRange ? range : null }
+    setLocalSettings(updated)
+    onChange?.(updated)
+  }
+
   const positionLabels = {
     1: '1st Place',
     2: '2nd Place',
@@ -48,6 +57,23 @@ const FullLeagueSettings = ({ settings, onChange }) => {
 
   return (
     <div className="space-y-6">
+      {/* Season Range — only show for golf when weeks are available */}
+      {seasonWeeks && seasonWeeks.length > 0 && (
+        <Card>
+          <h3 className="text-lg font-semibold font-display text-white mb-2">Season Range</h3>
+          <p className="text-xs text-text-muted mb-4">
+            Choose which tournaments count for your league. Leave blank for the full PGA season.
+          </p>
+          <SeasonRangePicker
+            weeks={seasonWeeks}
+            startWeekId={localSettings.seasonRange?.startFantasyWeekId || null}
+            endWeekId={localSettings.seasonRange?.endFantasyWeekId || null}
+            segments={localSettings.segments}
+            onChange={handleSeasonRangeChange}
+          />
+        </Card>
+      )}
+
       <Card>
         <h3 className="text-lg font-semibold font-display text-white mb-4">Season Structure</h3>
         <div>

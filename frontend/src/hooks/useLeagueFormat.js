@@ -67,6 +67,7 @@ export const DEFAULT_FORMAT_SETTINGS = {
   'full-league': {
     segments: 4,
     segmentBonus: 25,
+    seasonRange: null,
     pointsPerPosition: {
       1: 100,
       2: 75,

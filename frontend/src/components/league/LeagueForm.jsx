@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Input from '../common/Input'
 import Select from '../common/Select'
 import Button from '../common/Button'
@@ -10,6 +10,7 @@ import RotoSettings from './settings/RotoSettings'
 import SurvivorSettings from './settings/SurvivorSettings'
 import OneAndDoneSettings from './settings/OneAndDoneSettings'
 import { LEAGUE_FORMATS, DEFAULT_FORMAT_SETTINGS } from '../../hooks/useLeagueFormat'
+import api from '../../services/api'
 
 const NFL_SCORING_OPTIONS = [
   { key: 'half_ppr', label: 'Half PPR', desc: 'Half point per reception (most popular)' },
@@ -38,6 +39,16 @@ const LeagueForm = ({ onSubmit, loading }) => {
   })
   const isNfl = formData.sport === 'nfl'
   const [errors, setErrors] = useState({})
+  const [seasonWeeks, setSeasonWeeks] = useState([])
+
+  // Fetch season weeks when entering step 3 for golf full-league
+  useEffect(() => {
+    if (step === 3 && formData.sport === 'golf' && formData.format === 'full-league') {
+      api.getSeasonWeeks('golf')
+        .then(data => setSeasonWeeks(data.weeks || []))
+        .catch(() => setSeasonWeeks([]))
+    }
+  }, [step, formData.sport, formData.format])
 
   const rosterSizeOptions = Array.from({ length: 9 }, (_, i) => ({
     value: String(i + 4),
@@ -147,7 +158,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
   const renderFormatSettings = () => {
     switch (formData.format) {
       case 'full-league':
-        return <FullLeagueSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
+        return <FullLeagueSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={formData.sport === 'golf' ? seasonWeeks : null} />
       case 'head-to-head':
         return <HeadToHeadSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
       case 'roto':

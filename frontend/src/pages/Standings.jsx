@@ -11,6 +11,7 @@ import RotoStandings from '../components/standings/RotoStandings'
 import SurvivorStandings from '../components/standings/SurvivorStandings'
 import OADStandings from '../components/standings/OADStandings'
 import Card from '../components/common/Card'
+import SegmentStandings from '../components/standings/SegmentStandings'
 import LeagueChat from '../components/ai/LeagueChat'
 import useStandings from '../hooks/useStandings'
 import useMatchups from '../hooks/useMatchups'
@@ -230,16 +231,26 @@ const Standings = () => {
       )}
 
       {isFullLeague && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Standings Table - 2 columns */}
-          <div className="lg:col-span-2">
-            <StandingsTable standings={mappedStandings} currentUserId={user?.id} />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Standings Table - 2 columns */}
+            <div className="lg:col-span-2">
+              <StandingsTable standings={mappedStandings} currentUserId={user?.id} />
+            </div>
+
+            {/* Weekly Results - 1 column */}
+            <div>
+              <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />
+            </div>
           </div>
 
-          {/* Weekly Results - 1 column */}
-          <div>
-            <WeeklyBreakdown results={mappedWeeklyResults} currentUserId={user?.id} />
-          </div>
+          {/* Segment Standings - only if segments configured */}
+          {league?.settings?.segments > 1 && (
+            <SegmentStandings leagueId={leagueId} />
+          )}
+          {league?.settings?.formatSettings?.segments > 1 && !league?.settings?.segments && (
+            <SegmentStandings leagueId={leagueId} />
+          )}
         </div>
       )}
 

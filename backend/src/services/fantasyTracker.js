@@ -292,10 +292,19 @@ async function computeWeeklyResults(fantasyWeekId, prisma) {
       await updateMatchupScores(ls, fantasyWeekId, fantasyWeek.weekNumber, teamResults, prisma)
     }
 
-    // Update TeamSeason aggregates
+    // Update TeamSeason aggregates (filtered by season range if configured)
+    const { getLeagueSeasonWeeks } = require('./seasonRangeService')
+    const rangeWeeks = await getLeagueSeasonWeeks(ls.league.id, prisma)
+    const rangeWeekIds = rangeWeeks.length > 0 ? rangeWeeks.map(w => w.id) : null
+
     for (const tr of teamResults) {
+      const weekResultsWhere = { leagueSeasonId: ls.id, teamId: tr.teamId }
+      if (rangeWeekIds) {
+        weekResultsWhere.fantasyWeekId = { in: rangeWeekIds }
+      }
+
       const allWeekResults = await prisma.weeklyTeamResult.findMany({
-        where: { leagueSeasonId: ls.id, teamId: tr.teamId },
+        where: weekResultsWhere,
       })
 
       const totalSeasonPoints = allWeekResults.reduce((s, r) => s + r.totalPoints, 0)
@@ -474,6 +483,14 @@ async function processCompletedWeeks(prisma) {
       ...snapResult,
       ...weekResult,
     })
+
+    // Process segment completion (awards bonus if this week ends a segment)
+    try {
+      const { processSegmentCompletion } = require('./segmentScoringService')
+      await processSegmentCompletion(week.id, prisma)
+    } catch (err) {
+      console.error(`Segment processing failed for ${week.name}:`, err.message)
+    }
   }
 
   return results

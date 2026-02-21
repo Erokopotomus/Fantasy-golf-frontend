@@ -1523,6 +1523,19 @@ class ApiService {
   async deleteRosterOverride(leagueId, fantasyWeekId) {
     return this.request(`/leagues/${leagueId}/roster-overrides/${fantasyWeekId}`, { method: 'DELETE' })
   }
+
+  // ── Season Range & Segments ──
+  async getSeasonWeeks(sport = 'golf') {
+    return this.request(`/tournaments/season-weeks?sport=${sport}`)
+  }
+
+  async getAvailableWeeks(leagueId) {
+    return this.request(`/leagues/${leagueId}/available-weeks`)
+  }
+
+  async getSegmentStandings(leagueId) {
+    return this.request(`/leagues/${leagueId}/segment-standings`)
+  }
 }
 
 export const api = new ApiService()
