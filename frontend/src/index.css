@@ -3,25 +3,108 @@
 @tailwind utilities;
 
 /* ============================================
-   AURORA EMBER DESIGN SYSTEM — CSS Foundation
+   CLUTCH BRAND SYSTEM — CSS Foundation
+   Light-first with dark mode toggle
    ============================================ */
 
+/* LIGHT MODE (default) */
 :root {
-  --bg: #0A0908;
-  --surface: rgba(255,245,230,0.04);
-  --surface-hover: rgba(255,245,230,0.07);
-  --surface-bright: rgba(255,245,230,0.10);
-  --border: #2A2520;
-  --border-subtle: rgba(255,255,255,0.08);
-  --text: #F2EDE8;
-  --text-secondary: #958E84;
-  --text-muted: #5E5850;
-  --gold: #E8B84D;
-  --gold-bright: #F5CC65;
-  --gold-muted: #C49A3A;
-  --orange: #E07838;
-  --rose: #D4607A;
-  --green: #6ABF8A;
+  --bg: #FAFAF6;
+  --bg-alt: #F0EDE6;
+  --surface: #FFFFFF;
+  --surface-alt: #F7F5F0;
+  --stone: #E0DBD2;
+  --text-1: #1A1A1A;
+  --text-2: #65615A;
+  --text-3: #A09A90;
+  --nav-bg: #1E2A3A;
+  --card-border: rgba(0,0,0,0.06);
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  --gauge-bg: #E0DBD2;
+
+  /* Brand accents (same both modes) */
+  --blaze: #F06820;
+  --blaze-hot: #FF8828;
+  --blaze-deep: #D45A10;
+  --slate: #1E2A3A;
+  --slate-mid: #2C3E50;
+  --slate-light: #3D5166;
+  --field: #0D9668;
+  --field-bright: #14B880;
+  --crown: #D4930D;
+  --crown-bright: #F0B429;
+  --live-red: #E83838;
+
+  /* Tinted card backgrounds (light mode) */
+  --tint-golf: #F0F7F4;
+  --tint-nfl: #FFF5EE;
+  --tint-news: #F4F3F0;
+  --tint-rating: #FDF8EE;
+  --tint-ai: #F0F2F5;
+
+  /* Font families */
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-data: 'JetBrains Mono', monospace;
+  --font-editorial: 'Instrument Serif', serif;
+
+  /* Legacy variable mappings (keep existing components working) */
+  --border: #E0DBD2;
+  --border-subtle: rgba(0,0,0,0.06);
+  --text: #1A1A1A;
+  --text-secondary: #65615A;
+  --text-muted: #A09A90;
+  --gold: #D4930D;
+  --gold-bright: #F0B429;
+  --gold-muted: #B07D0A;
+  --orange: #F06820;
+  --rose: #E83838;
+  --green: #0D9668;
+  --surface-hover: rgba(0,0,0,0.04);
+  --surface-bright: rgba(0,0,0,0.06);
+}
+
+/* DARK MODE */
+.dark {
+  --bg: #0E1015;
+  --bg-alt: #151820;
+  --surface: #1A1D26;
+  --surface-alt: #1F222E;
+  --stone: #2A2D38;
+  --text-1: #EEEAE2;
+  --text-2: #908C84;
+  --text-3: #5C5952;
+  --nav-bg: #111318;
+  --card-border: rgba(255,255,255,0.06);
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  --gauge-bg: rgba(255,255,255,0.08);
+
+  /* Dark mode tints */
+  --tint-golf: #1A1D26;
+  --tint-nfl: #1A1D26;
+  --tint-news: #1A1D26;
+  --tint-rating: #1A1D26;
+  --tint-ai: #1A1D26;
+
+  /* Legacy variable mappings (keep existing components working) */
+  --border: #2A2D38;
+  --border-subtle: rgba(255,255,255,0.06);
+  --text: #EEEAE2;
+  --text-secondary: #908C84;
+  --text-muted: #5C5952;
+  --gold: #D4930D;
+  --gold-bright: #F0B429;
+  --gold-muted: #B07D0A;
+  --orange: #F06820;
+  --rose: #E83838;
+  --green: #0D9668;
+  --surface-hover: rgba(255,255,255,0.07);
+  --surface-bright: rgba(255,255,255,0.10);
+}
+
+/* Theme transition */
+*, *::before, *::after {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 /* Base styles */
@@ -36,36 +119,36 @@ html {
 }
 
 body {
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  background-color: #0A0908;
-  color: #F2EDE8;
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--text-1);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar — warm charcoal */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0908;
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2A2520;
+  background: var(--stone);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3A3530;
+  background: var(--text-3);
 }
 
-/* Focus styles — gold */
+/* Focus styles — Blaze */
 :focus-visible {
-  outline: 2px solid #E8B84D;
+  outline: 2px solid var(--blaze);
   outline-offset: 2px;
 }
 
@@ -74,15 +157,20 @@ body {
    ============================================ */
 @layer utilities {
   .text-display {
-    font-family: 'Syne', system-ui, sans-serif;
+    font-family: var(--font-display);
   }
 
   .text-body {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: var(--font-body);
   }
 
   .text-data {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-data);
+  }
+
+  .text-editorial {
+    font-family: var(--font-editorial);
+    font-style: italic;
   }
 
   .text-gradient {

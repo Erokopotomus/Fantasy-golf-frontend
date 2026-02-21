@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
+import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { OnboardingProvider } from './context/OnboardingContext'
@@ -95,15 +96,26 @@ import CategoryStandings from './pages/CategoryStandings'
 import SurvivorBoard from './pages/SurvivorBoard'
 import PickCenter from './pages/PickCenter'
 
+function AppShell({ children }) {
+  const { theme } = useTheme()
+  return (
+    <div className="min-h-screen bg-[var(--bg)]">
+      {theme === 'dark' && <AuroraBackground />}
+      <div className="relative z-10">
+        {children}
+      </div>
+    </div>
+  )
+}
+
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <SportProvider>
       <NotificationProvider>
         <OnboardingProvider>
-        <div className="min-h-screen bg-dark-primary">
-          <AuroraBackground />
-          <div className="relative z-10">
+        <AppShell>
           <Navbar />
           <MobileNav />
           <FloatingCaptureButton />
@@ -589,12 +601,12 @@ function App() {
           </main>
           <Analytics />
           <SpeedInsights />
-          </div>
-        </div>
+        </AppShell>
         </OnboardingProvider>
       </NotificationProvider>
       </SportProvider>
     </AuthProvider>
+    </ThemeProvider>
   )
 }
 

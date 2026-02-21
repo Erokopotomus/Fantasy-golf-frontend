@@ -4,10 +4,11 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Aurora Ember dark theme
+        // Aurora Ember dark theme (legacy — keep until pages migrated)
         dark: {
           primary: '#0A0908',
           secondary: '#151210',
@@ -37,12 +38,19 @@ export default {
           hover: 'rgba(255,245,230,0.14)',
           bright: 'rgba(255,245,230,0.18)',
         },
+        // New brand colors
+        blaze: { DEFAULT: '#F06820', hot: '#FF8828', deep: '#D45A10' },
+        slate: { DEFAULT: '#1E2A3A', mid: '#2C3E50', light: '#3D5166' },
+        field: { DEFAULT: '#0D9668', bright: '#14B880' },
+        crown: { DEFAULT: '#D4930D', bright: '#F0B429' },
+        'live-red': '#E83838',
       },
       fontFamily: {
         sans: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Syne', 'system-ui', 'sans-serif'],
+        display: ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
         body: ['DM Sans', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        editorial: ['Instrument Serif', 'Georgia', 'serif'],
       },
       borderRadius: {
         'card': '16px',
