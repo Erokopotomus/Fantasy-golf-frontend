@@ -116,7 +116,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
               }`}>
                 {draftLabel}
               </span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-[var(--surface-alt)] text-text-muted">
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-[var(--bg-alt)] text-text-muted">
                 {formatLabel}
               </span>
               <span className="text-text-muted text-xs">
@@ -151,7 +151,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
 
       {/* Points section - only show if there are points */}
       {userPoints > 0 ? (
-        <div className="bg-[var(--surface-alt)] rounded-lg p-3 mb-4">
+        <div className="bg-[var(--bg-alt)] rounded-lg p-3 mb-4">
           <div className="flex justify-between items-center">
             <div>
               <p className="text-text-muted text-xs">Your Points</p>
@@ -168,7 +168,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           </div>
         </div>
       ) : isPreDraft ? (
-        <div className="bg-[var(--surface-alt)] rounded-lg p-3 mb-4">
+        <div className="bg-[var(--bg-alt)] rounded-lg p-3 mb-4">
           {league.drafts?.[0]?.scheduledFor ? (
             <DraftCountdown compact scheduledFor={league.drafts[0].scheduledFor} />
           ) : (
@@ -183,7 +183,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           )}
         </div>
       ) : (
-        <div className="bg-[var(--surface-alt)] rounded-lg p-3 mb-4">
+        <div className="bg-[var(--bg-alt)] rounded-lg p-3 mb-4">
           <div className="flex justify-between items-center">
             <div>
               <p className="text-text-muted text-xs">Your Points</p>

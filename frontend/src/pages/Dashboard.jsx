@@ -132,7 +132,7 @@ const Dashboard = () => {
 
           {/* Latest Updates Tease */}
           {(feedLoading || feedCards.length > 0) && (
-            <div className="bg-[var(--surface-alt)] border border-[var(--card-border)] rounded-xl p-4 mb-6 sm:mb-8">
+            <div className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-xl p-4 mb-6 sm:mb-8">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary">My Leagues</h2>
                   {hasMultipleSports && (
-                    <div className="flex items-center bg-[var(--surface-alt)] rounded-lg p-0.5">
+                    <div className="flex items-center bg-[var(--bg-alt)] rounded-lg p-0.5">
                       {[
                         { key: 'all', label: 'All' },
                         { key: 'golf', label: '\u26F3' },
@@ -355,7 +355,7 @@ const Dashboard = () => {
                 {boardsLoading ? (
                   <div className="space-y-2">
                     {[1, 2].map(i => (
-                      <div key={i} className="h-10 bg-[var(--surface-alt)] rounded-lg animate-pulse" />
+                      <div key={i} className="h-10 bg-[var(--bg-alt)] rounded-lg animate-pulse" />
                     ))}
                   </div>
                 ) : boards.length === 0 ? (
@@ -371,7 +371,7 @@ const Dashboard = () => {
                       <Link
                         key={board.id}
                         to={`/lab/${board.id}`}
-                        className="flex items-center justify-between px-3 py-2 bg-[var(--surface-alt)] border border-[var(--card-border)] rounded-lg hover:bg-[var(--stone)] transition-colors group"
+                        className="flex items-center justify-between px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg hover:bg-[var(--stone)] transition-colors group"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
