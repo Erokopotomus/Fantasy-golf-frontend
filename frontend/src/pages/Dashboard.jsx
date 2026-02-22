@@ -136,10 +136,10 @@ const Dashboard = () => {
                 <Link
                   key={action.to}
                   to={action.to}
-                  className={`flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface-alt)] dark:bg-[var(--surface)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group ${
+                  className={`flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group ${
                     action.primary
-                      ? 'border-l-2 border border-[var(--card-border-strong)] dark:border-[var(--card-border)] border-l-[var(--crown)]'
-                      : 'border border-[var(--card-border-strong)] dark:border-[var(--card-border)]'
+                      ? 'border-l-2 border border-[var(--card-border-strong)] border-l-[var(--crown)]'
+                      : 'border border-[var(--card-border-strong)]'
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center group-hover:bg-gold/10 transition-colors ${

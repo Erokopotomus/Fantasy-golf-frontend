@@ -535,7 +535,7 @@ const LeagueHome = () => {
               {isDraftScheduledOrInProgress && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Left: Coach Briefing */}
-                  <div className="relative overflow-hidden rounded-xl border border-purple-200 dark:border-purple-500/30 bg-gradient-to-br from-purple-50 via-white to-white dark:from-purple-500/[0.08] dark:via-[var(--surface)] dark:to-[var(--surface)] p-6 flex flex-col justify-center min-h-[180px] shadow-sm dark:shadow-none">
+                  <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-6 flex flex-col justify-center min-h-[180px] shadow-sm dark:shadow-none">
                     {/* Subtle background neural cluster */}
                     <div className="absolute -right-6 -top-6 opacity-20 pointer-events-none">
                       <NeuralCluster size="lg" intensity="active" />

@@ -45,7 +45,7 @@ const CoachBriefing = ({ feedCards = [], feedLoading = false }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Coach Briefing — takes 2 cols on desktop */}
-      <div className={`relative overflow-hidden rounded-xl border border-purple-200 dark:border-purple-500/20 bg-gradient-to-br from-purple-50 via-white to-white dark:from-purple-500/[0.08] dark:via-[var(--surface)] dark:to-[var(--surface)] p-5 shadow-sm dark:shadow-none ${hasFeed ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
+      <div className={`relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-5 shadow-sm dark:shadow-none ${hasFeed ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
         {/* Background sphere */}
         <div className="absolute -right-4 -top-4 opacity-[0.15] dark:opacity-[0.12] pointer-events-none">
           <NeuralCluster size="lg" intensity={intensity} />
@@ -96,7 +96,7 @@ const CoachBriefing = ({ feedCards = [], feedLoading = false }) => {
 
       {/* Latest Updates — right column */}
       {hasFeed && (
-        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface-alt)] dark:bg-[var(--surface)] p-4 lg:col-span-1 shadow-sm dark:shadow-none">
+        <div className="rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-4 lg:col-span-1 shadow-sm dark:shadow-none">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">

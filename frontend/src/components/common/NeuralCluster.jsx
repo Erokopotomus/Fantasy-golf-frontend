@@ -156,9 +156,9 @@ const NeuralCluster = ({ size = 'sm', intensity = 'calm', className = '' }) => {
     >
       <defs>
         <linearGradient id={`${uid}-grad`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#A78BFA" />
+          <stop offset="0%" stopColor="#C4B5FD" />
           <stop offset="50%" stopColor="#8B5CF6" />
-          <stop offset="100%" stopColor="var(--crown, #D4930D)" />
+          <stop offset="100%" stopColor="#6D28D9" />
         </linearGradient>
         <radialGradient id={`${uid}-glow`}>
           <stop offset="0%" stopColor="#A78BFA" stopOpacity="0.5" />
@@ -203,7 +203,7 @@ const NeuralCluster = ({ size = 'sm', intensity = 'calm', className = '' }) => {
           key={`n-${i}`}
           ref={el => nodeRefs.current[i] = el}
           cx={50} cy={50} r={1.5}
-          fill="var(--crown, #D4930D)"
+          fill="#8B5CF6"
           opacity={0}
         />
       ))}
