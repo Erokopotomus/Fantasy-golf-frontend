@@ -200,94 +200,130 @@ const Dashboard = () => {
           {/* ── Section 3: This Week + My Leagues ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* This Week — Command Center */}
-            <Card>
-              <div className="flex items-center gap-2 mb-4">
-                <svg className="w-4.5 h-4.5 text-[var(--crown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <h2 className="text-base font-semibold font-display text-text-primary">This Week</h2>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary">This Week</h2>
               </div>
 
-              <div className="space-y-2.5">
-                {/* Live / Upcoming Tournament */}
-                {tournamentsLoading ? (
-                  <div className="flex items-center gap-3 animate-pulse">
-                    <div className="w-16 h-5 bg-[var(--stone)] rounded-full" />
-                    <div className="h-4 bg-[var(--stone)] rounded flex-1" />
+              <Card>
+                <div className="space-y-1">
+                  {/* Row: Live Events */}
+                  {(() => {
+                    const hasEvent = !tournamentsLoading && currentTournament
+                    const isLive = hasEvent && currentTournament.status === 'ACTIVE'
+                    return hasEvent ? (
+                      <Link
+                        to={`/tournaments/${currentTournament.id}${leagues?.length > 0 ? `?league=${leagues[0].id}` : ''}`}
+                        className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--bg-alt)] transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--field)] transition-colors">{currentTournament.name}</p>
+                            <div className="flex items-center gap-2">
+                              {isLive && (
+                                <span className="flex items-center gap-1 text-live-red text-[10px] font-mono font-bold uppercase">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-live-red animate-pulse" />
+                                  Live
+                                </span>
+                              )}
+                              {!isLive && <span className="text-[11px] text-text-primary/40 font-mono">Upcoming</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <svg className="w-4 h-4 text-text-primary/20 group-hover:text-[var(--field)] shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
+                        <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-text-primary/50 font-medium">Live Events</p>
+                          <p className="text-[11px] text-text-primary/30">No events in progress</p>
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Row: Lineup Deadlines */}
+                  {hasLeagues ? (
+                    filteredLeagues.slice(0, 2).map(league => (
+                      <Link
+                        key={league.id}
+                        to={`/leagues/${league.id}/roster`}
+                        className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--bg-alt)] transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            (league.sport || 'GOLF').toLowerCase() === 'nfl' ? 'bg-blue-500/10' : 'bg-emerald-500/10'
+                          }`}>
+                            <svg className={`w-4 h-4 ${(league.sport || 'GOLF').toLowerCase() === 'nfl' ? 'text-blue-400' : 'text-emerald-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{league.name}</p>
+                            <p className="text-[11px] text-text-primary/40 font-mono">Set lineup</p>
+                          </div>
+                        </div>
+                        <svg className="w-4 h-4 text-text-primary/20 group-hover:text-[var(--crown)] shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm text-text-primary/50 font-medium">Lineup Deadlines</p>
+                        <p className="text-[11px] text-text-primary/30">Join a league to track deadlines</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Row: Upcoming Drafts */}
+                  <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-primary/50 font-medium">Upcoming Drafts</p>
+                      <p className="text-[11px] text-text-primary/30">No drafts scheduled</p>
+                    </div>
                   </div>
-                ) : currentTournament ? (
-                  <Link
-                    to={`/tournaments/${currentTournament.id}${leagues?.length > 0 ? `?league=${leagues[0].id}` : ''}`}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-alt)] hover:bg-[var(--stone)] transition-colors group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {currentTournament.status === 'ACTIVE' ? (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-live-red/10 text-live-red text-[10px] font-mono font-bold uppercase shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-live-red animate-pulse" />
-                          Live
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold uppercase shrink-0">
-                          Upcoming
-                        </span>
-                      )}
-                      <span className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--field)] transition-colors">
-                        {currentTournament.name}
-                      </span>
-                    </div>
-                    <svg className="w-4 h-4 text-text-primary/20 group-hover:text-[var(--field)] shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                ) : null}
 
-                {/* League action items */}
-                {!leaguesLoading && hasLeagues && filteredLeagues.slice(0, 3).map(league => (
-                  <Link
-                    key={league.id}
-                    to={`/leagues/${league.id}/roster`}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-alt)] hover:bg-[var(--stone)] transition-colors group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${
-                        (league.sport || 'GOLF').toLowerCase() === 'nfl' ? 'bg-blue-500/15 text-blue-400' : 'bg-emerald-500/15 text-emerald-400'
-                      }`}>
-                        {(league.sport || 'GOLF').toLowerCase()}
-                      </span>
-                      <span className="text-sm text-text-primary truncate">{league.name}</span>
+                  {/* Row: Trade & Waiver Activity */}
+                  <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
                     </div>
-                    <span className="text-[11px] text-text-primary/30 font-mono shrink-0 ml-2 group-hover:text-[var(--crown)] transition-colors">
-                      Set lineup &rarr;
-                    </span>
-                  </Link>
-                ))}
-
-                {/* Draft boards */}
-                {!boardsLoading && boards.length > 0 && (
-                  <Link
-                    to="/lab"
-                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-alt)] hover:bg-[var(--stone)] transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-500/15 text-blue-400 shrink-0">
-                        Lab
-                      </span>
-                      <span className="text-sm text-text-primary">
-                        {boards.length} board{boards.length !== 1 ? 's' : ''} in progress
-                      </span>
+                    <div>
+                      <p className="text-sm text-text-primary/50 font-medium">Trades & Waivers</p>
+                      <p className="text-[11px] text-text-primary/30">No pending activity</p>
                     </div>
-                    <svg className="w-4 h-4 text-text-primary/20 group-hover:text-blue-400 shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                )}
-
-                {/* Empty state */}
-                {!tournamentsLoading && !currentTournament && !hasLeagues && (
-                  <p className="text-text-primary/40 text-sm py-2">No live events this week. Explore the hubs to get started!</p>
-                )}
-              </div>
-            </Card>
+                  </div>
+                </div>
+              </Card>
+            </div>
 
             {/* My Leagues */}
             <div>
