@@ -1,32 +1,68 @@
 import { useEffect, useRef, useState } from 'react'
 
-// 8 nodes in a loose organic cluster within a 100x100 viewBox
-const NODES = [
-  { cx: 50, cy: 18, speed: 0.3, amp: 4 },
-  { cx: 24, cy: 34, speed: 0.25, amp: 5 },
-  { cx: 76, cy: 28, speed: 0.35, amp: 4.5 },
-  { cx: 14, cy: 56, speed: 0.2, amp: 4 },
-  { cx: 86, cy: 54, speed: 0.28, amp: 5 },
-  { cx: 34, cy: 72, speed: 0.32, amp: 4 },
-  { cx: 66, cy: 76, speed: 0.22, amp: 4.5 },
-  { cx: 50, cy: 50, speed: 0.18, amp: 3 },
-]
+// Fibonacci sphere distribution — evenly spaces N points on a sphere surface
+const makeSphereNodes = (count, radius) => {
+  const nodes = []
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5))
+  for (let i = 0; i < count; i++) {
+    const y = 1 - (i / (count - 1)) * 2 // -1 to 1
+    const r = Math.sqrt(1 - y * y)
+    const theta = goldenAngle * i
+    nodes.push({
+      x: r * Math.cos(theta) * radius,
+      y: y * radius,
+      z: r * Math.sin(theta) * radius,
+    })
+  }
+  return nodes
+}
 
-// Connections between nearby nodes (index pairs)
-const EDGES = [
-  [0, 1], [0, 2], [0, 7],
-  [1, 3], [1, 7],
-  [2, 4], [2, 7],
-  [3, 5], [3, 7],
-  [4, 6], [4, 7],
-  [5, 6], [5, 7],
-  [6, 7],
-]
+// Build edges between nodes that are close in 3D space
+const makeEdges = (nodes, maxDist) => {
+  const edges = []
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x
+      const dy = nodes[i].y - nodes[j].y
+      const dz = nodes[i].z - nodes[j].z
+      if (Math.sqrt(dx * dx + dy * dy + dz * dz) < maxDist) {
+        edges.push([i, j])
+      }
+    }
+  }
+  return edges
+}
+
+const SPHERE_RADIUS = 35
+const NODE_COUNT = 22
+const BASE_NODES = makeSphereNodes(NODE_COUNT, SPHERE_RADIUS)
+const BASE_EDGES = makeEdges(BASE_NODES, SPHERE_RADIUS * 0.85)
+const PERSPECTIVE = 120 // distance from camera — lower = more perspective
 
 const SIZES = { sm: 80, md: 120, lg: 200 }
-const SPEED_MULT = { calm: 1, active: 2.2, thinking: 3.5 }
+const SPEED_MULT = { calm: 0.6, active: 1.4, thinking: 2.5 }
 
 let instanceCounter = 0
+
+// Rotate point around Y axis
+const rotY = (x, y, z, angle) => ({
+  x: x * Math.cos(angle) + z * Math.sin(angle),
+  y,
+  z: -x * Math.sin(angle) + z * Math.cos(angle),
+})
+
+// Rotate point around X axis
+const rotX = (x, y, z, angle) => ({
+  x,
+  y: y * Math.cos(angle) - z * Math.sin(angle),
+  z: y * Math.sin(angle) + z * Math.cos(angle),
+})
+
+// Project 3D → 2D with perspective
+const project = (x, y, z) => {
+  const scale = PERSPECTIVE / (PERSPECTIVE + z)
+  return { px: x * scale + 50, py: y * scale + 50, scale, z }
+}
 
 const NeuralCluster = ({ size = 'sm', intensity = 'calm', className = '' }) => {
   const nodeRefs = useRef([])
@@ -35,64 +71,78 @@ const NeuralCluster = ({ size = 'sm', intensity = 'calm', className = '' }) => {
   const svgRef = useRef(null)
   const [uid] = useState(() => `nc-${++instanceCounter}`)
   const px = SIZES[size] || SIZES.sm
-  const speedMult = SPEED_MULT[intensity] || 1
-  const activeEdgeCount = intensity === 'calm' ? 8 : intensity === 'active' ? 12 : EDGES.length
+  const speedMult = SPEED_MULT[intensity] || 0.6
 
   useEffect(() => {
     let frame = 0
     const interval = setInterval(() => {
       frame += 1
-      const t = frame * 0.02
+      const t = frame * 0.015
 
-      // Slow rotation + breathing scale on the whole SVG
-      const rotation = t * speedMult * 1.2
-      const breathe = 1 + Math.sin(t * 0.4 * speedMult) * 0.04
+      // Slow breathing on the whole SVG
+      const breathe = 1 + Math.sin(t * 0.5) * 0.03
       if (svgRef.current) {
-        svgRef.current.style.transform = `rotate(${rotation % 360}deg) scale(${breathe})`
+        svgRef.current.style.transform = `scale(${breathe})`
       }
 
-      // Update node + glow positions
-      const positions = NODES.map((node, i) => {
-        const phaseX = t * node.speed * speedMult + i * 0.8
-        const phaseY = t * node.speed * speedMult * 0.7 + i * 0.5
-        const x = node.cx + Math.sin(phaseX) * node.amp
-        const y = node.cy + Math.cos(phaseY) * node.amp
+      // Rotate all nodes
+      const angleY = t * speedMult * 0.4
+      const angleX = Math.sin(t * 0.15) * 0.3 // gentle wobble
+
+      const projected = BASE_NODES.map((node, i) => {
+        const r1 = rotY(node.x, node.y, node.z, angleY)
+        const r2 = rotX(r1.x, r1.y, r1.z, angleX)
+        const p = project(r2.x, r2.y, r2.z)
+
+        // Node size based on depth (closer = bigger)
+        const nodeRadius = size === 'lg'
+          ? 1.2 + p.scale * 1.8
+          : size === 'md'
+            ? 0.9 + p.scale * 1.4
+            : 0.7 + p.scale * 1.2
+        const nodeOpacity = 0.3 + p.scale * 0.6
 
         const nodeEl = nodeRefs.current[i]
         if (nodeEl) {
-          nodeEl.setAttribute('cx', x)
-          nodeEl.setAttribute('cy', y)
+          nodeEl.setAttribute('cx', p.px)
+          nodeEl.setAttribute('cy', p.py)
+          nodeEl.setAttribute('r', nodeRadius)
+          nodeEl.setAttribute('opacity', nodeOpacity)
         }
+
         const glowEl = glowRefs.current[i]
         if (glowEl) {
-          glowEl.setAttribute('cx', x)
-          glowEl.setAttribute('cy', y)
-          // Pulse glow opacity
-          const glowPulse = 0.1 + Math.sin(t * 0.6 + i * 1.2) * 0.08
-          glowEl.setAttribute('opacity', glowPulse)
+          glowEl.setAttribute('cx', p.px)
+          glowEl.setAttribute('cy', p.py)
+          const glowPulse = 0.06 + Math.sin(t * 0.7 + i * 1.1) * 0.06
+          glowEl.setAttribute('opacity', glowPulse * p.scale)
         }
-        return { x, y }
+
+        return p
       })
 
-      // Update line positions + dash offset for "data flowing" effect
-      EDGES.forEach((edge, i) => {
+      // Update edges
+      BASE_EDGES.forEach((edge, i) => {
         const el = lineRefs.current[i]
         if (!el) return
         const [a, b] = edge
-        el.setAttribute('x1', positions[a].x)
-        el.setAttribute('y1', positions[a].y)
-        el.setAttribute('x2', positions[b].x)
-        el.setAttribute('y2', positions[b].y)
-        el.setAttribute('stroke-dashoffset', (frame * speedMult * 0.8) % 20)
+        const pa = projected[a]
+        const pb = projected[b]
+        el.setAttribute('x1', pa.px)
+        el.setAttribute('y1', pa.py)
+        el.setAttribute('x2', pb.px)
+        el.setAttribute('y2', pb.py)
 
-        // Pulse edge opacity for "firing" effect
-        const edgePulse = 0.25 + Math.sin(t * 0.5 + i * 0.9) * 0.25
-        el.setAttribute('opacity', i < activeEdgeCount ? edgePulse : 0.06)
+        // Depth-based opacity (average of both endpoints)
+        const avgScale = (pa.scale + pb.scale) / 2
+        const edgePulse = 0.15 + Math.sin(t * 0.6 + i * 0.7) * 0.15
+        el.setAttribute('opacity', edgePulse * avgScale)
+        el.setAttribute('stroke-dashoffset', (frame * speedMult * 0.6) % 16)
       })
-    }, 33) // ~30fps for smoother animation
+    }, 33) // ~30fps
 
     return () => clearInterval(interval)
-  }, [speedMult, activeEdgeCount])
+  }, [speedMult, size])
 
   return (
     <svg
@@ -101,7 +151,7 @@ const NeuralCluster = ({ size = 'sm', intensity = 'calm', className = '' }) => {
       height={px}
       viewBox="0 0 100 100"
       className={className}
-      style={{ willChange: 'transform', transition: 'transform 0.1s linear' }}
+      style={{ willChange: 'transform' }}
       aria-hidden="true"
     >
       <defs>
@@ -110,58 +160,51 @@ const NeuralCluster = ({ size = 'sm', intensity = 'calm', className = '' }) => {
           <stop offset="50%" stopColor="#8B5CF6" />
           <stop offset="100%" stopColor="var(--crown, #D4930D)" />
         </linearGradient>
-        <radialGradient id={`${uid}-glow-grad`}>
-          <stop offset="0%" stopColor="#A78BFA" stopOpacity="0.4" />
+        <radialGradient id={`${uid}-glow`}>
+          <stop offset="0%" stopColor="#A78BFA" stopOpacity="0.5" />
           <stop offset="100%" stopColor="#A78BFA" stopOpacity="0" />
         </radialGradient>
-        <filter id={`${uid}-glow`}>
-          <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+        <filter id={`${uid}-blur`}>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
         </filter>
       </defs>
 
       {/* Edges */}
-      {EDGES.map((edge, i) => (
+      {BASE_EDGES.map((edge, i) => (
         <line
-          key={`edge-${i}`}
+          key={`e-${i}`}
           ref={el => lineRefs.current[i] = el}
-          x1={NODES[edge[0]].cx}
-          y1={NODES[edge[0]].cy}
-          x2={NODES[edge[1]].cx}
-          y2={NODES[edge[1]].cy}
+          x1={50} y1={50} x2={50} y2={50}
           stroke={`url(#${uid}-grad)`}
-          strokeWidth={size === 'lg' ? 1 : 0.7}
-          strokeDasharray="4 3"
-          strokeDashoffset="0"
-          opacity={i < activeEdgeCount ? 0.5 : 0.08}
+          strokeWidth={size === 'lg' ? 0.6 : 0.4}
+          strokeDasharray="3 2.5"
           strokeLinecap="round"
+          opacity={0}
         />
       ))}
 
-      {/* Glow circles (behind nodes) — these move with the nodes now */}
-      {NODES.map((node, i) => (
+      {/* Glow circles */}
+      {BASE_NODES.map((_, i) => (
         <circle
-          key={`glow-${i}`}
+          key={`g-${i}`}
           ref={el => glowRefs.current[i] = el}
-          cx={node.cx}
-          cy={node.cy}
-          r={size === 'lg' ? 7 : size === 'md' ? 5 : 4}
-          fill={`url(#${uid}-glow-grad)`}
-          opacity={0.15}
-          filter={`url(#${uid}-glow)`}
+          cx={50} cy={50}
+          r={size === 'lg' ? 6 : size === 'md' ? 4.5 : 3.5}
+          fill={`url(#${uid}-glow)`}
+          opacity={0}
+          filter={`url(#${uid}-blur)`}
           style={{ pointerEvents: 'none' }}
         />
       ))}
 
       {/* Nodes */}
-      {NODES.map((node, i) => (
+      {BASE_NODES.map((_, i) => (
         <circle
-          key={`node-${i}`}
+          key={`n-${i}`}
           ref={el => nodeRefs.current[i] = el}
-          cx={node.cx}
-          cy={node.cy}
-          r={size === 'lg' ? 2.8 : size === 'md' ? 2.2 : 2}
+          cx={50} cy={50} r={1.5}
           fill="var(--crown, #D4930D)"
-          opacity={0.85}
+          opacity={0}
         />
       ))}
     </svg>
