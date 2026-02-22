@@ -13,6 +13,7 @@ import ActivityFeed from '../components/dashboard/ActivityFeed'
 import DraftCountdown from '../components/DraftCountdown'
 import LeagueChat from '../components/ai/LeagueChat'
 import CommissionerNotes from '../components/league/CommissionerNotes'
+import LiveScoringWidget from '../components/league/LiveScoringWidget'
 import { formatDate } from '../utils/dateUtils'
 
 const LeagueHome = () => {
@@ -540,29 +541,9 @@ const LeagueHome = () => {
             </div>
           )}
 
-          {/* Active Tournament Widget (golf leagues only) */}
-          {!isNflLeague && currentTournament && currentTournament.status === 'IN_PROGRESS' && (
-            <div className="mb-6">
-              <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
-                    </div>
-                    <div>
-                      <h3 className="text-text-primary font-semibold">{currentTournament.name}</h3>
-                      <p className="text-text-muted text-xs">
-                        {currentTournament.courseName && <span>{currentTournament.courseName} &middot; </span>}
-                        Round {currentTournament.currentRound || '?'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button size="sm" onClick={() => navigate(`/leagues/${leagueId}/scoring`)}>
-                    View Scoring
-                  </Button>
-                </div>
-              </Card>
-            </div>
+          {/* Live / Final Tournament Scoring Widget (golf leagues only) */}
+          {!isNflLeague && currentTournament && (currentTournament.status === 'IN_PROGRESS' || currentTournament.status === 'COMPLETED') && (
+            <LiveScoringWidget leagueId={leagueId} tournament={currentTournament} />
           )}
           {!isNflLeague && currentTournament && currentTournament.status === 'UPCOMING' && (
             <div className="mb-6">
