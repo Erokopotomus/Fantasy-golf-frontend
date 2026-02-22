@@ -28,6 +28,228 @@ function rateLimit(userId, group, maxPerHour) {
 }
 
 // ═══════════════════════════════════════════════
+//  COACH BRIEFING (Living Dashboard Headline)
+// ═══════════════════════════════════════════════
+
+// GET /api/ai/coach-briefing — Personalized coach headline for dashboard / league home
+router.get('/coach-briefing', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id
+    const { leagueId } = req.query
+
+    // Gather user data state
+    const [leagueCount, boardCount, predictionCount, user] = await Promise.all([
+      prisma.leagueMember.count({ where: { userId } }),
+      prisma.draftBoard.count({ where: { userId } }),
+      prisma.prediction.count({ where: { userId } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { lastLoginAt: true } }),
+    ])
+
+    // ── League-specific briefing ──
+    if (leagueId) {
+      const member = await prisma.leagueMember.findUnique({
+        where: { userId_leagueId: { userId, leagueId } },
+      })
+      if (!member) return res.json({ briefing: null })
+
+      const league = await prisma.league.findUnique({
+        where: { id: leagueId },
+        include: {
+          drafts: { orderBy: { createdAt: 'desc' }, take: 1 },
+          standings: { where: { userId }, take: 1 },
+          _count: { select: { teams: true } },
+        },
+      })
+      if (!league) return res.json({ briefing: null })
+
+      const draft = league.drafts?.[0]
+      const standing = league.standings?.[0]
+      const sport = (league.sport || 'GOLF').toUpperCase()
+
+      // Board count for this sport
+      const sportBoards = await prisma.draftBoard.count({
+        where: { userId, sport: sport.toLowerCase() },
+      })
+      const sportBoardEntries = sportBoards > 0
+        ? await prisma.draftBoardEntry.count({
+            where: { board: { userId, sport: sport.toLowerCase() } },
+          })
+        : 0
+
+      // Draft upcoming
+      if (draft?.status === 'SCHEDULED' && draft.scheduledFor) {
+        const diff = new Date(draft.scheduledFor) - new Date()
+        const days = Math.floor(diff / 86400000)
+        const timeframe = days <= 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`
+        const boardStatus = sportBoardEntries > 0 ? `${sportBoardEntries} players ranked` : 'no players ranked yet'
+        return res.json({
+          briefing: {
+            headline: `Draft day is ${timeframe} — are you ready?`,
+            body: `Your board has ${boardStatus}. Get your rankings locked in before the clock starts.`,
+            type: 'draft_prep',
+          },
+        })
+      }
+
+      // In-season with standings
+      if (standing && draft?.status === 'COMPLETED') {
+        const rank = standing.rank || '—'
+        const totalTeams = league._count?.teams || '—'
+        return res.json({
+          briefing: {
+            headline: `You're #${rank} of ${totalTeams} — ${rank <= 3 ? 'keep the pressure on' : 'time to make a move'}`,
+            body: null,
+            type: 'in_season',
+          },
+        })
+      }
+
+      // Pre-draft default
+      if (!draft || draft.status === 'SCHEDULED') {
+        return res.json({
+          briefing: {
+            headline: sportBoardEntries > 0
+              ? `You've ranked ${sportBoardEntries} players — keep building your board`
+              : 'Start building your draft board before the draft',
+            body: null,
+            type: 'pre_draft',
+          },
+        })
+      }
+
+      return res.json({ briefing: null })
+    }
+
+    // ── Global dashboard briefing ──
+
+    // COLD START: no leagues, no boards
+    if (leagueCount === 0 && boardCount === 0) {
+      return res.json({
+        briefing: {
+          headline: 'Your coaching brain is warming up',
+          body: 'Join or create a league to activate your AI coach. The more you play, the more I learn.',
+          cta: { label: 'Create League', to: '/leagues/create' },
+          type: 'onboarding',
+        },
+      })
+    }
+
+    // HAS LEAGUES, NO ACTIVITY: no predictions, no boards
+    if (leagueCount > 0 && predictionCount === 0 && boardCount === 0) {
+      return res.json({
+        briefing: {
+          headline: "I'm studying your league — give me more to work with",
+          body: 'Make some predictions, build a draft board, or set your lineup. Every decision teaches me your style.',
+          cta: { label: 'Make a Call', to: '/prove-it' },
+          type: 'activation',
+        },
+      })
+    }
+
+    // LIVE EVENT: check for active tournament
+    const activeTournament = await prisma.tournament.findFirst({
+      where: { status: 'IN_PROGRESS' },
+      select: { id: true, name: true },
+    })
+
+    if (activeTournament) {
+      // Count rostered players in this tournament
+      const rosteredInTournament = await prisma.rosterEntry.count({
+        where: {
+          team: { userId },
+          player: {
+            tournamentEntries: {
+              some: { tournamentId: activeTournament.id },
+            },
+          },
+        },
+      }).catch(() => 0)
+
+      if (rosteredInTournament > 0) {
+        return res.json({
+          briefing: {
+            headline: `${activeTournament.name} is live — your players are on the course`,
+            body: `I'm tracking ${rosteredInTournament} of your rostered players.`,
+            cta: { label: 'Watch Live', to: `/tournaments/${activeTournament.id}` },
+            type: 'live',
+          },
+        })
+      }
+    }
+
+    // DRAFT UPCOMING (within 3 days)
+    const threeDaysOut = new Date(Date.now() + 3 * 86400000)
+    const upcomingDraft = await prisma.draft.findFirst({
+      where: {
+        status: 'SCHEDULED',
+        scheduledFor: { lte: threeDaysOut, gte: new Date() },
+        league: { members: { some: { userId } } },
+      },
+      include: { league: { select: { name: true, sport: true } } },
+      orderBy: { scheduledFor: 'asc' },
+    })
+
+    if (upcomingDraft) {
+      const diff = new Date(upcomingDraft.scheduledFor) - new Date()
+      const days = Math.floor(diff / 86400000)
+      const timeframe = days <= 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`
+      const sport = (upcomingDraft.league?.sport || 'golf').toLowerCase()
+      const boardForSport = await prisma.draftBoard.findFirst({
+        where: { userId, sport },
+        include: { _count: { select: { entries: true } } },
+      })
+      const entryCount = boardForSport?._count?.entries || 0
+      const boardStatus = entryCount > 0 ? `${entryCount} players ranked` : 'no board yet'
+
+      return res.json({
+        briefing: {
+          headline: `Draft day is ${timeframe} — are you ready?`,
+          body: `Your board has ${boardStatus}. ${upcomingDraft.league?.name || 'Your league'} is counting on you.`,
+          cta: boardForSport
+            ? { label: 'Review Board', to: `/lab/${boardForSport.id}` }
+            : { label: 'Build Board', to: '/lab' },
+          type: 'draft_prep',
+        },
+      })
+    }
+
+    // ACTIVE: has data — pull top insight
+    try {
+      const insights = await aiInsightPipeline.getActiveInsights(userId, { limit: 1 })
+      if (insights && insights.length > 0) {
+        const top = insights[0]
+        return res.json({
+          briefing: {
+            headline: top.title,
+            body: top.body,
+            type: 'insight',
+          },
+        })
+      }
+    } catch (e) {
+      // Fall through to default
+    }
+
+    // DEFAULT: generic active message
+    return res.json({
+      briefing: {
+        headline: leagueCount === 1
+          ? 'Your league is active — stay sharp'
+          : `${leagueCount} leagues active — stay sharp`,
+        body: predictionCount > 0
+          ? `You've made ${predictionCount} predictions so far. Keep building your track record.`
+          : 'Make some predictions to start building your reputation.',
+        cta: { label: 'Prove It', to: '/prove-it' },
+        type: 'active',
+      },
+    })
+  } catch (err) {
+    console.error('[AI] Coach briefing error:', err.message)
+    res.json({ briefing: null })
+  }
+})
+
+// ═══════════════════════════════════════════════
 //  INSIGHTS (Mode 1 — Ambient)
 // ═══════════════════════════════════════════════
 

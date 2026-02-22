@@ -14,8 +14,9 @@ import LeagueCard from '../components/dashboard/LeagueCard'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import PredictionWidget from '../components/predictions/PredictionWidget'
 import DashboardRatingWidget from '../components/dashboard/DashboardRatingWidget'
+import CoachBriefing from '../components/dashboard/CoachBriefing'
+import NeuralCluster from '../components/common/NeuralCluster'
 import api from '../services/api'
-import { formatDayET } from '../utils/dateUtils'
 import { buildLabUrl } from '../utils/labBridge'
 
 const LeagueCardSkeleton = () => (
@@ -40,32 +41,6 @@ const LeagueCardSkeleton = () => (
   </Card>
 )
 
-const getGreeting = (name) => {
-  const hour = new Date().getHours()
-  const first = name?.split(' ')[0] || 'Player'
-  if (hour < 12) return `Good morning, ${first}`
-  if (hour < 17) return `Good afternoon, ${first}`
-  if (hour < 21) return `Good evening, ${first}`
-  return `Burning the midnight oil, ${first}?`
-}
-
-const getSubtitle = ({ leagues, currentTournament, tournamentsLoading }) => {
-  const hasLeagues = leagues && leagues.length > 0
-  // Live tournament
-  if (!tournamentsLoading && currentTournament?.status === 'ACTIVE') {
-    return `${currentTournament.name} is live — check the leaderboard`
-  }
-  // Has leagues + upcoming event
-  if (hasLeagues && !tournamentsLoading && currentTournament) {
-    const start = currentTournament.startDate ? new Date(currentTournament.startDate) : null
-    const dayName = start ? formatDayET(currentTournament.startDate) : ''
-    return `${currentTournament.name} tees off ${dayName}`
-  }
-  // Has leagues, no event
-  if (hasLeagues) return 'Your leagues are active — stay sharp'
-  // No leagues
-  return 'Ready to start your fantasy journey?'
-}
 
 const Dashboard = () => {
   const { user } = useAuth()
@@ -131,86 +106,82 @@ const Dashboard = () => {
     : []
   const hasMultipleSports = hasLeagues && new Set(leagues.map(l => (l.sport || 'GOLF').toLowerCase())).size > 1
 
-  const quickActions = [
-    { to: '/leagues/create', label: 'Create League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />, color: 'text-gold', primary: true },
-    { to: '/leagues/join', label: 'Join League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />, color: 'text-orange' },
-    { to: '/mock-draft', label: 'Mock Draft', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />, color: 'text-yellow-400', primary: true },
-    { to: '/players', label: 'Players', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />, color: 'text-gold' },
-    { to: '/import', label: 'Import', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />, color: 'text-purple-400' },
-    { to: '/lab', label: 'The Lab', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />, color: 'text-blue-400' },
-  ]
+  const quickActions = hasLeagues
+    ? [
+        { to: '/leagues/create', label: 'Create League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />, color: 'text-gold', primary: true },
+        { to: '/lab', label: 'The Lab', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />, color: 'text-blue-400', primary: true },
+        { to: '/prove-it', label: 'Prove It', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />, color: 'text-yellow-400' },
+        { to: '#coaching', label: 'Ask Coach', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />, color: 'text-purple-400' },
+      ]
+    : [
+        { to: '/leagues/create', label: 'Create League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />, color: 'text-gold', primary: true },
+        { to: '/leagues/join', label: 'Join League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />, color: 'text-orange', primary: true },
+        { to: '/golf', label: 'Golf Hub', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M9 8h1m4 0h1m-7 4h1m4 0h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16" />, color: 'text-emerald-500' },
+        { to: '/nfl', label: 'NFL Hub', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />, color: 'text-blue-400' },
+      ]
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
 
-          {/* ── Section 1: Welcome Header + Latest Updates ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-primary mb-2 leading-tight">
-                {getGreeting(user?.name)}
-              </h1>
-              <p className="text-text-secondary leading-relaxed">
-                {getSubtitle({ leagues, currentTournament, tournamentsLoading })}
-              </p>
-            </div>
+          {/* ── Section 1: Coach Briefing + Latest Updates ── */}
+          <CoachBriefing />
 
-            {(feedLoading || feedCards.length > 0) && (
-              <div className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <h2 className="text-sm font-semibold font-display text-text-primary">Latest Updates</h2>
-                  </div>
-                  <Link
-                    to="/feed"
-                    className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors flex items-center gap-1"
-                  >
-                    View Feed
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
+          {(feedLoading || feedCards.length > 0) && (
+            <div className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <h2 className="text-sm font-semibold font-display text-text-primary">Latest Updates</h2>
                 </div>
-                {feedLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="flex items-center gap-3 animate-pulse">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--stone)] flex-shrink-0" />
-                        <div className="h-3 bg-[var(--stone)] rounded flex-1" />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {feedCards.slice(0, 3).map(card => (
-                      <Link
-                        key={card.id}
-                        to={card.actions?.[0]?.href || '/feed'}
-                        className="flex items-start gap-3 group"
-                      >
-                        <span
-                          className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
-                          style={{ backgroundColor: card.category === 'Big Performance' ? '#EF4444' : card.category === 'Stat Leader' ? '#F59E0B' : card.category === 'Team Trend' ? '#3B82F6' : card.category === 'Game Result' ? '#10B981' : '#F59E0B' }}
-                        />
-                        <span className="text-text-primary/70 text-xs leading-snug group-hover:text-text-primary transition-colors line-clamp-1">
-                          {card.headline}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                <Link
+                  to="/feed"
+                  className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors flex items-center gap-1"
+                >
+                  View Feed
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
-            )}
-          </div>
+              {feedLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center gap-3 animate-pulse">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--stone)] flex-shrink-0" />
+                      <div className="h-3 bg-[var(--stone)] rounded flex-1" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {feedCards.slice(0, 3).map(card => (
+                    <Link
+                      key={card.id}
+                      to={card.actions?.[0]?.href || '/feed'}
+                      className="flex items-start gap-3 group"
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                        style={{ backgroundColor: card.category === 'Big Performance' ? '#EF4444' : card.category === 'Stat Leader' ? '#F59E0B' : card.category === 'Team Trend' ? '#3B82F6' : card.category === 'Game Result' ? '#10B981' : '#F59E0B' }}
+                      />
+                      <span className="text-text-primary/70 text-xs leading-snug group-hover:text-text-primary transition-colors line-clamp-1">
+                        {card.headline}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ── Section 2: Quick Actions — Compact Icon Strip ── */}
           <div>
             <h3 className="text-sm font-semibold font-display text-text-primary/60 uppercase tracking-wider mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {quickActions.map(action => (
                 <Link
                   key={action.to}
@@ -544,19 +515,17 @@ const Dashboard = () => {
 
             {/* Coaching Corner — purple tint */}
             <div
+              id="coaching"
               className="rounded-xl p-4 border-l-[3px]"
               style={{ backgroundColor: 'var(--tint-ai)', borderLeftColor: '#8B5CF6' }}
             >
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-md bg-purple-500/15 flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
+                <NeuralCluster size="sm" intensity={coachingInsights.length > 0 ? 'active' : 'calm'} className="shrink-0" />
                 <h3 className="text-sm font-semibold font-display text-text-primary">Coaching Corner</h3>
               </div>
               {coachingInsights.length > 0 ? (
                 <div className="space-y-2">
+                  <p className="text-[10px] text-purple-400/50 uppercase tracking-wider font-semibold mb-1">Your coach has been watching...</p>
                   {coachingInsights.map(insight => (
                     <div key={insight.id} className="px-3 py-2.5 bg-purple-500/[0.05] border border-purple-400/10 rounded-lg">
                       <p className="text-xs font-semibold text-purple-300/70 mb-0.5">{insight.title}</p>
@@ -565,7 +534,31 @@ const Dashboard = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-text-primary/40 text-xs">AI insights will appear here as you play.</p>
+                <div>
+                  <p className="text-text-primary/50 text-xs mb-3 leading-relaxed">
+                    Your coach is learning your style. The more leagues you join and predictions you make, the sharper the coaching gets.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Link
+                      to="/lab"
+                      className="px-2.5 py-1 bg-purple-500/10 border border-purple-400/15 rounded-full text-[11px] text-purple-400/80 hover:bg-purple-500/20 transition-colors"
+                    >
+                      How's my draft history?
+                    </Link>
+                    <Link
+                      to="/prove-it"
+                      className="px-2.5 py-1 bg-purple-500/10 border border-purple-400/15 rounded-full text-[11px] text-purple-400/80 hover:bg-purple-500/20 transition-colors"
+                    >
+                      Am I too predictable?
+                    </Link>
+                    <Link
+                      to={`/manager/${user?.id}`}
+                      className="px-2.5 py-1 bg-purple-500/10 border border-purple-400/15 rounded-full text-[11px] text-purple-400/80 hover:bg-purple-500/20 transition-colors"
+                    >
+                      Show me my blind spots
+                    </Link>
+                  </div>
+                </div>
               )}
             </div>
           </div>

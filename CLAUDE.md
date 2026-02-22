@@ -100,6 +100,17 @@ Event tracking (42+ events, console logging, PostHog-ready). Prediction engine (
 
 All sub-phases complete (6A-6F): Data gap fixes (6 migrations, 27-32), decision graph + pattern engine, Claude API infrastructure, ambient insights (daily cron, 11 types), contextual nudges (draft room, board editor, prediction calibration), deep reports (pre-draft/mid-season/post-season), scout reports (golf + NFL), Clutch Sim matchup simulator, player AI briefs. Admin controls: kill switch, 7 feature toggles, daily token budget, spend tracking. User preferences: 4 AI coaching toggles. Data confidence gating.
 
+#### AI Coach as Main Character (Feb 2026) — COMPLETE
+
+Platform reframe: AI coach is the main character, visible on every surface (Dashboard, League Home, onboarding). Key components:
+
+- **NeuralCluster** (`components/common/NeuralCluster.jsx`): Animated SVG brain visual — 8 nodes + connecting lines drifting with sine/cosine waves. Props: `size` (sm/md/lg), `intensity` (calm/active/thinking). Platform's visual signature.
+- **Coach Briefing** (`GET /api/ai/coach-briefing`): Template-based, zero AI calls. Returns personalized headline/body/CTA based on user state (cold start, activation, live event, draft prep, active insight). Optional `?leagueId` for league-specific context. Frontend: `CoachBriefing.jsx` renders at top of Dashboard.
+- **Onboarding rewrite**: 5-step feature slideshow replaced with 2-step coach introduction — "Meet Your Coach" (NeuralCluster hero + sport selection pills) then "Quick Profile" (3 tap-to-answer questions stored in `clutch-coach-profile` localStorage via `useCoachProfile` hook).
+- **Quick Actions**: Contextual 4-button grid — users with leagues get Create League / The Lab / Prove It / Ask Coach; new users get Create / Join / Golf Hub / NFL Hub.
+- **Coaching Corner upgrade**: NeuralCluster animation, "Your coach has been watching..." prefix on insights, engaging empty state with clickable prompt chips.
+- **League Home coach line**: Compact italic `font-editorial` briefing below league header with NeuralCluster sm accent.
+
 ---
 
 ### Phase 7: Multi-Sport Expansion
@@ -345,7 +356,7 @@ Every feature should answer: "Which persona is this for?" When in doubt, optimiz
 - **Seasonal Flywheel:** Feed auto-adjusts by sports calendar. Golf fills NFL gaps (Feb-May). No dead months.
 
 ### Current Build Priority
-Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → **Next: Deploy migrations 43-44, finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E public data sources**
+Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → **Next: Deploy migrations 43-44, finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E public data sources**
 
 **Backlog:** NFL team pages need polish. Kicker/DST stats missing. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags).
 
@@ -395,7 +406,7 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 ---
 
 *Last updated: February 22, 2026*
-*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. 330+ commits. 91+ database models. 160+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
+*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. 335+ commits. 91+ database models. 161+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
 
 **Pending deployment:** Migrations 43 (Clutch Rating V2) and 44 (League Posts blog upgrade) need `prisma migrate deploy` on Railway.
 

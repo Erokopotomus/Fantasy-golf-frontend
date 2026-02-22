@@ -1352,6 +1352,12 @@ class ApiService {
 
   // ── AI Engine (Phase 6C-6F) ──
 
+  // Coach Briefing (Dashboard headline)
+  async getCoachBriefing(leagueId) {
+    const params = leagueId ? `?leagueId=${leagueId}` : ''
+    return this.request(`/ai/coach-briefing${params}`)
+  }
+
   // Insights (Mode 1)
   async getAiInsights(sport) {
     const params = sport ? `?sport=${sport}` : ''

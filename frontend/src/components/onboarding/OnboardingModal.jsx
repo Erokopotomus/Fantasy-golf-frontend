@@ -1,126 +1,101 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useOnboarding } from '../../context/OnboardingContext'
-import Button from '../common/Button'
+import { useCoachProfile } from '../../hooks/useCoachProfile'
+import NeuralCluster from '../common/NeuralCluster'
+
+const SPORT_OPTIONS = [
+  { key: 'golf', label: 'Golf', emoji: '\u26F3' },
+  { key: 'nfl', label: 'NFL', emoji: '\uD83C\uDFC8' },
+  { key: 'both', label: 'Both', emoji: '\uD83C\uDFC6' },
+]
+
+const QUESTIONS = [
+  {
+    key: 'leagueCount',
+    question: 'How many fantasy leagues do you usually play?',
+    options: [
+      { value: '1', label: '1' },
+      { value: '2-3', label: '2-3' },
+      { value: '4+', label: '4+' },
+      { value: 'new', label: 'New to fantasy' },
+    ],
+  },
+  {
+    key: 'draftStyle',
+    question: 'Draft style?',
+    options: [
+      { value: 'prep', label: 'I prep for weeks' },
+      { value: 'wing', label: 'I wing it' },
+      { value: 'between', label: 'Somewhere in between' },
+    ],
+  },
+  {
+    key: 'motivation',
+    question: 'What matters most?',
+    options: [
+      { value: 'championships', label: 'Winning championships' },
+      { value: 'bragging', label: 'Bragging rights' },
+      { value: 'community', label: 'The community' },
+    ],
+  },
+]
 
 const OnboardingModal = () => {
   const navigate = useNavigate()
   const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding()
-  const [currentStep, setCurrentStep] = useState(0)
-
-  const steps = [
-    {
-      id: 'welcome',
-      icon: '⛳',
-      title: 'Welcome to Clutch!',
-      description: 'Build your dream roster, compete against friends, and track live scoring.',
-      image: null,
-      features: [
-        'Draft top PGA Tour players',
-        'Compete in season-long leagues',
-        'Track live tournament scores',
-      ],
-    },
-    {
-      id: 'leagues',
-      icon: '🏆',
-      title: 'Create or Join Leagues',
-      description: 'Start your own league with custom settings or join an existing one with a code.',
-      image: null,
-      features: [
-        'Snake or Auction draft styles',
-        'Customizable scoring systems',
-        'Invite friends with a league code',
-      ],
-    },
-    {
-      id: 'draft',
-      icon: '📋',
-      title: 'Draft Your Team',
-      description: 'Select players to build your roster. Use stats and rankings to make informed picks.',
-      image: null,
-      features: [
-        'Real-time draft room',
-        'Player stats & rankings',
-        'Pre-draft queue to plan ahead',
-      ],
-    },
-    {
-      id: 'scoring',
-      icon: '📊',
-      title: 'Live Tournament Scoring',
-      description: 'Watch your players compete in real tournaments with live score updates.',
-      image: null,
-      features: [
-        'Real-time leaderboard updates',
-        'Track your players\' progress',
-        'Fantasy point calculations',
-      ],
-    },
-    {
-      id: 'getstarted',
-      icon: '🚀',
-      title: 'Ready to Play?',
-      description: 'Create your first league or join one with a code to start competing!',
-      image: null,
-      actions: true,
-    },
-  ]
-
-  const currentStepData = steps[currentStep]
-  const isLastStep = currentStep === steps.length - 1
-  const isFirstStep = currentStep === 0
-
-  const handleNext = () => {
-    if (isLastStep) {
-      completeOnboarding()
-    } else {
-      setCurrentStep(prev => prev + 1)
-    }
-  }
-
-  const handlePrev = () => {
-    if (!isFirstStep) {
-      setCurrentStep(prev => prev - 1)
-    }
-  }
-
-  const handleCreateLeague = () => {
-    completeOnboarding()
-    navigate('/leagues/create')
-  }
-
-  const handleJoinLeague = () => {
-    completeOnboarding()
-    navigate('/leagues/join')
-  }
-
-  const handleExplore = () => {
-    completeOnboarding()
-  }
+  const { setProfile } = useCoachProfile()
+  const [step, setStep] = useState(0)
+  const [selectedSports, setSelectedSports] = useState(null)
+  const [answers, setAnswers] = useState({})
 
   if (!showOnboarding) return null
 
+  const handleSportSelect = (key) => {
+    setSelectedSports(key)
+  }
+
+  const handleContinue = () => {
+    setStep(1)
+  }
+
+  const handleAnswer = (questionKey, value) => {
+    setAnswers(prev => ({ ...prev, [questionKey]: value }))
+  }
+
+  const handleComplete = () => {
+    setProfile({
+      preferredSports: selectedSports,
+      ...answers,
+    })
+    completeOnboarding()
+    navigate('/')
+  }
+
+  const handleSkipProfile = () => {
+    setProfile({ preferredSports: selectedSports })
+    completeOnboarding()
+    navigate('/')
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-dark-secondary rounded-2xl overflow-hidden shadow-2xl">
-        {/* Progress indicator */}
+      <div className="w-full max-w-lg bg-[var(--surface)] rounded-2xl overflow-hidden shadow-2xl">
+        {/* Progress */}
         <div className="flex gap-1 p-4 pb-0">
-          {steps.map((_, idx) => (
+          {[0, 1].map(idx => (
             <div
               key={idx}
-              className={`
-                h-1 flex-1 rounded-full transition-colors
-                ${idx <= currentStep ? 'bg-gold' : 'bg-dark-border'}
-              `}
+              className={`h-1 flex-1 rounded-full transition-colors ${
+                idx <= step ? 'bg-purple-500' : 'bg-[var(--stone)]'
+              }`}
             />
           ))}
         </div>
 
-        {/* Content */}
         <div className="p-6 pt-4">
-          {/* Skip button */}
-          <div className="flex justify-end mb-4">
+          {/* Skip */}
+          <div className="flex justify-end mb-2">
             <button
               onClick={skipOnboarding}
               className="text-sm text-text-muted hover:text-text-primary transition-colors"
@@ -129,103 +104,110 @@ const OnboardingModal = () => {
             </button>
           </div>
 
-          {/* Icon */}
-          <div className="text-center mb-6">
-            <span className="text-6xl">{currentStepData.icon}</span>
-          </div>
+          {step === 0 && (
+            <>
+              {/* Step 1: Meet Your Coach */}
+              <div className="flex justify-center mb-6">
+                <NeuralCluster size="lg" intensity="calm" />
+              </div>
 
-          {/* Title & Description */}
-          <h2 className="text-2xl font-bold font-display text-text-primary text-center mb-3">
-            {currentStepData.title}
-          </h2>
-          <p className="text-text-secondary text-center mb-6">
-            {currentStepData.description}
-          </p>
+              <h2 className="text-2xl font-bold font-display text-text-primary text-center mb-3">
+                Every great manager has an edge.
+              </h2>
+              <p className="text-lg font-display font-bold text-[var(--crown)] text-center mb-4">
+                Yours just got a brain.
+              </p>
+              <p className="text-text-secondary text-center text-sm mb-6 leading-relaxed max-w-md mx-auto">
+                Clutch Coach learns your draft tendencies, tracks your predictions,
+                and calls you out when you're slipping. The more you play, the smarter it gets.
+              </p>
 
-          {/* Features list */}
-          {currentStepData.features && (
-            <div className="space-y-3 mb-6">
-              {currentStepData.features.map((feature, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg"
-                >
-                  <div className="w-6 h-6 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-text-primary text-sm">{feature}</span>
+              {/* Sport pills */}
+              <div className="mb-6">
+                <p className="text-xs text-text-muted text-center mb-3 uppercase tracking-wider font-semibold">
+                  What do you follow?
+                </p>
+                <div className="flex justify-center gap-3">
+                  {SPORT_OPTIONS.map(sport => (
+                    <button
+                      key={sport.key}
+                      onClick={() => handleSportSelect(sport.key)}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-semibold transition-all ${
+                        selectedSports === sport.key
+                          ? 'border-purple-500 bg-purple-500/10 text-purple-400'
+                          : 'border-[var(--card-border)] text-text-secondary hover:border-purple-500/50'
+                      }`}
+                    >
+                      <span>{sport.emoji}</span>
+                      <span>{sport.label}</span>
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+
+              <button
+                onClick={handleContinue}
+                disabled={!selectedSports}
+                className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
+                  selectedSports
+                    ? 'bg-purple-500 text-white hover:bg-purple-600'
+                    : 'bg-[var(--stone)] text-text-muted cursor-not-allowed'
+                }`}
+              >
+                Continue
+              </button>
+            </>
           )}
 
-          {/* Action buttons for last step */}
-          {currentStepData.actions && (
-            <div className="space-y-3 mb-6">
-              <Button
-                onClick={handleCreateLeague}
-                className="w-full"
-              >
-                Create a League
-              </Button>
-              <Button
-                onClick={handleJoinLeague}
-                variant="outline"
-                className="w-full"
-              >
-                Join a League
-              </Button>
-              <button
-                onClick={handleExplore}
-                className="w-full py-2 text-text-muted hover:text-text-primary transition-colors text-sm"
-              >
-                Just explore for now
-              </button>
-            </div>
-          )}
+          {step === 1 && (
+            <>
+              {/* Step 2: Quick Profile */}
+              <div className="flex items-center gap-2 mb-1 justify-center">
+                <NeuralCluster size="sm" intensity="calm" className="shrink-0" />
+                <h2 className="text-xl font-bold font-display text-text-primary">
+                  Help your coach get to know you
+                </h2>
+              </div>
+              <p className="text-text-muted text-sm text-center mb-6">
+                Quick-fire questions — tap to answer
+              </p>
 
-          {/* Navigation */}
-          {!currentStepData.actions && (
-            <div className="flex items-center justify-between">
-              <button
-                onClick={handlePrev}
-                disabled={isFirstStep}
-                className={`
-                  flex items-center gap-1 text-sm font-medium transition-colors
-                  ${isFirstStep ? 'text-dark-border cursor-not-allowed' : 'text-text-muted hover:text-text-primary'}
-                `}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back
-              </button>
-
-              <div className="flex gap-2">
-                {steps.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentStep(idx)}
-                    className={`
-                      w-2 h-2 rounded-full transition-colors
-                      ${idx === currentStep ? 'bg-gold' : 'bg-dark-border hover:bg-dark-tertiary'}
-                    `}
-                  />
+              <div className="space-y-5 mb-6">
+                {QUESTIONS.map(q => (
+                  <div key={q.key}>
+                    <p className="text-sm font-semibold text-text-primary mb-2">{q.question}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {q.options.map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => handleAnswer(q.key, opt.value)}
+                          className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                            answers[q.key] === opt.value
+                              ? 'border-purple-500 bg-purple-500/10 text-purple-400'
+                              : 'border-[var(--card-border)] text-text-secondary hover:border-purple-500/50'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
 
               <button
-                onClick={handleNext}
-                className="flex items-center gap-1 text-sm font-medium text-gold hover:text-gold/80 transition-colors"
+                onClick={handleComplete}
+                className="w-full py-3 rounded-xl font-semibold text-sm bg-purple-500 text-white hover:bg-purple-600 transition-all"
               >
-                {isLastStep ? 'Finish' : 'Next'}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                Let's Go
               </button>
-            </div>
+              <button
+                onClick={handleSkipProfile}
+                className="w-full py-2 mt-2 text-text-muted hover:text-text-primary transition-colors text-sm"
+              >
+                Skip for now
+              </button>
+            </>
           )}
         </div>
       </div>

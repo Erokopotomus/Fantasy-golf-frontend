@@ -8,6 +8,7 @@ import useMatchups from '../hooks/useMatchups'
 import api from '../services/api'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import NeuralCluster from '../components/common/NeuralCluster'
 import ChatPanel from '../components/chat/ChatPanel'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import DraftCountdown from '../components/DraftCountdown'
@@ -38,6 +39,7 @@ const LeagueHome = () => {
   const [leagueLeaderboard, setLeagueLeaderboard] = useState([])
   const [historicalTeams, setHistoricalTeams] = useState(null) // most recent season from import
   const [existingBoardId, setExistingBoardId] = useState(null)
+  const [leagueBriefing, setLeagueBriefing] = useState(null)
 
   const loading = leaguesLoading && detailLoading
   const league = detailedLeague || leagues?.find(l => l.id === leagueId)
@@ -141,6 +143,14 @@ const LeagueHome = () => {
     if (!leagueId) return
     api.getPredictionLeaderboard({ leagueId, timeframe: 'weekly', limit: 5 })
       .then(data => setLeagueLeaderboard(data.leaderboard || []))
+      .catch(() => {})
+  }, [leagueId])
+
+  // Fetch league coach briefing
+  useEffect(() => {
+    if (!leagueId) return
+    api.getCoachBriefing(leagueId)
+      .then(data => setLeagueBriefing(data.briefing))
       .catch(() => {})
   }, [leagueId])
 
@@ -641,6 +651,16 @@ const LeagueHome = () => {
                   </div>
                 </Card>
               )}
+            </div>
+          )}
+
+          {/* Coach Line */}
+          {leagueBriefing && (
+            <div className="mb-4 flex items-center gap-2 px-1">
+              <NeuralCluster size="sm" intensity="calm" className="shrink-0" />
+              <p className="text-sm text-text-secondary italic font-editorial">
+                {leagueBriefing.headline}
+              </p>
             </div>
           )}
 
