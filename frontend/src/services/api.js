@@ -265,6 +265,12 @@ class ApiService {
     })
   }
 
+  async cancelDraft(draftId) {
+    return this.request(`/drafts/${draftId}`, {
+      method: 'DELETE',
+    })
+  }
+
   async startDraft(id) {
     return this.request(`/drafts/${id}/start`, {
       method: 'POST',

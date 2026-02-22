@@ -1003,6 +1003,48 @@ router.patch('/:id/schedule', authenticate, async (req, res, next) => {
   }
 })
 
+// DELETE /api/drafts/:id - Cancel/delete a scheduled draft (commissioner only)
+router.delete('/:id', authenticate, async (req, res, next) => {
+  try {
+    const draft = await prisma.draft.findUnique({
+      where: { id: req.params.id },
+      include: { league: true }
+    })
+
+    if (!draft) {
+      return res.status(404).json({ error: { message: 'Draft not found' } })
+    }
+
+    if (draft.league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can cancel the draft' } })
+    }
+
+    if (draft.status !== 'SCHEDULED') {
+      return res.status(400).json({ error: { message: 'Only scheduled drafts can be cancelled' } })
+    }
+
+    await prisma.$transaction([
+      prisma.draftPick.deleteMany({ where: { draftId: draft.id } }),
+      prisma.draftOrder.deleteMany({ where: { draftId: draft.id } }),
+      prisma.draft.delete({ where: { id: draft.id } }),
+      prisma.league.update({
+        where: { id: draft.leagueId },
+        data: { status: 'draft-pending' }
+      })
+    ])
+
+    const io = req.app.get('io')
+    io.to(`league-${draft.leagueId}`).emit('draft-cancelled', {
+      draftId: draft.id,
+      leagueId: draft.leagueId
+    })
+
+    res.json({ message: 'Draft cancelled' })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // Helper: Calculate pick deadline based on draft state
 function getPickDeadline(draft) {
   if (draft.status !== 'IN_PROGRESS') return null
