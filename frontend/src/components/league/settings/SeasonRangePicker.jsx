@@ -69,13 +69,14 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
   }, [weeks])
 
   // Build option label for a week
-  const optionLabel = (week, idx) => {
+  const optionLabel = (week, idx, status) => {
     const name = week.tournament?.shortName || week.tournament?.name || week.name
     const date = formatDate(week.tournament?.startDate)
     const parts = [name]
     if (date) parts.push(`\u2014 ${date}`)
-    if (week.tournament?.isMajor) parts.push(' (Major)')
-    if (week.tournament?.isPlayoff && week.tournament?.fieldSize) {
+    if (status === 'COMPLETED') parts.push(' (Completed)')
+    else if (week.tournament?.isMajor) parts.push(' (Major)')
+    else if (week.tournament?.isPlayoff && week.tournament?.fieldSize) {
       parts.push(` (${week.tournament.fieldSize}-player field)`)
     } else if (week.tournament?.isPlayoff) {
       parts.push(' (Playoff)')
@@ -171,8 +172,8 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
           >
             <option value="">First tournament of season</option>
             {weeks.map((w) => (
-              <option key={w.id} value={w.id}>
-                {optionLabel(w)}
+              <option key={w.id} value={w.id} disabled={w.tournament?.status === 'COMPLETED'}>
+                {optionLabel(w, undefined, w.tournament?.status)}
               </option>
             ))}
           </select>
@@ -206,10 +207,10 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
                   </option>
                 )
               }
-              const label = optionLabel(opt.week, opt.idx)
+              const label = optionLabel(opt.week, opt.idx, opt.week.tournament?.status)
               const suffix = opt.recommendation ? ` \u2605 ${opt.recommendation}` : ''
               return (
-                <option key={opt.week.id} value={opt.week.id}>
+                <option key={opt.week.id} value={opt.week.id} disabled={opt.week.tournament?.status === 'COMPLETED'}>
                   {label}{suffix}
                 </option>
               )
