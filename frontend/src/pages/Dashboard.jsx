@@ -38,6 +38,33 @@ const LeagueCardSkeleton = () => (
   </Card>
 )
 
+const getGreeting = (name) => {
+  const hour = new Date().getHours()
+  const first = name?.split(' ')[0] || 'Player'
+  if (hour < 12) return `Good morning, ${first}`
+  if (hour < 17) return `Good afternoon, ${first}`
+  if (hour < 21) return `Good evening, ${first}`
+  return `Burning the midnight oil, ${first}?`
+}
+
+const getSubtitle = ({ leagues, currentTournament, tournamentsLoading }) => {
+  const hasLeagues = leagues && leagues.length > 0
+  // Live tournament
+  if (!tournamentsLoading && currentTournament?.status === 'ACTIVE') {
+    return `${currentTournament.name} is live — check the leaderboard`
+  }
+  // Has leagues + upcoming event
+  if (hasLeagues && !tournamentsLoading && currentTournament) {
+    const start = currentTournament.startDate ? new Date(currentTournament.startDate) : null
+    const dayName = start ? start.toLocaleDateString('en-US', { weekday: 'long' }) : ''
+    return `${currentTournament.name} tees off ${dayName}`
+  }
+  // Has leagues, no event
+  if (hasLeagues) return 'Your leagues are active — stay sharp'
+  // No leagues
+  return 'Ready to start your fantasy journey?'
+}
+
 const Dashboard = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -103,9 +130,9 @@ const Dashboard = () => {
   const hasMultipleSports = hasLeagues && new Set(leagues.map(l => (l.sport || 'GOLF').toLowerCase())).size > 1
 
   const quickActions = [
-    { to: '/leagues/create', label: 'Create League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />, color: 'text-gold' },
+    { to: '/leagues/create', label: 'Create League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />, color: 'text-gold', primary: true },
     { to: '/leagues/join', label: 'Join League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />, color: 'text-orange' },
-    { to: '/mock-draft', label: 'Mock Draft', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />, color: 'text-yellow-400' },
+    { to: '/mock-draft', label: 'Mock Draft', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />, color: 'text-yellow-400', primary: true },
     { to: '/players', label: 'Players', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />, color: 'text-gold' },
     { to: '/import', label: 'Import', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />, color: 'text-purple-400' },
     { to: '/lab', label: 'The Lab', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />, color: 'text-blue-400' },
@@ -120,10 +147,10 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
             <div>
               <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-primary mb-2 leading-tight">
-                Welcome back, {user?.name || 'Player'}!
+                {getGreeting(user?.name)}
               </h1>
               <p className="text-text-secondary leading-relaxed">
-                Here's what's happening with your fantasy teams.
+                {getSubtitle({ leagues, currentTournament, tournamentsLoading })}
               </p>
             </div>
 
@@ -186,9 +213,15 @@ const Dashboard = () => {
                 <Link
                   key={action.to}
                   to={action.to}
-                  className="flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface)] border border-[var(--card-border)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group"
+                  className={`flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group ${
+                    action.primary
+                      ? 'border-l-2 border border-[var(--card-border)] border-l-[var(--crown)]'
+                      : 'border border-[var(--card-border)]'
+                  }`}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-[var(--surface-alt)] flex items-center justify-center group-hover:bg-gold/10 transition-colors">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center group-hover:bg-gold/10 transition-colors ${
+                    action.primary ? 'bg-gold/10' : 'bg-[var(--surface-alt)]'
+                  }`}>
                     <svg className={`w-5 h-5 ${action.color} group-hover:scale-110 transition-transform`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {action.icon}
                     </svg>
@@ -204,10 +237,19 @@ const Dashboard = () => {
             {/* This Week — Command Center */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary">This Week</h2>
+                <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary flex items-center gap-2">
+                  {!tournamentsLoading && currentTournament?.status === 'ACTIVE' && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
+                  This Week
+                </h2>
               </div>
 
-              <Card>
+              <Card className="overflow-hidden">
+                {/* Gradient accent bar when event is active/upcoming */}
+                {!tournamentsLoading && currentTournament && (
+                  <div className="h-[3px] -mt-6 -mx-6 mb-6 bg-gradient-to-r from-emerald-500/80 via-emerald-400/60 to-emerald-500/20" />
+                )}
                 <div className="space-y-1">
                   {/* Row: Live Events */}
                   {(() => {
@@ -216,11 +258,11 @@ const Dashboard = () => {
                     return hasEvent ? (
                       <Link
                         to={`/tournaments/${currentTournament.id}${leagues?.length > 0 ? `?league=${leagues[0].id}` : ''}`}
-                        className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--bg-alt)] transition-colors group"
+                        className={`flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--bg-alt)] transition-colors group border-l-2 ${isLive ? 'border-l-emerald-500 bg-emerald-500/[0.05]' : 'border-l-emerald-500/50'}`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className={`w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0`}>
+                            <svg className="w-[18px] h-[18px] text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -230,7 +272,7 @@ const Dashboard = () => {
                             <div className="flex items-center gap-2">
                               {isLive && (
                                 <span className="flex items-center gap-1 text-live-red text-[10px] font-mono font-bold uppercase">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-live-red animate-pulse" />
+                                  <span className="w-2 h-2 rounded-full bg-live-red animate-pulse" />
                                   Live
                                 </span>
                               )}
@@ -377,18 +419,19 @@ const Dashboard = () => {
               ) : (
                 <Card>
                   <div className="text-center py-8 sm:py-12">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[var(--stone)] rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3l3.5 5L12 3l3.5 5L19 3v12a2 2 0 01-2 2H7a2 2 0 01-2-2V3z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 17h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z" />
                       </svg>
                     </div>
-                    <h3 className="text-base sm:text-lg font-medium text-text-primary mb-2">No Leagues Yet</h3>
+                    <h3 className="text-base sm:text-lg font-display font-bold text-text-primary mb-2">Your league empire starts here</h3>
                     <p className="text-text-secondary mb-6 max-w-sm mx-auto text-sm sm:text-base leading-relaxed">
-                      Create your first league or join an existing one to start competing!
+                      Join other managers competing across Golf and NFL — your first championship awaits.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
                       <Link to="/leagues/create">
-                        <Button>Create a League</Button>
+                        <Button className="bg-gradient-to-r from-blaze to-blaze-hot hover:from-blaze-hot hover:to-blaze text-white shadow-md">Create a League</Button>
                       </Link>
                       <Link to="/leagues/join">
                         <Button variant="outline">Join a League</Button>
