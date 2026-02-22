@@ -9,7 +9,7 @@
 
 /* LIGHT MODE (default) */
 :root {
-  --bg: #FAFAF6;
+  --bg: #F2EEE5;
   --bg-alt: #E8E3DA;
   --surface: #FFFFFF;
   --surface-alt: #F7F5F0;
@@ -24,7 +24,7 @@
   --gauge-bg: #E0DBD2;
 
   /* RGB channels for Tailwind opacity modifier support */
-  --bg-rgb: 250 250 246;
+  --bg-rgb: 242 238 229;
   --bg-alt-rgb: 232 227 218;
   --surface-rgb: 255 255 255;
   --surface-alt-rgb: 247 245 240;

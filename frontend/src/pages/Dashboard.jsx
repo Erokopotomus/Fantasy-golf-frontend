@@ -10,7 +10,7 @@ import useDraftBoards from '../hooks/useDraftBoards'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import LeagueCard from '../components/dashboard/LeagueCard'
-import TournamentCard from '../components/dashboard/TournamentCard'
+// TournamentCard no longer used on dashboard — tournament data feeds "This Week" card
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import PredictionWidget from '../components/predictions/PredictionWidget'
 import DashboardRatingWidget from '../components/dashboard/DashboardRatingWidget'
@@ -77,20 +77,6 @@ const Dashboard = () => {
 
   const handleManageLineup = (league) => {
     navigate(`/leagues/${league.id}/roster`)
-  }
-
-  const handleSetLineup = (tournament) => {
-    // Navigate to roster page for the first league (to set lineup)
-    if (leagues && leagues.length > 0) {
-      navigate(`/leagues/${leagues[0].id}/roster`)
-    }
-  }
-
-  const handleViewTournament = (tournament) => {
-    // Navigate to tournament scoring view
-    if (tournament) {
-      navigate(`/tournaments/${tournament.id}${leagues?.length > 0 ? `?league=${leagues[0].id}` : ''}`)
-    }
   }
 
   const [feedCards, setFeedCards] = useState([])
@@ -211,34 +197,97 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* ── Section 3: Hero Row — Tournament + My Leagues ── */}
+          {/* ── Section 3: This Week + My Leagues ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Tournament Card — hero position with green tint */}
-            <div
-              className="rounded-xl p-5 border-l-[3px]"
-              style={{ backgroundColor: 'var(--tint-golf)', borderLeftColor: 'var(--field)' }}
-            >
-              {tournamentsLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-5 bg-[var(--stone)] rounded w-1/2 mb-4" />
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 bg-[var(--stone)] rounded-xl" />
-                    <div className="flex-1">
-                      <div className="h-4 bg-[var(--stone)] rounded w-3/4 mb-2" />
-                      <div className="h-3 bg-[var(--stone)] rounded w-1/2" />
-                    </div>
+            {/* This Week — Command Center */}
+            <Card>
+              <div className="flex items-center gap-2 mb-4">
+                <svg className="w-4.5 h-4.5 text-[var(--crown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <h2 className="text-base font-semibold font-display text-text-primary">This Week</h2>
+              </div>
+
+              <div className="space-y-2.5">
+                {/* Live / Upcoming Tournament */}
+                {tournamentsLoading ? (
+                  <div className="flex items-center gap-3 animate-pulse">
+                    <div className="w-16 h-5 bg-[var(--stone)] rounded-full" />
+                    <div className="h-4 bg-[var(--stone)] rounded flex-1" />
                   </div>
-                  <div className="h-20 bg-[var(--bg)] rounded-lg mb-4" />
-                  <div className="h-9 bg-[var(--stone)] rounded" />
-                </div>
-              ) : (
-                <TournamentCard
-                  tournament={currentTournament}
-                  onSetLineup={handleSetLineup}
-                  onViewDetails={handleViewTournament}
-                />
-              )}
-            </div>
+                ) : currentTournament ? (
+                  <Link
+                    to={`/tournaments/${currentTournament.id}${leagues?.length > 0 ? `?league=${leagues[0].id}` : ''}`}
+                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-alt)] hover:bg-[var(--stone)] transition-colors group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {currentTournament.status === 'ACTIVE' ? (
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-live-red/10 text-live-red text-[10px] font-mono font-bold uppercase shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-live-red animate-pulse" />
+                          Live
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold uppercase shrink-0">
+                          Upcoming
+                        </span>
+                      )}
+                      <span className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--field)] transition-colors">
+                        {currentTournament.name}
+                      </span>
+                    </div>
+                    <svg className="w-4 h-4 text-text-primary/20 group-hover:text-[var(--field)] shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                ) : null}
+
+                {/* League action items */}
+                {!leaguesLoading && hasLeagues && filteredLeagues.slice(0, 3).map(league => (
+                  <Link
+                    key={league.id}
+                    to={`/leagues/${league.id}/roster`}
+                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-alt)] hover:bg-[var(--stone)] transition-colors group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${
+                        (league.sport || 'GOLF').toLowerCase() === 'nfl' ? 'bg-blue-500/15 text-blue-400' : 'bg-emerald-500/15 text-emerald-400'
+                      }`}>
+                        {(league.sport || 'GOLF').toLowerCase()}
+                      </span>
+                      <span className="text-sm text-text-primary truncate">{league.name}</span>
+                    </div>
+                    <span className="text-[11px] text-text-primary/30 font-mono shrink-0 ml-2 group-hover:text-[var(--crown)] transition-colors">
+                      Set lineup &rarr;
+                    </span>
+                  </Link>
+                ))}
+
+                {/* Draft boards */}
+                {!boardsLoading && boards.length > 0 && (
+                  <Link
+                    to="/lab"
+                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-alt)] hover:bg-[var(--stone)] transition-colors group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-500/15 text-blue-400 shrink-0">
+                        Lab
+                      </span>
+                      <span className="text-sm text-text-primary">
+                        {boards.length} board{boards.length !== 1 ? 's' : ''} in progress
+                      </span>
+                    </div>
+                    <svg className="w-4 h-4 text-text-primary/20 group-hover:text-blue-400 shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                )}
+
+                {/* Empty state */}
+                {!tournamentsLoading && !currentTournament && !hasLeagues && (
+                  <p className="text-text-primary/40 text-sm py-2">No live events this week. Explore the hubs to get started!</p>
+                )}
+              </div>
+            </Card>
 
             {/* My Leagues */}
             <div>
