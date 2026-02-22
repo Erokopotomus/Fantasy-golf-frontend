@@ -16,6 +16,14 @@ const { PrismaClient } = require('@prisma/client')
 const path = require('path')
 const fs = require('fs')
 
+// Block running against production database
+const dbUrl = process.env.DATABASE_URL || '';
+if (/rlwy\.net|railway/i.test(dbUrl)) {
+  console.error('\n🚫 BLOCKED: Cannot run NFL test league seed against production (Railway).');
+  console.error('   Point DATABASE_URL at a local database first.\n');
+  process.exit(1);
+}
+
 const prisma = new PrismaClient()
 const MANIFEST_PATH = path.join(__dirname, 'nfl-test-manifest.json')
 
