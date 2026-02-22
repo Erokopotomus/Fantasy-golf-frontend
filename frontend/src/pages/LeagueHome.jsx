@@ -14,6 +14,8 @@ import DraftCountdown from '../components/DraftCountdown'
 import LeagueChat from '../components/ai/LeagueChat'
 import CommissionerNotes from '../components/league/CommissionerNotes'
 import LiveScoringWidget from '../components/league/LiveScoringWidget'
+import PhaseActionRow from '../components/league/PhaseActionRow'
+import { useLeaguePhase } from '../hooks/useLeaguePhase'
 import { formatDate } from '../utils/dateUtils'
 
 const LeagueHome = () => {
@@ -156,6 +158,7 @@ const LeagueHome = () => {
   const leaderPoints = leaderStanding?.totalPoints || 0
   const pointsDiff = leaderPoints - userPoints
 
+  const { phase: leaguePhase } = useLeaguePhase({ league, currentTournament })
   const isCommissioner = league?.ownerId === user?.id || league?.owner?.id === user?.id
   const latestDraft = league?.drafts?.[0]
   const draftStatus = latestDraft?.status
@@ -626,6 +629,9 @@ const LeagueHome = () => {
               )}
             </div>
           )}
+
+          {/* Phase-Aware Action Row */}
+          <PhaseActionRow phase={leaguePhase} league={league} />
 
           {/* Live / Final Tournament Scoring Widget (golf leagues only) */}
           {!isNflLeague && currentTournament && (currentTournament.status === 'IN_PROGRESS' || currentTournament.status === 'COMPLETED') && (

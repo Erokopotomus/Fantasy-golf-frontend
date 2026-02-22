@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import useDraftBoards from '../hooks/useDraftBoards'
 import api from '../services/api'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
@@ -134,6 +134,7 @@ function activityDescription(a) {
 export default function DraftBoards() {
   const { boards, loading, error, createBoard, deleteBoard } = useDraftBoards()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Hub data
   const [journalEntries, setJournalEntries] = useState([])
@@ -160,6 +161,30 @@ export default function DraftBoards() {
   const [draftType, setDraftType] = useState(null)
   const [startFrom, setStartFrom] = useState('clutch')
   const [creating, setCreating] = useState(false)
+
+  // Pre-fill create modal from URL params (league → Lab bridge)
+  useEffect(() => {
+    const sport = searchParams.get('sport')
+    const leagueName = searchParams.get('leagueName')
+    if (!sport && !leagueName) return
+
+    if (sport) setNewSport(sport.toLowerCase() === 'nfl' ? 'nfl' : 'golf')
+    if (leagueName) setNewName(`${leagueName} Draft Board`)
+
+    const tc = searchParams.get('teamCount')
+    if (tc) setTeamCount(parseInt(tc, 10) || null)
+
+    const dt = searchParams.get('draftType')
+    if (dt) setDraftType(dt)
+
+    const scoring = searchParams.get('scoring')
+    if (scoring) setNewScoring(scoring)
+
+    setShowCreate(true)
+    setStep(1)
+    // Clear params so they don't persist on reload
+    setSearchParams({}, { replace: true })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch hub data once boards are loaded
   useEffect(() => {

@@ -16,6 +16,7 @@ import PredictionWidget from '../components/predictions/PredictionWidget'
 import DashboardRatingWidget from '../components/dashboard/DashboardRatingWidget'
 import api from '../services/api'
 import { formatDayET } from '../utils/dateUtils'
+import { buildLabUrl } from '../utils/labBridge'
 
 const LeagueCardSkeleton = () => (
   <Card className="animate-pulse">
@@ -342,17 +343,66 @@ const Dashboard = () => {
                   )}
 
                   {/* Row: Upcoming Drafts */}
-                  <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
-                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
-                      <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-primary/60 font-medium">Upcoming Drafts</p>
-                      <p className="text-[11px] text-text-primary/35 font-mono">No drafts scheduled</p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const upcomingDrafts = (leagues || [])
+                      .filter(l => l.drafts?.[0]?.status === 'SCHEDULED' && l.drafts?.[0]?.scheduledFor)
+                      .sort((a, b) => new Date(a.drafts[0].scheduledFor) - new Date(b.drafts[0].scheduledFor))
+
+                    if (upcomingDrafts.length === 0) {
+                      return (
+                        <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
+                          <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm text-text-primary/60 font-medium">Upcoming Drafts</p>
+                            <p className="text-[11px] text-text-primary/35 font-mono">No drafts scheduled</p>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return upcomingDrafts.slice(0, 2).map(dl => {
+                      const draftDate = new Date(dl.drafts[0].scheduledFor)
+                      const now = new Date()
+                      const diffMs = draftDate - now
+                      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+                      const draftLabel = diffDays <= 0
+                        ? 'Today'
+                        : diffDays === 1
+                          ? 'Tomorrow'
+                          : `Draft in ${diffDays} days`
+                      const dateStr = draftDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                      const timeStr = draftDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+                      return (
+                        <div key={dl.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg border-l-2 border-l-[var(--crown)]/50 bg-[var(--crown)]/[0.03] hover:bg-[var(--bg-alt)] transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-[var(--crown)]/10 flex items-center justify-center shrink-0">
+                              <svg className="w-4 h-4 text-[var(--crown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                              </svg>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm text-text-primary font-medium truncate">{dl.name}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] text-text-primary/40 font-mono">{dateStr}, {timeStr}</span>
+                                <span className="text-[10px] text-[var(--crown)] font-semibold">{draftLabel}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Link
+                            to={buildLabUrl(dl)}
+                            className="text-xs font-semibold text-[var(--crown)] hover:text-[var(--crown)]/80 transition-colors shrink-0 ml-2"
+                          >
+                            Prep
+                          </Link>
+                        </div>
+                      )
+                    })
+                  })()}
 
                   {/* Row: Trade & Waiver Activity */}
                   <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
