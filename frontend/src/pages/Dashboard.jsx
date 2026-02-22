@@ -136,10 +136,10 @@ const Dashboard = () => {
                 <Link
                   key={action.to}
                   to={action.to}
-                  className={`flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group ${
+                  className={`flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface-alt)] dark:bg-[var(--surface)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group ${
                     action.primary
-                      ? 'border-l-2 border border-[var(--card-border)] border-l-[var(--crown)]'
-                      : 'border border-[var(--card-border)]'
+                      ? 'border-l-2 border border-[var(--card-border-strong)] dark:border-[var(--card-border)] border-l-[var(--crown)]'
+                      : 'border border-[var(--card-border-strong)] dark:border-[var(--card-border)]'
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center group-hover:bg-gold/10 transition-colors ${
@@ -450,7 +450,7 @@ const Dashboard = () => {
             {/* Prove It — clickable */}
             <Link
               to="/prove-it"
-              className="rounded-xl p-4 border-l-[3px] hover:shadow-card hover:-translate-y-0.5 transition-all group block"
+              className="rounded-xl p-4 border border-l-[3px] border-[var(--card-border)] hover:shadow-card hover:-translate-y-0.5 transition-all group block"
               style={{ backgroundColor: 'var(--tint-golf)', borderLeftColor: 'var(--field)' }}
             >
               <PredictionWidget />
@@ -459,16 +459,16 @@ const Dashboard = () => {
             {/* Clutch Rating — clickable */}
             <Link
               to={`/manager/${user?.id}`}
-              className="rounded-xl p-4 border-l-[3px] hover:shadow-card hover:-translate-y-0.5 transition-all group block"
+              className="rounded-xl p-4 border border-l-[3px] border-[var(--card-border)] hover:shadow-card hover:-translate-y-0.5 transition-all group block"
               style={{ backgroundColor: 'var(--tint-rating)', borderLeftColor: 'var(--crown)' }}
             >
               <DashboardRatingWidget />
             </Link>
 
-            {/* Coaching Corner — clickable */}
+            {/* Coaching Corner */}
             <div
               id="coaching"
-              className="rounded-xl p-4 border-l-[3px]"
+              className="rounded-xl p-4 border border-l-[3px] border-[var(--card-border)]"
               style={{ backgroundColor: 'var(--tint-ai)', borderLeftColor: '#8B5CF6' }}
             >
               <div className="flex items-center gap-2 mb-3">
