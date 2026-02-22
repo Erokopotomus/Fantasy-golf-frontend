@@ -15,6 +15,7 @@ import ActivityFeed from '../components/dashboard/ActivityFeed'
 import PredictionWidget from '../components/predictions/PredictionWidget'
 import DashboardRatingWidget from '../components/dashboard/DashboardRatingWidget'
 import api from '../services/api'
+import { formatDayET } from '../utils/dateUtils'
 
 const LeagueCardSkeleton = () => (
   <Card className="animate-pulse">
@@ -56,7 +57,7 @@ const getSubtitle = ({ leagues, currentTournament, tournamentsLoading }) => {
   // Has leagues + upcoming event
   if (hasLeagues && !tournamentsLoading && currentTournament) {
     const start = currentTournament.startDate ? new Date(currentTournament.startDate) : null
-    const dayName = start ? start.toLocaleDateString('en-US', { weekday: 'long' }) : ''
+    const dayName = start ? formatDayET(currentTournament.startDate) : ''
     return `${currentTournament.name} tees off ${dayName}`
   }
   // Has leagues, no event

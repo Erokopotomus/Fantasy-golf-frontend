@@ -1,27 +1,7 @@
 import { Link } from 'react-router-dom'
 import useTournaments from '../hooks/useTournaments'
 import Card from '../components/common/Card'
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-const formatDateRange = (start, end) => {
-  if (!start) return ''
-  const s = formatDate(start)
-  const e = end ? formatDate(end) : ''
-  return e ? `${s} - ${e}` : s
-}
-
-const formatPurse = (purse) => {
-  if (!purse) return null
-  const num = Number(purse)
-  if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(1)}M`
-  if (num >= 1_000) return `$${(num / 1_000).toFixed(0)}K`
-  return `$${num}`
-}
+import { formatDate, formatDateRange, formatPurse } from '../utils/dateUtils'
 
 const TourBadge = ({ tour }) => {
   if (!tour) return null

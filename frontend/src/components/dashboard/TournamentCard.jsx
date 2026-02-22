@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Card from '../common/Card'
+import { formatPurse, formatDateRange } from '../../utils/dateUtils'
 
 const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0 })
@@ -50,12 +51,6 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
   const currentRound = tournament.currentRound
   const cutLine = tournament.cutLine
 
-  const formatPurse = (amount) => {
-    if (!amount) return null
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(amount % 1000000 === 0 ? 0 : 1)}M`
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`
-    return `$${amount}`
-  }
 
   const formatCutLine = (cut) => {
     if (cut == null) return null
@@ -74,12 +69,6 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
     return null
   }
 
-  const formatDateRange = () => {
-    const start = new Date(tournament.startDate)
-    const end = new Date(tournament.endDate)
-    const opts = { month: 'short', day: 'numeric' }
-    return `${start.toLocaleDateString('en-US', opts)} – ${end.toLocaleDateString('en-US', opts)}`
-  }
 
   return (
     <div onClick={() => onViewDetails?.(tournament)} className="cursor-pointer">
@@ -227,7 +216,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
           </div>
 
           <div className="bg-[var(--bg-alt)] rounded-lg p-2">
-            <p className="text-text-primary font-semibold text-sm">{formatDateRange()}</p>
+            <p className="text-text-primary font-semibold text-sm">{formatDateRange(tournament.startDate, tournament.endDate)}</p>
             <p className="text-text-muted text-xs">Dates</p>
           </div>
         </div>

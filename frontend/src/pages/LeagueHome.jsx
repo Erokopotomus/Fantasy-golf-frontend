@@ -13,6 +13,7 @@ import ActivityFeed from '../components/dashboard/ActivityFeed'
 import DraftCountdown from '../components/DraftCountdown'
 import LeagueChat from '../components/ai/LeagueChat'
 import CommissionerNotes from '../components/league/CommissionerNotes'
+import { formatDate } from '../utils/dateUtils'
 
 const LeagueHome = () => {
   const { leagueId } = useParams()
@@ -575,7 +576,7 @@ const LeagueHome = () => {
                   <div>
                     <h3 className="text-text-primary font-medium text-sm">Next Event: {currentTournament.name}</h3>
                     <p className="text-text-muted text-xs">
-                      Starts {new Date(currentTournament.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      Starts {formatDate(currentTournament.startDate)}
                     </p>
                   </div>
                 </div>

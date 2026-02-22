@@ -10,6 +10,7 @@ import PlayerDrawer from '../components/players/PlayerDrawer'
 import LineupOptimizer from '../components/roster/LineupOptimizer'
 import { track, Events } from '../services/analytics'
 import api from '../services/api'
+import { formatDateTimeET } from '../utils/dateUtils'
 
 /**
  * Normalize a roster entry from the API into a flat player object
@@ -448,7 +449,7 @@ const TeamRoster = () => {
               Lineups lock in {countdown}
             </p>
             <p className="text-yellow-400/70 text-xs">
-              {scheduleData?.[0]?.name || lockInfo.tournament?.name || lockInfo.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {new Date(lockInfo.lockTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+              {scheduleData?.[0]?.name || lockInfo.tournament?.name || lockInfo.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {formatDateTimeET(lockInfo.lockTime)}
             </p>
           </div>
           <span className="font-mono text-yellow-400 text-lg font-bold">{countdown}</span>

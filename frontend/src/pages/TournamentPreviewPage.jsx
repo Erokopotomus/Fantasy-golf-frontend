@@ -6,28 +6,7 @@ import {
   selectPlayersToWatch,
   generateStorylines,
 } from '../utils/storylineGenerator'
-
-// ── Helpers ───────────────────────────────────────────────────────
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-const formatDateRange = (start, end) => {
-  if (!start) return ''
-  const s = formatDate(start)
-  const e = end ? formatDate(end) : ''
-  return e ? `${s} – ${e}` : s
-}
-
-const formatPurse = (purse) => {
-  if (!purse) return null
-  const num = Number(purse)
-  if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(num % 1_000_000 === 0 ? 0 : 1)}M`
-  if (num >= 1_000) return `$${(num / 1_000).toFixed(0)}K`
-  return `$${num}`
-}
+import { formatDate, formatDateRange, formatPurse } from '../utils/dateUtils'
 
 const getDnaLabel = (val) => {
   if (val == null) return null

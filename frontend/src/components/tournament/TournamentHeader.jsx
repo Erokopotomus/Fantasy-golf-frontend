@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { formatDate, formatPurse } from '../../utils/dateUtils'
 
 const getDnaLabel = (val) => {
   if (val == null) return null
@@ -10,21 +11,6 @@ const getDnaLabel = (val) => {
 
 const TournamentHeader = ({ tournament, leaderboard = [] }) => {
   if (!tournament) return null
-
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
-  const formatPurse = (purse) => {
-    if (!purse) return null
-    const num = typeof purse === 'string' ? parseInt(purse.replace(/[^0-9]/g, '')) : purse
-    if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(num % 1_000_000 === 0 ? 0 : 1)}M`
-    if (num >= 1_000) return `$${(num / 1_000).toFixed(0)}K`
-    return `$${num}`
-  }
 
   const isLive = tournament.status === 'IN_PROGRESS' || tournament.status === 'live'
   const isCompleted = tournament.status === 'COMPLETED' || tournament.status === 'completed'

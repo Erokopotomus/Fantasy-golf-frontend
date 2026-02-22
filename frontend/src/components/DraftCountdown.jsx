@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { formatTimeET, formatDate } from '../utils/dateUtils'
 
 function getTimeRemaining(scheduledFor) {
   const diff = new Date(scheduledFor).getTime() - Date.now()
@@ -20,15 +21,6 @@ function getUrgencyColor(totalMs) {
   return 'text-gold'
 }
 
-function formatDate(iso) {
-  const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-function formatTime(iso) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-}
 
 const DraftCountdown = ({ scheduledFor, compact = false }) => {
   const [remaining, setRemaining] = useState(() => getTimeRemaining(scheduledFor))
@@ -54,7 +46,7 @@ const DraftCountdown = ({ scheduledFor, compact = false }) => {
     return (
       <div className="text-center">
         <p className="text-red-400 font-semibold">Draft time has passed</p>
-        <p className="text-text-muted text-sm">{formatDate(scheduledFor)} at {formatTime(scheduledFor)}</p>
+        <p className="text-text-muted text-sm">{formatDate(scheduledFor)} at {formatTimeET(scheduledFor)}</p>
       </div>
     )
   }
@@ -74,7 +66,7 @@ const DraftCountdown = ({ scheduledFor, compact = false }) => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span className="text-text-secondary">
-          Draft: {formatDate(scheduledFor)} @ {formatTime(scheduledFor)}
+          Draft: {formatDate(scheduledFor)} @ {formatTimeET(scheduledFor)}
         </span>
         <span className={`font-semibold ${color}`}>
           {parts.join(' ')}
@@ -94,8 +86,8 @@ const DraftCountdown = ({ scheduledFor, compact = false }) => {
       </div>
       <p className="text-text-secondary text-sm mb-3">
         {new Date(scheduledFor).toLocaleDateString('en-US', {
-          weekday: 'long', month: 'long', day: 'numeric'
-        })} at {formatTime(scheduledFor)}
+          weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/New_York'
+        })} at {formatTimeET(scheduledFor)}
       </p>
       <div className="flex gap-3">
         {remaining.days > 0 && (

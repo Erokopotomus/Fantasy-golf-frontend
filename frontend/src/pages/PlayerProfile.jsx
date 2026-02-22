@@ -14,6 +14,7 @@ import CaptureFormModal from '../components/lab/CaptureFormModal'
 import usePlayerProfile from '../hooks/usePlayerProfile'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
+import { formatDate, formatDateRange } from '../utils/dateUtils'
 
 const PlayerProfile = () => {
   const { playerId } = useParams()
@@ -233,7 +234,7 @@ const PlayerProfile = () => {
                               </span>
                             )}
                             <span className="text-[10px] text-text-primary/15">
-                              {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {formatDate(c.createdAt)}
                             </span>
                           </div>
                         </div>
@@ -357,7 +358,7 @@ const PlayerProfile = () => {
                           {detail && <p className="text-[10px] text-text-primary/30 truncate">{detail}</p>}
                         </div>
                         <span className="text-[10px] text-text-primary/15 shrink-0">
-                          {new Date(ev.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {formatDate(ev.createdAt)}
                         </span>
                       </div>
                     )
@@ -375,9 +376,7 @@ const PlayerProfile = () => {
               </div>
               <div className="divide-y divide-[var(--card-border)]">
                 {playerSchedule.map(t => {
-                  const startDate = t.startDate ? new Date(t.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
-                  const endDate = t.endDate ? new Date(t.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
-                  const dateRange = endDate ? `${startDate} – ${endDate}` : startDate
+                  const dateRange = formatDateRange(t.startDate, t.endDate)
                   return (
                     <Link
                       key={t.id}
