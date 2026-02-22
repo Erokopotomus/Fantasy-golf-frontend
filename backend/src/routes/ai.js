@@ -62,65 +62,43 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
       if (!league) return res.json({ briefing: null })
 
       const draft = league.drafts?.[0]
-      const sport = (league.sport || 'GOLF').toUpperCase()
-
-      // Board count for this sport
-      const sportBoards = await prisma.draftBoard.count({
-        where: { userId, sport: sport.toLowerCase() },
-      })
-      const sportBoardEntries = sportBoards > 0
-        ? await prisma.draftBoardEntry.count({
-            where: { board: { userId, sport: sport.toLowerCase() } },
-          })
-        : 0
 
       // Draft upcoming
       if (draft?.status === 'SCHEDULED' && draft.scheduledFor) {
         const diff = new Date(draft.scheduledFor) - new Date()
         const days = Math.floor(diff / 86400000)
         const timeframe = days <= 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`
-        const boardStatus = sportBoardEntries > 0 ? `${sportBoardEntries} players ranked` : 'no players ranked yet'
         return res.json({
           briefing: {
             headline: `Draft day is ${timeframe} — are you ready?`,
-            body: `Your board has ${boardStatus}. Get your rankings locked in before the clock starts.`,
+            body: 'Get your rankings locked in before the clock starts.',
             type: 'draft_prep',
           },
         })
       }
 
-      // In-season with teams
+      // In-season
       if (draft?.status === 'COMPLETED') {
-        const userTeam = await prisma.team.findFirst({
-          where: { leagueId, userId },
-          select: { totalPoints: true },
-        })
-        const totalTeams = league._count?.teams || '—'
-        if (userTeam) {
-          return res.json({
-            briefing: {
-              headline: `Season is live — ${totalTeams} teams competing`,
-              body: null,
-              type: 'in_season',
-            },
-          })
-        }
-      }
-
-      // Pre-draft default
-      if (!draft || draft.status === 'SCHEDULED') {
+        const totalTeams = league._count?.teams || 0
         return res.json({
           briefing: {
-            headline: sportBoardEntries > 0
-              ? `You've ranked ${sportBoardEntries} players — keep building your board`
-              : 'Start building your draft board before the draft',
+            headline: totalTeams > 0
+              ? `Season is live — ${totalTeams} teams competing`
+              : 'Season is underway — stay sharp',
             body: null,
-            type: 'pre_draft',
+            type: 'in_season',
           },
         })
       }
 
-      return res.json({ briefing: null })
+      // Pre-draft default
+      return res.json({
+        briefing: {
+          headline: 'Start building your draft board before the draft',
+          body: null,
+          type: 'pre_draft',
+        },
+      })
     }
 
     // ── Global dashboard briefing ──
