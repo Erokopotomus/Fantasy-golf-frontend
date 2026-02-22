@@ -20,7 +20,7 @@ const NFL_SCORING_OPTIONS = [
 ]
 
 const SPORT_DEFAULTS = {
-  golf: { format: 'full-league', rosterSize: '6', scoringType: 'standard', maxMembers: '10', formatSettings: DEFAULT_FORMAT_SETTINGS['full-league'] },
+  golf: { format: 'full-league', rosterSize: '9', scoringType: 'standard', maxMembers: '10', formatSettings: DEFAULT_FORMAT_SETTINGS['full-league'] },
   nfl: { format: 'head-to-head', rosterSize: '17', scoringType: 'half_ppr', maxMembers: '12', formatSettings: DEFAULT_FORMAT_SETTINGS['head-to-head'] },
 }
 
@@ -31,10 +31,12 @@ const LeagueForm = ({ onSubmit, loading }) => {
     sport: 'golf',
     format: 'full-league',
     draftType: 'snake',
-    rosterSize: '6',
+    rosterSize: '9',
     scoringType: 'standard',
     maxMembers: '10',
     budget: '200',
+    startersPerWeek: '5',
+    allowWeeklyOverrides: false,
     formatSettings: DEFAULT_FORMAT_SETTINGS['full-league'],
   })
   const isNfl = formData.sport === 'nfl'
@@ -71,6 +73,11 @@ const LeagueForm = ({ onSubmit, loading }) => {
     { value: '500', label: '$500' },
   ]
 
+  const startersOptions = Array.from({ length: parseInt(formData.rosterSize) || 1 }, (_, i) => ({
+    value: String(i + 1),
+    label: `${i + 1} starter${i + 1 === 1 ? '' : 's'}`,
+  }))
+
   const handleSportChange = (sport) => {
     const defaults = SPORT_DEFAULTS[sport]
     setFormData((prev) => ({
@@ -80,12 +87,21 @@ const LeagueForm = ({ onSubmit, loading }) => {
       name: prev.name,
       draftType: 'snake',
       budget: prev.budget,
+      startersPerWeek: sport === 'golf' ? '5' : prev.startersPerWeek,
+      allowWeeklyOverrides: sport === 'golf' ? false : prev.allowWeeklyOverrides,
     }))
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value }
+      // Clamp starters if roster size shrinks below current starters
+      if (name === 'rosterSize' && parseInt(prev.startersPerWeek) > parseInt(value)) {
+        updated.startersPerWeek = value
+      }
+      return updated
+    })
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }))
     }
@@ -127,6 +143,13 @@ const LeagueForm = ({ onSubmit, loading }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (validate()) {
+      const formatSettings = { ...formData.formatSettings }
+      if (formData.sport === 'golf' && formData.format !== 'one-and-done') {
+        formatSettings.maxActiveLineup = parseInt(formData.startersPerWeek)
+        if (formData.allowWeeklyOverrides) {
+          formatSettings.allowWeeklyRosterOverrides = true
+        }
+      }
       onSubmit({
         name: formData.name.trim(),
         sport: formData.sport,
@@ -136,7 +159,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
         maxMembers: parseInt(formData.maxMembers),
         scoringType: formData.scoringType,
         budget: formData.draftType === 'auction' ? parseInt(formData.budget) : null,
-        formatSettings: formData.formatSettings,
+        formatSettings,
       })
     }
   }
@@ -267,7 +290,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
-              label="Max Members"
+              label="League Size"
               name="maxMembers"
               value={formData.maxMembers}
               onChange={handleChange}
@@ -293,6 +316,34 @@ const LeagueForm = ({ onSubmit, loading }) => {
               />
             ) : null}
           </div>
+
+          {/* Starters Per Week + Weekly Overrides (golf only, not one-and-done) */}
+          {!isNfl && formData.format !== 'one-and-done' && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Select
+                  label="Starters Per Week"
+                  name="startersPerWeek"
+                  value={formData.startersPerWeek}
+                  onChange={handleChange}
+                  options={startersOptions}
+                  required
+                />
+              </div>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.allowWeeklyOverrides}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, allowWeeklyOverrides: e.target.checked }))}
+                  className="mt-1 rounded border-dark-border text-gold focus:ring-gold"
+                />
+                <div>
+                  <span className="text-sm text-text-primary">Allow weekly roster adjustments</span>
+                  <p className="text-xs text-text-muted">Commissioners can adjust active roster size per week in league settings</p>
+                </div>
+              </label>
+            </div>
+          )}
 
           {/* Scoring Type */}
           <div>
@@ -478,8 +529,14 @@ const LeagueForm = ({ onSubmit, loading }) => {
                   <span className="text-text-primary ml-2">{formData.rosterSize} players</span>
                 </div>
               )}
+              {!isNfl && formData.format !== 'one-and-done' && (
+                <div>
+                  <span className="text-text-muted">Starters:</span>
+                  <span className="text-text-primary ml-2">{formData.startersPerWeek} of {formData.rosterSize}</span>
+                </div>
+              )}
               <div>
-                <span className="text-text-muted">Max Members:</span>
+                <span className="text-text-muted">League Size:</span>
                 <span className="text-text-primary ml-2">{formData.maxMembers} teams</span>
               </div>
               {formData.draftType === 'auction' && formData.format !== 'one-and-done' && (
