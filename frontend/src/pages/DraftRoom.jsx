@@ -118,7 +118,7 @@ const DraftRoomContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading draft room...</p>
@@ -129,7 +129,7 @@ const DraftRoomContent = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen bg-[var(--bg)]">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
@@ -159,7 +159,7 @@ const DraftRoomContent = () => {
   const rosterSize = league?.settings?.rosterSize || 6
 
   return (
-    <div className="h-screen bg-dark-primary flex flex-col overflow-hidden">
+    <div className="h-screen bg-[var(--bg)] flex flex-col overflow-hidden">
       <DraftHeader
         league={league}
         draft={draft}
@@ -176,7 +176,7 @@ const DraftRoomContent = () => {
       />
 
       {/* Tab Bar */}
-      <div className="bg-dark-secondary border-b border-dark-border flex-shrink-0">
+      <div className="bg-[var(--surface)] border-b border-[var(--card-border)] flex-shrink-0">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1">
             {['draft', 'dashboard'].map((tab) => (
@@ -243,7 +243,7 @@ const DraftRoomContent = () => {
           {/* Bottom: Player Pool + Queue */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
             {/* Left: Player Pool */}
-            <div className="flex-1 lg:w-[60%] lg:border-r lg:border-dark-border min-h-0">
+            <div className="flex-1 lg:w-[60%] lg:border-r lg:border-[var(--card-border)] min-h-0">
               <PlayerPool
                 players={availablePlayers}
                 onSelectPlayer={handleSelectPlayer}
@@ -257,7 +257,7 @@ const DraftRoomContent = () => {
             {/* Right: Queue / Chat */}
             <div className="lg:w-[40%] flex flex-col min-h-0">
               {/* Side Panel Tabs */}
-              <div className="flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
+              <div className="flex border-b border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
                 {[
                   { key: 'queue', label: `Queue (${queue.length})` },
                   { key: 'chat', label: 'Chat' },
@@ -306,7 +306,7 @@ const DraftRoomContent = () => {
                                 <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
                                   msg.isUser
                                     ? 'bg-gold/20 text-text-primary rounded-br-sm'
-                                    : 'bg-dark-primary text-text-secondary rounded-bl-sm'
+                                    : 'bg-[var(--bg)] text-text-secondary rounded-bl-sm'
                                 }`}>
                                   {msg.text}
                                 </div>
@@ -319,7 +319,7 @@ const DraftRoomContent = () => {
                     </div>
                     <form
                       onSubmit={(e) => { e.preventDefault(); handleSendChat() }}
-                      className="flex-shrink-0 p-2 border-t border-dark-border"
+                      className="flex-shrink-0 p-2 border-t border-[var(--card-border)]"
                     >
                       <div className="flex gap-2">
                         <input
@@ -327,7 +327,7 @@ const DraftRoomContent = () => {
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
                           placeholder="Type a message..."
-                          className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                          className="flex-1 px-3 py-1.5 bg-[var(--bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                         />
                         <button
                           type="submit"

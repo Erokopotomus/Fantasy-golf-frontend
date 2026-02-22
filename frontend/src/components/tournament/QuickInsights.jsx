@@ -18,12 +18,12 @@ const InsightSection = ({ title, emoji, players }) => {
         <Link
           key={p.id || i}
           to={`/players/${p.id}`}
-          className="flex items-center justify-between py-1 hover:bg-dark-tertiary/50 -mx-1 px-1 rounded transition-colors"
+          className="flex items-center justify-between py-1 hover:bg-[var(--surface-alt)] -mx-1 px-1 rounded transition-colors"
         >
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-xs font-mono text-text-muted w-4">{i + 1}.</span>
             {p.headshotUrl ? (
-              <img src={p.headshotUrl} alt="" className="w-5 h-5 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+              <img src={p.headshotUrl} alt="" className="w-5 h-5 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
             ) : (
               <span className="text-xs">{p.countryFlag || '?'}</span>
             )}
@@ -77,8 +77,8 @@ const QuickInsights = ({ leaderboard = [] }) => {
   if (!hasInsights) return null
 
   return (
-    <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-      <div className="px-4 py-3 border-b border-dark-border bg-gradient-to-r from-gold/5 to-transparent">
+    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+      <div className="px-4 py-3 border-b border-[var(--card-border)] bg-gradient-to-r from-gold/5 to-transparent">
         <h3 className="text-sm font-bold text-text-primary">Quick Insights</h3>
       </div>
       <div className="p-4 space-y-4">

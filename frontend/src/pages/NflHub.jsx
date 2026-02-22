@@ -72,7 +72,7 @@ const NflHub = () => {
   }, [])
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Hero */}
@@ -96,7 +96,7 @@ const NflHub = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] backdrop-blur-xl rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-dark-tertiary/[0.08] hover:border-orange/30 transition-all group"
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-[var(--surface-alt)] hover:border-orange/30 transition-all group shadow-card"
               >
                 <div className="text-text-primary/40 group-hover:text-orange transition-colors">
                   {link.icon}

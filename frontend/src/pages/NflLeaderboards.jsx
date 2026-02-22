@@ -147,7 +147,7 @@ export default function NflLeaderboards() {
       </div>
 
       {/* Category tabs */}
-      <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1 mb-4 overflow-x-auto">
+      <div className="flex gap-1 bg-[var(--bg-alt)] rounded-lg p-1 mb-4 overflow-x-auto">
         {CATEGORIES.map(cat => (
           <button
             key={cat.key}
@@ -170,7 +170,7 @@ export default function NflLeaderboards() {
               key={s.value}
               onClick={() => updateParam('stat', s.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-colors ${
-                activeStat === s.value ? 'bg-gold text-slate' : 'bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary/60'
+                activeStat === s.value ? 'bg-gold text-slate' : 'bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary/60'
               }`}
             >
               {s.label}
@@ -178,16 +178,16 @@ export default function NflLeaderboards() {
           ))}
         </div>
 
-        <div className="h-4 w-px bg-dark-tertiary/10 hidden sm:block" />
+        <div className="h-4 w-px bg-[var(--stone)] hidden sm:block" />
 
         {/* Position filter */}
         <select
           value={position || 'ALL'}
           onChange={e => updateParam('position', e.target.value === 'ALL' ? '' : e.target.value)}
-          className="bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
+          className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
         >
           {POSITIONS.map(p => (
-            <option key={p} value={p} className="bg-dark-primary">{p === 'ALL' ? 'All Positions' : p}</option>
+            <option key={p} value={p} className="bg-[var(--surface)]">{p === 'ALL' ? 'All Positions' : p}</option>
           ))}
         </select>
 
@@ -195,11 +195,11 @@ export default function NflLeaderboards() {
         <select
           value={team}
           onChange={e => updateParam('team', e.target.value)}
-          className="bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
+          className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
         >
-          <option value="" className="bg-dark-primary">All Teams</option>
+          <option value="" className="bg-[var(--surface)]">All Teams</option>
           {NFL_TEAMS.map(t => (
-            <option key={t} value={t} className="bg-dark-primary">{t}</option>
+            <option key={t} value={t} className="bg-[var(--surface)]">{t}</option>
           ))}
         </select>
 
@@ -207,10 +207,10 @@ export default function NflLeaderboards() {
         <select
           value={season}
           onChange={e => updateParam('season', e.target.value)}
-          className="bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
+          className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-text-primary font-mono appearance-none cursor-pointer"
         >
           {[2024, 2023, 2022, 2021, 2020].map(s => (
-            <option key={s} value={s} className="bg-dark-primary">{s}</option>
+            <option key={s} value={s} className="bg-[var(--surface)]">{s}</option>
           ))}
         </select>
       </div>
@@ -223,11 +223,11 @@ export default function NflLeaderboards() {
       )}
 
       {/* Leaderboard table */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-stone/30">
+              <tr className="border-b border-[var(--card-border)]">
                 <th className="text-center px-3 py-3 text-text-primary/40 text-xs font-mono uppercase w-12">#</th>
                 <th className="text-left px-3 py-3 text-text-primary/40 text-xs font-mono uppercase">Player</th>
                 <th className="text-center px-3 py-3 text-text-primary/40 text-xs font-mono uppercase w-16">Pos</th>
@@ -245,7 +245,7 @@ export default function NflLeaderboards() {
               ) : data?.players?.length === 0 ? (
                 <tr><td colSpan={6 + columns.length} className="text-center py-12 text-text-primary/20">No data for these filters</td></tr>
               ) : data?.players?.map(p => (
-                <tr key={p.id} className="border-b border-stone/20 hover:bg-dark-tertiary/5 transition-colors">
+                <tr key={p.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)] transition-colors">
                   <td className="px-3 py-2.5 text-center">
                     <span className={`font-mono text-sm font-bold ${
                       p.rank === 1 ? 'text-yellow-400' : p.rank === 2 ? 'text-gray-300' : p.rank === 3 ? 'text-amber-600' : 'text-text-primary/30'
@@ -254,9 +254,9 @@ export default function NflLeaderboards() {
                   <td className="px-3 py-2.5">
                     <Link to={`/nfl/players/${p.id}`} className="flex items-center gap-2 hover:text-gold group">
                       {p.headshotUrl ? (
-                        <img src={p.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-dark-tertiary/10 flex-shrink-0" />
+                        <img src={p.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-dark-tertiary/10 flex-shrink-0" />
+                        <div className="w-7 h-7 rounded-full bg-[var(--stone)] flex-shrink-0" />
                       )}
                       <span className="text-text-primary text-sm font-medium group-hover:text-gold truncate">{p.name}</span>
                     </Link>
@@ -287,7 +287,7 @@ export default function NflLeaderboards() {
           <button
             onClick={() => updateParam('page', String(page - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Prev
           </button>
@@ -295,7 +295,7 @@ export default function NflLeaderboards() {
           <button
             onClick={() => updateParam('page', String(page + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 rounded-lg text-sm font-mono bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Next
           </button>

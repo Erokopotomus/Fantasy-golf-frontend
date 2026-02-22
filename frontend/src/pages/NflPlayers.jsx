@@ -167,10 +167,10 @@ export default function NflPlayers() {
           placeholder="Search players..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="bg-dark-tertiary/5 border border-stone/30 rounded-lg px-4 py-2 text-text-primary placeholder:text-text-primary/30 focus:border-gold/50 focus:outline-none w-64"
+          className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-4 py-2 text-text-primary placeholder:text-text-primary/30 focus:border-gold/50 focus:outline-none w-64"
         />
 
-        <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
+        <div className="flex gap-1 bg-[var(--bg-alt)] rounded-lg p-1">
           {POSITIONS.map(pos => (
             <button
               key={pos}
@@ -189,10 +189,10 @@ export default function NflPlayers() {
         <select
           value={scoring}
           onChange={e => setScoring(e.target.value)}
-          className="bg-[#1a1917] border border-stone/30 rounded-lg px-3 py-2 text-text-primary text-sm focus:border-gold/50 focus:outline-none"
+          className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-sm focus:border-gold/50 focus:outline-none"
         >
           {SCORING_TYPES.map(s => (
-            <option key={s.value} value={s.value} className="bg-[#1a1917] text-text-primary">{s.label}</option>
+            <option key={s.value} value={s.value} className="bg-[var(--surface)] text-text-primary">{s.label}</option>
           ))}
         </select>
 
@@ -200,10 +200,10 @@ export default function NflPlayers() {
           <select
             value={season}
             onChange={e => setSeason(e.target.value)}
-            className="bg-[#1a1917] border border-stone/30 rounded-lg px-3 py-2 text-text-primary text-sm focus:border-gold/50 focus:outline-none"
+            className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-sm focus:border-gold/50 focus:outline-none"
           >
             {availableSeasons.map(yr => (
-              <option key={yr} value={yr} className="bg-[#1a1917] text-text-primary">{yr} Season</option>
+              <option key={yr} value={yr} className="bg-[var(--surface)] text-text-primary">{yr} Season</option>
             ))}
           </select>
         )}
@@ -213,7 +213,7 @@ export default function NflPlayers() {
           className={`px-4 py-2 rounded-lg text-sm font-mono font-bold transition-colors border ${
             compareMode
               ? 'bg-gold/20 text-gold border-gold/30'
-              : 'bg-dark-tertiary/5 text-text-primary/50 border-stone/30 hover:text-text-primary/70 hover:border-stone/50'
+              : 'bg-[var(--bg-alt)] text-text-primary/50 border-[var(--card-border)] hover:text-text-primary/70 hover:border-[var(--card-border)]'
           }`}
         >
           {compareMode ? `Compare (${compareSelection.length}/2)` : 'Compare'}
@@ -228,11 +228,11 @@ export default function NflPlayers() {
       )}
 
       {/* Table */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-stone/30">
+              <tr className="border-b border-[var(--card-border)]">
                 <th className="text-left px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider w-12">#</th>
                 <th
                   className="text-left px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider cursor-pointer hover:text-text-primary"
@@ -283,19 +283,19 @@ export default function NflPlayers() {
                     <tr
                       key={p.id}
                       onClick={() => handleRowClick(p)}
-                      className={`border-b border-stone/20 transition-colors cursor-pointer ${
+                      className={`border-b border-[var(--card-border)] transition-colors cursor-pointer ${
                         selected
                           ? 'bg-gold/10 border-l-2 border-l-gold'
-                          : 'hover:bg-dark-tertiary/5'
+                          : 'hover:bg-[var(--surface-alt)]'
                       }`}
                     >
                       <td className="px-4 py-3 text-text-primary/30 font-mono text-sm">{offset + i + 1}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {p.headshotUrl ? (
-                            <img src={p.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary/10" />
+                            <img src={p.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)]" />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-xs font-bold">
+                            <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-text-primary/30 text-xs font-bold">
                               {p.nflPosition}
                             </div>
                           )}
@@ -346,7 +346,7 @@ export default function NflPlayers() {
 
         {/* Pagination */}
         {pagination.total > limit && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-stone/30">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--card-border)]">
             <span className="text-text-primary/30 text-sm font-mono">
               {offset + 1}-{Math.min(offset + limit, pagination.total)} of {pagination.total}
             </span>
@@ -354,14 +354,14 @@ export default function NflPlayers() {
               <button
                 onClick={() => setOffset(Math.max(0, offset - limit))}
                 disabled={offset === 0}
-                className="px-3 py-1 rounded bg-dark-tertiary/5 text-text-primary/50 hover:bg-dark-tertiary/10 disabled:opacity-30 text-sm"
+                className="px-3 py-1 rounded bg-[var(--bg-alt)] text-text-primary/50 hover:bg-[var(--surface-alt)] disabled:opacity-30 text-sm"
               >
                 Prev
               </button>
               <button
                 onClick={() => setOffset(offset + limit)}
                 disabled={!pagination.hasMore}
-                className="px-3 py-1 rounded bg-dark-tertiary/5 text-text-primary/50 hover:bg-dark-tertiary/10 disabled:opacity-30 text-sm"
+                className="px-3 py-1 rounded bg-[var(--bg-alt)] text-text-primary/50 hover:bg-[var(--surface-alt)] disabled:opacity-30 text-sm"
               >
                 Next
               </button>

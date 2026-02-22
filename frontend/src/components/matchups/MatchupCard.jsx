@@ -6,13 +6,13 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
 
   return (
     <div
-      className={`bg-dark-tertiary rounded-lg overflow-hidden cursor-pointer transition-colors hover:bg-dark-tertiary/80 ${
+      className={`bg-[var(--surface)] rounded-lg overflow-hidden cursor-pointer transition-colors hover:bg-[var(--surface-alt)] ${
         isUserMatch ? 'ring-2 ring-gold/50' : ''
       } ${isExpanded ? 'ring-2 ring-emerald-500/50' : ''}`}
       onClick={onClick}
     >
       {/* Matchup Header */}
-      <div className="px-4 py-2 bg-dark-primary/50 border-b border-dark-border flex items-center justify-between">
+      <div className="px-4 py-2 bg-[var(--bg-alt)] border-b border-[var(--card-border)] flex items-center justify-between">
         <span className="text-xs text-text-muted">
           {matchup.completed ? 'Final' : (matchup.homeScore > 0 || matchup.awayScore > 0) ? 'In Progress' : 'Upcoming'}
         </span>
@@ -27,7 +27,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
         <div className={`flex items-center justify-between ${homeWon ? 'text-text-primary' : 'text-text-secondary'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-              matchup.home === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
+              matchup.home === currentUserId ? 'bg-gold/20 text-gold' : 'bg-[var(--bg-alt)] text-text-secondary'
             }`}>
               {homeTeam?.avatar || '?'}
             </div>
@@ -57,16 +57,16 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
 
         {/* Divider */}
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-px bg-dark-border"></div>
+          <div className="flex-1 h-px bg-[var(--card-border)]"></div>
           <span className="text-xs text-text-muted">vs</span>
-          <div className="flex-1 h-px bg-dark-border"></div>
+          <div className="flex-1 h-px bg-[var(--card-border)]"></div>
         </div>
 
         {/* Away Team */}
         <div className={`flex items-center justify-between ${awayWon ? 'text-text-primary' : 'text-text-secondary'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-              matchup.away === currentUserId ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
+              matchup.away === currentUserId ? 'bg-gold/20 text-gold' : 'bg-[var(--bg-alt)] text-text-secondary'
             }`}>
               {awayTeam?.avatar || '?'}
             </div>
@@ -106,7 +106,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
 
       {/* Expand indicator */}
       {detailed && (
-        <div className="px-4 py-1.5 text-center text-xs text-text-muted border-t border-dark-border">
+        <div className="px-4 py-1.5 text-center text-xs text-text-muted border-t border-[var(--card-border)]">
           {isExpanded ? 'Click to collapse' : 'Click to see rosters'}
         </div>
       )}

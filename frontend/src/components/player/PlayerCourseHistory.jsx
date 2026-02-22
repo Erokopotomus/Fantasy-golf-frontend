@@ -14,13 +14,13 @@ const PlayerCourseHistory = ({ courseHistory }) => {
 
   return (
     <Card padding="none">
-      <div className="p-4 border-b border-dark-border">
+      <div className="p-4 border-b border-[var(--card-border)]">
         <h4 className="text-sm font-semibold text-text-muted">Course History</h4>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-dark-tertiary">
+          <thead className="bg-[var(--stone)]">
             <tr className="text-xs text-text-muted">
               <th className="p-3 text-left">Course</th>
               <th className="p-3 text-center">Rounds</th>
@@ -31,7 +31,7 @@ const PlayerCourseHistory = ({ courseHistory }) => {
           </thead>
           <tbody>
             {courseHistory.map((course, index) => (
-              <tr key={index} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
+              <tr key={index} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                 <td className="p-3">
                   {course.courseId ? (
                     <Link to={`/courses/${course.courseId}`} className="text-text-primary font-medium hover:text-gold transition-colors">

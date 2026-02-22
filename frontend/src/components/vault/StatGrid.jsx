@@ -8,7 +8,7 @@ export default function StatGrid({ stats, ownerColor }) {
       {stats.map(s => (
         <div
           key={s.label}
-          className="bg-dark-tertiary/40 rounded-lg px-3 py-2.5 text-center"
+          className="bg-[var(--surface)] rounded-lg px-3 py-2.5 text-center"
         >
           <div className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">
             {s.label}

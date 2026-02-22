@@ -99,7 +99,7 @@ const PlayerPool = ({
             placeholder="Search players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+            className="w-full pl-9 pr-4 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
           />
         </div>
       </div>
@@ -107,7 +107,7 @@ const PlayerPool = ({
       {/* Table */}
       <div className="flex-1 overflow-auto min-h-0">
         {/* Header */}
-        <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
+        <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
           <div className="grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
             <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
               Rk <SortIcon field="rank" />
@@ -139,7 +139,7 @@ const PlayerPool = ({
           return (
             <div
               key={player.id}
-              className={`grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 border-b border-dark-border/30 items-center transition-colors cursor-pointer hover:bg-dark-tertiary/50 ${
+              className={`grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 border-b border-[var(--card-border)] items-center transition-colors cursor-pointer hover:bg-[var(--surface-alt)] ${
                 inQueue ? 'bg-orange/5' : ''
               }`}
               onClick={() => onViewPlayer?.(player)}
@@ -147,7 +147,7 @@ const PlayerPool = ({
               <span className="text-text-muted text-xs">{player.rank || player.owgrRank || '—'}</span>
               <div className="flex items-center gap-2 min-w-0">
                 {player.headshotUrl ? (
-                  <img src={player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                  <img src={player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0" />
                 ) : (
                   <span className="text-sm flex-shrink-0">{player.countryFlag || '🏳️'}</span>
                 )}
@@ -192,7 +192,7 @@ const PlayerPool = ({
                       f === 'CUT' ? 'bg-red-400' :
                       pos <= 5 ? 'bg-gold' :
                       pos <= 15 ? 'bg-emerald-400/60' :
-                      'bg-dark-border/30'
+                      'bg-[var(--card-border)]'
                     }`} title={String(f)} />
                   )
                 })}

@@ -21,7 +21,7 @@ class VaultErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-dark-primary pt-8 px-4">
+        <div className="min-h-screen pt-8 px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6">
               <h2 className="text-red-400 font-bold text-lg mb-2">League Vault Error</h2>
@@ -120,7 +120,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
                 {avatarMap[champion.ownerName || champion.teamName] ? (
                   <img src={avatarMap[champion.ownerName || champion.teamName]} alt="" className="w-6 h-6 rounded-full object-cover" />
                 ) : (
-                  <span className="w-6 h-6 rounded-full bg-dark-tertiary flex items-center justify-center text-xs font-mono text-text-secondary">
+                  <span className="w-6 h-6 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-xs font-mono text-text-secondary">
                     {(champion.ownerName || champion.teamName || '?').charAt(0).toUpperCase()}
                   </span>
                 )}
@@ -139,7 +139,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
       </div>
 
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-dark-tertiary">
+        <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
           {/* Edit mode toggle */}
           {isCommissioner && (
             <div className="mb-2 flex justify-end gap-2">
@@ -156,7 +156,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
               )}
               <button
                 onClick={() => { setEditing(e => !e); setSelected(new Set()) }}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors ${editing ? 'bg-rose/15 text-rose' : 'text-text-secondary hover:text-text-primary hover:bg-dark-tertiary'}`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-colors ${editing ? 'bg-rose/15 text-rose' : 'text-text-secondary hover:text-text-primary hover:bg-[var(--stone)]'}`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -210,7 +210,7 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
                   return (
                     <tr
                       key={team.id || idx}
-                      className={`border-t border-dark-tertiary/50 hover:bg-dark-tertiary/30 ${isEmpty ? 'opacity-40' : ''} ${editing && isChecked ? 'bg-rose/5' : ''}`}
+                      className={`border-t border-[var(--card-border)] hover:bg-[var(--surface-alt)] ${isEmpty ? 'opacity-40' : ''} ${editing && isChecked ? 'bg-rose/5' : ''}`}
                     >
                       {editing && (
                         <td className="py-2 pl-2">
@@ -331,7 +331,7 @@ const HeadToHeadTab = ({ history }) => {
             <select
               value={ownerA}
               onChange={e => setOwnerA(e.target.value)}
-              className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
+              className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
             >
               <option value="">Select...</option>
               {owners.filter(o => o !== ownerB).map(o => (
@@ -344,7 +344,7 @@ const HeadToHeadTab = ({ history }) => {
             <select
               value={ownerB}
               onChange={e => setOwnerB(e.target.value)}
-              className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
+              className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
             >
               <option value="">Select...</option>
               {owners.filter(o => o !== ownerA).map(o => (
@@ -390,7 +390,7 @@ const HeadToHeadTab = ({ history }) => {
                 {h2hData.matchups.map((m, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-dark-tertiary/30 text-sm"
+                    className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-[var(--surface-alt)] text-sm"
                   >
                     <span className="font-mono text-text-secondary w-20">{m.year} W{m.week}</span>
                     <div className="flex-1 flex items-center justify-center gap-4">
@@ -477,7 +477,7 @@ const DraftHistoryTab = ({ history }) => {
               key={y}
               onClick={() => setSelectedYear(y)}
               className={`px-3 py-1.5 rounded-lg text-sm font-mono font-bold transition-colors ${
-                selectedYear === y ? 'bg-accent-gold text-slate' : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                selectedYear === y ? 'bg-accent-gold text-slate' : 'bg-[var(--bg-alt)] text-text-secondary hover:text-text-primary'
               }`}
             >
               {y}
@@ -494,7 +494,7 @@ const DraftHistoryTab = ({ history }) => {
               {selectedYear} Draft
             </h3>
             {draftInfo.type && (
-              <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-2 py-1 rounded uppercase">
+              <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-2 py-1 rounded uppercase">
                 {draftInfo.type}
               </span>
             )}
@@ -510,7 +510,7 @@ const DraftHistoryTab = ({ history }) => {
                   {picks.map((pick, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-3 py-1.5 px-3 rounded-lg hover:bg-dark-tertiary/30"
+                      className="flex items-center gap-3 py-1.5 px-3 rounded-lg hover:bg-[var(--surface-alt)]"
                     >
                       <span className="text-xs font-mono text-text-secondary w-8">
                         {pick.pick}.
@@ -850,7 +850,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
         <select
           value={selectedOwner}
           onChange={e => { setSelectedOwner(e.target.value); setExpandedYear(null); setExpandedDraftYear(null) }}
-          className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
+          className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
         >
           <option value="">Select...</option>
           {owners.map(o => (
@@ -919,7 +919,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                     />
                   ) : (
                     <div
-                      className={`w-16 h-16 rounded-full bg-dark-tertiary flex items-center justify-center text-2xl font-mono font-bold text-text-secondary border-2 border-dark-tertiary ${isCommissioner ? 'cursor-pointer hover:border-accent-gold/30 transition-colors' : ''}`}
+                      className={`w-16 h-16 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-2xl font-mono font-bold text-text-secondary border-2 border-[var(--card-border)] ${isCommissioner ? 'cursor-pointer hover:border-accent-gold/30 transition-colors' : ''}`}
                       onClick={() => isCommissioner && fileInputRef.current?.click()}
                     >
                       {(selectedOwner || '?').charAt(0).toUpperCase()}
@@ -947,19 +947,19 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-3 text-center">
-                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                   <p className="text-2xl font-mono font-bold text-accent-gold">{profileData.summary.championships}</p>
                   <p className="text-xs font-mono text-text-secondary mt-1">Titles</p>
                 </div>
-                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                   <p className="text-2xl font-mono font-bold text-text-primary">{profileData.summary.runnerUps}</p>
                   <p className="text-xs font-mono text-text-secondary mt-1">Runner-Up</p>
                 </div>
-                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                   <p className="text-2xl font-mono font-bold text-text-primary">{profileData.summary.thirdPlaces}</p>
                   <p className="text-xs font-mono text-text-secondary mt-1">3rd Place</p>
                 </div>
-                <div className="bg-dark-tertiary/40 rounded-lg p-3">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                   <p className="text-2xl font-mono font-bold text-text-primary">{profileData.summary.playoffApps}</p>
                   <p className="text-xs font-mono text-text-secondary mt-1">Playoffs</p>
                 </div>
@@ -971,7 +971,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
               <h3 className="font-display font-bold text-text-primary mb-3">Career Highlights</h3>
               <div className="space-y-2">
                 {profileData.highlights.map((h, i) => (
-                  <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-dark-tertiary/20">
+                  <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[var(--surface-alt)]">
                     <span className="text-sm text-text-secondary">{h.label}</span>
                     <div className="text-right">
                       <span className={`text-sm font-mono font-bold ${h.color || 'text-text-primary'}`}>{h.value}</span>
@@ -1020,7 +1020,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                       const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
                       return h2hSort.dir === 'desc' ? -cmp : cmp
                     }).map(r => (
-                      <tr key={r.name} className="border-t border-dark-tertiary/50">
+                      <tr key={r.name} className="border-t border-[var(--card-border)]">
                         <td className="py-2 font-display font-semibold text-text-primary">{r.name}</td>
                         <td className="py-2 text-center font-mono text-green-400">{r.w}</td>
                         <td className="py-2 text-center font-mono text-red-400">{r.l}</td>
@@ -1082,7 +1082,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   }).map(s => {
                     const playoff = PLAYOFF_LABELS[s.playoffResult] || {}
                     return (
-                      <tr key={s.year} className="border-t border-dark-tertiary/50 hover:bg-dark-tertiary/20">
+                      <tr key={s.year} className="border-t border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                         <td className="py-2 font-mono font-bold text-accent-gold">{s.year}</td>
                         <td className="py-2 text-center font-mono text-text-secondary">{s.place || '—'}</td>
                         <td className="py-2 font-display text-text-primary text-xs">
@@ -1129,7 +1129,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                     <div key={year}>
                       <button
                         onClick={() => setExpandedDraftYear(expandedDraftYear === year ? null : year)}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-dark-tertiary/30 transition-colors"
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <span className="font-mono font-bold text-accent-gold">{year}</span>
@@ -1146,13 +1146,13 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                         </svg>
                       </button>
                       {expandedDraftYear === year && (
-                        <div className="ml-2 mb-3 border-l-2 border-dark-tertiary pl-3 space-y-0.5">
+                        <div className="ml-2 mb-3 border-l-2 border-[var(--card-border)] pl-3 space-y-0.5">
                           {picks.map((pick, i) => {
                             const auctionCost = pick.amount || pick.cost || 0
                             return (
                               <div
                                 key={i}
-                                className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
+                                className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--surface-alt)] text-sm"
                               >
                                 <div className="flex items-center gap-2">
                                   {draftType === 'auction' ? (
@@ -1168,7 +1168,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                                     {pick.playerName || '(Unknown)'}
                                   </span>
                                   {pick.position && (
-                                    <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
+                                    <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-1.5 py-0.5 rounded">
                                       {pick.position}
                                     </span>
                                   )}
@@ -1208,7 +1208,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                         <div key={year}>
                           <button
                             onClick={() => setExpandedYear(expandedYear === year ? null : year)}
-                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-dark-tertiary/30 transition-colors"
+                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
                           >
                             <div className="flex items-center gap-3">
                               <span className="font-mono font-bold text-accent-gold">{year}</span>
@@ -1222,11 +1222,11 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                             </svg>
                           </button>
                           {expandedYear === year && (
-                            <div className="ml-2 mb-3 border-l-2 border-dark-tertiary pl-3 space-y-0.5">
+                            <div className="ml-2 mb-3 border-l-2 border-[var(--card-border)] pl-3 space-y-0.5">
                               {weeks.map(w => (
                                 <div
                                   key={w.week}
-                                  className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dark-tertiary/20 text-sm"
+                                  className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--surface-alt)] text-sm"
                                 >
                                   <div className="flex items-center gap-2">
                                     <span className="font-mono text-text-secondary w-8">W{w.week}</span>
@@ -1254,7 +1254,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   <p className="text-text-secondary text-sm">No weekly matchup data available.</p>
                 )}
                 {missingYears.length > 0 && (
-                  <p className="text-text-secondary/60 text-xs font-mono mt-3 pt-3 border-t border-dark-tertiary">
+                  <p className="text-text-secondary/60 text-xs font-mono mt-3 pt-3 border-t border-[var(--card-border)]">
                     Weekly scores not available for {missingYears.join(', ')} (Yahoo). Re-import from Yahoo to fill missing data.
                   </p>
                 )}
@@ -1322,8 +1322,8 @@ const CustomDataTab = ({ leagueId }) => {
   if (loading) {
     return (
       <Card className="animate-pulse">
-        <div className="h-4 bg-dark-tertiary rounded w-1/3 mb-4" />
-        <div className="h-4 bg-dark-tertiary rounded w-2/3" />
+        <div className="h-4 bg-[var(--stone)] rounded w-1/3 mb-4" />
+        <div className="h-4 bg-[var(--stone)] rounded w-2/3" />
       </Card>
     )
   }
@@ -1377,7 +1377,7 @@ const CustomDataTab = ({ leagueId }) => {
               {items.map(item => (
                 <div
                   key={item.id}
-                  className="bg-dark-tertiary/30 rounded-lg p-3"
+                  className="bg-[var(--surface)] rounded-lg p-3"
                 >
                   <div
                     className="flex items-center justify-between cursor-pointer"
@@ -1390,7 +1390,7 @@ const CustomDataTab = ({ leagueId }) => {
                       <span className="text-sm text-text-primary font-display">
                         {item.sourceFileName || item.sourceType}
                       </span>
-                      <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-1.5 py-0.5 rounded">
+                      <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-1.5 py-0.5 rounded">
                         {SOURCE_BADGES[item.sourceType] || 'Custom'}
                       </span>
                     </div>
@@ -1409,10 +1409,10 @@ const CustomDataTab = ({ leagueId }) => {
                   </div>
 
                   {expandedId === item.id && item.data?.rows && (
-                    <div className="mt-3 pt-3 border-t border-dark-tertiary overflow-x-auto">
+                    <div className="mt-3 pt-3 border-t border-[var(--card-border)] overflow-x-auto">
                       <table className="w-full text-xs font-mono">
                         <thead>
-                          <tr className="border-b border-dark-tertiary">
+                          <tr className="border-b border-[var(--card-border)]">
                             {Object.keys(item.data.rows[0] || {}).map(key => (
                               <th key={key} className="text-left text-text-secondary py-1 pr-3">{key}</th>
                             ))}
@@ -1420,7 +1420,7 @@ const CustomDataTab = ({ leagueId }) => {
                         </thead>
                         <tbody>
                           {item.data.rows.slice(0, 20).map((row, idx) => (
-                            <tr key={idx} className="border-b border-dark-tertiary/30">
+                            <tr key={idx} className="border-b border-[var(--card-border)]">
                               {Object.values(row).map((val, j) => (
                                 <td key={j} className="py-1 pr-3 text-text-primary">
                                   {val != null ? String(val) : ''}
@@ -1508,10 +1508,10 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
-        className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
+        className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
+        <div className="p-5 border-b border-[var(--card-border)] flex items-center justify-between">
           <div>
             <h2 className="text-lg font-display font-bold text-text-primary">Add Season Manually</h2>
             <p className="text-xs text-text-secondary mt-1">For years before your digital league history</p>
@@ -1527,7 +1527,7 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
                 type="number"
                 value={year}
                 onChange={e => setYear(parseInt(e.target.value) || 2020)}
-                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
               />
             </div>
             <div>
@@ -1538,7 +1538,7 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
                 onChange={e => updateTeamCount(parseInt(e.target.value) || 12)}
                 min={2}
                 max={20}
-                className="w-full px-3 py-2 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
+                className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold"
               />
             </div>
           </div>
@@ -1556,26 +1556,26 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
                     placeholder="Manager name"
                     value={team.ownerName}
                     onChange={e => updateTeam(idx, 'ownerName', e.target.value)}
-                    className="flex-1 min-w-0 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm focus:outline-none focus:border-accent-gold"
+                    className="flex-1 min-w-0 px-2 py-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     placeholder="W"
                     value={team.wins || ''}
                     onChange={e => updateTeam(idx, 'wins', e.target.value)}
-                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center focus:outline-none focus:border-accent-gold"
+                    className="w-12 px-2 py-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded text-text-primary text-sm text-center focus:outline-none focus:border-accent-gold"
                   />
                   <input
                     type="number"
                     placeholder="L"
                     value={team.losses || ''}
                     onChange={e => updateTeam(idx, 'losses', e.target.value)}
-                    className="w-12 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm text-center focus:outline-none focus:border-accent-gold"
+                    className="w-12 px-2 py-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded text-text-primary text-sm text-center focus:outline-none focus:border-accent-gold"
                   />
                   <select
                     value={team.playoffResult}
                     onChange={e => updateTeam(idx, 'playoffResult', e.target.value)}
-                    className="w-28 px-2 py-1.5 bg-dark-tertiary border border-dark-tertiary rounded text-text-primary text-sm focus:outline-none focus:border-accent-gold"
+                    className="w-28 px-2 py-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:outline-none focus:border-accent-gold"
                   >
                     <option value="">—</option>
                     <option value="champion">Champion</option>
@@ -1594,7 +1594,7 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
           )}
         </div>
 
-        <div className="p-5 border-t border-dark-tertiary flex items-center justify-end gap-3">
+        <div className="p-5 border-t border-[var(--card-border)] flex items-center justify-end gap-3">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
@@ -1781,8 +1781,8 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
   if (!hasOwners) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-        <div className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
-          <div className="p-5 border-b border-dark-tertiary">
+        <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl w-full max-w-xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="p-5 border-b border-[var(--card-border)]">
             <h2 className="text-lg font-display font-bold text-text-primary">Step 1: Who's in your league?</h2>
             <p className="text-xs text-text-secondary mt-1">
               Tap the names of real people. Team names like "SWAMP DONKEYS" can be assigned to people in the next step.
@@ -1791,7 +1791,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
           <div className="p-4 overflow-y-auto flex-1">
             <div className="space-y-1">
               {allRawNames.sort().map(name => (
-                <div key={name} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-dark-tertiary/30 hover:bg-dark-tertiary/50 transition-colors">
+                <div key={name} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface)] transition-colors">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm text-text-primary font-display truncate">{name}</span>
                     {nameToYears[name] && (
@@ -1810,7 +1810,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
               ))}
             </div>
           </div>
-          <div className="p-4 border-t border-dark-tertiary flex items-center justify-between">
+          <div className="p-4 border-t border-[var(--card-border)] flex items-center justify-between">
             <button
               onClick={() => {
                 const name = window.prompt('Add someone not in this list:')
@@ -1830,9 +1830,9 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
   // ── Step 2: Owners exist — owner-focused assignment ──
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="bg-dark-secondary border border-dark-tertiary rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="p-5 border-b border-dark-tertiary flex items-center justify-between">
+        <div className="p-5 border-b border-[var(--card-border)] flex items-center justify-between">
           <div>
             <h2 className="text-lg font-display font-bold text-text-primary">Manage Owners</h2>
             <p className="text-xs text-text-secondary mt-1">
@@ -1845,7 +1845,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
         </div>
 
         {/* Owner tabs */}
-        <div className="px-5 pt-4 pb-2 flex flex-wrap gap-1.5 border-b border-dark-tertiary/50">
+        <div className="px-5 pt-4 pb-2 flex flex-wrap gap-1.5 border-b border-[var(--card-border)]">
           {ownerNames.map(name => {
             const isActive = activeOwner === name
             const count = (groups[name] || []).length
@@ -1856,7 +1856,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                 className={`px-3 py-1.5 rounded-lg text-xs font-display font-bold transition-colors ${
                   isActive
                     ? 'bg-accent-gold text-slate'
-                    : 'bg-dark-tertiary text-text-primary hover:bg-dark-tertiary/80'
+                    : 'bg-[var(--bg-alt)] text-text-primary hover:bg-[var(--surface-alt)]'
                 }`}
               >
                 {name}
@@ -1872,7 +1872,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                 setActiveOwner(name.trim())
               }
             }}
-            className="px-3 py-1.5 rounded-lg text-xs font-mono text-text-secondary border border-dashed border-dark-tertiary hover:border-accent-gold/40 hover:text-accent-gold transition-colors"
+            className="px-3 py-1.5 rounded-lg text-xs font-mono text-text-secondary border border-dashed border-[var(--card-border)] hover:border-accent-gold/40 hover:text-accent-gold transition-colors"
           >
             + Add
           </button>
@@ -1881,7 +1881,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
         <div className="flex-1 overflow-y-auto">
           {/* Active owner detail */}
           {activeOwner && groups[activeOwner] && (
-            <div className="px-5 py-3 bg-dark-tertiary/20 border-b border-dark-tertiary/30">
+            <div className="px-5 py-3 bg-[var(--bg-alt)] border-b border-[var(--card-border)]">
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <span className="text-sm font-display font-bold text-text-primary">{activeOwner}</span>
@@ -1902,7 +1902,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                         return next
                       })
                     }}
-                    className={`text-xs font-mono px-2 py-0.5 rounded ${inactiveOwners.has(activeOwner) ? 'text-text-secondary bg-dark-tertiary/30' : 'text-green-400 bg-green-500/10'}`}
+                    className={`text-xs font-mono px-2 py-0.5 rounded ${inactiveOwners.has(activeOwner) ? 'text-text-secondary bg-[var(--surface)]' : 'text-green-400 bg-green-500/10'}`}
                   >
                     {inactiveOwners.has(activeOwner) ? 'Inactive' : 'Active'}
                   </button>
@@ -1949,7 +1949,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-left ${
                           fillsGap
                             ? 'bg-accent-gold/5 border border-accent-gold/20 hover:bg-accent-gold/10'
-                            : 'bg-dark-tertiary/30 border border-transparent hover:bg-dark-tertiary/50'
+                            : 'bg-[var(--surface)] border border-transparent hover:bg-[var(--surface)]'
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -1972,14 +1972,14 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
 
             {/* Mark more people */}
             {unassigned.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-dark-tertiary/30">
+              <div className="mt-4 pt-3 border-t border-[var(--card-border)]">
                 <p className="text-[10px] font-mono text-text-secondary/50 mb-2">Not seeing the right owner? Mark more people:</p>
                 <div className="flex flex-wrap gap-1">
                   {unassigned.slice(0, 20).map(name => (
                     <button
                       key={name}
                       onClick={() => markAsOwner(name)}
-                      className="px-2 py-1 text-[10px] font-mono text-text-secondary/60 bg-dark-tertiary/20 rounded hover:text-accent-gold hover:bg-dark-tertiary/40 transition-colors"
+                      className="px-2 py-1 text-[10px] font-mono text-text-secondary/60 bg-[var(--bg-alt)] rounded hover:text-accent-gold hover:bg-[var(--bg-alt)] transition-colors"
                     >
                       {name}
                     </button>
@@ -1993,7 +1993,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
 
         {error && <p className="px-5 py-2 text-red-400 text-sm">{error}</p>}
 
-        <div className="p-5 border-t border-dark-tertiary bg-dark-secondary flex items-center justify-between">
+        <div className="p-5 border-t border-[var(--card-border)] bg-[var(--surface)] flex items-center justify-between">
           <span className="text-xs text-text-secondary font-mono">
             {ownerNames.length} owner{ownerNames.length !== 1 ? 's' : ''} &middot; {unassigned.length} unassigned
           </span>
@@ -2328,12 +2328,12 @@ const LeagueVault = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-dark-tertiary rounded w-1/3" />
-              <div className="h-4 bg-dark-tertiary rounded w-1/2" />
+              <div className="h-8 bg-[var(--stone)] rounded w-1/3" />
+              <div className="h-4 bg-[var(--stone)] rounded w-1/2" />
               <Card className="h-48" />
               <Card className="h-48" />
             </div>
@@ -2345,7 +2345,7 @@ const LeagueVault = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center py-16">
             <p className="text-red-400 mb-4">{String(error)}</p>
@@ -2366,7 +2366,7 @@ const LeagueVault = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -2435,7 +2435,7 @@ const LeagueVault = () => {
                 {years.length > 0 && (
                   <button
                     onClick={handleExport}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-secondary bg-dark-tertiary rounded-lg hover:text-text-primary hover:bg-dark-tertiary/80 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono text-text-secondary bg-[var(--bg-alt)] rounded-lg hover:text-text-primary hover:bg-[var(--surface-alt)] transition-colors"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -2521,7 +2521,7 @@ const LeagueVault = () => {
                     </p>
                     {health.overallStatus !== 'green' && (
                       <div className="flex items-center gap-2 mt-1">
-                        <div className="w-24 h-1.5 bg-dark-tertiary rounded-full overflow-hidden">
+                        <div className="w-24 h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
                               health.overallStatus === 'yellow' ? 'bg-accent-gold' : 'bg-red-500'
@@ -2546,7 +2546,7 @@ const LeagueVault = () => {
 
               {/* Expanded issue list */}
               {healthExpanded && health.overallStatus !== 'green' && (
-                <div className="mt-4 pt-3 border-t border-dark-tertiary/50 space-y-2">
+                <div className="mt-4 pt-3 border-t border-[var(--card-border)] space-y-2">
                   {health.missingYears?.length > 0 && (
                     <div className="bg-red-500/10 rounded-lg p-3">
                       <p className="text-sm text-text-primary font-medium mb-1">Missing: {health.missingYears.join(', ')}</p>
@@ -2557,7 +2557,7 @@ const LeagueVault = () => {
                   )}
                   {/* Orphan owner names — friendly callout */}
                   {health.issues.some(i => i.type === 'ORPHAN_OWNER') && (
-                    <div className="bg-dark-tertiary/30 rounded-lg p-4 border border-dark-tertiary/50">
+                    <div className="bg-[var(--surface)] rounded-lg p-4 border border-[var(--card-border)]">
                       <div className="flex items-start gap-3">
                         <span className="text-lg flex-shrink-0">👤</span>
                         <div>
@@ -2620,7 +2620,7 @@ const LeagueVault = () => {
                       <div key={idx} className={`rounded-lg p-3 ${
                         issue.severity === 'high' ? 'bg-red-500/10' :
                         issue.severity === 'medium' ? 'bg-accent-gold/10' :
-                        'bg-dark-tertiary/30'
+                        'bg-[var(--surface)]'
                       }`}>
                         <p className="text-sm text-text-primary">{issue.message}</p>
                         {issue.repairAction === 'EDIT_SEASON' && issue.seasonYear && (
@@ -2693,13 +2693,13 @@ const LeagueVault = () => {
           )}
 
           {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-dark-secondary/50 rounded-lg p-1">
+          <div className="flex gap-1 mb-6 bg-[var(--surface)] rounded-lg p-1">
             {TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={`flex-1 px-3 py-2 rounded-md text-sm font-display font-bold transition-colors ${
-                  tab === t.id ? 'bg-dark-tertiary text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                  tab === t.id ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {t.label}
@@ -2781,7 +2781,7 @@ const LeagueVault = () => {
                   {inactiveOwnerSet.size > 0 && (
                     <button
                       onClick={() => setShowActiveOnly(prev => !prev)}
-                      className={`text-xs font-mono px-2.5 py-1 rounded-lg transition-colors ${showActiveOnly ? 'bg-green-500/15 text-green-400' : 'bg-dark-tertiary text-text-secondary'}`}
+                      className={`text-xs font-mono px-2.5 py-1 rounded-lg transition-colors ${showActiveOnly ? 'bg-green-500/15 text-green-400' : 'bg-[var(--bg-alt)] text-text-secondary'}`}
                     >
                       {showActiveOnly ? 'Active Only' : 'All Managers'}
                     </button>
@@ -2827,14 +2827,14 @@ const LeagueVault = () => {
                           return recordsSort.dir === 'desc' ? -cmp : cmp
                         }) : []
                         return sorted.map((owner, idx) => (
-                          <tr key={owner.name} className="border-t border-dark-tertiary/50">
+                          <tr key={owner.name} className="border-t border-[var(--card-border)]">
                             <td className="py-2 font-mono text-text-secondary">{idx + 1}</td>
                             <td className="py-2">
                               <div className="flex items-center gap-2">
                                 {avatarMap[owner.name] ? (
                                   <img src={avatarMap[owner.name]} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
                                 ) : (
-                                  <span className="w-6 h-6 rounded-full bg-dark-tertiary flex items-center justify-center text-xs font-mono text-text-secondary flex-shrink-0">
+                                  <span className="w-6 h-6 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-xs font-mono text-text-secondary flex-shrink-0">
                                     {(owner.name || '?').charAt(0).toUpperCase()}
                                   </span>
                                 )}

@@ -49,16 +49,16 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative bg-dark-secondary border border-dark-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-scale-up shadow-2xl">
+      <div className="relative bg-[var(--surface)] border border-[var(--card-border)] rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-scale-up shadow-2xl">
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-dark-border bg-gradient-to-r from-dark-secondary to-dark-tertiary">
+        <div className="flex items-start justify-between p-6 border-b border-[var(--card-border)] bg-gradient-to-r from-[var(--surface)] to-[var(--stone)]">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-dark-primary rounded-full flex items-center justify-center text-4xl shadow-lg">
+            <div className="w-16 h-16 bg-[var(--stone)] rounded-full flex items-center justify-center text-4xl shadow-lg">
               {player.countryFlag}
             </div>
             <div>
@@ -80,7 +80,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-text-primary hover:bg-dark-tertiary rounded-lg transition-colors"
+            className="p-2 text-text-muted hover:text-text-primary hover:bg-[var(--stone)] rounded-lg transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -89,15 +89,15 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-dark-border">
+        <div className="flex border-b border-[var(--card-border)]">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'text-gold border-b-2 border-gold bg-dark-tertiary/30'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-dark-tertiary/30'
+                  ? 'text-gold border-b-2 border-gold bg-[var(--bg-alt)]'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-[var(--surface-alt)]'
               }`}
             >
               {tab.label}
@@ -112,25 +112,25 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
             <div className="space-y-6">
               {/* Quick Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-dark-primary rounded-lg p-4 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                   <p className={`text-2xl font-bold ${getStatColor(player.stats?.sgTotal)}`}>
                     {formatStat(player.stats?.sgTotal, '+')}
                   </p>
                   <p className="text-text-muted text-sm mt-1">SG: Total</p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-4 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.drivingDistance?.toFixed(0) || '—'}
                   </p>
                   <p className="text-text-muted text-sm mt-1">Driving (yds)</p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-4 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.gir?.toFixed(1) || '—'}%
                   </p>
                   <p className="text-text-muted text-sm mt-1">GIR %</p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-4 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.scoringAvg?.toFixed(1) || '—'}
                   </p>
@@ -149,7 +149,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                         result === '1st' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                         result === '2nd' || result === '3rd' ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
                         result.startsWith('T') && parseInt(result.slice(1)) <= 10 ? 'bg-gold/20 text-gold border border-gold/30' :
-                        'bg-dark-tertiary text-text-secondary border border-dark-border'
+                        'bg-[var(--stone)] text-text-secondary border border-[var(--card-border)]'
                       }`}
                     >
                       {result}
@@ -162,7 +162,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               {player.tournamentStatus && (
                 <div>
                   <h3 className="text-lg font-semibold font-display text-text-primary mb-3">Current Tournament</h3>
-                  <Card className="bg-dark-primary">
+                  <Card className="bg-[var(--bg-alt)]">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-text-muted text-sm">Position</p>
@@ -204,29 +204,29 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                   </button>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div className="bg-dark-primary rounded-lg p-3">
+                  <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                     <p className="text-text-primary font-medium">{player.stats?.drivingDistance?.toFixed(1)}</p>
                     <p className="text-text-muted text-xs">Driving Distance</p>
                   </div>
-                  <div className="bg-dark-primary rounded-lg p-3">
+                  <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                     <p className="text-text-primary font-medium">{player.stats?.drivingAccuracy?.toFixed(1)}%</p>
                     <p className="text-text-muted text-xs">Driving Accuracy</p>
                   </div>
-                  <div className="bg-dark-primary rounded-lg p-3">
+                  <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                     <p className="text-text-primary font-medium">{player.stats?.gir?.toFixed(1)}%</p>
                     <p className="text-text-muted text-xs">Greens in Regulation</p>
                   </div>
                   {showAdvanced && (
                     <>
-                      <div className="bg-dark-primary rounded-lg p-3">
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                         <p className="text-text-primary font-medium">{player.stats?.scoringAvg?.toFixed(2)}</p>
                         <p className="text-text-muted text-xs">Scoring Average</p>
                       </div>
-                      <div className="bg-dark-primary rounded-lg p-3">
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                         <p className="text-text-primary font-medium">68.2%</p>
                         <p className="text-text-muted text-xs">Sand Save %</p>
                       </div>
-                      <div className="bg-dark-primary rounded-lg p-3">
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-3">
                         <p className="text-text-primary font-medium">1.72</p>
                         <p className="text-text-muted text-xs">Putts per GIR</p>
                       </div>
@@ -254,7 +254,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                   { label: 'SG: Around-the-Green', value: player.stats?.sgAroundGreen, desc: 'Short game proficiency' },
                   { label: 'SG: Putting', value: player.stats?.sgPutting, desc: 'Putting efficiency' },
                 ].map((stat, idx) => (
-                  <div key={idx} className="bg-dark-primary rounded-lg p-4">
+                  <div key={idx} className="bg-[var(--bg-alt)] rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="text-text-primary font-medium">{stat.label}</p>
@@ -265,7 +265,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                       </p>
                     </div>
                     {/* Visual bar */}
-                    <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden">
+                    <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-500 ${
                           stat.value > 0 ? 'bg-gold' : 'bg-red-400'
@@ -281,7 +281,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               </div>
 
               {/* SG Tee-to-Green */}
-              <Card className="bg-dark-primary">
+              <Card className="bg-[var(--bg-alt)]">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-text-primary font-medium">SG: Tee-to-Green</p>
@@ -307,7 +307,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                 <h3 className="text-lg font-semibold font-display text-text-primary mb-3">Course History</h3>
                 <div className="space-y-3">
                   {courseHistory.map((course, idx) => (
-                    <div key={idx} className="bg-dark-primary rounded-lg p-4">
+                    <div key={idx} className="bg-[var(--bg-alt)] rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-text-primary font-medium">{course.course}</p>
                         <span className="text-text-muted text-xs">{course.events} events</span>
@@ -346,7 +346,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     { name: 'AT&T Pebble Beach Pro-Am', finish: player.recentForm?.[3] || 'T15', purse: '+$95,000' },
                     { name: 'Farmers Insurance Open', finish: player.recentForm?.[4] || 'T22', purse: '+$62,000' },
                   ].map((tournament, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-dark-primary rounded-lg">
+                    <div key={idx} className="flex items-center justify-between p-3 bg-[var(--bg-alt)] rounded-lg">
                       <span className="text-text-secondary">{tournament.name}</span>
                       <div className="flex items-center gap-4">
                         <span className={`font-medium ${
@@ -387,14 +387,14 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     className={`p-4 rounded-lg border ${
                       insight.type === 'positive' ? 'bg-gold/10 border-gold/30' :
                       insight.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/30' :
-                      'bg-dark-primary border-dark-border'
+                      'bg-[var(--bg-alt)] border-[var(--card-border)]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                         insight.type === 'positive' ? 'bg-gold/20' :
                         insight.type === 'warning' ? 'bg-yellow-500/20' :
-                        'bg-dark-tertiary'
+                        'bg-[var(--stone)]'
                       }`}>
                         {insight.type === 'positive' && (
                           <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,7 +425,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               </div>
 
               {/* Quick Recommendation */}
-              <Card className="bg-gradient-to-r from-gold/20 to-dark-primary border-gold/30">
+              <Card className="bg-gradient-to-r from-gold/20 to-[var(--bg-alt)] border-gold/30">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center">
                     <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,7 +447,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-dark-border bg-dark-tertiary/30">
+        <div className="flex items-center justify-end gap-3 p-4 border-t border-[var(--card-border)] bg-[var(--bg-alt)]">
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>

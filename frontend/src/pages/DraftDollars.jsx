@@ -125,7 +125,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.fromTeamId}
                   onChange={(e) => setFormData(p => ({ ...p, fromTeamId: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="">None (league)</option>
                   {(balances || []).map(a => (
@@ -138,7 +138,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.toTeamId}
                   onChange={(e) => setFormData(p => ({ ...p, toTeamId: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="">None (league)</option>
                   {(balances || []).map(a => (
@@ -155,7 +155,7 @@ const DraftDollars = () => {
                   min="1"
                   value={formData.amount}
                   onChange={(e) => setFormData(p => ({ ...p, amount: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 />
               </div>
               <div>
@@ -163,7 +163,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.yearType}
                   onChange={(e) => setFormData(p => ({ ...p, yearType: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="current">Current Year</option>
                   <option value="next">Next Year</option>
@@ -174,7 +174,7 @@ const DraftDollars = () => {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData(p => ({ ...p, category: e.target.value }))}
-                  className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                  className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 >
                   <option value="side_bet">Side Bet</option>
                   <option value="commissioner_adjustment">Commissioner Adjustment</option>
@@ -188,13 +188,13 @@ const DraftDollars = () => {
                 value={formData.description}
                 onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
                 placeholder="e.g., Weekly matchup side bet"
-                className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
               />
             </div>
 
             {/* Preview */}
             {formData.amount && (formData.fromTeamId || formData.toTeamId) && (
-              <div className="bg-dark-primary/50 rounded-lg p-3 text-xs text-text-secondary">
+              <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-xs text-text-secondary">
                 {formData.fromTeamId && (
                   <p>{balances?.find(a => a.teamId === formData.fromTeamId)?.teamName}: -{formData.amount} {formData.yearType}-year</p>
                 )}
@@ -218,7 +218,7 @@ const DraftDollars = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-dark-border text-xs text-text-muted">
+              <tr className="border-b border-[var(--card-border)] text-xs text-text-muted">
                 <th className="pb-2 text-left">Team</th>
                 <th className="pb-2 text-left">Owner</th>
                 <th className="pb-2 text-right">Current Year $</th>
@@ -246,7 +246,7 @@ const DraftDollars = () => {
                 return (
                   <tr
                     key={account.teamId}
-                    className={`border-b border-dark-border/30 ${isMe ? 'bg-gold/5' : ''}`}
+                    className={`border-b border-[var(--card-border)] ${isMe ? 'bg-gold/5' : ''}`}
                   >
                     <td className={`py-3 font-medium ${isMe ? 'text-gold' : 'text-text-primary'}`}>
                       {account.teamName}{isMe ? ' (You)' : ''}
@@ -278,7 +278,7 @@ const DraftDollars = () => {
           <select
             value={filterTeamId}
             onChange={(e) => handleFilterChange(e.target.value)}
-            className="p-1.5 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-xs focus:border-gold focus:outline-none"
+            className="p-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-xs focus:border-gold focus:outline-none"
           >
             <option value="">All Teams</option>
             {(balances || []).map(a => (
@@ -294,7 +294,7 @@ const DraftDollars = () => {
             {ledger.map(tx => (
               <div
                 key={tx.id}
-                className="flex items-center gap-3 p-3 bg-dark-tertiary/50 rounded-lg text-sm"
+                className="flex items-center gap-3 p-3 bg-[var(--surface)] rounded-lg text-sm"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -315,7 +315,7 @@ const DraftDollars = () => {
                     }`}>
                       {tx.yearType === 'current' ? 'Current' : 'Next Year'}
                     </span>
-                    <span className="text-[10px] font-medium px-1.5 bg-dark-border/50 rounded text-text-muted">
+                    <span className="text-[10px] font-medium px-1.5 bg-[var(--card-border)] rounded text-text-muted">
                       {tx.category === 'trade' ? 'Trade' : tx.category === 'side_bet' ? 'Side Bet' : 'Adjustment'}
                     </span>
                   </div>

@@ -313,15 +313,15 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative bg-dark-secondary border border-dark-border rounded-xl max-w-sm w-full shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="relative bg-[var(--surface)] border border-[var(--card-border)] rounded-xl max-w-sm w-full shadow-2xl animate-fade-in" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-dark-border">
+        <div className="flex items-start justify-between p-4 border-b border-[var(--card-border)]">
           <div className="flex items-center gap-3">
             {player.headshot ? (
-              <img src={player.headshot} alt="" className="w-11 h-11 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+              <img src={player.headshot} alt="" className="w-11 h-11 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0" />
             ) : isNflPopup ? (
-              <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${NFL_POS_COLORS[player.position] || 'bg-dark-tertiary text-text-muted'}`}>
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${NFL_POS_COLORS[player.position] || 'bg-[var(--bg-alt)] text-text-muted'}`}>
                 <span className="text-xs font-bold">{player.position}</span>
               </div>
             ) : (
@@ -366,15 +366,15 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
             <>
               {/* NFL: PPG, Total Pts, Games */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">PPG</p>
                   <p className="text-gold text-base font-bold">{player.ppg?.toFixed(1) || '0.0'}</p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Total Pts</p>
                   <p className="text-text-primary text-base font-bold">{player.totalPts?.toFixed(1) || '0.0'}</p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Games</p>
                   <p className="text-text-primary text-base font-bold">{player.gamesPlayed || 0}</p>
                 </div>
@@ -385,7 +385,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                   <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Season Stats</p>
                   <div className={`grid gap-2 ${getNflPositionStats(player).length > 4 ? 'grid-cols-3' : 'grid-cols-' + getNflPositionStats(player).length}`}>
                     {getNflPositionStats(player).map(s => (
-                      <div key={s.label} className="bg-dark-primary rounded-lg p-2 text-center">
+                      <div key={s.label} className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                         <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{s.label}</p>
                         <p className="text-text-primary text-sm font-bold">{s.value}</p>
                       </div>
@@ -397,21 +397,21 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
           ) : (
             <>
               <div className="grid grid-cols-4 gap-2">
-                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
                   <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-text-primary' : 'text-red-400'}`}>
                     {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
                   </p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Top 10</p>
                   <p className="text-text-primary text-base font-bold">{player.top10}%</p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Cuts</p>
                   <p className="text-text-primary text-base font-bold">{player.cutsPct || 0}%</p>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-2 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Events</p>
                   <p className="text-text-primary text-base font-bold">{player.tournaments}</p>
                 </div>
@@ -429,7 +429,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center gap-2">
                       <span className="text-text-muted text-xs w-8 text-right">{label}</span>
-                      <div className="flex-1 h-1.5 bg-dark-primary rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-[var(--bg-alt)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${value >= 0 ? 'bg-gold' : 'bg-red-400'}`}
                           style={{ width: `${Math.min(100, Math.abs(value) / 1.0 * 100)}%` }}
@@ -456,8 +456,8 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                           result === 'CUT' ? 'bg-red-500/15 text-red-400' :
                           pos <= 5 ? 'bg-gold/20 text-gold' :
                           pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
-                          pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
-                          'bg-dark-tertiary text-text-muted'
+                          pos <= 30 ? 'bg-[var(--bg-alt)] text-text-secondary' :
+                          'bg-[var(--bg-alt)] text-text-muted'
                         }`}>
                           {result === '1' ? '1st' : result}
                         </span>
@@ -478,7 +478,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                 inQueue
                   ? 'bg-orange/20 text-orange border border-orange/30'
-                  : 'bg-dark-primary text-text-primary hover:bg-dark-tertiary border border-dark-border'
+                  : 'bg-[var(--bg-alt)] text-text-primary hover:bg-[var(--surface-alt)] border border-[var(--card-border)]'
               }`}
             >
               {inQueue ? 'Queued' : 'Add to Queue'}
@@ -1488,7 +1488,7 @@ const MockDraftRoom = () => {
 
   if (!config || loadingPlayers) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-3" />
           {loadingPlayers && <p className="text-text-muted text-sm">Loading player data...</p>}
@@ -1500,7 +1500,7 @@ const MockDraftRoom = () => {
   // Draft Complete Screen (fallback if save fails)
   if (isComplete) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Grading your draft...</p>
@@ -1520,9 +1520,9 @@ const MockDraftRoom = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-dark-primary flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-64px)] bg-[var(--bg)] flex flex-col overflow-hidden">
       {/* ===== HEADER BAR ===== */}
-      <div className="bg-dark-secondary border-b border-dark-border flex-shrink-0 z-30">
+      <div className="bg-[var(--surface)] border-b border-[var(--card-border)] flex-shrink-0 z-30">
         <div className="px-3 sm:px-4 py-2">
           <div className="flex items-center justify-between gap-3">
             {/* Left: Back + Title */}
@@ -1564,7 +1564,7 @@ const MockDraftRoom = () => {
                     ? 'bg-gold/20 text-gold border border-gold/40'
                     : isAuction && auctionPhase === 'bidding'
                       ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40'
-                      : 'bg-dark-tertiary text-text-secondary'
+                      : 'bg-[var(--bg-alt)] text-text-secondary'
               }`}>
                 {isPaused ? 'PAUSED' : isAuction ? (
                   auctionPhase === 'bidding' && currentNom ? (
@@ -1606,7 +1606,7 @@ const MockDraftRoom = () => {
               ) : (
                 <>
                   {/* Speed selector */}
-                  <div className="hidden sm:flex items-center bg-dark-primary rounded-lg border border-dark-border overflow-hidden">
+                  <div className="hidden sm:flex items-center bg-[var(--bg-alt)] rounded-lg border border-[var(--card-border)] overflow-hidden">
                     {[
                       { key: 'normal', label: '1x' },
                       { key: 'fast', label: '2x' },
@@ -1631,7 +1631,7 @@ const MockDraftRoom = () => {
                     onClick={toggleSound}
                     className={`p-1.5 rounded-lg transition-colors ${
                       soundEnabled
-                        ? 'bg-dark-primary text-text-secondary hover:text-text-primary border border-dark-border'
+                        ? 'bg-[var(--bg-alt)] text-text-secondary hover:text-text-primary border border-[var(--card-border)]'
                         : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                     }`}
                     title={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
@@ -1654,7 +1654,7 @@ const MockDraftRoom = () => {
                     className={`p-1.5 rounded-lg transition-colors ${
                       isPaused
                         ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
-                        : 'bg-dark-primary text-text-secondary hover:text-text-primary border border-dark-border'
+                        : 'bg-[var(--bg-alt)] text-text-secondary hover:text-text-primary border border-[var(--card-border)]'
                     }`}
                     title={isPaused ? 'Resume (Space)' : 'Pause (Space)'}
                   >
@@ -1694,7 +1694,7 @@ const MockDraftRoom = () => {
                       (isUserTurn || isUserNominator) && timer <= 15 ? 'bg-yellow-500/20 text-yellow-400' :
                       (isUserTurn || isUserNominator) ? 'bg-gold/20 text-gold' :
                       isAuction && auctionPhase === 'bidding' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-dark-primary text-text-secondary border border-dark-border'
+                      'bg-[var(--bg-alt)] text-text-secondary border border-[var(--card-border)]'
                     }`}>
                       {formatTime(timer)}
                     </div>
@@ -1713,7 +1713,7 @@ const MockDraftRoom = () => {
                   ? 'bg-gold/20 text-gold'
                   : isAuction && auctionPhase === 'bidding'
                     ? 'bg-yellow-500/20 text-yellow-400'
-                    : 'bg-dark-tertiary text-text-secondary'
+                    : 'bg-[var(--bg-alt)] text-text-secondary'
             }`}>
               {isPaused ? (
                 <span className="flex items-center justify-center gap-1.5">
@@ -1765,7 +1765,7 @@ const MockDraftRoom = () => {
                   {s.label}
                 </button>
               ))}
-              <span className="text-dark-border mx-1">|</span>
+              <span className="text-text-muted mx-1">|</span>
               <button
                 onClick={toggleSound}
                 className={`p-0.5 rounded transition-colors ${soundEnabled ? 'text-text-muted' : 'text-red-400'}`}
@@ -1792,7 +1792,7 @@ const MockDraftRoom = () => {
           <div className={`px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 ${
             recentPick.teamId === userTeam?.id
               ? 'bg-gold text-text-primary'
-              : 'bg-dark-secondary border border-dark-border text-text-primary'
+              : 'bg-[var(--surface)] border border-[var(--card-border)] text-text-primary'
           }`}>
             {isNfl && recentPick.playerPosition ? (
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${NFL_POS_COLORS[recentPick.playerPosition] || ''}`}>
@@ -1815,7 +1815,7 @@ const MockDraftRoom = () => {
       {/* Pick Tag Prompt — appears after user makes a pick */}
       {pickTagPrompt && (
         <div className="fixed bottom-0 left-0 right-0 z-50 animate-fade-in">
-          <div className="bg-dark-secondary/95 backdrop-blur-md border-t border-stone/30 px-4 py-3 shadow-lg">
+          <div className="bg-[var(--surface)] border-t border-[var(--card-border)] px-4 py-3 shadow-lg">
             <div className="max-w-2xl mx-auto">
               <p className="text-[11px] text-text-primary/40 mb-2 text-center">
                 How'd that feel? <span className="text-text-primary/60 font-medium">{pickTagPrompt.playerName}</span>
@@ -1862,9 +1862,9 @@ const MockDraftRoom = () => {
               className="flex items-center gap-2.5 min-w-0 flex-1 text-left group px-2 py-1.5 -mx-2 -my-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors"
             >
               {enriched?.headshot ? (
-                <img src={enriched.headshot} alt="" className="w-10 h-10 rounded-full object-cover bg-dark-tertiary flex-shrink-0 ring-2 ring-yellow-500/50 shadow-lg" />
+                <img src={enriched.headshot} alt="" className="w-10 h-10 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0 ring-2 ring-yellow-500/50 shadow-lg" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center ring-2 ring-yellow-500/50 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center ring-2 ring-yellow-500/50 flex-shrink-0">
                   <span className="text-xl">{enriched?.flag}</span>
                 </div>
               )}
@@ -1915,12 +1915,12 @@ const MockDraftRoom = () => {
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
                   onClick={() => setNomBidInput(prev => Math.max(currentNom.currentBid + 1, prev - 1))}
-                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-text-primary flex items-center justify-center text-sm font-bold"
+                  className="w-7 h-7 bg-[var(--bg-alt)] rounded text-text-muted hover:text-text-primary flex items-center justify-center text-sm font-bold"
                 >-</button>
                 <span className="text-text-primary font-bold text-sm w-8 text-center tabular-nums">${nomBidInput}</span>
                 <button
                   onClick={() => setNomBidInput(prev => Math.min(budgets[userTeamId] || 0, prev + 1))}
-                  className="w-7 h-7 bg-dark-primary rounded text-text-muted hover:text-text-primary flex items-center justify-center text-sm font-bold"
+                  className="w-7 h-7 bg-[var(--bg-alt)] rounded text-text-muted hover:text-text-primary flex items-center justify-center text-sm font-bold"
                 >+</button>
                 <button
                   onClick={() => handlePlaceBid(nomBidInput)}
@@ -1939,7 +1939,7 @@ const MockDraftRoom = () => {
           {/* Expanded player profile card */}
           {nomExpanded && enriched && (
             <div className="px-3 sm:px-4 pb-3 animate-fade-in">
-              <div className="bg-dark-primary rounded-lg border border-dark-border/50 p-3">
+              <div className="bg-[var(--bg-alt)] rounded-lg border border-[var(--card-border)]/50 p-3">
                 {/* Stats grid */}
                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {[
@@ -1959,7 +1959,7 @@ const MockDraftRoom = () => {
                 </div>
 
                 {/* SG breakdown */}
-                <div className="mt-2.5 pt-2.5 border-t border-dark-border/40">
+                <div className="mt-2.5 pt-2.5 border-t border-[var(--card-border)]/40">
                   <div className="grid grid-cols-5 gap-2">
                     {[
                       { label: 'SG Total', value: enriched.sg },
@@ -1980,7 +1980,7 @@ const MockDraftRoom = () => {
 
                 {/* Recent form */}
                 {enriched.form?.length > 0 && (
-                  <div className="mt-2.5 pt-2.5 border-t border-dark-border/40">
+                  <div className="mt-2.5 pt-2.5 border-t border-[var(--card-border)]/40">
                     <p className="text-text-muted text-[9px] uppercase tracking-wider mb-1.5">Recent Form</p>
                     <div className="flex gap-1.5">
                       {enriched.form.map((result, i) => {
@@ -1991,8 +1991,8 @@ const MockDraftRoom = () => {
                             result === 'CUT' ? 'bg-red-500/15 text-red-400' :
                             pos <= 5 ? 'bg-gold/20 text-gold' :
                             pos <= 15 ? 'bg-emerald-500/10 text-emerald-400/70' :
-                            pos <= 30 ? 'bg-dark-tertiary text-text-secondary' :
-                            'bg-dark-tertiary text-text-muted'
+                            pos <= 30 ? 'bg-[var(--bg-alt)] text-text-secondary' :
+                            'bg-[var(--bg-alt)] text-text-muted'
                           }`}>
                             {result === '1' ? '1st' : result}
                           </span>
@@ -2009,7 +2009,7 @@ const MockDraftRoom = () => {
       })()}
 
       {/* ===== MOBILE TAB BAR ===== */}
-      <div className="lg:hidden flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
+      <div className="lg:hidden flex border-b border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
         {[
           { key: 'board', label: 'Board' },
           { key: 'players', label: 'Players' },
@@ -2039,11 +2039,11 @@ const MockDraftRoom = () => {
           activeTab === 'board' ? 'flex flex-1' : 'hidden'
         } lg:flex lg:flex-none lg:h-[45%]`}>
           {/* Board Column Headers */}
-          <div className="flex-shrink-0 bg-dark-secondary border-b border-dark-border" ref={boardRef}>
+          <div className="flex-shrink-0 bg-[var(--surface)] border-b border-[var(--card-border)]" ref={boardRef}>
             <div className="overflow-x-auto">
               <div className="grid gap-px min-w-[500px]"
                 style={{ gridTemplateColumns: `44px repeat(${config.teamCount}, 1fr)` }}>
-                <div className="bg-dark-tertiary px-1 py-2 text-text-muted text-[10px] font-semibold text-center">RD</div>
+                <div className="bg-[var(--bg-alt)] px-1 py-2 text-text-muted text-[10px] font-semibold text-center">RD</div>
                 {config.teams.map(team => (
                   <div
                     key={team.id}
@@ -2054,7 +2054,7 @@ const MockDraftRoom = () => {
                           ? 'bg-yellow-500/20 text-yellow-400'
                           : !isAuction && pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
                             ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-dark-tertiary text-text-muted'
+                            : 'bg-[var(--bg-alt)] text-text-muted'
                     }`}
                   >
                     {team.isUser ? (
@@ -2083,11 +2083,11 @@ const MockDraftRoom = () => {
                   <div
                     key={round}
                     data-round={round}
-                    className={`grid gap-px ${isCurrentRound ? 'bg-dark-border' : ''}`}
+                    className={`grid gap-px ${isCurrentRound ? 'bg-[var(--card-border)]' : ''}`}
                     style={{ gridTemplateColumns: `44px repeat(${config.teamCount}, 1fr)` }}
                   >
                     <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
-                      isCurrentRound ? 'text-gold bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
+                      isCurrentRound ? 'text-gold bg-[var(--surface)]' : 'text-text-muted bg-[var(--bg-alt)]/80'
                     }`}>
                       <span>{round}</span>
                       {!isAuction && <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>}
@@ -2127,8 +2127,8 @@ const MockDraftRoom = () => {
                                   ? isUserTeamCell ? 'bg-yellow-500/20' : 'bg-yellow-500/12'
                                   : pick.playerRank <= 25
                                     ? isUserTeamCell ? 'bg-gold/18' : 'bg-gold/10'
-                                    : isUserTeamCell ? 'bg-gold/10' : roundIdx % 2 === 0 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
-                                : roundIdx % 2 === 0 ? 'bg-dark-primary/50' : 'bg-dark-secondary/25'
+                                    : isUserTeamCell ? 'bg-gold/10' : roundIdx % 2 === 0 ? 'bg-[var(--bg-alt)]' : 'bg-[var(--surface)]/50'
+                                : roundIdx % 2 === 0 ? 'bg-[var(--bg-alt)]/50' : 'bg-[var(--surface)]/25'
                           }`}
                         >
                           {pick ? (
@@ -2144,7 +2144,7 @@ const MockDraftRoom = () => {
                                       pick.playerRank <= 10 ? 'bg-yellow-400' :
                                       pick.playerRank <= 25 ? 'bg-gold' :
                                       pick.playerRank <= 40 ? 'bg-blue-400' :
-                                      'bg-dark-border/40'
+                                      'bg-[var(--card-border)]/40'
                                     }`} />
                                     <span className="text-xs">{pick.playerFlag}</span>
                                   </>
@@ -2187,10 +2187,10 @@ const MockDraftRoom = () => {
           {/* LEFT: Player Table (always visible on desktop, 'players' tab on mobile) */}
           <div className={`flex-col min-h-0 ${
             activeTab === 'players' ? 'flex flex-1' : 'hidden'
-          } lg:flex lg:flex-none lg:w-[60%] lg:border-r lg:border-dark-border`}>
+          } lg:flex lg:flex-none lg:w-[60%] lg:border-r lg:border-[var(--card-border)]`}>
             <div className="h-full flex flex-col">
                 {/* Search Bar + Show Drafted Toggle */}
-                <div className="flex-shrink-0 p-3 bg-dark-secondary/50">
+                <div className="flex-shrink-0 p-3 bg-[var(--surface)]/50">
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2201,7 +2201,7 @@ const MockDraftRoom = () => {
                         placeholder="Search players..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                        className="w-full pl-9 pr-4 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                       />
                     </div>
                     <button
@@ -2209,7 +2209,7 @@ const MockDraftRoom = () => {
                       className={`flex-shrink-0 px-3 py-2 rounded-lg text-[11px] font-medium transition-colors border ${
                         showDrafted
                           ? 'bg-gold/15 border-gold/30 text-gold'
-                          : 'bg-dark-primary border-dark-border text-text-muted hover:text-text-primary hover:border-dark-border'
+                          : 'bg-[var(--bg-alt)] border-[var(--card-border)] text-text-muted hover:text-text-primary hover:border-[var(--card-border)]'
                       }`}
                     >
                       {showDrafted ? 'Hide Drafted' : 'Show Drafted'}
@@ -2227,7 +2227,7 @@ const MockDraftRoom = () => {
                         className={`px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap transition-colors ${
                           posFilter === pos
                             ? pos === 'ALL' ? 'bg-gold/20 text-gold' : (NFL_POS_COLORS[pos] || 'bg-gold/20 text-gold')
-                            : 'bg-dark-primary text-text-muted hover:text-text-primary'
+                            : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary'
                         }`}
                       >
                         {pos}
@@ -2239,7 +2239,7 @@ const MockDraftRoom = () => {
                 {/* Player Table */}
                 <div className="flex-1 overflow-y-auto min-h-0">
                   {/* Table Header */}
-                  <div className="sticky top-0 bg-dark-secondary z-10 border-b border-dark-border">
+                  <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
                     {isNfl ? (
                       <div className="grid grid-cols-[30px_1fr_36px_36px_48px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
                         <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
@@ -2285,10 +2285,10 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[30px_1fr_44px_36px_30px_44px_48px]'} px-3 py-2 border-b border-dark-border/30 items-center transition-colors ${
+                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[30px_1fr_44px_36px_30px_44px_48px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
                           player.isDrafted
-                            ? 'opacity-40 bg-dark-primary/50'
-                            : `cursor-pointer hover:bg-dark-tertiary/50 ${inQueue ? 'bg-orange/5' : ''}`
+                            ? 'opacity-40 bg-[var(--bg-alt)]/50'
+                            : `cursor-pointer hover:bg-[var(--surface-alt)] ${inQueue ? 'bg-orange/5' : ''}`
                         }`}
                         onClick={() => !player.isDrafted && setSelectedPlayer(player)}
                       >
@@ -2296,15 +2296,15 @@ const MockDraftRoom = () => {
                         <div className="flex items-center gap-2 min-w-0">
                           {isNfl ? (
                             player.headshot ? (
-                              <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                              <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0" />
                             ) : (
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${NFL_POS_COLORS[player.position] || 'bg-dark-tertiary text-text-muted'}`}>
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${NFL_POS_COLORS[player.position] || 'bg-[var(--bg-alt)] text-text-muted'}`}>
                                 <span className="text-[8px] font-bold">{player.position}</span>
                               </div>
                             )
                           ) : (
                             player.headshot ? (
-                              <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                              <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0" />
                             ) : (
                               <span className="text-sm flex-shrink-0">{player.flag}</span>
                             )
@@ -2359,7 +2359,7 @@ const MockDraftRoom = () => {
                                     f === 'CUT' ? 'bg-red-400' :
                                     pos <= 5 ? 'bg-gold' :
                                     pos <= 15 ? 'bg-emerald-400/60' :
-                                    'bg-dark-border/30'
+                                    'bg-[var(--card-border)]/30'
                                   }`} title={f} />
                                 )
                               })}
@@ -2368,7 +2368,7 @@ const MockDraftRoom = () => {
                         )}
                         <div className="flex items-center justify-end gap-1">
                           {player.isDrafted ? (
-                            <span className="px-1.5 py-0.5 bg-dark-border/40 text-text-muted text-[9px] font-mono uppercase rounded">
+                            <span className="px-1.5 py-0.5 bg-[var(--card-border)]/40 text-text-muted text-[9px] font-mono uppercase rounded">
                               Drafted
                             </span>
                           ) : (
@@ -2426,7 +2426,7 @@ const MockDraftRoom = () => {
             activeTab === 'queue' || activeTab === 'myteam' || activeTab === 'chat' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:flex-none lg:w-[40%]`}>
             {/* Desktop Side Panel Tabs */}
-            <div className="hidden lg:flex border-b border-dark-border bg-dark-secondary flex-shrink-0">
+            <div className="hidden lg:flex border-b border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
               {[
                 { key: 'queue', label: `Queue (${queue.length})` },
                 ...(boardEntries.length > 0 ? [{ key: 'myboard', label: 'Board' }] : []),
@@ -2454,7 +2454,7 @@ const MockDraftRoom = () => {
               <div className="h-full flex flex-col">
                 {/* Auto-pick toggle */}
                 <div className="flex-shrink-0 px-3 pt-3 pb-1">
-                  <div className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg border border-dark-border">
+                  <div className="flex items-center justify-between p-2.5 bg-[var(--bg-alt)] rounded-lg border border-[var(--card-border)]">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -2509,10 +2509,10 @@ const MockDraftRoom = () => {
                           }
                         }}
                         className={`relative inline-flex items-center w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
-                          autoPick ? 'bg-gold' : autoPickCountdown > 0 ? 'bg-yellow-500/50' : 'bg-dark-tertiary border border-dark-border'
+                          autoPick ? 'bg-gold' : autoPickCountdown > 0 ? 'bg-yellow-500/50' : 'bg-[var(--bg-alt)] border border-[var(--card-border)]'
                         }`}
                       >
-                        <span className={`inline-block w-3.5 h-3.5 rounded-full bg-dark-tertiary shadow-sm transition-transform ${
+                        <span className={`inline-block w-3.5 h-3.5 rounded-full bg-[var(--bg-alt)] shadow-sm transition-transform ${
                           autoPick || autoPickCountdown > 0 ? 'translate-x-[18px]' : 'translate-x-[3px]'
                         }`} />
                       </button>
@@ -2531,7 +2531,7 @@ const MockDraftRoom = () => {
                   ) : (
                     <div className="space-y-1">
                       {queue.map((player, i) => (
-                        <div key={player.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg group">
+                        <div key={player.id} className="flex items-center justify-between p-2.5 bg-[var(--bg-alt)] rounded-lg group">
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-orange text-xs font-bold w-5 text-center">{i + 1}</span>
                             {isNfl && player.position ? (
@@ -2609,7 +2609,7 @@ const MockDraftRoom = () => {
                             </div>
                           )}
                           <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
-                            isDrafted ? 'opacity-30' : 'hover:bg-dark-tertiary/30'
+                            isDrafted ? 'opacity-30' : 'hover:bg-[var(--surface-alt)]'
                           }`}>
                             <span className="text-gold text-xs font-bold w-5 text-center">{entry.rank}</span>
                             {isNfl && entry.player?.nflPosition && (
@@ -2658,7 +2658,7 @@ const MockDraftRoom = () => {
                   ) : (
                     <div className="space-y-1">
                       {userPicks.map(pick => (
-                        <div key={pick.id} className="flex items-center justify-between p-2.5 bg-dark-primary rounded-lg">
+                        <div key={pick.id} className="flex items-center justify-between p-2.5 bg-[var(--bg-alt)] rounded-lg">
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-gold text-xs font-bold w-5 text-center">R{pick.round}</span>
                             {isNfl && pick.playerPosition ? (
@@ -2683,7 +2683,7 @@ const MockDraftRoom = () => {
                                 pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
                                 pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                                 pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
-                                'bg-dark-tertiary/10 text-text-primary/40'
+                                'bg-[var(--stone)] text-text-primary/40'
                               }`}>
                                 {pick.pickTag}
                               </span>
@@ -2693,7 +2693,7 @@ const MockDraftRoom = () => {
                       ))}
                       {/* Empty slots */}
                       {Array.from({ length: config.rosterSize - userPicks.length }, (_, i) => (
-                        <div key={`empty-${i}`} className="flex items-center p-2.5 rounded-lg border border-dashed border-dark-border/50">
+                        <div key={`empty-${i}`} className="flex items-center p-2.5 rounded-lg border border-dashed border-[var(--card-border)]/50">
                           <span className="text-text-muted text-xs w-5 text-center">R{userPicks.length + i + 1}</span>
                           <span className="text-text-muted text-xs ml-3">—</span>
                         </div>
@@ -2716,7 +2716,7 @@ const MockDraftRoom = () => {
                     <div className="space-y-1">
                       {[...picks].reverse().map(pick => (
                         <div key={pick.id} className={`flex items-center justify-between p-2.5 rounded-lg ${
-                          pick.teamId === userTeam?.id ? 'bg-gold/10' : 'bg-dark-primary'
+                          pick.teamId === userTeam?.id ? 'bg-gold/10' : 'bg-[var(--bg-alt)]'
                         }`}>
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-text-muted text-xs font-bold w-6 text-right">#{pick.pickNumber}</span>
@@ -2764,7 +2764,7 @@ const MockDraftRoom = () => {
                               <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
                                 msg.isUser
                                   ? 'bg-gold/20 text-text-primary rounded-br-sm'
-                                  : 'bg-dark-primary text-text-secondary rounded-bl-sm'
+                                  : 'bg-[var(--bg-alt)] text-text-secondary rounded-bl-sm'
                               }`}>
                                 {msg.text}
                               </div>
@@ -2778,7 +2778,7 @@ const MockDraftRoom = () => {
                 </div>
                 <form
                   onSubmit={(e) => { e.preventDefault(); handleSendChat() }}
-                  className="flex-shrink-0 p-2 border-t border-dark-border"
+                  className="flex-shrink-0 p-2 border-t border-[var(--card-border)]"
                 >
                   <div className="flex gap-2">
                     <input
@@ -2786,7 +2786,7 @@ const MockDraftRoom = () => {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 px-3 py-1.5 bg-dark-primary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="flex-1 px-3 py-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     />
                     <button
                       type="submit"
@@ -2836,7 +2836,7 @@ const MockDraftRoom = () => {
       {/* AI Coach Nudge */}
       {draftNudge && isUserTurn && (
         <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-40 max-w-sm w-full px-4">
-          <div className="bg-purple-500/15 border border-purple-400/30 backdrop-blur-xl rounded-xl px-4 py-3 shadow-lg flex items-start gap-2">
+          <div className="bg-purple-500/15 border border-purple-400/30 rounded-xl px-4 py-3 shadow-lg flex items-start gap-2">
             <svg className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>

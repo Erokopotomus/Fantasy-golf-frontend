@@ -37,7 +37,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
           <span>Week {survivorData?.currentWeek || 1}</span>
           <span>{alive.length} teams remaining</span>
         </div>
-        <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden">
+        <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-gold to-red-400 transition-all duration-500"
             style={{ width: `${((standings.length - alive.length) / standings.length) * 100}%` }}
@@ -49,7 +49,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="text-left text-xs text-text-muted border-b border-dark-border">
+            <tr className="text-left text-xs text-text-muted border-b border-[var(--card-border)]">
               <th className="pb-3 pl-2">Rank</th>
               <th className="pb-3">Team</th>
               <th className="pb-3 text-center">Status</th>
@@ -63,8 +63,8 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
               return (
                 <tr
                   key={team.userId}
-                  className={`border-b border-dark-border/50 ${
-                    isUser ? 'bg-gold/10' : 'hover:bg-dark-tertiary/50'
+                  className={`border-b border-[var(--card-border)]/50 ${
+                    isUser ? 'bg-gold/10' : 'hover:bg-[var(--surface-alt)]'
                   }`}
                 >
                   <td className="py-3 pl-2">
@@ -79,7 +79,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
+                        isUser ? 'bg-gold/20 text-gold' : 'bg-[var(--bg-alt)] text-text-secondary'
                       }`}>
                         {team.avatar}
                       </div>
@@ -124,7 +124,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
               return (
                 <tr
                   key={team.userId}
-                  className={`border-b border-dark-border/50 opacity-60 ${
+                  className={`border-b border-[var(--card-border)]/50 opacity-60 ${
                     isUser ? 'bg-red-400/10' : ''
                   }`}
                 >
@@ -134,7 +134,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-red-400/20 text-red-400' : 'bg-dark-primary text-text-muted'
+                        isUser ? 'bg-red-400/20 text-red-400' : 'bg-[var(--bg-alt)] text-text-muted'
                       }`}>
                         {team.avatar}
                       </div>

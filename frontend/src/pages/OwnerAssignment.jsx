@@ -22,13 +22,13 @@ const StepIndicator = ({ current }) => (
       return (
         <div key={s.num} className="flex items-center gap-2">
           {i > 0 && (
-            <div className={`w-8 sm:w-12 h-px ${isComplete || isActive ? 'bg-accent-gold/50' : 'bg-dark-border'}`} />
+            <div className={`w-8 sm:w-12 h-px ${isComplete || isActive ? 'bg-accent-gold/50' : 'bg-[var(--card-border)]'}`} />
           )}
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold transition-colors ${
               isComplete ? 'bg-accent-gold text-slate' :
               isActive ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold' :
-              'bg-dark-tertiary text-text-muted border border-dark-border'
+              'bg-[var(--bg-alt)] text-text-muted border border-[var(--card-border)]'
             }`}>
               {isComplete ? (
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,8 +58,8 @@ const TeamCard = ({ rawName, years, totalWins, totalLosses, totalPF, hasChampion
       isClaiming
         ? 'scale-95 opacity-0 pointer-events-none'
         : isClickable
-          ? 'bg-dark-tertiary/30 border-dark-border hover:bg-dark-tertiary/50 cursor-pointer'
-          : 'bg-dark-tertiary/20 border-dark-border/50 opacity-60 cursor-default'
+          ? 'bg-[var(--surface)] border-[var(--card-border)] hover:bg-[var(--bg-alt)] cursor-pointer'
+          : 'bg-[var(--surface)] border-[var(--card-border)]/50 opacity-60 cursor-default'
     }`}
     style={isClickable && activeOwnerColor ? { borderColor: activeOwnerColor + '40' } : {}}
   >
@@ -88,7 +88,7 @@ const ProgressBar = ({ progress, owners }) => {
   if (progress.total === 0) return null
   return (
     <div className="mb-4">
-      <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden flex">
+      <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden flex">
         {[...owners].map(([name, data]) => {
           const count = progress.perOwner.get(name) || 0
           const pct = (count / progress.total) * 100
@@ -129,7 +129,7 @@ const OwnerChipBar = ({ owners, activeOwnerId, setActiveOwnerId, progress }) => 
           className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-display font-bold transition-all duration-200 ${
             isActive
               ? 'text-slate shadow-lg ring-1'
-              : 'text-text-primary/80 hover:text-text-primary border border-dark-border hover:border-stone/50'
+              : 'text-text-primary/80 hover:text-text-primary border border-[var(--card-border)] hover:border-[var(--card-border)]'
           }`}
           style={isActive
             ? { backgroundColor: data.color, boxShadow: `0 0 16px ${data.color}40`, ringColor: data.color }
@@ -213,7 +213,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
             </h3>
             <div className="space-y-1.5">
               {filteredDetections.map(({ name, seasons }) => (
-                <div key={name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-dark-tertiary/30 hover:bg-dark-tertiary/50 transition-colors">
+                <div key={name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--bg-alt)] transition-colors">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm text-text-primary font-display truncate">{name}</span>
                     {seasons.length > 0 && (
@@ -250,7 +250,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
             value={manualInput}
             onChange={e => setManualInput(e.target.value)}
             placeholder="Type a name and press Enter..."
-            className="flex-1 px-4 py-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm font-display placeholder:text-text-muted focus:outline-none focus:border-accent-gold transition-colors"
+            className="flex-1 px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm font-display placeholder:text-text-muted focus:outline-none focus:border-accent-gold transition-colors"
           />
           <button
             type="submit"
@@ -269,7 +269,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
           const OwnerRow = ({ name, data, index }) => {
             const years = nameToYears[name] || []
             return (
-              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-dark-tertiary/30 border border-dark-border/50">
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--card-border)]/50">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className="text-xs font-mono text-text-muted/60 w-5 text-right flex-shrink-0">{index}</span>
                   <span
@@ -288,7 +288,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     onClick={() => toggleOwnerActive(name)}
                     className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
                       data.isActive
-                        ? 'text-text-muted bg-dark-tertiary/30 border border-dark-border hover:text-text-secondary'
+                        ? 'text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-secondary'
                         : 'text-accent-green bg-accent-green/10 border border-accent-green/20 hover:bg-accent-green/20'
                     }`}
                     title={data.isActive ? 'Mark as former member' : 'Mark as active member'}
@@ -345,8 +345,8 @@ const Step1IdentifyOwners = ({ wizard }) => {
 
               {/* Former Owners */}
               {formerOwners.length > 0 && (
-                <div className="border border-dark-border/50 rounded-xl overflow-hidden">
-                  <div className="px-4 py-2.5 bg-dark-tertiary/20 border-b border-dark-border/50 flex items-center justify-between">
+                <div className="border border-[var(--card-border)]/50 rounded-xl overflow-hidden">
+                  <div className="px-4 py-2.5 bg-[var(--surface)] border-b border-[var(--card-border)]/50 flex items-center justify-between">
                     <h3 className="text-xs font-mono text-text-muted uppercase tracking-wider font-bold flex items-center gap-2">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -378,7 +378,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
 
       {/* Right: Reference panel */}
       <div className="lg:col-span-1">
-        <div className="bg-dark-tertiary/20 border border-dark-border rounded-xl p-4 max-h-[70vh] overflow-y-auto sticky top-24">
+        <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 max-h-[70vh] overflow-y-auto sticky top-24">
           <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-3">
             All Imported Teams
           </h3>
@@ -387,7 +387,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
               <div className="text-[11px] font-mono text-accent-gold/70 mb-1.5">{year}</div>
               <div className="space-y-0.5">
                 {entries.map((e, i) => (
-                  <div key={`${e.rawName}-${i}`} className="flex items-center justify-between px-2 py-1 text-[11px] rounded hover:bg-dark-tertiary/30">
+                  <div key={`${e.rawName}-${i}`} className="flex items-center justify-between px-2 py-1 text-[11px] rounded hover:bg-[var(--surface)]">
                     <span className="text-text-secondary truncate font-display">{e.rawName}</span>
                     <span className="text-text-muted font-mono flex-shrink-0 ml-2">
                       {e.wins}-{e.losses}
@@ -498,7 +498,7 @@ const Step2AssignTeams = ({ wizard }) => {
             className={`px-2.5 py-1 text-[11px] font-mono rounded-lg whitespace-nowrap transition-colors ${
               seasonFilter === null
                 ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold/30'
-                : 'text-text-muted hover:text-text-primary border border-dark-border'
+                : 'text-text-muted hover:text-text-primary border border-[var(--card-border)]'
             }`}
           >
             All
@@ -510,7 +510,7 @@ const Step2AssignTeams = ({ wizard }) => {
               className={`px-2.5 py-1 text-[11px] font-mono rounded-lg whitespace-nowrap transition-colors ${
                 seasonFilter === year
                   ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold/30'
-                  : 'text-text-muted hover:text-text-primary border border-dark-border'
+                  : 'text-text-muted hover:text-text-primary border border-[var(--card-border)]'
               }`}
             >
               {year}
@@ -521,7 +521,7 @@ const Step2AssignTeams = ({ wizard }) => {
           <button
             onClick={() => setSortMode('season')}
             className={`px-2 py-1 text-[10px] font-mono rounded transition-colors ${
-              sortMode === 'season' ? 'text-text-primary bg-dark-tertiary' : 'text-text-muted hover:text-text-primary'
+              sortMode === 'season' ? 'text-text-primary bg-[var(--bg-alt)]' : 'text-text-muted hover:text-text-primary'
             }`}
           >
             By Season
@@ -529,7 +529,7 @@ const Step2AssignTeams = ({ wizard }) => {
           <button
             onClick={() => setSortMode('alpha')}
             className={`px-2 py-1 text-[10px] font-mono rounded transition-colors ${
-              sortMode === 'alpha' ? 'text-text-primary bg-dark-tertiary' : 'text-text-muted hover:text-text-primary'
+              sortMode === 'alpha' ? 'text-text-primary bg-[var(--bg-alt)]' : 'text-text-muted hover:text-text-primary'
             }`}
           >
             A-Z
@@ -589,7 +589,7 @@ const Step2AssignTeams = ({ wizard }) => {
           {/* Mobile toggle */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden w-full flex items-center justify-between px-3 py-2 bg-dark-tertiary/30 border border-dark-border rounded-lg mb-2 text-sm text-text-secondary"
+            className="lg:hidden w-full flex items-center justify-between px-3 py-2 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg mb-2 text-sm text-text-secondary"
           >
             <span className="font-display font-bold">
               {activeOwnerId ? `${activeOwnerId}'s teams` : 'Owner details'}
@@ -600,7 +600,7 @@ const Step2AssignTeams = ({ wizard }) => {
           </button>
 
           <div className={`${sidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <div className="bg-dark-tertiary/20 border border-dark-border rounded-xl p-3 sticky top-24 max-h-[65vh] overflow-y-auto">
+            <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-3 sticky top-24 max-h-[65vh] overflow-y-auto">
               {activeOwnerId && activeOwner ? (
                 <>
                   {/* Active owner header */}
@@ -629,7 +629,7 @@ const Step2AssignTeams = ({ wizard }) => {
                           key={rawName}
                           onClick={() => unassignTeam(rawName)}
                           className={`w-full text-left flex items-center justify-between px-2.5 py-2 rounded-lg transition-all duration-500 group ${
-                            isFlashing ? 'bg-accent-gold/20' : 'bg-dark-tertiary/20 hover:bg-dark-tertiary/40'
+                            isFlashing ? 'bg-accent-gold/20' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'
                           }`}
                           title="Click to unassign"
                         >
@@ -654,7 +654,7 @@ const Step2AssignTeams = ({ wizard }) => {
                 </>
               ) : (
                 <div className="py-6 text-center">
-                  <div className="w-12 h-12 border-2 border-dashed border-dark-border rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <div className="w-12 h-12 border-2 border-dashed border-[var(--card-border)] rounded-xl flex items-center justify-center mx-auto mb-2">
                     <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -665,7 +665,7 @@ const Step2AssignTeams = ({ wizard }) => {
 
               {/* All owners summary */}
               {owners.size > 1 && (
-                <div className="mt-4 pt-3 border-t border-dark-border/50">
+                <div className="mt-4 pt-3 border-t border-[var(--card-border)]/50">
                   <h4 className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-2">All Owners</h4>
                   <div className="space-y-1">
                     {[...owners].map(([name, data]) => {
@@ -675,7 +675,7 @@ const Step2AssignTeams = ({ wizard }) => {
                           key={name}
                           onClick={() => setActiveOwnerId(name)}
                           className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-left transition-colors ${
-                            activeOwnerId === name ? 'bg-dark-tertiary/50' : 'hover:bg-dark-tertiary/20'
+                            activeOwnerId === name ? 'bg-[var(--bg-alt)]' : 'hover:bg-[var(--surface)]'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -695,7 +695,7 @@ const Step2AssignTeams = ({ wizard }) => {
       </div>
 
       {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-dark-secondary/95 backdrop-blur-xl border-t border-dark-border p-3 sm:p-4 flex items-center justify-between z-40 md:relative md:bg-transparent md:backdrop-blur-none md:border-0 md:p-0 md:mt-6">
+      <div className="fixed bottom-0 left-0 right-0 bg-[var(--surface)] border-t border-[var(--card-border)] p-3 sm:p-4 flex items-center justify-between z-40 md:relative md:bg-transparent md:backdrop-blur-none md:border-0 md:p-0 md:mt-6">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setStep(1)}
@@ -801,7 +801,7 @@ const Step3VaultReveal = ({ wizard, onSaveSuccess }) => {
           >
             {saving ? (
               <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[var(--card-border)] border-t-[var(--bg)] rounded-full animate-spin" />
                 Saving...
               </span>
             ) : (
@@ -930,7 +930,7 @@ const OwnerAssignment = () => {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className="text-center py-20">
-          <div className="w-14 h-14 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-3">
+          <div className="w-14 h-14 bg-[var(--stone)] rounded-full flex items-center justify-center mx-auto mb-3">
             <svg className="w-7 h-7 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>

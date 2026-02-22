@@ -62,8 +62,8 @@ const CourseDetail = () => {
     if (val == null) return null
     if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
     if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-    if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
-    return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
+    if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
+    return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
   }
 
   const dnaCategories = [
@@ -100,9 +100,9 @@ const CourseDetail = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-xl border border-dark-border bg-dark-secondary">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-dark-secondary to-dark-secondary" />
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-secondary via-transparent to-transparent" />
+      <div className="relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-[var(--surface)] to-[var(--surface)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] via-transparent to-transparent" />
 
         <div className="relative p-6">
           <h1 className="text-3xl font-bold font-display text-text-primary mb-1 tracking-tight">
@@ -162,13 +162,13 @@ const CourseDetail = () => {
       {/* Hole-by-Hole Scorecard */}
       {course.holes && course.holes.length > 0 && (
         <Card padding="none">
-          <div className="p-4 border-b border-dark-border">
+          <div className="p-4 border-b border-[var(--card-border)]">
             <h4 className="text-sm font-semibold text-text-muted">Hole-by-Hole Scorecard</h4>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-dark-border text-text-muted">
+                <tr className="border-b border-[var(--card-border)] text-text-muted">
                   <th className="px-2 py-2 text-left font-medium">Hole</th>
                   {course.holes.filter(h => h.number <= 9).map(h => (
                     <th key={h.number} className="px-2 py-2 text-center font-mono font-medium">{h.number}</th>
@@ -177,7 +177,7 @@ const CourseDetail = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-dark-border/50">
+                <tr className="border-b border-[var(--card-border)]">
                   <td className="px-2 py-2 text-text-muted font-medium">Par</td>
                   {course.holes.filter(h => h.number <= 9).map(h => (
                     <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
@@ -189,7 +189,7 @@ const CourseDetail = () => {
                   </td>
                 </tr>
                 {course.holes.some(h => h.yardage) && (
-                  <tr className="border-b border-dark-border/50">
+                  <tr className="border-b border-[var(--card-border)]">
                     <td className="px-2 py-2 text-text-muted font-medium">Yds</td>
                     {course.holes.filter(h => h.number <= 9).map(h => (
                       <td key={h.number} className="px-2 py-2 text-center font-mono text-text-secondary">{h.yardage || '-'}</td>
@@ -206,7 +206,7 @@ const CourseDetail = () => {
             {course.holes.filter(h => h.number > 9).length > 0 && (
               <table className="w-full text-xs mt-0">
                 <thead>
-                  <tr className="border-b border-dark-border text-text-muted">
+                  <tr className="border-b border-[var(--card-border)] text-text-muted">
                     <th className="px-2 py-2 text-left font-medium">Hole</th>
                     {course.holes.filter(h => h.number > 9).map(h => (
                       <th key={h.number} className="px-2 py-2 text-center font-mono font-medium">{h.number}</th>
@@ -216,7 +216,7 @@ const CourseDetail = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-dark-border/50">
+                  <tr className="border-b border-[var(--card-border)]">
                     <td className="px-2 py-2 text-text-muted font-medium">Par</td>
                     {course.holes.filter(h => h.number > 9).map(h => (
                       <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
@@ -231,7 +231,7 @@ const CourseDetail = () => {
                     </td>
                   </tr>
                   {course.holes.some(h => h.yardage) && (
-                    <tr className="border-b border-dark-border/50">
+                    <tr className="border-b border-[var(--card-border)]">
                       <td className="px-2 py-2 text-text-muted font-medium">Yds</td>
                       {course.holes.filter(h => h.number > 9).map(h => (
                         <td key={h.number} className="px-2 py-2 text-center font-mono text-text-secondary">{h.yardage || '-'}</td>
@@ -279,8 +279,8 @@ const CourseDetail = () => {
 
       {/* What Wins Here — Full-width intelligence card */}
       {dnaCategories.length > 0 && (
-        <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-          <div className="p-4 border-b border-dark-border flex items-center justify-between">
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+          <div className="p-4 border-b border-[var(--card-border)] flex items-center justify-between">
             <h4 className="text-sm font-bold text-text-primary">What Wins Here</h4>
             {upcomingTournament && (
               <Link
@@ -296,14 +296,14 @@ const CourseDetail = () => {
               {dnaCategories.map((cat) => {
                 const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
                 return (
-                  <div key={cat.label} className="rounded-lg bg-dark-primary/60 border border-dark-border/50 p-3">
+                  <div key={cat.label} className="rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)] p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-text-secondary font-medium">{cat.label}</span>
                       <span className={`text-[10px] font-mono font-bold ${cat.rating.color}`}>
                         {cat.rating.text}
                       </span>
                     </div>
-                    <div className="h-2 rounded-full bg-dark-tertiary/[0.06] overflow-hidden mb-1.5">
+                    <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden mb-1.5">
                       <div
                         className={`h-full rounded-full ${cat.rating.bar} transition-all`}
                         style={{ width: `${barPct}%` }}
@@ -327,8 +327,8 @@ const CourseDetail = () => {
 
       {/* ── Best Course Fits ─────────────────────────────────────────────── */}
       {course.topCourseFits && course.topCourseFits.length > 0 && (
-        <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-          <div className="px-4 py-3 border-b border-dark-border flex items-center justify-between">
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
             <div>
               <h4 className="text-sm font-bold text-text-primary">Best Course Fits</h4>
               <p className="text-[10px] text-text-muted mt-0.5">Players whose skills best match this course's DNA</p>
@@ -342,21 +342,21 @@ const CourseDetail = () => {
               </Link>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-dark-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-[var(--card-border)]">
             {course.topCourseFits.map((p, i) => (
               <Link
                 key={p.id}
                 to={`/players/${p.id}`}
-                className="bg-dark-secondary p-3 hover:bg-dark-tertiary/50 transition-colors group"
+                className="bg-[var(--surface)] p-3 hover:bg-[var(--surface-alt)] transition-colors group"
               >
                 <div className="flex items-center gap-2.5 mb-2">
                   <span className="text-xs font-mono text-text-muted w-4 flex-shrink-0">
                     {i + 1}.
                   </span>
                   {p.headshotUrl ? (
-                    <img src={p.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                    <img src={p.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-base flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-base flex-shrink-0">
                       {p.countryFlag || '?'}
                     </div>
                   )}
@@ -410,25 +410,25 @@ const CourseDetail = () => {
         />
 
         {/* News */}
-        <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-          <div className="px-4 py-3 border-b border-dark-border">
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--card-border)]">
             <h4 className="text-sm font-semibold text-text-muted">Latest News</h4>
           </div>
           {course.news && course.news.length > 0 ? (
-            <div className="divide-y divide-dark-border/30">
+            <div className="divide-y divide-[var(--card-border)]">
               {course.news.map((article) => (
                 <a
                   key={article.id}
                   href={article.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex gap-3 p-3 hover:bg-dark-tertiary/50 transition-colors group"
+                  className="flex gap-3 p-3 hover:bg-[var(--surface-alt)] transition-colors group"
                 >
                   {article.imageUrl && (
                     <img
                       src={article.imageUrl}
                       alt=""
-                      className="w-16 h-12 rounded object-cover bg-dark-tertiary flex-shrink-0"
+                      className="w-16 h-12 rounded object-cover bg-[var(--stone)] flex-shrink-0"
                     />
                   )}
                   <div className="min-w-0 flex-1">
@@ -461,13 +461,13 @@ const CourseDetail = () => {
           {/* Top Historical Performers Card */}
           {course.playerHistory && course.playerHistory.length > 0 && (
             <Card padding="none">
-              <div className="p-4 border-b border-dark-border">
+              <div className="p-4 border-b border-[var(--card-border)]">
                 <h4 className="text-sm font-semibold text-text-muted">Course History Leaders</h4>
                 <p className="text-[10px] text-text-muted mt-0.5">Best historical performers (min 4 rounds)</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-dark-tertiary">
+                  <thead className="bg-[var(--stone)]">
                     <tr className="text-xs text-text-muted">
                       <th className="p-3 text-left">Player</th>
                       <th className="p-3 text-center">Rnds</th>
@@ -482,7 +482,7 @@ const CourseDetail = () => {
                     {course.playerHistory.map((ph) => {
                       const cutRate = ph.cuts > 0 ? ((ph.cutsMade / ph.cuts) * 100).toFixed(0) : null
                       return (
-                        <tr key={ph.id} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
+                        <tr key={ph.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                           <td className="p-3">
                             <Link
                               to={`/players/${ph.player.id}`}
@@ -527,14 +527,14 @@ const CourseDetail = () => {
         {/* Right Column — Tournament History */}
         <div className="lg:col-span-2">
           <Card padding="none">
-            <div className="p-4 border-b border-dark-border">
+            <div className="p-4 border-b border-[var(--card-border)]">
               <h4 className="text-sm font-semibold text-text-muted">Tournament History</h4>
             </div>
 
             {course.tournaments && course.tournaments.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-dark-tertiary">
+                  <thead className="bg-[var(--stone)]">
                     <tr className="text-xs text-text-muted">
                       <th className="p-3 text-left">Event</th>
                       <th className="p-3 text-center">Dates</th>
@@ -545,7 +545,7 @@ const CourseDetail = () => {
                   </thead>
                   <tbody>
                     {course.tournaments.map((t) => (
-                      <tr key={t.id} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
+                      <tr key={t.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                         <td className="p-3">
                           <Link
                             to={`/tournaments/${t.id}`}

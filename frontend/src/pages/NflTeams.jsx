@@ -42,7 +42,7 @@ const NflTeams = () => {
             <Link
               key={team.abbreviation}
               to={`/nfl/teams/${team.abbreviation}`}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-dark-tertiary/[0.03] border border-[var(--card-border)] hover:bg-dark-tertiary/[0.08] hover:border-white/[0.12] transition-all group"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] hover:bg-[var(--surface-alt)] hover:border-[var(--card-border)] transition-all group"
             >
               <div
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-mono font-extrabold flex-shrink-0"

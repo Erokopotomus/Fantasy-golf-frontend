@@ -33,7 +33,7 @@ const TourBadge = ({ tour }) => {
     korn: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
   }
   const key = tour.toLowerCase()
-  const color = Object.entries(colors).find(([k]) => key.includes(k))?.[1] || 'bg-dark-tertiary/10 text-text-secondary border-stone/30'
+  const color = Object.entries(colors).find(([k]) => key.includes(k))?.[1] || 'bg-[var(--stone)] text-text-secondary border-[var(--card-border)]'
   const label = key.includes('pga') ? 'PGA Tour' : tour
   return (
     <span className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${color}`}>
@@ -69,10 +69,10 @@ const Tournaments = () => {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-dark-tertiary/[0.06] rounded w-48" />
+          <div className="h-8 bg-[var(--stone)] rounded w-48" />
           <div className="grid gap-4 md:grid-cols-2">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-dark-tertiary/[0.04] rounded-card" />
+              <div key={i} className="h-32 bg-[var(--stone)] rounded-card" />
             ))}
           </div>
         </div>

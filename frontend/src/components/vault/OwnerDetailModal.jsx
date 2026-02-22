@@ -53,7 +53,7 @@ export default function OwnerDetailModal({ owner, rank, onClose, rating = null }
         {/* Modal panel */}
         <div
           onClick={e => e.stopPropagation()}
-          className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-dark-border"
+          className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-[var(--card-border)]"
           style={{
             background: '#0E100F',
             animation: 'modalSlideUp 0.3s ease',
@@ -188,7 +188,7 @@ export default function OwnerDetailModal({ owner, rank, onClose, rating = null }
                 <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-2">
                   Win % by Season
                 </div>
-                <div className="bg-dark-tertiary/30 rounded-lg p-3 sm:p-4">
+                <div className="bg-[var(--surface)] rounded-lg p-3 sm:p-4">
                   <Sparkline data={owner.winPcts} color={owner.color} width={420} height={48} />
                   <div className="flex justify-between mt-1.5">
                     <span className="text-[10px] font-mono text-text-muted/60">{oldestYear}</span>
@@ -204,7 +204,7 @@ export default function OwnerDetailModal({ owner, rank, onClose, rating = null }
                 <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-2">
                   Season History
                 </div>
-                <div className="divide-y divide-dark-border/50">
+                <div className="divide-y divide-[var(--card-border)]">
                   {completedSeasons.map(s => {
                     const [w, l] = s.record.split('-').map(Number)
                     const recordColor = w > l ? 'text-accent-green'

@@ -51,7 +51,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       ref={setNodeRef}
       style={style}
       className={`flex items-center gap-2 px-3 py-2 border-b border-[var(--card-border)] transition-colors group
-        ${isDragging ? 'bg-dark-secondary/80 shadow-lg' : 'bg-dark-secondary/40 hover:bg-dark-secondary/80'}`}
+        ${isDragging ? 'bg-[var(--surface-alt)] shadow-lg' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
     >
       {/* Drag handle */}
       <button
@@ -77,7 +77,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       })()}
 
       {/* Headshot */}
-      <div className="w-8 h-8 rounded-full bg-dark-primary overflow-hidden shrink-0">
+      <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] overflow-hidden shrink-0">
         {player.headshotUrl ? (
           <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
         ) : (
@@ -111,7 +111,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       {sport === 'nfl' ? (
         <div className="hidden sm:flex items-center gap-2 shrink-0">
           {player.position && (
-            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${POSITION_COLORS[player.position] || 'bg-dark-tertiary/10 text-text-primary/60'}`}>
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${POSITION_COLORS[player.position] || 'bg-[var(--bg-alt)] text-text-primary/60'}`}>
               {player.position}{positionRank || ''}
             </span>
           )}

@@ -38,14 +38,14 @@ function relativeTime(dateStr) {
 function sentimentBadge(s) {
   if (s === 'bullish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/15 text-emerald-400">Bullish</span>
   if (s === 'bearish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/15 text-red-400">Bearish</span>
-  if (s === 'neutral') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-dark-tertiary/10 text-text-primary/40">Neutral</span>
+  if (s === 'neutral') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-[var(--bg-alt)] text-text-primary/40">Neutral</span>
   return null
 }
 
 function sourceBadge(type) {
   if (!type) return null
   const label = type === 'gut_feel' ? 'Gut Feel' : type.charAt(0).toUpperCase() + type.slice(1)
-  return <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-dark-tertiary/[0.05] text-text-primary/30">{label}</span>
+  return <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[var(--bg-alt)] text-text-primary/30">{label}</span>
 }
 
 function outcomeBadge(capture) {
@@ -58,7 +58,7 @@ function outcomeBadge(capture) {
   if (verdict === 'INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed this one</span>
   if (verdict === 'TRENDING_CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending right</span>
   if (verdict === 'TRENDING_INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending wrong</span>
-  if (verdict === 'NOTED') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-dark-tertiary/[0.06] text-text-primary/30">&#8212; Noted</span>
+  if (verdict === 'NOTED') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--bg-alt)] text-text-primary/30">&#8212; Noted</span>
   return null
 }
 
@@ -130,7 +130,7 @@ export default function LabCaptures() {
               </svg>
             </Link>
             <h1 className="text-xl font-display font-bold text-text-primary">Captures</h1>
-            <span className="px-2 py-0.5 text-[10px] font-bold bg-dark-tertiary/[0.06] text-text-primary/30 rounded">{total}</span>
+            <span className="px-2 py-0.5 text-[10px] font-bold bg-[var(--bg-alt)] text-text-primary/30 rounded">{total}</span>
           </div>
         </div>
         <button
@@ -151,7 +151,7 @@ export default function LabCaptures() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search captures..."
-          className="w-full px-3 py-2 text-sm bg-dark-secondary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+          className="w-full px-3 py-2 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
         />
 
         {/* Source type pills */}
@@ -201,7 +201,7 @@ export default function LabCaptures() {
       ) : (
         <div className="space-y-3">
           {filtered.map(c => (
-            <div key={c.id} className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
+            <div key={c.id} className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
               {/* Content */}
               <p className="text-sm text-text-primary/70 whitespace-pre-wrap mb-3">{c.content}</p>
 

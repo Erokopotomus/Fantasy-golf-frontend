@@ -151,7 +151,7 @@ const WaiverWire = () => {
 
       {/* Pre-draft lock banner */}
       {isDraftLocked && (
-        <div className="mb-4 p-4 bg-dark-secondary border border-dark-border rounded-lg text-center">
+        <div className="mb-4 p-4 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-center">
           <svg className="w-8 h-8 text-text-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
@@ -165,7 +165,7 @@ const WaiverWire = () => {
 
       {/* Tab bar for waiver mode */}
       {isWaiverMode && (
-        <div className="flex gap-1 mb-4 bg-dark-secondary rounded-lg p-1">
+        <div className="flex gap-1 mb-4 bg-[var(--surface)] rounded-lg p-1">
           {[
             { key: 'players', label: 'Available Players' },
             { key: 'claims', label: `Pending Claims${pendingClaims.length > 0 ? ` (${pendingClaims.length})` : ''}` },
@@ -176,7 +176,7 @@ const WaiverWire = () => {
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'bg-dark-tertiary text-text-primary'
+                  ? 'bg-[var(--surface-alt)] text-text-primary'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
@@ -200,7 +200,7 @@ const WaiverWire = () => {
                 placeholder="Search players..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-dark-secondary border border-dark-border rounded-lg text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-emerald-500/50"
+                className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-emerald-500/50"
               />
             </div>
             <div className="flex gap-1">
@@ -211,7 +211,7 @@ const WaiverWire = () => {
                   className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                     tour === t
                       ? 'bg-emerald-500/15 text-emerald-400'
-                      : 'bg-dark-secondary text-text-muted hover:text-text-primary'
+                      : 'bg-[var(--surface)] text-text-muted hover:text-text-primary'
                   }`}
                 >
                   {t}
@@ -244,7 +244,7 @@ const WaiverWire = () => {
 
           {/* Player list */}
           <div className={`rounded-xl border border-dark-border bg-dark-secondary overflow-hidden ${isDraftLocked ? 'opacity-50 pointer-events-none' : ''}`}>
-            <div className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_auto_72px]'} gap-2 px-4 py-2.5 bg-dark-tertiary/80 text-[11px] text-text-muted uppercase tracking-wider font-medium`}>
+            <div className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_auto_72px]'} gap-2 px-4 py-2.5 bg-[var(--surface)] text-[11px] text-text-muted uppercase tracking-wider font-medium`}>
               <div>Player</div>
               {isNfl ? (
                 <>
@@ -261,18 +261,18 @@ const WaiverWire = () => {
               <div></div>
             </div>
 
-            <div className="max-h-[600px] overflow-y-auto divide-y divide-dark-border/30">
+            <div className="max-h-[600px] overflow-y-auto divide-y divide-[var(--card-border)]">
               {availablePlayers.map(player => (
                 <div
                   key={player.id}
-                  className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_auto_72px]'} gap-2 items-center px-4 py-3 hover:bg-dark-tertiary/40 transition-colors cursor-pointer`}
+                  className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_auto_72px]'} gap-2 items-center px-4 py-3 hover:bg-[var(--surface-alt)] transition-colors cursor-pointer`}
                   onClick={() => setDrawerPlayerId(player.id)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {player.headshotUrl ? (
-                      <img src={player.headshotUrl} alt="" className="w-9 h-9 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                      <img src={player.headshotUrl} alt="" className="w-9 h-9 rounded-full object-cover bg-[var(--surface)] flex-shrink-0" />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-dark-tertiary flex items-center justify-center text-lg flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-[var(--surface)] flex items-center justify-center text-lg flex-shrink-0">
                         {isNfl ? (player.name?.charAt(0) || '?') : (player.countryFlag || '?')}
                       </div>
                     )}
@@ -314,8 +314,8 @@ const WaiverWire = () => {
                                 inField
                                   ? 'bg-emerald-500'
                                   : fieldAnnounced
-                                  ? 'bg-dark-tertiary/10'
-                                  : 'border border-stone/50 bg-transparent'
+                                  ? 'bg-[var(--stone)]'
+                                  : 'border border-[var(--card-border)] bg-transparent'
                               }`}
                               title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
                             />
@@ -363,13 +363,13 @@ const WaiverWire = () => {
             pendingClaims.map((claim, index) => (
               <div
                 key={claim.id}
-                className="bg-dark-secondary border border-dark-border rounded-lg p-4 flex items-center gap-4"
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg p-4 flex items-center gap-4"
               >
                 <span className="text-text-muted text-sm font-mono w-6 text-center">{index + 1}</span>
                 {claim.player?.headshotUrl ? (
-                  <img src={claim.player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                  <img src={claim.player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-[var(--surface)] flex-shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center text-lg flex-shrink-0">?</div>
+                  <div className="w-10 h-10 rounded-full bg-[var(--surface)] flex items-center justify-center text-lg flex-shrink-0">?</div>
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-text-primary font-semibold text-sm">{claim.player?.name || 'Unknown'}</p>
@@ -408,7 +408,7 @@ const WaiverWire = () => {
             recentResults.map(claim => (
               <div
                 key={claim.id}
-                className="bg-dark-secondary border border-dark-border rounded-lg p-3 flex items-center gap-3"
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg p-3 flex items-center gap-3"
               >
                 <span className={`px-2 py-0.5 text-xs font-bold rounded ${
                   claim.status === 'WON' ? 'bg-emerald-500/15 text-emerald-400' :
@@ -478,7 +478,7 @@ const WaiverWire = () => {
                     max={budget?.remaining || 100}
                     value={bidAmount}
                     onChange={(e) => setBidAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full pl-8 pr-4 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:outline-none focus:border-emerald-500/50"
+                    className="w-full pl-8 pr-4 py-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-emerald-500/50"
                   />
                 </div>
                 {/* Quick bid buttons */}
@@ -490,7 +490,7 @@ const WaiverWire = () => {
                       className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                         bidAmount === amt
                           ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-dark-tertiary text-text-muted hover:text-text-primary'
+                          : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary'
                       }`}
                     >
                       ${amt}
@@ -514,7 +514,7 @@ const WaiverWire = () => {
                       className={`w-full flex items-center gap-2 p-2.5 rounded-lg text-left text-sm transition-colors ${
                         dropTarget?.id === p.id
                           ? 'bg-red-500/15 border border-red-500/30 text-red-400'
-                          : 'bg-dark-tertiary hover:bg-dark-border text-text-primary'
+                          : 'bg-[var(--bg-alt)] hover:bg-[var(--surface-alt)] text-text-primary'
                       }`}
                     >
                       <span>{p.countryFlag}</span>
@@ -533,7 +533,7 @@ const WaiverWire = () => {
                   value={claimReasoning}
                   onChange={e => setClaimReasoning(e.target.value.substring(0, 280))}
                   placeholder="e.g. Starter went down, volume opportunity"
-                  className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+                  className="w-full px-3 py-2 text-xs bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
                 />
               </div>
             )}

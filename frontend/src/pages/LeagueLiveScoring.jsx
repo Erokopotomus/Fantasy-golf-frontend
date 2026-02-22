@@ -36,9 +36,9 @@ const formatPosition = (pos, status) => {
 }
 
 const PlayerRow = ({ player, isBench }) => (
-  <div className={`flex items-center gap-3 py-2.5 px-3 rounded-lg ${isBench ? 'opacity-50' : 'bg-dark-tertiary/50'}`}>
+  <div className={`flex items-center gap-3 py-2.5 px-3 rounded-lg ${isBench ? 'opacity-50' : 'bg-[var(--surface)]'}`}>
     {/* Headshot */}
-    <div className="w-8 h-8 rounded-full bg-dark-primary flex-shrink-0 overflow-hidden">
+    <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex-shrink-0 overflow-hidden">
       {player.headshotUrl ? (
         <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
       ) : (
@@ -95,7 +95,7 @@ const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
     className={`p-3 rounded-lg cursor-pointer transition-colors ${
       isUser
         ? 'bg-emerald-500/10 border border-emerald-500/30'
-        : 'bg-dark-tertiary/50 hover:bg-dark-tertiary'
+        : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'
     }`}
   >
     <div className="flex items-center gap-3">
@@ -106,7 +106,7 @@ const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
       }`}>
         {team.rank}
       </span>
-      <div className="w-8 h-8 bg-dark-primary rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
+      <div className="w-8 h-8 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
         {(team.userName || team.teamName || '?').charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -127,7 +127,7 @@ const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
 
     {/* Expanded roster */}
     {isExpanded && (
-      <div className="mt-3 space-y-1 border-t border-dark-border/50 pt-3">
+      <div className="mt-3 space-y-1 border-t border-[var(--card-border)]/50 pt-3">
         {/* Header */}
         <div className="flex items-center gap-3 px-3 text-[10px] text-text-muted uppercase tracking-wider mb-1">
           <div className="w-8" />
@@ -145,7 +145,7 @@ const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
           <>
             <div className="flex items-center gap-2 pt-2 px-3">
               <span className="text-[10px] text-text-muted uppercase tracking-wider">Bench</span>
-              <div className="flex-1 border-t border-dark-border/30" />
+              <div className="flex-1 border-t border-[var(--card-border)]/30" />
               <span className="text-xs text-text-muted">{team.benchPoints.toFixed(1)} pts on bench</span>
             </div>
             {team.bench.map((p) => (
@@ -179,7 +179,7 @@ const GolfLiveScoring = ({ leagueId }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading scoring...</p>
@@ -190,7 +190,7 @@ const GolfLiveScoring = ({ leagueId }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary pt-8 px-4">
+      <div className="min-h-screen pt-8 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="text-center py-12">
             <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error</h2>
@@ -204,7 +204,7 @@ const GolfLiveScoring = ({ leagueId }) => {
 
   if (!tournament) {
     return (
-      <div className="min-h-screen bg-dark-primary pt-8 px-4">
+      <div className="min-h-screen pt-8 px-4">
         <div className="max-w-2xl mx-auto">
           <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-text-primary mb-4">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,7 +276,7 @@ const GolfLiveScoring = ({ leagueId }) => {
         <div className="mt-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] text-text-muted uppercase tracking-wider">Bench</span>
-            <div className="flex-1 border-t border-dark-border/30" />
+            <div className="flex-1 border-t border-[var(--card-border)]/30" />
             <span className="text-xs text-text-muted">{userTeam.benchPoints.toFixed(1)} pts on bench</span>
           </div>
           <div className="space-y-1">
@@ -311,7 +311,7 @@ const GolfLiveScoring = ({ leagueId }) => {
   )
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -326,7 +326,7 @@ const GolfLiveScoring = ({ leagueId }) => {
           </div>
 
           {/* Tournament Banner */}
-          <Card className={`mb-6 ${isLive ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-dark-secondary' : ''}`}>
+          <Card className={`mb-6 ${isLive ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]' : ''}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <div className="flex items-center gap-2">
@@ -338,7 +338,7 @@ const GolfLiveScoring = ({ leagueId }) => {
                     </span>
                   )}
                   {tournament.status === 'COMPLETED' && (
-                    <span className="px-2 py-0.5 rounded-full bg-dark-tertiary text-text-muted text-xs font-semibold">
+                    <span className="px-2 py-0.5 rounded-full bg-[var(--bg-alt)] text-text-muted text-xs font-semibold">
                       FINAL
                     </span>
                   )}
@@ -355,7 +355,7 @@ const GolfLiveScoring = ({ leagueId }) => {
           </Card>
 
           {/* Mobile tabs */}
-          <div className="sm:hidden flex border-b border-dark-border mb-4">
+          <div className="sm:hidden flex border-b border-[var(--card-border)] mb-4">
             <button
               className={`flex-1 py-2 text-sm font-medium text-center transition-colors ${
                 mobileTab === 'myteam' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-text-muted'

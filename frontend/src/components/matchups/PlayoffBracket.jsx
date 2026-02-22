@@ -27,7 +27,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
     return (
       <Card>
         <div className="text-center py-8">
-          <div className="w-16 h-16 rounded-full bg-dark-tertiary flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -69,14 +69,14 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                   return (
                     <div
                       key={matchIndex}
-                      className="bg-dark-tertiary rounded-lg p-3 w-48"
+                      className="bg-[var(--surface)] rounded-lg p-3 w-48"
                     >
                       {/* Team 1 */}
                       <div
                         className={`flex items-center justify-between p-2 rounded mb-1 ${
                           matchup.winner === matchup.team1?.userId
                             ? 'bg-gold/20'
-                            : 'bg-dark-primary'
+                            : 'bg-[var(--bg-alt)]'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -106,10 +106,10 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
                       <div
                         className={`flex items-center justify-between p-2 rounded ${
                           isBye
-                            ? 'bg-dark-primary/50'
+                            ? 'bg-[var(--bg-alt)]'
                             : matchup.winner === matchup.team2?.userId
                               ? 'bg-gold/20'
-                              : 'bg-dark-primary'
+                              : 'bg-[var(--bg-alt)]'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
             <h4 className="text-sm font-medium text-text-secondary mb-4 text-center">
               Champion
             </h4>
-            <div className="bg-gradient-to-br from-yellow-500/20 to-dark-tertiary rounded-lg p-4 w-48 text-center border border-yellow-500/30">
+            <div className="bg-gradient-to-br from-yellow-500/20 to-[var(--surface)] rounded-lg p-4 w-48 text-center border border-yellow-500/30">
               <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-2">
                 <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z" clipRule="evenodd" />

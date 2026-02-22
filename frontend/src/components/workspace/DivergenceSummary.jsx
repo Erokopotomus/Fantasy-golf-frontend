@@ -19,7 +19,7 @@ export default function DivergenceSummary({ entries }) {
   if (risers.length === 0 && fallers.length === 0) return null
 
   return (
-    <div className="mx-3 my-2 p-3 rounded-lg bg-dark-primary/60 border border-[var(--card-border)]">
+    <div className="mx-3 my-2 p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)]">
       <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-primary/50 mb-2">Your Biggest Bets</h3>
       <div className="space-y-1.5">
         {risers.map(d => (

@@ -115,22 +115,22 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
       />
 
       {/* Drawer */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-dark-primary border-l border-dark-border shadow-2xl flex flex-col animate-slide-in-right">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[var(--bg)] border-l border-[var(--card-border)] shadow-2xl flex flex-col animate-slide-in-right">
         {/* Loading overlay */}
         {loading && (
-          <div className="absolute inset-0 bg-dark-primary/80 z-10 flex items-center justify-center">
+          <div className="absolute inset-0 bg-[var(--bg)] z-10 flex items-center justify-center">
             <div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
           </div>
         )}
 
         {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-dark-secondary to-dark-tertiary border-b border-dark-border">
+        <div className="flex-shrink-0 bg-gradient-to-r from-[var(--surface)] to-[var(--stone)] border-b border-[var(--card-border)]">
           <div className="flex items-start justify-between p-4">
             <div className="flex items-center gap-3 min-w-0">
               {player?.headshotUrl ? (
-                <img src={player.headshotUrl} alt="" className="w-14 h-14 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                <img src={player.headshotUrl} alt="" className="w-14 h-14 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
               ) : (
-                <div className="w-14 h-14 rounded-full bg-dark-tertiary flex items-center justify-center text-3xl flex-shrink-0">
+                <div className="w-14 h-14 rounded-full bg-[var(--stone)] flex items-center justify-center text-3xl flex-shrink-0">
                   {player?.countryFlag || '?'}
                 </div>
               )}
@@ -175,7 +175,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-text-muted hover:text-text-primary hover:bg-dark-tertiary rounded-lg transition-colors flex-shrink-0"
+              className="p-1.5 text-text-muted hover:text-text-primary hover:bg-[var(--stone)] rounded-lg transition-colors flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -185,22 +185,22 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
 
           {/* Projection quick bar */}
           {projection && (
-            <div className="grid grid-cols-4 gap-px bg-dark-border/30 mx-4 mb-3 rounded-lg overflow-hidden">
-              <div className="bg-dark-secondary p-2 text-center">
+            <div className="grid grid-cols-4 gap-px bg-[var(--card-border)] mx-4 mb-3 rounded-lg overflow-hidden">
+              <div className="bg-[var(--surface)] p-2 text-center">
                 <p className="text-emerald-400 text-lg font-bold font-display">{projection.projected}</p>
                 <p className="text-[10px] text-text-muted uppercase">Proj</p>
               </div>
-              <div className="bg-dark-secondary p-2 text-center">
+              <div className="bg-[var(--surface)] p-2 text-center">
                 <p className="text-text-primary text-lg font-bold font-display">{projection.avgFantasyPoints}</p>
                 <p className="text-[10px] text-text-muted uppercase">Avg FPts</p>
               </div>
-              <div className="bg-dark-secondary p-2 text-center">
+              <div className="bg-[var(--surface)] p-2 text-center">
                 <p className={`text-lg font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
                   {projection.trend > 0 ? '+' : ''}{projection.trend}%
                 </p>
                 <p className="text-[10px] text-text-muted uppercase">Trend</p>
               </div>
-              <div className="bg-dark-secondary p-2 text-center">
+              <div className="bg-[var(--surface)] p-2 text-center">
                 <p className="text-text-primary text-lg font-bold font-display">{projection.consistency}</p>
                 <p className="text-[10px] text-text-muted uppercase">Consist</p>
               </div>
@@ -234,7 +234,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                 <div className="p-4 space-y-4">
                   {/* Projection detail card */}
                   {projection && (
-                    <div className="bg-dark-secondary rounded-lg border border-dark-border p-3">
+                    <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                       <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Fantasy Projection</h3>
                       <div className="space-y-3">
                         {/* Range bar */}
@@ -243,7 +243,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                             <span>Floor: {projection.floor}</span>
                             <span>Ceiling: {projection.ceiling}</span>
                           </div>
-                          <div className="h-3 bg-dark-tertiary rounded-full relative overflow-hidden">
+                          <div className="h-3 bg-[var(--stone)] rounded-full relative overflow-hidden">
                             {projection.ceiling > 0 && (
                               <>
                                 <div
@@ -267,15 +267,15 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
 
                         {/* Stats row */}
                         <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="bg-dark-tertiary/50 rounded p-2">
+                          <div className="bg-[var(--bg-alt)] rounded p-2">
                             <p className="text-text-primary text-sm font-bold">{projection.totalEvents}</p>
                             <p className="text-[10px] text-text-muted">Events</p>
                           </div>
-                          <div className="bg-dark-tertiary/50 rounded p-2">
+                          <div className="bg-[var(--bg-alt)] rounded p-2">
                             <p className="text-text-primary text-sm font-bold">{projection.recentAvg}</p>
                             <p className="text-[10px] text-text-muted">Recent Avg</p>
                           </div>
-                          <div className="bg-dark-tertiary/50 rounded p-2">
+                          <div className="bg-[var(--bg-alt)] rounded p-2">
                             <p className={`text-sm font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
                               {projection.trend > 0 ? '\u2191' : projection.trend < 0 ? '\u2193' : '\u2192'} {Math.abs(projection.trend)}%
                             </p>
@@ -309,7 +309,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
 
                   {/* SG Summary (golf only) */}
                   {!isNfl && (
-                    <div className="bg-dark-secondary rounded-lg border border-dark-border p-3">
+                    <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                       <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Strokes Gained Summary</h3>
                       <div className="space-y-2">
                         <SGBar label="Off the Tee" value={player.sgOffTee} />
@@ -330,7 +330,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                     <div className="text-center py-8 text-text-muted">No tournament results yet</div>
                   ) : (
                     player.performances.map((perf) => (
-                      <div key={perf.id} className="bg-dark-secondary rounded-lg border border-dark-border p-3">
+                      <div key={perf.id} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-text-primary font-semibold text-sm truncate pr-2">{perf.tournament?.name}</p>
                           <span className={`text-lg font-bold flex-shrink-0 ${getPositionColor(perf.position)}`}>
@@ -354,7 +354,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                             <span key={i} className={`text-xs px-2 py-0.5 rounded ${
                               r == null ? 'text-text-muted/30' :
                               r < 70 ? 'bg-emerald-500/15 text-emerald-400' :
-                              r <= 72 ? 'bg-dark-tertiary text-text-primary' :
+                              r <= 72 ? 'bg-[var(--stone)] text-text-primary' :
                               'bg-red-500/10 text-red-400'
                             }`}>
                               {r != null ? r : '\u2013'}
@@ -383,7 +383,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                     </div>
                   ) : (
                     upcoming.map((t) => (
-                      <div key={t.id} className="bg-dark-secondary rounded-lg border border-dark-border p-4">
+                      <div key={t.id} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-4">
                         <div className="flex items-start justify-between">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
@@ -395,7 +395,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                             {t.location && <p className="text-text-muted text-xs mt-0.5">{t.location}</p>}
                           </div>
                           {t.tour && (
-                            <span className="text-[10px] font-medium text-text-muted bg-dark-tertiary px-1.5 py-0.5 rounded flex-shrink-0">{t.tour}</span>
+                            <span className="text-[10px] font-medium text-text-muted bg-[var(--stone)] px-1.5 py-0.5 rounded flex-shrink-0">{t.tour}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-4 mt-2 text-xs text-text-secondary">
@@ -411,17 +411,17 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                     <div>
                       <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 mt-6">Season Summary</h3>
                       <div className="grid grid-cols-3 gap-2">
-                        <div className="bg-dark-secondary rounded-lg p-3 text-center border border-dark-border">
+                        <div className="bg-[var(--surface)] rounded-lg p-3 text-center border border-[var(--card-border)]">
                           <p className="text-text-primary font-bold text-lg">{player.performances.length}</p>
                           <p className="text-[10px] text-text-muted uppercase">Events</p>
                         </div>
-                        <div className="bg-dark-secondary rounded-lg p-3 text-center border border-dark-border">
+                        <div className="bg-[var(--surface)] rounded-lg p-3 text-center border border-[var(--card-border)]">
                           <p className="text-text-primary font-bold text-lg">
                             {player.performances.filter(p => p.status !== 'CUT').length}
                           </p>
                           <p className="text-[10px] text-text-muted uppercase">Cuts Made</p>
                         </div>
-                        <div className="bg-dark-secondary rounded-lg p-3 text-center border border-dark-border">
+                        <div className="bg-[var(--surface)] rounded-lg p-3 text-center border border-[var(--card-border)]">
                           <p className="text-emerald-400 font-bold text-lg">
                             {Math.min(...player.performances.filter(p => p.position).map(p => p.position)) || '\u2014'}
                           </p>
@@ -447,7 +447,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                         <div className="w-16 text-right">Half PPR</div>
                       </div>
                       {player.gameLog.map((g) => (
-                        <div key={g.week} className="flex items-center gap-2 py-2 px-2 rounded-lg bg-dark-secondary/50">
+                        <div key={g.week} className="flex items-center gap-2 py-2 px-2 rounded-lg bg-[var(--bg-alt)]">
                           <div className="w-8 text-sm text-text-muted">{g.week}</div>
                           <div className="flex-1 text-sm text-text-primary">
                             {g.isHome ? 'vs' : '@'} {g.opponent}
@@ -476,7 +476,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                     { label: 'SG: Around-the-Green', value: player.sgAroundGreen, desc: 'Short game' },
                     { label: 'SG: Putting', value: player.sgPutting, desc: 'Putting efficiency' },
                   ].map((stat, idx) => (
-                    <div key={idx} className="bg-dark-secondary rounded-lg border border-dark-border p-3">
+                    <div key={idx} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                       <div className="flex items-center justify-between mb-1.5">
                         <div>
                           <p className="text-text-primary font-medium text-sm">{stat.label}</p>
@@ -486,7 +486,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                           {formatStat(stat.value, '+')}
                         </p>
                       </div>
-                      <div className="h-1.5 bg-dark-tertiary rounded-full overflow-hidden relative">
+                      <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden relative">
                         {stat.value != null && (
                           <div
                             className={`absolute h-full rounded-full transition-all duration-500 ${
@@ -499,13 +499,13 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                           />
                         )}
                         {/* Center line */}
-                        <div className="absolute left-1/2 top-0 w-px h-full bg-dark-border/30" />
+                        <div className="absolute left-1/2 top-0 w-px h-full bg-[var(--card-border)]" />
                       </div>
                     </div>
                   ))}
 
                   {/* Tee-to-Green combined */}
-                  <div className="bg-dark-secondary rounded-lg border border-emerald-500/20 p-3">
+                  <div className="bg-[var(--surface)] rounded-lg border border-emerald-500/20 p-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-text-primary font-medium text-sm">SG: Tee-to-Green</p>
@@ -529,7 +529,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
 
         {/* Footer Actions */}
         {player && rosterContext && (
-          <div className="flex-shrink-0 border-t border-dark-border bg-dark-secondary p-3 flex gap-2">
+          <div className="flex-shrink-0 border-t border-[var(--card-border)] bg-[var(--surface)] p-3 flex gap-2">
             {rosterContext.isOnRoster ? (
               <>
                 {rosterContext.onMovePosition && (
@@ -538,7 +538,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                       rosterContext.onMovePosition(player.id, rosterContext.position === 'ACTIVE' ? 'BENCH' : 'ACTIVE')
                       onClose()
                     }}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-dark-tertiary text-text-primary hover:bg-dark-border transition-colors"
+                    className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-[var(--stone)] text-text-primary hover:bg-[var(--surface-alt)] transition-colors"
                   >
                     Move to {rosterContext.position === 'ACTIVE' ? 'Bench' : 'Active'}
                   </button>
@@ -575,7 +575,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
 
 /** Small stat card */
 const StatCard = ({ label, value, color = 'text-text-primary' }) => (
-  <div className="bg-dark-secondary rounded-lg border border-dark-border p-3 text-center">
+  <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3 text-center">
     <p className={`text-lg font-bold ${color}`}>{value}</p>
     <p className="text-[10px] text-text-muted uppercase">{label}</p>
   </div>
@@ -590,7 +590,7 @@ const SGBar = ({ label, value }) => {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-text-muted w-24 flex-shrink-0">{label}</span>
-      <div className="flex-1 h-1.5 bg-dark-tertiary rounded-full relative">
+      <div className="flex-1 h-1.5 bg-[var(--stone)] rounded-full relative">
         {value != null && (
           <div
             className={`absolute h-full rounded-full ${barColor}`}
@@ -600,7 +600,7 @@ const SGBar = ({ label, value }) => {
             }}
           />
         )}
-        <div className="absolute left-1/2 top-0 w-px h-full bg-dark-border/20" />
+        <div className="absolute left-1/2 top-0 w-px h-full bg-[var(--card-border)]" />
       </div>
       <span className={`text-xs font-medium w-12 text-right ${color}`}>
         {value != null ? (value > 0 ? '+' : '') + value.toFixed(2) : '\u2014'}

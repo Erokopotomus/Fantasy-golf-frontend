@@ -67,12 +67,12 @@ const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam,
             <div
               key={p.playerId || i}
               className={`py-1.5 px-2 rounded ${
-                isBench ? 'opacity-40' : 'bg-dark-tertiary/30'
+                isBench ? 'opacity-40' : 'bg-[var(--surface)]'
               }`}
             >
               <div className="flex items-center gap-1.5">
                 {p.nflPos && (
-                  <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-6 text-center flex-shrink-0 ${posColors[p.nflPos] || 'bg-dark-tertiary text-text-muted'}`}>
+                  <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-6 text-center flex-shrink-0 ${posColors[p.nflPos] || 'bg-[var(--bg-alt)] text-text-muted'}`}>
                     {p.nflPos}
                   </span>
                 )}

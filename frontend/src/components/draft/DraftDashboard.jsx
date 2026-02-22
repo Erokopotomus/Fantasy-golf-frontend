@@ -99,13 +99,13 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                   <div
                     key={team.id}
                     className={`flex-shrink-0 rounded-lg border ${
-                      isUser ? 'border-gold/50 bg-gold/5' : 'border-dark-border bg-dark-tertiary/50'
+                      isUser ? 'border-gold/50 bg-gold/5' : 'border-[var(--card-border)] bg-[var(--surface)]'
                     }`}
                     style={{ minWidth: '148px', maxWidth: '180px', flex: '1 1 0' }}
                   >
                     {/* Team Header */}
                     <div className={`px-3 py-2 border-b ${
-                      isUser ? 'border-gold/30' : 'border-dark-border'
+                      isUser ? 'border-gold/30' : 'border-[var(--card-border)]'
                     }`}>
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-semibold truncate ${
@@ -129,8 +129,8 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                           key={idx}
                           className={`rounded px-2 py-1.5 text-xs ${
                             pick
-                              ? 'bg-dark-primary/60'
-                              : 'border border-dashed border-dark-border/60 bg-transparent'
+                              ? 'bg-[var(--surface)]'
+                              : 'border border-dashed border-[var(--card-border)] bg-transparent'
                           }`}
                         >
                           {pick ? (
@@ -173,7 +173,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
               placeholder="Search players..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-dark-tertiary border border-dark-border rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold transition-colors"
+              className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold transition-colors"
             />
           </div>
 
@@ -186,7 +186,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                 className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                   posFilter === f
                     ? 'bg-gold/20 text-gold'
-                    : 'bg-dark-tertiary text-text-muted hover:text-text-primary'
+                    : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary'
                 }`}
               >
                 {f === 'all' ? 'All' : f}
@@ -197,8 +197,8 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
           {/* Table */}
           <div className="flex-1 overflow-auto min-h-0">
             <table className="w-full">
-              <thead className="sticky top-0 bg-dark-secondary">
-                <tr className="text-xs border-b border-dark-border">
+              <thead className="sticky top-0 bg-[var(--surface)]">
+                <tr className="text-xs border-b border-[var(--card-border)]">
                   <th className="pb-2 pr-2 text-left"><SortBtn field="rank">Rank</SortBtn></th>
                   <th className="pb-2 pr-2 text-left"><SortBtn field="name">Player</SortBtn></th>
                   <th className="pb-2 text-right"><SortBtn field="sgTotal">SG Total</SortBtn></th>
@@ -206,7 +206,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
               </thead>
               <tbody>
                 {availablePlayers.map((player) => (
-                  <tr key={player.id} className="border-b border-dark-border/30 hover:bg-dark-tertiary/50 transition-colors">
+                  <tr key={player.id} className="border-b border-[var(--card-border)]/30 hover:bg-[var(--surface-alt)] transition-colors">
                     <td className="py-1.5 pr-2 text-text-muted text-xs">#{player.rank}</td>
                     <td className="py-1.5 pr-2">
                       <div className="flex items-center gap-1.5">

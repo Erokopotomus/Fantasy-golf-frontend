@@ -29,18 +29,18 @@ const StandingsTable = ({ standings, currentUserId }) => {
     if (rank === 1) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
     if (rank === 2) return 'bg-gray-400/20 text-gray-300 border-gray-400/50'
     if (rank === 3) return 'bg-amber-600/20 text-amber-500 border-amber-600/50'
-    return 'bg-dark-tertiary text-text-secondary border-dark-border'
+    return 'bg-[var(--surface)] text-text-secondary border-[var(--card-border)]'
   }
 
   return (
     <Card padding="none">
-      <div className="p-4 border-b border-dark-border">
+      <div className="p-4 border-b border-[var(--card-border)]">
         <h3 className="text-lg font-semibold font-display text-text-primary">Season Standings</h3>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-dark-tertiary">
+          <thead className="bg-[var(--surface)]">
             <tr className="text-xs text-text-muted">
               <th className="p-3 text-center w-16">Rank</th>
               <th className="p-3 text-left">Team</th>
@@ -60,8 +60,8 @@ const StandingsTable = ({ standings, currentUserId }) => {
                 <tr
                   key={team.id}
                   className={`
-                    border-b border-dark-border/50 transition-colors
-                    ${isCurrentUser ? 'bg-emerald-400/10' : 'hover:bg-dark-tertiary/50'}
+                    border-b border-[var(--card-border)] transition-colors
+                    ${isCurrentUser ? 'bg-emerald-400/10' : 'hover:bg-[var(--surface-alt)]'}
                   `}
                 >
                   <td className="p-3 text-center">
@@ -74,7 +74,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center text-lg">
+                      <div className="w-10 h-10 rounded-full bg-[var(--surface)] flex items-center justify-center text-lg">
                         {team.avatar || '⛳'}
                       </div>
                       <div>

@@ -17,10 +17,10 @@ const PLATFORMS = [
 const HelpGuide = ({ title, steps, tip }) => {
   const [open, setOpen] = useState(false)
   return (
-    <div className="bg-dark-tertiary/50 border border-dark-border rounded-lg mb-4 overflow-hidden">
+    <div className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg mb-4 overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-dark-tertiary/30 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[var(--surface-alt)] transition-colors"
       >
         <div className="flex items-center gap-2">
           <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@ const HelpGuide = ({ title, steps, tip }) => {
         </svg>
       </button>
       {open && (
-        <div className="px-4 pb-4 border-t border-dark-border/50">
+        <div className="px-4 pb-4 border-t border-[var(--card-border)]">
           <ol className="text-xs text-text-secondary space-y-2 mt-3 list-none">
             {steps.map((step, i) => (
               <li key={i} className="flex gap-3">
@@ -61,12 +61,12 @@ const StepIndicator = ({ current, total }) => (
         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-mono font-bold transition-colors ${
           i < current ? 'bg-accent-gold text-slate' :
           i === current ? 'bg-accent-gold/20 text-accent-gold border border-accent-gold' :
-          'bg-dark-tertiary text-text-secondary'
+          'bg-[var(--bg-alt)] text-text-secondary'
         }`}>
           {i < current ? '✓' : i + 1}
         </div>
         {i < total - 1 && (
-          <div className={`w-8 h-0.5 mx-1 ${i < current ? 'bg-accent-gold' : 'bg-dark-tertiary'}`} />
+          <div className={`w-8 h-0.5 mx-1 ${i < current ? 'bg-accent-gold' : 'bg-[var(--stone)]'}`} />
         )}
       </div>
     ))}
@@ -378,7 +378,7 @@ const ImportLeague = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
@@ -445,7 +445,7 @@ const ImportLeague = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     ) : (
-                      <span className="text-xs font-mono text-text-secondary bg-dark-tertiary px-2 py-1 rounded">SOON</span>
+                      <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-2 py-1 rounded">SOON</span>
                     )}
                   </div>
                 </Card>
@@ -513,7 +513,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 784462345678901234"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       onKeyDown={e => e.key === 'Enter' && handleDiscover()}
                     />
                   </div>
@@ -543,7 +543,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 12345678"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
                   </div>
 
@@ -551,7 +551,7 @@ const ImportLeague = () => {
                     title="Private league? How to get your ESPN cookies"
                     steps={[
                       <span key="c1">Open your ESPN league page in <strong>Chrome</strong> (make sure you're logged in)</span>,
-                      <span key="c2">Press <span className="font-mono bg-dark-primary px-1 rounded">F12</span> (or right-click → Inspect) to open Developer Tools</span>,
+                      <span key="c2">Press <span className="font-mono bg-[var(--bg-alt)] px-1 rounded">F12</span> (or right-click → Inspect) to open Developer Tools</span>,
                       <span key="c3">Click the <strong>Application</strong> tab at the top (you may need to click <span className="font-mono">&gt;&gt;</span> to find it)</span>,
                       <span key="c4">In the left sidebar, expand <strong>Cookies</strong> → click <strong>espn.com</strong></span>,
                       <span key="c5">Find <span className="font-mono text-accent-gold">espn_s2</span> — copy the entire value (it's long)</span>,
@@ -568,7 +568,7 @@ const ImportLeague = () => {
                         value={espnS2}
                         onChange={e => setEspnS2(e.target.value)}
                         placeholder="AEB... (leave blank for public leagues)"
-                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -578,7 +578,7 @@ const ImportLeague = () => {
                         value={espnSwid}
                         onChange={e => setEspnSwid(e.target.value)}
                         placeholder="{XXXXXXXX-XXXX-...} (leave blank for public leagues)"
-                        className="w-full px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                   </div>
@@ -672,7 +672,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 123456"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       onKeyDown={e => e.key === 'Enter' && canDiscover() && handleDiscover()}
                     />
                   </div>
@@ -699,7 +699,7 @@ const ImportLeague = () => {
 
                   {/* Manual token fallback */}
                   {!yahooOAuth.status?.connected && (
-                    <div className="border-t border-dark-border pt-3 mt-3">
+                    <div className="border-t border-[var(--card-border)] pt-3 mt-3">
                       <button
                         onClick={() => setShowManualToken(!showManualToken)}
                         className="flex items-center gap-2 text-xs text-text-muted hover:text-text-secondary transition-colors"
@@ -716,7 +716,7 @@ const ImportLeague = () => {
                             onChange={e => setYahooToken(e.target.value)}
                             placeholder="Paste your Yahoo OAuth access token here..."
                             rows={3}
-                            className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors resize-none"
+                            className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-xs focus:outline-none focus:border-accent-gold transition-colors resize-none"
                           />
                         </div>
                       )}
@@ -752,7 +752,7 @@ const ImportLeague = () => {
                         value={fantraxName}
                         onChange={e => setFantraxName(e.target.value)}
                         placeholder="e.g. The Gridiron Gang"
-                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -763,7 +763,7 @@ const ImportLeague = () => {
                         onChange={e => setFantraxYear(e.target.value)}
                         min="2000"
                         max="2030"
-                        className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                        className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                       />
                     </div>
                     <div>
@@ -780,7 +780,7 @@ const ImportLeague = () => {
                         className={`w-full px-4 py-3 border border-dashed rounded-lg text-sm transition-colors flex items-center justify-center gap-2 ${
                           standingsCSV
                             ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
-                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-text-primary hover:border-text-muted'
+                            : 'border-[var(--card-border)] bg-[var(--bg-alt)] text-text-muted hover:text-text-primary hover:border-text-muted'
                         }`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -803,7 +803,7 @@ const ImportLeague = () => {
                         className={`w-full px-4 py-3 border border-dashed rounded-lg text-sm transition-colors flex items-center justify-center gap-2 ${
                           draftCSV
                             ? 'border-accent-gold/50 bg-accent-gold/10 text-accent-gold'
-                            : 'border-dark-border bg-dark-tertiary text-text-muted hover:text-text-primary hover:border-text-muted'
+                            : 'border-[var(--card-border)] bg-[var(--bg-alt)] text-text-muted hover:text-text-primary hover:border-text-muted'
                         }`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -839,7 +839,7 @@ const ImportLeague = () => {
                       value={leagueId}
                       onChange={e => setLeagueId(e.target.value)}
                       placeholder="e.g. 12345"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
                   </div>
                   <div className="mb-4">
@@ -849,7 +849,7 @@ const ImportLeague = () => {
                       value={mflApiKey}
                       onChange={e => setMflApiKey(e.target.value)}
                       placeholder="Your MFL API key"
-                      className="w-full px-4 py-3 bg-dark-tertiary border border-dark-tertiary rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
+                      className="w-full px-4 py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary font-mono text-sm focus:outline-none focus:border-accent-gold transition-colors"
                     />
                   </div>
                 </div>
@@ -889,7 +889,7 @@ const ImportLeague = () => {
                     return (
                       <div
                         key={s.leagueKey || s.sleeperLeagueId || s.year || idx}
-                        className={`flex items-center justify-between py-2 px-3 bg-dark-tertiary/50 rounded-lg cursor-pointer transition-opacity ${isSelected ? '' : 'opacity-40'}`}
+                        className={`flex items-center justify-between py-2 px-3 bg-[var(--surface)] rounded-lg cursor-pointer transition-opacity ${isSelected ? '' : 'opacity-40'}`}
                         onClick={() => setSelectedSeasons(prev =>
                           prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
                         )}
@@ -899,7 +899,7 @@ const ImportLeague = () => {
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => {}}
-                            className="w-4 h-4 rounded border-dark-border text-accent-gold focus:ring-accent-gold/50 bg-dark-tertiary cursor-pointer"
+                            className="w-4 h-4 rounded border-[var(--card-border)] text-accent-gold focus:ring-accent-gold/50 bg-[var(--bg-alt)] cursor-pointer"
                           />
                           <span className="font-mono font-bold text-accent-gold">{s.season || s.year}</span>
                           <span className="text-sm text-text-primary">{s.name}</span>
@@ -920,7 +920,7 @@ const ImportLeague = () => {
                   })}
                 </div>
 
-                <div className={`mb-4 p-4 rounded-lg border ${targetLeagueId ? 'bg-accent-gold/5 border-accent-gold/30' : 'bg-dark-tertiary/50 border-accent-gold/20'}`}>
+                <div className={`mb-4 p-4 rounded-lg border ${targetLeagueId ? 'bg-accent-gold/5 border-accent-gold/30' : 'bg-[var(--surface)] border-accent-gold/20'}`}>
                   <div className="flex items-center gap-2 mb-2">
                     <svg className="w-4 h-4 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -930,7 +930,7 @@ const ImportLeague = () => {
                   <select
                     value={targetLeagueId}
                     onChange={e => setTargetLeagueId(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm font-medium focus:outline-none focus:border-accent-gold transition-colors"
+                    className="w-full px-3 py-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm font-medium focus:outline-none focus:border-accent-gold transition-colors"
                   >
                     <option value="">+ Create new league</option>
                     {existingLeagues.map(l => (
@@ -995,7 +995,7 @@ const ImportLeague = () => {
                 </p>
 
                 {/* Data volume callout */}
-                <div className="inline-flex items-center gap-3 bg-dark-tertiary/40 border border-dark-border rounded-lg px-4 py-2.5 mb-5">
+                <div className="inline-flex items-center gap-3 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-4 py-2.5 mb-5">
                   <span className="text-2xl font-mono font-bold text-accent-gold">{formattedDataPoints}+</span>
                   <span className="text-xs text-text-secondary text-left leading-tight">
                     data points across {seasonCount} season{seasonCount !== 1 ? 's' : ''}<br />
@@ -1040,7 +1040,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.format}
                         onChange={e => setEditSettings(s => ({ ...s, format: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="HEAD_TO_HEAD">Head-to-Head</option>
@@ -1057,7 +1057,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.draftType}
                         onChange={e => setEditSettings(s => ({ ...s, draftType: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="SNAKE">Snake</option>
@@ -1076,7 +1076,7 @@ const ImportLeague = () => {
                         placeholder="Not detected"
                         min={2}
                         max={32}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       />
                     </div>
 
@@ -1086,7 +1086,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.scoringType}
                         onChange={e => setEditSettings(s => ({ ...s, scoringType: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="standard">Standard</option>
@@ -1105,7 +1105,7 @@ const ImportLeague = () => {
                         placeholder="Not detected"
                         min={5}
                         max={53}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       />
                     </div>
 
@@ -1115,7 +1115,7 @@ const ImportLeague = () => {
                       <select
                         value={editSettings.waiverType}
                         onChange={e => setEditSettings(s => ({ ...s, waiverType: e.target.value }))}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       >
                         <option value="">Not detected</option>
                         <option value="faab">FAAB</option>
@@ -1133,7 +1133,7 @@ const ImportLeague = () => {
                           onChange={e => setEditSettings(s => ({ ...s, faabBudget: e.target.value }))}
                           placeholder="100"
                           min={0}
-                          className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                          className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                         />
                       </div>
                     )}
@@ -1148,7 +1148,7 @@ const ImportLeague = () => {
                         placeholder="Not detected"
                         min={2}
                         max={16}
-                        className="w-full bg-dark-tertiary border border-dark-border rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary focus:border-accent-gold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1182,7 +1182,7 @@ const ImportLeague = () => {
                             className={`flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-all ${
                               isSelected
                                 ? 'border border-accent-gold/30 bg-accent-gold/5'
-                                : 'bg-dark-tertiary/40 border border-transparent hover:border-dark-border'
+                                : 'bg-[var(--surface)] border border-transparent hover:border-[var(--card-border)]'
                             }`}
                             onClick={() => setSelectedOwner(owner.ownerName)}
                           >
@@ -1191,7 +1191,7 @@ const ImportLeague = () => {
                               name="ownerClaim"
                               checked={isSelected}
                               onChange={() => setSelectedOwner(owner.ownerName)}
-                              className="w-4 h-4 text-accent-gold border-dark-border focus:ring-accent-gold/50 bg-dark-tertiary"
+                              className="w-4 h-4 text-accent-gold border-[var(--card-border)] focus:ring-accent-gold/50 bg-[var(--bg-alt)]"
                             />
                             <div className="w-7 h-7 rounded-full bg-accent-gold/20 flex items-center justify-center text-xs font-mono font-bold text-accent-gold flex-shrink-0">
                               {i + 1}
@@ -1212,7 +1212,7 @@ const ImportLeague = () => {
                               <span className="text-xs bg-accent-gold/20 text-accent-gold px-2 py-0.5 rounded-full font-mono">🏆</span>
                             )}
                             {owner.playoffResult === 'runner_up' && (
-                              <span className="text-xs bg-dark-tertiary text-text-muted px-2 py-0.5 rounded-full font-mono">🥈</span>
+                              <span className="text-xs bg-[var(--bg-alt)] text-text-muted px-2 py-0.5 rounded-full font-mono">🥈</span>
                             )}
                           </label>
                         )
@@ -1221,8 +1221,8 @@ const ImportLeague = () => {
                       <label
                         className={`flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-all ${
                           selectedOwner === '__none__'
-                            ? 'border border-dark-border bg-dark-tertiary/60'
-                            : 'bg-dark-tertiary/20 border border-transparent hover:border-dark-border'
+                            ? 'border border-[var(--card-border)] bg-[var(--bg-alt)]/60'
+                            : 'bg-[var(--surface)] border border-transparent hover:border-[var(--card-border)]'
                         }`}
                         onClick={() => setSelectedOwner('__none__')}
                       >
@@ -1231,7 +1231,7 @@ const ImportLeague = () => {
                           name="ownerClaim"
                           checked={selectedOwner === '__none__'}
                           onChange={() => setSelectedOwner('__none__')}
-                          className="w-4 h-4 text-accent-gold border-dark-border focus:ring-accent-gold/50 bg-dark-tertiary"
+                          className="w-4 h-4 text-accent-gold border-[var(--card-border)] focus:ring-accent-gold/50 bg-[var(--bg-alt)]"
                         />
                         <p className="text-sm text-text-muted">None of these are me</p>
                       </label>
@@ -1259,7 +1259,7 @@ const ImportLeague = () => {
                   >
                     {confirmLoading ? (
                       <span className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-[var(--card-border)] border-t-[var(--text-1)] rounded-full animate-spin" />
                         Saving...
                       </span>
                     ) : (
@@ -1301,7 +1301,7 @@ const ImportLeague = () => {
                     {/* Health bar */}
                     <div className="flex items-center gap-3 max-w-sm mx-auto mb-3">
                       <span className="text-xs font-mono text-text-secondary whitespace-nowrap">Import Health</span>
-                      <div className="flex-1 h-3 bg-dark-tertiary rounded-full overflow-hidden">
+                      <div className="flex-1 h-3 bg-[var(--stone)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
                             health.overallStatus === 'green' ? 'bg-green-500' :
@@ -1401,7 +1401,7 @@ const ImportLeague = () => {
                       <div key={idx} className={`rounded-lg p-3 mb-2 ${
                         issue.severity === 'high' ? 'bg-red-500/10 border border-red-500/20' :
                         issue.severity === 'medium' ? 'bg-accent-gold/10 border border-accent-gold/20' :
-                        'bg-dark-tertiary/50 border border-dark-border'
+                        'bg-[var(--bg-alt)] border border-[var(--card-border)]'
                       }`}>
                         <p className="text-sm text-text-primary">{issue.message}</p>
                         {issue.repairLabel && (
@@ -1418,7 +1418,7 @@ const ImportLeague = () => {
 
                   {/* Info-only items (excluding orphan owners — shown separately) */}
                   {health.issues.filter(i => i.severity === 'info' && i.type !== 'ORPHAN_OWNER').length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-dark-tertiary/50">
+                    <div className="mt-2 pt-2 border-t border-[var(--card-border)]">
                       {health.issues.filter(i => i.severity === 'info' && i.type !== 'ORPHAN_OWNER').map((issue, idx) => (
                         <p key={idx} className="text-xs text-text-secondary py-1">{issue.message}</p>
                       ))}

@@ -7,8 +7,8 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
 }
 
 const Courses = () => {
@@ -43,7 +43,7 @@ const Courses = () => {
           placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-dark-secondary border border-dark-border rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 transition-colors"
         />
       </div>
 
@@ -122,7 +122,7 @@ const Courses = () => {
                                   <span className="text-[9px] text-text-muted">{cat.label}</span>
                                   <span className={`text-[8px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
                                 </div>
-                                <div className="h-1 rounded-full bg-dark-tertiary/[0.06] overflow-hidden">
+                                <div className="h-1 rounded-full bg-[var(--stone)] overflow-hidden">
                                   <div className={`h-full rounded-full ${cat.rating.bar}`} style={{ width: `${barPct}%` }} />
                                 </div>
                               </div>

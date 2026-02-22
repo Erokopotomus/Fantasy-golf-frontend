@@ -13,7 +13,7 @@ const StatBar = ({ label, value, rank, suffix = '', of = 32, invert = false }) =
         <span className="text-text-primary/60">{label}</span>
         <span className="text-text-primary font-mono font-medium">{value}{suffix} <span className="text-text-primary/30 text-xs">({rank ? `#${rank}` : '-'})</span></span>
       </div>
-      <div className="h-1.5 bg-dark-tertiary/[0.06] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -93,7 +93,7 @@ export default function NflTeamDetail() {
       <button onClick={() => navigate(-1)} className="text-text-primary/40 hover:text-text-primary/60 text-sm mb-4 inline-flex items-center gap-1">&larr; Back</button>
 
       {/* Team header */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-6 mb-6">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-6 mb-6">
         <div className="flex items-center gap-4">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-text-primary text-xl font-bold"
@@ -116,7 +116,7 @@ export default function NflTeamDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1 mb-6 w-fit">
+      <div className="flex gap-1 bg-[var(--bg-alt)] rounded-lg p-1 mb-6 w-fit">
         {tabs.map(t => (
           <button
             key={t}
@@ -141,17 +141,17 @@ export default function NflTeamDetail() {
                 <h3 className="text-text-primary/40 text-xs font-mono uppercase tracking-wider mb-2">
                   {pos === 'QB' ? 'Quarterbacks' : pos === 'RB' ? 'Running Backs' : pos === 'WR' ? 'Wide Receivers' : pos === 'TE' ? 'Tight Ends' : 'Kickers'}
                 </h3>
-                <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+                <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
                   {players.map(p => (
                     <Link
                       key={p.id}
                       to={`/nfl/players/${p.id}`}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-dark-tertiary/5 transition-colors border-b border-stone/20 last:border-0"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--surface-alt)] transition-colors border-b border-[var(--card-border)] last:border-0"
                     >
                       {p.headshotUrl ? (
-                        <img src={p.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary/10" />
+                        <img src={p.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)]" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-text-primary/30 text-xs font-bold">
                           {p.nflNumber || pos}
                         </div>
                       )}
@@ -168,10 +168,10 @@ export default function NflTeamDetail() {
 
       {/* ─── Schedule Tab ─── */}
       {tab === 'schedule' && (
-        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-stone/30">
+              <tr className="border-b border-[var(--card-border)]">
                 <th className="text-left px-4 py-3 text-text-primary/40 text-xs font-mono uppercase">WK</th>
                 <th className="text-left px-4 py-3 text-text-primary/40 text-xs font-mono uppercase">Opponent</th>
                 <th className="text-center px-4 py-3 text-text-primary/40 text-xs font-mono uppercase">Result</th>
@@ -187,7 +187,7 @@ export default function NflTeamDetail() {
                 const lost = isFinal && teamScore < oppScore
 
                 return (
-                  <tr key={g.id} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                  <tr key={g.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                     <td className="px-4 py-3 font-mono text-sm text-text-primary/50">{g.week}</td>
                     <td className="px-4 py-3">
                       <span className="text-text-primary/40 text-sm mr-1">{g.isHome ? 'vs' : '@'}</span>
@@ -224,7 +224,7 @@ export default function NflTeamDetail() {
               { label: 'YPG', value: stats.offense.ypg, sub: `${stats.offense.totalYards.toLocaleString()} total` },
               { label: 'Turnovers', value: stats.offense.turnovers, sub: `${stats.offense.passing.interceptions} INT, ${stats.offense.turnovers - stats.offense.passing.interceptions} FUM` },
             ].map(s => (
-              <div key={s.label} className="bg-dark-tertiary/5 border border-stone/30 rounded-xl p-4 text-center">
+              <div key={s.label} className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-xl p-4 text-center">
                 <div className="text-text-primary/40 text-xs font-mono uppercase mb-1">{s.label}</div>
                 <div className="text-2xl font-mono font-bold text-text-primary">{s.value}</div>
                 <div className="text-text-primary/30 text-xs mt-1">{s.sub}</div>
@@ -233,7 +233,7 @@ export default function NflTeamDetail() {
           </div>
 
           {/* Offense */}
-          <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-6">
+          <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-6">
             <h3 className="text-text-primary font-display font-bold text-lg mb-4">Offense</h3>
             <div className="grid lg:grid-cols-2 gap-6">
               <div className="space-y-3">
@@ -259,7 +259,7 @@ export default function NflTeamDetail() {
               </div>
             </div>
             {stats.offense.epa && (
-              <div className="mt-4 pt-4 border-t border-stone/20">
+              <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                   <div><span className="text-text-primary/40 block text-xs mb-1">Total TDs</span><span className="text-text-primary font-mono font-bold">{stats.offense.totalTds}</span></div>
                   <div><span className="text-text-primary/40 block text-xs mb-1">Total EPA</span><span className="text-text-primary font-mono font-bold">{stats.offense.epa.total}</span></div>
@@ -271,7 +271,7 @@ export default function NflTeamDetail() {
           </div>
 
           {/* Defense */}
-          <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-6">
+          <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-6">
             <h3 className="text-text-primary font-display font-bold text-lg mb-4">Defense</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
               <div><span className="text-text-primary/40 block text-xs mb-1">Points Allowed/G</span><span className="text-text-primary font-mono font-bold">{stats.defense.papg}</span></div>
@@ -287,13 +287,13 @@ export default function NflTeamDetail() {
 
           {/* Top Fantasy Players */}
           {stats.topPlayers && stats.topPlayers.length > 0 && (
-            <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-stone/30">
+            <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-[var(--card-border)]">
                 <h3 className="text-text-primary font-display font-bold">Top Fantasy Players <span className="text-text-primary/30 text-sm font-mono">(Half PPR)</span></h3>
               </div>
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-stone/30">
+                  <tr className="border-b border-[var(--card-border)]">
                     <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">#</th>
                     <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Player</th>
                     <th className="text-center px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Pos</th>
@@ -304,14 +304,14 @@ export default function NflTeamDetail() {
                 </thead>
                 <tbody>
                   {stats.topPlayers.map((p, i) => (
-                    <tr key={p.id} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                    <tr key={p.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                       <td className="px-4 py-2.5 font-mono text-sm text-text-primary/30">{i + 1}</td>
                       <td className="px-4 py-2.5">
                         <Link to={`/nfl/players/${p.id}`} className="flex items-center gap-2 hover:text-gold">
                           {p.headshotUrl ? (
-                            <img src={p.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-dark-tertiary/10" />
+                            <img src={p.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)]" />
                           ) : (
-                            <div className="w-7 h-7 rounded-full bg-dark-tertiary/10" />
+                            <div className="w-7 h-7 rounded-full bg-[var(--stone)]" />
                           )}
                           <span className="text-text-primary text-sm font-medium">{p.name}</span>
                         </Link>
@@ -337,7 +337,7 @@ export default function NflTeamDetail() {
           {newsLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="animate-pulse h-28 bg-dark-tertiary/5 rounded-lg" />
+                <div key={i} className="animate-pulse h-28 bg-[var(--bg-alt)] rounded-lg" />
               ))}
             </div>
           ) : teamNews.length === 0 ? (

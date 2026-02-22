@@ -41,7 +41,7 @@ const REASON_CHIPS = [
 const CHIP_STYLES = {
   positive: { active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40', inactive: 'border-emerald-500/20 text-emerald-500/40 hover:border-emerald-500/40 hover:text-emerald-400' },
   negative: { active: 'bg-red-500/20 text-red-400 border-red-500/40', inactive: 'border-red-500/20 text-red-500/40 hover:border-red-500/40 hover:text-red-400' },
-  source:   { active: 'bg-dark-tertiary/15 text-text-primary/80 border-stone/60', inactive: 'border-stone/30 text-text-primary/30 hover:border-white/25 hover:text-text-primary/50' },
+  source:   { active: 'bg-[var(--bg-alt)] text-text-primary/80 border-stone/60', inactive: 'border-[var(--card-border)] text-text-primary/30 hover:border-white/25 hover:text-text-primary/50' },
 }
 
 // ── Filter Bars ──────────────────────────────────────────────────────────────
@@ -57,19 +57,19 @@ function TagFilterBar({ entries, activeFilter, onFilterChange }) {
   }
 
   const filters = [
-    { key: 'all', label: 'All', count: entries.length, style: 'text-text-primary/60 border-stone/30 hover:border-white/25' },
+    { key: 'all', label: 'All', count: entries.length, style: 'text-text-primary/60 border-[var(--card-border)] hover:border-white/25' },
     { key: 'target', label: 'Targets', count: counts.target, style: 'text-emerald-400/70 border-emerald-500/20 hover:border-emerald-500/40' },
     { key: 'sleeper', label: 'Sleepers', count: counts.sleeper, style: 'text-gold/70 border-gold/20 hover:border-gold/40' },
     { key: 'avoid', label: 'Avoids', count: counts.avoid, style: 'text-red-400/70 border-red-500/20 hover:border-red-500/40' },
-    { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-text-primary/40 border-stone/30 hover:border-stone/50' },
+    { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-text-primary/40 border-[var(--card-border)] hover:border-stone/50' },
   ]
 
   const activeStyles = {
-    all: 'bg-dark-tertiary/10 text-text-primary border-white/25',
+    all: 'bg-[var(--stone)] text-text-primary border-white/25',
     target: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40',
     sleeper: 'bg-gold/15 text-gold border-gold/40',
     avoid: 'bg-red-500/15 text-red-400 border-red-500/40',
-    untagged: 'bg-dark-tertiary/10 text-text-primary/60 border-stone/50',
+    untagged: 'bg-[var(--stone)] text-text-primary/60 border-stone/50',
   }
 
   return (
@@ -144,7 +144,7 @@ function ReasonChipRow({ movedEntry, existingChips, onUpdateChips, onDismiss }) 
   const direction = delta > 0 ? `\u2191${delta}` : `\u2193${Math.abs(delta)}`
 
   return (
-    <div className="px-3 py-2.5 bg-dark-primary/60 border-b border-[var(--card-border)]">
+    <div className="px-3 py-2.5 bg-[var(--bg-alt)] border-b border-[var(--card-border)]">
       <p className="text-[11px] text-text-primary/50 mb-2">
         Moved <span className="text-text-primary font-medium">{movedEntry.playerName}</span>{' '}
         <span className={delta > 0 ? 'text-emerald-400' : 'text-red-400'}>{direction} spots</span>.{' '}
@@ -431,7 +431,7 @@ export default function DraftBoardEditor() {
         </div>
 
         {/* Right: Player Search */}
-        <div className={`md:w-[40%] md:block md:border-l border-[var(--card-border)] bg-dark-secondary/30 ${mobileTab === 'search' ? 'flex-1' : mobileTab === 'timeline' ? 'hidden md:block' : 'hidden'}`}>
+        <div className={`md:w-[40%] md:block md:border-l border-[var(--card-border)] bg-[var(--surface)] ${mobileTab === 'search' ? 'flex-1' : mobileTab === 'timeline' ? 'hidden md:block' : 'hidden'}`}>
           <PlayerSearchPanel
             sport={board?.sport || 'nfl'}
             onAdd={handleAddPlayer}
@@ -450,7 +450,7 @@ export default function DraftBoardEditor() {
       {/* Desktop Timeline button */}
       <button
         onClick={() => setShowTimeline(true)}
-        className="hidden md:flex fixed bottom-6 left-6 z-30 items-center gap-2 px-3 py-2 bg-dark-secondary border border-stone/30 rounded-lg text-xs text-text-primary/40 hover:text-gold hover:border-gold/30 transition-colors shadow-lg"
+        className="hidden md:flex fixed bottom-6 left-6 z-30 items-center gap-2 px-3 py-2 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-primary/40 hover:text-gold hover:border-gold/30 transition-colors shadow-lg"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -463,7 +463,7 @@ export default function DraftBoardEditor() {
         <div className="hidden md:flex fixed inset-0 z-50 items-center justify-center p-4" onClick={() => setShowTimeline(false)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div
-            className="relative w-full max-w-lg max-h-[80vh] bg-dark-secondary border border-[var(--card-border)] rounded-xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-lg max-h-[80vh] bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-4 border-b border-[var(--card-border)] flex items-center justify-between">
@@ -493,7 +493,7 @@ export default function DraftBoardEditor() {
       {/* AI Coaching Card */}
       {coachingCard && (
         <div className="fixed bottom-6 right-6 z-40 max-w-xs w-full">
-          <div className="bg-purple-500/10 border border-purple-400/20 backdrop-blur-xl rounded-xl p-4 shadow-lg">
+          <div className="bg-purple-500/10 border border-purple-400/20 rounded-xl p-4 shadow-lg">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

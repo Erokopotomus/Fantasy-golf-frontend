@@ -12,9 +12,9 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
   const totalPoints = players.reduce((sum, p) => sum + (p.fantasyPoints || 0), 0)
 
   return (
-    <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-dark-secondary border-b border-dark-border">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-[var(--surface)] border-b border-[var(--card-border)]">
         <h3 className="text-base font-bold text-text-primary">My Team</h3>
         <div className="text-right">
           <span className="text-[10px] text-text-muted uppercase tracking-wide">Fantasy Pts</span>
@@ -23,7 +23,7 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
       </div>
 
       {/* Player list */}
-      <div className="divide-y divide-dark-border/30">
+      <div className="divide-y divide-[var(--card-border)]">
         {players.map((player) => (
           <div
             key={player.id}
@@ -32,14 +32,14 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
               flex items-center justify-between px-4 py-3 cursor-pointer transition-all
               ${selectedPlayerId === player.id
                 ? 'bg-emerald-500/10 border-l-2 border-l-emerald-400'
-                : 'hover:bg-dark-tertiary/50 border-l-2 border-l-transparent'}
+                : 'hover:bg-[var(--surface-alt)] border-l-2 border-l-transparent'}
             `}
           >
             <div className="flex items-center gap-3">
               {player.headshotUrl ? (
-                <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary" />
+                <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)]" />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-lg">
+                <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-lg">
                   {player.countryFlag}
                 </div>
               )}

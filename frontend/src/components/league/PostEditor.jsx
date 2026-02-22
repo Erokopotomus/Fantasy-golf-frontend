@@ -39,7 +39,7 @@ const ToolBtn = ({ onClick, active, disabled, title, children, className = '' })
   </button>
 )
 
-const Separator = () => <div className="w-px h-5 bg-dark-border mx-0.5" />
+const Separator = () => <div className="w-px h-5 bg-[var(--card-border)] mx-0.5" />
 
 const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName }) => {
   const [title, setTitle] = useState('')
@@ -88,7 +88,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
     ],
     editorProps: {
       attributes: {
-        class: 'prose prose-invert prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3 text-sm text-text-primary leading-relaxed [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-text-primary [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-2 [&_strong]:text-text-primary [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-dark-border/50 [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline',
+        class: 'prose prose-invert prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3 text-sm text-text-primary leading-relaxed [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-text-primary [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-2 [&_strong]:text-text-primary [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-[var(--card-border)] [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline',
       },
     },
     content: '',
@@ -246,7 +246,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
           ) : (
             <button
               onClick={() => coverFileRef.current?.click()}
-              className="w-full mb-4 py-3 border border-dashed border-dark-border rounded-lg text-text-muted text-xs hover:border-gold/40 hover:text-gold transition-colors flex items-center justify-center gap-2"
+              className="w-full mb-4 py-3 border border-dashed border-[var(--card-border)] rounded-lg text-text-muted text-xs hover:border-gold/40 hover:text-gold transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -261,7 +261,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="Post title..."
-            className="w-full bg-dark-primary border border-dark-border rounded-lg px-4 py-2.5 text-text-primary text-sm placeholder-text-muted focus:outline-none focus:border-gold/50 mb-3"
+            className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-4 py-2.5 text-text-primary text-sm placeholder-text-muted focus:outline-none focus:border-gold/50 mb-3"
           />
 
           {/* Category pills */}
@@ -273,7 +273,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                 className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                   category === cat.value
                     ? cat.color + ' ring-1 ring-current'
-                    : 'bg-dark-tertiary text-text-muted hover:text-text-secondary'
+                    : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-secondary'
                 }`}
               >
                 {cat.label}
@@ -283,7 +283,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
 
           {/* Formatting toolbar */}
           {editor && (
-            <div className="border border-dark-border rounded-t-lg bg-dark-primary/50 px-2 py-1.5">
+            <div className="border border-[var(--card-border)] rounded-t-lg bg-[var(--surface)] px-2 py-1.5">
               {/* Row 1 */}
               <div className="flex items-center gap-0.5 flex-wrap">
                 <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
@@ -348,13 +348,13 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                   </ToolBtn>
                   {showLinkPopover && (
-                    <div className="absolute top-full left-0 mt-1 bg-dark-primary border border-dark-border rounded-lg p-3 z-10 w-64 shadow-xl">
+                    <div className="absolute top-full left-0 mt-1 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg p-3 z-10 w-64 shadow-xl">
                       <input
                         type="url"
                         value={linkUrl}
                         onChange={e => setLinkUrl(e.target.value)}
                         placeholder="https://..."
-                        className="w-full bg-dark-tertiary border border-dark-border rounded px-2 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 mb-2"
+                        className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 mb-2"
                         autoFocus
                         onKeyDown={e => e.key === 'Enter' && handleAddLink()}
                       />
@@ -379,12 +379,12 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   </ToolBtn>
                   {showImagePopover && (
-                    <div className="absolute top-full right-0 mt-1 bg-dark-primary border border-dark-border rounded-lg p-3 z-10 w-64 shadow-xl">
+                    <div className="absolute top-full right-0 mt-1 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg p-3 z-10 w-64 shadow-xl">
                       <input ref={imageFileRef} type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload(e.target.files?.[0])} />
                       <button
                         onClick={() => imageFileRef.current?.click()}
                         disabled={imageUploading}
-                        className="w-full mb-2 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-gold/30 transition-colors flex items-center justify-center gap-2"
+                        className="w-full mb-2 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-gold/30 transition-colors flex items-center justify-center gap-2"
                       >
                         {imageUploading ? (
                           <><div className="w-3 h-3 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /> Uploading...</>
@@ -398,7 +398,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                           value={imageUrl}
                           onChange={e => setImageUrl(e.target.value)}
                           placeholder="Or paste image URL..."
-                          className="w-full bg-dark-tertiary border border-dark-border rounded px-2 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
+                          className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
                           onKeyDown={e => e.key === 'Enter' && handleImageUrl()}
                         />
                       </div>
@@ -425,7 +425,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                     <button
                       onClick={() => setShowAiPanel(!showAiPanel)}
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                        showAiPanel ? 'bg-purple-500/20 text-purple-400' : 'bg-dark-tertiary text-text-muted hover:text-purple-400'
+                        showAiPanel ? 'bg-purple-500/20 text-purple-400' : 'bg-[var(--bg-alt)] text-text-muted hover:text-purple-400'
                       }`}
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,14 +441,14 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
 
           {/* AI Panel */}
           {showAiPanel && (
-            <div className="p-3 bg-purple-500/10 border-x border-dark-border">
+            <div className="p-3 bg-purple-500/10 border-x border-[var(--card-border)]">
               <p className="text-xs text-purple-300 font-medium mb-2">Describe what you want to post about</p>
               <input
                 type="text"
                 value={aiTopic}
                 onChange={e => setAiTopic(e.target.value)}
                 placeholder="e.g., New trade deadline rule, Week 5 recap, Draft prep reminder..."
-                className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-xs placeholder-text-muted focus:outline-none focus:border-purple-500/50 mb-2"
+                className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-xs placeholder-text-muted focus:outline-none focus:border-purple-500/50 mb-2"
               />
               <div className="flex items-center justify-between">
                 <div className="flex gap-1.5">
@@ -457,7 +457,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                       key={t.value}
                       onClick={() => setAiTone(t.value)}
                       className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                        aiTone === t.value ? 'bg-purple-500/30 text-purple-300' : 'bg-dark-tertiary text-text-muted'
+                        aiTone === t.value ? 'bg-purple-500/30 text-purple-300' : 'bg-[var(--bg-alt)] text-text-muted'
                       }`}
                     >
                       {t.label}
@@ -478,7 +478,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
           )}
 
           {/* TipTap editor content area */}
-          <div className="bg-dark-primary border border-dark-border border-t-0 rounded-b-lg min-h-[200px] max-h-[350px] overflow-y-auto">
+          <div className="bg-[var(--bg-alt)] border border-[var(--card-border)] border-t-0 rounded-b-lg min-h-[200px] max-h-[350px] overflow-y-auto">
             <EditorContent editor={editor} />
           </div>
 
@@ -489,7 +489,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                 type="checkbox"
                 checked={isPinned}
                 onChange={e => setIsPinned(e.target.checked)}
-                className="w-4 h-4 rounded border-dark-border bg-dark-tertiary text-gold focus:ring-gold"
+                className="w-4 h-4 rounded border-[var(--card-border)] bg-[var(--bg-alt)] text-gold focus:ring-gold"
               />
               <span className="text-xs text-text-secondary">Pin to top</span>
             </label>

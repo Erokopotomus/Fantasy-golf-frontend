@@ -48,7 +48,7 @@ export default function NflSchedule() {
         <button
           onClick={() => setSelectedWeek(null)}
           className={`px-3 py-1.5 rounded-md text-sm font-mono font-bold whitespace-nowrap transition-colors ${
-            !selectedWeek ? 'bg-gold/20 text-gold' : 'text-text-primary/40 hover:text-text-primary/60 bg-dark-tertiary/5'
+            !selectedWeek ? 'bg-gold/20 text-gold' : 'text-text-primary/40 hover:text-text-primary/60 bg-[var(--bg-alt)]'
           }`}
         >
           All
@@ -58,7 +58,7 @@ export default function NflSchedule() {
             key={w}
             onClick={() => setSelectedWeek(w)}
             className={`px-3 py-1.5 rounded-md text-sm font-mono font-bold whitespace-nowrap transition-colors ${
-              selectedWeek === w ? 'bg-gold/20 text-gold' : 'text-text-primary/40 hover:text-text-primary/60 bg-dark-tertiary/5'
+              selectedWeek === w ? 'bg-gold/20 text-gold' : 'text-text-primary/40 hover:text-text-primary/60 bg-[var(--bg-alt)]'
             }`}
           >
             {w}
@@ -100,7 +100,7 @@ function GameCard({ game }) {
   const awayWon = isFinal && game.awayScore > game.homeScore
 
   return (
-    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 hover:border-stone/50 transition-colors">
+    <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 hover:border-[var(--card-border)] transition-colors">
       {/* Status badge */}
       <div className="flex items-center justify-between mb-3">
         <span className={`text-xs font-mono font-bold uppercase ${
@@ -151,7 +151,7 @@ function GameCard({ game }) {
 
       {/* Lines */}
       {(game.spreadLine || game.totalLine) && (
-        <div className="flex gap-3 mt-2 pt-2 border-t border-stone/20">
+        <div className="flex gap-3 mt-2 pt-2 border-t border-[var(--card-border)]">
           {game.spreadLine != null && (
             <span className="text-text-primary/20 text-xs font-mono">
               Spread: {game.spreadLine > 0 ? '+' : ''}{game.spreadLine}

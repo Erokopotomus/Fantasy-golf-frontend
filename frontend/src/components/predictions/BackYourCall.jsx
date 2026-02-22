@@ -87,7 +87,7 @@ export default function BackYourCall({ onChange, sport = 'golf', compact = false
   }
 
   return (
-    <div className="mt-2 pt-2 border-t border-stone/20 space-y-2.5">
+    <div className="mt-2 pt-2 border-t border-[var(--card-border)] space-y-2.5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[11px] text-text-primary/40 flex items-center gap-1">
@@ -118,7 +118,7 @@ export default function BackYourCall({ onChange, sport = 'golf', compact = false
           onChange={e => handleThesisChange(e.target.value.slice(0, 280))}
           placeholder="Why do you believe this? Optional but helps your future self..."
           rows={2}
-          className="w-full bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-lg px-3 py-2 text-xs text-text-primary/80 placeholder-text-muted focus:outline-none focus:border-gold/30 resize-none"
+          className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-xs text-text-primary/80 placeholder-text-muted focus:outline-none focus:border-gold/30 resize-none"
         />
         <div className="text-right text-[9px] text-text-primary/15 mt-0.5">{thesis.length}/280</div>
       </div>
@@ -134,10 +134,10 @@ export default function BackYourCall({ onChange, sport = 'golf', compact = false
               onClick={() => handleConfidence(level)}
               className={`flex-1 py-1 rounded text-[10px] font-medium transition-colors ${
                 confidenceLevel === level
-                  ? level <= 2 ? 'bg-dark-tertiary/15 text-text-primary/70'
+                  ? level <= 2 ? 'bg-[var(--bg-alt)] text-text-primary/70'
                     : level <= 3 ? 'bg-gold/20 text-gold'
                     : 'bg-gold/30 text-gold font-bold'
-                  : 'bg-dark-tertiary/[0.04] text-text-primary/25 hover:text-text-primary/40'
+                  : 'bg-[var(--bg-alt)] text-text-primary/25 hover:text-text-primary/40'
               }`}
             >
               {CONFIDENCE_LABELS[level]}
@@ -159,7 +159,7 @@ export default function BackYourCall({ onChange, sport = 'golf', compact = false
                 className={`px-2 py-0.5 rounded-full text-[10px] transition-colors ${
                   selectedFactors.includes(factor)
                     ? 'bg-gold/20 text-gold border border-gold/30'
-                    : 'bg-dark-tertiary/[0.04] text-text-primary/25 border border-transparent hover:text-text-primary/40'
+                    : 'bg-[var(--bg-alt)] text-text-primary/25 border border-transparent hover:text-text-primary/40'
                 }`}
               >
                 {FACTOR_LABELS[factor]}

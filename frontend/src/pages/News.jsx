@@ -66,7 +66,7 @@ const News = () => {
   }, {})
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Page Header */}
@@ -78,7 +78,7 @@ const News = () => {
           </div>
 
           {/* Sport Toggle */}
-          <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-[var(--bg-alt)] rounded-lg p-1 w-fit">
             {SPORT_TABS.map(tab => (
               <button
                 key={tab.id}
@@ -115,7 +115,7 @@ const News = () => {
             <div className="lg:col-span-2">
               <Card padding="none">
                 {/* Category Filter Pills */}
-                <div className="border-b border-dark-border px-4 py-3">
+                <div className="border-b border-[var(--card-border)] px-4 py-3">
                   <div className="flex flex-wrap gap-2">
                     {CATEGORY_FILTERS.map(f => (
                       <button
@@ -124,7 +124,7 @@ const News = () => {
                         className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                           category === f.id
                             ? 'bg-gold/20 text-gold border border-gold/30'
-                            : 'bg-dark-tertiary text-text-muted border border-transparent hover:text-text-primary'
+                            : 'bg-[var(--bg-alt)] text-text-muted border border-transparent hover:text-text-primary'
                         }`}
                       >
                         {f.label}
@@ -139,7 +139,7 @@ const News = () => {
                     <div className="space-y-4">
                       {[1, 2, 3, 4].map(i => (
                         <div key={i} className="animate-pulse">
-                          <div className="h-32 bg-dark-tertiary rounded-lg"></div>
+                          <div className="h-32 bg-[var(--stone)] rounded-lg"></div>
                         </div>
                       ))}
                     </div>
@@ -158,7 +158,7 @@ const News = () => {
                         <button
                           onClick={loadMore}
                           disabled={loading}
-                          className="w-full py-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-tertiary/5 transition-colors text-sm font-medium"
+                          className="w-full py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-secondary hover:text-text-primary hover:bg-[var(--surface-alt)] transition-colors text-sm font-medium"
                         >
                           {loading ? 'Loading...' : `Load More (${articles.length} of ${total})`}
                         </button>
@@ -184,7 +184,7 @@ const News = () => {
                     <button
                       key={cat.key}
                       onClick={() => setCategory(cat.key)}
-                      className="flex items-center justify-between w-full hover:bg-dark-tertiary p-2 rounded-lg transition-colors"
+                      className="flex items-center justify-between w-full hover:bg-[var(--surface-alt)] p-2 rounded-lg transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{cat.icon}</span>
@@ -211,7 +211,7 @@ const News = () => {
               {/* Refresh Button */}
               <button
                 onClick={() => fetchNews(true)}
-                className="w-full py-3 bg-dark-secondary border border-dark-border rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-tertiary transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-secondary hover:text-text-primary hover:bg-[var(--surface-alt)] transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

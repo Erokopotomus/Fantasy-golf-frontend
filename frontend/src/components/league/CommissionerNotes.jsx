@@ -35,7 +35,7 @@ const SANITIZE_CONFIG = {
 
 const sanitize = (html) => DOMPurify.sanitize(html || '', SANITIZE_CONFIG)
 
-const CONTENT_CLASSES = 'text-text-secondary text-sm leading-relaxed [&_p]:mb-2 [&_strong]:text-text-primary [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_h2]:text-lg [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-text-primary [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-display [&_h3]:font-semibold [&_h3]:text-text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-dark-border/50 [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline [&_a]:hover:text-gold/80'
+const CONTENT_CLASSES = 'text-text-secondary text-sm leading-relaxed [&_p]:mb-2 [&_strong]:text-text-primary [&_em]:text-gold/80 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_li]:text-text-secondary [&_h2]:text-lg [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-text-primary [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-display [&_h3]:font-semibold [&_h3]:text-text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-gold/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-text-muted [&_blockquote]:my-3 [&_hr]:border-[var(--card-border)] [&_hr]:my-4 [&_img]:rounded-lg [&_img]:my-3 [&_img]:max-w-full [&_a]:text-gold [&_a]:underline [&_a]:hover:text-gold/80'
 
 const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
   const [posts, setPosts] = useState([])
@@ -178,7 +178,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
 
   const getCategoryStyle = (cat) => {
     const found = CATEGORIES.find(c => c.value === cat)
-    return found ? found.color : 'bg-dark-tertiary text-text-muted'
+    return found ? found.color : 'bg-[var(--bg-alt)] text-text-muted'
   }
 
   const getCategoryLabel = (cat) => {
@@ -255,7 +255,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
         {/* Post List */}
         <div className="space-y-4">
           {posts.map(post => (
-            <div key={post.id} className="bg-dark-primary/50 rounded-lg border border-dark-border/30 overflow-hidden">
+            <div key={post.id} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] overflow-hidden">
               {/* Cover image */}
               {post.coverImage && (
                 <img
@@ -347,7 +347,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                   {post.author?.avatar ? (
                     <img src={post.author.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
                   ) : (
-                    <div className="w-5 h-5 rounded-full bg-dark-tertiary flex items-center justify-center text-[9px] font-semibold text-text-secondary">
+                    <div className="w-5 h-5 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-[9px] font-semibold text-text-secondary">
                       {(post.author?.name || 'C').charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -385,8 +385,8 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                               ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400'
                               : 'bg-gold/20 border border-gold/40 text-gold'
                             : count > 0
-                              ? 'bg-dark-tertiary border border-dark-border text-text-secondary hover:border-gold/30'
-                              : 'bg-dark-tertiary/50 border border-transparent text-text-muted hover:bg-dark-tertiary hover:text-text-secondary'
+                              ? 'bg-[var(--bg-alt)] border border-[var(--card-border)] text-text-secondary hover:border-gold/30'
+                              : 'bg-[var(--surface)] border border-transparent text-text-muted hover:bg-[var(--stone)] hover:text-text-secondary'
                         }`}
                       >
                         <span>{emoji}</span>
@@ -412,7 +412,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
 
                 {/* Comments section */}
                 {expandedPost === post.id && (
-                  <div className="mt-3 pt-3 border-t border-dark-border/30">
+                  <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
                     {commentsLoading[post.id] ? (
                       <div className="flex justify-center py-3">
                         <div className="w-4 h-4 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
@@ -428,7 +428,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                               {comment.user?.avatar ? (
                                 <img src={comment.user.avatar} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5" />
                               ) : (
-                                <div className="w-6 h-6 bg-dark-tertiary rounded-full flex items-center justify-center text-[10px] font-semibold text-text-secondary flex-shrink-0 mt-0.5">
+                                <div className="w-6 h-6 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-[10px] font-semibold text-text-secondary flex-shrink-0 mt-0.5">
                                   {(comment.user?.name || '?').charAt(0).toUpperCase()}
                                 </div>
                               )}
@@ -460,7 +460,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                             onChange={e => setCommentInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddComment(post.id)}
                             placeholder="Add a comment..."
-                            className="flex-1 bg-dark-tertiary border border-dark-border rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
+                            className="flex-1 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-xs text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
                           />
                           <button
                             onClick={() => handleAddComment(post.id)}

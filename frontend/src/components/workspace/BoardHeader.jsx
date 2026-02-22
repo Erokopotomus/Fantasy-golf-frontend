@@ -36,7 +36,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
       : null
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-[var(--card-border)] bg-dark-secondary/60">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-[var(--card-border)] bg-[var(--surface)]">
       <div className="flex items-center gap-3 min-w-0">
         <button onClick={() => navigate('/lab')} className="text-text-primary/40 hover:text-text-primary transition-colors shrink-0">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
           <select
             value={board?.scoringFormat || 'ppr'}
             onChange={e => onUpdateMeta({ scoringFormat: e.target.value })}
-            className="text-xs bg-dark-primary border border-[var(--card-border)] rounded px-2 py-1.5 text-text-primary/70 outline-none cursor-pointer"
+            className="text-xs bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1.5 text-text-primary/70 outline-none cursor-pointer"
           >
             {SCORING_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -91,7 +91,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
         ) : (
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="p-1.5 text-text-primary/30 hover:text-red-400 transition-colors rounded hover:bg-dark-tertiary/[0.04]"
+            className="p-1.5 text-text-primary/30 hover:text-red-400 transition-colors rounded hover:bg-[var(--surface-alt)]"
             title="Delete board"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

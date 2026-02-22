@@ -75,15 +75,15 @@ const VaultLanding = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <div className="animate-pulse space-y-4">
-              <div className="h-10 bg-dark-tertiary rounded w-1/3 mx-auto" />
-              <div className="h-4 bg-dark-tertiary rounded w-1/2 mx-auto" />
+              <div className="h-10 bg-[var(--stone)] rounded w-1/3 mx-auto" />
+              <div className="h-4 bg-[var(--stone)] rounded w-1/2 mx-auto" />
               <div className="space-y-3 mt-8">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="h-20 bg-dark-tertiary rounded-xl" />
+                  <div key={i} className="h-20 bg-[var(--stone)] rounded-xl" />
                 ))}
               </div>
             </div>
@@ -94,7 +94,7 @@ const VaultLanding = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           {/* Hero header */}
@@ -129,12 +129,12 @@ const VaultLanding = () => {
                     to={`/leagues/${league.id}/vault`}
                     className="block group"
                   >
-                    <Card className="flex items-center gap-4 hover:border-accent-gold/30 transition-all duration-200 group-hover:bg-dark-tertiary/20">
+                    <Card className="flex items-center gap-4 hover:border-accent-gold/30 transition-all duration-200 group-hover:bg-[var(--surface-alt)]">
                       {/* Vault mini icon */}
                       <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
                         hasHistory
                           ? 'bg-gradient-to-br from-accent-gold/20 to-orange/20 border border-accent-gold/30'
-                          : 'bg-dark-tertiary/50 border border-dark-tertiary'
+                          : 'bg-[var(--bg-alt)] border border-[var(--card-border)]'
                       }`}>
                         <VaultIcon size={28} className={hasHistory ? '' : 'opacity-30'} />
                       </div>

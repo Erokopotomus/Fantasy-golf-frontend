@@ -33,8 +33,8 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
 }
 
 const storyIcons = {
@@ -89,7 +89,7 @@ const SectionHeader = ({ children, subtitle }) => (
 )
 
 const StatPill = ({ label, value, color = 'text-text-primary' }) => (
-  <div className="bg-dark-primary/60 border border-dark-border/50 rounded-lg px-3 py-2 text-center">
+  <div className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-center">
     <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">{label}</p>
     <p className={`text-sm font-mono font-bold ${color}`}>{value}</p>
   </div>
@@ -144,7 +144,7 @@ const TournamentPreviewPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-gold mx-auto mb-4" />
           <p className="text-text-secondary text-sm">Loading tournament preview...</p>
@@ -155,7 +155,7 @@ const TournamentPreviewPage = () => {
 
   if (error || !tournament) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <p className="text-red-400 mb-4">{error || 'Tournament not found'}</p>
           <Link to="/tournaments" className="text-gold hover:underline text-sm">
@@ -169,11 +169,11 @@ const TournamentPreviewPage = () => {
   const hasField = leaderboard.length > 0
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
         {/* ── 1. HERO ──────────────────────────────────────────────── */}
-        <header className="relative overflow-hidden rounded-2xl border border-dark-border bg-dark-secondary">
+        <header className="relative overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card">
           <div className="absolute inset-0 bg-gradient-to-br from-gold/[0.06] via-transparent to-emerald-900/[0.06]" />
           <div className="relative p-6 sm:p-8">
             {/* Badge row */}
@@ -226,14 +226,14 @@ const TournamentPreviewPage = () => {
                 {dnaCategories.map((cat) => {
                   const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
                   return (
-                    <div key={cat.label} className="rounded-xl bg-dark-secondary border border-dark-border/50 p-3">
+                    <div key={cat.label} className="rounded-xl bg-[var(--surface)] border border-[var(--card-border)] p-3">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs text-text-secondary font-medium">{cat.label}</span>
                         <span className={`text-[10px] font-mono font-bold ${cat.rating.color}`}>
                           {cat.rating.text}
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-dark-tertiary/[0.06] overflow-hidden mb-1.5">
+                      <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden mb-1.5">
                         <div
                           className={`h-full rounded-full ${cat.rating.bar} transition-all`}
                           style={{ width: `${barPct}%` }}
@@ -289,7 +289,7 @@ const TournamentPreviewPage = () => {
                 <Link
                   key={player.id}
                   to={`/players/${player.id}`}
-                  className="group rounded-xl border border-dark-border bg-dark-secondary hover:border-gold/30 transition-all overflow-hidden"
+                  className="group rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card hover:border-gold/30 transition-all overflow-hidden"
                 >
                   <div className="p-4">
                     {/* Top row: photo + name + tag */}
@@ -298,10 +298,10 @@ const TournamentPreviewPage = () => {
                         <img
                           src={player.headshotUrl}
                           alt=""
-                          className="w-12 h-12 rounded-full object-cover bg-dark-tertiary flex-shrink-0"
+                          className="w-12 h-12 rounded-full object-cover bg-[var(--stone)] flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-dark-tertiary flex items-center justify-center text-xl flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-[var(--stone)] flex items-center justify-center text-xl flex-shrink-0">
                           {player.countryFlag || '?'}
                         </div>
                       )}
@@ -372,14 +372,14 @@ const TournamentPreviewPage = () => {
                 <Link
                   key={p.id}
                   to={`/players/${p.id}`}
-                  className="group rounded-xl border border-dark-border bg-dark-secondary hover:border-gold/30 transition-all overflow-hidden"
+                  className="group rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card hover:border-gold/30 transition-all overflow-hidden"
                 >
                   <div className="p-4">
                     <div className="flex items-start gap-3 mb-3">
                       {p.headshotUrl ? (
-                        <img src={p.headshotUrl} alt="" className="w-12 h-12 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                        <img src={p.headshotUrl} alt="" className="w-12 h-12 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-dark-tertiary flex items-center justify-center text-xl flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-[var(--stone)] flex items-center justify-center text-xl flex-shrink-0">
                           {p.countryFlag || '?'}
                         </div>
                       )}
@@ -445,7 +445,7 @@ const TournamentPreviewPage = () => {
               {storylines.map((story, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-dark-border bg-dark-secondary p-5 sm:p-6"
+                  className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card p-5 sm:p-6"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center text-gold">
@@ -479,7 +479,7 @@ const TournamentPreviewPage = () => {
                 return (
                   <div
                     key={i}
-                    className="rounded-xl border border-dark-border bg-dark-secondary p-4 text-center"
+                    className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card p-4 text-center"
                   >
                     <p className="text-[10px] font-mono text-text-muted uppercase mb-2">Round {day.round || i + 1}</p>
                     {day.temperature != null && (
@@ -520,12 +520,12 @@ const TournamentPreviewPage = () => {
                   <Link
                     key={player.id}
                     to={`/players/${player.id}`}
-                    className="group flex items-center gap-2.5 rounded-lg bg-dark-secondary border border-dark-border/50 p-2.5 hover:border-gold/30 transition-all"
+                    className="group flex items-center gap-2.5 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] p-2.5 hover:border-gold/30 transition-all"
                   >
                     {player.headshotUrl ? (
-                      <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                      <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-sm flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-sm flex-shrink-0">
                         {player.countryFlag || '?'}
                       </div>
                     )}
@@ -546,10 +546,10 @@ const TournamentPreviewPage = () => {
             <SectionHeader subtitle="Best historical performers at this venue — field not yet announced">
               Course History Leaders
             </SectionHeader>
-            <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+            <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-dark-tertiary">
+                  <thead className="bg-[var(--stone)]">
                     <tr className="text-xs text-text-muted">
                       <th className="p-3 text-left">Player</th>
                       <th className="p-3 text-center">Rounds</th>
@@ -563,7 +563,7 @@ const TournamentPreviewPage = () => {
                     {course.playerHistory.slice(0, 10).map((ph) => {
                       const avgColor = ph.avgToPar != null ? (ph.avgToPar <= -2 ? 'text-gold' : ph.avgToPar <= 0 ? 'text-green-400' : ph.avgToPar <= 1 ? 'text-yellow-400' : 'text-red-400') : 'text-text-muted'
                       return (
-                        <tr key={ph.id} className="border-b border-dark-border/50 hover:bg-dark-tertiary/50">
+                        <tr key={ph.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                           <td className="p-3">
                             <Link to={`/players/${ph.player.id}`} className="flex items-center gap-2 hover:text-gold transition-colors">
                               {ph.player.countryFlag && <span className="text-sm">{ph.player.countryFlag}</span>}
@@ -598,7 +598,7 @@ const TournamentPreviewPage = () => {
         ) : (
           <section>
             <SectionHeader>Field Snapshot</SectionHeader>
-            <div className="rounded-xl border border-dark-border bg-dark-secondary p-8 text-center">
+            <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card p-8 text-center">
               <p className="text-text-muted text-sm">Field not yet announced. Check back Tuesday evening for the confirmed player list.</p>
             </div>
           </section>

@@ -95,7 +95,7 @@ function relativeTime(dateStr) {
 }
 
 function boardStatusCTA(board, cheatSheetId) {
-  if (board.isPublished) return { label: 'Published', color: 'text-text-primary/30', dot: 'bg-dark-tertiary/20' }
+  if (board.isPublished) return { label: 'Published', color: 'text-text-primary/30', dot: 'bg-[var(--stone)]' }
   if (board.playerCount === 0) return { label: 'Start Ranking →', color: 'text-gold', dot: null }
   if (cheatSheetId) return { label: 'View Cheat Sheet', color: 'text-emerald-400', dot: 'bg-emerald-400', link: `/lab/cheatsheet/${cheatSheetId}` }
   if (board.sport === 'nfl' && board.positionCoverage && board.positionCoverage.covered >= board.positionCoverage.total) {
@@ -263,7 +263,7 @@ export default function DraftBoards() {
             </button>
             <Link
               to="/mock-draft"
-              className="px-6 py-3 border border-stone/30 text-text-primary/50 text-sm font-medium rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
+              className="px-6 py-3 border border-[var(--card-border)] text-text-primary/50 text-sm font-medium rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
             >
               Or start with a Mock Draft
             </Link>
@@ -388,7 +388,7 @@ export default function DraftBoards() {
           {/* 3. Two-column: Readiness Tracker + Recent Captures */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {/* Draft Readiness Tracker */}
-            <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
+            <div className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
               <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30 mb-3">Draft Readiness</h3>
               <div className="space-y-2">
                 {boards.slice(0, 5).map(board => {
@@ -397,7 +397,7 @@ export default function DraftBoards() {
                     <Link
                       key={board.id}
                       to={`/lab/${board.id}`}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-dark-tertiary/[0.02] hover:bg-dark-tertiary/[0.05] transition-colors group"
+                      className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-alt)] transition-colors group"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${status.dot || 'bg-transparent'}`} />
@@ -416,14 +416,14 @@ export default function DraftBoards() {
             </div>
 
             {/* Recent Captures */}
-            <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
+            <div className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Recent Captures</h3>
                 <Link to="/lab/captures" className="text-[10px] text-gold hover:underline">View All</Link>
               </div>
               {hubLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map(i => <div key={i} className="h-7 bg-dark-tertiary/[0.03] rounded animate-pulse" />)}
+                  {[1, 2, 3].map(i => <div key={i} className="h-7 bg-[var(--stone)] rounded animate-pulse" />)}
                 </div>
               ) : recentCaptures.length === 0 ? (
                 <p className="text-xs text-text-primary/25 py-3">No captures yet — jot down podcast takes and gut feelings.</p>
@@ -471,7 +471,7 @@ export default function DraftBoards() {
                   <Link
                     key={board.id}
                     to={status.link || `/lab/${board.id}`}
-                    className="block p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl hover:border-gold/30 hover:bg-dark-secondary/80 transition-all group"
+                    className="block p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl hover:border-gold/30 hover:bg-[var(--surface-alt)] transition-all group"
                   >
                     {/* Top row: Name + sport badge */}
                     <div className="flex items-start justify-between mb-2">
@@ -488,22 +488,22 @@ export default function DraftBoards() {
                     {/* League context pills */}
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {board.sport === 'nfl' && (
-                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40">
+                        <span className="px-1.5 py-0.5 bg-[var(--bg-alt)] rounded text-[10px] text-text-primary/40">
                           {scoringLabel(board.scoringFormat)}
                         </span>
                       )}
                       {board.leagueType && (
-                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40 capitalize">
+                        <span className="px-1.5 py-0.5 bg-[var(--bg-alt)] rounded text-[10px] text-text-primary/40 capitalize">
                           {board.leagueType}
                         </span>
                       )}
                       {board.teamCount && (
-                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40">
+                        <span className="px-1.5 py-0.5 bg-[var(--bg-alt)] rounded text-[10px] text-text-primary/40">
                           {board.teamCount}-team
                         </span>
                       )}
                       {board.draftType && (
-                        <span className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[10px] text-text-primary/40 capitalize">
+                        <span className="px-1.5 py-0.5 bg-[var(--bg-alt)] rounded text-[10px] text-text-primary/40 capitalize">
                           {board.draftType}
                         </span>
                       )}
@@ -518,7 +518,7 @@ export default function DraftBoards() {
                             <span
                               key={pos}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                count > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-dark-tertiary/[0.03] text-text-primary/20'
+                                count > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-[var(--bg-alt)] text-text-primary/20'
                               }`}
                             >
                               {pos} {count}
@@ -567,16 +567,16 @@ export default function DraftBoards() {
 
           {/* 5. Watch List Summary */}
           {!hubLoading && watchListEntries.length > 0 && (
-            <div className="mb-6 p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
+            <div className="mb-6 p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Watch List</h3>
                 <Link to="/lab/watch-list" className="text-[10px] text-gold hover:underline">View All</Link>
               </div>
               <div className="flex gap-3">
                 {watchListEntries.slice(0, 3).map((e, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-dark-tertiary/[0.03] rounded-lg">
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-alt)] rounded-lg">
                     {e.player?.headshotUrl && (
-                      <img src={e.player.headshotUrl} alt="" className="w-6 h-6 rounded-full bg-dark-tertiary/5" />
+                      <img src={e.player.headshotUrl} alt="" className="w-6 h-6 rounded-full bg-[var(--stone)]" />
                     )}
                     <span className="text-xs text-text-primary/70">{e.player?.name || 'Unknown'}</span>
                     <span className={`px-1 py-0.5 rounded text-[9px] font-bold uppercase ${
@@ -597,7 +597,7 @@ export default function DraftBoards() {
 
           {/* 6. Decision Journal Summary */}
           {!hubLoading && journalEntries.length > 0 && (
-            <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
+            <div className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Decision Journal</h3>
                 <Link to="/lab/journal" className="text-[10px] text-gold hover:underline">View All</Link>
@@ -661,7 +661,7 @@ export default function DraftBoards() {
                   <Link
                     key={r.id}
                     to={`/coach/${r.id}`}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-dark-tertiary/[0.02] hover:bg-dark-tertiary/[0.05] transition-colors group text-xs"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-alt)] transition-colors group text-xs"
                   >
                     <span className="text-text-primary/60 group-hover:text-gold transition-colors">
                       {r.reportType === 'pre_draft' ? 'Pre-Draft' : r.reportType === 'mid_season' ? 'Mid-Season' : r.reportType === 'post_season' ? 'Season Retro' : 'Scout'}
@@ -714,7 +714,7 @@ function CreateModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg bg-dark-secondary border border-[var(--card-border)] rounded-xl shadow-2xl"
+        className="relative w-full max-w-lg bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -731,9 +731,9 @@ function CreateModal({
             )}
           </div>
           <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-gold' : 'bg-dark-tertiary/10'}`} />
-            <div className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-gold' : 'bg-dark-tertiary/10'}`} />
-            <div className={`w-2 h-2 rounded-full ${step >= 3 ? 'bg-gold' : 'bg-dark-tertiary/10'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-gold' : 'bg-[var(--stone)]'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-gold' : 'bg-[var(--stone)]'}`} />
+            <div className={`w-2 h-2 rounded-full ${step >= 3 ? 'bg-gold' : 'bg-[var(--stone)]'}`} />
           </div>
         </div>
 
@@ -747,7 +747,7 @@ function CreateModal({
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 placeholder="e.g., 2026 NFL Big Board"
-                className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+                className="w-full px-3 py-2 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
               />
             </div>
 
@@ -765,7 +765,7 @@ function CreateModal({
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
                       newSport === opt.value
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/50 hover:text-text-primary/70'
+                        : 'border-[var(--card-border)] bg-[var(--bg-alt)] text-text-primary/50 hover:text-text-primary/70'
                     }`}
                   >
                     <span>{opt.icon}</span>
@@ -781,7 +781,7 @@ function CreateModal({
                 <select
                   value={newScoring}
                   onChange={e => setNewScoring(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary outline-none focus:border-gold/50 cursor-pointer"
+                  className="w-full px-3 py-2 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary outline-none focus:border-gold/50 cursor-pointer"
                 >
                   {SCORING_OPTIONS.map(o => (
                     <option key={o.value} value={o.value}>{o.label}</option>
@@ -826,7 +826,7 @@ function CreateModal({
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                       leagueType === opt.value
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/40 hover:text-text-primary/60'
+                        : 'border-[var(--card-border)] bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary/60'
                     }`}
                   >
                     {opt.label}
@@ -846,7 +846,7 @@ function CreateModal({
                     className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                       teamCount === n
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/40 hover:text-text-primary/60'
+                        : 'border-[var(--card-border)] bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary/60'
                     }`}
                   >
                     {n}
@@ -866,7 +866,7 @@ function CreateModal({
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                       draftType === opt.value
                         ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-[var(--card-border)] bg-dark-primary text-text-primary/40 hover:text-text-primary/60'
+                        : 'border-[var(--card-border)] bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary/60'
                     }`}
                   >
                     {opt.label}
@@ -921,7 +921,7 @@ function CreateModal({
                   className={`w-full text-left p-3.5 rounded-lg border transition-all ${
                     startFrom === opt.value
                       ? 'border-gold/50 bg-gold/[0.07]'
-                      : 'border-[var(--card-border)] bg-dark-primary/50 hover:border-white/[0.12]'
+                      : 'border-[var(--card-border)] bg-[var(--bg-alt)]/50 hover:border-white/[0.12]'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">

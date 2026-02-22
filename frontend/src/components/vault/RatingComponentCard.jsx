@@ -121,7 +121,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
   return (
     <div
       className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-        expanded ? 'border-white/[0.12] bg-dark-secondary/80' : 'border-[var(--card-border)] bg-dark-secondary/60'
+        expanded ? 'border-white/[0.12] bg-[var(--bg-alt)]' : 'border-[var(--card-border)] bg-[var(--bg-alt)]'
       } ${meta.deferred && !isActive ? 'opacity-50' : ''}`}
     >
       {/* Header — always visible, clickable */}
@@ -145,7 +145,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
             )}
           </div>
           {/* Score bar */}
-          <div className="h-1.5 rounded-full bg-dark-tertiary/5 overflow-hidden">
+          <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
             {isActive ? (
               <div
                 className="h-full rounded-full transition-all duration-500"
@@ -181,10 +181,10 @@ export default function RatingComponentCard({ componentKey, componentData, owner
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-text-primary/40">Confidence</span>
               <div className="flex items-center gap-2">
-                <div className="w-16 h-1 rounded-full bg-dark-tertiary/5 overflow-hidden">
+                <div className="w-16 h-1 rounded-full bg-[var(--stone)] overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
-                      confidence >= 70 ? 'bg-green-400/60' : confidence >= 40 ? 'bg-yellow-400/60' : 'bg-dark-tertiary/20'
+                      confidence >= 70 ? 'bg-green-400/60' : confidence >= 40 ? 'bg-yellow-400/60' : 'bg-[var(--stone)]'
                     }`}
                     style={{ width: `${confidence}%` }}
                   />
@@ -230,7 +230,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
                 ) : (
                   <span
                     key={i}
-                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium bg-dark-tertiary/[0.04] text-text-primary/40"
+                    className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[var(--bg-alt)] text-text-primary/40"
                   >
                     {action.text}
                   </span>

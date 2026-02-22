@@ -97,7 +97,7 @@ const ClutchSim = () => {
               key={s}
               onClick={() => { setSport(s); reset() }}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                sport === s ? 'bg-gold text-slate' : 'bg-dark-tertiary/[0.06] text-text-primary/50 hover:text-text-primary/80'
+                sport === s ? 'bg-gold text-slate' : 'bg-[var(--bg-alt)] text-text-primary/50 hover:text-text-primary/80'
               }`}
             >
               {s.toUpperCase()}
@@ -126,15 +126,15 @@ const ClutchSim = () => {
                 value={searchQuery1}
                 onChange={e => setSearchQuery1(e.target.value)}
                 placeholder="Search player..."
-                className="w-full bg-dark-tertiary/[0.06] border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
+                className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
               />
               {searchResults1.length > 0 && (
-                <div className="absolute z-20 top-full mt-1 w-full bg-dark-card border border-stone/30 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-20 top-full mt-1 w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
                   {searchResults1.map(p => (
                     <button
                       key={p.id}
                       onClick={() => selectPlayer(p, 1)}
-                      className="w-full text-left px-3 py-2 text-sm text-text-primary/70 hover:bg-dark-tertiary/[0.06] transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm text-text-primary/70 hover:bg-[var(--surface-alt)] transition-colors"
                     >
                       {p.name} <span className="text-text-primary/30">{p.nflPosition || ''} {p.nflTeam || ''}</span>
                     </button>
@@ -163,15 +163,15 @@ const ClutchSim = () => {
                 value={searchQuery2}
                 onChange={e => setSearchQuery2(e.target.value)}
                 placeholder="Search player..."
-                className="w-full bg-dark-tertiary/[0.06] border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
+                className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50"
               />
               {searchResults2.length > 0 && (
-                <div className="absolute z-20 top-full mt-1 w-full bg-dark-card border border-stone/30 rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-20 top-full mt-1 w-full bg-[var(--surface)] border border-[var(--card-border)] rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
                   {searchResults2.map(p => (
                     <button
                       key={p.id}
                       onClick={() => selectPlayer(p, 2)}
-                      className="w-full text-left px-3 py-2 text-sm text-text-primary/70 hover:bg-dark-tertiary/[0.06] transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm text-text-primary/70 hover:bg-[var(--surface-alt)] transition-colors"
                     >
                       {p.name} <span className="text-text-primary/30">{p.nflPosition || ''} {p.nflTeam || ''}</span>
                     </button>

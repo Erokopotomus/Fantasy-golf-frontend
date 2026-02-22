@@ -34,7 +34,7 @@ function getWindColor(speed) {
 function getWindBg(speed) {
   if (speed >= 25) return 'bg-red-500/20'
   if (speed >= 15) return 'bg-orange-500/20'
-  return 'bg-dark-tertiary/5'
+  return 'bg-[var(--stone)]'
 }
 
 function getPrecipColor(chance) {
@@ -91,7 +91,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
   const maxPrecip = Math.max(...hourlyData.map(h => h.precip), 0.1)
 
   return (
-    <div className="bg-dark-card/30">
+    <div className="bg-[var(--bg-alt)]">
       {/* Legend row */}
       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
         <span className="text-xs font-mono text-text-muted uppercase tracking-wider">{roundLabel} — Hour by Hour</span>
@@ -112,7 +112,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
         <table className="w-full min-w-max">
           <thead>
             <tr className="text-[10px] font-mono text-text-muted uppercase">
-              <th className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1 text-left w-20 z-10">Time</th>
+              <th className="sticky left-0 bg-[var(--surface)] px-3 py-1 text-left w-20 z-10">Time</th>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -127,7 +127,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
           <tbody>
             {/* Conditions row */}
             <tr>
-              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Skies</td>
+              <td className="sticky left-0 bg-[var(--surface)] px-3 py-1.5 text-xs font-mono text-text-muted z-10">Skies</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -141,7 +141,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
 
             {/* Temp row */}
             <tr>
-              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Temp</td>
+              <td className="sticky left-0 bg-[var(--surface)] px-3 py-1.5 text-xs font-mono text-text-muted z-10">Temp</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -155,7 +155,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
 
             {/* Wind sustained row */}
             <tr>
-              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Wind</td>
+              <td className="sticky left-0 bg-[var(--surface)] px-3 py-1.5 text-xs font-mono text-text-muted z-10">Wind</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -172,7 +172,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
 
             {/* Gusts row */}
             <tr>
-              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Gusts</td>
+              <td className="sticky left-0 bg-[var(--surface)] px-3 py-1.5 text-xs font-mono text-text-muted z-10">Gusts</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -196,7 +196,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
 
             {/* Wind direction row */}
             <tr>
-              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Dir</td>
+              <td className="sticky left-0 bg-[var(--surface)] px-3 py-1.5 text-xs font-mono text-text-muted z-10">Dir</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -210,7 +210,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
 
             {/* Rain chance row */}
             <tr>
-              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-1.5 text-xs font-mono text-text-muted z-10">Rain %</td>
+              <td className="sticky left-0 bg-[var(--surface)] px-3 py-1.5 text-xs font-mono text-text-muted z-10">Rain %</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -227,7 +227,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
 
             {/* Rainfall amount row — only if any hour has rain */}
             {hourlyData.some(h => h.precip > 0) && <tr>
-              <td className="sticky left-0 bg-dark-card/80 backdrop-blur-sm px-3 py-2 text-xs font-mono text-text-muted z-10">Rain</td>
+              <td className="sticky left-0 bg-[var(--surface)] px-3 py-2 text-xs font-mono text-text-muted z-10">Rain</td>
               {hourlyData.map((h, i) => {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
@@ -271,7 +271,7 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
       const daysOut = Math.floor((new Date(tournamentStart) - new Date()) / 86400000)
       if (daysOut > 16) {
         return (
-          <div className="rounded-xl border border-dark-border bg-dark-secondary p-4">
+          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card p-4">
             <h3 className="text-sm font-semibold text-text-muted mb-2">Weather Forecast</h3>
             <p className="text-text-muted text-xs text-center py-3">
               Forecast available ~{daysOut - 14} days before the tournament
@@ -281,7 +281,7 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
       }
     }
     return (
-      <div className="rounded-xl border border-dark-border bg-dark-secondary p-4">
+      <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card p-4">
         <h3 className="text-sm font-semibold text-text-muted mb-2">Weather Forecast</h3>
         <p className="text-text-muted text-xs text-center py-3">
           Weather data syncs automatically before the tournament. Check back soon.
@@ -294,14 +294,14 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
   const active = rounds[selectedRound] || rounds[0]
 
   return (
-    <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-dark-border">
+      <div className="px-4 py-3 border-b border-[var(--card-border)]">
         <h3 className="text-sm font-semibold text-text-muted">Weather Forecast</h3>
       </div>
 
       {/* Round tabs — always visible, selected one highlighted */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-dark-border">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--card-border)]">
         {rounds.map((day, i) => {
           const weatherCode = guessWeatherCode(day.conditions)
           const icon = WMO_ICONS[weatherCode] || '🌤'
@@ -314,8 +314,8 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
               key={i}
               className={`relative p-3 space-y-2 cursor-pointer transition-all
                 ${isSelected
-                  ? 'bg-dark-card/60 border-t-2 border-t-gold'
-                  : 'bg-dark-secondary border-t-2 border-t-transparent hover:bg-dark-card/30'
+                  ? 'bg-[var(--bg-alt)] border-t-2 border-t-gold'
+                  : 'bg-[var(--surface)] border-t-2 border-t-transparent hover:bg-[var(--surface-alt)]'
                 }
               `}
               onClick={() => setSelectedRound(i)}

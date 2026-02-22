@@ -11,7 +11,7 @@ import StreakCard from '../components/share/cards/StreakCard'
 
 // ─── Tier helpers ───────────────────────────────────────────────────────────
 const TIER_CONFIG = {
-  rookie:    { color: 'text-text-primary/60',   bg: 'bg-dark-tertiary/10',       label: 'Rookie' },
+  rookie:    { color: 'text-text-primary/60',   bg: 'bg-[var(--bg-alt)]',        label: 'Rookie' },
   contender: { color: 'text-blue-400',   bg: 'bg-blue-500/20',    label: 'Contender' },
   sharp:     { color: 'text-purple-400', bg: 'bg-purple-500/20',  label: 'Sharp' },
   expert:    { color: 'text-amber-400',  bg: 'bg-amber-500/20',   label: 'Expert' },
@@ -139,7 +139,7 @@ function WeeklySlate({ onPredictionMade }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="h-16 bg-dark-tertiary/5 rounded-xl animate-pulse" />
+          <div key={i} className="h-16 bg-[var(--stone)] rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -163,7 +163,7 @@ function WeeklySlate({ onPredictionMade }) {
   return (
     <div>
       {/* Tournament header */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 mb-4">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-text-primary font-semibold">{currentTournament.name}</h3>
@@ -183,14 +183,14 @@ function WeeklySlate({ onPredictionMade }) {
           const benchmarkValue = Math.round(player.sgTotal * 10) / 10
 
           return (
-            <div key={player.id} className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+            <div key={player.id} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
               <div className="p-3 flex items-center gap-3">
                 {/* Player info */}
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {player.headshotUrl ? (
                     <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-sm">
+                    <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm">
                       {player.name?.charAt(0)}
                     </div>
                   )}
@@ -301,8 +301,8 @@ function TrackRecord() {
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="h-32 bg-dark-tertiary/5 rounded-xl animate-pulse" />
-        <div className="h-64 bg-dark-tertiary/5 rounded-xl animate-pulse" />
+        <div className="h-32 bg-[var(--stone)] rounded-xl animate-pulse" />
+        <div className="h-64 bg-[var(--stone)] rounded-xl animate-pulse" />
       </div>
     )
   }
@@ -335,13 +335,13 @@ function TrackRecord() {
   return (
     <div className="space-y-4">
       {/* Sport filter */}
-      <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-[var(--surface)] rounded-lg p-1 w-fit">
         {['all', 'nfl', 'golf'].map(s => (
           <button
             key={s}
             onClick={() => setSportFilter(s)}
             className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
-              sportFilter === s ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
+              sportFilter === s ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             {s === 'all' ? 'All Sports' : s.toUpperCase()}
@@ -351,7 +351,7 @@ function TrackRecord() {
 
       {/* NFL Quick Record (when NFL filter active) */}
       {sportFilter === 'nfl' && nflRecord && nflRecord.record?.total > 0 && (
-        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div>
               <div className="text-xl font-mono font-bold text-text-primary">{nflRecord.record.winLoss}</div>
@@ -373,7 +373,7 @@ function TrackRecord() {
       )}
 
       {/* Stats overview */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-5">
         <div className="flex items-center gap-3 mb-4">
           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${tierCfg.bg} ${tierCfg.color}`}>
             {tierCfg.label}
@@ -410,7 +410,7 @@ function TrackRecord() {
 
         {/* Share buttons */}
         {total > 0 && (
-          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-stone/30">
+          <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[var(--card-border)]">
             <ShareButton
               CardComponent={PicksResultCard}
               cardProps={{
@@ -439,7 +439,7 @@ function TrackRecord() {
 
         {/* Tier progress */}
         {progress && (
-          <div className="mt-4 pt-4 border-t border-stone/30">
+          <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
             <div className="flex items-center justify-between text-xs text-text-primary/50 mb-2">
               <span>Progress to {TIER_CONFIG[progress.nextTier]?.label}</span>
               <span className="font-mono">
@@ -447,7 +447,7 @@ function TrackRecord() {
                 {progress.needed.minAccuracy > 0 && ` · ${accuracy}%/${Math.round(progress.needed.minAccuracy * 100)}%`}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-dark-tertiary/10 overflow-hidden">
+            <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500 rounded-full"
                 style={{ width: `${Math.min(progress.predPct, progress.accPct)}%` }}
@@ -458,7 +458,7 @@ function TrackRecord() {
       </div>
 
       {/* Prediction history */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
         <div className="flex items-center gap-2 mb-4">
           <h3 className="text-sm font-semibold text-text-primary/80 flex-1">History</h3>
           <div className="flex gap-1">
@@ -467,7 +467,7 @@ function TrackRecord() {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-2 py-1 text-xs rounded transition-colors ${
-                  filter === f ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
+                  filter === f ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -483,11 +483,11 @@ function TrackRecord() {
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {filtered.map(p => (
-              <div key={p.id} className="flex items-center gap-3 py-2 border-b border-stone/20 last:border-0">
+              <div key={p.id} className="flex items-center gap-3 py-2 border-b border-[var(--card-border)] last:border-0">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                   p.outcome === 'CORRECT' ? 'bg-emerald-500/20 text-emerald-400' :
                   p.outcome === 'INCORRECT' ? 'bg-rose-500/20 text-rose-400' :
-                  p.outcome === 'VOIDED' ? 'bg-dark-tertiary/10 text-text-primary/30' :
+                  p.outcome === 'VOIDED' ? 'bg-[var(--bg-alt)] text-text-primary/30' :
                   'bg-amber-500/20 text-amber-400'
                 }`}>
                   {p.outcome === 'CORRECT' ? '✓' : p.outcome === 'INCORRECT' ? '✗' : p.outcome === 'VOIDED' ? '—' : '?'}
@@ -519,7 +519,7 @@ function TrackRecord() {
                   <div className="text-xs text-text-primary/30 font-mono flex items-center gap-2">
                     {new Date(p.createdAt).toLocaleDateString()}
                     {sportFilter === 'all' && (
-                      <span className="px-1 py-0.5 rounded bg-dark-tertiary/5 text-[10px] uppercase">{p.sport}</span>
+                      <span className="px-1 py-0.5 rounded bg-[var(--bg-alt)] text-[10px] uppercase">{p.sport}</span>
                     )}
                     {p.confidenceLevel && (
                       <span className="px-1 py-0.5 rounded bg-gold/10 text-gold/60 text-[9px]">
@@ -604,7 +604,7 @@ function Leaderboards() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               board === b.id
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
-                : 'bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary/60'
+                : 'bg-[var(--surface)] text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
             {b.label}
@@ -616,13 +616,13 @@ function Leaderboards() {
       {board === 'overall' && (
         <div className="flex flex-wrap items-center gap-3 mb-4">
           {/* Timeframe */}
-          <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-[var(--surface)] rounded-lg p-1">
             {TIMEFRAMES.map(tf => (
               <button
                 key={tf.id}
                 onClick={() => setTimeframe(tf.id)}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                  timeframe === tf.id ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
+                  timeframe === tf.id ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {tf.label}
@@ -631,13 +631,13 @@ function Leaderboards() {
           </div>
 
           {/* Sort by */}
-          <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
+          <div className="flex gap-1 bg-[var(--surface)] rounded-lg p-1">
             {SORT_OPTIONS.map(s => (
               <button
                 key={s.id}
                 onClick={() => setSortBy(s.id)}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                  sortBy === s.id ? 'bg-dark-tertiary/15 text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
+                  sortBy === s.id ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {s.label}
@@ -664,7 +664,7 @@ function Leaderboards() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-14 bg-dark-tertiary/5 rounded-xl animate-pulse" />
+            <div key={i} className="h-14 bg-[var(--stone)] rounded-xl animate-pulse" />
           ))}
         </div>
       ) : leaderboard.length === 0 ? (
@@ -676,9 +676,9 @@ function Leaderboards() {
           </p>
         </div>
       ) : (
-        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-stone/30 text-xs text-text-primary/40">
+          <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-[var(--card-border)] text-xs text-text-primary/40">
             <div className="col-span-1">#</div>
             <div className="col-span-4">User</div>
             <div className="col-span-2 text-center">Rating</div>
@@ -703,14 +703,14 @@ function Leaderboards() {
               <Link
                 key={entry.userId || i}
                 to={`/manager/${entry.userId}`}
-                className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-stone/20 last:border-0 hover:bg-dark-tertiary/5 transition-colors"
+                className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--surface-alt)] transition-colors"
               >
                 <div className="col-span-1 text-text-primary/60 font-mono text-sm flex items-center">{i + 1}</div>
                 <div className="col-span-4 flex items-center gap-2 min-w-0">
                   {entry.avatar ? (
                     <img src={entry.avatar} alt="" className="w-6 h-6 rounded-full shrink-0" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-xs shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs shrink-0">
                       {(entry.name || entry.userName || '?').charAt(0)}
                     </div>
                   )}
@@ -816,7 +816,7 @@ function Analysts() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-32 bg-dark-tertiary/5 rounded-xl animate-pulse" />
+          <div key={i} className="h-32 bg-[var(--stone)] rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -850,7 +850,7 @@ function Analysts() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search analysts..."
-          className="w-full sm:w-64 bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-amber-500/50"
+          className="w-full sm:w-64 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-amber-500/50"
         />
       </div>
 
@@ -868,13 +868,13 @@ function Analysts() {
             <Link
               key={analyst.userId || i}
               to={profileUrl}
-              className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 hover:bg-dark-tertiary/10 transition-colors"
+              className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 hover:bg-[var(--surface-alt)] transition-colors"
             >
               <div className="flex items-center gap-3">
                 {analyst.avatar ? (
                   <img src={analyst.avatar} alt="" className="w-10 h-10 rounded-full" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30">
+                  <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30">
                     {(analyst.name || '?').charAt(0)}
                   </div>
                 )}
@@ -1015,7 +1015,7 @@ function NflWeeklyProps({ onPredictionMade }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="h-16 bg-dark-tertiary/5 rounded-xl animate-pulse" />
+          <div key={i} className="h-16 bg-[var(--stone)] rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -1024,11 +1024,11 @@ function NflWeeklyProps({ onPredictionMade }) {
   return (
     <div>
       {/* Week selector + record */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 mb-4">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => setWeek(w => Math.max(1, w - 1))} disabled={week <= 1}
-              className="p-1.5 rounded bg-dark-tertiary/10 text-text-primary/60 hover:text-text-primary disabled:opacity-30">
+              className="p-1.5 rounded bg-[var(--bg-alt)] text-text-primary/60 hover:text-text-primary disabled:opacity-30">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -1038,7 +1038,7 @@ function NflWeeklyProps({ onPredictionMade }) {
               <p className="text-text-primary/40 text-xs">{totalProps} prop{totalProps !== 1 ? 's' : ''} available</p>
             </div>
             <button onClick={() => setWeek(w => Math.min(18, w + 1))} disabled={week >= 18}
-              className="p-1.5 rounded bg-dark-tertiary/10 text-text-primary/60 hover:text-text-primary disabled:opacity-30">
+              className="p-1.5 rounded bg-[var(--bg-alt)] text-text-primary/60 hover:text-text-primary disabled:opacity-30">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -1126,7 +1126,7 @@ function NflWeeklyProps({ onPredictionMade }) {
           {weeks.map(w => (
             <button key={w} onClick={() => setWeek(w)}
               className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                w === week ? 'bg-emerald-500 text-text-primary' : 'bg-dark-tertiary/5 text-text-primary/40 hover:text-text-primary/60'
+                w === week ? 'bg-emerald-500 text-text-primary' : 'bg-[var(--surface)] text-text-primary/40 hover:text-text-primary/60'
               }`}>{w}</button>
           ))}
         </div>
@@ -1142,15 +1142,15 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
   const isLocked = prop.locksAt && new Date(prop.locksAt) <= new Date()
 
   return (
-    <div className={`bg-dark-tertiary/5 backdrop-blur-sm border rounded-xl p-3 ${
+    <div className={`bg-[var(--surface)] shadow-card border rounded-xl p-3 ${
       userPick?.outcome === 'CORRECT' ? 'border-emerald-500/30' :
       userPick?.outcome === 'INCORRECT' ? 'border-rose-500/30' :
-      userDirection ? 'border-stone/50' : 'border-stone/30'
+      userDirection ? 'border-[var(--card-border)]' : 'border-[var(--card-border)]'
     }`}>
       <div className="flex items-center gap-3">
         {prop.player?.nflPosition && (
           <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${
-            nflPosColors[prop.player.nflPosition] || 'bg-dark-tertiary/10 text-text-primary/40'
+            nflPosColors[prop.player.nflPosition] || 'bg-[var(--bg-alt)] text-text-primary/40'
           }`}>{prop.player.nflPosition}</span>
         )}
         <div className="flex-1 min-w-0">
@@ -1196,14 +1196,14 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
       </div>
 
       {showReason && !isLocked && !isResolved && (
-        <div className="mt-2 pt-2 border-t border-stone/20">
+        <div className="mt-2 pt-2 border-t border-[var(--card-border)]">
           <p className="text-[10px] text-text-primary/30 mb-1.5">Why? (optional)</p>
           <div className="flex flex-wrap gap-1.5">
             {REASON_CHIPS.map(chip => (
               <button key={chip} onClick={() => onReasonChip(prop.id, chip)}
                 className={`px-2 py-0.5 rounded-full text-[10px] transition-colors ${
                   userPick?.predictionData?.reasonChip === chip
-                    ? 'bg-emerald-500/30 text-emerald-400' : 'bg-dark-tertiary/5 text-text-primary/30 hover:text-text-primary/60'
+                    ? 'bg-emerald-500/30 text-emerald-400' : 'bg-[var(--surface)] text-text-primary/30 hover:text-text-primary/60'
                 }`}>{chip}</button>
             ))}
           </div>
@@ -1212,7 +1212,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
             type="text"
             maxLength={280}
             placeholder="Quick thesis... (optional)"
-            className="w-full mt-2 bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-lg px-2.5 py-1.5 text-[11px] text-text-primary/70 placeholder-white/15 focus:outline-none focus:border-gold/30"
+            className="w-full mt-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2.5 py-1.5 text-[11px] text-text-primary/70 placeholder-white/15 focus:outline-none focus:border-gold/30"
             onBlur={e => {
               if (e.target.value.trim()) {
                 onReasonChip?.(prop.id, null, e.target.value.trim())
@@ -1281,7 +1281,7 @@ export default function ProveIt() {
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
-                : 'text-text-primary/40 hover:text-text-primary/60 hover:bg-dark-tertiary/5'
+                : 'text-text-primary/40 hover:text-text-primary/60 hover:bg-[var(--surface-alt)]'
             }`}
           >
             {tab.label}

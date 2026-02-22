@@ -322,7 +322,7 @@ const LeagueSettings = () => {
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? 'bg-gold text-text-primary'
-                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                : 'bg-[var(--surface)] text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -343,7 +343,7 @@ const LeagueSettings = () => {
                 type="text"
                 value={settings.name}
                 onChange={(e) => setSettings({ ...settings, name: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               />
             </div>
 
@@ -354,7 +354,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.rosterSize}
                 onChange={(e) => setSettings({ ...settings, rosterSize: parseInt(e.target.value) })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               >
                 {[4, 5, 6, 7, 8, 10, 12].map(size => (
                   <option key={size} value={size}>{size} players</option>
@@ -369,7 +369,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.irSlots}
                 onChange={(e) => setSettings({ ...settings, irSlots: parseInt(e.target.value) })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               >
                 {[0, 1, 2, 3, 4].map(n => (
                   <option key={n} value={n}>{n === 0 ? 'None' : `${n} IR slot${n > 1 ? 's' : ''}`}</option>
@@ -382,7 +382,7 @@ const LeagueSettings = () => {
 
             {/* Position Limits (NFL only) */}
             {league?.sport?.toLowerCase() === 'nfl' && (
-              <div className="pt-4 border-t border-dark-border">
+              <div className="pt-4 border-t border-[var(--card-border)]">
                 <label className="block text-sm font-medium text-text-secondary mb-3">
                   Position Limits
                 </label>
@@ -406,7 +406,7 @@ const LeagueSettings = () => {
                             positionLimits: { ...prev.positionLimits, [pos]: val },
                           }))
                         }}
-                        className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                        className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
                       />
                     </div>
                   ))}
@@ -415,7 +415,7 @@ const LeagueSettings = () => {
             )}
 
             {/* Keeper League Settings */}
-            <div className="pt-4 border-t border-dark-border">
+            <div className="pt-4 border-t border-[var(--card-border)]">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary">Keeper League</label>
@@ -431,11 +431,11 @@ const LeagueSettings = () => {
                     },
                   }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.keeperSettings?.enabled ? 'bg-gold' : 'bg-dark-border'
+                    settings.keeperSettings?.enabled ? 'bg-gold' : 'bg-[var(--card-border)]'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-dark-tertiary transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full bg-[var(--bg-alt)] transition-transform ${
                       settings.keeperSettings?.enabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
@@ -452,7 +452,7 @@ const LeagueSettings = () => {
                         ...prev,
                         keeperSettings: { ...prev.keeperSettings, maxKeepers: parseInt(e.target.value) },
                       }))}
-                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     >
                       {[1, 2, 3, 4, 5].map(n => (
                         <option key={n} value={n}>{n}</option>
@@ -467,7 +467,7 @@ const LeagueSettings = () => {
                         ...prev,
                         keeperSettings: { ...prev.keeperSettings, costModel: e.target.value },
                       }))}
-                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     >
                       <option value="no-cost">No Cost</option>
                       <option value="round-penalty">Round Penalty (draft round - 1)</option>
@@ -489,7 +489,7 @@ const LeagueSettings = () => {
                               ...prev,
                               keeperSettings: { ...prev.keeperSettings, escalatorMultiplier: parseFloat(e.target.value) || 1.5 },
                             }))}
-                            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                            className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                           />
                         </div>
                         <div>
@@ -503,11 +503,11 @@ const LeagueSettings = () => {
                               ...prev,
                               keeperSettings: { ...prev.keeperSettings, escalatorFloor: parseInt(e.target.value) || 10 },
                             }))}
-                            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                            className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                           />
                         </div>
                       </div>
-                      <div className="bg-dark-primary/50 rounded-lg p-2 text-xs text-text-secondary">
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-xs text-text-secondary">
                         <p className="font-medium text-text-muted mb-1">Cost Preview (max of multiplier vs floor):</p>
                         {(() => {
                           const m = settings.keeperSettings?.escalatorMultiplier || 1.5
@@ -533,7 +533,7 @@ const LeagueSettings = () => {
                         ...prev,
                         keeperSettings: { ...prev.keeperSettings, keeperYears: e.target.value },
                       }))}
-                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     >
                       <option value="1">1 Year</option>
                       <option value="2">2 Years</option>
@@ -548,7 +548,7 @@ const LeagueSettings = () => {
             </div>
 
             {/* Draft Dollar Trading */}
-            <div className="pt-4 border-t border-dark-border">
+            <div className="pt-4 border-t border-[var(--card-border)]">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary">Draft Dollar Trading</label>
@@ -563,11 +563,11 @@ const LeagueSettings = () => {
                     },
                   }))}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.draftDollarSettings?.enabled ? 'bg-gold' : 'bg-dark-border'
+                    settings.draftDollarSettings?.enabled ? 'bg-gold' : 'bg-[var(--card-border)]'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-dark-tertiary transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full bg-[var(--bg-alt)] transition-transform ${
                       settings.draftDollarSettings?.enabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
@@ -586,7 +586,7 @@ const LeagueSettings = () => {
                         ...prev,
                         draftDollarSettings: { ...prev.draftDollarSettings, defaultBudget: parseInt(e.target.value) || 200 },
                       }))}
-                      className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -604,7 +604,7 @@ const LeagueSettings = () => {
                           },
                         }))}
                         placeholder="No limit"
-                        className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                        className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
                       />
                     </div>
                     <div>
@@ -621,7 +621,7 @@ const LeagueSettings = () => {
                           },
                         }))}
                         placeholder="No limit"
-                        className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
+                        className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none placeholder-text-muted"
                       />
                     </div>
                   </div>
@@ -636,11 +636,11 @@ const LeagueSettings = () => {
                         },
                       }))}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        settings.draftDollarSettings?.allowNextYearTrades !== false ? 'bg-gold' : 'bg-dark-border'
+                        settings.draftDollarSettings?.allowNextYearTrades !== false ? 'bg-gold' : 'bg-[var(--card-border)]'
                       }`}
                     >
                       <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-dark-tertiary transition-transform ${
+                        className={`inline-block h-3 w-3 transform rounded-full bg-[var(--bg-alt)] transition-transform ${
                           settings.draftDollarSettings?.allowNextYearTrades !== false ? 'translate-x-5' : 'translate-x-1'
                         }`}
                       />
@@ -657,7 +657,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.rosterLockDeadline}
                 onChange={(e) => setSettings({ ...settings, rosterLockDeadline: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               >
                 <option value="tournament-start">Tournament Start (Thursday)</option>
                 <option value="first-tee">First Tee Time</option>
@@ -675,7 +675,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.maxRosterMoves}
                 onChange={(e) => setSettings({ ...settings, maxRosterMoves: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               >
                 <option value="unlimited">Unlimited</option>
                 <option value="3-week">3 per week</option>
@@ -691,7 +691,7 @@ const LeagueSettings = () => {
 
             {/* Playoff Settings (H2H leagues) */}
             {(league?.format === 'HEAD_TO_HEAD' || league?.format === 'head-to-head') && (
-              <div className="pt-4 border-t border-dark-border">
+              <div className="pt-4 border-t border-[var(--card-border)]">
                 <label className="block text-sm font-medium text-text-secondary mb-3">
                   Playoff Settings
                 </label>
@@ -703,7 +703,7 @@ const LeagueSettings = () => {
                     <select
                       value={settings.playoffTeams}
                       onChange={(e) => setSettings({ ...settings, playoffTeams: parseInt(e.target.value) })}
-                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                      className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                     >
                       {[2, 4, 6, 8].map(n => (
                         <option key={n} value={n}>{n} teams</option>
@@ -717,7 +717,7 @@ const LeagueSettings = () => {
                     <select
                       value={settings.playoffWeeks}
                       onChange={(e) => setSettings({ ...settings, playoffWeeks: parseInt(e.target.value) })}
-                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                      className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                     >
                       {[1, 2, 3, 4].map(n => (
                         <option key={n} value={n}>{n} week{n > 1 ? 's' : ''}</option>
@@ -733,11 +733,11 @@ const LeagueSettings = () => {
 
             {/* League Format Info */}
             {league?.format && (
-              <div className="pt-4 border-t border-dark-border">
+              <div className="pt-4 border-t border-[var(--card-border)]">
                 <label className="block text-sm font-medium text-text-secondary mb-2">
                   League Format
                 </label>
-                <div className="p-3 bg-dark-tertiary rounded-lg border border-dark-border">
+                <div className="p-3 bg-[var(--surface)] rounded-lg border border-[var(--card-border)]">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -806,7 +806,7 @@ const LeagueSettings = () => {
               <select
                 value={settings.tradeReview}
                 onChange={(e) => setSettings({ ...settings, tradeReview: e.target.value })}
-                className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               >
                 <option value="commissioner">Commissioner Review</option>
                 <option value="league-vote">League Vote</option>
@@ -816,13 +816,13 @@ const LeagueSettings = () => {
 
             {/* League Vote Settings */}
             {settings.tradeReview === 'league-vote' && (
-              <div className="space-y-3 p-4 bg-dark-tertiary/50 rounded-lg border border-dark-border">
+              <div className="space-y-3 p-4 bg-[var(--surface)] rounded-lg border border-[var(--card-border)]">
                 <div>
                   <label className="block text-xs font-medium text-text-muted mb-1">Veto Threshold</label>
                   <select
                     value={settings.tradeVetoThreshold}
                     onChange={(e) => setSettings({ ...settings, tradeVetoThreshold: parseInt(e.target.value) })}
-                    className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                    className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                   >
                     <option value="33">33% of league</option>
                     <option value="50">50% of league</option>
@@ -835,7 +835,7 @@ const LeagueSettings = () => {
                   <select
                     value={settings.tradeReviewHours}
                     onChange={(e) => setSettings({ ...settings, tradeReviewHours: parseInt(e.target.value) })}
-                    className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                    className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                   >
                     <option value="24">24 hours</option>
                     <option value="48">48 hours</option>
@@ -848,7 +848,7 @@ const LeagueSettings = () => {
                   <select
                     value={settings.tradeVetoVisibility}
                     onChange={(e) => setSettings({ ...settings, tradeVetoVisibility: e.target.value })}
-                    className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                    className="w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                   >
                     <option value="anonymous">Anonymous</option>
                     <option value="visible">Visible to All</option>
@@ -859,7 +859,7 @@ const LeagueSettings = () => {
             )}
 
             <div>
-              <div className="flex items-center justify-between p-4 bg-dark-tertiary rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-lg">
                 <div>
                   <p className="text-text-primary font-medium">Trade Deadline</p>
                   <p className="text-xs text-text-muted">Set a date after which trades are no longer allowed</p>
@@ -868,11 +868,11 @@ const LeagueSettings = () => {
                   type="button"
                   onClick={() => setSettings({ ...settings, tradeDeadline: !settings.tradeDeadline })}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.tradeDeadline ? 'bg-gold' : 'bg-dark-border'
+                    settings.tradeDeadline ? 'bg-gold' : 'bg-[var(--card-border)]'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-dark-tertiary transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full bg-[var(--bg-alt)] transition-transform ${
                       settings.tradeDeadline ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
@@ -889,7 +889,7 @@ const LeagueSettings = () => {
                     value={settings.tradeDeadlineDate}
                     min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setSettings({ ...settings, tradeDeadlineDate: e.target.value })}
-                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                    className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                   />
                   <p className="text-xs text-text-muted mt-2">
                     No trades will be allowed after this date
@@ -917,7 +917,7 @@ const LeagueSettings = () => {
                 </label>
                 <div className="space-y-2">
                   <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
-                    settings.waiverType === 'rolling' ? 'bg-gold/10 border-gold/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                    settings.waiverType === 'rolling' ? 'bg-gold/10 border-gold/50' : 'bg-[var(--surface)] border-[var(--card-border)] hover:border-[var(--card-border)]'
                   }`}>
                     <input
                       type="radio"
@@ -933,7 +933,7 @@ const LeagueSettings = () => {
                     </div>
                   </label>
                   <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
-                    settings.waiverType === 'faab' ? 'bg-gold/10 border-gold/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                    settings.waiverType === 'faab' ? 'bg-gold/10 border-gold/50' : 'bg-[var(--surface)] border-[var(--card-border)] hover:border-[var(--card-border)]'
                   }`}>
                     <input
                       type="radio"
@@ -949,7 +949,7 @@ const LeagueSettings = () => {
                     </div>
                   </label>
                   <label className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer border transition-colors ${
-                    settings.waiverType === 'none' ? 'bg-gold/10 border-gold/50' : 'bg-dark-tertiary border-dark-border hover:border-dark-border/80'
+                    settings.waiverType === 'none' ? 'bg-gold/10 border-gold/50' : 'bg-[var(--surface)] border-[var(--card-border)] hover:border-[var(--card-border)]'
                   }`}>
                     <input
                       type="radio"
@@ -976,7 +976,7 @@ const LeagueSettings = () => {
                   <select
                     value={settings.waiverPriority}
                     onChange={(e) => setSettings({ ...settings, waiverPriority: e.target.value })}
-                    className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                    className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                   >
                     <option value="reverse-standings">Reverse Standings (worst team picks first)</option>
                     <option value="rolling">Rolling (resets to last after successful claim)</option>
@@ -1004,7 +1004,7 @@ const LeagueSettings = () => {
                       max="1000"
                       value={settings.faabBudget}
                       onChange={(e) => setSettings({ ...settings, faabBudget: parseInt(e.target.value) || 100 })}
-                      className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                      className="w-32 p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                     />
                   </div>
                   <p className="text-text-muted text-xs mt-2">
@@ -1012,7 +1012,7 @@ const LeagueSettings = () => {
                   </p>
                 </div>
 
-                <div className="bg-dark-tertiary rounded-lg p-4">
+                <div className="bg-[var(--surface)] rounded-lg p-4">
                   <p className="text-text-secondary text-sm">
                     <span className="text-gold font-medium">How FAAB works:</span> Teams submit blind bids on players.
                     When waivers process, highest bid wins. Tied bids go to the team with worse standings.
@@ -1036,7 +1036,7 @@ const LeagueSettings = () => {
                     <select
                       value={settings.waiverClearDay}
                       onChange={(e) => setSettings({ ...settings, waiverClearDay: e.target.value })}
-                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                      className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                     >
                       <option value="sunday">Sunday</option>
                       <option value="monday">Monday</option>
@@ -1055,7 +1055,7 @@ const LeagueSettings = () => {
                     <select
                       value={settings.waiverClearTime}
                       onChange={(e) => setSettings({ ...settings, waiverClearTime: e.target.value })}
-                      className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                      className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                     >
                       <option value="00:00">12:00 AM (Midnight)</option>
                       <option value="03:00">3:00 AM</option>
@@ -1086,7 +1086,7 @@ const LeagueSettings = () => {
                 <select
                   value={settings.waiverPeriodHours}
                   onChange={(e) => setSettings({ ...settings, waiverPeriodHours: parseInt(e.target.value) })}
-                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                  className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                 >
                   <option value="0">No waiver period (immediate free agent)</option>
                   <option value="24">24 hours</option>
@@ -1123,7 +1123,7 @@ const LeagueSettings = () => {
             <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Invite Members</h3>
 
             {/* Invite Code Display */}
-            <div className="bg-dark-primary rounded-lg p-4 mb-4">
+            <div className="bg-[var(--bg-alt)] rounded-lg p-4 mb-4">
               <p className="text-text-muted text-xs mb-2">LEAGUE INVITE CODE</p>
               <div className="flex items-center justify-between">
                 <span className="text-3xl font-mono tracking-[0.3em] text-gold font-bold">
@@ -1131,7 +1131,7 @@ const LeagueSettings = () => {
                 </span>
                 <button
                   onClick={copyInviteCode}
-                  className="p-2 bg-dark-tertiary hover:bg-dark-border rounded-lg transition-colors"
+                  className="p-2 bg-[var(--surface)] hover:bg-[var(--surface-alt)] rounded-lg transition-colors"
                   title="Copy code"
                 >
                   {copied ? (
@@ -1183,11 +1183,11 @@ const LeagueSettings = () => {
                   <div
                     key={member.userId || member.user?.id}
                     className={`flex items-center justify-between p-3 rounded-lg ${
-                      isOwner ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary'
+                      isOwner ? 'bg-gold/10 border border-gold/30' : 'bg-[var(--surface)]'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-dark-primary flex items-center justify-center text-sm font-semibold text-text-secondary">
+                      <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-sm font-semibold text-text-secondary">
                         {member.user?.avatar || member.user?.name?.charAt(0)?.toUpperCase() || '?'}
                       </div>
                       <div>
@@ -1226,7 +1226,7 @@ const LeagueSettings = () => {
 
           {/* Commissioner Note */}
           {!isCommissioner && (
-            <Card className="bg-dark-tertiary/50 border-dark-border">
+            <Card className="bg-[var(--surface)] border-[var(--card-border)]">
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-text-muted flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1291,7 +1291,7 @@ const LeagueSettings = () => {
                 <select
                   value={newFormat || league?.format || ''}
                   onChange={(e) => setNewFormat(e.target.value)}
-                  className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                  className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
                 >
                   <option value="">Select new format...</option>
                   <option value="full-league">Full League - Total points accumulation</option>

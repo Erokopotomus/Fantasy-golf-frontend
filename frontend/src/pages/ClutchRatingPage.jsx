@@ -44,7 +44,7 @@ export default function ClutchRatingPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       {/* ── 1. Hero Section ────────────────────────────────────────────────── */}
-      <section className="bg-dark-secondary/60 rounded-2xl border border-[var(--card-border)] p-6 md:p-8">
+      <section className="bg-[var(--surface)] rounded-2xl border border-[var(--card-border)] p-6 md:p-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
           {/* Rating Ring */}
           <div className="shrink-0">
@@ -101,7 +101,7 @@ export default function ClutchRatingPage() {
                     const url = `${window.location.origin}/my-rating`
                     navigator.clipboard.writeText(url)
                   }}
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-dark-tertiary/[0.04] text-text-primary/50 border border-[var(--card-border)] hover:text-text-primary/70 transition-colors"
+                  className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--bg-alt)] text-text-primary/50 border border-[var(--card-border)] hover:text-text-primary/70 transition-colors"
                 >
                   Share
                 </button>
@@ -142,7 +142,7 @@ export default function ClutchRatingPage() {
               return (
                 <div
                   key={sp.id}
-                  className="p-4 bg-dark-secondary/60 rounded-xl border border-[var(--card-border)]"
+                  className="p-4 bg-[var(--surface)] rounded-xl border border-[var(--card-border)]"
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-base">{isNfl ? '🏈' : '⛳'}</span>
@@ -181,7 +181,7 @@ export default function ClutchRatingPage() {
           {/* The Lab */}
           <Link
             to="/lab"
-            className="group p-5 bg-dark-secondary/60 rounded-xl border border-[var(--card-border)] hover:border-purple-400/30 transition-all"
+            className="group p-5 bg-[var(--surface)] rounded-xl border border-[var(--card-border)] hover:border-purple-400/30 transition-all"
           >
             <div className="w-10 h-10 rounded-lg bg-purple-500/15 flex items-center justify-center mb-3">
               <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,7 +199,7 @@ export default function ClutchRatingPage() {
           {/* Prove It */}
           <Link
             to="/prove-it"
-            className="group p-5 bg-dark-secondary/60 rounded-xl border border-[var(--card-border)] hover:border-accent-gold/30 transition-all"
+            className="group p-5 bg-[var(--surface)] rounded-xl border border-[var(--card-border)] hover:border-accent-gold/30 transition-all"
           >
             <div className="w-10 h-10 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-3">
               <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +217,7 @@ export default function ClutchRatingPage() {
           {/* League Vault */}
           <Link
             to="/import"
-            className="group p-5 bg-dark-secondary/60 rounded-xl border border-[var(--card-border)] hover:border-accent-gold/30 transition-all"
+            className="group p-5 bg-[var(--surface)] rounded-xl border border-[var(--card-border)] hover:border-accent-gold/30 transition-all"
           >
             <div className="w-10 h-10 rounded-lg bg-accent-gold/15 flex items-center justify-center mb-3">
               <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,9 +236,9 @@ export default function ClutchRatingPage() {
       </section>
 
       {/* ── 5. How Do You Compare? (Teaser) ───────────────────────────────── */}
-      <section className="p-5 bg-dark-secondary/60 rounded-xl border border-[var(--card-border)]">
+      <section className="p-5 bg-[var(--surface)] rounded-xl border border-[var(--card-border)]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-dark-tertiary/[0.04] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
             <svg className="w-5 h-5 text-text-primary/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
@@ -253,7 +253,7 @@ export default function ClutchRatingPage() {
       </section>
 
       {/* ── 6. Rating Journey ─────────────────────────────────────────────── */}
-      <section className="p-5 bg-dark-secondary/60 rounded-xl border border-[var(--card-border)]">
+      <section className="p-5 bg-[var(--surface)] rounded-xl border border-[var(--card-border)]">
         <h2 className="text-sm font-display font-bold text-text-primary mb-3">Your Rating Journey</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
           <div>

@@ -14,8 +14,8 @@ const ScheduleDots = ({ playerId, tournaments = [] }) => {
               inField
                 ? 'bg-emerald-500'
                 : fieldAnnounced
-                ? 'bg-dark-tertiary/10'
-                : 'border border-stone/50 bg-transparent'
+                ? 'bg-[var(--stone)]'
+                : 'border border-[var(--card-border)] bg-transparent'
             }`}
             title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
           />
@@ -59,8 +59,8 @@ const PlayerTable = ({
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[800px]">
-        <thead className="bg-dark-secondary sticky top-0">
-          <tr className="border-b border-dark-border text-xs">
+        <thead className="bg-[var(--surface)] sticky top-0">
+          <tr className="border-b border-[var(--card-border)] text-xs">
             {compareMode && <th className="p-3 w-12"></th>}
             <SortHeader field="rank" className="w-16">Rank</SortHeader>
             <SortHeader field="name">Player</SortHeader>
@@ -81,8 +81,8 @@ const PlayerTable = ({
                 key={player.id}
                 onClick={() => onViewPlayer?.(player)}
                 className={`
-                  border-b border-dark-border/50 transition-colors cursor-pointer
-                  ${isSelected ? 'bg-gold/10' : 'hover:bg-dark-tertiary/50'}
+                  border-b border-[var(--card-border)] transition-colors cursor-pointer
+                  ${isSelected ? 'bg-gold/10' : 'hover:bg-[var(--surface-alt)]'}
                 `}
               >
                 {compareMode && (
@@ -92,7 +92,7 @@ const PlayerTable = ({
                       checked={isSelected}
                       onChange={() => onSelectPlayer(player)}
                       disabled={!isSelected && !canSelect}
-                      className="w-4 h-4 rounded border-dark-border bg-dark-tertiary text-gold focus:ring-gold"
+                      className="w-4 h-4 rounded border-[var(--card-border)] bg-[var(--stone)] text-gold focus:ring-gold"
                     />
                   </td>
                 )}
@@ -105,7 +105,7 @@ const PlayerTable = ({
                     onClick={() => onViewPlayer?.(player)}
                   >
                     {player.headshotUrl ? (
-                      <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline' }} />
+                      <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)]" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'inline' }} />
                     ) : null}
                     <span className={`text-xl ${player.headshotUrl ? 'hidden' : ''}`}>{player.countryFlag}</span>
                     <div>

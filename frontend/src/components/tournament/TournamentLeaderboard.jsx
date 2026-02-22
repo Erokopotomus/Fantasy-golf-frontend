@@ -227,9 +227,9 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               : medal ? `${medal.bg} border-l-2 ${medal.border}` : 'border-l-2 border-transparent'}
             ${!isExpanded && isMyPlayer ? 'bg-emerald-500/8 border-l-emerald-400' : ''}
             ${isCut ? 'opacity-50' : ''}
-            ${hasRecentChange ? `bg-dark-tertiary/40 ${changeGlow}` : ''}
-            ${!isCut && !isExpanded ? 'hover:bg-dark-tertiary/60' : ''}
-            ${index > 0 ? 'border-t border-dark-border/30' : ''}
+            ${hasRecentChange ? `bg-[var(--surface-alt)] ${changeGlow}` : ''}
+            ${!isCut && !isExpanded ? 'hover:bg-[var(--surface-alt)]' : ''}
+            ${index > 0 ? 'border-t border-[var(--card-border)]' : ''}
           `}
         >
           {/* Position */}
@@ -255,12 +255,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               <img
                 src={player.headshotUrl}
                 alt=""
-                className="w-8 h-8 rounded-full object-cover bg-dark-tertiary flex-shrink-0"
+                className="w-8 h-8 rounded-full object-cover bg-[var(--stone)] flex-shrink-0"
                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
               />
             ) : null}
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-lg bg-dark-tertiary ${player.headshotUrl ? 'hidden' : ''}`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-lg bg-[var(--stone)] ${player.headshotUrl ? 'hidden' : ''}`}
             >
               {player.countryFlag || '?'}
             </div>
@@ -341,7 +341,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
         {/* Expanded inline scorecard */}
         {isExpanded && (
-          <div className="bg-dark-tertiary/40 border-t border-dark-border/30">
+          <div className="bg-[var(--surface-alt)] border-t border-[var(--card-border)]">
             {/* Round tabs */}
             <div className="flex items-center gap-1 px-4 pt-3 pb-2">
               {[1, 2, 3, 4].map(r => {
@@ -360,8 +360,8 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                       ${isActive
                         ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30'
                         : isReachable
-                          ? 'bg-dark-secondary/60 text-text-secondary hover:text-text-primary hover:bg-dark-secondary'
-                          : 'bg-dark-secondary/30 text-text-muted/40 cursor-not-allowed'}
+                          ? 'bg-[var(--surface)] text-text-secondary hover:text-text-primary hover:bg-[var(--surface-alt)]'
+                          : 'bg-[var(--bg-alt)] text-text-muted/40 cursor-not-allowed'}
                     `}
                   >
                     R{r}
@@ -451,34 +451,34 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                         <table className="w-full mb-1.5 text-xs border-collapse">
                           <thead>
                             <tr>
-                              <th className="p-1.5 text-left bg-dark-secondary/70 text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
+                              <th className="p-1.5 text-left bg-[var(--surface)] text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
                               {front9.map((h, i) => (
-                                <th key={i} className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-medium min-w-[28px]">{i + 1}</th>
+                                <th key={i} className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-medium min-w-[28px]">{i + 1}</th>
                               ))}
-                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px]">Out</th>
-                              <th className="p-1.5 bg-dark-secondary/70 min-w-[32px] rounded-tr"></th>
+                              <th className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-bold min-w-[32px]">Out</th>
+                              <th className="p-1.5 bg-[var(--surface)] min-w-[32px] rounded-tr"></th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="p-1.5 text-left bg-dark-secondary/30 text-text-muted text-[10px]">Par</td>
+                              <td className="p-1.5 text-left bg-[var(--bg-alt)] text-text-muted text-[10px]">Par</td>
                               {front9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px]">{h.par || defaultPars[i]}</td>
+                                <td key={i} className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px]">{h.par || defaultPars[i]}</td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px] font-bold">{front9Par}</td>
-                              <td className="p-1.5 bg-dark-secondary/30"></td>
+                              <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{front9Par}</td>
+                              <td className="p-1.5 bg-[var(--bg-alt)]"></td>
                             </tr>
                             <tr className="border-t-2 border-emerald-500/30">
-                              <td className="p-1.5 text-left bg-dark-secondary/60 text-emerald-400 text-[10px] font-bold">Score</td>
+                              <td className="p-1.5 text-left bg-[var(--surface)] text-emerald-400 text-[10px] font-bold">Score</td>
                               {front9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center bg-dark-secondary/60">
+                                <td key={i} className="p-0.5 text-center bg-[var(--surface)]">
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
                                 </td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-text-primary text-[11px]">
+                              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-text-primary text-[11px]">
                                 {front9Score != null ? front9Score : '–'}
                               </td>
-                              <td className="p-1.5 bg-dark-secondary/60"></td>
+                              <td className="p-1.5 bg-[var(--surface)]"></td>
                             </tr>
                           </tbody>
                         </table>
@@ -488,34 +488,34 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                         <table className="w-full text-xs border-collapse">
                           <thead>
                             <tr>
-                              <th className="p-1.5 text-left bg-dark-secondary/70 text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
+                              <th className="p-1.5 text-left bg-[var(--surface)] text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
                               {back9.map((h, i) => (
-                                <th key={i} className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-medium min-w-[28px]">{i + 10}</th>
+                                <th key={i} className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-medium min-w-[28px]">{i + 10}</th>
                               ))}
-                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px]">In</th>
-                              <th className="p-1.5 text-center bg-dark-secondary/70 text-text-muted text-[10px] font-bold min-w-[32px] rounded-tr">Tot</th>
+                              <th className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-bold min-w-[32px]">In</th>
+                              <th className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-bold min-w-[32px] rounded-tr">Tot</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="p-1.5 text-left bg-dark-secondary/30 text-text-muted text-[10px]">Par</td>
+                              <td className="p-1.5 text-left bg-[var(--bg-alt)] text-text-muted text-[10px]">Par</td>
                               {back9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px]">{h.par || defaultPars[i + 9]}</td>
+                                <td key={i} className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px]">{h.par || defaultPars[i + 9]}</td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px] font-bold">{back9Par}</td>
-                              <td className="p-1.5 text-center bg-dark-secondary/30 text-text-muted text-[10px] font-bold">{front9Par + back9Par}</td>
+                              <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{back9Par}</td>
+                              <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{front9Par + back9Par}</td>
                             </tr>
                             <tr className="border-t-2 border-emerald-500/30">
-                              <td className="p-1.5 text-left bg-dark-secondary/60 text-emerald-400 text-[10px] font-bold">Score</td>
+                              <td className="p-1.5 text-left bg-[var(--surface)] text-emerald-400 text-[10px] font-bold">Score</td>
                               {back9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center bg-dark-secondary/60">
+                                <td key={i} className="p-0.5 text-center bg-[var(--surface)]">
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i + 9]} />
                                 </td>
                               ))}
-                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-text-primary text-[11px]">
+                              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-text-primary text-[11px]">
                                 {back9Score != null ? back9Score : '–'}
                               </td>
-                              <td className="p-1.5 text-center bg-dark-secondary/60 font-bold text-text-primary text-[11px]">
+                              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-text-primary text-[11px]">
                                 {roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : '–')}
                               </td>
                             </tr>
@@ -558,7 +558,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                   </span>
                 )}
                 {player.probabilities.makeCut != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-dark-secondary/80 text-text-secondary font-medium">
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--surface)] text-text-secondary font-medium">
                     Cut {(player.probabilities.makeCut * 100).toFixed(1)}%
                   </span>
                 )}
@@ -571,9 +571,9 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
   }
 
   return (
-    <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
       {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-dark-tertiary to-dark-secondary border-b border-dark-border">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[var(--stone)] to-[var(--surface)] border-b border-[var(--card-border)]">
         <div className="flex items-center gap-3">
           <h3 className="text-base font-bold text-text-primary tracking-tight">Leaderboard</h3>
           {cut != null && (
@@ -593,7 +593,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="w-32 sm:w-40 pl-7 pr-2 py-1 text-xs rounded-full bg-dark-tertiary border border-dark-border text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-32 sm:w-40 pl-7 pr-2 py-1 text-xs rounded-full bg-[var(--bg-alt)] border border-[var(--card-border)] text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
             />
             {search && (
               <button
@@ -609,7 +609,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           <button
             onClick={() => setShowRounds(!showRounds)}
             className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
-              showRounds ? 'bg-emerald-500/15 text-emerald-400' : 'bg-dark-tertiary text-text-muted hover:text-text-primary'
+              showRounds ? 'bg-emerald-500/15 text-emerald-400' : 'bg-[var(--stone)] text-text-muted hover:text-text-primary'
             }`}
           >
             Rounds
@@ -620,7 +620,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
       {/* Column headers */}
       <div className={`
-        grid items-center gap-2 px-3 py-2 bg-dark-tertiary/80 text-[11px] text-text-muted uppercase tracking-wider font-medium
+        grid items-center gap-2 px-3 py-2 bg-[var(--stone)] text-[11px] text-text-muted uppercase tracking-wider font-medium
         ${showRounds ? 'grid-cols-[40px_1fr_52px_52px_52px_52px_52px_56px_64px]' : 'grid-cols-[40px_1fr_56px_48px_56px_64px]'}
       `}>
         <div className="text-center">Pos</div>

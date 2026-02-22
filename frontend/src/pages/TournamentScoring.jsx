@@ -31,7 +31,7 @@ const PlayerOddsCard = ({ player, onClose }) => {
           <span className="text-text-muted">{label}</span>
           <span className="text-text-primary font-semibold">{pct.toFixed(1)}%</span>
         </div>
-        <div className="h-1.5 bg-dark-primary rounded-full overflow-hidden">
+        <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
           <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${Math.min(pct, 100)}%` }} />
         </div>
       </div>
@@ -39,14 +39,14 @@ const PlayerOddsCard = ({ player, onClose }) => {
   }
 
   return (
-    <div className="rounded-xl border border-emerald-500/30 bg-dark-secondary overflow-hidden animate-fade-in">
+    <div className="rounded-xl border border-emerald-500/30 bg-[var(--surface)] shadow-card overflow-hidden animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-dark-secondary border-b border-dark-border">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-[var(--surface)] border-b border-[var(--card-border)]">
         <div className="flex items-center gap-3">
           {player.headshotUrl ? (
-            <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary" />
+            <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)]" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-lg">
+            <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-lg">
               {player.countryFlag || '?'}
             </div>
           )}
@@ -86,16 +86,16 @@ const PlayerOddsCard = ({ player, onClose }) => {
       )}
 
       {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-px bg-dark-border border-t border-dark-border">
-        <div className="bg-dark-secondary px-3 py-2 text-center">
+      <div className="grid grid-cols-3 gap-px bg-[var(--card-border)] border-t border-[var(--card-border)]">
+        <div className="bg-[var(--surface)] px-3 py-2 text-center">
           <p className="text-xs font-semibold text-text-primary">{player.eagles || 0}</p>
           <p className="text-[10px] text-text-muted">Eagles</p>
         </div>
-        <div className="bg-dark-secondary px-3 py-2 text-center">
+        <div className="bg-[var(--surface)] px-3 py-2 text-center">
           <p className="text-xs font-semibold text-emerald-400">{player.birdies || 0}</p>
           <p className="text-[10px] text-text-muted">Birdies</p>
         </div>
-        <div className="bg-dark-secondary px-3 py-2 text-center">
+        <div className="bg-[var(--surface)] px-3 py-2 text-center">
           <p className="text-xs font-semibold text-red-400">{player.bogeys || 0}</p>
           <p className="text-[10px] text-text-muted">Bogeys</p>
         </div>
@@ -190,7 +190,7 @@ const TournamentScoring = () => {
           />
         ) : (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-dark-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-[var(--surface)] rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-text-muted/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -232,7 +232,7 @@ const TournamentScoring = () => {
       </div>
 
       {/* Mobile tab bar */}
-      <div className="flex lg:hidden border-b border-dark-border">
+      <div className="flex lg:hidden border-b border-[var(--card-border)]">
         <button
           onClick={() => setActiveTab('leaderboard')}
           className={`flex-1 py-2.5 text-sm font-medium text-center transition-colors ${
@@ -282,16 +282,16 @@ const TournamentScoring = () => {
           <EventPredictionSlate eventId={tournamentId} leaderboard={leaderboard || []} tournamentStatus={tournament?.status} />
 
           {/* My Team — with league dropdown */}
-          <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
             {/* Header with league selector */}
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-dark-secondary border-b border-dark-border">
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-900/20 to-[var(--surface)] border-b border-[var(--card-border)]">
               <div className="flex items-center gap-2 min-w-0">
                 <h3 className="text-base font-bold text-text-primary whitespace-nowrap">My Team</h3>
                 {leagues && leagues.length > 0 && (
                   <select
                     value={leagueId || ''}
                     onChange={(e) => handleLeagueChange(e.target.value || null)}
-                    className="bg-dark-tertiary border border-dark-border rounded-lg text-xs text-text-secondary px-2 py-1 focus:outline-none focus:border-emerald-500/50 cursor-pointer min-w-0 truncate"
+                    className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary px-2 py-1 focus:outline-none focus:border-emerald-500/50 cursor-pointer min-w-0 truncate"
                   >
                     <option value="">No League</option>
                     {leagues.map(league => (
@@ -312,17 +312,17 @@ const TournamentScoring = () => {
 
             {/* Player list */}
             {leagueId ? (
-              <div className="divide-y divide-dark-border/30">
+              <div className="divide-y divide-[var(--card-border)]">
                 {myPlayers.map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-dark-tertiary/50 transition-colors"
+                    className="flex items-center justify-between px-4 py-3 hover:bg-[var(--surface-alt)] transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       {player.headshotUrl ? (
-                        <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-dark-tertiary" />
+                        <img src={player.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover bg-[var(--stone)]" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-lg">
+                        <div className="w-8 h-8 rounded-full bg-[var(--stone)] flex items-center justify-center text-lg">
                           {player.countryFlag || '?'}
                         </div>
                       )}

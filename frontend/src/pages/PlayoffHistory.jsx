@@ -110,7 +110,7 @@ const PlayoffHistory = () => {
 
   if (historyLoading) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-center min-h-[400px]">
@@ -127,7 +127,7 @@ const PlayoffHistory = () => {
 
   if (historyError) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="text-center py-12">
@@ -145,7 +145,7 @@ const PlayoffHistory = () => {
   const hasHistory = years.length > 0
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
@@ -166,7 +166,7 @@ const PlayoffHistory = () => {
               <select
                 value={activeYear || ''}
                 onChange={e => setSelectedYear(e.target.value)}
-                className="bg-dark-secondary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm focus:border-gold focus:outline-none"
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-sm focus:border-gold focus:outline-none"
               >
                 {years.map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -177,7 +177,7 @@ const PlayoffHistory = () => {
 
           {!hasHistory ? (
             <Card className="text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-dark-tertiary flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
@@ -196,7 +196,7 @@ const PlayoffHistory = () => {
                   {recordCards.map(card => (
                     <Card
                       key={card.title}
-                      className={card.isGold ? 'border-accent-gold/30 bg-gradient-to-br from-accent-gold/10 to-dark-secondary' : ''}
+                      className={card.isGold ? 'border-accent-gold/30 bg-gradient-to-br from-accent-gold/10 to-[var(--surface)]' : ''}
                     >
                       <div className="flex items-start gap-2 mb-2">
                         {card.icon === 'trophy' && (
@@ -229,7 +229,7 @@ const PlayoffHistory = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-dark-border text-xs text-text-muted uppercase tracking-wider">
+                        <tr className="border-b border-[var(--card-border)] text-xs text-text-muted uppercase tracking-wider">
                           <th className="pb-3 text-left">Owner</th>
                           <th className="pb-3 text-center">Champs</th>
                           <th className="pb-3 text-center">Runner-Ups</th>
@@ -240,7 +240,7 @@ const PlayoffHistory = () => {
                       </thead>
                       <tbody>
                         {ownerTable.map((owner, i) => (
-                          <tr key={owner.name} className="border-b border-dark-border/30 hover:bg-dark-tertiary/50 transition-colors">
+                          <tr key={owner.name} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)] transition-colors">
                             <td className="py-3 text-text-primary font-medium">
                               <div className="flex items-center gap-2">
                                 <span className={`text-xs font-mono w-5 ${i === 0 && owner.championships > 0 ? 'text-accent-gold' : 'text-text-muted'}`}>
@@ -275,7 +275,7 @@ const PlayoffHistory = () => {
 
                   {/* Champion highlight card */}
                   {seasonChampion && (
-                    <Card className="border-accent-gold/30 bg-gradient-to-r from-accent-gold/10 to-dark-secondary mb-4">
+                    <Card className="border-accent-gold/30 bg-gradient-to-r from-accent-gold/10 to-[var(--surface)] mb-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-accent-gold/20 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-2xl">🏆</span>
@@ -305,7 +305,7 @@ const PlayoffHistory = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-dark-border text-xs text-text-muted uppercase tracking-wider">
+                          <tr className="border-b border-[var(--card-border)] text-xs text-text-muted uppercase tracking-wider">
                             <th className="pb-3 text-left w-10">#</th>
                             <th className="pb-3 text-left">Team</th>
                             <th className="pb-3 text-left">Owner</th>
@@ -319,7 +319,7 @@ const PlayoffHistory = () => {
                           {seasonTeams.map((team, i) => {
                             const label = PLAYOFF_LABELS[team.playoffResult] || {}
                             return (
-                              <tr key={team.id || i} className="border-b border-dark-border/30 hover:bg-dark-tertiary/50 transition-colors">
+                              <tr key={team.id || i} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)] transition-colors">
                                 <td className={`py-3 font-bold ${
                                   i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-500' : 'text-text-muted'
                                 }`}>

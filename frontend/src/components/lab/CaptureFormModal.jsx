@@ -123,7 +123,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg bg-dark-secondary border border-[var(--card-border)] rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -146,7 +146,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
               placeholder="What's on your mind? A podcast take, gut feeling, stat insight..."
               maxLength={2000}
               rows={4}
-              className="w-full px-3 py-2.5 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
+              className="w-full px-3 py-2.5 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
             />
             <div className="flex justify-end mt-1">
               <span className={`text-[10px] ${content.length > 1800 ? 'text-orange' : 'text-text-primary/20'}`}>
@@ -162,7 +162,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                 <span
                   key={p.id}
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
-                    p.autoDetected ? 'bg-gold/15 text-gold border border-gold/20' : 'bg-dark-tertiary/10 text-text-primary/70 border border-stone/40'
+                    p.autoDetected ? 'bg-gold/15 text-gold border border-gold/20' : 'bg-[var(--bg-alt)] text-text-primary/70 border border-stone/40'
                   }`}
                 >
                   {p.name}
@@ -185,16 +185,16 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search player name..."
-                  className="w-full px-3 py-2 text-sm bg-dark-primary border border-gold/30 rounded-lg text-text-primary placeholder-text-muted outline-none"
+                  className="w-full px-3 py-2 text-sm bg-[var(--bg-alt)] border border-gold/30 rounded-lg text-text-primary placeholder-text-muted outline-none"
                   onKeyDown={e => { if (e.key === 'Escape') { setPlayerSearchOpen(false); setSearchQuery('') } }}
                 />
                 {searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-dark-secondary border border-stone/30 rounded-lg overflow-hidden z-10 max-h-48 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg overflow-hidden z-10 max-h-48 overflow-y-auto">
                     {searchResults.map(p => (
                       <button
                         key={p.id}
                         onClick={() => addManualTag(p)}
-                        className="w-full px-3 py-2 text-sm text-text-primary/70 hover:bg-dark-tertiary/[0.05] text-left transition-colors"
+                        className="w-full px-3 py-2 text-sm text-text-primary/70 hover:bg-[var(--surface-alt)] text-left transition-colors"
                       >
                         {p.name}
                       </button>
@@ -241,7 +241,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
               value={sourceName}
               onChange={e => setSourceName(e.target.value)}
               placeholder={`e.g., "${sourceType === 'podcast' ? 'Fantasy Footballers Ep. 412' : sourceType === 'article' ? 'ESPN article on RB rankings' : 'Source details...'  }"`}
-              className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+              className="w-full px-3 py-2 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
             />
           )}
 
@@ -257,7 +257,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                     sentiment === s.value
                       ? s.color === 'emerald' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
                         : s.color === 'red' ? 'border-red-500/40 bg-red-500/10 text-red-400'
-                        : 'border-stone/60 bg-dark-tertiary/10 text-text-primary/70'
+                        : 'border-stone/60 bg-[var(--bg-alt)] text-text-primary/70'
                       : 'border-[var(--card-border)] text-text-primary/30 hover:text-text-primary/50'
                   }`}
                 >
@@ -282,7 +282,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
               className="px-5 py-2 text-sm font-semibold bg-gold text-slate rounded-lg hover:bg-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               {saving ? (
-                <div className="w-4 h-4 border-2 border-dark-primary/30 border-t-dark-primary rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
               ) : (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

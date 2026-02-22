@@ -4,8 +4,8 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
 }
 
 const TournamentHeader = ({ tournament, leaderboard = [] }) => {
@@ -49,10 +49,10 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
     : null
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-dark-border bg-dark-secondary">
+    <div className="relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card">
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 via-dark-secondary to-dark-secondary" />
-      <div className="absolute inset-0 bg-gradient-to-t from-dark-secondary via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 via-[var(--surface)] to-[var(--surface)]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] via-transparent to-transparent" />
 
       <div className="relative p-5">
         <div className="flex gap-6">
@@ -80,7 +80,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                 </span>
               )}
               {tournament.tour && (
-                <span className="px-2 py-0.5 rounded bg-dark-tertiary text-text-muted text-xs font-medium">
+                <span className="px-2 py-0.5 rounded bg-[var(--stone)] text-text-muted text-xs font-medium">
                   {tournament.tour}
                 </span>
               )}
@@ -178,8 +178,8 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                         className={`
                           w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
                           ${isCurrent ? 'bg-emerald-500 text-text-primary ring-2 ring-emerald-400/50' : ''}
-                          ${isPast ? 'bg-dark-tertiary text-emerald-400' : ''}
-                          ${!isCurrent && !isPast ? 'bg-dark-tertiary/50 text-text-muted' : ''}
+                          ${isPast ? 'bg-[var(--stone)] text-emerald-400' : ''}
+                          ${!isCurrent && !isPast ? 'bg-[var(--stone)] text-text-muted' : ''}
                         `}
                       >
                         R{r}
@@ -193,7 +193,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
 
           {/* Right side — Course DNA panel (UPCOMING only) */}
           {isUpcoming && dnaCategories.length > 0 && (
-            <div className="hidden md:flex flex-col w-56 flex-shrink-0 rounded-lg bg-dark-primary/60 border border-dark-border/50 p-4">
+            <div className="hidden md:flex flex-col w-56 flex-shrink-0 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)] p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">What Wins Here</span>
                 <Link
@@ -215,7 +215,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                           {cat.rating.text}
                         </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-dark-tertiary/[0.06] overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
                         <div
                           className={`h-full rounded-full ${cat.rating.bar} transition-all`}
                           style={{ width: `${barPct}%` }}
@@ -227,7 +227,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
               </div>
 
               {courseSummary && (
-                <p className="text-[10px] text-emerald-400/80 font-medium mt-3 pt-3 border-t border-dark-border/50">
+                <p className="text-[10px] text-emerald-400/80 font-medium mt-3 pt-3 border-t border-[var(--card-border)]">
                   {courseSummary}
                 </p>
               )}

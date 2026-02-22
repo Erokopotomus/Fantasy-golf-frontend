@@ -103,7 +103,7 @@ export default function ShareModal({
         {/* Panel */}
         <div
           onClick={e => e.stopPropagation()}
-          className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-dark-border"
+          className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-[var(--card-border)]"
           style={{
             background: '#0E100F',
             animation: 'shareModalSlideUp 0.3s ease',
@@ -138,12 +138,12 @@ export default function ShareModal({
             </button>
 
             {/* Shareable link section */}
-            <div className="rounded-xl border border-dark-border bg-dark-secondary/40 p-4 mb-5">
+            <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-alt)] p-4 mb-5">
               <div className="text-[11px] font-mono font-semibold text-text-muted uppercase tracking-wider mb-2.5">
                 Shareable Link
               </div>
               <div className="flex gap-2">
-                <div className="flex-1 px-3 py-2.5 rounded-lg bg-dark-primary border border-dark-border text-xs font-mono text-text-muted/60 truncate">
+                <div className="flex-1 px-3 py-2.5 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)] text-xs font-mono text-text-muted/60 truncate">
                   {baseUrl}
                 </div>
                 <button
@@ -159,7 +159,7 @@ export default function ShareModal({
                 {typeof navigator.share === 'function' && (
                   <button
                     onClick={handleNativeShare}
-                    className="px-3 py-2.5 rounded-lg bg-dark-tertiary text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+                    className="px-3 py-2.5 rounded-lg bg-[var(--bg-alt)] text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
                     title="Share"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,7 +175,7 @@ export default function ShareModal({
             </div>
 
             {/* Per-owner invite rows */}
-            <div className="rounded-xl border border-dark-border bg-dark-secondary/40 p-4 mb-5">
+            <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-alt)] p-4 mb-5">
               <div className="text-[11px] font-mono font-semibold text-text-muted uppercase tracking-wider mb-3">
                 Personalized Invites
               </div>
@@ -224,7 +224,7 @@ export default function ShareModal({
                             </span>
                           )}
                           {!owner.isActive && (
-                            <span className="text-[9px] font-mono text-text-muted bg-dark-tertiary px-1.5 py-0.5 rounded flex-shrink-0">
+                            <span className="text-[9px] font-mono text-text-muted bg-[var(--bg-alt)] px-1.5 py-0.5 rounded flex-shrink-0">
                               FORMER
                             </span>
                           )}

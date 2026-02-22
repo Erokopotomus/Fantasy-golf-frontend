@@ -111,7 +111,7 @@ export default function VaultPublicLanding() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex gap-1.5">
           {[0, 1, 2].map(i => (
             <div
@@ -133,7 +133,7 @@ export default function VaultPublicLanding() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <div className="text-3xl mb-3">🔒</div>
           <h1 className="text-lg font-display font-bold text-text-primary mb-2">
@@ -156,10 +156,10 @@ export default function VaultPublicLanding() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       {/* Top bar */}
       <div
-        className="border-b border-dark-border px-4 sm:px-6 py-2.5 flex items-center justify-between"
+        className="border-b border-[var(--card-border)] px-4 sm:px-6 py-2.5 flex items-center justify-between"
         style={{ background: 'linear-gradient(135deg, #111413, #0E100F)' }}
       >
         <Link to="/" className="flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function VaultPublicLanding() {
             <>
               <Link
                 to="/login"
-                className="px-3.5 py-1.5 rounded-md border border-dark-border text-[11px] font-mono font-medium text-text-muted hover:text-text-primary transition-colors"
+                className="px-3.5 py-1.5 rounded-md border border-[var(--card-border)] text-[11px] font-mono font-medium text-text-muted hover:text-text-primary transition-colors"
               >
                 Log In
               </Link>
@@ -275,7 +275,7 @@ export default function VaultPublicLanding() {
 
               {/* Clutch Rating display */}
               {ratings[memberOwner.name] && (
-                <div className="flex items-center justify-center gap-3 mt-5 pt-5 border-t border-stone/20">
+                <div className="flex items-center justify-center gap-3 mt-5 pt-5 border-t border-[var(--card-border)]">
                   <RatingRing
                     rating={ratings[memberOwner.name].overall}
                     confidence={ratings[memberOwner.name].confidence}
@@ -305,7 +305,7 @@ export default function VaultPublicLanding() {
             { label: 'Total Points', value: (leagueStats.totalPoints || 0).toLocaleString() },
             { label: 'Titles', value: leagueStats.totalTitles },
           ].map(s => (
-            <div key={s.label} className="text-center py-3 rounded-xl bg-dark-secondary/40 border border-dark-border/50">
+            <div key={s.label} className="text-center py-3 rounded-xl bg-[var(--surface)] border border-[var(--card-border)]">
               <div className="text-base sm:text-lg font-mono font-bold text-text-primary">{s.value}</div>
               <div className="text-[9px] font-mono text-text-muted uppercase tracking-wide mt-0.5">{s.label}</div>
             </div>
@@ -360,7 +360,7 @@ export default function VaultPublicLanding() {
         {/* Blurred teaser sections */}
         <div className="relative mb-6">
           <div
-            className="rounded-2xl border border-dark-border bg-dark-secondary/30 p-5"
+            className="rounded-2xl border border-[var(--card-border)] bg-[var(--surface)] p-5"
             style={{ filter: 'blur(3px)', opacity: 0.5, pointerEvents: 'none' }}
           >
             <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-3">
@@ -368,7 +368,7 @@ export default function VaultPublicLanding() {
             </div>
             <div className="grid grid-cols-4 gap-2">
               {[1, 2, 3, 4].map(n => (
-                <div key={n} className="bg-dark-tertiary rounded-lg h-14" />
+                <div key={n} className="bg-[var(--stone)] rounded-lg h-14" />
               ))}
             </div>
           </div>
@@ -384,7 +384,7 @@ export default function VaultPublicLanding() {
 
         <div className="relative mb-6">
           <div
-            className="rounded-2xl border border-dark-border bg-dark-secondary/30 p-5"
+            className="rounded-2xl border border-[var(--card-border)] bg-[var(--surface)] p-5"
             style={{ filter: 'blur(3px)', opacity: 0.5, pointerEvents: 'none' }}
           >
             <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-3">
@@ -392,7 +392,7 @@ export default function VaultPublicLanding() {
             </div>
             <div className="grid grid-cols-3 gap-2">
               {[1, 2, 3, 4, 5, 6].map(n => (
-                <div key={n} className="bg-dark-tertiary rounded-lg h-10" />
+                <div key={n} className="bg-[var(--stone)] rounded-lg h-10" />
               ))}
             </div>
           </div>
@@ -409,24 +409,24 @@ export default function VaultPublicLanding() {
         {/* Clutch Rating blurred teaser */}
         <div className="relative mb-10">
           <div
-            className="rounded-2xl border border-dark-border bg-dark-secondary/30 p-5"
+            className="rounded-2xl border border-[var(--card-border)] bg-[var(--surface)] p-5"
             style={{ filter: 'blur(3px)', opacity: 0.5, pointerEvents: 'none' }}
           >
             <div className="text-[11px] font-mono text-text-muted uppercase tracking-wider mb-3">
               Your Full Rating Breakdown
             </div>
             <div className="flex items-center gap-4 mb-3">
-              <div className="w-16 h-16 rounded-full bg-dark-tertiary" />
+              <div className="w-16 h-16 rounded-full bg-[var(--stone)]" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-dark-tertiary rounded w-1/2" />
-                <div className="h-2 bg-dark-tertiary rounded w-3/4" />
+                <div className="h-3 bg-[var(--stone)] rounded w-1/2" />
+                <div className="h-2 bg-[var(--stone)] rounded w-3/4" />
               </div>
             </div>
             <div className="space-y-2">
               {[1, 2, 3, 4, 5, 6].map(n => (
                 <div key={n} className="flex items-center gap-2">
-                  <div className="w-16 h-2 bg-dark-tertiary rounded" />
-                  <div className="flex-1 h-2 bg-dark-tertiary rounded" />
+                  <div className="w-16 h-2 bg-[var(--stone)] rounded" />
+                  <div className="flex-1 h-2 bg-[var(--stone)] rounded" />
                 </div>
               ))}
             </div>

@@ -204,7 +204,7 @@ const GamedayPortal = () => {
 
               {/* Floating VS badge */}
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="w-9 h-9 rounded-full bg-dark-primary border-2 border-dark-border flex items-center justify-center shadow-lg">
+                <div className="w-9 h-9 rounded-full bg-[var(--bg)] border-2 border-[var(--card-border)] flex items-center justify-center shadow-lg">
                   <span className="text-[10px] font-bold text-text-muted uppercase">VS</span>
                 </div>
               </div>
@@ -250,12 +250,12 @@ const GamedayPortal = () => {
                     <div
                       key={p.playerId || i}
                       className={`py-1.5 px-2 rounded-lg ${
-                        isBench ? 'opacity-40' : 'bg-dark-tertiary/50'
+                        isBench ? 'opacity-40' : 'bg-[var(--bg-alt)]'
                       }`}
                     >
                       <div className="flex items-center gap-1.5">
                         {p.nflPos && (
-                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${posColors[p.nflPos] || 'bg-dark-tertiary text-text-muted'}`}>
+                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${posColors[p.nflPos] || 'bg-[var(--bg-alt)] text-text-muted'}`}>
                             {p.nflPos}
                           </span>
                         )}
@@ -296,12 +296,12 @@ const GamedayPortal = () => {
                     <div
                       key={p.playerId || i}
                       className={`py-1.5 px-2 rounded-lg ${
-                        isBench ? 'opacity-40' : 'bg-dark-tertiary/50'
+                        isBench ? 'opacity-40' : 'bg-[var(--bg-alt)]'
                       }`}
                     >
                       <div className="flex items-center gap-1.5">
                         {p.nflPos && (
-                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${posColors[p.nflPos] || 'bg-dark-tertiary text-text-muted'}`}>
+                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${posColors[p.nflPos] || 'bg-[var(--bg-alt)] text-text-muted'}`}>
                             {p.nflPos}
                           </span>
                         )}
@@ -346,7 +346,7 @@ const GamedayPortal = () => {
                   <div
                     key={i}
                     className={`p-2.5 rounded-lg text-sm ${
-                      isUserMatchup ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-dark-tertiary/30'
+                      isUserMatchup ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-[var(--bg-alt)]'
                     }`}
                   >
                     {/* Home team row */}
@@ -431,8 +431,8 @@ const GamedayPortal = () => {
                       isActive
                         ? 'bg-emerald-500 text-text-primary'
                         : isScored
-                        ? 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
-                        : 'bg-dark-tertiary/50 text-text-muted'
+                        ? 'bg-[var(--bg-alt)] text-text-secondary hover:text-text-primary'
+                        : 'bg-[var(--bg-alt)] text-text-muted'
                     }`}
                   >
                     {w.week}

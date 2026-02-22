@@ -123,7 +123,7 @@ export default function VaultRevealView({
             ].map((stat, i) => (
               <div
                 key={stat.label}
-                className="text-center px-3 py-5 bg-dark-secondary/60 rounded-xl border border-dark-border"
+                className="text-center px-3 py-5 bg-[var(--bg-alt)] rounded-xl border border-[var(--card-border)]"
               >
                 <div className="text-2xl sm:text-[28px] font-display font-bold text-text-primary mb-1">
                   <AnimatedNumber
@@ -194,7 +194,7 @@ export default function VaultRevealView({
           {/* Bottom CTA slot */}
           {children && (
             <div
-              className="text-center mt-12 pt-8 border-t border-dark-border/50"
+              className="text-center mt-12 pt-8 border-t border-[var(--card-border)]/50"
               style={{
                 animation: showCards
                   ? `vaultFadeUp 0.8s ease ${1.2 + ownerStats.length * 0.1 + 0.3}s both`

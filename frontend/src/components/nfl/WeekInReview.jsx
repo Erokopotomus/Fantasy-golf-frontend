@@ -101,7 +101,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
         </div>
 
         {lineup.pointsLeftOnBench > 0 && (
-          <div className="mt-3 pt-3 border-t border-dark-border/50">
+          <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
             <p className="text-xs text-text-muted">
               Points left on bench: <span className="text-yellow-400 font-mono font-bold">{lineup.pointsLeftOnBench}</span>
             </p>
@@ -161,12 +161,12 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                 <div
                   key={p.playerId || i}
                   className={`flex items-center gap-2 py-1.5 px-2 rounded ${
-                    wasStarted ? 'bg-dark-tertiary/30' : 'bg-yellow-500/5'
+                    wasStarted ? 'bg-[var(--bg-alt)]' : 'bg-yellow-500/5'
                   }`}
                 >
                   {p.nflPos && (
                     <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center flex-shrink-0 ${
-                      posColors[p.nflPos] || 'bg-dark-tertiary text-text-muted'
+                      posColors[p.nflPos] || 'bg-[var(--bg-alt)] text-text-muted'
                     }`}>{p.nflPos}</span>
                   )}
                   <span className="text-xs text-text-muted w-8 flex-shrink-0">{p.optimalSlot}</span>
@@ -208,7 +208,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
             {seasonTrends.weeklyEfficiencies.map(we => (
               <div key={we.week} className="flex items-center gap-2">
                 <span className="text-xs text-text-muted font-mono w-8">Wk{we.week}</span>
-                <div className="flex-1 h-4 bg-dark-tertiary/30 rounded overflow-hidden">
+                <div className="flex-1 h-4 bg-[var(--bg-alt)] rounded overflow-hidden">
                   <div
                     className={`h-full rounded transition-all ${
                       we.efficiency >= 95 ? 'bg-emerald-500' :

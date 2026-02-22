@@ -52,7 +52,7 @@ export default function WatchList() {
             key={f.key}
             onClick={() => setSportFilter(f.key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors
-              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-text-primary/40 border border-stone/30 hover:border-stone/50'}`}
+              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-text-primary/40 border border-[var(--card-border)] hover:border-stone/50'}`}
           >
             {f.label} ({f.count})
           </button>
@@ -77,8 +77,8 @@ export default function WatchList() {
             const p = entry.player || {}
             const profileUrl = entry.sport === 'nfl' ? `/nfl/players/${entry.playerId}` : `/players/${entry.playerId}`
             return (
-              <div key={entry.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-dark-secondary/40 hover:bg-dark-secondary/80 transition-colors group">
-                <div className="w-9 h-9 rounded-full bg-dark-primary overflow-hidden shrink-0">
+              <div key={entry.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-alt)] transition-colors group">
+                <div className="w-9 h-9 rounded-full bg-[var(--bg-alt)] overflow-hidden shrink-0">
                   {p.headshotUrl ? (
                     <img src={p.headshotUrl} alt="" className="w-full h-full object-cover" />
                   ) : (

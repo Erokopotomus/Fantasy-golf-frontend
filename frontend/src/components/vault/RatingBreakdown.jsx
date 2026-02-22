@@ -48,7 +48,7 @@ export default function RatingBreakdown({ components, ownerColor = '#E8B84D', an
                 </span>
               )}
             </div>
-            <div className="h-1.5 rounded-full bg-dark-tertiary/5 overflow-hidden">
+            <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
               {isActive ? (
                 <div
                   className="h-full rounded-full transition-all duration-700 ease-out"

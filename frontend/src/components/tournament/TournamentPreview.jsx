@@ -32,7 +32,7 @@ const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, 
     >
       <span className="border-b border-dotted border-current">{label}</span>
       {show && (
-        <div className="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-dark-primary border border-dark-border shadow-xl text-left normal-case tracking-normal pointer-events-none">
+        <div className="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] shadow-xl text-left normal-case tracking-normal pointer-events-none">
           <p className="text-[11px] text-text-primary font-semibold mb-0.5 leading-tight">{label}</p>
           <p className="text-[10px] text-text-muted font-normal leading-snug">{tip}</p>
         </div>
@@ -91,9 +91,9 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* ── Left: Field Table ── */}
       <div className="lg:col-span-2">
-        <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
           {/* Filters */}
-          <div className="px-4 py-3 border-b border-dark-border">
+          <div className="px-4 py-3 border-b border-[var(--card-border)]">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-bold text-text-primary">
                 Field Analysis
@@ -113,8 +113,8 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       filter === opt.key
                         ? 'bg-gold/15 text-gold border border-gold/25'
                         : disabled
-                          ? 'bg-dark-tertiary text-text-muted/40 border border-dark-border cursor-not-allowed'
-                          : 'bg-dark-tertiary text-text-muted border border-dark-border hover:text-text-primary'
+                          ? 'bg-[var(--stone)] text-text-muted/40 border border-[var(--card-border)] cursor-not-allowed'
+                          : 'bg-[var(--stone)] text-text-muted border border-[var(--card-border)] hover:text-text-primary'
                     }`}
                     title={disabled ? 'Clutch metrics not yet computed for this event' : ''}
                   >
@@ -129,7 +129,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-dark-border text-text-muted text-[10px] uppercase tracking-wider">
+                <tr className="border-b border-[var(--card-border)] text-text-muted text-[10px] uppercase tracking-wider">
                   <th className="text-left px-4 py-2 font-medium">Player</th>
                   <HeaderTooltip
                     label="CPI"
@@ -161,7 +161,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                   />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-dark-border/30">
+              <tbody className="divide-y divide-[var(--card-border)]">
                 {filteredField.map((entry, i) => {
                   const isMyPlayer = myPlayerIds.includes(entry.id)
                   const cm = entry.clutchMetrics || {}
@@ -170,14 +170,14 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                   return (
                     <tr
                       key={entry.id || i}
-                      className={`hover:bg-dark-tertiary/50 transition-colors ${isMyPlayer ? 'bg-gold/[0.04]' : ''}`}
+                      className={`hover:bg-[var(--surface-alt)] transition-colors ${isMyPlayer ? 'bg-gold/[0.04]' : ''}`}
                     >
                       <td className="px-4 py-2.5">
                         <Link to={`/players/${entry.id}`} className="flex items-center gap-2.5 group">
                           {entry.headshotUrl ? (
-                            <img src={entry.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-dark-tertiary" />
+                            <img src={entry.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)]" />
                           ) : (
-                            <div className="w-7 h-7 rounded-full bg-dark-tertiary flex items-center justify-center text-sm">
+                            <div className="w-7 h-7 rounded-full bg-[var(--stone)] flex items-center justify-center text-sm">
                               {entry.countryFlag || '?'}
                             </div>
                           )}
@@ -249,8 +249,8 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
 
         {/* Field snapshot when no clutch data */}
         {!hasClutchData && leaderboard.length > 0 && (
-          <div className="rounded-xl border border-dark-border bg-dark-secondary overflow-hidden">
-            <div className="px-4 py-3 border-b border-dark-border bg-gradient-to-r from-emerald-500/5 to-transparent">
+          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--card-border)] bg-gradient-to-r from-emerald-500/5 to-transparent">
               <h3 className="text-sm font-bold text-text-primary">Field Snapshot</h3>
             </div>
             <div className="p-4 space-y-4">
@@ -262,11 +262,11 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                   .sort((a, b) => a.owgrRank - b.owgrRank)
                   .slice(0, 5)
                   .map((p, i) => (
-                    <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between py-1 hover:bg-dark-tertiary/50 -mx-1 px-1 rounded transition-colors">
+                    <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between py-1 hover:bg-[var(--surface-alt)] -mx-1 px-1 rounded transition-colors">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-xs font-mono text-text-muted w-4">{i + 1}.</span>
                         {p.headshotUrl ? (
-                          <img src={p.headshotUrl} alt="" className="w-5 h-5 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+                          <img src={p.headshotUrl} alt="" className="w-5 h-5 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
                         ) : (
                           <span className="text-xs">{p.countryFlag || '?'}</span>
                         )}
@@ -279,7 +279,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
               </div>
 
               {/* Field stats */}
-              <div className="pt-3 border-t border-dark-border/50 space-y-2">
+              <div className="pt-3 border-t border-[var(--card-border)] space-y-2">
                 <p className="text-[10px] text-text-muted uppercase tracking-wider font-bold">Field Stats</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-text-muted">Total Players</span>

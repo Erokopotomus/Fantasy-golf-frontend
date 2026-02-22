@@ -60,7 +60,7 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search players..."
-            className="w-full pl-8 pr-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
           />
         </div>
 
@@ -70,7 +70,7 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
             <button
               onClick={() => setPosition(null)}
               className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors ${
-                !position ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary/[0.04] text-text-primary/40 hover:text-text-primary/60'
+                !position ? 'bg-gold/20 text-gold' : 'bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary/60'
               }`}
             >
               All
@@ -80,7 +80,7 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
                 key={pos}
                 onClick={() => setPosition(position === pos ? null : pos)}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors ${
-                  position === pos ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary/[0.04] text-text-primary/40 hover:text-text-primary/60'
+                  position === pos ? 'bg-gold/20 text-gold' : 'bg-[var(--bg-alt)] text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
                 {pos}
@@ -104,10 +104,10 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
           filteredPlayers.map(player => (
             <div
               key={player.id}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-dark-tertiary/[0.04] transition-colors group"
+              className="flex items-center gap-2 px-3 py-2 hover:bg-[var(--surface-alt)] transition-colors group"
             >
               {/* Headshot */}
-              <div className="w-7 h-7 rounded-full bg-dark-primary overflow-hidden shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[var(--bg-alt)] overflow-hidden shrink-0">
                 {player.headshotUrl ? (
                   <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
                 ) : (

@@ -5,7 +5,7 @@ import Card from '../components/common/Card'
 import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
 
 const TIER_COLORS = {
-  rookie: 'bg-dark-tertiary/10 text-text-primary/60',
+  rookie: 'bg-[var(--bg-alt)] text-text-primary/60',
   contender: 'bg-green-500/20 text-green-400',
   sharp: 'bg-blue-500/20 text-blue-400',
   expert: 'bg-accent-gold/20 text-accent-gold',
@@ -58,11 +58,11 @@ const OUTCOME_BADGE = {
   CORRECT: { label: 'Correct', class: 'bg-green-500/20 text-green-400' },
   INCORRECT: { label: 'Incorrect', class: 'bg-red-500/20 text-red-400' },
   PUSH: { label: 'Push', class: 'bg-yellow-500/20 text-yellow-400' },
-  VOIDED: { label: 'Voided', class: 'bg-dark-tertiary/10 text-text-primary/40' },
+  VOIDED: { label: 'Voided', class: 'bg-[var(--bg-alt)] text-text-primary/40' },
 }
 
 const StatBox = ({ label, value, color = 'text-text-primary' }) => (
-  <div className="bg-dark-primary rounded-lg p-3 text-center">
+  <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
     <p className={`text-xl font-bold font-mono ${color}`}>{value}</p>
     <p className="text-text-muted text-xs">{label}</p>
   </div>
@@ -196,7 +196,7 @@ export default function PublicProfile() {
                   : call.predictionType
 
                 return (
-                  <div key={call.id} className="flex items-center gap-3 bg-dark-primary rounded-lg p-3">
+                  <div key={call.id} className="flex items-center gap-3 bg-[var(--bg-alt)] rounded-lg p-3">
                     <span className={`text-xs font-mono px-2 py-0.5 rounded ${badge.class}`}>
                       {badge.label}
                     </span>
@@ -239,7 +239,7 @@ export default function PublicProfile() {
               {achievements.map(a => (
                 <div
                   key={a.id}
-                  className="bg-dark-primary rounded-lg px-3 py-2 text-center"
+                  className="bg-[var(--bg-alt)] rounded-lg px-3 py-2 text-center"
                   title={a.name}
                 >
                   <span className="text-xl">{a.icon || '?'}</span>

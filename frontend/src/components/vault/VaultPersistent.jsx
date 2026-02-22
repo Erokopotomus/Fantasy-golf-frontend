@@ -108,7 +108,7 @@ export default function VaultPersistent({
             {statItems.map(stat => (
               <div
                 key={stat.label}
-                className="text-center px-3 py-5 bg-dark-secondary/60 rounded-xl border border-dark-border"
+                className="text-center px-3 py-5 bg-[var(--bg-alt)] rounded-xl border border-[var(--card-border)]"
               >
                 <div className="text-2xl sm:text-[28px] font-display font-bold text-text-primary mb-1">
                   {stat.value.toLocaleString()}

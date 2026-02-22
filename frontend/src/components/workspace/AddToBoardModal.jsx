@@ -83,7 +83,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative bg-dark-secondary border border-stone/30 rounded-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+        className="relative bg-[var(--surface)] border border-[var(--card-border)] rounded-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -104,7 +104,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
           {loading ? (
             <div className="space-y-3 py-4">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-12 bg-dark-tertiary/5 rounded-lg animate-pulse" />
+                <div key={i} className="h-12 bg-[var(--stone)] rounded-lg animate-pulse" />
               ))}
             </div>
           ) : boards.length === 0 ? (
@@ -118,7 +118,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
                 return (
                   <div
                     key={board.id}
-                    className="flex items-center justify-between px-3 py-2.5 bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-lg"
+                    className="flex items-center justify-between px-3 py-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${SPORT_BADGE[board.sport] || SPORT_BADGE.golf}`}>
@@ -165,7 +165,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
               onChange={e => setNewName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCreateAndAdd()}
               placeholder="New board name..."
-              className="flex-1 bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/40"
+              className="flex-1 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/40"
             />
             <button
               onClick={handleCreateAndAdd}

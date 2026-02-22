@@ -92,7 +92,7 @@ export default function NflPlayerDetail() {
     TE: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
     K: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
     DEF: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
-  }[player.nflPosition] || 'text-text-primary/50 bg-dark-tertiary/5 border-stone/30'
+  }[player.nflPosition] || 'text-text-primary/50 bg-[var(--bg-alt)] border-[var(--card-border)]'
 
   const isQb = player.nflPosition === 'QB'
   const isK = player.nflPosition === 'K'
@@ -135,12 +135,12 @@ export default function NflPlayerDetail() {
       <Link to="/nfl/players" className="text-text-primary/40 hover:text-text-primary/60 text-sm mb-4 inline-block">&larr; Back to Players</Link>
 
       {/* ─── Player Header ─── */}
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-6 mb-6">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
           {player.headshotUrl ? (
-            <img src={player.headshotUrl} alt="" className="w-24 h-24 rounded-full object-cover bg-dark-tertiary/10 flex-shrink-0" />
+            <img src={player.headshotUrl} alt="" className="w-24 h-24 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-2xl font-bold flex-shrink-0">
+            <div className="w-24 h-24 rounded-full bg-[var(--stone)] flex items-center justify-center text-text-primary/30 text-2xl font-bold flex-shrink-0">
               {player.nflPosition}
             </div>
           )}
@@ -197,7 +197,7 @@ export default function NflPlayerDetail() {
 
         {/* Add to Board + Watch */}
         {user && (
-          <div className="mt-4 pt-4 border-t border-stone/20 flex items-center gap-2">
+          <div className="mt-4 pt-4 border-t border-[var(--card-border)] flex items-center gap-2">
             <button
               onClick={() => setShowAddToBoard(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gold/40 rounded-lg text-gold text-sm font-semibold hover:bg-gold/10 transition-colors"
@@ -210,7 +210,7 @@ export default function NflPlayerDetail() {
             <button
               onClick={() => toggleWatch(playerId, 'nfl')}
               className={`inline-flex items-center gap-1 px-3 py-1.5 border rounded-lg text-sm font-semibold transition-colors
-                ${isWatched(playerId) ? 'border-gold/40 text-gold bg-gold/10' : 'border-stone/50 text-text-primary/40 hover:border-gold/30 hover:text-gold'}`}
+                ${isWatched(playerId) ? 'border-gold/40 text-gold bg-gold/10' : 'border-[var(--card-border)] text-text-primary/40 hover:border-gold/30 hover:text-gold'}`}
             >
               <svg className="w-4 h-4" fill={isWatched(playerId) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -222,7 +222,7 @@ export default function NflPlayerDetail() {
 
         {/* Quick season stats (default view for Informed Fan) */}
         {latestSeason && latestSeason.totals.gamesPlayed > 0 && (
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-6 pt-4 border-t border-stone/20">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-6 pt-4 border-t border-[var(--card-border)]">
             <QuickStat label="GP" value={latestSeason.totals.gamesPlayed} />
             {isQb ? (
               <>
@@ -261,7 +261,7 @@ export default function NflPlayerDetail() {
       </div>
 
       {/* ─── Tab Navigation ─── */}
-      <div className="flex gap-1 mb-4 bg-dark-tertiary/5 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 mb-4 bg-[var(--bg-alt)] rounded-lg p-1 w-fit">
         {TABS.map(tab => (
           <button
             key={tab.key}
@@ -281,15 +281,15 @@ export default function NflPlayerDetail() {
       {activeTab === 'career' && (
         <div className="space-y-4">
           {/* Career Stats by Season Table */}
-          <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-stone/30">
+          <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--card-border)]">
               <h2 className="text-lg font-display font-bold text-text-primary">Career Stats by Season</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-stone/30">
-                    <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase sticky left-0 bg-[#0e0d0b]">Year</th>
+                  <tr className="border-b border-[var(--card-border)]">
+                    <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase sticky left-0 bg-[var(--surface)]">Year</th>
                     <th className="text-left px-3 py-2 text-text-primary/40 text-xs font-mono">TM</th>
                     <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">GP</th>
                     {isQb ? (
@@ -336,7 +336,7 @@ export default function NflPlayerDetail() {
                 </thead>
                 <tbody>
                   {seasonSummaries.map(ss => (
-                    <tr key={ss.season} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                    <tr key={ss.season} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                       <td className="px-4 py-2.5 font-mono text-sm font-bold text-text-primary sticky left-0 bg-transparent">{ss.season}</td>
                       <td className="px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.teamAbbr || '-'}</td>
                       <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.gamesPlayed}</td>
@@ -394,7 +394,7 @@ export default function NflPlayerDetail() {
                   ))}
                   {/* Career totals row */}
                   {seasonSummaries.length > 1 && (
-                    <tr className="border-t border-stone/50 bg-dark-tertiary/5">
+                    <tr className="border-t border-[var(--card-border)] bg-[var(--bg-alt)]">
                       <td className="px-4 py-2.5 font-mono text-sm font-bold text-gold sticky left-0">Career</td>
                       <td className="px-3 py-2.5 font-mono text-sm text-text-primary/40">—</td>
                       <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary font-bold">{careerTotals.gamesPlayed}</td>
@@ -474,7 +474,7 @@ export default function NflPlayerDetail() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-stone/30">
+                    <tr className="border-b border-[var(--card-border)]">
                       <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Year</th>
                       <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">EPA Total</th>
                       <th className="text-right px-3 py-2 text-text-primary/40 text-xs font-mono">EPA/Game</th>
@@ -491,7 +491,7 @@ export default function NflPlayerDetail() {
                       const hasAny = adv.epaTotal != null || adv.cpoe != null || adv.successRate != null
                       if (!hasAny) return null
                       return (
-                        <tr key={ss.season} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                        <tr key={ss.season} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                           <td className="px-4 py-2.5 font-mono text-sm font-bold text-text-primary">{ss.season}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{adv.epaTotal ?? '-'}</td>
                           <td className={`text-right px-3 py-2.5 font-mono text-sm font-bold ${
@@ -540,17 +540,17 @@ export default function NflPlayerDetail() {
 
       {/* ─── Game Log Tab ─── */}
       {activeTab === 'gamelog' && (
-        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-stone/30 flex items-center justify-between">
+        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
             <h2 className="text-lg font-display font-bold text-text-primary">Game Log</h2>
             {availableSeasons.length > 1 && (
               <select
                 value={gameLogSeason || ''}
                 onChange={e => setGameLogSeason(Number(e.target.value))}
-                className="bg-[#1a1917] border border-stone/30 rounded-lg px-3 py-1.5 text-text-primary text-sm focus:border-gold/50 focus:outline-none"
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-text-primary text-sm focus:border-gold/50 focus:outline-none"
               >
                 {availableSeasons.map(yr => (
-                  <option key={yr} value={yr} className="bg-[#1a1917] text-text-primary">{yr}</option>
+                  <option key={yr} value={yr} className="bg-[var(--surface)] text-text-primary">{yr}</option>
                 ))}
               </select>
             )}
@@ -558,7 +558,7 @@ export default function NflPlayerDetail() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-stone/30">
+                <tr className="border-b border-[var(--card-border)]">
                   <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">WK</th>
                   <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">OPP</th>
                   <th className="text-center px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Result</th>
@@ -605,7 +605,7 @@ export default function NflPlayerDetail() {
                   <tr><td colSpan={12} className="text-center py-8 text-text-primary/20">No game data available</td></tr>
                 ) : (
                   filteredGameLog.map(g => (
-                    <tr key={g.gameId} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                    <tr key={g.gameId} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                       <td className="px-4 py-2.5 font-mono text-sm text-text-primary/60">{g.week}</td>
                       <td className="px-4 py-2.5 font-mono text-sm text-text-primary/70">
                         {g.isHome ? 'vs ' : '@ '}{g.opponent}
@@ -662,14 +662,14 @@ export default function NflPlayerDetail() {
       {activeTab === 'fantasy' && (
         <div className="space-y-4">
           {/* Fantasy Points by Format Comparison */}
-          <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-stone/30">
+          <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--card-border)]">
               <h2 className="text-lg font-display font-bold text-text-primary">Fantasy Points by Scoring Format</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-stone/30">
+                  <tr className="border-b border-[var(--card-border)]">
                     <th className="text-left px-4 py-2 text-text-primary/40 text-xs font-mono uppercase">Year</th>
                     <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">GP</th>
                     <th className="text-right px-4 py-2 text-text-primary/40 text-xs font-mono">STD Total</th>
@@ -682,7 +682,7 @@ export default function NflPlayerDetail() {
                 </thead>
                 <tbody>
                   {seasonSummaries.map(ss => (
-                    <tr key={ss.season} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                    <tr key={ss.season} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                       <td className="px-4 py-2.5 font-mono text-sm font-bold text-text-primary">{ss.season}</td>
                       <td className="text-right px-4 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.gamesPlayed}</td>
                       <td className="text-right px-4 py-2.5 font-mono text-sm text-text-primary/80">{ss.fantasyPts.standard.toFixed(1)}</td>
@@ -700,7 +700,7 @@ export default function NflPlayerDetail() {
 
           {/* PPR vs Standard Differential (for skill positions) */}
           {isSkillPos && seasonSummaries.length > 0 && (
-            <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
+            <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
               <h3 className="text-sm font-display font-bold text-text-primary/60 mb-3">PPR Boost</h3>
               <p className="text-text-primary/40 text-xs mb-3">How much this player benefits from PPR scoring vs Standard</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -708,7 +708,7 @@ export default function NflPlayerDetail() {
                   const boost = ss.fantasyPts.ppr - ss.fantasyPts.standard
                   const boostPg = ss.fantasyPtsPerGame.ppr - ss.fantasyPtsPerGame.standard
                   return (
-                    <div key={ss.season} className="bg-dark-tertiary/5 rounded-lg p-3 text-center">
+                    <div key={ss.season} className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
                       <div className="text-text-primary/40 text-xs font-mono mb-1">{ss.season}</div>
                       <div className="text-gold font-mono font-bold text-lg">+{boost.toFixed(1)}</div>
                       <div className="text-text-primary/30 text-xs font-mono">+{boostPg.toFixed(1)}/game</div>
@@ -727,7 +727,7 @@ export default function NflPlayerDetail() {
           {newsLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="animate-pulse h-28 bg-dark-tertiary/5 rounded-lg" />
+                <div key={i} className="animate-pulse h-28 bg-[var(--bg-alt)] rounded-lg" />
               ))}
             </div>
           ) : playerNews.length === 0 ? (
@@ -745,8 +745,8 @@ export default function NflPlayerDetail() {
 
       {/* ─── Your Notes (Captures) ─── */}
       {user && (
-        <div className="mt-6 bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-stone/30 flex items-center justify-between">
+        <div className="mt-6 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
             <h3 className="text-sm font-display font-bold text-text-primary">Your Notes</h3>
             <button
               onClick={() => setShowCaptureForm(true)}
@@ -771,7 +771,7 @@ export default function NflPlayerDetail() {
                 {playerCaptures.map(c => {
                   const verdict = c.outcomeLinked && c.outcomeData?.players?.[0]?.verdict
                   return (
-                    <div key={c.id} className="px-3 py-2 bg-dark-tertiary/[0.03] rounded-lg border border-[var(--card-border)]">
+                    <div key={c.id} className="px-3 py-2 bg-[var(--bg-alt)] rounded-lg border border-[var(--card-border)]">
                       <p className="text-xs text-text-primary/70 line-clamp-3">{c.content}</p>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; Called it</span>}
@@ -779,7 +779,7 @@ export default function NflPlayerDetail() {
                         {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending</span>}
                         {(verdict === 'TRENDING_INCORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending</span>}
                         {c.sourceType && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-dark-tertiary/[0.06] text-text-primary/30">{c.sourceType}</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[var(--bg-alt)] text-text-primary/30">{c.sourceType}</span>
                         )}
                         {c.sentiment && (
                           <span className={`text-[10px] font-medium ${
@@ -820,7 +820,7 @@ export default function NflPlayerDetail() {
 
       {/* ─── Clutch Brief (AI Player Analysis) ─── */}
       {user && (
-        <div className="mt-6 bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+        <div className="mt-6 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
           <button
             onClick={() => {
               setShowBrief(!showBrief)
@@ -844,7 +844,7 @@ export default function NflPlayerDetail() {
                   .finally(() => setBriefLoading(false))
               }
             }}
-            className="w-full px-4 py-3 border-b border-stone/30 flex items-center justify-between hover:bg-dark-tertiary/[0.02] transition-colors"
+            className="w-full px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between hover:bg-[var(--surface-alt)] transition-colors"
           >
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -880,10 +880,10 @@ export default function NflPlayerDetail() {
 
       {/* ─── Your History (Opinion Timeline) ─── */}
       {user && timeline.length > 0 && (
-        <div className="mt-6 bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+        <div className="mt-6 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
           <button
             onClick={() => setShowTimeline(!showTimeline)}
-            className="w-full px-4 py-3 border-b border-stone/30 flex items-center justify-between hover:bg-dark-tertiary/[0.02] transition-colors"
+            className="w-full px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between hover:bg-[var(--surface-alt)] transition-colors"
           >
             <h3 className="text-sm font-display font-bold text-text-primary">Your History with {player.name}</h3>
             <div className="flex items-center gap-2">
@@ -955,10 +955,10 @@ function QuickStat({ label, value, accent, negative }) {
 
 function ExpandableSection({ title, subtitle, expanded, onToggle, children }) {
   return (
-    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
+    <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full px-4 py-3 border-b border-stone/30 flex items-center justify-between hover:bg-dark-tertiary/5 transition-colors"
+        className="w-full px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between hover:bg-[var(--surface-alt)] transition-colors"
       >
         <div className="text-left">
           <h2 className="text-lg font-display font-bold text-text-primary">{title}</h2>

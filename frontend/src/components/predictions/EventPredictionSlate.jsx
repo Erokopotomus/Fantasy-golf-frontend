@@ -84,7 +84,7 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
   const totalTargets = leaderboard.filter(p => p.sgTotal != null || p.fantasyPoints != null).length
 
   return (
-    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
+    <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-text-primary/80">This Week's Calls</h3>
         {madeCount > 0 && (
@@ -166,7 +166,7 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
                     type="text"
                     maxLength={280}
                     placeholder="Quick reason? (optional)"
-                    className="w-full bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded px-2 py-1 text-[10px] text-text-primary/60 placeholder-white/15 focus:outline-none focus:border-gold/30"
+                    className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-[10px] text-text-primary/60 placeholder-white/15 focus:outline-none focus:border-gold/30"
                     autoFocus
                     onBlur={e => {
                       if (e.target.value.trim() && existing?.id) {

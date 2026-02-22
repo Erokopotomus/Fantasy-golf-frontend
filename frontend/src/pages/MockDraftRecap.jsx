@@ -50,7 +50,7 @@ const MockDraftRecap = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
       </div>
     )
@@ -58,7 +58,7 @@ const MockDraftRecap = () => {
 
   if (error || !result) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Card className="text-center p-8">
           <p className="text-red-400 mb-4">{error || 'Mock draft not found'}</p>
           <Link to="/draft/history"><Button>Back to History</Button></Link>
@@ -116,7 +116,7 @@ const MockDraftRecap = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -132,7 +132,7 @@ const MockDraftRecap = () => {
                 <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
                   sport === 'nfl' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'
                 }`}>{sport}</span>
-                <span className="px-2 py-0.5 bg-dark-tertiary rounded text-xs capitalize">{result.draftType}</span>
+                <span className="px-2 py-0.5 bg-[var(--bg-alt)] rounded text-xs capitalize">{result.draftType}</span>
                 <span>{result.teamCount} teams</span>
                 <span>{result.rosterSize} rounds</span>
                 <span>{new Date(result.completedAt).toLocaleDateString()}</span>
@@ -146,7 +146,7 @@ const MockDraftRecap = () => {
           {/* Grade Card */}
           <Card className="mb-6 border-gold/30">
             <div className="flex items-center gap-6">
-              <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${gradeBgColors[result.overallGrade] || 'bg-dark-tertiary'}`}>
+              <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${gradeBgColors[result.overallGrade] || 'bg-[var(--surface)]'}`}>
                 <span className={`text-4xl font-bold ${gradeColors[result.overallGrade] || 'text-text-muted'}`}>
                   {result.overallGrade || '—'}
                 </span>
@@ -179,7 +179,7 @@ const MockDraftRecap = () => {
               {userPicks.map((pick, i) => {
                 const pg = pickGrades.find(g => g.pickNumber === pick.pickNumber) || pickGrades[i] || {}
                 return (
-                  <div key={pick.pickNumber || i} className="flex items-center justify-between p-3 bg-dark-primary rounded-lg">
+                  <div key={pick.pickNumber || i} className="flex items-center justify-between p-3 bg-[var(--bg-alt)] rounded-lg">
                     <div className="flex items-center gap-3">
                       <span className="text-text-muted text-sm w-8">R{pick.round}</span>
                       {sport === 'nfl' && pick.playerPosition ? (
@@ -201,7 +201,7 @@ const MockDraftRecap = () => {
                               pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
                               pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                               pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
-                              'bg-dark-tertiary/10 text-text-primary/40'
+                              'bg-[var(--stone)] text-text-primary/40'
                             }`}>{pick.pickTag}</span>
                           )}
                           {!pick.pickTag && pg.adpDiff != null && pg.adpDiff > 3 && (
@@ -222,7 +222,7 @@ const MockDraftRecap = () => {
                           {pg.adpDiff >= 0 ? '+' : ''}{pg.adpDiff}
                         </span>
                       )}
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${gradeBgColors[pg.grade] || 'bg-dark-tertiary'}`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${gradeBgColors[pg.grade] || 'bg-[var(--surface)]'}`}>
                         <span className={`text-sm font-bold ${gradeColors[pg.grade] || 'text-text-muted'}`}>
                           {pg.grade || '—'}
                         </span>
@@ -239,13 +239,13 @@ const MockDraftRecap = () => {
             <Card className="mb-6 overflow-x-auto">
               <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Draft Board</h2>
               <div className="min-w-[500px]">
-                <div className="grid gap-px bg-dark-border" style={{ gridTemplateColumns: `50px repeat(${result.teamCount}, 1fr)` }}>
+                <div className="grid gap-px bg-[var(--card-border)]" style={{ gridTemplateColumns: `50px repeat(${result.teamCount}, 1fr)` }}>
                   {/* Headers */}
-                  <div className="bg-dark-secondary p-2 text-xs text-text-muted">Rd</div>
+                  <div className="bg-[var(--surface)] p-2 text-xs text-text-muted">Rd</div>
                   {teamNames.map((name, i) => (
                     <div
                       key={i}
-                      className={`bg-dark-secondary p-2 text-xs font-medium truncate ${
+                      className={`bg-[var(--surface)] p-2 text-xs font-medium truncate ${
                         allPicks.some(p => p.teamIndex === i && p.isUser) ? 'text-gold border-b-2 border-gold' : 'text-text-secondary'
                       }`}
                     >
@@ -256,7 +256,7 @@ const MockDraftRecap = () => {
                   {Array.from({ length: result.rosterSize }, (_, r) => {
                     const round = r + 1
                     return [
-                      <div key={`r-${round}`} className="bg-dark-primary p-2 text-xs text-text-muted flex items-center">{round}</div>,
+                      <div key={`r-${round}`} className="bg-[var(--bg-alt)] p-2 text-xs text-text-muted flex items-center">{round}</div>,
                       ...Array.from({ length: result.teamCount }, (_, teamIdx) => {
                         const pick = allPicks.find(p => p.round === round && p.teamIndex === teamIdx)
                         const isUserTeam = pick?.isUser
@@ -264,7 +264,7 @@ const MockDraftRecap = () => {
                         return (
                           <div
                             key={`${round}-${teamIdx}`}
-                            className={`bg-dark-primary p-1.5 text-xs ${isUserTeam ? 'bg-gold/5' : ''}`}
+                            className={`bg-[var(--bg-alt)] p-1.5 text-xs ${isUserTeam ? 'bg-gold/5' : ''}`}
                           >
                             {pick ? (
                               <div className="truncate">
@@ -335,15 +335,15 @@ const MockDraftRecap = () => {
 
               {/* Summary stats */}
               <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="bg-dark-primary rounded-lg p-3 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
                   <div className="text-lg font-mono font-bold text-emerald-400">{boardComparison.picksMatchingBoard}</div>
                   <div className="text-[10px] text-text-primary/40">On Plan</div>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-3 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
                   <div className="text-lg font-mono font-bold text-orange-400">{boardComparison.picksDeviatingFromBoard}</div>
                   <div className="text-[10px] text-text-primary/40">Deviated</div>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-3 text-center">
+                <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
                   <div className="text-lg font-mono font-bold text-text-primary/60">
                     {boardComparison.averageBoardRankDeviation != null ? `${boardComparison.averageBoardRankDeviation}` : '—'}
                   </div>
@@ -361,7 +361,7 @@ const MockDraftRecap = () => {
                     devAbs <= 8 ? 'text-yellow-400' : 'text-rose-400'
 
                   return (
-                    <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-dark-primary/50">
+                    <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--bg-alt)]/50">
                       <span className="text-[10px] font-mono text-text-primary/30 w-6 text-right shrink-0">#{pick.draftPosition}</span>
                       <span className="text-xs text-text-primary truncate flex-1">{pick.playerName}</span>
                       {pick.pickTag && (
@@ -372,7 +372,7 @@ const MockDraftRecap = () => {
                           pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
                           pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                           pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
-                          'bg-dark-tertiary/10 text-text-primary/40'
+                          'bg-[var(--stone)] text-text-primary/40'
                         }`}>{pick.pickTag}</span>
                       )}
                       {pick.wasOnBoard ? (
@@ -389,11 +389,11 @@ const MockDraftRecap = () => {
 
               {/* Board players not drafted */}
               {(boardComparison.boardPlayersNotDrafted || []).length > 0 && (
-                <div className="mt-4 pt-3 border-t border-stone/20">
+                <div className="mt-4 pt-3 border-t border-[var(--card-border)]">
                   <h4 className="text-[11px] text-text-primary/40 mb-2">Targeted but didn't draft</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {boardComparison.boardPlayersNotDrafted.slice(0, 8).map((p, i) => (
-                      <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-dark-tertiary/[0.04] text-text-primary/30 border border-[var(--card-border)]">
+                      <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-alt)] text-text-primary/30 border border-[var(--card-border)]">
                         {p.playerName} <span className="text-text-primary/15">B#{p.boardRank}</span>
                       </span>
                     ))}

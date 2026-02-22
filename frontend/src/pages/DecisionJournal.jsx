@@ -114,20 +114,20 @@ export default function DecisionJournal() {
 
       {/* New Entry Form */}
       {showNewEntry && (
-        <div className="mb-4 p-4 bg-dark-secondary/60 border border-purple-500/20 rounded-xl">
+        <div className="mb-4 p-4 bg-[var(--surface)] border border-purple-500/20 rounded-xl">
           <textarea
             autoFocus
             value={entryContent}
             onChange={e => setEntryContent(e.target.value)}
             placeholder="What's your take? A draft strategy thought, trade idea, player insight..."
             rows={3}
-            className="w-full px-3 py-2 text-sm bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
+            className="w-full px-3 py-2 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
           />
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <select
               value={entryBoardId}
               onChange={e => setEntryBoardId(e.target.value)}
-              className="px-2 py-1.5 text-xs bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary/60 outline-none focus:border-gold/50"
+              className="px-2 py-1.5 text-xs bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary/60 outline-none focus:border-gold/50"
             >
               <option value="">No board (general)</option>
               {boards.map(b => (
@@ -138,7 +138,7 @@ export default function DecisionJournal() {
               value={entryPlayerName}
               onChange={e => setEntryPlayerName(e.target.value)}
               placeholder="Player name (optional)"
-              className="px-2 py-1.5 text-xs bg-dark-primary border border-[var(--card-border)] rounded-lg text-text-primary/60 placeholder-text-muted outline-none focus:border-gold/50 w-40"
+              className="px-2 py-1.5 text-xs bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary/60 placeholder-text-muted outline-none focus:border-gold/50 w-40"
             />
             <div className="flex-1" />
             <button
@@ -169,7 +169,7 @@ export default function DecisionJournal() {
             key={f.key || 'all'}
             onClick={() => setSportFilter(f.key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors
-              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-text-primary/40 border border-stone/30 hover:border-stone/50'}`}
+              ${sportFilter === f.key ? 'bg-gold/15 text-gold border border-gold/30' : 'text-text-primary/40 border border-[var(--card-border)] hover:border-stone/50'}`}
           >
             {f.label}
           </button>
@@ -196,7 +196,7 @@ export default function DecisionJournal() {
                   const cfg = ACTION_CONFIG[a.action] || { icon: '\u2022', label: a.action, color: 'text-text-primary/50' }
                   const details = a.details || {}
                   return (
-                    <div key={a.id} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-dark-secondary/30 hover:bg-dark-secondary/50 transition-colors">
+                    <div key={a.id} className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-alt)] transition-colors">
                       <span className={`text-sm shrink-0 mt-0.5 ${cfg.color}`}>{cfg.icon}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-text-primary/80">
@@ -246,7 +246,7 @@ export default function DecisionJournal() {
                         {details.reasonChips?.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {details.reasonChips.map(c => (
-                              <span key={c} className="px-1.5 py-0.5 rounded-full text-[9px] font-medium border border-stone/30 text-text-primary/40">
+                              <span key={c} className="px-1.5 py-0.5 rounded-full text-[9px] font-medium border border-[var(--card-border)] text-text-primary/40">
                                 {CHIP_LABELS[c] || c}
                               </span>
                             ))}

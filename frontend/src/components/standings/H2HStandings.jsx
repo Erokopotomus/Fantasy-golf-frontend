@@ -21,7 +21,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="text-left text-xs text-text-muted border-b border-dark-border">
+            <tr className="text-left text-xs text-text-muted border-b border-[var(--card-border)]">
               <th className="pb-3 pl-2">Rank</th>
               <th className="pb-3">Team</th>
               <th className="pb-3 text-center">W</th>
@@ -43,8 +43,8 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
               return (
                 <tr
                   key={team.userId}
-                  className={`border-b border-dark-border/50 ${
-                    isUser ? 'bg-emerald-400/10' : 'hover:bg-dark-tertiary/50'
+                  className={`border-b border-[var(--card-border)]/50 ${
+                    isUser ? 'bg-emerald-400/10' : 'hover:bg-[var(--surface-alt)]'
                   }`}
                 >
                   <td className="py-3 pl-2">
@@ -58,7 +58,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-dark-primary text-text-secondary'
+                        isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-[var(--bg-alt)] text-text-secondary'
                       }`}>
                         {team.avatar}
                       </div>
@@ -104,7 +104,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
             <div
               key={team.userId}
               className={`p-3 rounded-lg ${
-                isUser ? 'bg-emerald-400/10 border border-emerald-400/30' : 'bg-dark-tertiary'
+                isUser ? 'bg-emerald-400/10 border border-emerald-400/30' : 'bg-[var(--surface)]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -116,7 +116,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                     {rank}
                   </span>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                    isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-dark-primary text-text-secondary'
+                    isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-[var(--bg-alt)] text-text-secondary'
                   }`}>
                     {team.avatar}
                   </div>
@@ -174,7 +174,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
       )}
 
       {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-dark-border flex flex-wrap gap-4 text-xs text-text-muted">
+      <div className="mt-4 pt-4 border-t border-[var(--card-border)] flex flex-wrap gap-4 text-xs text-text-muted">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
           <span>1st Place</span>

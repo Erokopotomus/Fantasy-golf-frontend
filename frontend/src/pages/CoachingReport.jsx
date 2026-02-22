@@ -45,10 +45,10 @@ const CoachingReport = () => {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-dark-tertiary/5 rounded w-2/3" />
-          <div className="h-4 bg-dark-tertiary/5 rounded w-1/3" />
+          <div className="h-8 bg-[var(--stone)] rounded w-2/3" />
+          <div className="h-4 bg-[var(--stone)] rounded w-1/3" />
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 bg-dark-tertiary/5 rounded-xl" />
+            <div key={i} className="h-32 bg-[var(--stone)] rounded-xl" />
           ))}
         </div>
       </div>
@@ -89,7 +89,7 @@ const CoachingReport = () => {
 
         {/* Data confidence indicator */}
         {content.dataConfidence && (
-          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-dark-tertiary/[0.04] rounded-lg">
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--bg-alt)] rounded-lg">
             <div className={`w-2 h-2 rounded-full ${
               content.dataConfidence === 'HIGH' ? 'bg-emerald-400' :
               content.dataConfidence === 'MEDIUM' ? 'bg-yellow-400' : 'bg-orange-400'

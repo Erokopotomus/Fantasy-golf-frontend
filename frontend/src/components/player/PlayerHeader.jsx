@@ -6,7 +6,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
     if (rank <= 5) return 'bg-gold/20 text-gold border-gold/50'
     if (rank <= 10) return 'bg-blue-500/20 text-blue-400 border-blue-500/50'
     if (rank <= 25) return 'bg-purple-500/20 text-purple-400 border-purple-500/50'
-    return 'bg-dark-tertiary text-text-secondary border-dark-border'
+    return 'bg-[var(--stone)] text-text-secondary border-[var(--card-border)]'
   }
 
   const getTourBadge = (tour) => {
@@ -49,15 +49,15 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
 
   // Recent form badge color
   const getFormBadgeStyle = (result) => {
-    if (!result) return 'bg-dark-tertiary/5 text-text-muted'
+    if (!result) return 'bg-[var(--stone)] text-text-muted'
     if (result === 'CUT') return 'bg-red-500/20 text-red-400'
     if (result === 'WD') return 'bg-gray-500/20 text-gray-400'
     const num = parseInt(result.replace('T', ''), 10)
-    if (isNaN(num)) return 'bg-dark-tertiary/5 text-text-secondary'
+    if (isNaN(num)) return 'bg-[var(--stone)] text-text-secondary'
     if (num === 1) return 'bg-gold/20 text-gold'
     if (num <= 10) return 'bg-green-500/20 text-green-400'
     if (num <= 25) return 'bg-yellow-500/20 text-yellow-400'
-    return 'bg-dark-tertiary/5 text-text-secondary'
+    return 'bg-[var(--stone)] text-text-secondary'
   }
 
   // Compute age from birthDate
@@ -141,7 +141,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
   ]
 
   return (
-    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5 sm:p-6">
+    <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-5 sm:p-6">
       {/* Top section: headshot + info + actions */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
         {/* Headshot */}
@@ -150,12 +150,12 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
             <img
               src={headshotSrc}
               alt=""
-              className="w-[120px] h-[120px] rounded-xl object-cover bg-dark-primary border border-stone/30"
+              className="w-[120px] h-[120px] rounded-xl object-cover bg-[var(--stone)] border border-[var(--card-border)]"
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
             />
           ) : null}
           <div
-            className={`w-[120px] h-[120px] rounded-xl bg-dark-primary flex items-center justify-center text-5xl border border-stone/30 ${hasHeadshot ? 'hidden' : ''}`}
+            className={`w-[120px] h-[120px] rounded-xl bg-[var(--stone)] flex items-center justify-center text-5xl border border-[var(--card-border)] ${hasHeadshot ? 'hidden' : ''}`}
           >
             {player.countryFlag}
           </div>
@@ -238,7 +238,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
       </div>
 
       {/* Season Stats Row */}
-      <div className="mt-5 pt-5 border-t border-stone/30">
+      <div className="mt-5 pt-5 border-t border-[var(--card-border)]">
         <p className="text-xs text-text-muted mb-3 text-center sm:text-left">2025–26 Season</p>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">

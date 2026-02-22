@@ -30,7 +30,7 @@ const OADStandings = ({ standings, currentUserId }) => {
               className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${
                 isUser
                   ? 'bg-gold/10 border border-gold/30'
-                  : 'bg-dark-tertiary hover:bg-dark-tertiary/70'
+                  : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'
               }`}
             >
               {/* Rank */}
@@ -44,7 +44,7 @@ const OADStandings = ({ standings, currentUserId }) => {
 
               {/* Avatar */}
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-                isUser ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
+                isUser ? 'bg-gold/20 text-gold' : 'bg-[var(--bg-alt)] text-text-secondary'
               }`}>
                 {team.avatar}
               </div>
@@ -80,7 +80,7 @@ const OADStandings = ({ standings, currentUserId }) => {
       </div>
 
       {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-dark-border text-xs text-text-muted">
+      <div className="mt-4 pt-4 border-t border-[var(--card-border)] text-xs text-text-muted">
         <p>Points include tier multipliers. Higher tier picks earn bonus multipliers on their points.</p>
       </div>
     </Card>

@@ -36,9 +36,9 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
       <div className="overflow-x-auto">
         <table className="w-full min-w-[800px]">
           <thead>
-            <tr className="text-left text-xs text-text-muted border-b border-dark-border">
-              <th className="pb-3 pl-2 sticky left-0 bg-dark-secondary z-10">Rank</th>
-              <th className="pb-3 sticky left-8 bg-dark-secondary z-10">Team</th>
+            <tr className="text-left text-xs text-text-muted border-b border-[var(--card-border)]">
+              <th className="pb-3 pl-2 sticky left-0 bg-[var(--surface)] z-10">Rank</th>
+              <th className="pb-3 sticky left-8 bg-[var(--surface)] z-10">Team</th>
               {categories.map(cat => (
                 <th key={cat} className="pb-3 text-center px-2">
                   <div className="flex flex-col items-center">
@@ -59,21 +59,21 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
               return (
                 <tr
                   key={team.userId}
-                  className={`border-b border-dark-border/50 ${
-                    isUser ? 'bg-gold/10' : 'hover:bg-dark-tertiary/50'
+                  className={`border-b border-[var(--card-border)]/50 ${
+                    isUser ? 'bg-gold/10' : 'hover:bg-[var(--surface-alt)]'
                   }`}
                 >
-                  <td className="py-3 pl-2 sticky left-0 bg-dark-secondary z-10">
+                  <td className="py-3 pl-2 sticky left-0 bg-[var(--surface)] z-10">
                     <span className={`font-semibold ${
                       index === 0 ? 'text-yellow-400' : 'text-text-muted'
                     }`}>
                       {index + 1}
                     </span>
                   </td>
-                  <td className="py-3 sticky left-8 bg-dark-secondary z-10">
+                  <td className="py-3 sticky left-8 bg-[var(--surface)] z-10">
                     <div className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-gold/20 text-gold' : 'bg-dark-primary text-text-secondary'
+                        isUser ? 'bg-gold/20 text-gold' : 'bg-[var(--bg-alt)] text-text-secondary'
                       }`}>
                         {team.avatar}
                       </div>
@@ -118,7 +118,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
       </div>
 
       {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-dark-border">
+      <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
         <p className="text-xs text-text-muted mb-2">How Roto Scoring Works:</p>
         <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-2">

@@ -33,7 +33,7 @@ const formatStatLine = (sl) => {
 }
 
 const NflPlayerRow = ({ ps, isBench, benchOutscoredStarter }) => {
-  const posClass = posColors[ps.nflPos] || 'bg-dark-tertiary text-text-muted'
+  const posClass = posColors[ps.nflPos] || 'bg-[var(--bg-alt)] text-text-muted'
   const statLine = formatStatLine(ps.statLine)
 
   return (
@@ -43,7 +43,7 @@ const NflPlayerRow = ({ ps, isBench, benchOutscoredStarter }) => {
           ? benchOutscoredStarter
             ? 'bg-amber-500/8 border border-amber-500/20'
             : 'opacity-40'
-          : 'bg-dark-tertiary/50 border border-dark-border/30'
+          : 'bg-[var(--bg-alt)] border border-[var(--card-border)]'
       }`}
     >
       <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading week {weekNumber} scores...</p>
@@ -121,7 +121,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary pt-8 px-4">
+      <div className="min-h-screen pt-8 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="text-center py-12">
             <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error</h2>
@@ -216,7 +216,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] text-text-muted uppercase tracking-wider">Bench</span>
-              <div className="flex-1 border-t border-dark-border/30" />
+              <div className="flex-1 border-t border-[var(--card-border)]" />
               <span className="text-xs text-text-muted">
                 {bench.reduce((s, p) => s + (p.points || 0), 0).toFixed(1)} pts
               </span>
@@ -238,7 +238,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -261,7 +261,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   weekNumber === w
                     ? 'bg-emerald-500 text-text-primary'
-                    : 'bg-dark-tertiary text-text-muted hover:text-text-primary'
+                    : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary'
                 }`}
               >
                 Wk {w}
@@ -323,7 +323,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                           className={`rounded-lg transition-colors ${
                             isUser
                               ? 'bg-emerald-500/10 border border-emerald-500/30'
-                              : 'bg-dark-tertiary/50 hover:bg-dark-tertiary'
+                              : 'bg-[var(--bg-alt)] hover:bg-[var(--surface-alt)]'
                           }`}
                         >
                           <div
@@ -354,7 +354,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                           </div>
 
                           {isExpanded && team.playerScores && (
-                            <div className="px-3 pb-3 border-t border-dark-border/50 pt-2 space-y-1">
+                            <div className="px-3 pb-3 border-t border-[var(--card-border)] pt-2 space-y-1">
                               {[...team.playerScores]
                                 .sort((a, b) => {
                                   if (a.position === 'ACTIVE' && b.position !== 'ACTIVE') return -1
@@ -373,7 +373,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                                     >
                                       <div className="flex items-center gap-2">
                                         {ps.nflPos && (
-                                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center ${posColors[ps.nflPos] || 'bg-dark-tertiary text-text-muted'}`}>
+                                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded w-7 text-center ${posColors[ps.nflPos] || 'bg-[var(--bg-alt)] text-text-muted'}`}>
                                             {ps.nflPos}
                                           </span>
                                         )}
@@ -405,7 +405,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                         return (
                           <div
                             key={m.id}
-                            className="bg-dark-tertiary/50 rounded-lg p-3"
+                            className="bg-[var(--bg-alt)] rounded-lg p-3"
                           >
                             <div className="flex items-center gap-3">
                               <div className="flex-1 text-right">

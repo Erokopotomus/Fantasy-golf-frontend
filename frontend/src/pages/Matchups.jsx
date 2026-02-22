@@ -138,7 +138,7 @@ const Matchups = () => {
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? 'bg-emerald-500 text-text-primary'
-                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                : 'bg-[var(--surface)] text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}

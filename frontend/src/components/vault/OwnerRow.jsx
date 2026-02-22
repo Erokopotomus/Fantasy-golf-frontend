@@ -56,8 +56,8 @@ export default function OwnerRow({
         onClick={onClick}
         className={`w-full group relative overflow-hidden rounded-xl border transition-all duration-250 cursor-pointer
           ${isLeader
-            ? 'bg-dark-tertiary/30 border-accent-gold/15'
-            : 'bg-dark-secondary/60 border-dark-border hover:border-stone/40'
+            ? 'bg-[var(--surface)] border-accent-gold/15'
+            : 'bg-[var(--bg-alt)] border-[var(--card-border)] hover:border-[var(--card-border)]'
           }
           hover:-translate-y-1 hover:shadow-lg`}
         style={{
@@ -127,7 +127,7 @@ export default function OwnerRow({
             </div>
             {/* Live season pulse dot */}
             {currentSeason && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-dark-secondary"
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[var(--surface)]"
                 style={{ background: '#6BCB77' }}
               >
                 <div className="w-full h-full rounded-full"
@@ -145,7 +145,7 @@ export default function OwnerRow({
               </span>
               {rating && <RatingTrendIndicator trend={rating.trend} />}
               {!owner.isActive && (
-                <span className="text-[9px] font-mono text-text-muted bg-dark-tertiary px-1.5 py-0.5 rounded flex-shrink-0">
+                <span className="text-[9px] font-mono text-text-muted bg-[var(--bg-alt)] px-1.5 py-0.5 rounded flex-shrink-0">
                   FORMER
                 </span>
               )}
@@ -221,7 +221,7 @@ export default function OwnerRow({
                 {owner.name[0]}
               </div>
               {currentSeason && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-[1.5px] border-dark-secondary"
+                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-[1.5px] border-[var(--surface)]"
                   style={{ background: '#6BCB77' }}
                 >
                   <div className="w-full h-full rounded-full"
@@ -238,7 +238,7 @@ export default function OwnerRow({
                   {owner.name}
                 </span>
                 {!owner.isActive && (
-                  <span className="text-[8px] font-mono text-text-muted bg-dark-tertiary px-1 py-0.5 rounded flex-shrink-0">
+                  <span className="text-[8px] font-mono text-text-muted bg-[var(--bg-alt)] px-1 py-0.5 rounded flex-shrink-0">
                     FORMER
                   </span>
                 )}

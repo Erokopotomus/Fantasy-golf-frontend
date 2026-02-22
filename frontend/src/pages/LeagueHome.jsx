@@ -217,7 +217,7 @@ const LeagueHome = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading league...</p>
@@ -228,7 +228,7 @@ const LeagueHome = () => {
 
   if (!league) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
@@ -245,7 +245,7 @@ const LeagueHome = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -280,7 +280,7 @@ const LeagueHome = () => {
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                   league.status === 'active' ? 'bg-gold/20 text-gold' :
                   league.status === 'draft-pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-dark-tertiary text-text-muted'
+                  'bg-[var(--bg-alt)] text-text-muted'
                 }`}>
                   {league.status === 'active' ? 'Active' :
                    league.status === 'draft-pending' ? 'Draft Pending' : league.status}
@@ -434,7 +434,7 @@ const LeagueHome = () => {
           {hasDraft && !isOneAndDone && (
             <div className="mb-6">
               {!hasDraftRecord && isCommissioner && !teamsHavePlayers && (
-                <Card className="border-gold/30 bg-gradient-to-r from-gold/10 to-dark-secondary">
+                <Card className="border-gold/30 bg-gradient-to-r from-gold/10 to-[var(--surface)]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <h3 className="text-lg font-semibold font-display text-text-primary">Ready to Draft?</h3>
@@ -447,7 +447,7 @@ const LeagueHome = () => {
                 </Card>
               )}
               {isDraftScheduledOrInProgress && (
-                <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-dark-secondary">
+                <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-[var(--surface)]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold font-display text-text-primary">
@@ -490,7 +490,7 @@ const LeagueHome = () => {
                             type="datetime-local"
                             value={draftDateInput}
                             onChange={(e) => setDraftDateInput(e.target.value)}
-                            className="bg-dark-primary border border-dark-border rounded-lg px-3 py-1.5 text-sm text-text-primary"
+                            className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-text-primary"
                           />
                           <Button size="sm" onClick={handleSaveDraftDate} disabled={savingDate || !draftDateInput}>
                             {savingDate ? 'Saving...' : 'Save'}
@@ -522,7 +522,7 @@ const LeagueHome = () => {
                 </Card>
               )}
               {isDraftComplete && (
-                <Card className="border-dark-border">
+                <Card className="border-[var(--card-border)]">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gold/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -542,7 +542,7 @@ const LeagueHome = () => {
           {/* Active Tournament Widget (golf leagues only) */}
           {!isNflLeague && currentTournament && currentTournament.status === 'IN_PROGRESS' && (
             <div className="mb-6">
-              <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-dark-secondary">
+              <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -565,9 +565,9 @@ const LeagueHome = () => {
           )}
           {!isNflLeague && currentTournament && currentTournament.status === 'UPCOMING' && (
             <div className="mb-6">
-              <Card className="border-dark-border">
+              <Card className="border-[var(--card-border)]">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-dark-tertiary rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-[var(--surface)] rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -588,10 +588,10 @@ const LeagueHome = () => {
             <div className="mb-6">
               <Card className={`border-${nflMatchupData.isLive ? 'emerald-500' : 'gold'}/30 bg-gradient-to-r ${
                 nflMatchupData.isLive
-                  ? 'from-emerald-500/10 to-dark-secondary'
+                  ? 'from-emerald-500/10 to-[var(--surface)]'
                   : nflMatchupData.isComplete
-                    ? 'from-dark-tertiary to-dark-secondary'
-                    : 'from-gold/10 to-dark-secondary'
+                    ? 'from-dark-tertiary to-[var(--surface)]'
+                    : 'from-gold/10 to-[var(--surface)]'
               }`}>
                 {/* Week label + status */}
                 <div className="flex items-center justify-between mb-4">
@@ -680,7 +680,7 @@ const LeagueHome = () => {
 
                 {/* Last week result */}
                 {nflMatchupData.lastResult && (
-                  <div className="mt-3 pt-3 border-t border-dark-border/50 text-center">
+                  <div className="mt-3 pt-3 border-t border-[var(--card-border)]/50 text-center">
                     <p className="text-xs text-text-muted">
                       Last week: {nflMatchupData.lastResult.won ? 'W' : 'L'}{' '}
                       {nflMatchupData.lastResult.userScore.toFixed(1)} - {nflMatchupData.lastResult.opponentScore.toFixed(1)}
@@ -694,7 +694,7 @@ const LeagueHome = () => {
           {/* Generate Playoffs Banner (commissioner, H2H, draft complete) */}
           {isCommissioner && isHeadToHead && isDraftComplete && (
             <div className="mb-6">
-              <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-dark-secondary">
+              <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-[var(--surface)]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -726,7 +726,7 @@ const LeagueHome = () => {
             <div className="lg:col-span-1 space-y-6">
               {/* Your Position — only show if there's an active season with standings */}
               {!hasNoActiveTeams && (
-              <Card className="bg-gradient-to-br from-gold/20 to-dark-secondary border-gold/30">
+              <Card className="bg-gradient-to-br from-gold/20 to-[var(--surface)] border-gold/30">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold font-display text-text-primary">Your Position</h3>
                   <span className={`text-3xl font-bold ${
@@ -737,11 +737,11 @@ const LeagueHome = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-dark-primary/50 rounded-lg p-3 text-center">
+                  <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold font-display text-gold">{userPoints?.toLocaleString()}</p>
                     <p className="text-text-muted text-xs">Total Points</p>
                   </div>
-                  <div className="bg-dark-primary/50 rounded-lg p-3 text-center">
+                  <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold font-display text-text-primary">
                       {pointsDiff > 0 ? '-' : '+'}{Math.abs(pointsDiff).toLocaleString()}
                     </p>
@@ -763,7 +763,7 @@ const LeagueHome = () => {
                     <div
                       key={team.userId}
                       className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                        team.userId === '1' ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary'
+                        team.userId === '1' ? 'bg-gold/10 border border-gold/30' : 'bg-[var(--surface)]'
                       }`}
                     >
                       <span className={`text-lg font-bold w-6 ${
@@ -773,7 +773,7 @@ const LeagueHome = () => {
                       }`}>
                         {team.rank}
                       </span>
-                      <div className="w-8 h-8 bg-dark-primary rounded-full flex items-center justify-center text-sm font-semibold text-text-secondary">
+                      <div className="w-8 h-8 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-sm font-semibold text-text-secondary">
                         {team.avatar}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -950,7 +950,7 @@ const LeagueHome = () => {
                   {!hasNoActiveTeams && (
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-dark-border text-xs text-text-muted">
+                      <tr className="border-b border-[var(--card-border)] text-xs text-text-muted">
                         <th className="pb-2 text-left w-10">#</th>
                         <th className="pb-2 text-left">Team</th>
                         <th className="pb-2 text-left">Owner</th>
@@ -970,8 +970,8 @@ const LeagueHome = () => {
                             key={team.id || i}
                             onClick={() => team.id && navigate(`/leagues/${leagueId}/roster`)}
                             className={`
-                              border-b border-dark-border/30 transition-colors cursor-pointer
-                              ${isMe ? 'bg-emerald-500/8' : 'hover:bg-dark-tertiary/50'}
+                              border-b border-[var(--card-border)] transition-colors cursor-pointer
+                              ${isMe ? 'bg-emerald-500/8' : 'hover:bg-[var(--surface-alt)]'}
                             `}
                           >
                             <td className={`py-3 font-bold ${
@@ -983,7 +983,7 @@ const LeagueHome = () => {
                             </td>
                             <td className="py-3">
                               <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-dark-tertiary rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
+                                <div className="w-7 h-7 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
                                   {(team.name || ownerName || '?').charAt(0).toUpperCase()}
                                 </div>
                                 <span className={`font-medium truncate ${isMe ? 'text-emerald-400' : 'text-text-primary'}`}>
@@ -1016,7 +1016,7 @@ const LeagueHome = () => {
                   <>
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-dark-border text-xs text-text-muted">
+                        <tr className="border-b border-[var(--card-border)] text-xs text-text-muted">
                           <th className="pb-2 text-left w-10">#</th>
                           <th className="pb-2 text-left">Team</th>
                           <th className="pb-2 text-left">Owner</th>
@@ -1032,7 +1032,7 @@ const LeagueHome = () => {
                           return (
                             <tr
                               key={ht.id || i}
-                              className={`border-b border-dark-border/30 ${isChamp ? 'bg-yellow-500/5' : ''}`}
+                              className={`border-b border-[var(--card-border)] ${isChamp ? 'bg-yellow-500/5' : ''}`}
                             >
                               <td className={`py-3 font-bold ${
                                 rank === 1 ? 'text-yellow-400' :
@@ -1043,7 +1043,7 @@ const LeagueHome = () => {
                               </td>
                               <td className="py-3">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-7 h-7 bg-dark-tertiary rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
+                                  <div className="w-7 h-7 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
                                     {(ht.teamName || '?').charAt(0).toUpperCase()}
                                   </div>
                                   <span className="font-medium truncate text-text-primary">
@@ -1106,13 +1106,13 @@ const LeagueHome = () => {
 
                 {/* League members without teams */}
                 {league.members && league.members.length > (league.teams?.length || 0) && (
-                  <div className="mt-4 pt-4 border-t border-dark-border">
+                  <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
                     <p className="text-xs text-text-muted mb-2">Members without teams</p>
                     <div className="flex flex-wrap gap-2">
                       {league.members
                         .filter(m => !league.teams?.some(t => t.userId === m.userId))
                         .map(m => (
-                          <span key={m.userId} className="px-2 py-1 bg-dark-tertiary rounded text-xs text-text-secondary">
+                          <span key={m.userId} className="px-2 py-1 bg-[var(--bg-alt)] rounded text-xs text-text-secondary">
                             {m.user?.name || 'Member'}
                           </span>
                         ))

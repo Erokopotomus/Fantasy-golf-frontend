@@ -72,7 +72,7 @@ const NewsAlertBanner = () => {
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                  idx === currentIndex ? 'bg-dark-tertiary' : 'bg-dark-tertiary/30'
+                  idx === currentIndex ? 'bg-[var(--stone)]' : 'bg-[var(--stone)]/30'
                 }`}
               />
             ))}

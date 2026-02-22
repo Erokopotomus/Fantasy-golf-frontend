@@ -2,7 +2,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
   const rounds = Array.from({ length: rosterSize }, (_, i) => i + 1)
 
   return (
-    <div className="flex flex-col h-full bg-dark-secondary rounded-lg border border-dark-border overflow-hidden">
+    <div className="flex flex-col h-full bg-[var(--surface)] rounded-lg border border-[var(--card-border)] overflow-hidden">
       {/* Team Column Headers */}
       <div className="flex-shrink-0">
         <div className="overflow-x-auto">
@@ -10,7 +10,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
             className="grid gap-px min-w-[500px]"
             style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
           >
-            <div className="bg-dark-tertiary px-1 py-2.5 text-text-muted text-[10px] font-semibold text-center">RD</div>
+            <div className="bg-[var(--bg-alt)] px-1 py-2.5 text-text-muted text-[10px] font-semibold text-center">RD</div>
             {teams.map(team => (
               <div
                 key={team.id}
@@ -19,7 +19,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                     ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
                     : currentPick?.teamId === team.id
                       ? 'bg-yellow-500/20 text-yellow-400'
-                      : 'bg-dark-tertiary text-text-muted'
+                      : 'bg-[var(--bg-alt)] text-text-muted'
                 }`}
               >
                 {team.id === userTeamId ? (
@@ -43,11 +43,11 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
             return (
               <div
                 key={round}
-                className={`grid gap-px ${isCurrentRound ? 'bg-dark-border' : ''}`}
+                className={`grid gap-px ${isCurrentRound ? 'bg-[var(--card-border)]' : ''}`}
                 style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
               >
                 <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
-                  isCurrentRound ? 'text-gold bg-dark-secondary' : 'text-text-muted bg-dark-primary/80'
+                  isCurrentRound ? 'text-gold bg-[var(--surface)]' : 'text-text-muted bg-[var(--bg-alt)]'
                 }`}>
                   <span>{round}</span>
                   <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>
@@ -77,8 +77,8 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                               ? isUserTeamCell ? 'bg-yellow-500/20' : 'bg-yellow-500/12'
                               : pick.playerRank <= 25
                                 ? isUserTeamCell ? 'bg-gold/18' : 'bg-gold/10'
-                                : isUserTeamCell ? 'bg-gold/10' : round % 2 === 1 ? 'bg-dark-primary' : 'bg-dark-secondary/50'
-                            : round % 2 === 1 ? 'bg-dark-primary/50' : 'bg-dark-secondary/25'
+                                : isUserTeamCell ? 'bg-gold/10' : round % 2 === 1 ? 'bg-[var(--surface)]' : 'bg-[var(--bg-alt)]'
+                            : round % 2 === 1 ? 'bg-[var(--surface)]' : 'bg-[var(--bg-alt)]'
                       }`}
                     >
                       {pick ? (
@@ -88,7 +88,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                               pick.playerRank <= 10 ? 'bg-yellow-400' :
                               pick.playerRank <= 25 ? 'bg-gold' :
                               pick.playerRank <= 40 ? 'bg-blue-400' :
-                              'bg-dark-border/40'
+                              'bg-[var(--card-border)]'
                             }`} />
                           </div>
                           <p className={`text-[10px] leading-tight truncate ${

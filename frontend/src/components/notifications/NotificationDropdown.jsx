@@ -54,7 +54,7 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
         )
       default:
         return (
-          <div className="w-8 h-8 bg-dark-tertiary rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-[var(--bg-alt)] rounded-full flex items-center justify-center">
             <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
@@ -74,9 +74,9 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
   }
 
   return (
-    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-dark-secondary border border-dark-border rounded-xl shadow-lg z-30 overflow-hidden">
+    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-lg z-30 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-dark-border">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--card-border)]">
         <h3 className="text-text-primary font-semibold text-sm">Notifications</h3>
         {unreadCount > 0 && (
           <button
@@ -103,9 +103,9 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
               key={notif.id}
               onClick={() => handleClick(notif)}
               className={`
-                flex items-start gap-3 px-4 py-3 border-b border-dark-border/50 cursor-pointer
-                hover:bg-dark-tertiary/50 transition-colors
-                ${!notif.read ? 'bg-dark-tertiary/20' : ''}
+                flex items-start gap-3 px-4 py-3 border-b border-[var(--card-border)]/50 cursor-pointer
+                hover:bg-[var(--bg-alt)]/50 transition-colors
+                ${!notif.read ? 'bg-[var(--bg-alt)]/20' : ''}
               `}
             >
               {getTypeIcon(notif.type)}

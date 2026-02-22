@@ -44,8 +44,8 @@ const ChatPanel = ({
       <button
         onClick={() => setIsCollapsed(false)}
         className={`
-          w-full flex items-center justify-between p-4 bg-dark-secondary border border-dark-border rounded-xl
-          hover:bg-dark-tertiary transition-colors ${className}
+          w-full flex items-center justify-between p-4 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl
+          hover:bg-[var(--surface-alt)] transition-colors ${className}
         `}
       >
         <div className="flex items-center gap-3">
@@ -68,9 +68,9 @@ const ChatPanel = ({
   }
 
   return (
-    <div className={`flex flex-col bg-dark-secondary border border-dark-border rounded-xl overflow-hidden ${className}`}>
+    <div className={`flex flex-col bg-[var(--surface)] border border-[var(--card-border)] rounded-xl overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-dark-border bg-dark-tertiary/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gold/20 rounded-lg flex items-center justify-center">
             <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +100,7 @@ const ChatPanel = ({
           {collapsible && (
             <button
               onClick={() => setIsCollapsed(true)}
-              className="p-2 text-text-muted hover:text-text-primary hover:bg-dark-tertiary rounded-lg transition-colors"
+              className="p-2 text-text-muted hover:text-text-primary hover:bg-[var(--surface-alt)] rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -126,7 +126,7 @@ const ChatPanel = ({
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-16 h-16 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[var(--surface)] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

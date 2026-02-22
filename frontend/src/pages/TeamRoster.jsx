@@ -341,7 +341,7 @@ const TeamRoster = () => {
         </div>
 
         <Card className="text-center py-12">
-          <div className="w-16 h-16 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-[var(--stone)] rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -466,14 +466,14 @@ const TeamRoster = () => {
 
       {/* Lineup progress bar (editing mode) */}
       {isEditing && (
-        <div className="mb-4 p-3 rounded-lg bg-dark-secondary border border-dark-border">
+        <div className="mb-4 p-3 rounded-lg bg-[var(--surface)] border border-[var(--card-border)]">
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-text-muted">Active lineup — drag or tap players to move</span>
             <span className={`font-medium ${activeSet.size === maxActive ? 'text-emerald-400' : 'text-text-primary'}`}>
               {activeSet.size} / {maxActive}
             </span>
           </div>
-          <div className="h-2 bg-dark-tertiary rounded-full overflow-hidden">
+          <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 transition-all duration-300"
               style={{ width: `${(activeSet.size / maxActive) * 100}%` }}
@@ -517,7 +517,7 @@ const TeamRoster = () => {
 
       {/* Golf Schedule Summary */}
       {scheduleSummary && (
-        <div className="mb-4 p-3 bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-lg">
+        <div className="mb-4 p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-emerald-400">⛳ This Week:</span>
@@ -540,7 +540,7 @@ const TeamRoster = () => {
           isEditing && draggedPlayerId
             ? dragOverZone === 'active'
               ? 'ring-2 ring-emerald-400 bg-emerald-500/5 p-3'
-              : 'ring-1 ring-dashed ring-dark-border p-3'
+              : 'ring-1 ring-dashed ring-[var(--card-border)] p-3'
             : ''
         }`}
         onDragOver={isEditing ? (e) => handleDragOver(e, 'active') : undefined}
@@ -578,10 +578,10 @@ const TeamRoster = () => {
             <div
               key={`empty-${i}`}
               className={`flex items-center gap-3 p-3 rounded-lg border border-dashed transition-colors ${
-                dragOverZone === 'active' ? 'border-emerald-400/60 bg-emerald-500/5' : 'border-dark-border/60 bg-dark-secondary/30'
+                dragOverZone === 'active' ? 'border-emerald-400/60 bg-emerald-500/5' : 'border-[var(--card-border)] bg-[var(--surface)]'
               }`}
             >
-              <div className="w-10 h-10 rounded-full border-2 border-dashed border-dark-border/40 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-full border-2 border-dashed border-[var(--card-border)] flex items-center justify-center flex-shrink-0">
                 <span className="text-text-muted/30 text-sm font-bold">{isNflLeague ? roster.filter(p => activeSet.has(p.id)).length + i + 1 : `G${roster.filter(p => activeSet.has(p.id)).length + i + 1}`}</span>
               </div>
               <span className="text-text-muted/40 text-sm">
@@ -600,7 +600,7 @@ const TeamRoster = () => {
           isEditing && draggedPlayerId
             ? dragOverZone === 'bench'
               ? 'ring-2 ring-neutral-400 bg-neutral-500/5 p-3'
-              : 'ring-1 ring-dashed ring-dark-border p-3'
+              : 'ring-1 ring-dashed ring-[var(--card-border)] p-3'
             : ''
         }`}
         onDragOver={isEditing ? (e) => handleDragOver(e, 'bench') : undefined}
@@ -655,7 +655,7 @@ const TeamRoster = () => {
             isEditing && draggedPlayerId
               ? dragOverZone === 'ir'
                 ? 'ring-2 ring-red-400 bg-red-500/5 p-3'
-                : 'ring-1 ring-dashed ring-dark-border p-3'
+                : 'ring-1 ring-dashed ring-[var(--card-border)] p-3'
               : ''
           }`}
           onDragOver={isEditing ? (e) => handleDragOver(e, 'ir') : undefined}
@@ -693,7 +693,7 @@ const TeamRoster = () => {
               <div
                 key={`ir-empty-${i}`}
                 className={`flex items-center gap-3 p-3 rounded-lg border border-dashed transition-colors ${
-                  dragOverZone === 'ir' ? 'border-red-400/60 bg-red-500/5' : 'border-dark-border/60 bg-dark-secondary/30'
+                  dragOverZone === 'ir' ? 'border-red-400/60 bg-red-500/5' : 'border-[var(--card-border)] bg-[var(--surface)]'
                 }`}
               >
                 <div className="w-10 h-10 rounded-full border-2 border-dashed border-red-500/30 flex items-center justify-center flex-shrink-0">
@@ -732,13 +732,13 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       onClick={isEditing ? (e) => { e.stopPropagation(); onToggle() } : onClick}
       className={`
         flex items-center gap-3 p-3 rounded-lg transition-all select-none
-        ${isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:bg-dark-tertiary/60'}
+        ${isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:bg-[var(--surface-alt)]'}
         ${isDragging ? 'opacity-40 scale-95' : ''}
         ${isActive
-          ? 'bg-dark-secondary border border-emerald-500/30'
+          ? 'bg-[var(--surface)] border border-emerald-500/30'
           : isIR
-          ? 'bg-dark-secondary/50 border border-red-500/30'
-          : 'bg-dark-secondary/50 border border-dark-border/50'
+          ? 'bg-[var(--surface)] border border-red-500/30'
+          : 'bg-[var(--surface)] border border-[var(--card-border)]'
         }
       `}
     >
@@ -758,9 +758,9 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
 
       {/* Player info */}
       {player.headshotUrl ? (
-        <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-dark-tertiary flex-shrink-0" />
+        <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
       ) : (
-        <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center text-lg flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-[var(--stone)] flex items-center justify-center text-lg flex-shrink-0">
           {player.countryFlag || '?'}
         </div>
       )}
@@ -788,7 +788,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
                   <div
                     key={t.id || i}
                     className={`w-2 h-2 rounded-full ${
-                      inField ? 'bg-emerald-500' : fieldAnnounced ? 'bg-dark-tertiary/10' : 'border border-stone/50 bg-transparent'
+                      inField ? 'bg-emerald-500' : fieldAnnounced ? 'bg-[var(--stone)]' : 'border border-[var(--card-border)] bg-transparent'
                     }`}
                     title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
                   />
@@ -831,7 +831,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           onClick={(e) => { e.stopPropagation(); onToggleIR() }}
           disabled={!canIR}
           className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
-            canIR ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'text-text-muted/30 bg-dark-tertiary/30 cursor-not-allowed'
+            canIR ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'text-text-muted/30 bg-[var(--stone)] cursor-not-allowed'
           }`}
         >
           IR
@@ -841,7 +841,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       {/* Active/Bench/IR badge in edit mode */}
       {isEditing && (
         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
-          isActive ? 'text-emerald-400 bg-emerald-500/10' : isIR ? 'text-red-400 bg-red-500/10' : 'text-text-muted bg-dark-tertiary/50'
+          isActive ? 'text-emerald-400 bg-emerald-500/10' : isIR ? 'text-red-400 bg-red-500/10' : 'text-text-muted bg-[var(--stone)]'
         }`}>
           {isActive ? 'ACTIVE' : isIR ? 'IR' : 'BENCH'}
         </span>

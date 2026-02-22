@@ -68,7 +68,7 @@ export default function BoardTimeline({ boardId }) {
   return (
     <div className="relative">
       {/* Vertical line */}
-      <div className="absolute left-4 top-0 bottom-0 w-px bg-dark-tertiary/[0.06]" />
+      <div className="absolute left-4 top-0 bottom-0 w-px bg-[var(--card-border)]" />
 
       <div className="space-y-4">
         {timeline.map((day, i) => {
@@ -80,7 +80,7 @@ export default function BoardTimeline({ boardId }) {
           return (
             <div key={day.date} className="relative pl-10">
               {/* Date dot */}
-              <div className="absolute left-2.5 top-1 w-3 h-3 rounded-full bg-dark-secondary border-2 border-gold/40" />
+              <div className="absolute left-2.5 top-1 w-3 h-3 rounded-full bg-[var(--surface)] border-2 border-gold/40" />
 
               {/* Day summary */}
               <button
@@ -125,7 +125,7 @@ export default function BoardTimeline({ boardId }) {
                         {a.details?.reasonChips && a.details.reasonChips.length > 0 && (
                           <div className="flex gap-1 mt-1">
                             {a.details.reasonChips.map((c, ci) => (
-                              <span key={ci} className="px-1.5 py-0.5 bg-dark-tertiary/[0.04] rounded text-[9px] text-text-primary/30">{c}</span>
+                              <span key={ci} className="px-1.5 py-0.5 bg-[var(--bg-alt)] rounded text-[9px] text-text-primary/30">{c}</span>
                             ))}
                           </div>
                         )}

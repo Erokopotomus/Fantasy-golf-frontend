@@ -173,7 +173,7 @@ const GolfHub = () => {
   const days = heroTournament ? daysUntil(heroTournament.startDate) : null
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Page Header */}
@@ -193,14 +193,14 @@ const GolfHub = () => {
 
           {/* Section 1: This Week Hero Card */}
           {tournamentsLoading ? (
-            <div className="mb-8 h-36 bg-dark-tertiary/[0.04] rounded-xl animate-pulse" />
+            <div className="mb-8 h-36 bg-[var(--stone)] rounded-xl animate-pulse" />
           ) : heroTournament ? (
             <Link
               to={`/tournaments/${heroTournament.id}`}
               className="block mb-8 rounded-xl border overflow-hidden transition-all hover:border-emerald-500/40 group"
               style={{ borderColor: isLive ? 'rgba(244, 63, 94, 0.3)' : 'rgba(255,255,255,0.08)' }}
             >
-              <div className={`p-5 sm:p-6 ${isLive ? 'bg-rose/[0.04]' : 'bg-dark-tertiary/[0.03]'}`}>
+              <div className={`p-5 sm:p-6 ${isLive ? 'bg-rose/[0.04]' : 'bg-[var(--surface)]'}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     {/* Status badge */}
@@ -218,7 +218,7 @@ const GolfHub = () => {
                           Starts in {days} day{days !== 1 ? 's' : ''}
                         </span>
                       ) : (
-                        <span className="text-xs font-mono text-text-muted bg-dark-tertiary/[0.06] px-2 py-0.5 rounded">UPCOMING</span>
+                        <span className="text-xs font-mono text-text-muted bg-[var(--bg-alt)] px-2 py-0.5 rounded">UPCOMING</span>
                       )}
                       <EventBadge tournament={heroTournament} />
                     </div>
@@ -315,7 +315,7 @@ const GolfHub = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Course DNA snapshot */}
                 {heroIntel.course && (
-                  <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4">
+                  <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-bold text-text-primary">What Wins Here</h3>
                       {heroIntel.course.id && (
@@ -333,8 +333,8 @@ const GolfHub = () => {
                       const getDnaLabel = (val) => {
                         if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
                         if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-                        if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-dark-tertiary/30' }
-                        return { text: 'Low', color: 'text-text-muted', bar: 'bg-dark-tertiary/10' }
+                        if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
+                        return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
                       }
                       const dna = [
                         { label: 'Driving', value: heroIntel.course.drivingImportance },
@@ -353,7 +353,7 @@ const GolfHub = () => {
                                   <span className="text-text-secondary text-[10px] font-medium">{cat.label}</span>
                                   <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
                                 </div>
-                                <div className="h-1.5 rounded-full bg-dark-tertiary/[0.06] overflow-hidden">
+                                <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
                                   <div className={`h-full rounded-full ${cat.rating.bar} transition-all`} style={{ width: `${barPct}%` }} />
                                 </div>
                               </div>
@@ -366,7 +366,7 @@ const GolfHub = () => {
                 )}
 
                 {/* Top Course Fits */}
-                <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4">
+                <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
                   <h3 className="text-sm font-bold text-text-primary mb-3">Top Course Fits</h3>
                   {(() => {
                     const fits = (heroIntel.leaderboard || [])
@@ -380,7 +380,7 @@ const GolfHub = () => {
                           const p = e.player || e
                           const score = Math.round(e.clutchMetrics.courseFitScore)
                           return (
-                            <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-dark-tertiary/[0.04] -mx-1 px-1 py-0.5 rounded transition-colors">
+                            <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-[var(--surface-alt)] -mx-1 px-1 py-0.5 rounded transition-colors">
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-mono text-text-muted w-3">{i + 1}.</span>
                                 <span className="text-xs font-medium text-text-primary">{p.name}</span>
@@ -397,7 +397,7 @@ const GolfHub = () => {
                 </div>
 
                 {/* Weather snapshot */}
-                <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4">
+                <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
                   <h3 className="text-sm font-bold text-text-primary mb-3">Weather Outlook</h3>
                   {heroIntel.weather && heroIntel.weather.length > 0 ? (
                     <div className="space-y-2">
@@ -447,7 +447,7 @@ const GolfHub = () => {
               <Link
                 key={link.label}
                 to={link.href}
-                className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] backdrop-blur-xl rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-dark-tertiary/[0.08] hover:border-emerald-500/30 transition-all group"
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-[var(--surface-alt)] hover:border-emerald-500/30 transition-all group shadow-card"
               >
                 <div className="text-text-primary/40 group-hover:text-emerald-400 transition-colors">
                   {link.icon}
@@ -471,7 +471,7 @@ const GolfHub = () => {
                     <Link
                       key={t.id}
                       to={`/tournaments/${t.id}`}
-                      className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-4 hover:bg-dark-tertiary/[0.06] hover:border-emerald-500/20 transition-all group"
+                      className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 hover:bg-[var(--surface-alt)] hover:border-emerald-500/20 transition-all group shadow-card"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -519,7 +519,7 @@ const GolfHub = () => {
               <h2 className="text-lg font-display font-bold text-text-primary mb-4">
                 Roster Check — {heroTournament.shortName || heroTournament.name}
               </h2>
-              <div className="bg-dark-tertiary/[0.03] border border-[var(--card-border)] rounded-xl p-5">
+              <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-5">
                 {!rosterCheck.fieldAnnounced ? (
                   <div className="text-center py-4">
                     <p className="text-text-muted text-sm">Field not yet announced</p>
@@ -568,7 +568,7 @@ const GolfHub = () => {
                           <div className="space-y-1.5">
                             {rosterCheck.notPlaying.map(p => (
                               <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors">
-                                <span className="w-1.5 h-1.5 rounded-full bg-dark-tertiary/20 shrink-0" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--stone)] shrink-0" />
                                 {p.name}
                               </Link>
                             ))}

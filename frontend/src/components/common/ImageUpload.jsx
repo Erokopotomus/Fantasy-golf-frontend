@@ -84,7 +84,7 @@ const ImageUpload = ({
           relative cursor-pointer rounded-xl border-2 border-dashed transition-all
           ${dragOver
             ? 'border-gold bg-gold/10'
-            : 'border-dark-border hover:border-gold/50 bg-dark-tertiary'
+            : 'border-[var(--card-border)] hover:border-gold/50 bg-[var(--bg-alt)]'
           }
           ${displayImage ? 'p-2' : 'p-8'}
         `}
@@ -100,7 +100,7 @@ const ImageUpload = ({
               <span className="text-text-primary text-sm font-medium">Change Image</span>
             </div>
             {uploading && (
-              <div className="absolute inset-0 bg-dark-primary/80 flex items-center justify-center rounded-lg">
+              <div className="absolute inset-0 bg-[var(--bg)]/80 flex items-center justify-center rounded-lg">
                 <div className="w-8 h-8 border-3 border-gold/30 border-t-gold rounded-full animate-spin" />
               </div>
             )}

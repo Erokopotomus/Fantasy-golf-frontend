@@ -84,7 +84,7 @@ const FeatureTip = ({
             {/* Got it button */}
             <button
               onClick={handleDismiss}
-              className="mt-2 text-xs font-medium text-text-primary bg-dark-tertiary/20 hover:bg-dark-tertiary/30 px-2 py-1 rounded transition-colors"
+              className="mt-2 text-xs font-medium text-text-primary bg-[var(--bg-alt)] hover:bg-[var(--stone)] px-2 py-1 rounded transition-colors"
             >
               Got it!
             </button>

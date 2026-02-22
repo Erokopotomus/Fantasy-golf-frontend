@@ -40,10 +40,10 @@ const ScoutReport = () => {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-dark-tertiary/5 rounded w-2/3" />
-          <div className="h-4 bg-dark-tertiary/5 rounded w-1/3" />
+          <div className="h-8 bg-[var(--stone)] rounded w-2/3" />
+          <div className="h-4 bg-[var(--stone)] rounded w-1/3" />
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-24 bg-dark-tertiary/5 rounded-xl" />
+            <div key={i} className="h-24 bg-[var(--stone)] rounded-xl" />
           ))}
         </div>
       </div>
@@ -95,7 +95,7 @@ const ScoutReport = () => {
           <h4 className="text-xs font-semibold text-gold/70 uppercase tracking-wider mb-2">Your Board Connections</h4>
           <div className="flex flex-wrap gap-2">
             {annotations.map((a, i) => (
-              <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-dark-tertiary/[0.06] rounded-lg text-xs text-text-primary/60">
+              <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[var(--bg-alt)] rounded-lg text-xs text-text-primary/60">
                 <span className="font-semibold text-text-primary/80">{a.playerName}</span>
                 <span className="text-text-primary/30">#{a.boardRank}</span>
                 {a.tags?.map(t => (

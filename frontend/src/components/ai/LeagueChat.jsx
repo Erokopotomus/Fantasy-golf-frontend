@@ -123,7 +123,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
-          <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-dark-secondary border border-stone/30 text-[10px] font-medium text-text-primary/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-[var(--surface)] border border-[var(--card-border)] text-[10px] font-medium text-text-primary/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             League Intel
           </span>
         </button>
@@ -140,13 +140,13 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
       {/* Chat Drawer */}
       {isOpen && (
         <div
-          className="fixed z-50 bg-dark-primary border border-stone/30 shadow-2xl flex flex-col
+          className="fixed z-50 bg-[var(--surface)] border border-[var(--card-border)] shadow-2xl flex flex-col
             bottom-0 left-0 right-0 h-[70vh] rounded-t-2xl
             md:bottom-4 md:left-4 md:right-auto md:top-auto md:w-[400px] md:h-[600px] md:rounded-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-stone/30 shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--card-border)] shrink-0">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-7 h-7 rounded-full bg-purple-600/20 flex items-center justify-center shrink-0">
                 <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +162,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
               {messages.length > 0 && (
                 <button
                   onClick={startNewConversation}
-                  className="text-[10px] text-text-primary/40 hover:text-text-primary/60 px-2 py-1 rounded hover:bg-dark-tertiary/5 transition-colors"
+                  className="text-[10px] text-text-primary/40 hover:text-text-primary/60 px-2 py-1 rounded hover:bg-[var(--surface)] transition-colors"
                   title="New conversation"
                 >
                   New
@@ -170,7 +170,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-text-primary/40 hover:text-text-primary p-1 rounded hover:bg-dark-tertiary/5 transition-colors"
+                className="text-text-primary/40 hover:text-text-primary p-1 rounded hover:bg-[var(--surface)] transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -209,7 +209,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
                 <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
                   msg.role === 'user'
                     ? 'bg-purple-600/20 border border-purple-500/20 text-text-primary'
-                    : 'bg-dark-tertiary/5 border border-stone/20 text-text-primary/80'
+                    : 'bg-[var(--surface)] border border-[var(--card-border)] text-text-primary/80'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                   {msg.sources && msg.sources.length > 0 && (
@@ -236,7 +236,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
 
             {loading && (
               <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-xl px-3 py-2 bg-dark-tertiary/5 border border-stone/20">
+                <div className="max-w-[85%] rounded-xl px-3 py-2 bg-[var(--surface)] border border-[var(--card-border)]">
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -254,7 +254,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSubmit} className="shrink-0 px-4 py-3 border-t border-stone/30">
+          <form onSubmit={handleSubmit} className="shrink-0 px-4 py-3 border-t border-[var(--card-border)]">
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
@@ -262,7 +262,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about your league..."
-                className="flex-1 bg-dark-tertiary/5 border border-stone/30 rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-primary/30 focus:outline-none focus:border-purple-500/40"
+                className="flex-1 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-primary/30 focus:outline-none focus:border-purple-500/40"
                 maxLength={500}
                 disabled={loading}
               />

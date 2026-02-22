@@ -11,7 +11,7 @@ const AwardCard = ({ award, index }) => {
       className={`rounded-xl p-4 transition-all ${
         isChampion
           ? 'bg-gradient-to-br from-accent-gold/20 to-orange/20 border border-accent-gold/30 col-span-full'
-          : 'bg-dark-secondary/50 border border-dark-tertiary/30 hover:border-accent-gold/20'
+          : 'bg-[var(--surface)] border border-[var(--card-border)] hover:border-accent-gold/20'
       }`}
       style={{ animationDelay: `${index * 100}ms` }}
     >
@@ -55,17 +55,17 @@ const SeasonRecap = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-dark-tertiary rounded w-1/3" />
-              <div className="h-32 bg-dark-tertiary rounded" />
+              <div className="h-8 bg-[var(--stone)] rounded w-1/3" />
+              <div className="h-32 bg-[var(--stone)] rounded" />
               <div className="grid grid-cols-2 gap-3">
-                <div className="h-24 bg-dark-tertiary rounded" />
-                <div className="h-24 bg-dark-tertiary rounded" />
-                <div className="h-24 bg-dark-tertiary rounded" />
-                <div className="h-24 bg-dark-tertiary rounded" />
+                <div className="h-24 bg-[var(--stone)] rounded" />
+                <div className="h-24 bg-[var(--stone)] rounded" />
+                <div className="h-24 bg-[var(--stone)] rounded" />
+                <div className="h-24 bg-[var(--stone)] rounded" />
               </div>
             </div>
           </div>
@@ -76,7 +76,7 @@ const SeasonRecap = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center py-16">
             <p className="text-red-400 mb-4">{error}</p>
@@ -92,7 +92,7 @@ const SeasonRecap = () => {
   const { awards = [], standings = [], leagueName, seasonYear } = recap || {}
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
@@ -145,7 +145,7 @@ const SeasonRecap = () => {
                   </thead>
                   <tbody>
                     {standings.map((s, i) => (
-                      <tr key={i} className={`border-t border-dark-tertiary/50 ${s.isChampion ? 'bg-accent-gold/5' : ''}`}>
+                      <tr key={i} className={`border-t border-[var(--card-border)] ${s.isChampion ? 'bg-accent-gold/5' : ''}`}>
                         <td className="py-2.5 font-mono text-text-secondary">{s.rank}</td>
                         <td className="py-2.5">
                           <Link to={`/manager/${s.userId}`} className="text-text-primary font-display font-semibold hover:text-accent-gold transition-colors">

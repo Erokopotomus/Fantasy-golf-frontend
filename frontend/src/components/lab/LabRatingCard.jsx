@@ -14,12 +14,12 @@ export default function LabRatingCard() {
 
   if (loading) {
     return (
-      <div className="p-4 bg-dark-secondary/60 border border-[var(--card-border)] rounded-xl">
+      <div className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-dark-tertiary/50 animate-pulse shrink-0" />
+          <div className="w-12 h-12 rounded-full bg-[var(--stone)] animate-pulse shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-24 bg-dark-tertiary/50 rounded animate-pulse" />
-            <div className="h-3 w-40 bg-dark-tertiary/50 rounded animate-pulse" />
+            <div className="h-4 w-24 bg-[var(--stone)] rounded animate-pulse" />
+            <div className="h-3 w-40 bg-[var(--stone)] rounded animate-pulse" />
           </div>
         </div>
       </div>

@@ -150,7 +150,7 @@ export default function NflCompare() {
       {/* Title + scoring toggle */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-display font-bold text-text-primary">Player Comparison</h1>
-        <div className="flex gap-1 bg-dark-tertiary/5 rounded-lg p-1">
+        <div className="flex gap-1 bg-[var(--bg-alt)] rounded-lg p-1">
           {['standard', 'half_ppr', 'ppr'].map(s => (
             <button
               key={s}
@@ -175,7 +175,7 @@ export default function NflCompare() {
 
       {/* ── Stat Comparison Grid ───────────────────────────────────── */}
       {p1 && p2 && p1Totals && p2Totals && (
-        <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 mb-6">
+        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-6">
           <h2 className="text-sm font-mono font-bold text-text-primary/50 uppercase tracking-wider mb-4">Season Stats</h2>
 
           {/* Games played */}
@@ -195,7 +195,7 @@ export default function NflCompare() {
           ))}
 
           {/* Fantasy Points */}
-          <div className="mt-2 pt-2 border-t border-stone/30">
+          <div className="mt-2 pt-2 border-t border-[var(--card-border)]">
             <StatCompareRow
               label="Fantasy Points"
               v1={getFpts(p1Totals)}
@@ -236,7 +236,7 @@ export default function NflCompare() {
 function PlayerHeader({ player, totals, loading, season, seasons, onSeasonChange, fpts }) {
   if (loading && !player) {
     return (
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-5">
         <div className="text-center text-text-primary/30 py-6">Loading...</div>
       </div>
     )
@@ -250,15 +250,15 @@ function PlayerHeader({ player, totals, loading, season, seasons, onSeasonChange
     TE: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
     K: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
     DST: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-  }[player.nflPosition] || 'text-text-primary/50 bg-dark-tertiary/5 border-stone/30'
+  }[player.nflPosition] || 'text-text-primary/50 bg-[var(--bg-alt)] border-[var(--card-border)]'
 
   return (
-    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-5">
+    <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-5">
       <div className="flex items-center gap-4">
         {player.headshotUrl ? (
-          <img src={player.headshotUrl} alt="" className="w-16 h-16 rounded-full object-cover bg-dark-tertiary/10" />
+          <img src={player.headshotUrl} alt="" className="w-16 h-16 rounded-full object-cover bg-[var(--stone)]" />
         ) : (
-          <div className="w-16 h-16 rounded-full bg-dark-tertiary/10 flex items-center justify-center text-text-primary/30 text-xl font-bold">
+          <div className="w-16 h-16 rounded-full bg-[var(--stone)] flex items-center justify-center text-text-primary/30 text-xl font-bold">
             {player.nflPosition}
           </div>
         )}
@@ -284,14 +284,14 @@ function PlayerHeader({ player, totals, loading, season, seasons, onSeasonChange
 
       {/* Season selector */}
       {seasons.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-stone/20">
+        <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
           <select
             value={season}
             onChange={e => onSeasonChange(e.target.value)}
-            className="bg-[#1a1917] border border-stone/30 rounded-lg px-3 py-1.5 text-text-primary text-sm font-mono focus:border-gold/50 focus:outline-none w-full"
+            className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-text-primary text-sm font-mono focus:border-gold/50 focus:outline-none w-full"
           >
             {seasons.map(yr => (
-              <option key={yr} value={yr} className="bg-[#1a1917] text-text-primary">{yr} Season</option>
+              <option key={yr} value={yr} className="bg-[var(--surface)] text-text-primary">{yr} Season</option>
             ))}
           </select>
         </div>
@@ -351,8 +351,8 @@ function GameLogPanel({ player, gameLog, loading, season, scoringView }) {
   const isDst = player.nflPosition === 'DST'
 
   return (
-    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-stone/30 flex items-center justify-between">
+    <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
         <h3 className="text-sm font-display font-bold text-text-primary">
           {season ? `${season} Game Log` : 'Game Log'}
         </h3>
@@ -361,7 +361,7 @@ function GameLogPanel({ player, gameLog, loading, season, scoringView }) {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-stone/30">
+            <tr className="border-b border-[var(--card-border)]">
               <th className="text-left px-2 py-2 text-text-primary/40 font-mono">WK</th>
               <th className="text-left px-2 py-2 text-text-primary/40 font-mono">OPP</th>
               {isQb ? (
@@ -398,7 +398,7 @@ function GameLogPanel({ player, gameLog, loading, season, scoringView }) {
               <tr><td colSpan={8} className="text-center py-6 text-text-primary/20">No game data</td></tr>
             ) : (
               gameLog.map(g => (
-                <tr key={g.gameId} className="border-b border-stone/20 hover:bg-dark-tertiary/5">
+                <tr key={g.gameId} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                   <td className="px-2 py-1.5 font-mono text-text-primary/50">{g.week}</td>
                   <td className="px-2 py-1.5 font-mono text-text-primary/60">
                     {g.isHome ? 'v' : '@'}{g.opponent}

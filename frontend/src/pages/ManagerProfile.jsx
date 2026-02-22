@@ -107,7 +107,7 @@ const SOCIAL_LABELS = {
 }
 
 const StatBox = ({ label, value, color = 'text-text-primary' }) => (
-  <div className="bg-dark-primary rounded-lg p-4 text-center">
+  <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
     <p className={`text-2xl font-bold ${color}`}>{value}</p>
     <p className="text-text-muted text-sm">{label}</p>
   </div>
@@ -121,7 +121,7 @@ const ComponentBar = ({ label, value, max = 100 }) => {
         <span className="text-text-secondary">{label}</span>
         <span className="text-text-primary font-mono">{value != null ? Math.round(value) : '—'}</span>
       </div>
-      <div className="h-1.5 bg-dark-primary rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
         <div
           className="h-full bg-accent-gold rounded-full transition-all"
           style={{ width: `${pct}%` }}
@@ -147,7 +147,7 @@ const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
         className={`rounded-xl p-3 text-center transition-all ${
           unlocked
             ? `${TIER_BG[achievement.tier]} border-2`
-            : 'bg-dark-primary border border-dark-border opacity-40 grayscale'
+            : 'bg-[var(--bg-alt)] border border-[var(--card-border)] opacity-40 grayscale'
         }`}
         style={unlocked ? { borderColor: tierColor } : undefined}
       >
@@ -174,7 +174,7 @@ const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
           <button
             onClick={() => onTogglePin(badgeSlug)}
             className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] transition-colors ${
-              isPinned ? 'bg-amber-500 text-text-primary' : 'bg-dark-tertiary/10 text-text-primary/40 hover:bg-dark-tertiary/20'
+              isPinned ? 'bg-amber-500 text-text-primary' : 'bg-[var(--bg-alt)] text-text-primary/40 hover:bg-[var(--stone)]'
             }`}
             title={isPinned ? 'Unpin badge' : 'Pin badge (max 3)'}
           >
@@ -264,7 +264,7 @@ const ManagerProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -272,7 +272,7 @@ const ManagerProfile = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen">
         <div className="max-w-5xl mx-auto px-4 py-6">
           <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-4">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,7 +370,7 @@ const ManagerProfile = () => {
     : (Array.isArray(user?.pinnedBadges) ? user.pinnedBadges : [])
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Back Link */}
         <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-6 transition-colors">
@@ -505,7 +505,7 @@ const ManagerProfile = () => {
 
           {/* Edit form */}
           {editing && (
-            <div className="border-t border-dark-border pt-4 space-y-3">
+            <div className="border-t border-[var(--card-border)] pt-4 space-y-3">
               {saveError && (
                 <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
                   {saveError}
@@ -519,7 +519,7 @@ const ManagerProfile = () => {
                     type="text"
                     value={editUsername}
                     onChange={e => setEditUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30))}
-                    className="flex-1 bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm font-mono"
+                    className="flex-1 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-sm font-mono"
                     placeholder="your-username"
                   />
                 </div>
@@ -535,7 +535,7 @@ const ManagerProfile = () => {
                   type="text"
                   value={editTagline}
                   onChange={e => setEditTagline(e.target.value.slice(0, 280))}
-                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm"
+                  className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-sm"
                   placeholder="Your one-liner..."
                 />
                 <span className="text-[10px] text-text-muted font-mono">{editTagline.length}/280</span>
@@ -546,7 +546,7 @@ const ManagerProfile = () => {
                   value={editBio}
                   onChange={e => setEditBio(e.target.value.slice(0, 2000))}
                   rows={3}
-                  className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm resize-none"
+                  className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-sm resize-none"
                   placeholder="Tell us about yourself..."
                 />
               </div>
@@ -558,7 +558,7 @@ const ManagerProfile = () => {
                       type="text"
                       value={editSocial[key] || ''}
                       onChange={e => setEditSocial(prev => ({ ...prev, [key]: e.target.value }))}
-                      className="w-full bg-dark-primary border border-dark-border rounded-lg px-3 py-2 text-text-primary text-sm"
+                      className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-2 text-text-primary text-sm"
                       placeholder={`https://...`}
                     />
                   </div>
@@ -648,7 +648,7 @@ const ManagerProfile = () => {
                 reputation.tier === 'expert' ? 'bg-accent-gold/20 text-accent-gold' :
                 reputation.tier === 'sharp' ? 'bg-blue-500/20 text-blue-400' :
                 reputation.tier === 'contender' ? 'bg-green-500/20 text-green-400' :
-                'bg-dark-tertiary text-text-secondary'
+                'bg-[var(--bg-alt)] text-text-secondary'
               }`}>
                 {reputation.tier}
               </span>
@@ -678,7 +678,7 @@ const ManagerProfile = () => {
                     <span className="text-text-secondary font-mono">Progress to {nextTier}</span>
                     <span className="text-text-secondary font-mono">{(progress * 100).toFixed(0)}%</span>
                   </div>
-                  <div className="h-1.5 bg-dark-primary rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
                     <div className="h-full bg-accent-gold rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
                   </div>
                 </div>
@@ -687,7 +687,7 @@ const ManagerProfile = () => {
 
             {/* Prediction badges */}
             {reputation.badges?.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-dark-tertiary">
+              <div className="mt-4 pt-3 border-t border-[var(--card-border)]">
                 <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-2">Badges</p>
                 <div className="flex flex-wrap gap-2">
                   {reputation.badges.map((badge, i) => {
@@ -760,7 +760,7 @@ const ManagerProfile = () => {
                   <h2 className="text-lg font-semibold font-display text-text-primary mb-4">By Sport</h2>
                   <div className="space-y-4">
                     {bySport.map((sp) => (
-                      <div key={sp.id} className="bg-dark-primary rounded-lg p-4">
+                      <div key={sp.id} className="bg-[var(--bg-alt)] rounded-lg p-4">
                         <h3 className="text-text-primary font-medium mb-2">{sp.sport?.name || 'Unknown'}</h3>
                         <div className="grid grid-cols-3 gap-2 text-center text-sm">
                           <div>
@@ -798,7 +798,7 @@ const ManagerProfile = () => {
                 {/* Progress Bar */}
                 {achievementStats && achievementStats.total > 0 && (
                   <div className="mb-6">
-                    <div className="h-2 bg-dark-primary rounded-full overflow-hidden">
+                    <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gold rounded-full transition-all"
                         style={{ width: `${(achievementStats.unlocked / achievementStats.total) * 100}%` }}

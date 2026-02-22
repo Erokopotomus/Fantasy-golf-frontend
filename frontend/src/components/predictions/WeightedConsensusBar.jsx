@@ -25,7 +25,7 @@ export default function WeightedConsensusBar({ eventId, playerId, type = 'player
   }, [eventId, playerId, type])
 
   if (loading) {
-    return <div className={`h-16 bg-dark-tertiary/5 rounded-lg animate-pulse ${className}`} />
+    return <div className={`h-16 bg-[var(--stone)] rounded-lg animate-pulse ${className}`} />
   }
 
   if (!data || data.total === 0) return null
@@ -36,7 +36,7 @@ export default function WeightedConsensusBar({ eventId, playerId, type = 'player
   const weightedUnder = data.weightedConsensus?.under || 0
 
   return (
-    <div className={`bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-lg p-3 ${className}`}>
+    <div className={`bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-lg p-3 ${className}`}>
       <div className="text-xs text-text-primary/40 font-mono uppercase tracking-wider mb-2">
         Community Consensus ({data.total} calls)
       </div>
@@ -48,7 +48,7 @@ export default function WeightedConsensusBar({ eventId, playerId, type = 'player
           <span className="text-text-primary/30 text-[10px]">Raw</span>
           <span className="text-rose-400 font-mono">UNDER {rawUnder}%</span>
         </div>
-        <div className="h-2 rounded-full bg-dark-tertiary/5 overflow-hidden flex">
+        <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden flex">
           <div
             className="h-full bg-emerald-500/60 transition-all"
             style={{ width: `${rawOver}%` }}
@@ -67,7 +67,7 @@ export default function WeightedConsensusBar({ eventId, playerId, type = 'player
           <span className="text-amber-400 text-[10px]">Weighted</span>
           <span className="text-rose-400 font-mono">UNDER {weightedUnder}%</span>
         </div>
-        <div className="h-2 rounded-full bg-dark-tertiary/5 overflow-hidden flex">
+        <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden flex">
           <div
             className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all"
             style={{ width: `${weightedOver}%` }}

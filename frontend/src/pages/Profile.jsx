@@ -40,7 +40,7 @@ const Profile = () => {
     : 'January 2024'
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-6">My Profile</h1>
@@ -98,31 +98,31 @@ const Profile = () => {
                 {statsLoading ? (
                   <>
                     {[1, 2, 3, 4].map(i => (
-                      <div key={i} className="bg-dark-primary rounded-lg p-4 text-center animate-pulse">
-                        <div className="h-7 bg-dark-tertiary rounded w-12 mx-auto mb-1" />
-                        <div className="h-4 bg-dark-tertiary rounded w-16 mx-auto" />
+                      <div key={i} className="bg-[var(--bg-alt)] rounded-lg p-4 text-center animate-pulse">
+                        <div className="h-7 bg-[var(--stone)] rounded w-12 mx-auto mb-1" />
+                        <div className="h-4 bg-[var(--stone)] rounded w-16 mx-auto" />
                       </div>
                     ))}
                   </>
                 ) : (
                   <>
-                    <div className="bg-dark-primary rounded-lg p-4 text-center">
+                    <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold font-display text-text-primary">{stats?.activeLeagues ?? 0}</p>
                       <p className="text-text-muted text-sm">Leagues</p>
                     </div>
-                    <div className="bg-dark-primary rounded-lg p-4 text-center">
+                    <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold font-display text-gold">
                         {stats?.totalPoints ? stats.totalPoints.toLocaleString() : '—'}
                       </p>
                       <p className="text-text-muted text-sm">Total Points</p>
                     </div>
-                    <div className="bg-dark-primary rounded-lg p-4 text-center">
+                    <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold font-display text-yellow-400">
                         {stats?.bestFinish ? `#${stats.bestFinish}` : '—'}
                       </p>
                       <p className="text-text-muted text-sm">Best Finish</p>
                     </div>
-                    <div className="bg-dark-primary rounded-lg p-4 text-center">
+                    <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                       <p className="text-2xl font-bold font-display text-text-primary">
                         {stats?.winRate !== undefined ? `${stats.winRate}%` : '—'}
                       </p>
@@ -163,7 +163,7 @@ const Profile = () => {
             <div className="space-y-3">
               <Link
                 to="/settings/notifications"
-                className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-dark-primary/50 transition-colors"
+                className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-gold/20 flex items-center justify-center">
@@ -182,7 +182,7 @@ const Profile = () => {
               </Link>
               <Link
                 to="/news"
-                className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-dark-primary/50 transition-colors"
+                className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -201,7 +201,7 @@ const Profile = () => {
               </Link>
               <Link
                 to="/import"
-                className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-dark-primary/50 transition-colors"
+                className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-purple-500/20 flex items-center justify-center">
