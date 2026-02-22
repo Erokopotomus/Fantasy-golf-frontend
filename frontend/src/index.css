@@ -9,26 +9,26 @@
 
 /* LIGHT MODE (default) */
 :root {
-  --bg: #F2EEE5;
-  --bg-alt: #E8E3DA;
+  --bg: #EBE7DE;
+  --bg-alt: #E2DDD3;
   --surface: #FFFFFF;
   --surface-alt: #F7F5F0;
-  --stone: #E0DBD2;
+  --stone: #D8D3C9;
   --text-1: #1A1A1A;
   --text-2: #65615A;
   --text-3: #A09A90;
   --nav-bg: #1E2A3A;
-  --card-border: rgba(0,0,0,0.12);
-  --card-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08);
-  --card-shadow-hover: 0 12px 40px rgba(0,0,0,0.12);
-  --gauge-bg: #E0DBD2;
+  --card-border: rgba(0,0,0,0.10);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.10);
+  --card-shadow-hover: 0 8px 32px rgba(0,0,0,0.16);
+  --gauge-bg: #D8D3C9;
 
   /* RGB channels for Tailwind opacity modifier support */
-  --bg-rgb: 242 238 229;
-  --bg-alt-rgb: 232 227 218;
+  --bg-rgb: 235 231 222;
+  --bg-alt-rgb: 226 221 211;
   --surface-rgb: 255 255 255;
   --surface-alt-rgb: 247 245 240;
-  --stone-rgb: 224 219 210;
+  --stone-rgb: 216 211 201;
   --text-1-rgb: 26 26 26;
   --text-2-rgb: 101 97 90;
   --text-3-rgb: 160 154 144;
