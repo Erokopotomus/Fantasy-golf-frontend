@@ -30,8 +30,8 @@ export default function BoardWelcomeCard({ boardId, sport, movedEntry, onDismiss
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-[var(--text-1)] mb-1">Your Draft Board is Ready</h3>
-          <p className="text-xs text-[var(--text-2)] leading-relaxed mb-3">
+          <h3 className="text-base font-display font-bold text-[var(--text-1)] mb-1">Your Draft Board is Ready</h3>
+          <p className="text-sm text-[var(--text-2)] leading-relaxed mb-3">
             200 players ranked by {rankingName}. This is your starting point — not the finish line.
           </p>
           <div className="space-y-1.5 mb-3">

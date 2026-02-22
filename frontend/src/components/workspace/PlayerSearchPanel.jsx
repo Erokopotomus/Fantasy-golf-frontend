@@ -97,8 +97,20 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
             <div className="w-5 h-5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
           </div>
         ) : filteredPlayers.length === 0 ? (
-          <div className="text-center py-8 text-text-primary/30 text-sm">
-            {search ? 'No players found' : 'All players on board'}
+          <div className="text-center py-12 px-6">
+            {search ? (
+              <p className="text-text-primary/30 text-sm">No players found</p>
+            ) : (
+              <>
+                <svg className="w-10 h-10 mx-auto mb-3 text-[var(--text-3)]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm font-medium text-[var(--text-2)] mb-1">Board is fully loaded</p>
+                <p className="text-xs text-[var(--text-3)]">
+                  All top players are on your board. Search by name to find and add anyone else.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           filteredPlayers.map(player => (

@@ -6,8 +6,8 @@ import { buildLabUrl } from '../../utils/labBridge'
  * Contextual action cards based on league lifecycle phase.
  * Returns null for PRE_DRAFT and DRAFTING (those have dedicated UI).
  */
-export default function PhaseActionRow({ phase, league }) {
-  const cards = getCardsForPhase(phase, league)
+export default function PhaseActionRow({ phase, league, existingBoardId }) {
+  const cards = getCardsForPhase(phase, league, existingBoardId)
   if (!cards || cards.length === 0) return null
 
   return (
@@ -45,7 +45,7 @@ export default function PhaseActionRow({ phase, league }) {
   )
 }
 
-function getCardsForPhase(phase, league) {
+function getCardsForPhase(phase, league, existingBoardId) {
   if (!league) return null
   const leagueId = league.id
   const sport = (league.sport || 'GOLF').toUpperCase()
@@ -57,15 +57,21 @@ function getCardsForPhase(phase, league) {
     ? `/players?league=${leagueId}`
     : `/nfl/players?league=${leagueId}`
 
+  // Link to existing board if one exists, otherwise Lab creation flow
+  const boardUrl = existingBoardId ? `/lab/${existingBoardId}` : buildLabUrl(league)
+  const hasBoardAlready = !!existingBoardId
+
   switch (phase) {
     case PHASES.DRAFT_PREP:
       return [
         {
           icon: '\uD83E\uDDEA',
-          title: 'Build Your Draft Board',
-          description: `Create a custom board for this ${teamCount}-team ${draftTypeLabel} draft`,
-          cta: 'Open The Lab',
-          to: buildLabUrl(league),
+          title: hasBoardAlready ? 'Continue Your Draft Board' : 'Build Your Draft Board',
+          description: hasBoardAlready
+            ? `Pick up where you left off on your ${draftTypeLabel} draft board`
+            : `Create a custom board for this ${teamCount}-team ${draftTypeLabel} draft`,
+          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+          to: boardUrl,
         },
         {
           icon: '\u26A1',
@@ -89,8 +95,8 @@ function getCardsForPhase(phase, league) {
           icon: '\uD83D\uDCCB',
           title: 'Review Your Board',
           description: 'Final look at your rankings before the draft',
-          cta: 'Open The Lab',
-          to: buildLabUrl(league),
+          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+          to: boardUrl,
         },
         {
           icon: '\u26A1',
@@ -103,8 +109,8 @@ function getCardsForPhase(phase, league) {
           icon: '\uD83D\uDCDD',
           title: 'Generate Cheat Sheet',
           description: 'Get a printable cheat sheet from your board',
-          cta: 'Open The Lab',
-          to: buildLabUrl(league),
+          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+          to: boardUrl,
         },
       ]
 
@@ -180,8 +186,8 @@ function getCardsForPhase(phase, league) {
           icon: '\uD83E\uDDEA',
           title: 'Start Prepping',
           description: 'Get ahead on next season\'s draft prep',
-          cta: 'Open The Lab',
-          to: buildLabUrl(league),
+          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+          to: boardUrl,
         },
       ]
 

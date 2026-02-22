@@ -37,6 +37,7 @@ const LeagueHome = () => {
   const [generatingPlayoffs, setGeneratingPlayoffs] = useState(false)
   const [leagueLeaderboard, setLeagueLeaderboard] = useState([])
   const [historicalTeams, setHistoricalTeams] = useState(null) // most recent season from import
+  const [existingBoardId, setExistingBoardId] = useState(null)
 
   const loading = leaguesLoading && detailLoading
   const league = detailedLeague || leagues?.find(l => l.id === leagueId)
@@ -121,6 +122,19 @@ const LeagueHome = () => {
       .then(data => setCurrentTournament(data.tournament || data))
       .catch(() => {})
   }, [isNflLeague])
+
+  // Fetch user's draft boards to find existing one for this sport
+  useEffect(() => {
+    if (!league) return
+    const sport = (league.sport || 'golf').toLowerCase()
+    api.getDraftBoards()
+      .then(data => {
+        const boards = data.boards || data || []
+        const match = boards.find(b => b.sport === sport && b.playerCount > 0)
+        if (match) setExistingBoardId(match.id)
+      })
+      .catch(() => {})
+  }, [league])
 
   // Fetch league prediction leaderboard
   useEffect(() => {
@@ -631,7 +645,7 @@ const LeagueHome = () => {
           )}
 
           {/* Phase-Aware Action Row */}
-          <PhaseActionRow phase={leaguePhase} league={league} />
+          <PhaseActionRow phase={leaguePhase} league={league} existingBoardId={existingBoardId} />
 
           {/* Live / Final Tournament Scoring Widget (golf leagues only) */}
           {!isNflLeague && currentTournament && (currentTournament.status === 'IN_PROGRESS' || currentTournament.status === 'COMPLETED') && (
