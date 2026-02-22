@@ -544,6 +544,17 @@ async function getBoardReadiness(boardId, userId) {
   // Cheat sheet generated
   const cheatSheetCount = await prisma.labCheatSheet.count({ where: { userId, boardId } })
 
+  // Enhanced counts for progress tracker
+  const tagsCount = entries.filter(e => Array.isArray(e.tags) && e.tags.length > 0).length
+  const reasonChipsCount = entries.filter(e => Array.isArray(e.reasonChips) && e.reasonChips.length > 0).length
+  const tiers = new Set(entries.filter(e => e.tier != null).map(e => e.tier))
+  const tierBreakCount = Math.max(0, tiers.size - 1)
+  const divergenceCount = entries.filter(e => {
+    if (e.baselineRank == null) return false
+    const idx = entries.indexOf(e)
+    return e.baselineRank !== (idx + 1)
+  }).length
+
   return {
     boardCreated: true,
     positionsRanked,
@@ -552,6 +563,88 @@ async function getBoardReadiness(boardId, userId) {
     capturesCount,
     mockDraftCompleted: mockDraftCount > 0,
     cheatSheetGenerated: cheatSheetCount > 0,
+    tagsCount,
+    reasonChipsCount,
+    tierBreakCount,
+    divergenceCount,
+  }
+}
+
+// ── Board Snapshot (for AI Coach) ────────────────────────────────────────────
+
+async function buildBoardSnapshot(boardId) {
+  const board = await prisma.draftBoard.findUnique({
+    where: { id: boardId },
+    select: { sport: true, scoringFormat: true },
+  })
+  if (!board) return null
+
+  const entries = await prisma.draftBoardEntry.findMany({
+    where: { boardId },
+    orderBy: { rank: 'asc' },
+    include: { player: { select: { id: true, name: true, nflPosition: true } } },
+  })
+
+  const targets = []
+  const sleepers = []
+  const avoids = []
+  const topRisers = []
+  const topFallers = []
+  const reasonChipCounts = {}
+  const positionCounts = {}
+  const notedPlayers = []
+
+  for (const entry of entries) {
+    const tags = entry.tags || []
+    const name = entry.player?.name || 'Unknown'
+    const position = entry.player?.nflPosition || null
+    const rank = entry.rank
+
+    // Tags
+    if (tags.includes('target')) targets.push({ name, rank, position })
+    if (tags.includes('sleeper')) sleepers.push({ name, rank, position })
+    if (tags.includes('avoid')) avoids.push({ name, rank, position })
+
+    // Divergences
+    if (entry.baselineRank != null) {
+      const delta = entry.baselineRank - rank
+      if (delta >= 3) topRisers.push({ name, rank, baseline: entry.baselineRank, delta })
+      if (delta <= -3) topFallers.push({ name, rank, baseline: entry.baselineRank, delta })
+    }
+
+    // Reason chips
+    for (const chip of (entry.reasonChips || [])) {
+      reasonChipCounts[chip] = (reasonChipCounts[chip] || 0) + 1
+    }
+
+    // Position composition (NFL only)
+    if (position && board.sport === 'nfl') {
+      positionCounts[position] = (positionCounts[position] || 0) + 1
+    }
+
+    // Notes (first 10 with notes, 80 char excerpts)
+    if (entry.notes && entry.notes.trim().length > 0 && notedPlayers.length < 10) {
+      notedPlayers.push({ name, rank, noteExcerpt: entry.notes.substring(0, 80) })
+    }
+  }
+
+  // Sort risers/fallers by magnitude, take top 5
+  topRisers.sort((a, b) => b.delta - a.delta)
+  topFallers.sort((a, b) => a.delta - b.delta)
+
+  return {
+    sport: board.sport,
+    scoringFormat: board.scoringFormat,
+    totalPlayers: entries.length,
+    targets,
+    sleepers,
+    avoids,
+    topRisers: topRisers.slice(0, 5),
+    topFallers: topFallers.slice(0, 5),
+    reasonChipSummary: reasonChipCounts,
+    positionComposition: board.sport === 'nfl' ? positionCounts : undefined,
+    notedPlayers,
+    top10: entries.slice(0, 10).map(e => ({ name: e.player?.name || 'Unknown', position: e.player?.nflPosition || null })),
   }
 }
 
@@ -650,4 +743,5 @@ module.exports = {
   getBoardReadiness,
   getBoardTimeline,
   createJournalEntry,
+  buildBoardSnapshot,
 }

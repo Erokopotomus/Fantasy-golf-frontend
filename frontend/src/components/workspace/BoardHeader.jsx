@@ -26,8 +26,8 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
   }
 
   const sportBadge = board?.sport === 'nfl'
-    ? <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange/20 text-orange">NFL</span>
-    : <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400">Golf</span>
+    ? <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 dark:bg-orange/20 text-orange-700 dark:text-orange">NFL</span>
+    : <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">Golf</span>
 
   const saveStatus = isSaving
     ? <span className="text-xs text-amber-400 animate-pulse">Saving...</span>

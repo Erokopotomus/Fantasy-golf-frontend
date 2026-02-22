@@ -2,18 +2,18 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 const POSITION_COLORS = {
-  QB: 'bg-red-500/20 text-red-400',
-  RB: 'bg-blue-500/20 text-blue-400',
-  WR: 'bg-green-500/20 text-green-400',
-  TE: 'bg-orange-500/20 text-orange-400',
-  K: 'bg-purple-500/20 text-purple-400',
-  DEF: 'bg-yellow-500/20 text-yellow-400',
+  QB: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
+  RB: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',
+  WR: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400',
+  TE: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400',
+  K: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400',
+  DEF: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
 }
 
 const TAG_CONFIG = {
-  target:  { label: 'TGT', active: 'bg-emerald-500/25 text-emerald-400 border-emerald-500/40', inactive: 'border-emerald-500/15 text-emerald-500/30 hover:text-emerald-400/60 hover:border-emerald-500/30' },
-  sleeper: { label: 'SLP', active: 'bg-gold/25 text-gold border-gold/40', inactive: 'border-gold/15 text-gold/30 hover:text-gold/60 hover:border-gold/30' },
-  avoid:   { label: 'AVD', active: 'bg-red-500/25 text-red-400 border-red-500/40', inactive: 'border-red-500/15 text-red-500/30 hover:text-red-400/60 hover:border-red-500/30' },
+  target:  { label: 'TGT', active: 'bg-emerald-100 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40', inactive: 'border-emerald-200 dark:border-emerald-500/15 text-emerald-600/40 dark:text-emerald-500/30 hover:text-emerald-600/60 dark:hover:text-emerald-400/60 hover:border-emerald-300 dark:hover:border-emerald-500/30' },
+  sleeper: { label: 'SLP', active: 'bg-amber-100 dark:bg-gold/25 text-amber-700 dark:text-gold border-amber-300 dark:border-gold/40', inactive: 'border-amber-200 dark:border-gold/15 text-amber-600/40 dark:text-gold/30 hover:text-amber-600/60 dark:hover:text-gold/60 hover:border-amber-300 dark:hover:border-gold/30' },
+  avoid:   { label: 'AVD', active: 'bg-red-100 dark:bg-red-500/25 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40', inactive: 'border-red-200 dark:border-red-500/15 text-red-600/40 dark:text-red-500/30 hover:text-red-600/60 dark:hover:text-red-400/60 hover:border-red-300 dark:hover:border-red-500/30' },
 }
 
 export default function BoardEntryRow({ entry, index, sport, positionRank, onRemove, onClickNotes, onUpdateTags, isWatched, onToggleWatch }) {
@@ -126,7 +126,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
       ) : (
         <div className="hidden sm:flex items-center gap-2 shrink-0">
           {player.cpi != null && (
-            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400'}`}>
               CPI {player.cpi > 0 ? '+' : ''}{player.cpi.toFixed(1)}
             </span>
           )}
@@ -135,7 +135,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
           )}
           {player.owgrRank && <span className="text-xs text-text-primary/40">#{player.owgrRank}</span>}
           {player.sgTotal != null && (
-            <span className={`text-xs ${player.sgTotal > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`text-xs ${player.sgTotal > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
               SG {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}
             </span>
           )}

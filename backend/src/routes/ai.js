@@ -10,6 +10,7 @@ const router = express.Router()
 const { authenticate } = require('../middleware/auth')
 const aiInsightPipeline = require('../services/aiInsightPipeline')
 const aiCoachService = require('../services/aiCoachService')
+const { buildBoardSnapshot } = require('../services/draftBoardService')
 const leagueIntelligence = require('../services/leagueIntelligenceService')
 const prisma = require('../lib/prisma.js')
 
@@ -98,16 +99,19 @@ router.post('/board-coach', authenticate, async (req, res) => {
     // Data confidence: board must have 30+ entries
     const { boardId, triggerAction, context } = req.body
     if (boardId) {
-      const entryCount = await prisma.boardEntry.count({ where: { boardId } })
+      const entryCount = await prisma.draftBoardEntry.count({ where: { boardId } })
       if (entryCount < 30) {
         return res.json({ card: null, gated: true, reason: `Board needs ${30 - entryCount} more entries to unlock AI coaching` })
       }
     }
 
-    if (!rateLimit(req.user.id, 'board-coach', 5)) {
+    if (!rateLimit(req.user.id, 'board-coach', 8)) {
       return res.status(429).json({ error: 'Rate limit exceeded' })
     }
-    const card = await aiCoachService.generateBoardCoachingCard(req.user.id, boardId, triggerAction, context)
+
+    // Build board snapshot for context-aware coaching
+    const snapshot = boardId ? await buildBoardSnapshot(boardId) : null
+    const card = await aiCoachService.generateBoardCoachingCard(req.user.id, boardId, triggerAction, context, snapshot)
     res.json({ card })
   } catch (err) {
     console.error('[AI] Board coach error:', err.message)

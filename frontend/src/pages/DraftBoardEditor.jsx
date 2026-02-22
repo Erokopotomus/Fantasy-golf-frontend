@@ -1,9 +1,10 @@
-import { useState, Fragment, useCallback, useEffect, useRef } from 'react'
+import { useState, Fragment, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import useDraftBoardEditor from '../hooks/useDraftBoardEditor'
 import useWatchList from '../hooks/useWatchList'
+import useBoardReadiness from '../hooks/useBoardReadiness'
 import api from '../services/api'
 import BoardHeader from '../components/workspace/BoardHeader'
 import BoardEntryRow from '../components/workspace/BoardEntryRow'
@@ -12,6 +13,8 @@ import PlayerSearchPanel from '../components/workspace/PlayerSearchPanel'
 import PlayerNoteEditor from '../components/workspace/PlayerNoteEditor'
 import DivergenceSummary from '../components/workspace/DivergenceSummary'
 import BoardTimeline from '../components/workspace/BoardTimeline'
+import BoardWelcomeCard from '../components/workspace/BoardWelcomeCard'
+import BoardProgressTracker from '../components/workspace/BoardProgressTracker'
 
 // ── Reason Chip Definitions ──────────────────────────────────────────────────
 
@@ -39,9 +42,9 @@ const REASON_CHIPS = [
 ]
 
 const CHIP_STYLES = {
-  positive: { active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40', inactive: 'border-emerald-500/20 text-emerald-500/40 hover:border-emerald-500/40 hover:text-emerald-400' },
-  negative: { active: 'bg-red-500/20 text-red-400 border-red-500/40', inactive: 'border-red-500/20 text-red-500/40 hover:border-red-500/40 hover:text-red-400' },
-  source:   { active: 'bg-[var(--bg-alt)] text-text-primary/80 border-stone/60', inactive: 'border-[var(--card-border)] text-text-primary/30 hover:border-white/25 hover:text-text-primary/50' },
+  positive: { active: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40', inactive: 'border-emerald-200 dark:border-emerald-500/20 text-emerald-600/40 dark:text-emerald-500/40 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-600 dark:hover:text-emerald-400' },
+  negative: { active: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40', inactive: 'border-red-200 dark:border-red-500/20 text-red-600/40 dark:text-red-500/40 hover:border-red-300 dark:hover:border-red-500/40 hover:text-red-600 dark:hover:text-red-400' },
+  source:   { active: 'bg-[var(--bg-alt)] text-[var(--text-1)]/80 border-[var(--stone)]/60', inactive: 'border-[var(--stone)]/40 text-[var(--text-1)]/30 hover:border-[var(--stone)]/60 hover:text-[var(--text-1)]/50' },
 }
 
 // ── Filter Bars ──────────────────────────────────────────────────────────────
@@ -57,19 +60,19 @@ function TagFilterBar({ entries, activeFilter, onFilterChange }) {
   }
 
   const filters = [
-    { key: 'all', label: 'All', count: entries.length, style: 'text-text-primary/60 border-[var(--card-border)] hover:border-white/25' },
-    { key: 'target', label: 'Targets', count: counts.target, style: 'text-emerald-400/70 border-emerald-500/20 hover:border-emerald-500/40' },
-    { key: 'sleeper', label: 'Sleepers', count: counts.sleeper, style: 'text-gold/70 border-gold/20 hover:border-gold/40' },
-    { key: 'avoid', label: 'Avoids', count: counts.avoid, style: 'text-red-400/70 border-red-500/20 hover:border-red-500/40' },
-    { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-text-primary/40 border-[var(--card-border)] hover:border-stone/50' },
+    { key: 'all', label: 'All', count: entries.length, style: 'text-[var(--text-1)]/60 border-[var(--stone)]/40 hover:border-[var(--stone)]/60' },
+    { key: 'target', label: 'Targets', count: counts.target, style: 'text-emerald-600/70 dark:text-emerald-400/70 border-emerald-200 dark:border-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-500/40' },
+    { key: 'sleeper', label: 'Sleepers', count: counts.sleeper, style: 'text-amber-600/70 dark:text-gold/70 border-amber-200 dark:border-gold/20 hover:border-amber-300 dark:hover:border-gold/40' },
+    { key: 'avoid', label: 'Avoids', count: counts.avoid, style: 'text-red-600/70 dark:text-red-400/70 border-red-200 dark:border-red-500/20 hover:border-red-300 dark:hover:border-red-500/40' },
+    { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-[var(--text-1)]/40 border-[var(--stone)]/40 hover:border-[var(--stone)]/60' },
   ]
 
   const activeStyles = {
-    all: 'bg-[var(--stone)] text-text-primary border-white/25',
-    target: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40',
-    sleeper: 'bg-gold/15 text-gold border-gold/40',
-    avoid: 'bg-red-500/15 text-red-400 border-red-500/40',
-    untagged: 'bg-[var(--stone)] text-text-primary/60 border-stone/50',
+    all: 'bg-[var(--stone)]/30 dark:bg-[var(--stone)] text-[var(--text-1)] border-[var(--stone)]/60 dark:border-white/25',
+    target: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40',
+    sleeper: 'bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border-amber-300 dark:border-gold/40',
+    avoid: 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40',
+    untagged: 'bg-[var(--stone)]/30 dark:bg-[var(--stone)] text-[var(--text-1)]/60 border-[var(--stone)]/60 dark:border-stone/50',
   }
 
   return (
@@ -184,6 +187,7 @@ export default function DraftBoardEditor() {
   } = useDraftBoardEditor(boardId)
 
   const { isWatched, toggleWatch } = useWatchList()
+  const { readiness } = useBoardReadiness(boardId)
 
   const [noteEntry, setNoteEntry] = useState(null)
   const [mobileTab, setMobileTab] = useState('rankings')
@@ -192,6 +196,9 @@ export default function DraftBoardEditor() {
   const [showDivergence, setShowDivergence] = useState(true)
   const [showTimeline, setShowTimeline] = useState(false)
   const [coachingCard, setCoachingCard] = useState(null)
+  const [welcomeDismissed, setWelcomeDismissed] = useState(() =>
+    !!localStorage.getItem(`lab-welcome-dismissed-${boardId}`)
+  )
 
   // AI Coach: fetch coaching card on major moves
   const fetchCoachingCard = useCallback((triggerAction, context) => {
@@ -216,6 +223,77 @@ export default function DraftBoardEditor() {
     }
     prevEntriesLenRef.current = entries.length
   }, [entries.length, board, fetchCoachingCard])
+
+  // ── AI Trigger Types ──────────────────────────────────────────────────
+  const firedTriggers = useRef(new Set())
+  const triggerDebounce = useRef(null)
+
+  const fireTrigger = useCallback((type, context) => {
+    if (firedTriggers.current.has(type)) return
+    firedTriggers.current.add(type)
+    if (triggerDebounce.current) clearTimeout(triggerDebounce.current)
+    triggerDebounce.current = setTimeout(() => {
+      fetchCoachingCard(type, context)
+    }, 1500)
+  }, [fetchCoachingCard])
+
+  // Watch for tag milestones, divergence thresholds, chip patterns, position imbalance
+  const prevTagCount = useRef(0)
+  useEffect(() => {
+    if (!board || entries.length === 0) return
+
+    // TAG_MILESTONE: 3rd, 5th, or 10th tag
+    const tagCount = entries.filter(e => e.tags && e.tags.length > 0).length
+    if (tagCount !== prevTagCount.current) {
+      if ([3, 5, 10].includes(tagCount) && tagCount > prevTagCount.current) {
+        const lastTagged = entries.find(e => e.tags?.length > 0)
+        fireTrigger('TAG_MILESTONE', { tagType: lastTagged?.tags?.[0], tagCount })
+      }
+      prevTagCount.current = tagCount
+    }
+
+    // DIVERGENCE_THRESHOLD: any player moved 10+ spots from baseline
+    for (const entry of entries) {
+      if (entry.baselineRank != null) {
+        const idx = entries.indexOf(entry)
+        const delta = entry.baselineRank - (idx + 1)
+        if (Math.abs(delta) >= 10) {
+          const key = `DIVERGENCE_THRESHOLD_${entry.playerId}`
+          if (!firedTriggers.current.has(key)) {
+            firedTriggers.current.add(key)
+            fireTrigger('DIVERGENCE_THRESHOLD', { playerName: entry.player?.name, delta })
+            break
+          }
+        }
+      }
+    }
+
+    // REASON_CHIP_PATTERN: same chip used 3+ times
+    const chipCounts = {}
+    for (const entry of entries) {
+      for (const chip of (entry.reasonChips || [])) {
+        chipCounts[chip] = (chipCounts[chip] || 0) + 1
+      }
+    }
+    for (const [chip, count] of Object.entries(chipCounts)) {
+      if (count >= 3) {
+        fireTrigger('REASON_CHIP_PATTERN', { chip, chipCount: count })
+        break
+      }
+    }
+
+    // POSITION_IMBALANCE: NFL top-20 missing a starting position
+    if (board.sport === 'nfl') {
+      const top20 = entries.slice(0, 20)
+      const positionsInTop20 = new Set(top20.map(e => e.player?.position).filter(Boolean))
+      for (const pos of ['QB', 'RB', 'WR', 'TE']) {
+        if (!positionsInTop20.has(pos)) {
+          fireTrigger('POSITION_IMBALANCE', { missingPosition: pos })
+          break
+        }
+      }
+    }
+  }, [entries, board, fireTrigger])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -299,6 +377,13 @@ export default function DraftBoardEditor() {
         onDelete={handleDelete}
       />
 
+      {entries.length > 0 && (
+        <BoardProgressTracker
+          entries={entries}
+          cheatSheetGenerated={readiness?.cheatSheetGenerated}
+        />
+      )}
+
       {/* Mobile tab toggle */}
       <div className="md:hidden flex border-b border-[var(--card-border)]">
         <button
@@ -339,6 +424,16 @@ export default function DraftBoardEditor() {
                 <PositionTabBar activePos={posFilter} onPosChange={setPosFilter} entries={entries} />
               )}
             </div>
+          )}
+
+          {/* Welcome card (first visit only) */}
+          {!welcomeDismissed && entries.length > 0 && (
+            <BoardWelcomeCard
+              boardId={boardId}
+              sport={board?.sport}
+              movedEntry={movedEntry}
+              onDismiss={() => setWelcomeDismissed(true)}
+            />
           )}
 
           {/* Divergence summary */}

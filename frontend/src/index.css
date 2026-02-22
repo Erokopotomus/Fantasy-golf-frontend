@@ -12,13 +12,14 @@
   --bg: #F0EDE6;
   --bg-alt: #E6E3DA;
   --surface: #FFFFFF;
-  --surface-alt: #F5F3EE;
+  --surface-alt: #EDEAE3;
   --stone: #D5D0C5;
   --text-1: #1A1A1A;
   --text-2: #55514A;
   --text-3: #8A8478;
   --nav-bg: #1E2A3A;
-  --card-border: rgba(0,0,0,0.08);
+  --card-border: rgba(0,0,0,0.12);
+  --card-border-strong: rgba(0,0,0,0.18);
   --card-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.08);
   --card-shadow-hover: 0 8px 32px rgba(0,0,0,0.18);
   --gauge-bg: #D5D0C5;
@@ -27,7 +28,7 @@
   --bg-rgb: 240 237 230;
   --bg-alt-rgb: 230 227 218;
   --surface-rgb: 255 255 255;
-  --surface-alt-rgb: 245 243 238;
+  --surface-alt-rgb: 237 234 227;
   --stone-rgb: 213 208 197;
   --text-1-rgb: 26 26 26;
   --text-2-rgb: 101 97 90;
@@ -82,6 +83,7 @@
   --text-3: #5C5952;
   --nav-bg: #111318;
   --card-border: rgba(255,255,255,0.06);
+  --card-border-strong: rgba(255,255,255,0.10);
   --card-shadow: 0 2px 8px rgba(0,0,0,0.2);
   --card-shadow-hover: 0 12px 40px rgba(0,0,0,0.3);
   --gauge-bg: rgba(255,255,255,0.08);

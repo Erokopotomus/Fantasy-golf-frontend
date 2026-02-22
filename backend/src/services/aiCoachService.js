@@ -184,23 +184,55 @@ Return { "nudgeText": null } if no nudge is warranted.`
 
 /**
  * Generate a board editor coaching card.
+ * snapshot: optional board snapshot from buildBoardSnapshot()
  */
-async function generateBoardCoachingCard(userId, boardId, triggerAction, context) {
+async function generateBoardCoachingCard(userId, boardId, triggerAction, context, snapshot) {
   const profile = await patternEngine.getUserProfile(userId, context?.sport || 'nfl')
   if (!profile) return null
 
+  // Build snapshot section if available
+  let snapshotBlock = ''
+  if (snapshot) {
+    snapshotBlock = `
+=== BOARD STATE ===
+Sport: ${snapshot.sport} | Scoring: ${snapshot.scoringFormat}
+Total ranked: ${snapshot.totalPlayers}
+
+TARGETS (${snapshot.targets.length}):
+${snapshot.targets.map(t => `- ${t.name} (#${t.rank})`).join('\n') || '(none)'}
+
+SLEEPERS (${snapshot.sleepers.length}):
+${snapshot.sleepers.map(s => `- ${s.name} (#${s.rank})`).join('\n') || '(none)'}
+
+AVOIDS (${snapshot.avoids.length}):
+${snapshot.avoids.map(a => `- ${a.name} (#${a.rank})`).join('\n') || '(none)'}
+
+BIGGEST DIVERGENCES:
+Risers: ${snapshot.topRisers.map(r => `${r.name} +${r.delta}`).join(', ') || '(none)'}
+Fallers: ${snapshot.topFallers.map(f => `${f.name} ${f.delta}`).join(', ') || '(none)'}
+
+REASON CHIPS: ${JSON.stringify(snapshot.reasonChipSummary)}
+NOTES: ${snapshot.notedPlayers.map(n => `${n.name}: "${n.noteExcerpt}"`).join(' | ') || '(none)'}
+${snapshot.sport === 'nfl' && snapshot.positionComposition ? `POSITIONS: ${JSON.stringify(snapshot.positionComposition)}` : ''}
+TOP 10: ${snapshot.top10.map(p => p.name).join(', ')}
+`
+  }
+
   const prompt = `Generate a coaching card for a user editing their draft board.
 
-Trigger: ${triggerAction} (e.g., MAJOR_MOVE, TAG_CHANGE, ENTRY_ADD)
+Trigger: ${triggerAction}
 Context: ${JSON.stringify(context || {})}
-User tendencies: ${JSON.stringify(profile.tendencies || [])}
-User biases: ${JSON.stringify(profile.biases || [])}
+${snapshotBlock}
+=== USER PROFILE ===
+Tendencies: ${JSON.stringify(profile.tendencies || [])}
+Biases: ${JSON.stringify(profile.biases || [])}
 
 Return JSON: { "cardTitle": "short title", "cardBody": "2-3 sentences of coaching advice", "cardType": "HISTORICAL_ECHO|BLIND_SPOT|DIVERGENCE_INSIGHT|POSITION_SCARCITY|CAPTURE_CONNECTION", "relatedPlayers": [], "actionSuggestion": "optional one-line CTA" }
 
+IMPORTANT: Reference specific player names, tags, and divergences from THIS board. No generic advice.
 Return { "cardTitle": null } if no coaching card is warranted.`
 
-  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 384, feature: 'boardCoach' })
+  const result = await claude.generateJsonCompletion(CLUTCH_COACH_SYSTEM_PROMPT, prompt, { maxTokens: 512, feature: 'boardCoach' })
   if (!result || !result.data?.cardTitle) return null
 
   return { ...result.data, tokenCount: (result.inputTokens || 0) + (result.outputTokens || 0) }
