@@ -38,11 +38,10 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
     const { leagueId } = req.query
 
     // Gather user data state
-    const [leagueCount, boardCount, predictionCount, user] = await Promise.all([
+    const [leagueCount, boardCount, predictionCount] = await Promise.all([
       prisma.leagueMember.count({ where: { userId } }),
       prisma.draftBoard.count({ where: { userId } }),
       prisma.prediction.count({ where: { userId } }),
-      prisma.user.findUnique({ where: { id: userId }, select: { lastLoginAt: true } }),
     ])
 
     // ── League-specific briefing ──
@@ -225,7 +224,7 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
       },
     })
   } catch (err) {
-    console.error('[AI] Coach briefing error:', err.message)
+    console.error('[AI] Coach briefing error:', err.message, err.stack)
     res.json({ briefing: null })
   }
 })
