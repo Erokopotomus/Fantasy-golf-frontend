@@ -25,12 +25,12 @@ export default function DashboardRatingWidget() {
 
   if (loading) {
     return (
-      <div className="bg-dark-secondary/60 rounded-xl border border-dark-border p-5">
-        <div className="h-6 w-32 bg-dark-tertiary/50 rounded animate-pulse mb-3" />
-        <div className="h-16 w-16 rounded-full bg-dark-tertiary/50 animate-pulse mx-auto mb-3" />
+      <div className="p-5">
+        <div className="h-6 w-32 bg-[var(--stone)] rounded animate-pulse mb-3" />
+        <div className="h-16 w-16 rounded-full bg-[var(--stone)] animate-pulse mx-auto mb-3" />
         <div className="space-y-2">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-4 bg-dark-tertiary/50 rounded animate-pulse" />
+            <div key={i} className="h-4 bg-[var(--stone)] rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function DashboardRatingWidget() {
   const isLocked = !isActive && !isActivating
 
   return (
-    <div className="bg-dark-secondary/60 rounded-xl border border-dark-border overflow-hidden">
+    <div className="overflow-hidden">
       {/* Header */}
       <div className="px-5 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function DashboardRatingWidget() {
                   {Array.from({ length: totalComponents }).map((_, i) => (
                     <div
                       key={i}
-                      className={`h-1.5 flex-1 rounded-full ${i < activeCount ? 'bg-accent-gold' : 'bg-dark-tertiary'}`}
+                      className={`h-1.5 flex-1 rounded-full ${i < activeCount ? 'bg-accent-gold' : 'bg-[var(--stone)]'}`}
                     />
                   ))}
                 </div>
@@ -147,7 +147,7 @@ export default function DashboardRatingWidget() {
                 {Array.from({ length: totalComponents }).map((_, i) => (
                   <div
                     key={i}
-                    className={`h-1 flex-1 rounded-full ${i < activeCount ? 'bg-accent-gold' : 'bg-dark-tertiary'}`}
+                    className={`h-1 flex-1 rounded-full ${i < activeCount ? 'bg-accent-gold' : 'bg-[var(--stone)]'}`}
                   />
                 ))}
               </div>
@@ -156,7 +156,7 @@ export default function DashboardRatingWidget() {
             {/* Unlock actions */}
             <div className="space-y-1.5">
               {COMPONENT_UNLOCK_ACTIONS.filter(c => !components[c.key]?.active).slice(0, 3).map(c => (
-                <div key={c.key} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg bg-dark-tertiary/30">
+                <div key={c.key} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg bg-[var(--bg-alt)]">
                   <span className="text-text-muted font-sans">{c.label}</span>
                   {c.link ? (
                     <Link to={c.link} className="text-accent-gold font-mono text-[10px] hover:underline">

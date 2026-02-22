@@ -25,9 +25,9 @@ export default function PredictionWidget() {
 
   if (loading) {
     return (
-      <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4 animate-pulse">
-        <div className="h-4 bg-dark-tertiary/10 rounded w-24 mb-3" />
-        <div className="h-8 bg-dark-tertiary/10 rounded w-full" />
+      <div className="animate-pulse">
+        <div className="h-4 bg-[var(--stone)] rounded w-24 mb-3" />
+        <div className="h-8 bg-[var(--stone)] rounded w-full" />
       </div>
     )
   }
@@ -54,7 +54,7 @@ export default function PredictionWidget() {
   }
 
   return (
-    <div className="bg-dark-tertiary/5 backdrop-blur-sm border border-stone/30 rounded-xl p-4">
+    <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-text-primary/80">Prove It</h3>
         <span className={`text-xs font-mono capitalize ${tierColors[tier] || 'text-text-primary/60'}`}>
@@ -101,7 +101,7 @@ export default function PredictionWidget() {
           {/* CTA */}
           <Link
             to="/prove-it"
-            className="block w-full py-2 text-center rounded-lg bg-dark-tertiary/5 border border-stone/30 text-amber-400 text-sm font-medium hover:bg-dark-tertiary/10 transition-colors"
+            className="block w-full py-2 text-center rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)] text-amber-400 text-sm font-medium hover:bg-[var(--stone)] transition-colors"
           >
             Make Calls
           </Link>
