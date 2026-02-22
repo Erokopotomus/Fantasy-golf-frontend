@@ -864,217 +864,9 @@ const LeagueHome = () => {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Standings & Info */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Your Position — only show if there's an active season with standings */}
-              {!hasNoActiveTeams && (
-              <Card className="bg-gradient-to-br from-gold/20 to-[var(--surface)] border-gold/30">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold font-display text-text-primary">Your Position</h3>
-                  <span className={`text-3xl font-bold ${
-                    userRank === 1 ? 'text-yellow-400' :
-                    userRank <= 3 ? 'text-gold' : 'text-text-primary'
-                  }`}>
-                    #{userRank}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold font-display text-gold">{userPoints?.toLocaleString()}</p>
-                    <p className="text-text-muted text-xs">Total Points</p>
-                  </div>
-                  <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold font-display text-text-primary">
-                      {pointsDiff > 0 ? '-' : '+'}{Math.abs(pointsDiff).toLocaleString()}
-                    </p>
-                    <p className="text-text-muted text-xs">vs Leader</p>
-                  </div>
-                </div>
-              </Card>
-              )}
-
-              {/* Standings — only show if there's an active season */}
-              {!hasNoActiveTeams && (
-              <Card>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold font-display text-text-primary">Standings</h3>
-                  <span className="text-text-muted text-sm">{league.standings?.length} teams</span>
-                </div>
-                <div className="space-y-2">
-                  {league.standings?.slice(0, 8).map((team) => (
-                    <div
-                      key={team.userId}
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                        team.userId === '1' ? 'bg-gold/10 border border-gold/30' : 'bg-[var(--surface)]'
-                      }`}
-                    >
-                      <span className={`text-lg font-bold w-6 ${
-                        team.rank === 1 ? 'text-yellow-400' :
-                        team.rank === 2 ? 'text-gray-300' :
-                        team.rank === 3 ? 'text-amber-600' : 'text-text-muted'
-                      }`}>
-                        {team.rank}
-                      </span>
-                      <div className="w-8 h-8 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-sm font-semibold text-text-secondary">
-                        {team.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-medium truncate ${team.userId === '1' ? 'text-gold' : 'text-text-primary'}`}>
-                          {team.name}
-                          {team.userId === '1' && <span className="text-xs ml-1">(You)</span>}
-                        </p>
-                      </div>
-                      <span className="text-text-secondary font-medium">{team.points?.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-              )}
-
-              {/* League Info */}
-              <Card>
-                <h3 className="text-lg font-semibold font-display text-text-primary mb-4">League Settings</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">Format</span>
-                    <span className="text-gold">{format?.name || 'League'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">Teams</span>
-                    <span className="text-text-primary">{league.maxTeams || historicalTeams?.teams?.length || '–'}</span>
-                  </div>
-                  {hasDraft && (
-                    <div className="flex justify-between">
-                      <span className="text-text-muted">Draft Type</span>
-                      <span className="text-text-primary capitalize">{league.draftType}</span>
-                    </div>
-                  )}
-                  {!isOneAndDone && league.settings?.rosterSize && (
-                    <div className="flex justify-between">
-                      <span className="text-text-muted">Roster Spots</span>
-                      <span className="text-text-primary">{league.settings.rosterSize}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-text-muted">Scoring</span>
-                    <span className="text-text-primary capitalize">{league.settings?.scoringType || 'Standard'}</span>
-                  </div>
-                  {league.settings?.waiverType && (
-                    <div className="flex justify-between">
-                      <span className="text-text-muted">Waivers</span>
-                      <span className="text-text-primary capitalize">{league.settings.waiverType === 'faab' ? 'FAAB' : league.settings.waiverType}</span>
-                    </div>
-                  )}
-                  {league.settings?.faabBudget && (
-                    <div className="flex justify-between">
-                      <span className="text-text-muted">FAAB Budget</span>
-                      <span className="text-text-primary">${league.settings.faabBudget}</span>
-                    </div>
-                  )}
-                  {league.settings?.tradeDeadline && league.settings?.tradeDeadlineDate && (
-                    <div className="flex justify-between">
-                      <span className="text-text-muted">Trade Deadline</span>
-                      <span className="text-text-primary">{new Date(league.settings.tradeDeadlineDate).toLocaleDateString()}</span>
-                    </div>
-                  )}
-                  {!isImportedLeague && (
-                    <div className="flex justify-between">
-                      <span className="text-text-muted">Current Event</span>
-                      <span className="text-gold">{league.currentRound || 'TBD'}</span>
-                    </div>
-                  )}
-                </div>
-              </Card>
-
-              {/* League Vault link */}
-              {league?.settings?.importedFrom && (
-                <Link
-                  to={`/leagues/${leagueId}/vault`}
-                  className="block"
-                >
-                  <Card className="hover:border-accent-gold/50 transition-colors group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-text-primary font-display font-bold text-sm group-hover:text-accent-gold transition-colors">League Vault</p>
-                        <p className="text-xs text-text-secondary">View your league's imported history</p>
-                      </div>
-                      <svg className="w-4 h-4 text-text-secondary group-hover:text-accent-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </Card>
-                </Link>
-              )}
-
-              {/* Season Recap link */}
-              <Link
-                to={`/leagues/${leagueId}/recap`}
-                className="block"
-              >
-                <Card className="hover:border-accent-gold/50 transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent-gold/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-text-primary font-display font-bold text-sm group-hover:text-accent-gold transition-colors">Season Recap</p>
-                      <p className="text-xs text-text-secondary">Awards, records, and final standings</p>
-                    </div>
-                    <svg className="w-4 h-4 text-text-secondary group-hover:text-accent-gold transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </Card>
-              </Link>
-
-              {/* League Prediction Leaderboard */}
-              {leagueLeaderboard.length > 0 && (
-                <Card>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-display font-bold text-text-primary">Sharpest Predictors</h3>
-                    <Link to="/prove-it" className="text-xs text-accent-gold hover:text-accent-gold/80 font-mono">View All</Link>
-                  </div>
-                  <div className="space-y-2">
-                    {leagueLeaderboard.map((entry, i) => (
-                      <div key={entry.userId || i} className="flex items-center gap-2">
-                        <span className={`text-xs font-mono font-bold w-5 ${i === 0 ? 'text-accent-gold' : 'text-text-secondary'}`}>
-                          {i + 1}.
-                        </span>
-                        <Link
-                          to={`/manager/${entry.userId}`}
-                          className="flex-1 text-sm text-text-primary hover:text-accent-gold transition-colors truncate font-display"
-                        >
-                          {entry.name || entry.userName || 'Unknown'}
-                        </Link>
-                        <span className="text-xs font-mono text-green-400">
-                          {(entry.accuracyRate * 100).toFixed(0)}%
-                        </span>
-                        <span className="text-xs font-mono text-text-secondary">
-                          {entry.totalPredictions}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {/* Activity Feed */}
-              <Card>
-                <h3 className="text-base font-semibold text-text-primary mb-4">Recent Activity</h3>
-                <ActivityFeed activity={activity} loading={activityLoading} />
-              </Card>
-            </div>
-
-            {/* Right Column - Members & Chat */}
+            {/* Left Column — Standings (the one source of truth) + Quick Links */}
             <div className="lg:col-span-2 space-y-6">
-              {/* League Members / Teams */}
+              {/* Teams / Standings — merged into one card */}
               <Card>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold font-display text-text-primary">
@@ -1264,19 +1056,90 @@ const LeagueHome = () => {
                 )}
               </Card>
 
-              {/* Commissioner Notes */}
+              {/* Quick Links Row */}
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to={`/leagues/${leagueId}/standings`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  Full Standings
+                </Link>
+                <Link
+                  to={`/leagues/${leagueId}/settings`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  Settings
+                </Link>
+                <Link
+                  to={`/leagues/${leagueId}/recap`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                  Season Recap
+                </Link>
+                {league?.settings?.importedFrom && (
+                  <Link
+                    to={`/leagues/${leagueId}/vault`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    League Vault
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column — Blog, Activity, Chat */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Commissioner Blog */}
               <CommissionerNotes
                 leagueId={leagueId}
                 isCommissioner={isCommissioner}
                 leagueName={league.name}
               />
 
-              {/* Chat - compact */}
+              {/* Activity Feed */}
+              <Card>
+                <h3 className="text-sm font-semibold font-display text-text-primary mb-3">Recent Activity</h3>
+                <ActivityFeed activity={activity} loading={activityLoading} />
+              </Card>
+
+              {/* League Prediction Leaderboard */}
+              {leagueLeaderboard.length > 0 && (
+                <Card>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-display font-bold text-text-primary">Sharpest Predictors</h3>
+                    <Link to="/prove-it" className="text-xs text-accent-gold hover:text-accent-gold/80 font-mono">View All</Link>
+                  </div>
+                  <div className="space-y-2">
+                    {leagueLeaderboard.map((entry, i) => (
+                      <div key={entry.userId || i} className="flex items-center gap-2">
+                        <span className={`text-xs font-mono font-bold w-5 ${i === 0 ? 'text-accent-gold' : 'text-text-secondary'}`}>
+                          {i + 1}.
+                        </span>
+                        <Link
+                          to={`/manager/${entry.userId}`}
+                          className="flex-1 text-sm text-text-primary hover:text-accent-gold transition-colors truncate font-display"
+                        >
+                          {entry.name || entry.userName || 'Unknown'}
+                        </Link>
+                        <span className="text-xs font-mono text-green-400">
+                          {(entry.accuracyRate * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Chat */}
               <ChatPanel
                 leagueId={leagueId}
                 leagueName={league.name}
                 memberCount={league.memberCount || league._count?.members || league.members?.length}
-                className="h-[400px]"
+                className="h-[350px]"
               />
             </div>
           </div>
