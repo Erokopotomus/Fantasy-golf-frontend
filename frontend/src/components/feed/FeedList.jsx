@@ -2,15 +2,15 @@ import { Link } from 'react-router-dom'
 import FeedCard from './FeedCard'
 
 const SkeletonCard = () => (
-  <div className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] rounded-xl p-4 animate-pulse">
+  <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 shadow-card animate-pulse">
     <div className="flex items-center gap-2 mb-2">
-      <div className="w-2 h-2 rounded-full bg-dark-tertiary/10" />
-      <div className="h-3 w-20 bg-dark-tertiary/10 rounded" />
+      <div className="w-2 h-2 rounded-full bg-[var(--stone)]" />
+      <div className="h-3 w-20 bg-[var(--stone)] rounded" />
     </div>
-    <div className="h-4 w-3/4 bg-dark-tertiary/10 rounded mb-2" />
-    <div className="h-3 w-full bg-dark-tertiary/10 rounded mb-1" />
-    <div className="h-3 w-2/3 bg-dark-tertiary/10 rounded mb-3" />
-    <div className="h-3 w-16 bg-dark-tertiary/10 rounded" />
+    <div className="h-4 w-3/4 bg-[var(--stone)] rounded mb-2" />
+    <div className="h-3 w-full bg-[var(--stone)] rounded mb-1" />
+    <div className="h-3 w-2/3 bg-[var(--stone)] rounded mb-3" />
+    <div className="h-3 w-16 bg-[var(--stone)] rounded" />
   </div>
 )
 

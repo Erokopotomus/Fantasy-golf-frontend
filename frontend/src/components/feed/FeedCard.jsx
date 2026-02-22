@@ -65,7 +65,7 @@ const FeedCard = ({ card }) => {
   const hasImage = !!card.meta?.imageUrl
 
   return (
-    <div className="bg-dark-tertiary/[0.04] border border-[var(--card-border)] backdrop-blur-xl rounded-xl p-4 hover:bg-dark-tertiary/[0.06] transition-colors">
+    <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 shadow-card hover:shadow-card-hover transition-all">
       <div className={hasImage ? 'flex gap-4' : ''}>
         {/* Left-side thumbnail */}
         {hasImage && (

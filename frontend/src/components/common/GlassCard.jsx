@@ -2,10 +2,10 @@ const GlassCard = ({ children, className = '', highlighted = false }) => {
   return (
     <div
       className={`
-        rounded-card backdrop-blur-xl backdrop-saturate-150 border
+        rounded-card border shadow-card
         ${highlighted
-          ? 'bg-dark-tertiary/[0.06] border-gold/20'
-          : 'bg-dark-tertiary/[0.04] border-[var(--card-border)]'
+          ? 'bg-[var(--surface)] border-gold/20'
+          : 'bg-[var(--surface)] border-[var(--card-border)]'
         }
         ${className}
       `}
