@@ -56,14 +56,12 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
         where: { id: leagueId },
         include: {
           drafts: { orderBy: { createdAt: 'desc' }, take: 1 },
-          standings: { where: { userId }, take: 1 },
           _count: { select: { teams: true } },
         },
       })
       if (!league) return res.json({ briefing: null })
 
       const draft = league.drafts?.[0]
-      const standing = league.standings?.[0]
       const sport = (league.sport || 'GOLF').toUpperCase()
 
       // Board count for this sport
@@ -91,17 +89,22 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
         })
       }
 
-      // In-season with standings
-      if (standing && draft?.status === 'COMPLETED') {
-        const rank = standing.rank || '—'
-        const totalTeams = league._count?.teams || '—'
-        return res.json({
-          briefing: {
-            headline: `You're #${rank} of ${totalTeams} — ${rank <= 3 ? 'keep the pressure on' : 'time to make a move'}`,
-            body: null,
-            type: 'in_season',
-          },
+      // In-season with teams
+      if (draft?.status === 'COMPLETED') {
+        const userTeam = await prisma.team.findFirst({
+          where: { leagueId, userId },
+          select: { totalPoints: true },
         })
+        const totalTeams = league._count?.teams || '—'
+        if (userTeam) {
+          return res.json({
+            briefing: {
+              headline: `Season is live — ${totalTeams} teams competing`,
+              body: null,
+              type: 'in_season',
+            },
+          })
+        }
       }
 
       // Pre-draft default
