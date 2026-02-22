@@ -181,16 +181,18 @@ const Dashboard = () => {
           {/* ── Section 2: Quick Actions — Compact Icon Strip ── */}
           <div>
             <h3 className="text-sm font-semibold font-display text-text-primary/60 uppercase tracking-wider mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
               {quickActions.map(action => (
                 <Link
                   key={action.to}
                   to={action.to}
-                  className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl bg-[var(--surface)] border border-[var(--card-border)] hover:border-[var(--crown)] transition-colors group"
+                  className="flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface)] border border-[var(--card-border)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group"
                 >
-                  <svg className={`w-5 h-5 ${action.color} group-hover:scale-110 transition-transform`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {action.icon}
-                  </svg>
+                  <div className="w-10 h-10 rounded-lg bg-[var(--surface-alt)] flex items-center justify-center group-hover:bg-gold/10 transition-colors">
+                    <svg className={`w-5 h-5 ${action.color} group-hover:scale-110 transition-transform`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {action.icon}
+                    </svg>
+                  </div>
                   <span className="text-text-primary text-xs font-medium">{action.label}</span>
                 </Link>
               ))}
@@ -241,16 +243,16 @@ const Dashboard = () => {
                         </svg>
                       </Link>
                     ) : (
-                      <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
-                        <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
-                          <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
+                        <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </div>
                         <div>
-                          <p className="text-sm text-text-primary/50 font-medium">Live Events</p>
-                          <p className="text-[11px] text-text-primary/30">No events in progress</p>
+                          <p className="text-sm text-text-primary/60 font-medium">Live Events</p>
+                          <p className="text-[11px] text-text-primary/35 font-mono">No events in progress</p>
                         </div>
                       </div>
                     )
@@ -283,42 +285,42 @@ const Dashboard = () => {
                       </Link>
                     ))
                   ) : (
-                    <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
-                      <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
+                      <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
+                        <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm text-text-primary/50 font-medium">Lineup Deadlines</p>
-                        <p className="text-[11px] text-text-primary/30">Join a league to track deadlines</p>
+                        <p className="text-sm text-text-primary/60 font-medium">Lineup Deadlines</p>
+                        <p className="text-[11px] text-text-primary/35 font-mono">Join a league to track deadlines</p>
                       </div>
                     </div>
                   )}
 
                   {/* Row: Upcoming Drafts */}
-                  <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
-                      <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
+                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-text-primary/50 font-medium">Upcoming Drafts</p>
-                      <p className="text-[11px] text-text-primary/30">No drafts scheduled</p>
+                      <p className="text-sm text-text-primary/60 font-medium">Upcoming Drafts</p>
+                      <p className="text-[11px] text-text-primary/35 font-mono">No drafts scheduled</p>
                     </div>
                   </div>
 
                   {/* Row: Trade & Waiver Activity */}
-                  <div className="flex items-center gap-3 py-2.5 px-3 opacity-35">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--stone)] flex items-center justify-center shrink-0">
-                      <svg className="w-4 h-4 text-text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
+                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm text-text-primary/50 font-medium">Trades & Waivers</p>
-                      <p className="text-[11px] text-text-primary/30">No pending activity</p>
+                      <p className="text-sm text-text-primary/60 font-medium">Trades & Waivers</p>
+                      <p className="text-[11px] text-text-primary/35 font-mono">No pending activity</p>
                     </div>
                   </div>
                 </div>

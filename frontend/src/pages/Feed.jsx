@@ -101,7 +101,7 @@ const Feed = () => {
 
           {/* Cards */}
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 shadow-card animate-pulse">
                   <div className="flex items-center gap-2 mb-2">
@@ -116,7 +116,7 @@ const Feed = () => {
               ))}
             </div>
           ) : cards.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {cards.map(card => (
                 <FeedCard key={card.id} card={card} />
               ))}

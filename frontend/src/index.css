@@ -9,11 +9,11 @@
 
 /* LIGHT MODE (default) */
 :root {
-  --bg: #DAD5CA;
-  --bg-alt: #CFC9BD;
+  --bg: #F0EDE6;
+  --bg-alt: #E6E3DA;
   --surface: #FFFFFF;
   --surface-alt: #F5F3EE;
-  --stone: #C5BFB3;
+  --stone: #D5D0C5;
   --text-1: #1A1A1A;
   --text-2: #55514A;
   --text-3: #8A8478;
@@ -21,14 +21,14 @@
   --card-border: rgba(0,0,0,0.08);
   --card-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.08);
   --card-shadow-hover: 0 8px 32px rgba(0,0,0,0.18);
-  --gauge-bg: #C5BFB3;
+  --gauge-bg: #D5D0C5;
 
   /* RGB channels for Tailwind opacity modifier support */
-  --bg-rgb: 218 213 202;
-  --bg-alt-rgb: 207 201 189;
+  --bg-rgb: 240 237 230;
+  --bg-alt-rgb: 230 227 218;
   --surface-rgb: 255 255 255;
   --surface-alt-rgb: 245 243 238;
-  --stone-rgb: 197 191 179;
+  --stone-rgb: 213 208 197;
   --text-1-rgb: 26 26 26;
   --text-2-rgb: 101 97 90;
   --text-3-rgb: 160 154 144;
