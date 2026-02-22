@@ -192,7 +192,26 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* ── Section 2: Hero Row — Tournament + My Leagues ── */}
+          {/* ── Section 2: Quick Actions — Compact Icon Strip ── */}
+          <div>
+            <h3 className="text-sm font-semibold font-display text-text-primary/60 uppercase tracking-wider mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {quickActions.map(action => (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl bg-[var(--surface)] border border-[var(--card-border)] hover:border-[var(--crown)] transition-colors group"
+                >
+                  <svg className={`w-5 h-5 ${action.color} group-hover:scale-110 transition-transform`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {action.icon}
+                  </svg>
+                  <span className="text-text-primary text-xs font-medium">{action.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Section 3: Hero Row — Tournament + My Leagues ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Tournament Card — hero position with green tint */}
             <div
@@ -324,7 +343,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* ── Section 3: Insight Row — Three Engagement Cards ── */}
+          {/* ── Section 4: Insight Row — Three Engagement Cards ── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Prove It — green tint */}
             <div
@@ -367,25 +386,6 @@ const Dashboard = () => {
               ) : (
                 <p className="text-text-primary/40 text-xs">AI insights will appear here as you play.</p>
               )}
-            </div>
-          </div>
-
-          {/* ── Section 4: Quick Actions — Compact Icon Strip ── */}
-          <div>
-            <h3 className="text-sm font-semibold font-display text-text-primary/60 uppercase tracking-wider mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {quickActions.map(action => (
-                <Link
-                  key={action.to}
-                  to={action.to}
-                  className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl bg-[var(--surface)] border border-[var(--card-border)] hover:border-[var(--crown)] transition-colors group"
-                >
-                  <svg className={`w-5 h-5 ${action.color} group-hover:scale-110 transition-transform`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {action.icon}
-                  </svg>
-                  <span className="text-text-primary text-xs font-medium">{action.label}</span>
-                </Link>
-              ))}
             </div>
           </div>
 
