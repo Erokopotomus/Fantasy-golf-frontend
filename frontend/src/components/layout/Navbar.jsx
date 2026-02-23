@@ -92,9 +92,6 @@ const Navbar = () => {
                 <Link to="/dashboard" className={navLinkStyles('/dashboard')}>
                   Dashboard
                 </Link>
-                <Link to="/draft" className={navLinkStyles('/draft')}>
-                  Draft
-                </Link>
                 <Link to="/lab" className={`
                   px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
                   ${location.pathname.startsWith('/lab')
@@ -103,12 +100,6 @@ const Navbar = () => {
                   }
                 `}>
                   The Lab
-                </Link>
-                <Link to="/prove-it" className={navLinkStyles('/prove-it')}>
-                  Prove It
-                </Link>
-                <Link to="/feed" className={navLinkStyles('/feed')}>
-                  Feed
                 </Link>
 
                 {/* Research Dropdown */}
@@ -534,32 +525,11 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
-                  to="/draft"
-                  className={mobileNavLinkStyles('/draft')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Draft
-                </Link>
-                <Link
                   to="/lab"
                   className={mobileNavLinkStyles('/lab')}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   The Lab
-                </Link>
-                <Link
-                  to="/prove-it"
-                  className={mobileNavLinkStyles('/prove-it')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Prove It
-                </Link>
-                <Link
-                  to="/feed"
-                  className={mobileNavLinkStyles('/feed')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Feed
                 </Link>
 
                 {/* Research section */}

@@ -372,7 +372,7 @@ const LeagueHome = () => {
                 ...(isOneAndDone ? [{ to: `/leagues/${leagueId}/picks`, label: 'Picks' }] : []),
                 // Common
                 { to: isNflLeague ? `/nfl/players?league=${leagueId}` : `/players?league=${leagueId}`, label: 'Players' },
-                { to: existingBoardId ? `/lab/${existingBoardId}` : buildLabUrl(league), label: 'Board' },
+                { to: existingBoardId ? `/lab/${existingBoardId}` : buildLabUrl(league), label: 'Lab' },
                 { to: `/leagues/${leagueId}/standings`, label: 'Standings' },
                 { to: `/leagues/${leagueId}/scoring`, label: 'Scoring' },
                 { to: `/leagues/${leagueId}/settings`, label: 'Settings' },
@@ -429,7 +429,7 @@ const LeagueHome = () => {
                   {/* Left: Coach Briefing */}
                   <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-6 flex flex-col justify-center min-h-[180px] shadow-sm dark:shadow-none">
                     {/* Floating sphere accent */}
-                    <div className="absolute -right-6 -top-6 opacity-[0.15] pointer-events-none">
+                    <div className="absolute -right-8 -top-8 opacity-[0.3] pointer-events-none">
                       <NeuralCluster size="lg" intensity="active" />
                     </div>
                     <div className="relative z-10">
