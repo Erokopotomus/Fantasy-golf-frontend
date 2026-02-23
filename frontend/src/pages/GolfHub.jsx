@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import FeedList from '../components/feed/FeedList'
-import WeatherStrip from '../components/tournament/WeatherStrip'
 import { formatDate, formatDateRange, formatPurse } from '../utils/dateUtils'
 
 const daysUntil = (dateStr) => {
@@ -244,6 +243,43 @@ const GolfHub = () => {
                 </div>
               </Link>
 
+              {/* Teaser row — weather snapshot + TV schedule */}
+              {heroIntel?.weather?.length > 0 && (() => {
+                const today = heroIntel.weather[0]
+                const WMO = { 0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌦',63:'🌧',65:'🌧',71:'🌨',73:'❄️',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈' }
+                const code = today.conditions?.toLowerCase().includes('rain') ? 63 : today.conditions?.toLowerCase().includes('cloud') || today.conditions?.toLowerCase().includes('overcast') ? 3 : today.conditions?.toLowerCase().includes('clear') || today.conditions?.toLowerCase().includes('sunny') ? 0 : 2
+                const icon = WMO[code] || '🌤'
+                const diff = (today.difficultyImpact || 0) >= 0.6 ? 'Brutal' : (today.difficultyImpact || 0) >= 0.4 ? 'Windy' : (today.difficultyImpact || 0) >= 0.2 ? 'Breezy' : 'Calm'
+                const diffColor = diff === 'Brutal' ? 'text-red-400' : diff === 'Windy' ? 'text-orange-400' : diff === 'Breezy' ? 'text-yellow-400' : 'text-emerald-400'
+                return (
+                  <div className="px-5 sm:px-6 pb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-text-muted">
+                    <span className="flex items-center gap-1.5">
+                      <span>{icon}</span>
+                      <span className="font-mono font-bold text-text-primary">{today.temperature != null ? `${Math.round(today.temperature)}°` : '--'}</span>
+                      <span className="text-text-muted/50">·</span>
+                      <span className="font-mono">{today.windSpeed != null ? `${Math.round(today.windSpeed)} mph` : '--'}</span>
+                      <span className="text-text-muted/50">·</span>
+                      <span className={`font-mono font-bold ${diffColor}`}>{diff}</span>
+                    </span>
+                    {heroTournament.broadcast ? (
+                      <span className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-text-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span>{heroTournament.broadcast}</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-text-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span>Golf Channel / ESPN+</span>
+                      </span>
+                    )}
+                  </div>
+                )
+              })()}
+
               {/* Quick action links */}
               <div className="px-5 sm:px-6 pb-4 flex flex-wrap items-center gap-2">
                 {heroTournament.status === 'UPCOMING' && (
@@ -273,104 +309,6 @@ const GolfHub = () => {
                   Full Field
                 </Link>
               </div>
-
-              {/* Tournament Intel — Course DNA + Course Fits + Weather */}
-              {heroIntel && (
-                <>
-                  <div className="border-t border-[var(--card-border)] px-5 sm:px-6 pt-4 pb-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">Tournament Intel</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Course DNA snapshot */}
-                      {heroIntel.course && (
-                        <div className="p-3 bg-[var(--bg-alt)] rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-xs font-bold text-text-primary">What Wins Here</h4>
-                            {heroIntel.course.id && (
-                              <Link to={`/courses/${heroIntel.course.id}`} className="text-[10px] text-gold hover:text-gold/80 transition-colors">
-                                Course Profile →
-                              </Link>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-text-muted mb-2.5">
-                            {heroIntel.course.name}
-                            {heroIntel.course.par && ` | Par ${heroIntel.course.par}`}
-                            {heroIntel.course.yardage && ` | ${heroIntel.course.yardage.toLocaleString()} yds`}
-                          </p>
-                          {(() => {
-                            const getDnaLabel = (val) => {
-                              if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
-                              if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-                              if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
-                              return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
-                            }
-                            const dna = [
-                              { label: 'Driving', value: heroIntel.course.drivingImportance },
-                              { label: 'Approach', value: heroIntel.course.approachImportance },
-                              { label: 'Around Green', value: heroIntel.course.aroundGreenImportance },
-                              { label: 'Putting', value: heroIntel.course.puttingImportance },
-                            ].filter(d => d.value != null).map(d => ({ ...d, rating: getDnaLabel(d.value) }))
-                            if (dna.length === 0) return <p className="text-xs text-text-muted">Course profile not yet available</p>
-                            return (
-                              <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                                {dna.map(cat => {
-                                  const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
-                                  return (
-                                    <div key={cat.label}>
-                                      <div className="flex items-center justify-between mb-1">
-                                        <span className="text-text-secondary text-[10px] font-medium">{cat.label}</span>
-                                        <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
-                                      </div>
-                                      <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
-                                        <div className={`h-full rounded-full ${cat.rating.bar} transition-all`} style={{ width: `${barPct}%` }} />
-                                      </div>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            )
-                          })()}
-                        </div>
-                      )}
-
-                      {/* Top Course Fits */}
-                      <div className="p-3 bg-[var(--bg-alt)] rounded-lg">
-                        <h4 className="text-xs font-bold text-text-primary mb-2.5">Top Course Fits</h4>
-                        {(() => {
-                          const fits = (heroIntel.leaderboard || [])
-                            .filter(e => e.clutchMetrics?.courseFitScore != null)
-                            .sort((a, b) => (b.clutchMetrics.courseFitScore || 0) - (a.clutchMetrics.courseFitScore || 0))
-                            .slice(0, 5)
-                          if (fits.length === 0) return <p className="text-xs text-text-muted">Course fit data not yet available</p>
-                          return (
-                            <div className="space-y-1.5">
-                              {fits.map((e, i) => {
-                                const p = e.player || e
-                                const score = Math.round(e.clutchMetrics.courseFitScore)
-                                return (
-                                  <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-[var(--surface)] -mx-1 px-1 py-0.5 rounded transition-colors">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-mono text-text-muted w-3">{i + 1}.</span>
-                                      <span className="text-xs font-medium text-text-primary">{p.name}</span>
-                                    </div>
-                                    <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-gold' : score >= 60 ? 'text-yellow-400' : 'text-text-secondary'}`}>
-                                      {score}
-                                    </span>
-                                  </Link>
-                                )
-                              })}
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Weather — nested inside the unified card */}
-                  <div className="border-t border-[var(--card-border)]">
-                    <WeatherStrip weather={heroIntel.weather} tournamentStart={heroTournament.startDate} embedded />
-                  </div>
-                </>
-              )}
             </div>
           ) : null}
 
