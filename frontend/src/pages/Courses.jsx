@@ -129,8 +129,74 @@ const Courses = () => {
                 const nextEvent = course.tournaments?.[0]
                 const badge = view === 'season' && nextEvent ? getDateBadge(nextEvent.startDate) : null
 
+                const hasImage = !!course.imageUrl
+
                 return (
                   <Link key={course.id} to={`/courses/${course.id}`} className="block">
+                    {hasImage ? (
+                      <div className="relative h-full rounded-xl overflow-hidden border border-[var(--card-border)] hover:border-gold/40 transition-colors group">
+                        <img
+                          src={course.imageUrl}
+                          alt={course.name}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+                        <div className="relative p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="text-sm font-display font-bold text-white drop-shadow-sm">{course.name}</h3>
+                              {course.nickname && course.nickname !== course.name && (
+                                <p className="text-xs text-gold mt-0.5 drop-shadow-sm">"{course.nickname}"</p>
+                              )}
+                              {(course.city || course.state) && (
+                                <p className="text-xs text-white/70 mt-0.5">
+                                  {[course.city, course.state, course.country].filter(Boolean).join(', ')}
+                                </p>
+                              )}
+                              {view === 'season' && nextEvent && (
+                                <p className="text-xs text-white/90 mt-1 font-medium">{nextEvent.name}</p>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0">
+                              {badge ? (
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${badge.className}`}>
+                                  {badge.text}
+                                </span>
+                              ) : course._count?.tournaments > 0 ? (
+                                <span className="text-[10px] font-mono text-white/60">
+                                  {course._count.tournaments} event{course._count.tournaments !== 1 ? 's' : ''}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4 mt-3 text-xs text-white/60 font-mono">
+                            {course.par && <span>Par {course.par}</span>}
+                            {course.yardage && <span>{course.yardage.toLocaleString()} yds</span>}
+                            {course.grassType && <span>{course.grassType}</span>}
+                          </div>
+
+                          {dna.length > 0 && (
+                            <div className="flex items-center gap-2 mt-3">
+                              {dna.map(cat => {
+                                const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
+                                return (
+                                  <div key={cat.label} className="flex-1">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                      <span className="text-[9px] text-white/50">{cat.label}</span>
+                                      <span className={`text-[8px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
+                                    </div>
+                                    <div className="h-1 rounded-full bg-white/20 overflow-hidden">
+                                      <div className={`h-full rounded-full ${cat.rating.bar}`} style={{ width: `${barPct}%` }} />
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
                     <Card hover className="h-full">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -142,6 +208,9 @@ const Courses = () => {
                             <p className="text-xs text-text-muted mt-0.5">
                               {[course.city, course.state, course.country].filter(Boolean).join(', ')}
                             </p>
+                          )}
+                          {view === 'season' && nextEvent && (
+                            <p className="text-xs text-text-secondary mt-1 font-medium">{nextEvent.name}</p>
                           )}
                         </div>
                         <div className="text-right shrink-0">
@@ -184,6 +253,7 @@ const Courses = () => {
                         </div>
                       )}
                     </Card>
+                    )}
                   </Link>
                 )
               })}
