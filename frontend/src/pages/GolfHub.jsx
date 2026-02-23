@@ -191,11 +191,19 @@ const GolfHub = () => {
           {tournamentsLoading ? (
             <div className="mb-8 h-36 bg-[var(--stone)] rounded-xl animate-pulse" />
           ) : heroTournament ? (
-            <div className="mb-8 rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+            <div className="mb-8 rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden relative">
+              {/* Course background image */}
+              {heroIntel?.course?.imageUrl && (
+                <>
+                  <img src={heroIntel.course.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                </>
+              )}
               {/* Tournament header */}
               <Link
                 to={`/tournaments/${heroTournament.id}`}
-                className="block p-5 sm:p-6 hover:bg-[var(--surface-alt)] transition-colors group"
+                className="block p-5 sm:p-6 relative hover:opacity-95 transition-opacity group"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -218,17 +226,17 @@ const GolfHub = () => {
                       <EventBadge tournament={heroTournament} />
                     </div>
 
-                    <h2 className="text-xl sm:text-2xl font-display font-bold text-text-primary group-hover:text-emerald-400 transition-colors">
+                    <h2 className={`text-xl sm:text-2xl font-display font-bold transition-colors ${heroIntel?.course?.imageUrl ? 'text-white group-hover:text-emerald-300' : 'text-text-primary group-hover:text-emerald-400'}`} style={heroIntel?.course?.imageUrl ? { textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>
                       {heroTournament.name}
                     </h2>
 
                     {heroTournament.course && (
-                      <p className="text-sm text-gold mt-1">
+                      <p className={`text-sm mt-1 ${heroIntel?.course?.imageUrl ? 'text-gold drop-shadow-sm' : 'text-gold'}`}>
                         {heroTournament.course.nickname || heroTournament.course.name}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 mt-2 text-xs text-text-muted font-mono">
+                    <div className={`flex items-center gap-4 mt-2 text-xs font-mono ${heroIntel?.course?.imageUrl ? 'text-white/60' : 'text-text-muted'}`}>
                       <span>{formatDateRange(heroTournament.startDate, heroTournament.endDate)}</span>
                       {heroTournament.purse && <span>{formatPurse(heroTournament.purse)}</span>}
                       {heroTournament.fieldSize > 0 && <span>{heroTournament.fieldSize} players</span>}
@@ -252,7 +260,7 @@ const GolfHub = () => {
                 const diff = (today.difficultyImpact || 0) >= 0.6 ? 'Brutal' : (today.difficultyImpact || 0) >= 0.4 ? 'Windy' : (today.difficultyImpact || 0) >= 0.2 ? 'Breezy' : 'Calm'
                 const diffColor = diff === 'Brutal' ? 'text-red-400' : diff === 'Windy' ? 'text-orange-400' : diff === 'Breezy' ? 'text-yellow-400' : 'text-emerald-400'
                 return (
-                  <div className="px-5 sm:px-6 pb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-text-muted">
+                  <div className={`relative px-5 sm:px-6 pb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs ${heroIntel?.course?.imageUrl ? 'text-white/50' : 'text-text-muted'}`}>
                     <span className="flex items-center gap-1.5">
                       <span>{icon}</span>
                       <span className="font-mono font-bold text-text-primary">{today.temperature != null ? `${Math.round(today.temperature)}°` : '--'}</span>
@@ -281,7 +289,7 @@ const GolfHub = () => {
               })()}
 
               {/* Quick action links */}
-              <div className="px-5 sm:px-6 pb-4 flex flex-wrap items-center gap-2">
+              <div className="relative px-5 sm:px-6 pb-4 flex flex-wrap items-center gap-2">
                 {heroTournament.status === 'UPCOMING' && (
                   <Link
                     to={`/tournaments/${heroTournament.id}/preview`}

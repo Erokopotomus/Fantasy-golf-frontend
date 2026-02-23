@@ -20,7 +20,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
         where,
         include: {
           course: {
-            select: { id: true, name: true, nickname: true, city: true, state: true, par: true, yardage: true },
+            select: { id: true, name: true, nickname: true, city: true, state: true, par: true, yardage: true, imageUrl: true },
           },
         },
         orderBy: { startDate: 'desc' },
@@ -80,7 +80,7 @@ router.get('/upcoming-with-fields', optionalAuth, async (req, res, next) => {
       take: 5,
       include: {
         course: {
-          select: { id: true, name: true, nickname: true, city: true, state: true, par: true },
+          select: { id: true, name: true, nickname: true, city: true, state: true, par: true, imageUrl: true },
         },
         performances: {
           select: {

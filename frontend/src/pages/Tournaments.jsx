@@ -137,45 +137,82 @@ const Tournaments = () => {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
-            {upcomingTournaments.map(t => (
-              <Link key={t.id} to={`/tournaments/${t.id}`} className="block">
-                <Card hover className="h-full">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-display font-semibold text-text-primary">{t.name}</h3>
-                        <TourBadge tour={t.tour} />
-                        <EventBadge tournament={t} />
+            {upcomingTournaments.map(t => {
+              const courseImg = t.course?.imageUrl
+              return (
+                <Link key={t.id} to={`/tournaments/${t.id}`} className="block">
+                  {courseImg ? (
+                    <div className="relative h-full rounded-xl overflow-hidden border border-[var(--card-border)] hover:border-gold/40 transition-colors group">
+                      <img src={courseImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+                      <div className="relative p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-sm font-display font-semibold text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{t.name}</h3>
+                              <TourBadge tour={t.tour} />
+                              <EventBadge tournament={t} />
+                            </div>
+                            {(t.course?.name || t.courseName) && (
+                              <span className="text-xs text-gold mt-0.5 inline-block" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                                {t.course?.nickname || t.course?.name || t.courseName}
+                              </span>
+                            )}
+                          </div>
+                          {t.purse && (
+                            <span className="text-xs font-mono text-white/50 shrink-0">{formatPurse(t.purse)}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-white/60 font-mono">
+                            {formatDateRange(t.startDate, t.endDate)}
+                          </p>
+                          <span className="text-[10px] font-medium text-gold group-hover:text-gold/80 transition-colors">
+                            Preview →
+                          </span>
+                        </div>
                       </div>
-                      {(t.course?.name || t.courseName) && (
+                    </div>
+                  ) : (
+                    <Card hover className="h-full">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-sm font-display font-semibold text-text-primary">{t.name}</h3>
+                            <TourBadge tour={t.tour} />
+                            <EventBadge tournament={t} />
+                          </div>
+                          {(t.course?.name || t.courseName) && (
+                            <Link
+                              to={`/courses/${t.course?.id || t.courseId}`}
+                              className="text-xs text-gold hover:text-gold/80 transition-colors mt-0.5 inline-block"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {t.course?.nickname || t.course?.name || t.courseName}
+                            </Link>
+                          )}
+                        </div>
+                        {t.purse && (
+                          <span className="text-xs font-mono text-text-muted shrink-0">{formatPurse(t.purse)}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-text-muted font-mono">
+                          {formatDateRange(t.startDate, t.endDate)}
+                        </p>
                         <Link
-                          to={`/courses/${t.course?.id || t.courseId}`}
-                          className="text-xs text-gold hover:text-gold/80 transition-colors mt-0.5 inline-block"
+                          to={`/tournaments/${t.id}/preview`}
+                          className="text-[10px] font-medium text-gold hover:text-gold/80 transition-colors"
                           onClick={e => e.stopPropagation()}
                         >
-                          {t.course?.nickname || t.course?.name || t.courseName}
+                          Preview →
                         </Link>
-                      )}
-                    </div>
-                    {t.purse && (
-                      <span className="text-xs font-mono text-text-muted shrink-0">{formatPurse(t.purse)}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-xs text-text-muted font-mono">
-                      {formatDateRange(t.startDate, t.endDate)}
-                    </p>
-                    <Link
-                      to={`/tournaments/${t.id}/preview`}
-                      className="text-[10px] font-medium text-gold hover:text-gold/80 transition-colors"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      Preview →
-                    </Link>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                      </div>
+                    </Card>
+                  )}
+                </Link>
+              )
+            })}
           </div>
         )}
       </section>
@@ -185,43 +222,82 @@ const Tournaments = () => {
         <section>
           <h2 className="text-lg font-display font-semibold text-text-primary mb-4">Recent Results</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            {recentTournaments.map(t => (
-              <Link key={t.id} to={`/tournaments/${t.id}`} className="block">
-                <Card hover className="h-full">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-display font-semibold text-text-primary">{t.name}</h3>
-                        <TourBadge tour={t.tour} />
-                        <EventBadge tournament={t} />
+            {recentTournaments.map(t => {
+              const courseImg = t.course?.imageUrl
+              return (
+                <Link key={t.id} to={`/tournaments/${t.id}`} className="block">
+                  {courseImg ? (
+                    <div className="relative h-full rounded-xl overflow-hidden border border-[var(--card-border)] hover:border-gold/40 transition-colors group">
+                      <img src={courseImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+                      <div className="relative p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-sm font-display font-semibold text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{t.name}</h3>
+                              <TourBadge tour={t.tour} />
+                              <EventBadge tournament={t} />
+                            </div>
+                            {(t.course?.name || t.courseName) && (
+                              <span className="text-xs text-gold mt-0.5 inline-block" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                                {t.course?.nickname || t.course?.name || t.courseName}
+                              </span>
+                            )}
+                          </div>
+                          {t.purse && (
+                            <span className="text-xs font-mono text-white/50 shrink-0">{formatPurse(t.purse)}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-white/60 font-mono">
+                            {formatDateRange(t.startDate, t.endDate)}
+                          </p>
+                          {t.winnerName && (
+                            <span className="text-xs font-mono text-gold">
+                              W: {t.winnerName}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      {(t.course?.name || t.courseName) && (
-                        <Link
-                          to={`/courses/${t.course?.id || t.courseId}`}
-                          className="text-xs text-gold hover:text-gold/80 transition-colors mt-0.5 inline-block"
-                          onClick={e => e.stopPropagation()}
-                        >
-                          {t.course?.nickname || t.course?.name || t.courseName}
-                        </Link>
-                      )}
                     </div>
-                    {t.purse && (
-                      <span className="text-xs font-mono text-text-muted shrink-0">{formatPurse(t.purse)}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-xs text-text-muted font-mono">
-                      {formatDateRange(t.startDate, t.endDate)}
-                    </p>
-                    {t.winnerName && (
-                      <span className="text-xs font-mono text-gold">
-                        W: {t.winnerName}
-                      </span>
-                    )}
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                  ) : (
+                    <Card hover className="h-full">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-sm font-display font-semibold text-text-primary">{t.name}</h3>
+                            <TourBadge tour={t.tour} />
+                            <EventBadge tournament={t} />
+                          </div>
+                          {(t.course?.name || t.courseName) && (
+                            <Link
+                              to={`/courses/${t.course?.id || t.courseId}`}
+                              className="text-xs text-gold hover:text-gold/80 transition-colors mt-0.5 inline-block"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {t.course?.nickname || t.course?.name || t.courseName}
+                            </Link>
+                          )}
+                        </div>
+                        {t.purse && (
+                          <span className="text-xs font-mono text-text-muted shrink-0">{formatPurse(t.purse)}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-text-muted font-mono">
+                          {formatDateRange(t.startDate, t.endDate)}
+                        </p>
+                        {t.winnerName && (
+                          <span className="text-xs font-mono text-gold">
+                            W: {t.winnerName}
+                          </span>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+                </Link>
+              )
+            })}
           </div>
         </section>
       )}

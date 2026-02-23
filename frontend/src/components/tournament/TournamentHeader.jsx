@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { formatDate, formatPurse } from '../../utils/dateUtils'
+import api from '../../services/api'
 
 const getDnaLabel = (val) => {
   if (val == null) return null
@@ -18,6 +20,19 @@ const getTvSchedule = (tournament) => {
   if (tour.includes('DP') || tour.includes('EURO')) return 'Golf Channel / NBC Sports'
   if (tour.includes('LPGA')) return 'Golf Channel / Peacock'
   return 'Golf Channel / ESPN+'
+}
+
+const WMO_ICON = { 0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌦',63:'🌧',65:'🌧',71:'🌨',73:'❄️',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈' }
+
+const conditionToIcon = (cond) => {
+  if (!cond) return '🌤'
+  const c = cond.toLowerCase()
+  if (c.includes('rain') || c.includes('shower')) return '🌧'
+  if (c.includes('storm') || c.includes('thunder')) return '⛈'
+  if (c.includes('cloud') || c.includes('overcast')) return '☁️'
+  if (c.includes('clear') || c.includes('sunny')) return '☀️'
+  if (c.includes('partly')) return '⛅'
+  return '🌤'
 }
 
 const TournamentHeader = ({ tournament, leaderboard = [] }) => {
@@ -45,6 +60,15 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
     ? `Rewards ${premiumSkills.map(s => s.label.toLowerCase()).join(' & ')}`
     : null
 
+  // Fetch weather for upcoming/live tournaments
+  const [weather, setWeather] = useState([])
+  useEffect(() => {
+    if (!tournament?.id || (!isUpcoming && !isLive)) return
+    api.getTournamentWeather(tournament.id)
+      .then(data => setWeather(data?.weather || []))
+      .catch(() => {})
+  }, [tournament?.id])
+
   const img = !!course?.imageUrl
 
   // Text color helpers — white when image bg, themed when not
@@ -53,6 +77,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
   const txtMuted = img ? 'text-white/50' : 'text-text-muted'
   const shadow = img ? { textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined
   const borderColor = img ? 'border-white/15' : 'border-[var(--card-border)]'
+  const panelBg = img ? 'bg-black/40 backdrop-blur-sm border-white/15' : 'bg-[var(--bg-alt)] border-[var(--card-border)]'
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card">
@@ -71,7 +96,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
       )}
 
       <div className="relative p-5">
-        <div className="flex gap-6">
+        <div className="flex gap-4">
           {/* Left side — tournament info */}
           <div className="flex-1 min-w-0">
             {/* Top row: Status + Tour */}
@@ -220,45 +245,74 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
             </div>
           </div>
 
-          {/* Right side — Course DNA panel (UPCOMING only) */}
-          {isUpcoming && dnaCategories.length > 0 && (
-            <div className={`hidden md:flex flex-col w-56 flex-shrink-0 rounded-lg ${img ? 'bg-black/40 backdrop-blur-sm border-white/15' : 'bg-[var(--bg-alt)] border-[var(--card-border)]'} border p-4`}>
-              <div className="flex items-center justify-between mb-3">
-                <span className={`text-[10px] ${txtMuted} uppercase tracking-wider font-bold`}>What Wins Here</span>
-                <Link
-                  to={`/courses/${course.id}`}
-                  className="text-[9px] text-gold hover:text-gold/80 transition-colors font-medium"
-                >
-                  Profile →
-                </Link>
-              </div>
+          {/* Right side panels (UPCOMING only) */}
+          {isUpcoming && (dnaCategories.length > 0 || weather.length > 0) && (
+            <div className="hidden md:flex gap-3 flex-shrink-0">
+              {/* 4-Day Forecast */}
+              {weather.length > 0 && (
+                <div className={`flex flex-col w-36 rounded-lg ${panelBg} border p-3`}>
+                  <span className={`text-[10px] ${txtMuted} uppercase tracking-wider font-bold mb-2`}>Forecast</span>
+                  <div className="space-y-1.5 flex-1">
+                    {weather.slice(0, 4).map((w) => {
+                      const icon = conditionToIcon(w.conditions)
+                      return (
+                        <div key={w.round} className="flex items-center justify-between">
+                          <span className={`text-[10px] font-mono ${txtMuted}`}>R{w.round}</span>
+                          <span className="text-xs">{icon}</span>
+                          <span className={`text-[10px] font-mono font-bold ${txtPrimary}`}>
+                            {w.temperature != null ? `${Math.round(w.temperature)}°` : '--'}
+                          </span>
+                          <span className={`text-[10px] font-mono ${txtMuted}`}>
+                            {w.windSpeed != null ? `${Math.round(w.windSpeed)}mph` : '--'}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2 flex-1">
-                {dnaCategories.map((cat) => {
-                  const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
-                  return (
-                    <div key={cat.label}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-[10px] ${txtSecondary} font-medium`}>{cat.label}</span>
-                        <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>
-                          {cat.rating.text}
-                        </span>
-                      </div>
-                      <div className={`h-1.5 rounded-full ${img ? 'bg-white/20' : 'bg-[var(--stone)]'} overflow-hidden`}>
-                        <div
-                          className={`h-full rounded-full ${cat.rating.bar} transition-all`}
-                          style={{ width: `${barPct}%` }}
-                        />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              {/* Course DNA */}
+              {dnaCategories.length > 0 && (
+                <div className={`flex flex-col w-56 rounded-lg ${panelBg} border p-4`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`text-[10px] ${txtMuted} uppercase tracking-wider font-bold`}>What Wins Here</span>
+                    <Link
+                      to={`/courses/${course.id}`}
+                      className="text-[9px] text-gold hover:text-gold/80 transition-colors font-medium"
+                    >
+                      Profile →
+                    </Link>
+                  </div>
 
-              {courseSummary && (
-                <p className="text-[10px] text-emerald-400/80 font-medium mt-3 pt-3 border-t border-[var(--card-border)]">
-                  {courseSummary}
-                </p>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 flex-1">
+                    {dnaCategories.map((cat) => {
+                      const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
+                      return (
+                        <div key={cat.label}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className={`text-[10px] ${txtSecondary} font-medium`}>{cat.label}</span>
+                            <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>
+                              {cat.rating.text}
+                            </span>
+                          </div>
+                          <div className={`h-1.5 rounded-full ${img ? 'bg-white/20' : 'bg-[var(--stone)]'} overflow-hidden`}>
+                            <div
+                              className={`h-full rounded-full ${cat.rating.bar} transition-all`}
+                              style={{ width: `${barPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {courseSummary && (
+                    <p className="text-[10px] text-emerald-400/80 font-medium mt-3 pt-3 border-t border-[var(--card-border)]">
+                      {courseSummary}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
