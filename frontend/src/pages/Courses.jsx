@@ -140,13 +140,13 @@ const Courses = () => {
                           alt={course.name}
                           className="absolute inset-0 w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/40" />
                         <div className="relative p-4">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <h3 className="text-sm font-display font-bold text-white drop-shadow-sm">{course.name}</h3>
+                              <h3 className="text-base font-display font-bold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>{course.name}</h3>
                               {course.nickname && course.nickname !== course.name && (
-                                <p className="text-xs text-gold mt-0.5 drop-shadow-sm">"{course.nickname}"</p>
+                                <p className="text-xs text-gold mt-0.5" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>"{course.nickname}"</p>
                               )}
                               {(course.city || course.state) && (
                                 <p className="text-xs text-white/70 mt-0.5">
