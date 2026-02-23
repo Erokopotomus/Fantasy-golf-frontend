@@ -66,11 +66,11 @@ function getCardsForPhase(phase, league, existingBoardId) {
       return [
         {
           icon: '\uD83E\uDDEA',
-          title: hasBoardAlready ? 'Continue Your Draft Board' : 'Build Your Draft Board',
+          title: hasBoardAlready ? 'Continue in The Lab' : 'Open The Lab',
           description: hasBoardAlready
-            ? `Pick up where you left off on your ${draftTypeLabel} draft board`
-            : `Create a custom board for this ${teamCount}-team ${draftTypeLabel} draft`,
-          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+            ? `Pick up where you left off on your ${draftTypeLabel} rankings`
+            : `Build your rankings for this ${teamCount}-team ${draftTypeLabel} draft`,
+          cta: 'Open Lab',
           to: boardUrl,
         },
         {
@@ -83,7 +83,7 @@ function getCardsForPhase(phase, league, existingBoardId) {
         {
           icon: '\uD83D\uDCCA',
           title: 'Scout the Field',
-          description: `Research stats and projections`,
+          description: 'Research stats and projections',
           cta: 'Browse',
           to: playersUrl,
         },
@@ -93,9 +93,9 @@ function getCardsForPhase(phase, league, existingBoardId) {
       return [
         {
           icon: '\uD83D\uDCCB',
-          title: 'Review Your Board',
-          description: 'Final look at your rankings before the draft',
-          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+          title: 'Final Review',
+          description: 'Last look at your rankings before the draft',
+          cta: 'Open Lab',
           to: boardUrl,
         },
         {
@@ -108,8 +108,8 @@ function getCardsForPhase(phase, league, existingBoardId) {
         {
           icon: '\uD83D\uDCDD',
           title: 'Generate Cheat Sheet',
-          description: 'Get a printable cheat sheet from your board',
-          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+          description: 'Get a printable cheat sheet from your rankings',
+          cta: 'Open Lab',
           to: boardUrl,
         },
       ]
@@ -126,18 +126,18 @@ function getCardsForPhase(phase, league, existingBoardId) {
           to: `/leagues/${leagueId}/scoring`,
         },
         {
-          icon: '\uD83C\uDFAF',
-          title: 'Make Your Calls',
-          description: 'Submit your predictions before lock',
-          cta: 'Prove It',
-          to: '/prove-it',
-        },
-        {
           icon: '\uD83D\uDCCB',
           title: 'Waiver Wire',
-          description: 'Browse free agents and make claims',
+          description: 'Browse free agents and plan your next move',
           cta: 'Waivers',
           to: `/leagues/${leagueId}/waivers`,
+        },
+        {
+          icon: '\uD83D\uDD04',
+          title: 'Trade Block',
+          description: 'Explore trade opportunities with other managers',
+          cta: 'Trades',
+          to: `/leagues/${leagueId}/trades`,
         },
       ]
 
@@ -151,18 +151,18 @@ function getCardsForPhase(phase, league, existingBoardId) {
           to: `/leagues/${leagueId}/waivers`,
         },
         {
-          icon: '\uD83C\uDFAF',
-          title: 'Make Your Calls',
-          description: 'Submit your predictions and build your track record',
-          cta: 'Prove It',
-          to: '/prove-it',
-        },
-        {
           icon: '\uD83D\uDD04',
           title: 'Trade Block',
           description: 'Explore trade opportunities with other managers',
           cta: 'Trades',
           to: `/leagues/${leagueId}/trades`,
+        },
+        {
+          icon: '\uD83E\uDDEA',
+          title: 'Scout & Prep',
+          description: isGolf ? 'Research the upcoming course and field' : 'Study matchups and player trends',
+          cta: 'Research',
+          to: isGolf ? '/golf' : '/nfl',
         },
       ]
 
@@ -186,7 +186,7 @@ function getCardsForPhase(phase, league, existingBoardId) {
           icon: '\uD83E\uDDEA',
           title: 'Start Prepping',
           description: 'Get ahead on next season\'s draft prep',
-          cta: hasBoardAlready ? 'Open Board' : 'Open The Lab',
+          cta: 'Open Lab',
           to: boardUrl,
         },
       ]

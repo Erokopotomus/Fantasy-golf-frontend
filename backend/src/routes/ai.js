@@ -164,6 +164,54 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
           }
         }
 
+        // Upcoming tournament preview (golf, between events)
+        let upcomingPreview = null
+        if (sport === 'golf' && !liveTournament) {
+          const nextTournament = await prisma.tournament.findFirst({
+            where: { startDate: { gt: new Date() }, status: { not: 'COMPLETED' } },
+            orderBy: { startDate: 'asc' },
+            select: {
+              id: true, name: true, startDate: true,
+              course: { select: { name: true, drivingImportance: true, approachImportance: true, aroundGreenImportance: true, puttingImportance: true } },
+            },
+          }).catch(() => null)
+
+          if (nextTournament?.course) {
+            const c = nextTournament.course
+            const importances = [
+              { label: 'driving', val: c.drivingImportance || 0, sg: 'sgOffTee' },
+              { label: 'approach', val: c.approachImportance || 0, sg: 'sgApproach' },
+              { label: 'short game', val: c.aroundGreenImportance || 0, sg: 'sgAroundGreen' },
+              { label: 'putting', val: c.puttingImportance || 0, sg: 'sgPutting' },
+            ].sort((a, b) => b.val - a.val)
+
+            const topSkill = importances[0]
+            if (topSkill.val > 0) {
+              // Check roster strength in that skill
+              let rosterInsight = ''
+              if (userTeam) {
+                const rosterPlayers = await prisma.rosterEntry.findMany({
+                  where: { teamId: userTeam.id, isActive: true },
+                  select: { player: { select: { name: true, [topSkill.sg]: true } } },
+                })
+                const sgValues = rosterPlayers.map(r => r.player?.[topSkill.sg]).filter(v => v != null)
+                if (sgValues.length > 0) {
+                  const avgSg = sgValues.reduce((a, b) => a + b, 0) / sgValues.length
+                  if (avgSg > 0.3) rosterInsight = `Your roster is strong in ${topSkill.label} — that's an edge.`
+                  else if (avgSg < -0.1) rosterInsight = `Your roster is weak in ${topSkill.label} — check the wire for upgrades.`
+                }
+              }
+
+              const daysUntil = Math.floor((new Date(nextTournament.startDate) - new Date()) / 86400000)
+              const timeLabel = daysUntil <= 1 ? 'starts tomorrow' : `is ${daysUntil} days out`
+              upcomingPreview = {
+                headline: `${nextTournament.name} ${timeLabel} — ${topSkill.label} course`,
+                body: `${c.name} rewards ${topSkill.label}. ${rosterInsight}`,
+              }
+            }
+          }
+        }
+
         let headline, body = null
 
         if (liveTournament) {
@@ -180,6 +228,11 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
             ? `You have ${rosteredInEvent} player${rosteredInEvent > 1 ? 's' : ''} in the field. ${userRank ? `You're ${ordinal(userRank)} in your league.` : ''}`
             : userRank ? `You're sitting ${ordinal(userRank)} of ${totalTeams} teams.` : null
           // Append board insight if available
+          if (boardInsight) body = (body ? body + ' ' : '') + boardInsight
+        } else if (upcomingPreview) {
+          // Between tournaments — show course preview + waiver advice
+          headline = upcomingPreview.headline
+          body = upcomingPreview.body
           if (boardInsight) body = (body ? body + ' ' : '') + boardInsight
         } else if (userRank) {
           const leader = league.teams[0]
