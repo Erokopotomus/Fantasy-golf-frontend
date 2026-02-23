@@ -45,11 +45,30 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
     ? `Rewards ${premiumSkills.map(s => s.label.toLowerCase()).join(' & ')}`
     : null
 
+  const img = !!course?.imageUrl
+
+  // Text color helpers — white when image bg, themed when not
+  const txtPrimary = img ? 'text-white' : 'text-text-primary'
+  const txtSecondary = img ? 'text-white/70' : 'text-text-secondary'
+  const txtMuted = img ? 'text-white/50' : 'text-text-muted'
+  const shadow = img ? { textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined
+  const borderColor = img ? 'border-white/15' : 'border-[var(--card-border)]'
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card">
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 via-[var(--surface)] to-[var(--surface)]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] via-transparent to-transparent" />
+      {/* Course background image or gradient fallback */}
+      {img ? (
+        <>
+          <img src={course.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 via-[var(--surface)] to-[var(--surface)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] via-transparent to-transparent" />
+        </>
+      )}
 
       <div className="relative p-5">
         <div className="flex gap-6">
@@ -77,15 +96,15 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                 </span>
               )}
               {tournament.tour && (
-                <span className="px-2 py-0.5 rounded bg-[var(--stone)] text-text-muted text-xs font-medium">
+                <span className={`px-2 py-0.5 rounded ${img ? 'bg-white/15 text-white/70' : 'bg-[var(--stone)] text-text-muted'} text-xs font-medium`}>
                   {tournament.tour}
                 </span>
               )}
             </div>
 
             {/* Tournament name + course */}
-            <h1 className="text-2xl font-bold font-display text-text-primary mb-1 tracking-tight">{tournament.name}</h1>
-            <div className="text-text-secondary text-sm mb-4">
+            <h1 className={`text-2xl font-bold font-display ${txtPrimary} mb-1 tracking-tight`} style={shadow}>{tournament.name}</h1>
+            <div className={`${txtSecondary} text-sm mb-4`}>
               {course ? (
                 <span>
                   <Link
@@ -95,7 +114,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                     {course.nickname || course.name}
                   </Link>
                   {(course.city || course.state) && (
-                    <span className="text-text-muted ml-1.5">
+                    <span className={`${txtMuted} ml-1.5`}>
                       — {[course.city, course.state].filter(Boolean).join(', ')}
                     </span>
                   )}
@@ -108,23 +127,23 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
             {/* Stats row */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
               <div>
-                <span className="text-text-muted text-xs uppercase tracking-wide">Dates</span>
-                <p className="text-text-primary font-medium">
+                <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Dates</span>
+                <p className={`${txtPrimary} font-medium`}>
                   {formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}
                 </p>
               </div>
 
               {tournament.purse && (
                 <div>
-                  <span className="text-text-muted text-xs uppercase tracking-wide">Purse</span>
-                  <p className="text-text-primary font-medium">{formatPurse(tournament.purse)}</p>
+                  <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Purse</span>
+                  <p className={`${txtPrimary} font-medium`}>{formatPurse(tournament.purse)}</p>
                 </div>
               )}
 
               {leaderboard.length > 0 && (
                 <div>
-                  <span className="text-text-muted text-xs uppercase tracking-wide">Field</span>
-                  <p className="text-text-primary font-medium">
+                  <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Field</span>
+                  <p className={`${txtPrimary} font-medium`}>
                     {leaderboard.length} players{cutPlayers.length > 0 ? ` (${cutPlayers.length} cut)` : ''}
                   </p>
                 </div>
@@ -134,14 +153,14 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                 <>
                   {course.par && (
                     <div>
-                      <span className="text-text-muted text-xs uppercase tracking-wide">Par</span>
-                      <p className="text-text-primary font-medium font-mono">{course.par}</p>
+                      <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Par</span>
+                      <p className={`${txtPrimary} font-medium font-mono`}>{course.par}</p>
                     </div>
                   )}
                   {course.yardage && (
                     <div>
-                      <span className="text-text-muted text-xs uppercase tracking-wide">Yards</span>
-                      <p className="text-text-primary font-medium font-mono">{course.yardage?.toLocaleString()}</p>
+                      <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Yards</span>
+                      <p className={`${txtPrimary} font-medium font-mono`}>{course.yardage?.toLocaleString()}</p>
                     </div>
                   )}
                 </>
@@ -149,9 +168,9 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
 
               {/* TV Schedule */}
               {isUpcoming && (
-                <div className="w-full mt-1 pt-2 border-t border-[var(--card-border)]">
-                  <div className="flex items-center gap-2 text-xs text-text-secondary">
-                    <svg className="w-3.5 h-3.5 text-text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className={`w-full mt-1 pt-2 border-t ${borderColor}`}>
+                  <div className={`flex items-center gap-2 text-xs ${txtSecondary}`}>
+                    <svg className={`w-3.5 h-3.5 ${txtMuted} flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <rect x="2" y="4" width="20" height="13" rx="2" />
                       <path d="M8 21h8M12 17v4" />
                     </svg>
@@ -162,14 +181,14 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
 
               {leader && (isCompleted || isLive) && (
                 <div className="ml-auto text-right">
-                  <span className="text-text-muted text-xs uppercase tracking-wide">
+                  <span className={`${txtMuted} text-xs uppercase tracking-wide`}>
                     {isCompleted ? 'Winner' : 'Leader'}
                   </span>
-                  <p className="text-text-primary font-medium flex items-center gap-1.5 justify-end">
+                  <p className={`${txtPrimary} font-medium flex items-center gap-1.5 justify-end`}>
                     {isCompleted && <span className="text-yellow-400">&#127942;</span>}
                     <span className="text-lg">{leader.countryFlag}</span>
                     {leader.name}
-                    <span className={`ml-1 font-bold ${leader.score < 0 ? 'text-emerald-400' : leader.score > 0 ? 'text-red-400' : 'text-text-primary'}`}>
+                    <span className={`ml-1 font-bold ${leader.score < 0 ? 'text-emerald-400' : leader.score > 0 ? 'text-red-400' : txtPrimary}`}>
                       {leader.score > 0 ? `+${leader.score}` : leader.score === 0 ? 'E' : leader.score}
                     </span>
                   </p>
@@ -203,9 +222,9 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
 
           {/* Right side — Course DNA panel (UPCOMING only) */}
           {isUpcoming && dnaCategories.length > 0 && (
-            <div className="hidden md:flex flex-col w-56 flex-shrink-0 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)] p-4">
+            <div className={`hidden md:flex flex-col w-56 flex-shrink-0 rounded-lg ${img ? 'bg-black/40 backdrop-blur-sm border-white/15' : 'bg-[var(--bg-alt)] border-[var(--card-border)]'} border p-4`}>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] text-text-muted uppercase tracking-wider font-bold">What Wins Here</span>
+                <span className={`text-[10px] ${txtMuted} uppercase tracking-wider font-bold`}>What Wins Here</span>
                 <Link
                   to={`/courses/${course.id}`}
                   className="text-[9px] text-gold hover:text-gold/80 transition-colors font-medium"
@@ -220,12 +239,12 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                   return (
                     <div key={cat.label}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-text-secondary font-medium">{cat.label}</span>
+                        <span className={`text-[10px] ${txtSecondary} font-medium`}>{cat.label}</span>
                         <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>
                           {cat.rating.text}
                         </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
+                      <div className={`h-1.5 rounded-full ${img ? 'bg-white/20' : 'bg-[var(--stone)]'} overflow-hidden`}>
                         <div
                           className={`h-full rounded-full ${cat.rating.bar} transition-all`}
                           style={{ width: `${barPct}%` }}
