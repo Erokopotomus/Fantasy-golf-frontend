@@ -172,19 +172,18 @@ const GolfHub = () => {
             </p>
           </div>
 
-          {/* Section 1: This Week Hero Card */}
+          {/* This Week — Unified Tournament Section */}
           {tournamentsLoading ? (
             <div className="mb-8 h-36 bg-[var(--stone)] rounded-xl animate-pulse" />
           ) : heroTournament ? (
-            <Link
-              to={`/tournaments/${heroTournament.id}`}
-              className="block mb-8 rounded-xl border overflow-hidden transition-all hover:border-emerald-500/40 group"
-              style={{ borderColor: isLive ? 'rgba(244, 63, 94, 0.3)' : 'rgba(255,255,255,0.08)' }}
-            >
-              <div className={`p-5 sm:p-6 ${isLive ? 'bg-rose/[0.04]' : 'bg-[var(--surface)]'}`}>
+            <div className="mb-8 rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+              {/* Tournament header */}
+              <Link
+                to={`/tournaments/${heroTournament.id}`}
+                className="block p-5 sm:p-6 hover:bg-[var(--surface-alt)] transition-colors group"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    {/* Status badge */}
                     <div className="flex items-center gap-2 mb-2">
                       {isLive ? (
                         <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-rose bg-rose/10 px-2 py-0.5 rounded">
@@ -227,171 +226,137 @@ const GolfHub = () => {
                     </span>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ) : null}
+              </Link>
 
-          {/* Tournament Preview Banner */}
-          {heroTournament?.status === 'UPCOMING' && (
-            <Link
-              to={`/tournaments/${heroTournament.id}/preview`}
-              className="block mb-8 rounded-xl border border-gold/20 bg-gradient-to-r from-gold/[0.08] via-gold/[0.03] to-transparent p-5 hover:border-gold/40 hover:from-gold/[0.12] transition-all group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-gold/15 border border-gold/20 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              {/* Quick action links */}
+              <div className="px-5 sm:px-6 pb-4 flex flex-wrap items-center gap-2">
+                {heroTournament.status === 'UPCOMING' && (
+                  <Link
+                    to={`/tournaments/${heroTournament.id}/preview`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gold bg-gold/10 border border-gold/20 rounded-lg hover:bg-gold/15 hover:border-gold/30 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                     </svg>
-                  </div>
-                  <div>
-                    <p className="text-base font-display font-bold text-gold">This Week in Golf</p>
-                    <p className="text-xs text-text-muted mt-0.5">Course DNA, players to watch, key storylines, weather outlook</p>
-                  </div>
-                </div>
-                <span className="text-sm text-gold group-hover:text-gold/80 transition-colors font-semibold shrink-0 ml-4 flex items-center gap-1">
-                  Read Preview
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
-          )}
-
-          {/* AI Scout Report Banner */}
-          {heroTournament && (
-            <Link
-              to={`/scout/golf/${heroTournament.id}`}
-              className="block mb-4 rounded-xl border border-purple-400/20 bg-gradient-to-r from-purple-500/[0.06] to-gold/[0.03] p-4 hover:border-purple-400/30 transition-all group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    Preview
+                  </Link>
+                )}
+                <Link
+                  to={`/scout/golf/${heroTournament.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-400/20 rounded-lg hover:bg-purple-500/15 hover:border-purple-400/30 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
-                  <div>
-                    <p className="text-sm font-display font-bold text-purple-300">AI Scout Report</p>
-                    <p className="text-[11px] text-text-primary/40">Field analysis, value plays, course fit — powered by Clutch Scout</p>
-                  </div>
-                </div>
-                <span className="text-xs text-purple-300 group-hover:text-purple-200 transition-colors font-semibold">View &rarr;</span>
-              </div>
-            </Link>
-          )}
-
-          {/* Section 1B: Tournament Intel Preview */}
-          {heroTournament?.status === 'UPCOMING' && heroIntel && (
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-display font-bold text-text-primary">Tournament Intel</h2>
+                  Scout Report
+                </Link>
                 <Link
                   to={`/tournaments/${heroTournament.id}`}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/15 hover:border-emerald-500/30 transition-colors"
                 >
-                  Full Field →
+                  Full Field
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Course DNA snapshot */}
-                {heroIntel.course && (
-                  <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-text-primary">What Wins Here</h3>
-                      {heroIntel.course.id && (
-                        <Link to={`/courses/${heroIntel.course.id}`} className="text-[10px] text-gold hover:text-gold/80 transition-colors">
-                          Course Profile →
-                        </Link>
-                      )}
-                    </div>
-                    <p className="text-xs text-text-muted mb-3">
-                      {heroIntel.course.name}
-                      {heroIntel.course.par && ` | Par ${heroIntel.course.par}`}
-                      {heroIntel.course.yardage && ` | ${heroIntel.course.yardage.toLocaleString()} yds`}
-                    </p>
-                    {(() => {
-                      const getDnaLabel = (val) => {
-                        if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
-                        if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-                        if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
-                        return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
-                      }
-                      const dna = [
-                        { label: 'Driving', value: heroIntel.course.drivingImportance },
-                        { label: 'Approach', value: heroIntel.course.approachImportance },
-                        { label: 'Around Green', value: heroIntel.course.aroundGreenImportance },
-                        { label: 'Putting', value: heroIntel.course.puttingImportance },
-                      ].filter(d => d.value != null).map(d => ({ ...d, rating: getDnaLabel(d.value) }))
-                      if (dna.length === 0) return <p className="text-xs text-text-muted">Course profile not yet available</p>
-                      return (
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                          {dna.map(cat => {
-                            const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
+              {/* Tournament Intel — Course DNA + Course Fits + Weather */}
+              {heroIntel && (
+                <>
+                  <div className="border-t border-[var(--card-border)] px-5 sm:px-6 pt-4 pb-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3">Tournament Intel</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Course DNA snapshot */}
+                      {heroIntel.course && (
+                        <div className="p-3 bg-[var(--bg-alt)] rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-xs font-bold text-text-primary">What Wins Here</h4>
+                            {heroIntel.course.id && (
+                              <Link to={`/courses/${heroIntel.course.id}`} className="text-[10px] text-gold hover:text-gold/80 transition-colors">
+                                Course Profile →
+                              </Link>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-text-muted mb-2.5">
+                            {heroIntel.course.name}
+                            {heroIntel.course.par && ` | Par ${heroIntel.course.par}`}
+                            {heroIntel.course.yardage && ` | ${heroIntel.course.yardage.toLocaleString()} yds`}
+                          </p>
+                          {(() => {
+                            const getDnaLabel = (val) => {
+                              if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
+                              if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
+                              if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
+                              return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
+                            }
+                            const dna = [
+                              { label: 'Driving', value: heroIntel.course.drivingImportance },
+                              { label: 'Approach', value: heroIntel.course.approachImportance },
+                              { label: 'Around Green', value: heroIntel.course.aroundGreenImportance },
+                              { label: 'Putting', value: heroIntel.course.puttingImportance },
+                            ].filter(d => d.value != null).map(d => ({ ...d, rating: getDnaLabel(d.value) }))
+                            if (dna.length === 0) return <p className="text-xs text-text-muted">Course profile not yet available</p>
                             return (
-                              <div key={cat.label}>
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-text-secondary text-[10px] font-medium">{cat.label}</span>
-                                  <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
-                                </div>
-                                <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
-                                  <div className={`h-full rounded-full ${cat.rating.bar} transition-all`} style={{ width: `${barPct}%` }} />
-                                </div>
+                              <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                                {dna.map(cat => {
+                                  const barPct = Math.min(100, Math.max(20, ((cat.value - 0.15) / 0.25) * 80 + 20))
+                                  return (
+                                    <div key={cat.label}>
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="text-text-secondary text-[10px] font-medium">{cat.label}</span>
+                                        <span className={`text-[9px] font-mono font-bold ${cat.rating.color}`}>{cat.rating.text}</span>
+                                      </div>
+                                      <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
+                                        <div className={`h-full rounded-full ${cat.rating.bar} transition-all`} style={{ width: `${barPct}%` }} />
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                               </div>
                             )
-                          })}
+                          })()}
                         </div>
-                      )
-                    })()}
-                  </div>
-                )}
+                      )}
 
-                {/* Top Course Fits */}
-                <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-text-primary mb-3">Top Course Fits</h3>
-                  {(() => {
-                    const fits = (heroIntel.leaderboard || [])
-                      .filter(e => e.clutchMetrics?.courseFitScore != null)
-                      .sort((a, b) => (b.clutchMetrics.courseFitScore || 0) - (a.clutchMetrics.courseFitScore || 0))
-                      .slice(0, 5)
-                    if (fits.length === 0) return <p className="text-xs text-text-muted">Course fit data not yet available</p>
-                    return (
-                      <div className="space-y-2">
-                        {fits.map((e, i) => {
-                          const p = e.player || e
-                          const score = Math.round(e.clutchMetrics.courseFitScore)
+                      {/* Top Course Fits */}
+                      <div className="p-3 bg-[var(--bg-alt)] rounded-lg">
+                        <h4 className="text-xs font-bold text-text-primary mb-2.5">Top Course Fits</h4>
+                        {(() => {
+                          const fits = (heroIntel.leaderboard || [])
+                            .filter(e => e.clutchMetrics?.courseFitScore != null)
+                            .sort((a, b) => (b.clutchMetrics.courseFitScore || 0) - (a.clutchMetrics.courseFitScore || 0))
+                            .slice(0, 5)
+                          if (fits.length === 0) return <p className="text-xs text-text-muted">Course fit data not yet available</p>
                           return (
-                            <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-[var(--surface-alt)] -mx-1 px-1 py-0.5 rounded transition-colors">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono text-text-muted w-3">{i + 1}.</span>
-                                <span className="text-xs font-medium text-text-primary">{p.name}</span>
-                              </div>
-                              <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-gold' : score >= 60 ? 'text-yellow-400' : 'text-text-secondary'}`}>
-                                {score}
-                              </span>
-                            </Link>
+                            <div className="space-y-1.5">
+                              {fits.map((e, i) => {
+                                const p = e.player || e
+                                const score = Math.round(e.clutchMetrics.courseFitScore)
+                                return (
+                                  <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between hover:bg-[var(--surface)] -mx-1 px-1 py-0.5 rounded transition-colors">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-mono text-text-muted w-3">{i + 1}.</span>
+                                      <span className="text-xs font-medium text-text-primary">{p.name}</span>
+                                    </div>
+                                    <span className={`text-xs font-mono font-bold ${score >= 80 ? 'text-gold' : score >= 60 ? 'text-yellow-400' : 'text-text-secondary'}`}>
+                                      {score}
+                                    </span>
+                                  </Link>
+                                )
+                              })}
+                            </div>
                           )
-                        })}
+                        })()}
                       </div>
-                    )
-                  })()}
-                </div>
-              </div>
+                    </div>
+                  </div>
 
-              {/* Weather — full WeatherStrip with round tabs + hourly detail */}
-              <div className="mt-4">
-                <WeatherStrip weather={heroIntel.weather} tournamentStart={heroTournament.startDate} />
-              </div>
+                  {/* Weather — nested inside the unified card */}
+                  <div className="border-t border-[var(--card-border)]">
+                    <WeatherStrip weather={heroIntel.weather} tournamentStart={heroTournament.startDate} embedded />
+                  </div>
+                </>
+              )}
             </div>
-          )}
-
-          {/* Weather strip for live tournaments (intel section only shows for UPCOMING) */}
-          {heroTournament?.status === 'IN_PROGRESS' && heroIntel?.weather?.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-lg font-display font-bold text-text-primary mb-4">Weather — {heroTournament.shortName || heroTournament.name}</h2>
-              <WeatherStrip weather={heroIntel.weather} tournamentStart={heroTournament.startDate} />
-            </div>
-          )}
+          ) : null}
 
           {/* Section 2: Quick Links */}
           <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-8">

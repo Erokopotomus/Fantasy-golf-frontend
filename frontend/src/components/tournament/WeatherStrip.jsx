@@ -258,7 +258,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
   )
 }
 
-const WeatherStrip = ({ weather = [], tournamentStart }) => {
+const WeatherStrip = ({ weather = [], tournamentStart, embedded = false }) => {
   const defaultRound = useMemo(() => {
     if (!weather?.length) return 0
     return getCurrentRoundIndex(weather)
@@ -266,12 +266,16 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
 
   const [selectedRound, setSelectedRound] = useState(defaultRound)
 
+  const wrapCls = embedded
+    ? ''
+    : 'rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card'
+
   if (!weather || weather.length === 0) {
     if (tournamentStart) {
       const daysOut = Math.floor((new Date(tournamentStart) - new Date()) / 86400000)
       if (daysOut > 16) {
         return (
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card p-4">
+          <div className={`${wrapCls} p-4`}>
             <h3 className="text-sm font-semibold text-text-muted mb-2">Weather Forecast</h3>
             <p className="text-text-muted text-xs text-center py-3">
               Forecast available ~{daysOut - 14} days before the tournament
@@ -281,7 +285,7 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
       }
     }
     return (
-      <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card p-4">
+      <div className={`${wrapCls} p-4`}>
         <h3 className="text-sm font-semibold text-text-muted mb-2">Weather Forecast</h3>
         <p className="text-text-muted text-xs text-center py-3">
           Weather data syncs automatically before the tournament. Check back soon.
@@ -294,7 +298,7 @@ const WeatherStrip = ({ weather = [], tournamentStart }) => {
   const active = rounds[selectedRound] || rounds[0]
 
   return (
-    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+    <div className={`${wrapCls} overflow-hidden`}>
       {/* Header */}
       <div className="px-4 py-3 border-b border-[var(--card-border)]">
         <h3 className="text-sm font-semibold text-text-muted">Weather Forecast</h3>
