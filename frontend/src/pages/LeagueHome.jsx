@@ -15,6 +15,7 @@ import DraftCountdown from '../components/DraftCountdown'
 import LeagueChat from '../components/ai/LeagueChat'
 import CommissionerNotes from '../components/league/CommissionerNotes'
 import LiveScoringWidget from '../components/league/LiveScoringWidget'
+import TournamentHeader from '../components/tournament/TournamentHeader'
 import PhaseActionRow from '../components/league/PhaseActionRow'
 import { useLeaguePhase } from '../hooks/useLeaguePhase'
 import { formatDate } from '../utils/dateUtils'
@@ -601,24 +602,17 @@ const LeagueHome = () => {
           {!isNflLeague && currentTournament && (currentTournament.status === 'IN_PROGRESS' || currentTournament.status === 'COMPLETED') && (
             <LiveScoringWidget leagueId={leagueId} tournament={currentTournament} />
           )}
-          {!isNflLeague && currentTournament && currentTournament.status === 'UPCOMING' && (
-            <div className="mb-6">
-              <Card className="border-[var(--card-border)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[var(--surface)] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-text-primary font-medium text-sm">Next Event: {currentTournament.name}</h3>
-                    <p className="text-text-muted text-xs">
-                      Starts {formatDate(currentTournament.startDate)}
-                    </p>
-                  </div>
+          {!isNflLeague && currentTournament && (currentTournament.status === 'UPCOMING' || currentTournament.status === 'IN_PROGRESS') && (
+            <Link to="/golf" className="block mb-6 group">
+              <div className="relative">
+                <TournamentHeader tournament={currentTournament} leaderboard={[]} />
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] font-mono font-bold text-gold bg-gold/10 px-2 py-1 rounded-full">
+                    Golf Hub →
+                  </span>
                 </div>
-              </Card>
-            </div>
+              </div>
+            </Link>
           )}
 
           {/* NFL Matchup Hero Card */}

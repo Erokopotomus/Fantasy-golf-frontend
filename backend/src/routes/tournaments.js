@@ -51,6 +51,7 @@ router.get('/current', async (req, res, next) => {
       where: {
         status: { in: ['IN_PROGRESS', 'UPCOMING'] }
       },
+      include: { course: true },
       orderBy: { startDate: 'asc' }
     })
 
