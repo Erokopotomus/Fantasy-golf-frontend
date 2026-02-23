@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import Card from '../components/common/Card'
@@ -11,9 +11,20 @@ const getDnaLabel = (val) => {
   return { text: 'Low', color: 'text-text-muted', bar: 'bg-slate-500' }
 }
 
+const getDateBadge = (startDate) => {
+  const start = new Date(startDate)
+  const now = new Date()
+  const daysUntil = Math.ceil((start - now) / (1000 * 60 * 60 * 24))
+  if (daysUntil <= 7) return { text: 'This Week', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' }
+  const month = start.toLocaleDateString('en-US', { month: 'short' })
+  const day = start.getDate()
+  return { text: `${month} ${day}`, className: 'bg-[var(--stone)] text-text-muted border-[var(--card-border)]' }
+}
+
 const Courses = () => {
   const [courses, setCourses] = useState([])
   const [search, setSearch] = useState('')
+  const [view, setView] = useState('season')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -24,6 +35,15 @@ const Courses = () => {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [search])
+
+  const seasonCourses = useMemo(() =>
+    courses
+      .filter(c => c.tournaments?.length > 0)
+      .sort((a, b) => new Date(a.tournaments[0].startDate) - new Date(b.tournaments[0].startDate)),
+    [courses]
+  )
+
+  const displayCourses = view === 'season' ? seasonCourses : courses
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
@@ -47,6 +67,32 @@ const Courses = () => {
         />
       </div>
 
+      {/* Filter pills */}
+      {!loading && !error && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setView('season')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+              view === 'season'
+                ? 'border-gold text-gold bg-gold/10'
+                : 'border-[var(--card-border)] text-text-muted bg-[var(--stone)] hover:text-text-secondary'
+            }`}
+          >
+            This Season ({seasonCourses.length})
+          </button>
+          <button
+            onClick={() => setView('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+              view === 'all'
+                ? 'border-gold text-gold bg-gold/10'
+                : 'border-[var(--card-border)] text-text-muted bg-[var(--stone)] hover:text-text-secondary'
+            }`}
+          >
+            All Venues ({courses.length})
+          </button>
+        </div>
+      )}
+
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-16">
@@ -64,21 +110,24 @@ const Courses = () => {
       {/* Course List */}
       {!loading && !error && (
         <>
-          {courses.length === 0 ? (
+          {displayCourses.length === 0 ? (
             <Card>
               <p className="text-text-muted text-center text-sm">
-                {search ? `No courses matching "${search}"` : 'No courses found'}
+                {search ? `No courses matching "${search}"` : view === 'season' ? 'No upcoming events this season' : 'No courses found'}
               </p>
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {courses.map(course => {
+              {displayCourses.map(course => {
                 const dna = [
                   { label: 'DRV', value: course.drivingImportance },
                   { label: 'APP', value: course.approachImportance },
                   { label: 'ARG', value: course.aroundGreenImportance },
                   { label: 'PUT', value: course.puttingImportance },
                 ].filter(d => d.value != null).map(d => ({ ...d, rating: getDnaLabel(d.value) }))
+
+                const nextEvent = course.tournaments?.[0]
+                const badge = view === 'season' && nextEvent ? getDateBadge(nextEvent.startDate) : null
 
                 return (
                   <Link key={course.id} to={`/courses/${course.id}`} className="block">
@@ -96,11 +145,15 @@ const Courses = () => {
                           )}
                         </div>
                         <div className="text-right shrink-0">
-                          {course._count?.tournaments > 0 && (
+                          {badge ? (
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${badge.className}`}>
+                              {badge.text}
+                            </span>
+                          ) : course._count?.tournaments > 0 ? (
                             <span className="text-[10px] font-mono text-text-muted">
                               {course._count.tournaments} event{course._count.tournaments !== 1 ? 's' : ''}
                             </span>
-                          )}
+                          ) : null}
                         </div>
                       </div>
 
@@ -138,7 +191,7 @@ const Courses = () => {
           )}
 
           <p className="text-center text-text-muted text-xs pt-2">
-            {courses.length} course{courses.length !== 1 ? 's' : ''}
+            {displayCourses.length} course{displayCourses.length !== 1 ? 's' : ''}
           </p>
         </>
       )}

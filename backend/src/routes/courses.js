@@ -38,6 +38,12 @@ router.get('/', optionalAuth, async (req, res, next) => {
           aroundGreenImportance: true,
           puttingImportance: true,
           _count: { select: { tournaments: true } },
+          tournaments: {
+            where: { status: { in: ['UPCOMING', 'IN_PROGRESS'] } },
+            select: { id: true, name: true, startDate: true, status: true },
+            orderBy: { startDate: 'asc' },
+            take: 1,
+          },
         },
         orderBy: { name: 'asc' },
         take: parseInt(limit),
