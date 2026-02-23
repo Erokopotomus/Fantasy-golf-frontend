@@ -430,9 +430,9 @@ const LeagueHome = () => {
                 </Card>
               )}
               {isDraftScheduledOrInProgress && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                   {/* Left: Coach Briefing */}
-                  <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-4 flex flex-col justify-center shadow-sm dark:shadow-none">
+                  <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-4 shadow-sm dark:shadow-none">
                     <div className="relative z-10">
                       <div className="flex items-center gap-2 mb-2">
                         <NeuralCluster size="sm" intensity="active" className="shrink-0" />
@@ -459,8 +459,8 @@ const LeagueHome = () => {
                   </div>
 
                   {/* Right: Draft Countdown */}
-                  <Card className="border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-[var(--surface)] !p-4">
-                    <div className="flex flex-col justify-between h-full">
+                  <Card padding="sm" className="border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-[var(--surface)]">
+                    <div className="flex flex-col">
                       <div>
                         <h3 className="text-base font-semibold font-display text-text-primary">
                           {draftStatus === 'SCHEDULED' ? 'Draft Scheduled' :
