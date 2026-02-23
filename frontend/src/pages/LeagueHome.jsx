@@ -432,25 +432,34 @@ const LeagueHome = () => {
               {isDraftScheduledOrInProgress && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {/* Left: Coach Briefing */}
-                  <div className="rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-3 shadow-sm dark:shadow-none">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-400">Coach Briefing</span>
+                  <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-3 shadow-sm dark:shadow-none">
+                    <div className="flex items-start gap-4">
+                      {/* Text content — left half */}
+                      <div className="flex-1 min-w-0 relative z-10">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                          <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-400">Coach Briefing</span>
+                        </div>
+                        <p className="text-sm font-semibold text-text-primary leading-snug">
+                          {leagueBriefing?.headline || (draftStatus === 'SCHEDULED' ? 'Draft day is approaching — time to prepare' : 'The draft is live — trust your board')}
+                        </p>
+                        <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+                          {leagueBriefing?.body || 'Get your rankings dialed in. Your coach is analyzing the field and tracking your board for blind spots.'}
+                        </p>
+                        {existingBoardId && (
+                          <button
+                            onClick={() => navigate(`/lab/${existingBoardId}`)}
+                            className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[var(--crown)] hover:text-[var(--crown-bright)] transition-colors"
+                          >
+                            Open Lab →
+                          </button>
+                        )}
+                      </div>
+                      {/* Neural cluster — right half */}
+                      <div className="hidden sm:flex items-center justify-center flex-shrink-0 opacity-60">
+                        <NeuralCluster size="md" intensity="active" />
+                      </div>
                     </div>
-                    <p className="text-sm font-semibold text-text-primary leading-snug">
-                      {leagueBriefing?.headline || (draftStatus === 'SCHEDULED' ? 'Draft day is approaching — time to prepare' : 'The draft is live — trust your board')}
-                    </p>
-                    <p className="text-xs text-text-secondary mt-1 leading-relaxed">
-                      {leagueBriefing?.body || 'Get your rankings dialed in. Your coach is analyzing the field and tracking your board for blind spots.'}
-                    </p>
-                    {existingBoardId && (
-                      <button
-                        onClick={() => navigate(`/lab/${existingBoardId}`)}
-                        className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[var(--crown)] hover:text-[var(--crown-bright)] transition-colors"
-                      >
-                        Open Lab →
-                      </button>
-                    )}
                   </div>
 
                   {/* Right: Draft Countdown */}
