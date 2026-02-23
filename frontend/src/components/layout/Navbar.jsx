@@ -17,20 +17,15 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [researchOpen, setResearchOpen] = useState(false)
-  const researchRef = useRef(null)
   const profileRef = useRef(null)
   const notifRef = useRef(null)
   const inbox = useNotificationInbox()
   const { currentTournament } = useTournaments()
 
-  // Close dropdowns on outside click (backdrop-filter breaks fixed overlays)
+  // Close dropdowns on outside click
   useEffect(() => {
-    if (!researchOpen && !profileMenuOpen && !notifOpen) return
+    if (!profileMenuOpen && !notifOpen) return
     const handleClick = (e) => {
-      if (researchOpen && researchRef.current && !researchRef.current.contains(e.target)) {
-        setResearchOpen(false)
-      }
       if (profileMenuOpen && profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileMenuOpen(false)
       }
@@ -40,9 +35,11 @@ const Navbar = () => {
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
-  }, [researchOpen, profileMenuOpen, notifOpen])
+  }, [profileMenuOpen, notifOpen])
 
   const isActive = (path) => location.pathname === path
+  const isGolfActive = ['/golf', '/players', '/tournaments', '/courses'].some(p => location.pathname.startsWith(p))
+  const isNflActive = location.pathname.startsWith('/nfl')
   const isTournamentActive = location.pathname.startsWith('/tournaments/')
 
   const tournamentLink = currentTournament ? `/tournaments/${currentTournament.id}` : null
@@ -102,143 +99,27 @@ const Navbar = () => {
                   The Lab
                 </Link>
 
-                {/* Research Dropdown */}
-                <div className="relative" ref={researchRef}>
-                  <button
-                    onClick={() => {
-                      setResearchOpen(!researchOpen)
-                      setProfileMenuOpen(false)
-                      setNotifOpen(false)
-                    }}
-                    className={`
-                      px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1
-                      ${location.pathname === '/nfl' || location.pathname === '/golf' || location.pathname.startsWith('/nfl/') || location.pathname.startsWith('/players') || location.pathname.startsWith('/tournaments') || location.pathname.startsWith('/courses')
-                        ? 'text-white bg-white/15'
-                        : 'text-white/60 hover:text-white hover:bg-white/10'
-                      }
-                    `}
-                  >
-                    Research
-                    <svg className={`w-3.5 h-3.5 transition-transform ${researchOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
+                {/* Golf Hub */}
+                <Link to="/golf" className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                  ${isGolfActive
+                    ? 'text-white bg-white/15'
+                    : 'text-white/60 hover:text-white hover:bg-white/10'
+                  }
+                `}>
+                  Golf
+                </Link>
 
-                  {researchOpen && (
-                      <div className="absolute left-0 mt-2 w-56 bg-[var(--nav-bg)] border border-white/10 rounded-card shadow-lg z-20 py-2">
-                        {/* NFL Hub */}
-                        <Link
-                          to="/nfl"
-                          className="block px-4 py-2 text-sm font-semibold text-orange hover:bg-surface-hover transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-base">🏈</span>
-                            NFL Hub
-                          </div>
-                        </Link>
-                        <Link
-                          to="/nfl/players"
-                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Players
-                          </div>
-                        </Link>
-                        <Link
-                          to="/nfl/schedule"
-                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Schedule
-                          </div>
-                        </Link>
-                        <Link
-                          to="/nfl/leaderboards"
-                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            Leaderboards
-                          </div>
-                        </Link>
-                        <Link
-                          to="/nfl/teams"
-                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            Teams
-                          </div>
-                        </Link>
-
-                        <div className="border-t border-white/10 my-2" />
-
-                        {/* Golf Hub */}
-                        <Link
-                          to="/golf"
-                          className="block px-4 py-2 text-sm font-semibold text-emerald-400 hover:bg-surface-hover transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-base">⛳</span>
-                            Golf Hub
-                          </div>
-                        </Link>
-                        <Link
-                          to="/players"
-                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Players
-                          </div>
-                        </Link>
-                        <Link
-                          to="/tournaments"
-                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Tournaments
-                          </div>
-                        </Link>
-                        <Link
-                          to="/courses"
-                          className="block px-4 py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                          onClick={() => setResearchOpen(false)}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Courses
-                          </div>
-                        </Link>
-                      </div>
-                  )}
-                </div>
+                {/* NFL Hub */}
+                <Link to="/nfl" className={`
+                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                  ${isNflActive
+                    ? 'text-white bg-white/15'
+                    : 'text-white/60 hover:text-white hover:bg-white/10'
+                  }
+                `}>
+                  NFL
+                </Link>
                 <Link
                   to={tournamentLink || '/tournaments'}
                   className={`
@@ -532,36 +413,20 @@ const Navbar = () => {
                   The Lab
                 </Link>
 
-                {/* Research section */}
-                <div className="pt-2 pb-1 px-4">
-                  <span className="text-[10px] font-mono font-bold text-white/25 uppercase tracking-widest">Research</span>
-                </div>
-                <div className="pl-2 space-y-1">
-                  <Link to="/nfl" className={mobileNavLinkStyles('/nfl')} onClick={() => setMobileMenuOpen(false)}>
-                    <span className="flex items-center gap-2">🏈 NFL Hub</span>
-                  </Link>
-                  <Link to="/nfl/players" className={mobileNavLinkStyles('/nfl/players')} onClick={() => setMobileMenuOpen(false)}>
-                    NFL Players
-                  </Link>
-                  <Link to="/nfl/leaderboards" className={mobileNavLinkStyles('/nfl/leaderboards')} onClick={() => setMobileMenuOpen(false)}>
-                    NFL Leaderboards
-                  </Link>
-                  <Link to="/nfl/schedule" className={mobileNavLinkStyles('/nfl/schedule')} onClick={() => setMobileMenuOpen(false)}>
-                    NFL Schedule
-                  </Link>
-                  <Link to="/golf" className={mobileNavLinkStyles('/golf')} onClick={() => setMobileMenuOpen(false)}>
-                    <span className="flex items-center gap-2">⛳ Golf Hub</span>
-                  </Link>
-                  <Link to="/players" className={mobileNavLinkStyles('/players')} onClick={() => setMobileMenuOpen(false)}>
-                    Golf Players
-                  </Link>
-                  <Link to="/tournaments" className={mobileNavLinkStyles('/tournaments')} onClick={() => setMobileMenuOpen(false)}>
-                    Tournaments
-                  </Link>
-                  <Link to="/courses" className={mobileNavLinkStyles('/courses')} onClick={() => setMobileMenuOpen(false)}>
-                    Courses
-                  </Link>
-                </div>
+                <Link
+                  to="/golf"
+                  className={mobileNavLinkStyles('/golf')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Golf
+                </Link>
+                <Link
+                  to="/nfl"
+                  className={mobileNavLinkStyles('/nfl')}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  NFL
+                </Link>
 
                 <Link
                   to={`/manager/${user.id}`}
