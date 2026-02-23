@@ -119,7 +119,7 @@ const GolfHub = () => {
 
   // Fetch tournament intel (weather + field) for the hero tournament
   useEffect(() => {
-    if (!heroTournament?.id || heroTournament.status !== 'UPCOMING') return
+    if (!heroTournament?.id || (heroTournament.status !== 'UPCOMING' && heroTournament.status !== 'IN_PROGRESS')) return
     Promise.all([
       api.getTournamentWeather(heroTournament.id).catch(() => ({ weather: [] })),
       api.getTournamentLeaderboard(heroTournament.id).catch(() => ({ leaderboard: [] })),
@@ -293,7 +293,7 @@ const GolfHub = () => {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Course DNA snapshot */}
                 {heroIntel.course && (
                   <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
@@ -376,49 +376,20 @@ const GolfHub = () => {
                     )
                   })()}
                 </div>
-
-                {/* Weather snapshot */}
-                <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4">
-                  <h3 className="text-sm font-bold text-text-primary mb-3">Weather Outlook</h3>
-                  {heroIntel.weather && heroIntel.weather.length > 0 ? (
-                    <div className="space-y-2">
-                      {heroIntel.weather.slice(0, 4).map((day, i) => {
-                        const windColor = (day.windSpeed || 0) >= 20 ? 'text-red-400' : (day.windSpeed || 0) >= 15 ? 'text-orange-400' : 'text-text-secondary'
-                        return (
-                          <div key={i} className="flex items-center justify-between">
-                            <span className="text-[10px] font-mono text-text-muted uppercase">Rd {day.round || i + 1}</span>
-                            <div className="flex items-center gap-3">
-                              {day.temperature != null && (
-                                <span className="text-xs font-mono text-text-primary">{Math.round(day.temperature)}°</span>
-                              )}
-                              {day.windSpeed != null && (
-                                <span className={`text-xs font-mono ${windColor}`}>{Math.round(day.windSpeed)} mph</span>
-                              )}
-                              {day.difficultyImpact != null && (
-                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full border ${
-                                  day.difficultyImpact >= 0.6 ? 'text-red-400 bg-red-500/15 border-red-500/25' :
-                                  day.difficultyImpact >= 0.4 ? 'text-orange-400 bg-orange-500/15 border-orange-500/25' :
-                                  day.difficultyImpact >= 0.2 ? 'text-yellow-400 bg-yellow-500/15 border-yellow-500/25' :
-                                  'text-emerald-400 bg-emerald-500/15 border-emerald-500/25'
-                                }`}>
-                                  {day.difficultyImpact >= 0.6 ? 'Brutal' : day.difficultyImpact >= 0.4 ? 'Windy' : day.difficultyImpact >= 0.2 ? 'Breezy' : 'Calm'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-text-muted">
-                      {heroTournament?.startDate ? (() => {
-                        const daysOut = Math.ceil((new Date(heroTournament.startDate) - new Date()) / 86400000)
-                        return daysOut > 16 ? `Forecast available ~${daysOut - 14} days before` : 'No weather data yet'
-                      })() : 'No weather data yet'}
-                    </p>
-                  )}
-                </div>
               </div>
+
+              {/* Weather — full WeatherStrip with round tabs + hourly detail */}
+              <div className="mt-4">
+                <WeatherStrip weather={heroIntel.weather} tournamentStart={heroTournament.startDate} />
+              </div>
+            </div>
+          )}
+
+          {/* Weather strip for live tournaments (intel section only shows for UPCOMING) */}
+          {heroTournament?.status === 'IN_PROGRESS' && heroIntel?.weather?.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-display font-bold text-text-primary mb-4">Weather — {heroTournament.shortName || heroTournament.name}</h2>
+              <WeatherStrip weather={heroIntel.weather} tournamentStart={heroTournament.startDate} />
             </div>
           )}
 
