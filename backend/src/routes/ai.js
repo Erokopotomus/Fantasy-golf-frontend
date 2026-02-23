@@ -1131,4 +1131,261 @@ router.delete('/league-query/sessions/:id', authenticate, async (req, res) => {
   }
 })
 
+// ═══════════════════════════════════════════════
+//  LAB PHASE CONTEXT (Season Cycle)
+// ═══════════════════════════════════════════════
+
+// GET /api/ai/lab-phase-context — Thin aggregation endpoint for Lab hub phase data. No AI calls.
+router.get('/lab-phase-context', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id
+
+    const [leagueCount, boardCount, predictionCount, captureCount, activeInsights] = await Promise.all([
+      prisma.leagueMember.count({ where: { userId } }),
+      prisma.draftBoard.count({ where: { userId } }),
+      prisma.prediction.count({ where: { userId } }),
+      prisma.labCapture.count({ where: { userId } }),
+      aiInsightPipeline.getActiveInsights(userId, { limit: 5 }).catch(() => []),
+    ])
+
+    // Determine phase from user's leagues
+    const leagues = await prisma.league.findMany({
+      where: { members: { some: { userId } }, status: { not: 'archived' } },
+      select: {
+        id: true, name: true, sport: true, status: true,
+        drafts: { orderBy: { createdAt: 'desc' }, take: 1, select: { id: true, status: true, scheduledFor: true } },
+        teams: { where: { userId }, select: { id: true, totalPoints: true, wins: true, losses: true } },
+      },
+    })
+
+    // Compute phase per league
+    const tournament = await prisma.tournament.findFirst({
+      where: { OR: [{ status: 'IN_PROGRESS' }, { startDate: { gte: new Date() }, status: { not: 'COMPLETED' } }] },
+      orderBy: [{ status: 'desc' }, { startDate: 'asc' }],
+      select: { id: true, name: true, status: true, startDate: true },
+    })
+
+    const leaguePhases = leagues.map(league => {
+      const draft = league.drafts?.[0]
+      const draftStatus = draft?.status
+      const scheduledFor = draft?.scheduledFor
+
+      if (league.status === 'completed') return { leagueId: league.id, phase: 'SEASON_COMPLETE' }
+      if (draftStatus === 'IN_PROGRESS' || draftStatus === 'PAUSED') return { leagueId: league.id, phase: 'DRAFTING' }
+      if (draftStatus === 'COMPLETED') {
+        const live = tournament?.status === 'IN_PROGRESS'
+        return { leagueId: league.id, phase: live ? 'IN_SEASON_LIVE' : 'IN_SEASON_IDLE' }
+      }
+      if (draftStatus === 'SCHEDULED' && scheduledFor) {
+        const hoursUntil = (new Date(scheduledFor).getTime() - Date.now()) / (1000 * 60 * 60)
+        return { leagueId: league.id, phase: hoursUntil <= 24 ? 'DRAFT_IMMINENT' : 'DRAFT_PREP', hoursUntil }
+      }
+      return { leagueId: league.id, phase: 'PRE_DRAFT' }
+    })
+
+    // Pick highest priority phase
+    const PRIORITY = { PRE_DRAFT: 0, SEASON_COMPLETE: 1, IN_SEASON_IDLE: 2, DRAFT_PREP: 3, IN_SEASON_LIVE: 4, DRAFT_IMMINENT: 5, DRAFTING: 6 }
+    let primaryPhase = 'PRE_DRAFT'
+    for (const lp of leaguePhases) {
+      if ((PRIORITY[lp.phase] || 0) > (PRIORITY[primaryPhase] || 0)) primaryPhase = lp.phase
+    }
+
+    // Build phase-specific data
+    let phaseData = {}
+
+    if (primaryPhase === 'PRE_DRAFT') {
+      phaseData = { suggestedActions: boardCount === 0 ? ['Create your first board', 'Browse player stats'] : ['Refine your boards', 'Tag your targets'] }
+    } else if (primaryPhase === 'DRAFT_PREP' || primaryPhase === 'DRAFT_IMMINENT') {
+      const boards = await prisma.draftBoard.findMany({
+        where: { userId },
+        select: { id: true, _count: { select: { entries: true } } },
+      })
+      const avgScore = boards.length > 0 ? Math.round(boards.reduce((s, b) => s + Math.min(b._count.entries, 100), 0) / boards.length) : 0
+      phaseData = {
+        boardReadiness: { complete: boards.filter(b => b._count.entries >= 50).length, total: boards.length, avgScore },
+        divergenceCount: 0, boldTakeCount: 0, positionGaps: 0,
+      }
+    } else if (primaryPhase === 'IN_SEASON_LIVE' || primaryPhase === 'IN_SEASON_IDLE') {
+      // Standings history for sparkline
+      const userTeam = leagues[0]?.teams?.[0]
+      let standingsHistory = []
+      if (userTeam) {
+        const weeklyResults = await prisma.weeklyTeamResult.findMany({
+          where: { teamId: userTeam.id },
+          orderBy: { createdAt: 'asc' },
+          select: { createdAt: true, rank: true },
+          take: 12,
+        }).catch(() => [])
+        standingsHistory = weeklyResults.map((r, i) => ({ week: i + 1, rank: r.rank || 0 })).filter(r => r.rank > 0)
+      }
+      phaseData = { standingsHistory }
+    }
+
+    // Load patterns if user has enough data
+    let patterns = null
+    if (boardCount > 0 || predictionCount > 5) {
+      try {
+        const patternEngine = require('../services/patternEngine')
+        const sport = leagues[0]?.sport?.toLowerCase() || 'golf'
+        patterns = await patternEngine.getUserProfile(userId, sport)
+      } catch { /* graceful degradation */ }
+    }
+
+    res.json({
+      phase: primaryPhase,
+      sport: leagues[0]?.sport?.toLowerCase() || 'golf',
+      summary: {
+        leagueCount,
+        boardCount,
+        predictionCount,
+        captureCount,
+        activeInsightCount: activeInsights?.length || 0,
+      },
+      phaseData,
+      patterns,
+    })
+  } catch (err) {
+    console.error('[AI] Lab phase context error:', err.message, err.stack)
+    res.json({ phase: 'PRE_DRAFT', summary: {}, phaseData: {}, patterns: null })
+  }
+})
+
+// GET /api/ai/decision-timeline — Recent opinion events for the Decision Timeline component
+router.get('/decision-timeline', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id
+    const sport = req.query.sport || 'golf'
+    const limit = Math.min(parseInt(req.query.limit) || 15, 30)
+
+    const events = await prisma.playerOpinionEvent.findMany({
+      where: { userId, sport },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        playerId: true,
+        eventType: true,
+        sentiment: true,
+        createdAt: true,
+        eventData: true,
+      },
+    })
+
+    // Enrich with player names
+    const playerIds = [...new Set(events.map(e => e.playerId).filter(Boolean))]
+    const players = playerIds.length > 0
+      ? await prisma.player.findMany({
+          where: { id: { in: playerIds } },
+          select: { id: true, name: true },
+        })
+      : []
+    const playerMap = new Map(players.map(p => [p.id, p.name]))
+
+    const enriched = events.map(e => ({
+      date: e.createdAt,
+      playerName: e.eventData?.playerName || playerMap.get(e.playerId) || 'Unknown',
+      playerId: e.playerId,
+      eventType: e.eventType,
+      sentiment: e.sentiment,
+    }))
+
+    res.json({ events: enriched })
+  } catch (err) {
+    console.error('[AI] Decision timeline error:', err.message)
+    res.json({ events: [] })
+  }
+})
+
+// GET /api/ai/season-review — Aggregated season review data for Season Complete hero
+router.get('/season-review', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id
+    const sport = req.query.sport || 'golf'
+    const season = parseInt(req.query.season) || new Date().getFullYear()
+
+    const startDate = new Date(`${season}-01-01`)
+    const endDate = new Date(`${season}-12-31T23:59:59`)
+
+    // Prediction accuracy
+    const predictions = await prisma.prediction.findMany({
+      where: { userId, sport, createdAt: { gte: startDate, lte: endDate } },
+      select: { outcome: true, thesis: true, confidenceLevel: true, subjectPlayerId: true },
+    })
+
+    const resolved = predictions.filter(p => p.outcome === 'CORRECT' || p.outcome === 'INCORRECT')
+    const correct = resolved.filter(p => p.outcome === 'CORRECT')
+    const predictionAccuracy = resolved.length > 0 ? correct.length / resolved.length : null
+
+    // Best call — highest confidence correct prediction
+    const bestCall = correct
+      .sort((a, b) => (b.confidenceLevel || 0) - (a.confidenceLevel || 0))
+      .map(p => p.thesis)[0] || null
+
+    // Worst call — highest confidence incorrect prediction
+    const incorrect = resolved.filter(p => p.outcome === 'INCORRECT')
+    const worstCall = incorrect
+      .sort((a, b) => (b.confidenceLevel || 0) - (a.confidenceLevel || 0))
+      .map(p => p.thesis)[0] || null
+
+    // Board accuracy (targets drafted)
+    const boards = await prisma.draftBoard.findMany({
+      where: { userId, sport },
+      select: { entries: { select: { playerId: true, tags: true } } },
+    })
+    const taggedTargets = boards.flatMap(b => b.entries)
+      .filter(e => {
+        const tags = Array.isArray(e.tags) ? e.tags : Object.keys(e.tags || {})
+        return tags.some(t => ['target', 'TARGET', 'must-have'].includes(t))
+      })
+    const draftedPlayerIds = new Set(
+      (await prisma.draftPick.findMany({
+        where: { team: { userId }, pickedAt: { gte: startDate, lte: endDate } },
+        select: { playerId: true },
+      })).map(p => p.playerId)
+    )
+    const boardAccuracy = taggedTargets.length > 0
+      ? taggedTargets.filter(e => draftedPlayerIds.has(e.playerId)).length / taggedTargets.length
+      : null
+
+    // Captures
+    const captureCount = await prisma.labCapture.count({
+      where: { userId, createdAt: { gte: startDate, lte: endDate } },
+    })
+
+    // Final standings
+    const userTeam = await prisma.team.findFirst({
+      where: { userId, league: { status: 'completed', sportRef: { slug: sport } } },
+      select: {
+        totalPoints: true,
+        league: { select: { teams: { select: { totalPoints: true }, orderBy: { totalPoints: 'desc' } } } },
+      },
+    })
+    let finalRank = null
+    let totalTeams = null
+    if (userTeam) {
+      totalTeams = userTeam.league.teams.length
+      finalRank = userTeam.league.teams.findIndex(t => t.totalPoints === userTeam.totalPoints) + 1
+    }
+
+    res.json({
+      review: {
+        season,
+        sport,
+        finalRank,
+        totalTeams,
+        predictionAccuracy,
+        totalPredictions: predictions.length,
+        bestCall,
+        worstCall,
+        boardAccuracy,
+        captureCount,
+        captureToAction: null, // Would need pattern engine — defer
+      },
+    })
+  } catch (err) {
+    console.error('[AI] Season review error:', err.message, err.stack)
+    res.json({ review: null })
+  }
+})
+
 module.exports = router

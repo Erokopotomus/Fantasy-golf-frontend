@@ -1362,6 +1362,20 @@ class ApiService {
     return this.request('/ai/lab-weekly')
   }
 
+  async getLabPhaseContext() {
+    return this.request('/ai/lab-phase-context')
+  }
+
+  async getDecisionTimeline(sport = 'golf', limit = 15) {
+    return this.request(`/ai/decision-timeline?sport=${sport}&limit=${limit}`)
+  }
+
+  async getSeasonReview(sport = 'golf', season) {
+    const params = new URLSearchParams({ sport })
+    if (season) params.set('season', season)
+    return this.request(`/ai/season-review?${params.toString()}`)
+  }
+
   async getRosterMap(sport) {
     return this.request(`/leagues/roster-map?sport=${sport || 'golf'}`)
   }

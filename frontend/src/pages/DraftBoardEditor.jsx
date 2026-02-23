@@ -1,5 +1,5 @@
 import { useState, Fragment, useCallback, useEffect, useRef, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import useDraftBoardEditor from '../hooks/useDraftBoardEditor'
@@ -220,6 +220,18 @@ export default function DraftBoardEditor() {
       setLeagueStatusMap(map)
     }).catch(() => {})
   }, [board?.sport])
+
+  // Handle ?addPlayer=<id> query param from Hub-to-Lab bridge
+  const [searchParams, setSearchParams] = useSearchParams()
+  useEffect(() => {
+    const playerIdToAdd = searchParams.get('addPlayer')
+    if (playerIdToAdd && !loading && board) {
+      addPlayer(playerIdToAdd).catch(() => {})
+      // Remove query param so it doesn't re-trigger
+      searchParams.delete('addPlayer')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams, loading, board, addPlayer])
 
   // AI Coach: fetch coaching card on major moves
   const fetchCoachingCard = useCallback((triggerAction, context) => {
