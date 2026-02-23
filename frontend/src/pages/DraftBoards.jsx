@@ -1,15 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import useDraftBoards from '../hooks/useDraftBoards'
-import { useLabPhase } from '../hooks/useLabPhase'
-import { PHASES } from '../hooks/useLeaguePhase'
 import api from '../services/api'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
-import LabRatingCard from '../components/lab/LabRatingCard'
-import NeuralCluster from '../components/common/NeuralCluster'
 import LeagueCockpit from '../components/lab/LeagueCockpit'
-import PatternInsightsSection from '../components/lab/PatternInsightsSection'
-import DecisionTimeline from '../components/lab/DecisionTimeline'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -117,24 +111,6 @@ function scoringLabel(fmt) {
   return fmt
 }
 
-// ── Action Description for Journal ───────────────────────────────────────────
-
-function activityDescription(a) {
-  const name = a.details?.playerName || 'Player'
-  switch (a.action) {
-    case 'player_moved': {
-      const delta = a.details?.delta
-      return `Moved ${name} ${delta > 0 ? `up ${delta}` : `down ${Math.abs(delta)}`}`
-    }
-    case 'player_added': return `Added ${name}`
-    case 'player_removed': return `Removed ${name}`
-    case 'player_tagged': return `Tagged ${name}`
-    case 'note_added': return `Note on ${name}`
-    case 'board_created': return `Created board`
-    default: return a.action
-  }
-}
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function DraftBoards() {
@@ -144,21 +120,12 @@ export default function DraftBoards() {
 
   // Hub data
   const [leagues, setLeagues] = useState([])
-  const [journalEntries, setJournalEntries] = useState([])
   const [watchListEntries, setWatchListEntries] = useState([])
   const [recentCaptures, setRecentCaptures] = useState([])
-  const [dynamicInsight, setDynamicInsight] = useState(null)
-  const [insightDismissed, setInsightDismissed] = useState(false)
-  const [aiInsights, setAiInsights] = useState([])
-  const [aiDismissed, setAiDismissed] = useState(new Set())
   const [hubLoading, setHubLoading] = useState(true)
   const [showCaptureModal, setShowCaptureModal] = useState(false)
-  const [cheatSheetMap, setCheatSheetMap] = useState({}) // boardId → sheetId
-  const [aiReports, setAiReports] = useState([])
-  const [generatingReport, setGeneratingReport] = useState(null)
+  const [cheatSheetMap, setCheatSheetMap] = useState({})
   const [weeklyIntel, setWeeklyIntel] = useState(null)
-  const [phaseContext, setPhaseContext] = useState(null)
-  const [seasonReview, setSeasonReview] = useState(null)
 
   // Create modal state
   const [showCreate, setShowCreate] = useState(false)
@@ -173,18 +140,11 @@ export default function DraftBoards() {
   const [startFrom, setStartFrom] = useState('clutch')
   const [creating, setCreating] = useState(false)
 
-  // Derive currentTournament object for phase computation
+  // Derive currentTournament for LeagueCockpit
   const currentTournament = weeklyIntel?.tournament ? {
     status: weeklyIntel.tournament.isLive ? 'IN_PROGRESS' : 'UPCOMING',
     name: weeklyIntel.tournament.name,
   } : undefined
-
-  // Phase detection
-  const { primaryPhase, phaseMeta, displayStep, coachLine, activeSport, hasBoards } = useLabPhase({
-    boards,
-    leagues,
-    currentTournament,
-  })
 
   // Pre-fill create modal from URL params (league → Lab bridge)
   useEffect(() => {
@@ -225,24 +185,14 @@ export default function DraftBoards() {
     if (boards.length === 0) { setHubLoading(false); return }
     let cancelled = false
     Promise.all([
-      api.getDecisionJournal({ limit: 5 }).catch(() => ({ activities: [] })),
       api.getWatchList().catch(() => ({ entries: [] })),
       api.getRecentCaptures(5).catch(() => ({ captures: [] })),
-      api.getLabInsight().catch(() => ({ insight: null })),
-      api.getAiInsights().catch(() => ({ insights: [] })),
-      api.getAiReports().catch(() => ({ reports: [] })),
       api.getLabWeekly().catch(() => ({ week: null })),
-      api.getLabPhaseContext().catch(() => ({})),
-    ]).then(([journal, watchList, capturesRes, insightRes, aiRes, reportsRes, weeklyRes, phaseCtx]) => {
+    ]).then(([watchList, capturesRes, weeklyRes]) => {
       if (cancelled) return
-      setJournalEntries(journal.activities || [])
       setWatchListEntries(watchList.entries || [])
       setRecentCaptures(capturesRes.captures || [])
-      if (insightRes.insight) setDynamicInsight(insightRes.insight)
-      setAiInsights((aiRes.insights || []).slice(0, 3))
-      setAiReports((reportsRes.reports || []).slice(0, 3))
       if (weeklyRes.week) setWeeklyIntel(weeklyRes.week)
-      if (phaseCtx.phase) setPhaseContext(phaseCtx)
       setHubLoading(false)
     })
     // Check for cheat sheets per board
@@ -255,15 +205,6 @@ export default function DraftBoards() {
     }
     return () => { cancelled = true }
   }, [loading, boards.length])
-
-  // Fetch season review when phase is SEASON_COMPLETE
-  useEffect(() => {
-    if (primaryPhase === PHASES.SEASON_COMPLETE) {
-      api.getSeasonReview(activeSport).then(res => {
-        if (res.review) setSeasonReview(res.review)
-      }).catch(() => {})
-    }
-  }, [primaryPhase, activeSport])
 
   const openCreateModal = () => {
     setShowCreate(true)
@@ -309,7 +250,7 @@ export default function DraftBoards() {
 
   const startFromOptions = START_FROM_OPTIONS[newSport] || START_FROM_OPTIONS.nfl
 
-  // ── Empty State (Phase-Aware) ──────────────────────────────────────────────
+  // ── Empty State ──────────────────────────────────────────────────────────
   if (!loading && !error && boards.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -320,13 +261,13 @@ export default function DraftBoards() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-display font-bold text-text-primary mb-2">This is where your coaching brain lives.</h1>
+          <h1 className="text-2xl font-display font-bold text-text-primary mb-2">Start your draft prep here.</h1>
           <p className="text-sm text-text-primary/40 max-w-md mx-auto mb-8">
-            Every action teaches your coach. The more you play, the smarter it gets.
+            Build a draft board to rank players your way. When you join a league, link your board to get league-specific insights.
           </p>
 
-          {/* 3 action cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-lg mx-auto mb-8">
+          {/* 2 action cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-sm mx-auto mb-8">
             <button
               onClick={openCreateModal}
               className="p-4 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl hover:border-gold/30 transition-colors text-center"
@@ -348,20 +289,8 @@ export default function DraftBoards() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <p className="text-sm font-semibold text-text-primary mb-0.5">Join a League</p>
-              <p className="text-[10px] text-text-primary/30">Compete against friends</p>
-            </Link>
-            <Link
-              to="/prove-it"
-              className="p-4 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl hover:border-gold/30 transition-colors text-center"
-            >
-              <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-sm font-semibold text-text-primary mb-0.5">Make a Call</p>
-              <p className="text-[10px] text-text-primary/30">Prove your instinct</p>
+              <p className="text-sm font-semibold text-text-primary mb-0.5">Browse Leagues</p>
+              <p className="text-[10px] text-text-primary/30">Find a league to join</p>
             </Link>
           </div>
         </div>
@@ -396,135 +325,7 @@ export default function DraftBoards() {
     }
   }
 
-  // ── Reusable Section Renderers ────────────────────────────────────────────
-
-  const renderAiInsightBar = () => (
-    <>
-      {dynamicInsight && !insightDismissed && (
-        <div className="mb-6 p-3.5 bg-gradient-to-r from-gold/[0.07] to-orange/[0.04] border border-gold/15 rounded-xl flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gold/15 flex items-center justify-center shrink-0">
-            <svg className="w-4.5 h-4.5 text-gold" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          </div>
-          <p className="text-sm text-text-primary/60 flex-1">{dynamicInsight.text}</p>
-          <button
-            onClick={() => { setInsightDismissed(true); api.dismissLabInsight().catch(() => {}) }}
-            className="text-text-primary/20 hover:text-text-primary/50 transition-colors shrink-0"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      {aiInsights.filter(i => !aiDismissed.has(i.id)).length > 0 && (
-        <div className="mb-6 space-y-2">
-          {aiInsights.filter(i => !aiDismissed.has(i.id)).map(insight => (
-            <div key={insight.id} className="p-3 bg-gradient-to-r from-purple-500/[0.06] to-gold/[0.04] border border-purple-400/15 rounded-xl flex items-start gap-3">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-purple-300/80 mb-0.5">{insight.title}</p>
-                <p className="text-xs text-text-primary/50 leading-relaxed">{insight.body}</p>
-              </div>
-              <button
-                onClick={() => { setAiDismissed(prev => new Set([...prev, insight.id])); api.dismissAiInsight(insight.id).catch(() => {}) }}
-                className="text-text-primary/20 hover:text-text-primary/50 transition-colors shrink-0"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  )
-
-  const renderBoardStatus = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      {/* Board Status */}
-      <div className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30 mb-3">
-          {weeklyIntel ? 'Your Boards' : 'Draft Readiness'}
-        </h3>
-        <div className="space-y-2">
-          {boards.slice(0, 5).map(board => {
-            const status = boardStatusCTA(board)
-            return (
-              <Link
-                key={board.id}
-                to={`/lab/${board.id}`}
-                className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-alt)] transition-colors group"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${status.dot || 'bg-transparent'}`} />
-                  <span className="text-sm text-text-primary truncate group-hover:text-gold transition-colors">{board.name}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                    board.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
-                  }`}>
-                    {board.sport}
-                  </span>
-                </div>
-                <span className={`text-[11px] font-medium ${status.color}`}>{status.label}</span>
-              </Link>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Recent Captures */}
-      <div className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Recent Captures</h3>
-          <Link to="/lab/captures" className="text-[10px] text-gold hover:underline">View All</Link>
-        </div>
-        {hubLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map(i => <div key={i} className="h-7 bg-[var(--stone)] rounded animate-pulse" />)}
-          </div>
-        ) : recentCaptures.length === 0 ? (
-          <p className="text-xs text-text-primary/25 py-3">No captures yet — jot down podcast takes and gut feelings.</p>
-        ) : (
-          <div className="space-y-1.5">
-            {recentCaptures.slice(0, 5).map((c, i) => (
-              <div key={i} className="flex items-start justify-between text-xs py-1 gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="text-text-primary/50 truncate">{c.content}</p>
-                  {c.players && c.players.length > 0 && (
-                    <div className="flex gap-1 mt-0.5">
-                      {c.players.slice(0, 3).map(lp => (
-                        <span key={lp.id} className="px-1 py-0.5 rounded text-[9px] bg-gold/10 text-gold/60">
-                          {lp.player?.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {c.sentiment === 'bullish' && <span className="text-emerald-400 text-[10px]">↑</span>}
-                  {c.sentiment === 'bearish' && <span className="text-red-400 text-[10px]">↓</span>}
-                  <span className="text-text-primary/20">{relativeTime(c.createdAt)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <button
-          onClick={() => setShowCaptureModal(true)}
-          className="mt-3 w-full py-1.5 text-xs text-gold/50 hover:text-gold border border-gold/10 hover:border-gold/30 rounded-lg transition-colors"
-        >
-          + Quick Note
-        </button>
-      </div>
-    </div>
-  )
+  // ── Section Renderers ────────────────────────────────────────────────────
 
   const renderMyBoards = () => (
     <div className="mb-6">
@@ -658,112 +459,63 @@ export default function DraftBoards() {
     )
   )
 
-  const renderJournal = () => (
-    !hubLoading && journalEntries.length > 0 && (
-      <div className="mb-6 p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Decision Journal</h3>
-          <Link to="/lab/journal" className="text-[10px] text-gold hover:underline">View All</Link>
+  const renderCaptures = () => (
+    <div className="mb-6 p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Recent Notes</h3>
+        <Link to="/lab/captures" className="text-[10px] text-gold hover:underline">View All</Link>
+      </div>
+      {hubLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => <div key={i} className="h-7 bg-[var(--stone)] rounded animate-pulse" />)}
         </div>
+      ) : recentCaptures.length === 0 ? (
+        <p className="text-xs text-text-primary/25 py-3">No notes yet — jot down podcast takes and gut feelings.</p>
+      ) : (
         <div className="space-y-1.5">
-          {journalEntries.slice(0, 3).map((a, i) => (
-            <div key={i} className="flex items-center justify-between text-xs py-1">
-              <span className="text-text-primary/50">{activityDescription(a)}</span>
-              <span className="text-text-primary/20 shrink-0 ml-2">{relativeTime(a.createdAt)}</span>
+          {recentCaptures.slice(0, 5).map((c, i) => (
+            <div key={i} className="flex items-start justify-between text-xs py-1 gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-text-primary/50 truncate">{c.content}</p>
+                {c.players && c.players.length > 0 && (
+                  <div className="flex gap-1 mt-0.5">
+                    {c.players.slice(0, 3).map(lp => (
+                      <span key={lp.id} className="px-1 py-0.5 rounded text-[9px] bg-gold/10 text-gold/60">
+                        {lp.player?.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {c.sentiment === 'bullish' && <span className="text-emerald-400 text-[10px]">↑</span>}
+                {c.sentiment === 'bearish' && <span className="text-red-400 text-[10px]">↓</span>}
+                <span className="text-text-primary/20">{relativeTime(c.createdAt)}</span>
+              </div>
             </div>
           ))}
         </div>
-      </div>
-    )
-  )
-
-  const renderCoachingReports = () => (
-    <div className="mb-6 p-4 bg-gradient-to-r from-purple-500/[0.04] to-gold/[0.03] border border-purple-400/10 rounded-xl">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300/60">Coaching Reports</h3>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2 mb-3">
-        {['pre_draft', 'mid_season', 'post_season'].map(type => {
-          const labels = { pre_draft: 'Pre-Draft', mid_season: 'Mid-Season', post_season: 'Season Retro' }
-          return (
-            <button
-              key={type}
-              disabled={!!generatingReport}
-              onClick={async () => {
-                setGeneratingReport(type)
-                try {
-                  const fn = type === 'pre_draft' ? api.generatePreDraftReport
-                    : type === 'mid_season' ? api.generateMidSeasonReport
-                    : api.generatePostSeasonReport
-                  const res = await fn('nfl')
-                  if (res.report?.id) {
-                    navigate(`/coach/${res.report.id}`)
-                  }
-                } catch {}
-                setGeneratingReport(null)
-              }}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-500/10 text-purple-300 border border-purple-400/20 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
-            >
-              {generatingReport === type ? 'Generating...' : `Generate ${labels[type]}`}
-            </button>
-          )
-        })}
-      </div>
-      {aiReports.length > 0 && (
-        <div className="space-y-1.5">
-          <p className="text-[10px] text-text-primary/25 uppercase tracking-wider">Previous Reports</p>
-          {aiReports.map(r => (
-            <Link
-              key={r.id}
-              to={`/coach/${r.id}`}
-              className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-alt)] transition-colors group text-xs"
-            >
-              <span className="text-text-primary/60 group-hover:text-gold transition-colors">
-                {r.reportType === 'pre_draft' ? 'Pre-Draft' : r.reportType === 'mid_season' ? 'Mid-Season' : r.reportType === 'post_season' ? 'Season Retro' : 'Scout'}
-                {r.sport && <span className="text-text-primary/30 ml-1">({r.sport.toUpperCase()})</span>}
-              </span>
-              <span className="text-text-primary/20">{new Date(r.generatedAt).toLocaleDateString()}</span>
-            </Link>
-          ))}
-        </div>
       )}
-      <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
-        <Link to="/sim" className="flex items-center gap-2 text-xs text-gold hover:text-gold/80 transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          Clutch Sim — Head-to-Head Matchup Simulator
-        </Link>
-      </div>
+      <button
+        onClick={() => setShowCaptureModal(true)}
+        className="mt-3 w-full py-1.5 text-xs text-gold/50 hover:text-gold border border-gold/10 hover:border-gold/30 rounded-lg transition-colors"
+      >
+        + Quick Note
+      </button>
     </div>
   )
 
-  // ── Fixed Section Ordering (LeagueCockpit drives per-league phase) ──────
-  const renderSections = () => {
-    return (
-      <>
-        <LeagueCockpit leagues={leagues} boards={boards} currentTournament={currentTournament} onBoardLinked={refetch} />
-        {renderAiInsightBar()}
-        <div className="mb-6">
-          <LabRatingCard />
-        </div>
-        {renderBoardStatus()}
-        {renderMyBoards()}
-        <PatternInsightsSection phaseContext={phaseContext} />
-        {renderWatchList()}
-        {renderJournal()}
-        <DecisionTimeline sport={activeSport} />
-        {renderCoachingReports()}
-      </>
-    )
-  }
+  // ── Section Ordering ──────────────────────────────────────────────────────
+  const renderSections = () => (
+    <>
+      <LeagueCockpit leagues={leagues} boards={boards} currentTournament={currentTournament} onBoardLinked={refetch} />
+      {renderMyBoards()}
+      {renderWatchList()}
+      {renderCaptures()}
+    </>
+  )
 
-  // ── Full Hub Layout ──────────────────────────────────────────────────────
+  // ── Full Layout ────────────────────────────────────────────────────────────
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Loading */}
@@ -780,10 +532,11 @@ export default function DraftBoards() {
 
       {!loading && !error && (
         <>
-          {/* 1. Header */}
+          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-display font-bold text-text-primary tracking-wide">THE LAB</h1>
+              <p className="text-sm text-text-primary/40">Your draft prep workbench. Build boards, capture notes, then link to your leagues.</p>
             </div>
             <button
               onClick={openCreateModal}
@@ -796,7 +549,7 @@ export default function DraftBoards() {
             </button>
           </div>
 
-          {/* Sections (LeagueCockpit first, then fixed order) */}
+          {/* Sections */}
           {renderSections()}
         </>
       )}
@@ -812,194 +565,6 @@ export default function DraftBoards() {
             api.getRecentCaptures(5).then(res => setRecentCaptures(res.captures || [])).catch(() => {})
           }}
         />
-      )}
-    </div>
-  )
-}
-
-// ── This Week Intelligence Section ──────────────────────────────────────────
-
-function ThisWeekSection({ data }) {
-  const { tournament, courseProfile, rosterFit, waiverTargets, boardInsights, leagueName, leagueId } = data
-
-  const timeLabel = tournament.isLive
-    ? 'Live Now'
-    : tournament.daysUntil <= 0
-      ? 'Starts Today'
-      : tournament.daysUntil === 1
-        ? 'Tomorrow'
-        : `${tournament.daysUntil} days out`
-
-  const strengthColor = rosterFit?.strength === 'strong'
-    ? 'text-emerald-400'
-    : rosterFit?.strength === 'average'
-      ? 'text-yellow-400'
-      : 'text-red-400'
-
-  const strengthBg = rosterFit?.strength === 'strong'
-    ? 'bg-emerald-500/15'
-    : rosterFit?.strength === 'average'
-      ? 'bg-yellow-500/15'
-      : 'bg-red-500/15'
-
-  return (
-    <div className="mb-6 bg-gradient-to-br from-purple-500/[0.06] via-[var(--surface)] to-gold/[0.04] border border-purple-400/15 rounded-xl overflow-hidden">
-      {/* Header */}
-      <div className="px-5 pt-4 pb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <NeuralCluster size="sm" intensity={tournament.isLive ? 'active' : 'calm'} className="shrink-0" />
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300/70">This Week</h3>
-            {leagueName && (
-              <p className="text-[10px] text-text-primary/30 mt-0.5">{leagueName}</p>
-            )}
-          </div>
-        </div>
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-          tournament.isLive
-            ? 'bg-red-500/20 text-red-400 animate-pulse'
-            : 'bg-purple-500/15 text-purple-300/80'
-        }`}>
-          {timeLabel}
-        </span>
-      </div>
-
-      {/* Tournament + Course */}
-      <div className="px-5 pb-3">
-        <h4 className="text-lg font-display font-bold text-text-primary">{tournament.name}</h4>
-        {courseProfile && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-text-primary/40">
-            <span>{courseProfile.courseName}</span>
-            {courseProfile.par && (
-              <>
-                <span className="text-text-primary/15">·</span>
-                <span>Par {courseProfile.par}</span>
-              </>
-            )}
-            {courseProfile.yardage && (
-              <>
-                <span className="text-text-primary/15">·</span>
-                <span>{courseProfile.yardage.toLocaleString()} yds</span>
-              </>
-            )}
-            {courseProfile.grassType && (
-              <>
-                <span className="text-text-primary/15">·</span>
-                <span className="capitalize">{courseProfile.grassType}</span>
-              </>
-            )}
-          </div>
-        )}
-        {courseProfile?.description && (
-          <p className="mt-2 text-sm text-text-primary/50 font-editorial italic leading-relaxed">
-            {courseProfile.description}
-          </p>
-        )}
-      </div>
-
-      {/* Roster Fit + Waiver Targets grid */}
-      {(rosterFit || waiverTargets.length > 0) && (
-        <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Roster Fit */}
-          {rosterFit && (
-            <div className="p-3 bg-[var(--surface)]/60 backdrop-blur-sm border border-[var(--card-border)]/50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h5 className="text-[10px] font-bold uppercase tracking-wider text-text-primary/30">Roster Fit</h5>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${strengthBg} ${strengthColor}`}>
-                  {rosterFit.strength}
-                </span>
-              </div>
-              <p className="text-xs text-text-primary/50 mb-2">
-                Your team averages <span className="font-mono font-bold text-text-primary/70">{rosterFit.avgSg > 0 ? '+' : ''}{rosterFit.avgSg}</span> SG {rosterFit.skill}
-              </p>
-              <div className="flex justify-between text-[11px]">
-                <div>
-                  <span className="text-text-primary/25">Best: </span>
-                  <span className="text-emerald-400 font-medium">{rosterFit.bestPlayer}</span>
-                  <span className="text-text-primary/20 font-mono ml-1">{rosterFit.bestSg > 0 ? '+' : ''}{rosterFit.bestSg}</span>
-                </div>
-                <div>
-                  <span className="text-text-primary/25">Worst: </span>
-                  <span className="text-red-400/70 font-medium">{rosterFit.worstPlayer}</span>
-                  <span className="text-text-primary/20 font-mono ml-1">{rosterFit.worstSg > 0 ? '+' : ''}{rosterFit.worstSg}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Waiver Targets */}
-          {waiverTargets.length > 0 && (
-            <div className="p-3 bg-[var(--surface)]/60 backdrop-blur-sm border border-[var(--card-border)]/50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h5 className="text-[10px] font-bold uppercase tracking-wider text-text-primary/30">Course-Fit Targets</h5>
-                {leagueId && (
-                  <Link to={`/leagues/${leagueId}/waivers`} className="text-[10px] text-gold hover:underline">
-                    Wire
-                  </Link>
-                )}
-              </div>
-              <div className="space-y-1">
-                {waiverTargets.slice(0, 4).map(p => (
-                  <div key={p.id} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {p.headshotUrl ? (
-                        <img src={p.headshotUrl} alt="" className="w-5 h-5 rounded-full bg-[var(--stone)] shrink-0" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full bg-[var(--stone)] shrink-0" />
-                      )}
-                      <span className="text-text-primary/60 truncate">{p.name}</span>
-                      {p.countryFlag && <span className="text-[10px]">{p.countryFlag}</span>}
-                    </div>
-                    <span className="text-emerald-400 font-mono text-[11px] font-bold shrink-0 ml-2">
-                      +{p.skillSg}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Board Insights — tagged targets available on waivers */}
-      {boardInsights.length > 0 && (
-        <div className="px-5 pb-4">
-          <div className="p-3 bg-gold/[0.05] border border-gold/10 rounded-lg">
-            <h5 className="text-[10px] font-bold uppercase tracking-wider text-gold/50 mb-2">
-              Your Targets Available on Waivers
-            </h5>
-            <div className="flex flex-wrap gap-2">
-              {boardInsights.map(p => (
-                <div key={p.playerId} className="flex items-center gap-1.5 px-2 py-1 bg-[var(--surface)]/60 rounded-md">
-                  {p.headshotUrl ? (
-                    <img src={p.headshotUrl} alt="" className="w-4 h-4 rounded-full bg-[var(--stone)]" />
-                  ) : (
-                    <div className="w-4 h-4 rounded-full bg-[var(--stone)]" />
-                  )}
-                  <span className="text-xs text-text-primary/60">{p.name}</span>
-                  {p.tags?.slice(0, 1).map(tag => (
-                    <span key={tag} className={`px-1 py-0.5 rounded text-[8px] font-bold uppercase ${
-                      tag === 'target' || tag === 'must-have' ? 'bg-emerald-500/15 text-emerald-500' :
-                      tag === 'sleeper' ? 'bg-purple-500/15 text-purple-400' :
-                      'bg-gold/15 text-gold'
-                    }`}>{tag}</span>
-                  ))}
-                </div>
-              ))}
-            </div>
-            {leagueId && (
-              <Link
-                to={`/leagues/${leagueId}/waivers`}
-                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-gold/60 hover:text-gold transition-colors"
-              >
-                Go to Waiver Wire
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            )}
-          </div>
-        </div>
       )}
     </div>
   )
@@ -1121,7 +686,7 @@ function CreateModal({
           </form>
         )}
 
-        {/* Step 2: League Context (NEW) */}
+        {/* Step 2: League Context */}
         {step === 2 && (
           <div className="p-5 space-y-4">
             {sportLeagues.length > 0 && (
