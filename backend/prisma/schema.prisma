@@ -160,6 +160,9 @@ model League {
   // Per-week roster overrides (commissioner adjustments)
   weeklyRosterOverrides WeeklyRosterOverride[]
 
+  // Draft boards linked to this league
+  draftBoards DraftBoard[] @relation("LeagueBoards")
+
   @@map("leagues")
 }
 
@@ -2785,6 +2788,8 @@ model DraftBoard {
   teamCount      Int?     @map("team_count")
   draftType      String?  @map("draft_type")
   rosterConfig   Json?    @map("roster_config")
+  leagueId       String?
+  league         League?  @relation("LeagueBoards", fields: [leagueId], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   entries        DraftBoardEntry[]
@@ -2793,6 +2798,7 @@ model DraftBoard {
 
   @@index([userId])
   @@index([userId, sport])
+  @@index([leagueId])
   @@map("clutch_draft_boards")
 }
 

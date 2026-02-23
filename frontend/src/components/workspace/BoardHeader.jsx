@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const SCORING_OPTIONS = [
   { value: 'ppr', label: 'PPR' },
@@ -63,6 +63,15 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
         )}
 
         {sportBadge}
+
+        {board?.league && (
+          <Link
+            to={`/leagues/${board.league.id}`}
+            className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--crown)]/10 text-[var(--crown)] hover:bg-[var(--crown)]/20 transition-colors truncate max-w-[120px]"
+          >
+            {board.league.name}
+          </Link>
+        )}
 
         <span className="text-xs text-text-primary/30">{entryCount} player{entryCount !== 1 ? 's' : ''}</span>
 

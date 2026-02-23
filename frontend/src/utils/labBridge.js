@@ -5,6 +5,7 @@
 export function buildLabUrl(league) {
   const params = new URLSearchParams()
   params.set('sport', (league.sport || 'GOLF').toLowerCase())
+  if (league.id) params.set('leagueId', league.id)
   if (league.maxTeams) params.set('teamCount', String(league.maxTeams))
   if (league.draftType) params.set('draftType', league.draftType.toLowerCase())
   if (league.settings?.scoringType) params.set('scoring', league.settings.scoringType)

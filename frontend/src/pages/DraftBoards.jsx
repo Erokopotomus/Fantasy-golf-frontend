@@ -7,11 +7,7 @@ import api from '../services/api'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
 import LabRatingCard from '../components/lab/LabRatingCard'
 import NeuralCluster from '../components/common/NeuralCluster'
-import PhaseTimeline from '../components/lab/PhaseTimeline'
-import PreDraftHero from '../components/lab/PreDraftHero'
-import SeasonCompleteHero from '../components/lab/SeasonCompleteHero'
-import InSeasonLiveHero from '../components/lab/InSeasonLiveHero'
-import InSeasonIdleHero from '../components/lab/InSeasonIdleHero'
+import LeagueCockpit from '../components/lab/LeagueCockpit'
 import PatternInsightsSection from '../components/lab/PatternInsightsSection'
 import DecisionTimeline from '../components/lab/DecisionTimeline'
 
@@ -147,6 +143,7 @@ export default function DraftBoards() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Hub data
+  const [leagues, setLeagues] = useState([])
   const [journalEntries, setJournalEntries] = useState([])
   const [watchListEntries, setWatchListEntries] = useState([])
   const [recentCaptures, setRecentCaptures] = useState([])
@@ -172,26 +169,33 @@ export default function DraftBoards() {
   const [leagueType, setLeagueType] = useState(null)
   const [teamCount, setTeamCount] = useState(null)
   const [draftType, setDraftType] = useState(null)
+  const [newLeagueId, setNewLeagueId] = useState(null)
   const [startFrom, setStartFrom] = useState('clutch')
   const [creating, setCreating] = useState(false)
+
+  // Derive currentTournament object for phase computation
+  const currentTournament = weeklyIntel?.tournament ? {
+    status: weeklyIntel.tournament.isLive ? 'IN_PROGRESS' : 'UPCOMING',
+    name: weeklyIntel.tournament.name,
+  } : undefined
 
   // Phase detection
   const { primaryPhase, phaseMeta, displayStep, coachLine, activeSport, hasBoards } = useLabPhase({
     boards,
-    currentTournament: weeklyIntel?.tournament ? {
-      status: weeklyIntel.tournament.isLive ? 'IN_PROGRESS' : 'UPCOMING',
-      name: weeklyIntel.tournament.name,
-    } : undefined,
+    leagues,
+    currentTournament,
   })
 
   // Pre-fill create modal from URL params (league → Lab bridge)
   useEffect(() => {
     const sport = searchParams.get('sport')
     const leagueName = searchParams.get('leagueName')
-    if (!sport && !leagueName) return
+    const urlLeagueId = searchParams.get('leagueId')
+    if (!sport && !leagueName && !urlLeagueId) return
 
     if (sport) setNewSport(sport.toLowerCase() === 'nfl' ? 'nfl' : 'golf')
     if (leagueName) setNewName(`${leagueName} Draft Board`)
+    if (urlLeagueId) setNewLeagueId(urlLeagueId)
 
     const tc = searchParams.get('teamCount')
     if (tc) setTeamCount(parseInt(tc, 10) || null)
@@ -207,6 +211,13 @@ export default function DraftBoards() {
     // Clear params so they don't persist on reload
     setSearchParams({}, { replace: true })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch leagues once
+  useEffect(() => {
+    api.getLeagues()
+      .then(data => setLeagues(data.leagues || []))
+      .catch(() => {})
+  }, [])
 
   // Fetch hub data once boards are loaded
   useEffect(() => {
@@ -263,6 +274,7 @@ export default function DraftBoards() {
     setLeagueType(null)
     setTeamCount(null)
     setDraftType(null)
+    setNewLeagueId(null)
     setStartFrom('clutch')
   }
 
@@ -284,6 +296,7 @@ export default function DraftBoards() {
         leagueType: leagueType || undefined,
         teamCount: teamCount || undefined,
         draftType: draftType || undefined,
+        leagueId: newLeagueId || undefined,
       })
       setShowCreate(false)
       if (board?.id) navigate(`/lab/${board.id}`)
@@ -364,6 +377,7 @@ export default function DraftBoards() {
     return {
       step, setStep, newName, setNewName, newSport, setNewSport, newScoring, setNewScoring,
       leagueType, setLeagueType, teamCount, setTeamCount, draftType, setDraftType,
+      newLeagueId, setNewLeagueId, leagues,
       startFrom, setStartFrom, startFromOptions, creating,
       onClose: () => setShowCreate(false), onNext: handleNext, onCreate: handleCreate,
     }
@@ -379,23 +393,6 @@ export default function DraftBoards() {
       }
     } catch (err) {
       console.error('Generate cheat sheet failed:', err)
-    }
-  }
-
-  // ── Phase-Aware Hero ──────────────────────────────────────────────────────
-  const renderHero = () => {
-    switch (primaryPhase) {
-      case PHASES.IN_SEASON_LIVE:
-        return <InSeasonLiveHero weeklyIntel={weeklyIntel} phaseMeta={phaseMeta} />
-      case PHASES.IN_SEASON_IDLE:
-        return <InSeasonIdleHero weeklyIntel={weeklyIntel} phaseMeta={phaseMeta} phaseContext={phaseContext} />
-      case PHASES.SEASON_COMPLETE:
-        return <SeasonCompleteHero phaseMeta={phaseMeta} seasonReview={seasonReview} onCreateBoard={openCreateModal} />
-      case PHASES.DRAFT_IMMINENT:
-      case PHASES.DRAFT_PREP:
-      case PHASES.PRE_DRAFT:
-      default:
-        return <PreDraftHero phase={primaryPhase} phaseMeta={phaseMeta} phaseContext={phaseContext} boards={boards} onCreateBoard={openCreateModal} />
     }
   }
 
@@ -552,6 +549,11 @@ export default function DraftBoards() {
                 </span>
               </div>
               <div className="flex flex-wrap gap-1.5 mb-3">
+                {board.leagueName && (
+                  <span className="px-1.5 py-0.5 bg-[var(--crown)]/10 rounded text-[10px] text-[var(--crown)] font-medium truncate max-w-[140px]">
+                    {board.leagueName}
+                  </span>
+                )}
                 {board.sport === 'nfl' && (
                   <span className="px-1.5 py-0.5 bg-[var(--bg-alt)] rounded text-[10px] text-text-primary/40">
                     {scoringLabel(board.scoringFormat)}
@@ -741,45 +743,11 @@ export default function DraftBoards() {
     </div>
   )
 
-  // ── Phase-Aware Section Ordering ──────────────────────────────────────────
+  // ── Fixed Section Ordering (LeagueCockpit drives per-league phase) ──────
   const renderSections = () => {
-    const isPreDraft = primaryPhase === PHASES.PRE_DRAFT || primaryPhase === PHASES.DRAFT_PREP || primaryPhase === PHASES.DRAFT_IMMINENT
-    const isInSeason = primaryPhase === PHASES.IN_SEASON_LIVE || primaryPhase === PHASES.IN_SEASON_IDLE
-    const isComplete = primaryPhase === PHASES.SEASON_COMPLETE
-
-    if (isComplete) {
-      return (
-        <>
-          <PatternInsightsSection phaseContext={phaseContext} />
-          <DecisionTimeline sport={activeSport} limit={20} />
-          {renderAiInsightBar()}
-          {renderCoachingReports()}
-          {renderBoardStatus()}
-          {renderMyBoards()}
-          {renderWatchList()}
-          {renderJournal()}
-        </>
-      )
-    }
-
-    if (isInSeason) {
-      return (
-        <>
-          {renderAiInsightBar()}
-          <PatternInsightsSection phaseContext={phaseContext} />
-          <DecisionTimeline sport={activeSport} />
-          {renderBoardStatus()}
-          {renderMyBoards()}
-          {renderWatchList()}
-          {renderJournal()}
-          {renderCoachingReports()}
-        </>
-      )
-    }
-
-    // PRE_DRAFT / DRAFT_PREP / DRAFT_IMMINENT (default)
     return (
       <>
+        <LeagueCockpit leagues={leagues} boards={boards} currentTournament={currentTournament} />
         {renderAiInsightBar()}
         <div className="mb-6">
           <LabRatingCard />
@@ -813,7 +781,7 @@ export default function DraftBoards() {
       {!loading && !error && (
         <>
           {/* 1. Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-display font-bold text-text-primary tracking-wide">THE LAB</h1>
             </div>
@@ -828,20 +796,7 @@ export default function DraftBoards() {
             </button>
           </div>
 
-          {/* Phase Timeline Breadcrumb */}
-          <PhaseTimeline displayStep={displayStep} phaseMeta={phaseMeta} boards={boards} />
-
-          {/* Coach Line */}
-          {coachLine && (
-            <p className="text-sm text-text-primary/40 italic font-editorial mb-5">
-              {coachLine}
-            </p>
-          )}
-
-          {/* Phase-Aware Hero */}
-          {renderHero()}
-
-          {/* Phase-Aware Section Order */}
+          {/* Sections (LeagueCockpit first, then fixed order) */}
           {renderSections()}
         </>
       )}
@@ -1055,9 +1010,15 @@ function ThisWeekSection({ data }) {
 function CreateModal({
   step, setStep, newName, setNewName, newSport, setNewSport, newScoring, setNewScoring,
   leagueType, setLeagueType, teamCount, setTeamCount, draftType, setDraftType,
+  newLeagueId, setNewLeagueId, leagues = [],
   startFrom, setStartFrom, startFromOptions, creating,
   onClose, onNext, onCreate,
 }) {
+  // Filter leagues matching selected sport
+  const sportLeagues = leagues.filter(l => {
+    const ls = (l.sport || l.sportRef?.slug || 'golf').toLowerCase()
+    return ls === newSport
+  })
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
@@ -1163,6 +1124,23 @@ function CreateModal({
         {/* Step 2: League Context (NEW) */}
         {step === 2 && (
           <div className="p-5 space-y-4">
+            {sportLeagues.length > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-text-primary/50 mb-2">Link to League</label>
+                <select
+                  value={newLeagueId || ''}
+                  onChange={e => setNewLeagueId(e.target.value || null)}
+                  className="w-full px-3 py-2 text-sm bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary outline-none focus:border-gold/50 cursor-pointer"
+                >
+                  <option value="">None (standalone board)</option>
+                  {sportLeagues.map(l => (
+                    <option key={l.id} value={l.id}>{l.name}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-text-primary/30 mt-1">Linking a board makes it show up on the league's cockpit card</p>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-text-primary/50 mb-2">League Type</label>
               <div className="flex flex-wrap gap-2">

@@ -41,7 +41,7 @@ export const COACH_LINES = {
  * Compute phase for a single league from its data.
  * Reuses same logic as useLeaguePhase.js but without the hook wrapper.
  */
-function computeLeaguePhase(league, currentTournament) {
+export function computeLeaguePhase(league, currentTournament) {
   if (!league) return { phase: PHASES.PRE_DRAFT, meta: {} }
 
   const draft = league.drafts?.[0]

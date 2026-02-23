@@ -78,7 +78,10 @@ async function batchLoadNflFantasyStats(playerIds, scoringFormat) {
 }
 
 async function assertOwnership(boardId, userId) {
-  const board = await prisma.draftBoard.findUnique({ where: { id: boardId } })
+  const board = await prisma.draftBoard.findUnique({
+    where: { id: boardId },
+    include: { league: { select: { id: true, name: true } } },
+  })
   if (!board) throw Object.assign(new Error('Board not found'), { status: 404 })
   if (board.userId !== userId) throw Object.assign(new Error('Forbidden'), { status: 403 })
   return board
@@ -99,7 +102,7 @@ async function logActivity(boardId, userId, action, playerId, details) {
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
-async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr', boardType = 'overall', season = 2026, startFrom = 'scratch', leagueType, teamCount, draftType, rosterConfig }) {
+async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr', boardType = 'overall', season = 2026, startFrom = 'scratch', leagueType, teamCount, draftType, rosterConfig, leagueId }) {
   // Create the board first
   const board = await prisma.draftBoard.create({
     data: {
@@ -108,6 +111,7 @@ async function createBoard(userId, { name, sport = 'nfl', scoringFormat = 'ppr',
       ...(teamCount && { teamCount }),
       ...(draftType && { draftType }),
       ...(rosterConfig && { rosterConfig }),
+      ...(leagueId && { leagueId }),
     },
   })
 
@@ -204,6 +208,7 @@ async function listBoards(userId) {
       entries: {
         select: { player: { select: { nflPosition: true } } },
       },
+      league: { select: { id: true, name: true, sport: true } },
     },
   })
   return boards.map(b => {
@@ -232,6 +237,8 @@ async function listBoards(userId) {
       draftType: b.draftType,
       playerCount: b._count.entries,
       positionCoverage,
+      leagueId: b.leagueId,
+      leagueName: b.league?.name || null,
       createdAt: b.createdAt,
       updatedAt: b.updatedAt,
     }
@@ -281,6 +288,8 @@ async function getBoard(boardId, userId) {
     season: board.season,
     isPublished: board.isPublished,
     publishedAt: board.publishedAt,
+    leagueId: board.leagueId,
+    league: board.league || null,
     createdAt: board.createdAt,
     updatedAt: board.updatedAt,
     entries: enrichedEntries,

@@ -126,18 +126,22 @@ const LeagueHome = () => {
       .catch(() => {})
   }, [isNflLeague])
 
-  // Fetch user's draft boards to find existing one for this sport
+  // Fetch user's draft boards to find existing one for this league (prefer leagueId match, fall back to sport)
   useEffect(() => {
     if (!league) return
     const sport = (league.sport || 'golf').toLowerCase()
     api.getDraftBoards()
       .then(data => {
         const boards = data.boards || data || []
-        const match = boards.find(b => b.sport === sport && b.playerCount > 0)
-        if (match) setExistingBoardId(match.id)
+        // Prefer boards linked to this specific league
+        const linkedMatch = boards.find(b => b.leagueId === leagueId && b.playerCount > 0)
+        if (linkedMatch) { setExistingBoardId(linkedMatch.id); return }
+        // Fall back to sport match
+        const sportMatch = boards.find(b => b.sport === sport && b.playerCount > 0)
+        if (sportMatch) setExistingBoardId(sportMatch.id)
       })
       .catch(() => {})
-  }, [league])
+  }, [league, leagueId])
 
   // Fetch league prediction leaderboard
   useEffect(() => {

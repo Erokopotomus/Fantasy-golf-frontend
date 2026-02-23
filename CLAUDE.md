@@ -53,7 +53,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 ## DEVELOPMENT PHASES
 
 ### Current Status: PHASE 5 — IN PROGRESS
-> Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 (owner assignment, reveal, sharing) built. Commissioner blog system built. Prisma singleton + connection pooling deployed. Next: finish Phase 5 remaining items, deploy migrations 43-44 to Railway.
+> Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 (owner assignment, reveal, sharing) built. Commissioner blog system built. Prisma singleton + connection pooling deployed. Next: finish Phase 5 remaining items.
 
 ### Phase 1: Core Platform — COMPLETE
 Auth (JWT), league CRUD, commissioner tools, invite codes, snake+auction drafts (Socket.IO), roster management (add/drop/FAAB/rolling waivers), live scoring (DataGolf, 12 sync functions, 7 crons), H2H matchups, trading (veto voting, draft dollars), notifications (Socket.IO + web push), in-league chat, standings (H2H/Roto/Survivor/OAD/Segment), playoffs (bracket, seeding, auto-advance, history), IR slots, season recap & awards, security hardening (rate-limit + input validation), analytics foundation (Sport/Season/FantasyWeek/ScoringSystem models, 32 achievements), keeper leagues (no-cost/round penalty/auction/escalator), divisions, mobile responsive.
@@ -63,7 +63,7 @@ Auth (JWT), league CRUD, commissioner tools, invite codes, snake+auction drafts 
 Event tracking (42+ events, console logging, PostHog-ready). Prediction engine (4 types, deadline enforcement, Sunday 10:15 PM auto-resolution, tier system rookie→elite, badges, leaderboard). "Prove It" hub (4 sections: slate, track record, leaderboards, analysts). Contextual prediction components (PlayerBenchmarkCard, EventPredictionSlate, PredictionWidget). Progressive rollout strategy with feature flags. See **PREDICTION SYSTEM — DESIGN RULES** section below for non-negotiable language rules.
 
 ### Phase 3: League Vault & Migration — COMPLETE
-5 import platforms (Sleeper, ESPN, Yahoo, Fantrax, MFL). League Vault v1 (timeline + records). Player matching service. League history schema. League Vault V2 (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing, settings auto-detection). Commissioner blog system (TipTap rich text, cover images via Cloudinary, emoji reactions, comments, view tracking). **Migrations 43-44 NOT YET DEPLOYED TO RAILWAY.**
+5 import platforms (Sleeper, ESPN, Yahoo, Fantrax, MFL). League Vault v1 (timeline + records). Player matching service. League history schema. League Vault V2 (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing, settings auto-detection). Commissioner blog system (TipTap rich text, cover images via Cloudinary, emoji reactions, comments, view tracking).
 
 ### Phase 4: Data Architecture & Proprietary Metrics — COMPLETE (4E deferred)
 4-layer database architecture (RawProviderData → canonical → ClutchScore → display). Rosetta Stone player/event ID mapping. ETL pipeline (DataGolf → canonical, raw data cleanup cron). Proprietary metrics: CPI (-3.0 to +3.0), Form Score (0-100), Pressure Score (-2.0 to +2.0), Course Fit (0-100). Transformation rules: never display raw provider numbers, always blend multiple inputs, always add Clutch branding, log formula version.
@@ -84,7 +84,7 @@ Event tracking (42+ events, console logging, PostHog-ready). Prediction engine (
   - Confidence curve: `confidence ^ 0.6` (1 season=25%, 3=55%, 5=75%, 12+=98%)
   - Tiers: ELITE (90+), VETERAN (80+), COMPETITOR (70+), CONTENDER (60+), DEVELOPING (50+), ROOKIE (40+), UNRANKED (<40)
   - Backend: `clutchRatingService.js` (833 lines). Frontend: `useClutchRating.js`, `DashboardRatingWidget.jsx`, vault components
-  - **MIGRATION 43 NOT YET DEPLOYED TO RAILWAY**
+  - Migration 43 deployed to Railway
 
 - [ ] **5C: Enhanced Prediction Categories** — Expand per sport (golf: winner, top 5/10/20, cut, H2H; NFL: game winner, player calls, weekly rankings)
 - [ ] **5D: Enhanced Leaderboard** — Filters (sport/type/time/min calls), "Hot Right Now", "Most Consistent", auto-awards
@@ -356,7 +356,7 @@ Every feature should answer: "Which persona is this for?" When in doubt, optimiz
 - **Seasonal Flywheel:** Feed auto-adjusts by sports calendar. Golf fills NFL gaps (Feb-May). No dead months.
 
 ### Current Build Priority
-Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → **Next: Deploy migrations 43-44, finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E public data sources**
+Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → **Next: Build out Golf/NFL Hubs as sport homepages, finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E public data sources**
 
 **Backlog:** NFL team pages need polish. Kicker/DST stats missing. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags).
 
@@ -408,6 +408,6 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 *Last updated: February 22, 2026*
 *Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. 335+ commits. 91+ database models. 161+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
 
-**Pending deployment:** Migrations 43 (Clutch Rating V2) and 44 (League Posts blog upgrade) need `prisma migrate deploy` on Railway.
+**All migrations (1-45) deployed to Railway.**
 
 **Infrastructure fix (Feb 2026):** All backend route files now import from `src/lib/prisma.js` singleton instead of creating individual PrismaClient instances. Pool: 20 connections, 30s timeout.
