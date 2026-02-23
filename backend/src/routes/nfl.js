@@ -1044,8 +1044,36 @@ router.get('/leagues/:leagueId/available-players', authenticate, async (req, res
     // Sort by fantasy points descending
     playersWithPts.sort((a, b) => b.fantasyPts - a.fantasyPts)
 
+    // Enrich with user's board tags (if they have a board for NFL)
+    const board = await prisma.draftBoard.findFirst({
+      where: { userId: req.user.id, sport: 'nfl' },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true },
+    })
+
+    let enriched = playersWithPts
+    if (board) {
+      const playerIds = playersWithPts.map(p => p.id)
+      const boardEntries = await prisma.draftBoardEntry.findMany({
+        where: { boardId: board.id, playerId: { in: playerIds } },
+        select: { playerId: true, tags: true, tier: true, notes: true },
+      })
+      const boardTagMap = {}
+      for (const entry of boardEntries) {
+        boardTagMap[entry.playerId] = {
+          tags: entry.tags || [],
+          tier: entry.tier,
+          hasNotes: !!(entry.notes && entry.notes.trim()),
+        }
+      }
+      enriched = playersWithPts.map(p => ({
+        ...p,
+        boardData: boardTagMap[p.id] || null,
+      }))
+    }
+
     res.json({
-      players: playersWithPts,
+      players: enriched,
       pagination: {
         total,
         limit: parseInt(limit),

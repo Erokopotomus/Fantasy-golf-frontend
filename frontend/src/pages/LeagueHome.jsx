@@ -18,6 +18,7 @@ import LiveScoringWidget from '../components/league/LiveScoringWidget'
 import PhaseActionRow from '../components/league/PhaseActionRow'
 import { useLeaguePhase } from '../hooks/useLeaguePhase'
 import { formatDate } from '../utils/dateUtils'
+import { buildLabUrl } from '../utils/labBridge'
 
 const LeagueHome = () => {
   const { leagueId } = useParams()
@@ -371,6 +372,7 @@ const LeagueHome = () => {
                 ...(isOneAndDone ? [{ to: `/leagues/${leagueId}/picks`, label: 'Picks' }] : []),
                 // Common
                 { to: isNflLeague ? `/nfl/players?league=${leagueId}` : `/players?league=${leagueId}`, label: 'Players' },
+                { to: existingBoardId ? `/lab/${existingBoardId}` : buildLabUrl(league), label: 'Board' },
                 { to: `/leagues/${leagueId}/standings`, label: 'Standings' },
                 { to: `/leagues/${leagueId}/scoring`, label: 'Scoring' },
                 { to: `/leagues/${leagueId}/settings`, label: 'Settings' },

@@ -967,7 +967,35 @@ router.get('/:id/available-players', authenticate, async (req, res, next) => {
       prisma.player.count({ where }),
     ])
 
-    res.json({ players, total, limit: parseInt(limit), offset: parseInt(offset) })
+    // Enrich with user's board tags (if they have a board for this sport)
+    const board = await prisma.draftBoard.findFirst({
+      where: { userId: req.user.id, sport: 'golf' },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true },
+    })
+
+    let boardTagMap = {}
+    if (board) {
+      const playerIds = players.map(p => p.id)
+      const boardEntries = await prisma.draftBoardEntry.findMany({
+        where: { boardId: board.id, playerId: { in: playerIds } },
+        select: { playerId: true, tags: true, tier: true, notes: true },
+      })
+      for (const entry of boardEntries) {
+        boardTagMap[entry.playerId] = {
+          tags: entry.tags || [],
+          tier: entry.tier,
+          hasNotes: !!(entry.notes && entry.notes.trim()),
+        }
+      }
+    }
+
+    const enrichedPlayers = players.map(p => ({
+      ...p,
+      boardData: boardTagMap[p.id] || null,
+    }))
+
+    res.json({ players: enrichedPlayers, total, limit: parseInt(limit), offset: parseInt(offset) })
   } catch (error) {
     next(error)
   }

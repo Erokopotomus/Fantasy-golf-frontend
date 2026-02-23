@@ -1,5 +1,6 @@
 const express = require('express')
 const { authenticate } = require('../middleware/auth')
+const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
 
 const router = express.Router()
 const prisma = require('../lib/prisma.js')
@@ -74,6 +75,25 @@ router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => 
         player: { select: { id: true, name: true, owgrRank: true, headshotUrl: true } },
       },
     })
+
+    // Record opinion event (decision capture)
+    const sport = (league.sport || 'golf').toLowerCase()
+    recordOpinionEvent(req.user.id, playerId, sport, 'WAIVER_ADD', {
+      playerName: claim.player?.name,
+      leagueId,
+      bidAmount: claim.bidAmount,
+      reasoning: claim.reasoning,
+      dropPlayerId: dropPlayerId || null,
+    }, leagueId, 'league').catch(() => {})
+
+    // If dropping a player, record that as a negative opinion event
+    if (dropPlayerId) {
+      recordOpinionEvent(req.user.id, dropPlayerId, sport, 'WAIVER_DROP', {
+        leagueId,
+        reason: 'waiver_swap',
+        replacedBy: playerId,
+      }, leagueId, 'league').catch(() => {})
+    }
 
     res.status(201).json({ claim })
   } catch (error) {

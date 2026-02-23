@@ -277,7 +277,21 @@ const WaiverWire = () => {
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="text-text-primary font-semibold text-sm truncate">{player.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-text-primary font-semibold text-sm truncate">{player.name}</p>
+                        {player.boardData && (() => {
+                          const tags = Array.isArray(player.boardData.tags) ? player.boardData.tags : Object.keys(player.boardData.tags || {})
+                          return tags.slice(0, 2).map(tag => (
+                            <span key={tag} className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${
+                              tag === 'target' || tag === 'must-have' ? 'bg-emerald-500/15 text-emerald-500' :
+                              tag === 'sleeper' ? 'bg-purple-500/15 text-purple-400' :
+                              tag === 'avoid' ? 'bg-red-500/15 text-red-400' :
+                              tag === 'value' ? 'bg-[var(--crown)]/15 text-[var(--crown)]' :
+                              'bg-blue-500/15 text-blue-400'
+                            }`}>{tag}</span>
+                          ))
+                        })()}
+                      </div>
                       <p className="text-text-muted text-xs">
                         {isNfl
                           ? (player.nflTeamAbbr || '')

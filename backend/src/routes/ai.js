@@ -104,11 +104,12 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
         })
       }
 
-      // In-season — enrich with standings position and roster context
+      // In-season — enrich with standings, roster history, and board cross-references
       if (draft?.status === 'COMPLETED' && league.teams?.length > 0) {
         const userTeam = league.teams.find(t => t.userId === userId)
         const totalTeams = league.teams.length
         const userRank = userTeam ? league.teams.indexOf(userTeam) + 1 : null
+        const ordinal = n => n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`
 
         // Check for live tournament (golf)
         const liveTournament = sport === 'golf'
@@ -118,10 +119,54 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
             }).catch(() => null)
           : null
 
+        // Board cross-reference: find tagged players available on waivers
+        let boardInsight = null
+        if (userTeam) {
+          const board = await prisma.draftBoard.findFirst({
+            where: { userId, sport },
+            orderBy: { updatedAt: 'desc' },
+            select: { entries: { select: { playerId: true, tags: true, player: { select: { name: true } } } } },
+          })
+          if (board?.entries?.length > 0) {
+            const taggedTargets = board.entries.filter(e => {
+              const tags = Array.isArray(e.tags) ? e.tags : Object.keys(e.tags || {})
+              return tags.some(t => ['target', 'sleeper', 'must-have', 'TARGET', 'SLEEPER'].includes(t))
+            })
+            if (taggedTargets.length > 0) {
+              const taggedIds = taggedTargets.map(e => e.playerId)
+              const rostered = await prisma.rosterEntry.findMany({
+                where: { team: { leagueId }, isActive: true, playerId: { in: taggedIds } },
+                select: { playerId: true },
+              })
+              const rosteredIds = new Set(rostered.map(r => r.playerId))
+              const available = taggedTargets.filter(e => !rosteredIds.has(e.playerId))
+              if (available.length > 0) {
+                const pick = available[0]
+                boardInsight = `You tagged ${pick.player?.name || 'a player'} as a target on your board — they're available on waivers.`
+              }
+            }
+          }
+        }
+
+        // Roster loyalty: find longest-tenured player
+        let loyaltyInsight = null
+        if (userTeam) {
+          const oldest = await prisma.rosterEntry.findFirst({
+            where: { teamId: userTeam.id, isActive: true },
+            orderBy: { createdAt: 'asc' },
+            select: { player: { select: { name: true } }, createdAt: true },
+          })
+          if (oldest) {
+            const weeksOwned = Math.floor((Date.now() - new Date(oldest.createdAt).getTime()) / (7 * 86400000))
+            if (weeksOwned >= 3) {
+              loyaltyInsight = `${oldest.player?.name} has been on your roster for ${weeksOwned} weeks — your most loyal pick.`
+            }
+          }
+        }
+
         let headline, body = null
 
         if (liveTournament) {
-          // Count user's rostered players in the live tournament
           const rosteredInEvent = userTeam ? await prisma.rosterEntry.count({
             where: {
               teamId: userTeam.id,
@@ -132,8 +177,10 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
 
           headline = `${liveTournament.name} is live${liveTournament.currentRound ? ` — Round ${liveTournament.currentRound}` : ''}`
           body = rosteredInEvent > 0
-            ? `You have ${rosteredInEvent} player${rosteredInEvent > 1 ? 's' : ''} in the field. ${userRank ? `You're ${userRank === 1 ? 'leading' : `${userRank}${userRank === 2 ? 'nd' : userRank === 3 ? 'rd' : 'th'}`} in your league.` : ''}`
-            : userRank ? `You're sitting ${userRank === 1 ? '1st' : `${userRank}${userRank === 2 ? 'nd' : userRank === 3 ? 'rd' : 'th'}`} of ${totalTeams} teams.` : null
+            ? `You have ${rosteredInEvent} player${rosteredInEvent > 1 ? 's' : ''} in the field. ${userRank ? `You're ${ordinal(userRank)} in your league.` : ''}`
+            : userRank ? `You're sitting ${ordinal(userRank)} of ${totalTeams} teams.` : null
+          // Append board insight if available
+          if (boardInsight) body = (body ? body + ' ' : '') + boardInsight
         } else if (userRank) {
           const leader = league.teams[0]
           const pointsBack = userRank > 1 ? (leader.totalPoints - (userTeam?.totalPoints || 0)).toFixed(1) : null
@@ -142,14 +189,18 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
             headline = "You're on top — don't get comfortable"
             body = `Leading by ${((userTeam?.totalPoints || 0) - (league.teams[1]?.totalPoints || 0)).toFixed(1)} points over ${league.teams[1]?.name || '2nd place'}.`
           } else if (userRank <= 3) {
-            headline = `You're ${userRank}${userRank === 2 ? 'nd' : 'rd'} — the gap is closable`
-            body = pointsBack ? `${pointsBack} points behind ${leader.name || 'the leader'}. A strong week changes everything.` : null
+            headline = `You're ${ordinal(userRank)} — the gap is closable`
+            body = pointsBack ? `${pointsBack} points behind ${leader.name || 'the leader'}.` : null
           } else {
-            headline = `${userRank}${userRank === 4 ? 'th' : 'th'} of ${totalTeams} — time to make moves`
-            body = pointsBack ? `${pointsBack} points off the lead. Check the wire for upgrades.` : null
+            headline = `${ordinal(userRank)} of ${totalTeams} — time to make moves`
+            body = pointsBack ? `${pointsBack} points off the lead.` : null
           }
+          // Append history insights
+          if (boardInsight) body = (body ? body + ' ' : '') + boardInsight
+          else if (loyaltyInsight) body = (body ? body + ' ' : '') + loyaltyInsight
         } else {
           headline = `Season is live — ${totalTeams} teams competing`
+          body = boardInsight || loyaltyInsight || null
         }
 
         return res.json({
@@ -286,21 +337,42 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
       // Fall through to default
     }
 
-    // DEFAULT: active message with league context
+    // DEFAULT: active message with league context + recent activity
     const firstLeague = await prisma.leagueMember.findFirst({
       where: { userId },
       include: { league: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
     })
 
+    // Check for recent roster moves to reference
+    let recentActivity = null
+    const recentEvent = await prisma.playerOpinionEvent.findFirst({
+      where: { userId, eventType: { in: ['WAIVER_ADD', 'LINEUP_START'] } },
+      orderBy: { createdAt: 'desc' },
+      select: { eventType: true, eventData: true, createdAt: true },
+    }).catch(() => null)
+
+    if (recentEvent) {
+      const daysAgo = Math.floor((Date.now() - new Date(recentEvent.createdAt).getTime()) / 86400000)
+      const playerName = recentEvent.eventData?.playerName
+      if (playerName && daysAgo <= 7) {
+        if (recentEvent.eventType === 'WAIVER_ADD') {
+          recentActivity = `You picked up ${playerName} recently — let's see if it pays off.`
+        } else {
+          recentActivity = `You started ${playerName} last week — your instincts are on record.`
+        }
+      }
+    }
+
     return res.json({
       briefing: {
         headline: leagueCount === 1
           ? `${firstLeague?.league?.name || 'Your league'} is active — stay sharp`
           : `${leagueCount} leagues active — stay sharp`,
-        body: boardCount > 0
-          ? `You have ${boardCount} board${boardCount > 1 ? 's' : ''} and ${predictionCount} prediction${predictionCount !== 1 ? 's' : ''} on record.`
-          : 'Build a draft board to start sharpening your edge.',
+        body: recentActivity
+          || (boardCount > 0
+            ? `You have ${boardCount} board${boardCount > 1 ? 's' : ''} and ${predictionCount} prediction${predictionCount !== 1 ? 's' : ''} on record.`
+            : 'Build a draft board to start sharpening your edge.'),
         cta: firstLeague?.league?.id
           ? { label: 'Go to League', to: `/leagues/${firstLeague.league.id}` }
           : null,

@@ -178,6 +178,14 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
       leagueId: team.leagueId,
     }, prisma).catch(err => console.error('Transaction log failed:', err.message))
 
+    // Record opinion event (decision capture)
+    const sport = (team.league.sport || 'golf').toLowerCase()
+    recordOpinionEvent(req.user.id, playerId, sport, 'WAIVER_ADD', {
+      playerName: rosterEntry.player.name,
+      leagueId: team.leagueId,
+      acquiredVia: 'FREE_AGENT',
+    }, team.leagueId, 'league').catch(() => {})
+
     // Notify league about the pickup (excluding the actor)
     try {
       notifyLeague(team.leagueId, {
@@ -201,7 +209,8 @@ router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
     const { playerId } = req.body
 
     const team = await prisma.team.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: { league: { select: { sport: true } } },
     })
 
     if (!team) {
@@ -235,6 +244,13 @@ router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
       playerName: entry.player.name,
       leagueId: team.leagueId,
     }, prisma).catch(err => console.error('Transaction log failed:', err.message))
+
+    // Record opinion event (decision capture)
+    const sport = (team.league?.sport || 'golf').toLowerCase()
+    recordOpinionEvent(req.user.id, playerId, sport, 'WAIVER_DROP', {
+      playerName: entry.player.name,
+      leagueId: team.leagueId,
+    }, team.leagueId, 'league').catch(() => {})
 
     // Notify league about the drop (excluding the actor)
     try {
