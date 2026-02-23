@@ -8,7 +8,7 @@ import useMatchups from '../hooks/useMatchups'
 import api from '../services/api'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
-// NeuralCluster parked (Season 2) — using simple coach dot instead
+import NeuralCluster from '../components/common/NeuralCluster'
 import ChatPanel from '../components/chat/ChatPanel'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import DraftCountdown from '../components/DraftCountdown'
@@ -426,11 +426,13 @@ const LeagueHome = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Left: Coach Briefing */}
                   <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-6 flex flex-col justify-center min-h-[180px] shadow-sm dark:shadow-none">
-                    {/* Subtle background accent */}
-                    <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-purple-500/[0.06] pointer-events-none blur-2xl" />
+                    {/* Floating sphere accent */}
+                    <div className="absolute -right-6 -top-6 opacity-[0.15] pointer-events-none">
+                      <NeuralCluster size="lg" intensity="active" />
+                    </div>
                     <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shrink-0" />
+                      <div className="flex items-center gap-3 mb-3">
+                        <NeuralCluster size="sm" intensity="active" className="shrink-0" />
                         <span className="text-xs font-semibold uppercase tracking-widest text-purple-400">Coach Briefing</span>
                       </div>
                       <h3 className="text-xl font-bold font-display text-text-primary mb-2 leading-snug">
