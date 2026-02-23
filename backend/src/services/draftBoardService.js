@@ -298,11 +298,13 @@ async function getBoard(boardId, userId) {
 
 async function updateBoard(boardId, userId, data) {
   await assertOwnership(boardId, userId)
-  const allowed = ['name', 'scoringFormat', 'boardType', 'isPublished', 'leagueType', 'teamCount', 'draftType', 'rosterConfig']
+  const allowed = ['name', 'scoringFormat', 'boardType', 'isPublished', 'leagueType', 'teamCount', 'draftType', 'rosterConfig', 'leagueId']
   const update = {}
   for (const key of allowed) {
     if (data[key] !== undefined) update[key] = data[key]
   }
+  // Allow explicit null to unlink a board from a league
+  if (data.leagueId === null) update.leagueId = null
   if (data.isPublished === true) update.publishedAt = new Date()
   if (data.isPublished === false) update.publishedAt = null
   return prisma.draftBoard.update({ where: { id: boardId }, data: update })

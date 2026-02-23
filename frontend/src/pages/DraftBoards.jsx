@@ -138,7 +138,7 @@ function activityDescription(a) {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function DraftBoards() {
-  const { boards, loading, error, createBoard, deleteBoard } = useDraftBoards()
+  const { boards, loading, error, createBoard, deleteBoard, refetch } = useDraftBoards()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -747,7 +747,7 @@ export default function DraftBoards() {
   const renderSections = () => {
     return (
       <>
-        <LeagueCockpit leagues={leagues} boards={boards} currentTournament={currentTournament} />
+        <LeagueCockpit leagues={leagues} boards={boards} currentTournament={currentTournament} onBoardLinked={refetch} />
         {renderAiInsightBar()}
         <div className="mb-6">
           <LabRatingCard />
