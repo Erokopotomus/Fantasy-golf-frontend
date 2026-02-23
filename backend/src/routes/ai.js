@@ -439,6 +439,222 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
 })
 
 // ═══════════════════════════════════════════════
+//  LAB WEEKLY INTELLIGENCE
+// ═══════════════════════════════════════════════
+
+// GET /api/ai/lab-weekly — Weekly prep intelligence for the Lab hub
+router.get('/lab-weekly', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id
+
+    // Get user's active golf leagues
+    const golfLeagues = await prisma.league.findMany({
+      where: {
+        members: { some: { userId } },
+        sport: { in: ['GOLF', 'golf', null] },
+        status: 'active',
+      },
+      select: {
+        id: true, name: true,
+        teams: { where: { userId }, select: { id: true } },
+      },
+    })
+
+    // No active golf leagues → return minimal
+    if (golfLeagues.length === 0) {
+      return res.json({ week: null })
+    }
+
+    const primaryLeague = golfLeagues[0]
+    const userTeamId = primaryLeague.teams[0]?.id
+
+    // Upcoming or live tournament
+    const tournament = await prisma.tournament.findFirst({
+      where: {
+        OR: [
+          { status: 'IN_PROGRESS' },
+          { startDate: { gte: new Date() }, status: { not: 'COMPLETED' } },
+        ],
+      },
+      orderBy: [
+        { status: 'desc' }, // IN_PROGRESS first
+        { startDate: 'asc' },
+      ],
+      select: {
+        id: true, name: true, startDate: true, status: true,
+        course: {
+          select: {
+            name: true, par: true, yardage: true, grassType: true, architect: true,
+            drivingImportance: true, approachImportance: true,
+            aroundGreenImportance: true, puttingImportance: true,
+          },
+        },
+      },
+    })
+
+    if (!tournament) {
+      return res.json({ week: null })
+    }
+
+    const isLive = tournament.status === 'IN_PROGRESS'
+    const daysUntil = isLive ? 0 : Math.floor((new Date(tournament.startDate) - new Date()) / 86400000)
+
+    // Course profile — identify top skill
+    const course = tournament.course
+    let courseProfile = null
+    if (course) {
+      const skills = [
+        { key: 'driving', importance: course.drivingImportance || 0, sg: 'sgOffTee', label: 'off the tee' },
+        { key: 'approach', importance: course.approachImportance || 0, sg: 'sgApproach', label: 'on approach' },
+        { key: 'shortGame', importance: course.aroundGreenImportance || 0, sg: 'sgAroundGreen', label: 'around the green' },
+        { key: 'putting', importance: course.puttingImportance || 0, sg: 'sgPutting', label: 'on the greens' },
+      ].sort((a, b) => b.importance - a.importance)
+
+      const topSkill = skills[0]
+      const secondSkill = skills[1]
+      courseProfile = {
+        courseName: course.name,
+        par: course.par,
+        yardage: course.yardage,
+        grassType: course.grassType,
+        architect: course.architect,
+        topSkill: topSkill.key,
+        topSkillLabel: topSkill.label,
+        topSkillSg: topSkill.sg,
+        secondSkill: secondSkill.key,
+        secondSkillLabel: secondSkill.label,
+        description: topSkill.importance > 0
+          ? `This course rewards players who excel ${topSkill.label}${secondSkill.importance > 0.2 ? ` and ${secondSkill.label}` : ''}.`
+          : null,
+      }
+    }
+
+    // Roster SG analysis for top skill
+    let rosterFit = null
+    if (userTeamId && courseProfile?.topSkillSg) {
+      const rosterEntries = await prisma.rosterEntry.findMany({
+        where: { teamId: userTeamId, isActive: true },
+        select: {
+          player: {
+            select: {
+              id: true, name: true, headshotUrl: true, owgrRank: true,
+              sgTotal: true, sgOffTee: true, sgApproach: true, sgAroundGreen: true, sgPutting: true,
+            },
+          },
+        },
+      })
+
+      const sgField = courseProfile.topSkillSg
+      const withSg = rosterEntries
+        .filter(r => r.player?.[sgField] != null)
+        .map(r => ({ name: r.player.name, sg: r.player[sgField] }))
+        .sort((a, b) => b.sg - a.sg)
+
+      if (withSg.length > 0) {
+        const avgSg = withSg.reduce((s, p) => s + p.sg, 0) / withSg.length
+        rosterFit = {
+          skill: courseProfile.topSkillLabel,
+          avgSg: Math.round(avgSg * 100) / 100,
+          strength: avgSg > 0.3 ? 'strong' : avgSg > 0 ? 'average' : 'weak',
+          bestPlayer: withSg[0]?.name,
+          bestSg: Math.round(withSg[0]?.sg * 100) / 100,
+          worstPlayer: withSg[withSg.length - 1]?.name,
+          worstSg: Math.round(withSg[withSg.length - 1]?.sg * 100) / 100,
+        }
+      }
+    }
+
+    // Waiver targets who fit the course (top 5 available players by top skill SG)
+    let waiverTargets = []
+    if (userTeamId && courseProfile?.topSkillSg) {
+      const rosteredIds = await prisma.rosterEntry.findMany({
+        where: { team: { leagueId: primaryLeague.id }, isActive: true },
+        select: { playerId: true },
+      })
+      const rosteredSet = new Set(rosteredIds.map(r => r.playerId))
+      const sgField = courseProfile.topSkillSg
+
+      const candidates = await prisma.player.findMany({
+        where: {
+          id: { notIn: [...rosteredSet] },
+          [sgField]: { gt: 0.3 },
+          primaryTour: { in: ['PGA', 'LIV'] },
+        },
+        select: {
+          id: true, name: true, headshotUrl: true, owgrRank: true, countryFlag: true,
+          sgTotal: true, [sgField]: true,
+        },
+        orderBy: { [sgField]: 'desc' },
+        take: 5,
+      })
+
+      waiverTargets = candidates.map(p => ({
+        id: p.id,
+        name: p.name,
+        headshotUrl: p.headshotUrl,
+        owgrRank: p.owgrRank,
+        countryFlag: p.countryFlag,
+        skillSg: Math.round((p[sgField] || 0) * 100) / 100,
+        sgTotal: p.sgTotal ? Math.round(p.sgTotal * 100) / 100 : null,
+      }))
+    }
+
+    // Board tag cross-references (targets/sleepers available on waivers)
+    let boardInsights = []
+    const board = await prisma.draftBoard.findFirst({
+      where: { userId, sport: 'golf' },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        entries: {
+          select: { playerId: true, tags: true, player: { select: { id: true, name: true, headshotUrl: true } } },
+        },
+      },
+    })
+    if (board?.entries?.length > 0) {
+      const rosteredInLeague = await prisma.rosterEntry.findMany({
+        where: { team: { leagueId: primaryLeague.id }, isActive: true },
+        select: { playerId: true },
+      })
+      const rosteredSet = new Set(rosteredInLeague.map(r => r.playerId))
+
+      boardInsights = board.entries
+        .filter(e => {
+          const tags = Array.isArray(e.tags) ? e.tags : Object.keys(e.tags || {})
+          return tags.some(t => ['target', 'sleeper', 'must-have', 'TARGET', 'SLEEPER'].includes(t)) && !rosteredSet.has(e.playerId)
+        })
+        .slice(0, 3)
+        .map(e => ({
+          playerId: e.playerId,
+          name: e.player?.name,
+          headshotUrl: e.player?.headshotUrl,
+          tags: Array.isArray(e.tags) ? e.tags : Object.keys(e.tags || {}),
+        }))
+    }
+
+    res.json({
+      week: {
+        tournament: {
+          id: tournament.id,
+          name: tournament.name,
+          startDate: tournament.startDate,
+          isLive,
+          daysUntil,
+        },
+        courseProfile,
+        rosterFit,
+        waiverTargets,
+        boardInsights,
+        leagueName: primaryLeague.name,
+        leagueId: primaryLeague.id,
+      },
+    })
+  } catch (err) {
+    console.error('[AI] Lab weekly error:', err.message, err.stack)
+    res.json({ week: null })
+  }
+})
+
+// ═══════════════════════════════════════════════
 //  INSIGHTS (Mode 1 — Ambient)
 // ═══════════════════════════════════════════════
 

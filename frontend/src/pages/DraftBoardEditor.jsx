@@ -196,9 +196,30 @@ export default function DraftBoardEditor() {
   const [showDivergence, setShowDivergence] = useState(true)
   const [showTimeline, setShowTimeline] = useState(false)
   const [coachingCard, setCoachingCard] = useState(null)
+  const [leagueStatusMap, setLeagueStatusMap] = useState({}) // playerId → [{ leagueName, status }]
   const [welcomeDismissed, setWelcomeDismissed] = useState(() =>
     !!localStorage.getItem(`lab-welcome-dismissed-${boardId}`)
   )
+
+  // Fetch league roster map for availability badges
+  useEffect(() => {
+    if (!board?.sport) return
+    api.getRosterMap(board.sport).then(res => {
+      if (!res.leagues) return
+      const map = {}
+      for (const league of res.leagues) {
+        for (const pid of league.yourPlayerIds) {
+          if (!map[pid]) map[pid] = []
+          map[pid].push({ leagueName: league.name, leagueId: league.id, status: 'yours' })
+        }
+        for (const pid of league.takenPlayerIds) {
+          if (!map[pid]) map[pid] = []
+          map[pid].push({ leagueName: league.name, leagueId: league.id, status: 'taken' })
+        }
+      }
+      setLeagueStatusMap(map)
+    }).catch(() => {})
+  }, [board?.sport])
 
   // AI Coach: fetch coaching card on major moves
   const fetchCoachingCard = useCallback((triggerAction, context) => {
@@ -493,6 +514,7 @@ export default function DraftBoardEditor() {
                         index={originalIndex}
                         sport={board?.sport}
                         positionRank={positionRankMap[entry.playerId]}
+                        leagueStatus={leagueStatusMap[entry.playerId]}
                         onRemove={removePlayer}
                         onClickNotes={(e) => setNoteEntry(e)}
                         onUpdateTags={updateTags}

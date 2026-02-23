@@ -16,7 +16,7 @@ const TAG_CONFIG = {
   avoid:   { label: 'AVD', active: 'bg-red-100 dark:bg-red-500/25 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40', inactive: 'border-red-200 dark:border-red-500/15 text-red-600/40 dark:text-red-500/30 hover:text-red-600/60 dark:hover:text-red-400/60 hover:border-red-300 dark:hover:border-red-500/30' },
 }
 
-export default function BoardEntryRow({ entry, index, sport, positionRank, onRemove, onClickNotes, onUpdateTags, isWatched, onToggleWatch }) {
+export default function BoardEntryRow({ entry, index, sport, positionRank, leagueStatus, onRemove, onClickNotes, onUpdateTags, isWatched, onToggleWatch }) {
   const {
     attributes,
     listeners,
@@ -87,8 +87,27 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, onRem
         )}
       </div>
 
-      {/* Name */}
-      <span className="text-sm text-text-primary font-medium truncate min-w-0 flex-1">{player.name || 'Unknown'}</span>
+      {/* Name + League status */}
+      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <span className="text-sm text-text-primary font-medium truncate">{player.name || 'Unknown'}</span>
+        {leagueStatus && leagueStatus.length > 0 && (
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
+            {leagueStatus.slice(0, 1).map((ls, i) => (
+              <span
+                key={i}
+                className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                  ls.status === 'yours'
+                    ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/20'
+                    : 'bg-red-500/10 text-red-400/60 border border-red-500/10'
+                }`}
+                title={ls.leagueName}
+              >
+                {ls.status === 'yours' ? 'Your Team' : 'Taken'}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Tag pills */}
       <div className="hidden sm:flex items-center gap-1 shrink-0">

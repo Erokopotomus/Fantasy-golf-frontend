@@ -188,6 +188,55 @@ router.post('/', authenticate, async (req, res, next) => {
   }
 })
 
+// GET /api/leagues/roster-map — Player roster status across user's leagues for a given sport
+router.get('/roster-map', authenticate, async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const sport = (req.query.sport || 'golf').toUpperCase()
+
+    const leagues = await prisma.league.findMany({
+      where: {
+        members: { some: { userId } },
+        sport: sport === 'GOLF' ? { in: ['GOLF', 'golf', null] } : sport,
+        status: 'active',
+      },
+      select: {
+        id: true,
+        name: true,
+        teams: {
+          select: {
+            id: true,
+            userId: true,
+            roster: {
+              where: { isActive: true },
+              select: { playerId: true },
+            },
+          },
+        },
+      },
+    })
+
+    const result = leagues.map(league => {
+      const yourTeam = league.teams.find(t => t.userId === userId)
+      const yourPlayerIds = yourTeam ? yourTeam.roster.map(r => r.playerId) : []
+      const takenPlayerIds = league.teams
+        .filter(t => t.userId !== userId)
+        .flatMap(t => t.roster.map(r => r.playerId))
+
+      return {
+        id: league.id,
+        name: league.name,
+        yourPlayerIds,
+        takenPlayerIds,
+      }
+    })
+
+    res.json({ leagues: result })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/leagues/:id - Get league details
 router.get('/:id', authenticate, async (req, res, next) => {
   try {

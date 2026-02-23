@@ -4,6 +4,7 @@ import useDraftBoards from '../hooks/useDraftBoards'
 import api from '../services/api'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
 import LabRatingCard from '../components/lab/LabRatingCard'
+import NeuralCluster from '../components/common/NeuralCluster'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,7 @@ export default function DraftBoards() {
   const [cheatSheetMap, setCheatSheetMap] = useState({}) // boardId → sheetId
   const [aiReports, setAiReports] = useState([])
   const [generatingReport, setGeneratingReport] = useState(null)
+  const [weeklyIntel, setWeeklyIntel] = useState(null)
 
   // Create modal state
   const [showCreate, setShowCreate] = useState(false)
@@ -198,7 +200,8 @@ export default function DraftBoards() {
       api.getLabInsight().catch(() => ({ insight: null })),
       api.getAiInsights().catch(() => ({ insights: [] })),
       api.getAiReports().catch(() => ({ reports: [] })),
-    ]).then(([journal, watchList, capturesRes, insightRes, aiRes, reportsRes]) => {
+      api.getLabWeekly().catch(() => ({ week: null })),
+    ]).then(([journal, watchList, capturesRes, insightRes, aiRes, reportsRes, weeklyRes]) => {
       if (cancelled) return
       setJournalEntries(journal.activities || [])
       setWatchListEntries(watchList.entries || [])
@@ -206,6 +209,7 @@ export default function DraftBoards() {
       if (insightRes.insight) setDynamicInsight(insightRes.insight)
       setAiInsights((aiRes.insights || []).slice(0, 3))
       setAiReports((reportsRes.reports || []).slice(0, 3))
+      if (weeklyRes.week) setWeeklyIntel(weeklyRes.week)
       setHubLoading(false)
     })
     // Check for cheat sheets per board
@@ -274,7 +278,7 @@ export default function DraftBoards() {
           </div>
           <h1 className="text-2xl font-display font-bold text-text-primary mb-2">Welcome to The Lab</h1>
           <p className="text-sm text-text-primary/40 max-w-md mx-auto mb-8">
-            Build custom draft boards, rank players your way, track your decisions, and develop a draft thesis that gives you an edge.
+            Build custom boards, rank players your way, track your decisions, and get weekly course-fit intelligence for your leagues.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
@@ -345,7 +349,9 @@ export default function DraftBoards() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-display font-bold text-text-primary tracking-wide">THE LAB</h1>
-              <p className="text-sm text-text-primary/40 mt-0.5">Where your draft thesis takes shape.</p>
+              <p className="text-sm text-text-primary/40 mt-0.5">
+                {weeklyIntel ? 'Your weekly prep starts here.' : 'Where your draft thesis takes shape.'}
+              </p>
             </div>
             <button
               onClick={openCreateModal}
@@ -357,6 +363,11 @@ export default function DraftBoards() {
               New Board
             </button>
           </div>
+
+          {/* 1b. This Week — Course Intelligence */}
+          {weeklyIntel && (
+            <ThisWeekSection data={weeklyIntel} />
+          )}
 
           {/* 2. AI Insight Bar (dynamic from backend) */}
           {dynamicInsight && !insightDismissed && (
@@ -412,9 +423,11 @@ export default function DraftBoards() {
 
           {/* 3. Two-column: Readiness Tracker + Recent Captures */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Draft Readiness Tracker */}
+            {/* Board Status */}
             <div className="p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30 mb-3">Draft Readiness</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30 mb-3">
+                {weeklyIntel ? 'Your Boards' : 'Draft Readiness'}
+              </h3>
               <div className="space-y-2">
                 {boards.slice(0, 5).map(board => {
                   const status = boardStatusCTA(board)
@@ -722,6 +735,194 @@ export default function DraftBoards() {
             api.getRecentCaptures(5).then(res => setRecentCaptures(res.captures || [])).catch(() => {})
           }}
         />
+      )}
+    </div>
+  )
+}
+
+// ── This Week Intelligence Section ──────────────────────────────────────────
+
+function ThisWeekSection({ data }) {
+  const { tournament, courseProfile, rosterFit, waiverTargets, boardInsights, leagueName, leagueId } = data
+
+  const timeLabel = tournament.isLive
+    ? 'Live Now'
+    : tournament.daysUntil <= 0
+      ? 'Starts Today'
+      : tournament.daysUntil === 1
+        ? 'Tomorrow'
+        : `${tournament.daysUntil} days out`
+
+  const strengthColor = rosterFit?.strength === 'strong'
+    ? 'text-emerald-400'
+    : rosterFit?.strength === 'average'
+      ? 'text-yellow-400'
+      : 'text-red-400'
+
+  const strengthBg = rosterFit?.strength === 'strong'
+    ? 'bg-emerald-500/15'
+    : rosterFit?.strength === 'average'
+      ? 'bg-yellow-500/15'
+      : 'bg-red-500/15'
+
+  return (
+    <div className="mb-6 bg-gradient-to-br from-purple-500/[0.06] via-[var(--surface)] to-gold/[0.04] border border-purple-400/15 rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="px-5 pt-4 pb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <NeuralCluster size="sm" intensity={tournament.isLive ? 'active' : 'calm'} className="shrink-0" />
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300/70">This Week</h3>
+            {leagueName && (
+              <p className="text-[10px] text-text-primary/30 mt-0.5">{leagueName}</p>
+            )}
+          </div>
+        </div>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+          tournament.isLive
+            ? 'bg-red-500/20 text-red-400 animate-pulse'
+            : 'bg-purple-500/15 text-purple-300/80'
+        }`}>
+          {timeLabel}
+        </span>
+      </div>
+
+      {/* Tournament + Course */}
+      <div className="px-5 pb-3">
+        <h4 className="text-lg font-display font-bold text-text-primary">{tournament.name}</h4>
+        {courseProfile && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-text-primary/40">
+            <span>{courseProfile.courseName}</span>
+            {courseProfile.par && (
+              <>
+                <span className="text-text-primary/15">·</span>
+                <span>Par {courseProfile.par}</span>
+              </>
+            )}
+            {courseProfile.yardage && (
+              <>
+                <span className="text-text-primary/15">·</span>
+                <span>{courseProfile.yardage.toLocaleString()} yds</span>
+              </>
+            )}
+            {courseProfile.grassType && (
+              <>
+                <span className="text-text-primary/15">·</span>
+                <span className="capitalize">{courseProfile.grassType}</span>
+              </>
+            )}
+          </div>
+        )}
+        {courseProfile?.description && (
+          <p className="mt-2 text-sm text-text-primary/50 font-editorial italic leading-relaxed">
+            {courseProfile.description}
+          </p>
+        )}
+      </div>
+
+      {/* Roster Fit + Waiver Targets grid */}
+      {(rosterFit || waiverTargets.length > 0) && (
+        <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Roster Fit */}
+          {rosterFit && (
+            <div className="p-3 bg-[var(--surface)]/60 backdrop-blur-sm border border-[var(--card-border)]/50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h5 className="text-[10px] font-bold uppercase tracking-wider text-text-primary/30">Roster Fit</h5>
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${strengthBg} ${strengthColor}`}>
+                  {rosterFit.strength}
+                </span>
+              </div>
+              <p className="text-xs text-text-primary/50 mb-2">
+                Your team averages <span className="font-mono font-bold text-text-primary/70">{rosterFit.avgSg > 0 ? '+' : ''}{rosterFit.avgSg}</span> SG {rosterFit.skill}
+              </p>
+              <div className="flex justify-between text-[11px]">
+                <div>
+                  <span className="text-text-primary/25">Best: </span>
+                  <span className="text-emerald-400 font-medium">{rosterFit.bestPlayer}</span>
+                  <span className="text-text-primary/20 font-mono ml-1">{rosterFit.bestSg > 0 ? '+' : ''}{rosterFit.bestSg}</span>
+                </div>
+                <div>
+                  <span className="text-text-primary/25">Worst: </span>
+                  <span className="text-red-400/70 font-medium">{rosterFit.worstPlayer}</span>
+                  <span className="text-text-primary/20 font-mono ml-1">{rosterFit.worstSg > 0 ? '+' : ''}{rosterFit.worstSg}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Waiver Targets */}
+          {waiverTargets.length > 0 && (
+            <div className="p-3 bg-[var(--surface)]/60 backdrop-blur-sm border border-[var(--card-border)]/50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h5 className="text-[10px] font-bold uppercase tracking-wider text-text-primary/30">Course-Fit Targets</h5>
+                {leagueId && (
+                  <Link to={`/leagues/${leagueId}/waivers`} className="text-[10px] text-gold hover:underline">
+                    Wire
+                  </Link>
+                )}
+              </div>
+              <div className="space-y-1">
+                {waiverTargets.slice(0, 4).map(p => (
+                  <div key={p.id} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {p.headshotUrl ? (
+                        <img src={p.headshotUrl} alt="" className="w-5 h-5 rounded-full bg-[var(--stone)] shrink-0" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-[var(--stone)] shrink-0" />
+                      )}
+                      <span className="text-text-primary/60 truncate">{p.name}</span>
+                      {p.countryFlag && <span className="text-[10px]">{p.countryFlag}</span>}
+                    </div>
+                    <span className="text-emerald-400 font-mono text-[11px] font-bold shrink-0 ml-2">
+                      +{p.skillSg}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Board Insights — tagged targets available on waivers */}
+      {boardInsights.length > 0 && (
+        <div className="px-5 pb-4">
+          <div className="p-3 bg-gold/[0.05] border border-gold/10 rounded-lg">
+            <h5 className="text-[10px] font-bold uppercase tracking-wider text-gold/50 mb-2">
+              Your Targets Available on Waivers
+            </h5>
+            <div className="flex flex-wrap gap-2">
+              {boardInsights.map(p => (
+                <div key={p.playerId} className="flex items-center gap-1.5 px-2 py-1 bg-[var(--surface)]/60 rounded-md">
+                  {p.headshotUrl ? (
+                    <img src={p.headshotUrl} alt="" className="w-4 h-4 rounded-full bg-[var(--stone)]" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full bg-[var(--stone)]" />
+                  )}
+                  <span className="text-xs text-text-primary/60">{p.name}</span>
+                  {p.tags?.slice(0, 1).map(tag => (
+                    <span key={tag} className={`px-1 py-0.5 rounded text-[8px] font-bold uppercase ${
+                      tag === 'target' || tag === 'must-have' ? 'bg-emerald-500/15 text-emerald-500' :
+                      tag === 'sleeper' ? 'bg-purple-500/15 text-purple-400' :
+                      'bg-gold/15 text-gold'
+                    }`}>{tag}</span>
+                  ))}
+                </div>
+              ))}
+            </div>
+            {leagueId && (
+              <Link
+                to={`/leagues/${leagueId}/waivers`}
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-gold/60 hover:text-gold transition-colors"
+              >
+                Go to Waiver Wire
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

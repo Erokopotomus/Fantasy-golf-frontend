@@ -1358,6 +1358,14 @@ class ApiService {
     return this.request(`/ai/coach-briefing${params}`)
   }
 
+  async getLabWeekly() {
+    return this.request('/ai/lab-weekly')
+  }
+
+  async getRosterMap(sport) {
+    return this.request(`/leagues/roster-map?sport=${sport || 'golf'}`)
+  }
+
   // Insights (Mode 1)
   async getAiInsights(sport) {
     const params = sport ? `?sport=${sport}` : ''
