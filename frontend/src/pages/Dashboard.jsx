@@ -6,16 +6,10 @@ import { useOnboarding } from '../context/OnboardingContext'
 import { useLeagues } from '../hooks/useLeagues'
 import { useTournaments } from '../hooks/useTournaments'
 import { useActivity } from '../hooks/useActivity'
-import useDraftBoards from '../hooks/useDraftBoards'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import LeagueCard from '../components/dashboard/LeagueCard'
-// TournamentCard no longer used on dashboard — tournament data feeds "This Week" card
 import ActivityFeed from '../components/dashboard/ActivityFeed'
-import PredictionWidget from '../components/predictions/PredictionWidget'
-import DashboardRatingWidget from '../components/dashboard/DashboardRatingWidget'
-import CoachBriefing from '../components/dashboard/CoachBriefing'
-import NeuralCluster from '../components/common/NeuralCluster'
 import api from '../services/api'
 import { buildLabUrl } from '../utils/labBridge'
 
@@ -41,61 +35,37 @@ const LeagueCardSkeleton = () => (
   </Card>
 )
 
-
 const Dashboard = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { isCompleted: onboardingCompleted, startOnboarding } = useOnboarding()
   const { leagues, loading: leaguesLoading } = useLeagues()
   const { currentTournament, loading: tournamentsLoading } = useTournaments()
-  const { boards, loading: boardsLoading } = useDraftBoards()
   const primaryLeagueId = leagues?.[0]?.id
-  const { activity, loading: activityLoading } = useActivity(primaryLeagueId, 8)
-  const [coachingInsights, setCoachingInsights] = useState([])
+  const { activity, loading: activityLoading } = useActivity(primaryLeagueId, 6)
+
+  // Coach briefing — single sentence
+  const [briefing, setBriefing] = useState(null)
+  useEffect(() => {
+    api.getCoachBriefing()
+      .then(data => setBriefing(data.briefing))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     track(Events.DASHBOARD_VIEWED, { leagueCount: leagues?.length || 0 })
   }, [])
 
-  // Fetch AI coaching insights
-  useEffect(() => {
-    api.getAiInsights().then(res => {
-      setCoachingInsights((res.insights || []).slice(0, 2))
-    }).catch(() => {})
-  }, [])
-
   // Show onboarding for first-time users
   useEffect(() => {
     if (!onboardingCompleted && !leaguesLoading) {
-      // Small delay to let the dashboard render first
-      const timer = setTimeout(() => {
-        startOnboarding()
-      }, 500)
+      const timer = setTimeout(() => startOnboarding(), 500)
       return () => clearTimeout(timer)
     }
   }, [onboardingCompleted, leaguesLoading, startOnboarding])
 
-  const handleViewLeague = (league) => {
-    navigate(`/leagues/${league.id}`)
-  }
-
-  const handleManageLineup = (league) => {
-    navigate(`/leagues/${league.id}/roster`)
-  }
-
-  const [feedCards, setFeedCards] = useState([])
-  const [feedLoading, setFeedLoading] = useState(true)
-
-  // Determine sport from user's leagues
-  const leagueSports = leagues ? [...new Set(leagues.map(l => (l.sport || 'GOLF').toLowerCase()))] : []
-  const feedSport = leagueSports.length === 1 ? leagueSports[0] : 'all'
-
-  useEffect(() => {
-    api.getFeed(feedSport, { limit: 3 })
-      .then(data => setFeedCards(data.cards || []))
-      .catch(() => setFeedCards([]))
-      .finally(() => setFeedLoading(false))
-  }, [feedSport])
+  const handleViewLeague = (league) => navigate(`/leagues/${league.id}`)
+  const handleManageLineup = (league) => navigate(`/leagues/${league.id}/roster`)
 
   const [sportFilter, setSportFilter] = useState('all')
   const hasLeagues = leagues && leagues.length > 0
@@ -106,485 +76,243 @@ const Dashboard = () => {
     : []
   const hasMultipleSports = hasLeagues && new Set(leagues.map(l => (l.sport || 'GOLF').toLowerCase())).size > 1
 
-  const quickActions = hasLeagues
-    ? [
-        { to: '/leagues/create', label: 'Create League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />, color: 'text-gold', primary: true },
-        { to: '/lab', label: 'The Lab', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />, color: 'text-blue-400', primary: true },
-        { to: '/prove-it', label: 'Prove It', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />, color: 'text-yellow-400' },
-        { to: '#coaching', label: 'Ask Coach', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />, color: 'text-purple-400' },
-      ]
-    : [
-        { to: '/leagues/create', label: 'Create League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />, color: 'text-gold', primary: true },
-        { to: '/leagues/join', label: 'Join League', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />, color: 'text-orange', primary: true },
-        { to: '/golf', label: 'Golf Hub', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M9 8h1m4 0h1m-7 4h1m4 0h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16" />, color: 'text-emerald-500' },
-        { to: '/nfl', label: 'NFL Hub', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />, color: 'text-blue-400' },
-      ]
+  // Prioritize leagues by urgency: draft today > live tournament > upcoming draft > idle
+  const prioritizedLeagues = [...filteredLeagues].sort((a, b) => {
+    const urgency = (league) => {
+      const draft = league.drafts?.[0]
+      if (draft?.status === 'IN_PROGRESS' || draft?.status === 'PAUSED') return 0
+      if (draft?.status === 'SCHEDULED' && draft?.scheduledFor) {
+        const daysUntil = (new Date(draft.scheduledFor) - new Date()) / (1000 * 60 * 60 * 24)
+        if (daysUntil <= 0) return 1
+        if (daysUntil <= 3) return 2
+        return 3
+      }
+      if (league.status === 'active') return 4
+      return 5
+    }
+    return urgency(a) - urgency(b)
+  })
+
+  // Greeting
+  const hour = new Date().getHours()
+  const firstName = user?.name?.split(' ')[0] || 'Player'
+  const greeting = hour < 12 ? `Good morning, ${firstName}` : hour < 17 ? `Good afternoon, ${firstName}` : hour < 21 ? `Good evening, ${firstName}` : `Burning the midnight oil, ${firstName}?`
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        <div className="max-w-5xl mx-auto space-y-6">
 
-          {/* ── Section 1: Coach Briefing + Latest Updates (merged) ── */}
-          <CoachBriefing feedCards={feedCards} feedLoading={feedLoading} />
-
-          {/* ── Section 2: Quick Actions — Compact Icon Strip ── */}
+          {/* ── Coach Line ── */}
           <div>
-            <h3 className="text-sm font-semibold font-display text-text-primary/60 uppercase tracking-wider mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {quickActions.map(action => (
-                <Link
-                  key={action.to}
-                  to={action.to}
-                  className={`flex flex-col items-center justify-center gap-2.5 py-5 rounded-xl bg-[var(--surface)] shadow-sm hover:shadow-card hover:border-[var(--crown)] hover:-translate-y-0.5 transition-all group ${
-                    action.primary
-                      ? 'border-l-2 border border-[var(--card-border-strong)] border-l-[var(--crown)]'
-                      : 'border border-[var(--card-border-strong)]'
-                  }`}
-                >
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center group-hover:bg-gold/10 transition-colors ${
-                    action.primary ? 'bg-gold/10' : 'bg-[var(--surface-alt)]'
-                  }`}>
-                    <svg className={`w-5 h-5 ${action.color} group-hover:scale-110 transition-transform`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {action.icon}
-                    </svg>
-                  </div>
-                  <span className="text-text-primary text-xs font-medium">{action.label}</span>
-                </Link>
-              ))}
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-primary mb-1">
+              {greeting}
+            </h1>
+            {briefing ? (
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  {briefing.headline}
+                  {briefing.cta && (
+                    <>
+                      {' '}
+                      <Link
+                        to={briefing.cta.to}
+                        className="text-[var(--crown)] font-semibold hover:text-[var(--crown)]/80 transition-colors"
+                      >
+                        {briefing.cta.label} &rarr;
+                      </Link>
+                    </>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-text-secondary">
+                {hasLeagues
+                  ? `You have ${leagues.length} active league${leagues.length > 1 ? 's' : ''}. Let's get to work.`
+                  : 'Create or join a league to get started.'
+                }
+              </p>
+            )}
           </div>
 
-          {/* ── Section 3: This Week + My Leagues ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* This Week — Command Center */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary flex items-center gap-2">
-                  {!tournamentsLoading && currentTournament?.status === 'ACTIVE' && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  )}
-                  This Week
-                </h2>
-              </div>
+          {/* ── Urgency Signals (live event, upcoming drafts) ── */}
+          {(() => {
+            const hasEvent = !tournamentsLoading && currentTournament
+            const isLive = hasEvent && currentTournament.status === 'ACTIVE'
+            const upcomingDrafts = (leagues || [])
+              .filter(l => l.drafts?.[0]?.status === 'SCHEDULED' && l.drafts?.[0]?.scheduledFor)
+              .sort((a, b) => new Date(a.drafts[0].scheduledFor) - new Date(b.drafts[0].scheduledFor))
+              .slice(0, 2)
 
-              <Card className="overflow-hidden">
-                {/* Gradient accent bar when event is active/upcoming */}
-                {!tournamentsLoading && currentTournament && (
-                  <div className="h-[3px] -mt-6 -mx-6 mb-6 bg-gradient-to-r from-emerald-500/80 via-emerald-400/60 to-emerald-500/20" />
+            if (!hasEvent && upcomingDrafts.length === 0) return null
+
+            return (
+              <div className="flex flex-wrap gap-3">
+                {hasEvent && (
+                  <Link
+                    to={`/tournaments/${currentTournament.id}${hasLeagues ? `?league=${leagues[0].id}` : ''}`}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border transition-colors group ${
+                      isLive
+                        ? 'bg-emerald-500/[0.06] border-emerald-500/30 hover:border-emerald-500/50'
+                        : 'bg-[var(--surface)] border-[var(--card-border)] hover:border-[var(--card-border-strong)]'
+                    }`}
+                  >
+                    {isLive && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
+                    <span className="text-sm font-medium text-text-primary group-hover:text-[var(--field)] transition-colors">
+                      {currentTournament.name}
+                    </span>
+                    {isLive && (
+                      <span className="text-[10px] font-mono font-bold text-live-red uppercase">Live</span>
+                    )}
+                    {!isLive && (
+                      <span className="text-[11px] text-text-muted font-mono">Upcoming</span>
+                    )}
+                    <svg className="w-3.5 h-3.5 text-text-primary/20 group-hover:text-[var(--field)] ml-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
                 )}
-                <div className="space-y-1">
-                  {/* Row: Live Events */}
-                  {(() => {
-                    const hasEvent = !tournamentsLoading && currentTournament
-                    const isLive = hasEvent && currentTournament.status === 'ACTIVE'
-                    return hasEvent ? (
-                      <Link
-                        to={`/tournaments/${currentTournament.id}${leagues?.length > 0 ? `?league=${leagues[0].id}` : ''}`}
-                        className={`flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--bg-alt)] transition-colors group border-l-2 ${isLive ? 'border-l-emerald-500 bg-emerald-500/[0.05]' : 'border-l-emerald-500/50'}`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0`}>
-                            <svg className="w-[18px] h-[18px] text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--field)] transition-colors">{currentTournament.name}</p>
-                            <div className="flex items-center gap-2">
-                              {isLive && (
-                                <span className="flex items-center gap-1 text-live-red text-[10px] font-mono font-bold uppercase">
-                                  <span className="w-2 h-2 rounded-full bg-live-red animate-pulse" />
-                                  Live
-                                </span>
-                              )}
-                              {!isLive && <span className="text-[11px] text-text-primary/40 font-mono">Upcoming</span>}
-                            </div>
-                          </div>
-                        </div>
-                        <svg className="w-4 h-4 text-text-primary/20 group-hover:text-[var(--field)] shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                    ) : (
-                      <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
-                        <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
-                          <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm text-text-primary/60 font-medium">Live Events</p>
-                          <p className="text-[11px] text-text-primary/35 font-mono">No events in progress</p>
-                        </div>
-                      </div>
-                    )
-                  })()}
-
-                  {/* Row: Lineup Deadlines */}
-                  {hasLeagues ? (
-                    filteredLeagues.slice(0, 2).map(league => (
-                      <Link
-                        key={league.id}
-                        to={`/leagues/${league.id}/roster`}
-                        className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--bg-alt)] transition-colors group"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                            (league.sport || 'GOLF').toLowerCase() === 'nfl' ? 'bg-blue-500/10' : 'bg-emerald-500/10'
-                          }`}>
-                            <svg className={`w-4 h-4 ${(league.sport || 'GOLF').toLowerCase() === 'nfl' ? 'text-blue-400' : 'text-emerald-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{league.name}</p>
-                            <p className="text-[11px] text-text-primary/40 font-mono">Set lineup</p>
-                          </div>
-                        </div>
-                        <svg className="w-4 h-4 text-text-primary/20 group-hover:text-[var(--crown)] shrink-0 ml-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
-                      <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
-                        <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm text-text-primary/60 font-medium">Lineup Deadlines</p>
-                        <p className="text-[11px] text-text-primary/35 font-mono">Join a league to track deadlines</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Row: Upcoming Drafts */}
-                  {(() => {
-                    const upcomingDrafts = (leagues || [])
-                      .filter(l => l.drafts?.[0]?.status === 'SCHEDULED' && l.drafts?.[0]?.scheduledFor)
-                      .sort((a, b) => new Date(a.drafts[0].scheduledFor) - new Date(b.drafts[0].scheduledFor))
-
-                    if (upcomingDrafts.length === 0) {
-                      return (
-                        <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
-                          <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
-                            <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-sm text-text-primary/60 font-medium">Upcoming Drafts</p>
-                            <p className="text-[11px] text-text-primary/35 font-mono">No drafts scheduled</p>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    return upcomingDrafts.slice(0, 2).map(dl => {
-                      const draftDate = new Date(dl.drafts[0].scheduledFor)
-                      const now = new Date()
-                      const diffMs = draftDate - now
-                      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-                      const draftLabel = diffDays <= 0
-                        ? 'Today'
-                        : diffDays === 1
-                          ? 'Tomorrow'
-                          : `Draft in ${diffDays} days`
-                      const dateStr = draftDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-                      const timeStr = draftDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-
-                      return (
-                        <div key={dl.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg border-l-2 border-l-[var(--crown)]/50 bg-[var(--crown)]/[0.03] hover:bg-[var(--bg-alt)] transition-colors">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-[var(--crown)]/10 flex items-center justify-center shrink-0">
-                              <svg className="w-4 h-4 text-[var(--crown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                              </svg>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm text-text-primary font-medium truncate">{dl.name}</p>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[11px] text-text-primary/40 font-mono">{dateStr}, {timeStr}</span>
-                                <span className="text-[10px] text-[var(--crown)] font-semibold">{draftLabel}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <Link
-                            to={buildLabUrl(dl)}
-                            className="text-xs font-semibold text-[var(--crown)] hover:text-[var(--crown)]/80 transition-colors shrink-0 ml-2"
-                          >
-                            Prep
-                          </Link>
-                        </div>
-                      )
-                    })
-                  })()}
-
-                  {/* Row: Trade & Waiver Activity */}
-                  <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-transparent" style={{ opacity: 0.45 }}>
-                    <div className="w-8 h-8 rounded-lg bg-[var(--bg-alt)] flex items-center justify-center shrink-0">
-                      <svg className="w-4 h-4 text-text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                {upcomingDrafts.map(dl => {
+                  const draftDate = new Date(dl.drafts[0].scheduledFor)
+                  const diffDays = Math.floor((draftDate - new Date()) / (1000 * 60 * 60 * 24))
+                  const label = diffDays <= 0 ? 'Today' : diffDays === 1 ? 'Tomorrow' : `in ${diffDays} days`
+                  return (
+                    <Link
+                      key={dl.id}
+                      to={buildLabUrl(dl)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[var(--crown)]/[0.06] border border-[var(--crown)]/30 hover:border-[var(--crown)]/50 transition-colors group"
+                    >
+                      <svg className="w-4 h-4 text-[var(--crown)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-primary/60 font-medium">Trades & Waivers</p>
-                      <p className="text-[11px] text-text-primary/35 font-mono">No pending activity</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+                      <span className="text-sm font-medium text-text-primary group-hover:text-[var(--crown)] transition-colors">
+                        {dl.name}
+                      </span>
+                      <span className="text-[10px] text-[var(--crown)] font-semibold">Draft {label}</span>
+                      <span className="text-xs text-[var(--crown)]/60 font-semibold ml-1">Prep &rarr;</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            )
+          })()}
 
-            {/* My Leagues */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary">My Leagues</h2>
-                  {hasMultipleSports && (
-                    <div className="flex items-center bg-[var(--bg-alt)] rounded-lg p-0.5">
-                      {[
-                        { key: 'all', label: 'All' },
-                        { key: 'golf', label: '\u26F3' },
-                        { key: 'nfl', label: '\uD83C\uDFC8' },
-                      ].map(opt => (
-                        <button
-                          key={opt.key}
-                          onClick={() => setSportFilter(opt.key)}
-                          className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
-                            sportFilter === opt.key
-                              ? 'bg-gold/20 text-gold'
-                              : 'text-text-primary/30 hover:text-text-primary/50'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+          {/* ── My Leagues ── */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg sm:text-xl font-semibold font-display text-text-primary">My Leagues</h2>
+                {hasMultipleSports && (
+                  <div className="flex items-center bg-[var(--bg-alt)] rounded-lg p-0.5">
+                    {[
+                      { key: 'all', label: 'All' },
+                      { key: 'golf', label: '\u26F3' },
+                      { key: 'nfl', label: '\uD83C\uDFC8' },
+                    ].map(opt => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setSportFilter(opt.key)}
+                        className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
+                          sportFilter === opt.key
+                            ? 'bg-gold/20 text-gold'
+                            : 'text-text-primary/30 hover:text-text-primary/50'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Link to="/leagues/join">
+                  <Button size="sm" variant="secondary">Join</Button>
+                </Link>
                 <Link to="/leagues/create">
                   <Button size="sm">Create League</Button>
                 </Link>
               </div>
-
-              {leaguesLoading ? (
-                <div className="space-y-4">
-                  <LeagueCardSkeleton />
-                </div>
-              ) : filteredLeagues.length > 0 ? (
-                <div className={`space-y-4 ${filteredLeagues.length >= 3 ? 'max-h-[400px] overflow-y-auto scrollbar-thin pr-1' : ''}`}>
-                  {filteredLeagues.map((league) => (
-                    <LeagueCard
-                      key={league.id}
-                      league={league}
-                      onView={handleViewLeague}
-                      onManageLineup={handleManageLineup}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <Card>
-                  <div className="text-center py-8 sm:py-12">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3l3.5 5L12 3l3.5 5L19 3v12a2 2 0 01-2 2H7a2 2 0 01-2-2V3z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 17h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-base sm:text-lg font-display font-bold text-text-primary mb-2">Your league empire starts here</h3>
-                    <p className="text-text-secondary mb-6 max-w-sm mx-auto text-sm sm:text-base leading-relaxed">
-                      Join other managers competing across Golf and NFL — your first championship awaits.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
-                      <Link to="/leagues/create">
-                        <Button className="bg-gradient-to-r from-blaze to-blaze-hot hover:from-blaze-hot hover:to-blaze text-white shadow-md">Create a League</Button>
-                      </Link>
-                      <Link to="/leagues/join">
-                        <Button variant="outline">Join a League</Button>
-                      </Link>
-                    </div>
-
-                    <div className="border-t border-[var(--stone)] pt-6">
-                      <p className="text-text-muted text-xs uppercase tracking-wider font-semibold mb-4">Explore while you wait</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
-                        <Link
-                          to="/golf"
-                          className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl hover:border-emerald-500/40 transition-colors group"
-                        >
-                          <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                            <span className="text-lg">&#x26f3;</span>
-                          </div>
-                          <div className="text-left">
-                            <p className="text-text-primary font-semibold text-sm">Golf Hub</p>
-                            <p className="text-emerald-400/70 text-xs">PGA Tour, stats & previews</p>
-                          </div>
-                        </Link>
-                        <Link
-                          to="/nfl"
-                          className="flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl hover:border-blue-500/40 transition-colors group"
-                        >
-                          <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                            <span className="text-lg">&#x1f3c8;</span>
-                          </div>
-                          <div className="text-left">
-                            <p className="text-text-primary font-semibold text-sm">NFL Hub</p>
-                            <p className="text-blue-400/70 text-xs">Players, teams & leaderboards</p>
-                          </div>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              )}
             </div>
-          </div>
 
-          {/* ── Section 4: Insight Row — Three Engagement Cards (all clickable) ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Prove It — clickable */}
-            <Link
-              to="/prove-it"
-              className="rounded-xl p-4 border border-l-[3px] border-[var(--card-border)] hover:shadow-card hover:-translate-y-0.5 transition-all group block"
-              style={{ backgroundColor: 'var(--tint-golf)', borderLeftColor: 'var(--field)' }}
-            >
-              <PredictionWidget />
-            </Link>
-
-            {/* Clutch Rating — clickable */}
-            <Link
-              to={`/manager/${user?.id}`}
-              className="rounded-xl p-4 border border-l-[3px] border-[var(--card-border)] hover:shadow-card hover:-translate-y-0.5 transition-all group block"
-              style={{ backgroundColor: 'var(--tint-rating)', borderLeftColor: 'var(--crown)' }}
-            >
-              <DashboardRatingWidget />
-            </Link>
-
-            {/* Coaching Corner */}
-            <div
-              id="coaching"
-              className="rounded-xl p-4 border border-l-[3px] border-[var(--card-border)]"
-              style={{ backgroundColor: 'var(--tint-ai)', borderLeftColor: '#8B5CF6' }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <NeuralCluster size="sm" intensity={coachingInsights.length > 0 ? 'active' : 'calm'} className="shrink-0" />
-                <h3 className="text-sm font-semibold font-display text-text-primary">Coaching Corner</h3>
+            {leaguesLoading ? (
+              <div className="space-y-4">
+                <LeagueCardSkeleton />
               </div>
-              {coachingInsights.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-purple-400/50 uppercase tracking-wider font-semibold mb-1">Your coach has been watching...</p>
-                  {coachingInsights.map(insight => (
-                    <div key={insight.id} className="px-3 py-2.5 bg-purple-500/[0.05] border border-purple-400/10 rounded-lg">
-                      <p className="text-xs font-semibold text-purple-300/70 mb-0.5">{insight.title}</p>
-                      <p className="text-[11px] text-text-primary/45 leading-relaxed line-clamp-2">{insight.body}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div>
-                  <p className="text-text-primary/50 text-xs mb-3 leading-relaxed">
-                    Your coach is learning your style. The more you play, the sharper it gets.
+            ) : prioritizedLeagues.length > 0 ? (
+              <div className={`space-y-4 ${prioritizedLeagues.length >= 4 ? 'max-h-[500px] overflow-y-auto scrollbar-thin pr-1' : ''}`}>
+                {prioritizedLeagues.map((league) => (
+                  <LeagueCard
+                    key={league.id}
+                    league={league}
+                    onView={handleViewLeague}
+                    onManageLineup={handleManageLineup}
+                  />
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <div className="text-center py-8 sm:py-12">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3l3.5 5L12 3l3.5 5L19 3v12a2 2 0 01-2 2H7a2 2 0 01-2-2V3z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 17h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-display font-bold text-text-primary mb-2">Your league empire starts here</h3>
+                  <p className="text-text-secondary mb-6 max-w-sm mx-auto text-sm sm:text-base leading-relaxed">
+                    Join other managers competing across Golf and NFL — your first championship awaits.
                   </p>
-                  <div className="flex flex-col gap-2">
-                    <Link
-                      to="/lab"
-                      className="flex items-center justify-between px-3 py-2 bg-purple-500/10 border border-purple-400/15 rounded-lg text-xs text-purple-400/80 hover:bg-purple-500/20 transition-colors group"
-                    >
-                      <span>Review my draft history</span>
-                      <svg className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+                    <Link to="/leagues/create">
+                      <Button className="bg-gradient-to-r from-blaze to-blaze-hot hover:from-blaze-hot hover:to-blaze text-white shadow-md">Create a League</Button>
                     </Link>
-                    <Link
-                      to="/prove-it"
-                      className="flex items-center justify-between px-3 py-2 bg-purple-500/10 border border-purple-400/15 rounded-lg text-xs text-purple-400/80 hover:bg-purple-500/20 transition-colors group"
-                    >
-                      <span>Make a prediction</span>
-                      <svg className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                    <Link
-                      to={`/manager/${user?.id}`}
-                      className="flex items-center justify-between px-3 py-2 bg-purple-500/10 border border-purple-400/15 rounded-lg text-xs text-purple-400/80 hover:bg-purple-500/20 transition-colors group"
-                    >
-                      <span>View my manager profile</span>
-                      <svg className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                    <Link to="/leagues/join">
+                      <Button variant="outline">Join a League</Button>
                     </Link>
                   </div>
+                  <div className="border-t border-[var(--stone)] pt-6">
+                    <p className="text-text-muted text-xs uppercase tracking-wider font-semibold mb-4">Explore while you wait</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
+                      <Link
+                        to="/golf"
+                        className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl hover:border-emerald-500/40 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                          <span className="text-lg">&#x26f3;</span>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-text-primary font-semibold text-sm">Golf Hub</p>
+                          <p className="text-emerald-400/70 text-xs">PGA Tour, stats & previews</p>
+                        </div>
+                      </Link>
+                      <Link
+                        to="/nfl"
+                        className="flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl hover:border-blue-500/40 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                          <span className="text-lg">&#x1f3c8;</span>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-text-primary font-semibold text-sm">NFL Hub</p>
+                          <p className="text-blue-400/70 text-xs">Players, teams & leaderboards</p>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+              </Card>
+            )}
           </div>
 
-          {/* ── Section 5: Bottom Row — Boards + Activity ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* My Boards */}
+          {/* ── Recent Activity (minimized) ── */}
+          {hasLeagues && (
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base sm:text-lg font-semibold font-display text-text-primary">My Boards</h3>
-                {boards.length > 0 && (
-                  <Link to="/lab" className="text-gold text-xs font-semibold hover:text-gold/80 transition-colors">
-                    View All &rarr;
-                  </Link>
-                )}
-              </div>
-              {boardsLoading ? (
-                <div className="space-y-2">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-10 bg-[var(--bg-alt)] rounded-lg animate-pulse" />
-                  ))}
-                </div>
-              ) : boards.length === 0 ? (
-                <Link
-                  to="/lab"
-                  className="block text-center py-4 text-text-primary/30 text-sm hover:text-text-primary/50 transition-colors"
-                >
-                  Create your first draft board &rarr;
-                </Link>
-              ) : (
-                <div className="space-y-2">
-                  {boards.slice(0, 3).map(board => (
-                    <Link
-                      key={board.id}
-                      to={`/lab/${board.id}`}
-                      className="flex items-center justify-between px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg hover:bg-[var(--stone)] transition-colors group"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                          board.sport === 'nfl' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'
-                        }`}>
-                          {board.sport}
-                        </span>
-                        <span className="text-sm text-text-primary font-medium truncate">{board.name}</span>
-                      </div>
-                      <span className="text-[11px] text-text-primary/30 font-mono shrink-0 ml-2">{board.playerCount} players</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Recent Activity */}
-            <Card>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base sm:text-lg font-semibold font-display text-text-primary">Recent Activity</h3>
-                {activity && activity.length > 0 && (
-                  <button className="text-gold text-xs hover:underline">
-                    View All
-                  </button>
-                )}
+                <h3 className="text-sm font-semibold font-display text-text-primary">Recent Activity</h3>
               </div>
               <ActivityFeed activity={activity} loading={activityLoading} />
             </Card>
-          </div>
+          )}
 
         </div>
       </main>

@@ -8,7 +8,7 @@ import useMatchups from '../hooks/useMatchups'
 import api from '../services/api'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
-import NeuralCluster from '../components/common/NeuralCluster'
+// NeuralCluster parked (Season 2) — using simple coach dot instead
 import ChatPanel from '../components/chat/ChatPanel'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import DraftCountdown from '../components/DraftCountdown'
@@ -353,146 +353,36 @@ const LeagueHome = () => {
                 </span>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {/* Standard buttons for leagues with rosters */}
-              {!isOneAndDone && (
-                <>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/leagues/${leagueId}/roster`)}
-                  >
-                    My Roster
-                  </Button>
-                  {hasDraft && isDraftScheduledOrInProgress && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`/leagues/${leagueId}/draft`)}
-                    >
-                      Draft Room
-                    </Button>
-                  )}
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/leagues/${leagueId}/waivers`)}
-                  >
-                    Waivers
-                  </Button>
-                </>
-              )}
-
-              {/* Format-specific buttons */}
-              {isHeadToHead && (
-                <>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/leagues/${leagueId}/matchups`)}
-                  >
-                    Matchups
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/leagues/${leagueId}/playoffs`)}
-                  >
-                    Playoffs
-                  </Button>
-                  {isNflLeague && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`/leagues/${leagueId}/gameday`)}
-                    >
-                      Gameday
-                    </Button>
-                  )}
-                </>
-              )}
-              {isRoto && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/leagues/${leagueId}/categories`)}
+            {/* Compact nav pills */}
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                // Core — always show (except OAD)
+                ...(!isOneAndDone ? [
+                  { to: `/leagues/${leagueId}/roster`, label: 'Roster' },
+                  ...(hasDraft && isDraftScheduledOrInProgress ? [{ to: `/leagues/${leagueId}/draft`, label: 'Draft Room' }] : []),
+                  { to: `/leagues/${leagueId}/waivers`, label: 'Waivers' },
+                ] : []),
+                // Format-specific
+                ...(isHeadToHead ? [
+                  { to: `/leagues/${leagueId}/matchups`, label: 'Matchups' },
+                ] : []),
+                ...(isRoto ? [{ to: `/leagues/${leagueId}/categories`, label: 'Categories' }] : []),
+                ...(isSurvivor ? [{ to: `/leagues/${leagueId}/survivor`, label: 'Survivor' }] : []),
+                ...(isOneAndDone ? [{ to: `/leagues/${leagueId}/picks`, label: 'Picks' }] : []),
+                // Common
+                { to: isNflLeague ? `/nfl/players?league=${leagueId}` : `/players?league=${leagueId}`, label: 'Players' },
+                { to: `/leagues/${leagueId}/standings`, label: 'Standings' },
+                { to: `/leagues/${leagueId}/scoring`, label: 'Scoring' },
+                { to: `/leagues/${leagueId}/settings`, label: 'Settings' },
+              ].map(nav => (
+                <Link
+                  key={nav.to}
+                  to={nav.to}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-text-secondary bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors"
                 >
-                  Categories
-                </Button>
-              )}
-              {isSurvivor && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/leagues/${leagueId}/survivor`)}
-                >
-                  Survivor Board
-                </Button>
-              )}
-              {isOneAndDone && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/leagues/${leagueId}/picks`)}
-                >
-                  Pick Center
-                </Button>
-              )}
-
-              {/* Common buttons */}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(isNflLeague ? `/nfl/players?league=${leagueId}` : `/players?league=${leagueId}`)}
-              >
-                Players
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/standings`)}
-              >
-                Standings
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/scoring`)}
-              >
-                Scoring
-              </Button>
-              {!isOneAndDone && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/leagues/${leagueId}/trades`)}
-                >
-                  Trades
-                </Button>
-              )}
-              {league?.settings?.draftDollarSettings?.enabled && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/leagues/${leagueId}/draft-dollars`)}
-                >
-                  Draft Dollars
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/vault`)}
-              >
-                Vault
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/leagues/${leagueId}/settings`)}
-              >
-                Settings
-              </Button>
+                  {nav.label}
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -536,13 +426,11 @@ const LeagueHome = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Left: Coach Briefing */}
                   <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-6 flex flex-col justify-center min-h-[180px] shadow-sm dark:shadow-none">
-                    {/* Subtle background neural cluster */}
-                    <div className="absolute -right-6 -top-6 opacity-20 pointer-events-none">
-                      <NeuralCluster size="lg" intensity="active" />
-                    </div>
+                    {/* Subtle background accent */}
+                    <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-purple-500/[0.06] pointer-events-none blur-2xl" />
                     <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <NeuralCluster size="sm" intensity="active" className="shrink-0" />
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shrink-0" />
                         <span className="text-xs font-semibold uppercase tracking-widest text-purple-400">Coach Briefing</span>
                       </div>
                       <h3 className="text-xl font-bold font-display text-text-primary mb-2 leading-snug">
@@ -691,7 +579,7 @@ const LeagueHome = () => {
           {/* Coach Line (non-draft states) */}
           {leagueBriefing && !(hasDraft && !isOneAndDone && isDraftScheduledOrInProgress) && (
             <div className="mb-4 flex items-center gap-2 px-1">
-              <NeuralCluster size="sm" intensity="calm" className="shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
               <p className="text-sm text-text-secondary italic font-editorial">
                 {leagueBriefing.headline}
               </p>
@@ -1056,36 +944,24 @@ const LeagueHome = () => {
                 )}
               </Card>
 
-              {/* Quick Links Row */}
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to={`/leagues/${leagueId}/standings`}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                  Full Standings
-                </Link>
-                <Link
-                  to={`/leagues/${leagueId}/settings`}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  Settings
-                </Link>
-                <Link
-                  to={`/leagues/${leagueId}/recap`}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                  Season Recap
+              {/* Secondary links (only what's not in top nav pills) */}
+              <div className="flex flex-wrap gap-1.5">
+                {!isOneAndDone && (
+                  <Link to={`/leagues/${leagueId}/trades`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                    Trades
+                  </Link>
+                )}
+                {isHeadToHead && (
+                  <Link to={`/leagues/${leagueId}/playoffs`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                    Playoffs
+                  </Link>
+                )}
+                <Link to={`/leagues/${leagueId}/recap`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                  Recap
                 </Link>
                 {league?.settings?.importedFrom && (
-                  <Link
-                    to={`/leagues/${leagueId}/vault`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-xs text-text-secondary hover:text-text-primary hover:border-[var(--crown)] transition-colors"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                    League Vault
+                  <Link to={`/leagues/${leagueId}/vault`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                    Vault
                   </Link>
                 )}
               </div>
