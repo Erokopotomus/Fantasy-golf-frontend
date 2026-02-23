@@ -5,8 +5,19 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-slate-400' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-slate-500' }
+}
+
+const getTvSchedule = (tournament) => {
+  const tour = tournament?.tour?.toUpperCase?.() || ''
+  if (tour.includes('PGA') || tour.includes('SIGNATURE')) {
+    return 'Golf Channel / ESPN+ (Thu–Fri) · NBC / Peacock (Sat–Sun)'
+  }
+  if (tour.includes('LIV')) return 'CW Network / YouTube'
+  if (tour.includes('DP') || tour.includes('EURO')) return 'Golf Channel / NBC Sports'
+  if (tour.includes('LPGA')) return 'Golf Channel / Peacock'
+  return 'Golf Channel / ESPN+'
 }
 
 const TournamentHeader = ({ tournament, leaderboard = [] }) => {
@@ -134,6 +145,19 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                     </div>
                   )}
                 </>
+              )}
+
+              {/* TV Schedule */}
+              {isUpcoming && (
+                <div className="w-full mt-1 pt-2 border-t border-[var(--card-border)]">
+                  <div className="flex items-center gap-2 text-xs text-text-secondary">
+                    <svg className="w-3.5 h-3.5 text-text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <rect x="2" y="4" width="20" height="13" rx="2" />
+                      <path d="M8 21h8M12 17v4" />
+                    </svg>
+                    <span className="font-medium">{getTvSchedule(tournament)}</span>
+                  </div>
+                </div>
               )}
 
               {leader && (isCompleted || isLive) && (

@@ -12,8 +12,8 @@ const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
-  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-[var(--stone)]' }
-  return { text: 'Low', color: 'text-text-muted', bar: 'bg-[var(--stone)]' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-slate-400' }
+  return { text: 'Low', color: 'text-text-muted', bar: 'bg-slate-500' }
 }
 
 const storyIcons = {
