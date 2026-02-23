@@ -172,6 +172,22 @@ const GolfHub = () => {
             </p>
           </div>
 
+          {/* Quick Links */}
+          <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-8">
+            {quickLinks.map(link => (
+              <Link
+                key={link.label}
+                to={link.href}
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-[var(--surface-alt)] hover:border-emerald-500/30 transition-all group shadow-card"
+              >
+                <div className="text-text-primary/40 group-hover:text-emerald-400 transition-colors">
+                  {link.icon}
+                </div>
+                <span className="text-text-primary text-[10px] sm:text-xs font-semibold">{link.label}</span>
+              </Link>
+            ))}
+          </div>
+
           {/* This Week — Unified Tournament Section */}
           {tournamentsLoading ? (
             <div className="mb-8 h-36 bg-[var(--stone)] rounded-xl animate-pulse" />
@@ -358,21 +374,6 @@ const GolfHub = () => {
             </div>
           ) : null}
 
-          {/* Section 2: Quick Links */}
-          <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-8">
-            {quickLinks.map(link => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-[var(--surface-alt)] hover:border-emerald-500/30 transition-all group shadow-card"
-              >
-                <div className="text-text-primary/40 group-hover:text-emerald-400 transition-colors">
-                  {link.icon}
-                </div>
-                <span className="text-text-primary text-[10px] sm:text-xs font-semibold">{link.label}</span>
-              </Link>
-            ))}
-          </div>
 
           {/* Section 3: Upcoming Schedule */}
           {upcomingSchedule.length > 0 && (
