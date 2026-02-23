@@ -519,6 +519,25 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
     await batchTransaction(prisma, dfsOps)
   }
 
+  // Remove players no longer in the field — mark ACTIVE→WD for anyone not in the current DataGolf list
+  const currentFieldIds = new Set(
+    field.map(e => playerMap.get(String(e.dg_id))).filter(Boolean)
+  )
+  const stalePerfs = await prisma.performance.findMany({
+    where: { tournamentId: tournament.id, status: 'ACTIVE' },
+    select: { playerId: true },
+  })
+  const withdrawals = stalePerfs
+    .filter(p => !currentFieldIds.has(p.playerId))
+    .map(p => prisma.performance.update({
+      where: { tournamentId_playerId: { tournamentId: tournament.id, playerId: p.playerId } },
+      data: { status: 'WD' },
+    }))
+  if (withdrawals.length > 0) {
+    await batchTransaction(prisma, withdrawals)
+    console.log(`[Sync] Marked ${withdrawals.length} withdrawn players as WD`)
+  }
+
   // Update tournament field size
   await prisma.tournament.update({
     where: { id: tournament.id },

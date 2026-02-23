@@ -254,9 +254,15 @@ router.get('/:id/leaderboard', async (req, res, next) => {
     })
     const isLive = tournament?.status === 'IN_PROGRESS'
 
+    // For UPCOMING tournaments, exclude withdrawn players from the field
+    const perfWhere = { tournamentId: req.params.id }
+    if (tournament?.status === 'UPCOMING') {
+      perfWhere.status = { not: 'WD' }
+    }
+
     const [performances, allRoundScores, liveScores] = await Promise.all([
       prisma.performance.findMany({
-        where: { tournamentId: req.params.id },
+        where: perfWhere,
         include: {
           player: {
             select: {
