@@ -78,35 +78,35 @@ const DraftCountdown = ({ scheduledFor, compact = false }) => {
   // Full variant
   return (
     <div className={shouldPulse ? 'animate-pulse' : ''}>
-      <div className="flex items-center gap-2 mb-2">
-        <svg className={`w-5 h-5 ${color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <svg className={`w-4 h-4 ${color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h4 className="text-text-primary font-semibold">Draft Day</h4>
+        <h4 className="text-text-primary font-semibold text-sm">Draft Day</h4>
       </div>
-      <p className="text-text-secondary text-sm mb-3">
+      <p className="text-text-secondary text-xs mb-2">
         {new Date(scheduledFor).toLocaleDateString('en-US', {
           weekday: 'long', month: 'long', day: 'numeric', timeZone: 'America/New_York'
         })} at {formatTimeET(scheduledFor)}
       </p>
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         {remaining.days > 0 && (
-          <div className="bg-dark-primary rounded-lg px-3 py-2 text-center min-w-[56px]">
-            <p className={`text-xl font-bold ${color}`}>{remaining.days}</p>
-            <p className="text-text-muted text-xs">days</p>
+          <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+            <p className={`text-lg font-bold ${color}`}>{remaining.days}</p>
+            <p className="text-text-muted text-[10px]">days</p>
           </div>
         )}
-        <div className="bg-dark-primary rounded-lg px-3 py-2 text-center min-w-[56px]">
-          <p className={`text-xl font-bold ${color}`}>{remaining.hours}</p>
-          <p className="text-text-muted text-xs">hrs</p>
+        <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+          <p className={`text-lg font-bold ${color}`}>{remaining.hours}</p>
+          <p className="text-text-muted text-[10px]">hrs</p>
         </div>
-        <div className="bg-dark-primary rounded-lg px-3 py-2 text-center min-w-[56px]">
-          <p className={`text-xl font-bold ${color}`}>{remaining.minutes}</p>
-          <p className="text-text-muted text-xs">min</p>
+        <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+          <p className={`text-lg font-bold ${color}`}>{remaining.minutes}</p>
+          <p className="text-text-muted text-[10px]">min</p>
         </div>
-        <div className="bg-dark-primary rounded-lg px-3 py-2 text-center min-w-[56px]">
-          <p className={`text-xl font-bold ${color}`}>{remaining.seconds}</p>
-          <p className="text-text-muted text-xs">sec</p>
+        <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+          <p className={`text-lg font-bold ${color}`}>{remaining.seconds}</p>
+          <p className="text-text-muted text-[10px]">sec</p>
         </div>
       </div>
     </div>

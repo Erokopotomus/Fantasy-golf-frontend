@@ -432,29 +432,25 @@ const LeagueHome = () => {
               {isDraftScheduledOrInProgress && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* Left: Coach Briefing */}
-                  <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-6 flex flex-col justify-center min-h-[180px] shadow-sm dark:shadow-none">
-                    {/* Floating sphere accent */}
-                    <div className="absolute -right-8 -top-8 opacity-[0.3] pointer-events-none">
-                      <NeuralCluster size="lg" intensity="active" />
-                    </div>
+                  <div className="relative overflow-hidden rounded-xl border border-[var(--card-border-strong)] bg-[var(--surface)] p-4 flex flex-col justify-center shadow-sm dark:shadow-none">
                     <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-3">
+                      <div className="flex items-center gap-2 mb-2">
                         <NeuralCluster size="sm" intensity="active" className="shrink-0" />
-                        <span className="text-xs font-semibold uppercase tracking-widest text-purple-400">Coach Briefing</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-purple-400">Coach Briefing</span>
                       </div>
-                      <h3 className="text-xl font-bold font-display text-text-primary mb-2 leading-snug">
+                      <h3 className="text-base font-bold font-display text-text-primary mb-1 leading-snug">
                         {leagueBriefing?.headline || (draftStatus === 'SCHEDULED' ? 'Draft day is approaching — time to prepare' : 'The draft is live — trust your board')}
                       </h3>
-                      <p className="text-sm text-text-secondary leading-relaxed">
+                      <p className="text-xs text-text-secondary leading-relaxed">
                         {leagueBriefing?.body || 'Get your rankings dialed in. Your coach is analyzing the field and tracking your board for blind spots.'}
                       </p>
                       {existingBoardId && (
                         <button
                           onClick={() => navigate(`/lab/${existingBoardId}`)}
-                          className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[var(--crown)] hover:text-[var(--crown-bright)] transition-colors"
+                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--crown)] hover:text-[var(--crown-bright)] transition-colors"
                         >
                           Open Lab
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
@@ -463,10 +459,10 @@ const LeagueHome = () => {
                   </div>
 
                   {/* Right: Draft Countdown */}
-                  <Card className="border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-[var(--surface)]">
+                  <Card className="border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-[var(--surface)] !p-4">
                     <div className="flex flex-col justify-between h-full">
                       <div>
-                        <h3 className="text-lg font-semibold font-display text-text-primary">
+                        <h3 className="text-base font-semibold font-display text-text-primary">
                           {draftStatus === 'SCHEDULED' ? 'Draft Scheduled' :
                            draftStatus === 'PAUSED' ? 'Draft Paused' : 'Draft In Progress'}
                         </h3>
@@ -549,8 +545,9 @@ const LeagueHome = () => {
                           <p className="text-text-secondary text-sm">The draft is live! Join the draft room now.</p>
                         )}
                       </div>
-                      <div className="mt-4 text-right">
+                      <div className="mt-3 text-right">
                         <Button
+                          size="sm"
                           onClick={() => navigate(`/leagues/${leagueId}/draft`)}
                           disabled={draftStatus === 'SCHEDULED' && (!latestDraft?.scheduledFor || !draftRoomOpen)}
                         >
