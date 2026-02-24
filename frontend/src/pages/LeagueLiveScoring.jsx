@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import useLeagueLiveScoring from '../hooks/useLeagueLiveScoring'
 import { flattenEntry } from '../hooks/useTournamentScoring'
 import { useLeague } from '../hooks/useLeague'
 import Card from '../components/common/Card'
 import TournamentLeaderboard from '../components/tournament/TournamentLeaderboard'
+import TournamentHeader from '../components/tournament/TournamentHeader'
 import NflWeeklyScoring from '../components/nfl/NflWeeklyScoring'
+import { formatDate } from '../utils/dateUtils'
 import api from '../services/api'
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -258,52 +260,6 @@ const LeagueMiniStandings = ({ teams, userTeam }) => {
   )
 }
 
-// ── Tournament Banner ────────────────────────────────────────────
-
-const TournamentBanner = ({ tournament, isLive, leagueId }) => (
-  <div className={`rounded-xl border p-4 mb-6 ${
-    isLive
-      ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]'
-      : 'border-[var(--card-border)] bg-[var(--surface)]'
-  }`}>
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <div className="flex items-center gap-3">
-        <Link
-          to={`/leagues/${leagueId}`}
-          className="text-text-secondary hover:text-text-primary transition-colors flex-shrink-0"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-lg font-bold font-display text-text-primary">{tournament.name}</h2>
-            {isLive && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                LIVE
-              </span>
-            )}
-            {tournament.status === 'COMPLETED' && (
-              <span className="px-2 py-0.5 rounded-full bg-[var(--bg-alt)] text-text-muted text-xs font-semibold">
-                FINAL
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-text-secondary">
-            {tournament.courseName && <span>{tournament.courseName}</span>}
-            {tournament.currentRound && <span> &middot; Round {tournament.currentRound}</span>}
-          </p>
-        </div>
-      </div>
-      {isLive && (
-        <p className="text-xs text-text-muted">Updates every 60s</p>
-      )}
-    </div>
-  </div>
-)
-
 // ── Main Component ───────────────────────────────────────────────
 
 const LeagueLiveScoring = () => {
@@ -320,10 +276,35 @@ const LeagueLiveScoring = () => {
 
 const GolfLiveScoring = ({ leagueId }) => {
   const { tournament, isLive, teams, userTeam, loading, error } = useLeagueLiveScoring(leagueId)
+  const navigate = useNavigate()
   const [mobileTab, setMobileTab] = useState('leaderboard')
   const [leaderboard, setLeaderboard] = useState([])
   const [lbLoading, setLbLoading] = useState(true)
+  const [fullTournament, setFullTournament] = useState(null)
+  const [nextTournament, setNextTournament] = useState(null)
   const pollRef = useRef(null)
+
+  // Fetch full tournament data (with course object for TournamentHeader)
+  useEffect(() => {
+    if (!tournament?.id) return
+    api.getTournament(tournament.id)
+      .then(data => setFullTournament(data?.tournament || data))
+      .catch(() => {})
+  }, [tournament?.id])
+
+  // Fetch next tournament when current is COMPLETED
+  useEffect(() => {
+    if (!tournament || tournament.status !== 'COMPLETED') {
+      setNextTournament(null)
+      return
+    }
+    api.getCurrentTournament()
+      .then(data => {
+        const next = data?.tournament || data
+        if (next && next.id !== tournament.id) setNextTournament(next)
+      })
+      .catch(() => {})
+  }, [tournament?.id, tournament?.status])
 
   // Fetch leaderboard data independently
   const fetchLeaderboard = useCallback(async (tournamentId) => {
@@ -441,15 +422,53 @@ const GolfLiveScoring = ({ leagueId }) => {
       myPlayerIds={myPlayerIds}
       tournamentId={tournament.id}
       currentRound={tournament.currentRound}
+      onPlayerClick={!isLive ? (player) => { navigate(`/players/${player.id}`); return true } : undefined}
     />
   )
+
+  // Merge slim tournament with full data for TournamentHeader
+  const headerTournament = fullTournament || tournament
 
   return (
     <div className="min-h-screen">
       <main className="pt-6 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Tournament Banner */}
-          <TournamentBanner tournament={tournament} isLive={isLive} leagueId={leagueId} />
+          {/* Back to league */}
+          <Link
+            to={`/leagues/${leagueId}`}
+            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors mb-3"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to League
+          </Link>
+
+          {/* Rich Tournament Header */}
+          <div className="mb-6">
+            <TournamentHeader tournament={headerTournament} leaderboard={leaderboard} />
+          </div>
+
+          {/* Next Up card — shown when tournament is FINAL */}
+          {nextTournament && tournament.status === 'COMPLETED' && (
+            <Link
+              to={`/tournaments/${nextTournament.id}/preview`}
+              className="block rounded-xl border border-gold/20 bg-gradient-to-r from-gold/[0.06] to-transparent p-4 mb-6 hover:border-gold/40 transition-all group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-gold">Next Up</p>
+                  <p className="text-base font-display font-semibold text-text-primary mt-0.5">{nextTournament.name}</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {formatDate(nextTournament.startDate)} – {formatDate(nextTournament.endDate)}
+                  </p>
+                </div>
+                <span className="text-xs text-gold group-hover:text-gold/80 transition-colors font-medium shrink-0 ml-4">
+                  Preview →
+                </span>
+              </div>
+            </Link>
+          )}
 
           {/* Mobile tab bar */}
           <div className="lg:hidden flex border-b border-[var(--card-border)] mb-4">

@@ -41,7 +41,7 @@ const ScoreCell = ({ score, par }) => {
   )
 }
 
-const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand, timezone, currentRound: tournamentRound }) => {
+const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand, onPlayerClick, timezone, currentRound: tournamentRound }) => {
   const [expandedPlayer, setExpandedPlayer] = useState(null)
   const [expandedRound, setExpandedRound] = useState(null) // which round tab is active
   const [showRounds, setShowRounds] = useState(false)
@@ -202,6 +202,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
       <div key={player.id}>
         <div
           onClick={() => {
+            if (onPlayerClick?.(player)) return
             if (isExpanded) {
               setExpandedPlayer(null)
               setExpandedRound(null)
