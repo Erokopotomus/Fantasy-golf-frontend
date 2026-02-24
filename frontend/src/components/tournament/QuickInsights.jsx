@@ -6,14 +6,19 @@
 
 import { Link } from 'react-router-dom'
 
-const InsightSection = ({ title, emoji, players }) => {
+const InsightSection = ({ title, emoji, players, valueLabel }) => {
   if (!players || players.length === 0) return null
 
   return (
     <div className="space-y-1.5">
-      <p className="text-[10px] text-text-muted uppercase tracking-wider font-bold">
-        {emoji} {title}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] text-text-muted uppercase tracking-wider font-bold">
+          {emoji} {title}
+        </p>
+        {valueLabel && (
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold">{valueLabel}</span>
+        )}
+      </div>
       {players.map((p, i) => (
         <Link
           key={p.id || i}
@@ -82,10 +87,10 @@ const QuickInsights = ({ leaderboard = [] }) => {
         <h3 className="text-sm font-bold text-text-primary">Quick Insights</h3>
       </div>
       <div className="p-4 space-y-4">
-        <InsightSection title="Best Course Fit" emoji="🎯" players={bestFit} />
-        <InsightSection title="Hottest Form" emoji="🔥" players={hotForm} />
-        <InsightSection title="Under the Radar" emoji="👀" players={underRadar} />
-        <InsightSection title="Course History Kings" emoji="👑" players={historyKings} />
+        <InsightSection title="Best Course Fit" emoji="🎯" players={bestFit} valueLabel="Fit" />
+        <InsightSection title="Hottest Form" emoji="🔥" players={hotForm} valueLabel="Form" />
+        <InsightSection title="Under the Radar" emoji="👀" players={underRadar} valueLabel="OWGR" />
+        <InsightSection title="Course History Kings" emoji="👑" players={historyKings} valueLabel="Avg" />
       </div>
     </div>
   )
