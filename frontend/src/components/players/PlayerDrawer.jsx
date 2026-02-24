@@ -297,7 +297,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
 
           {/* Clutch insights tagline */}
           {showClutchStrip && (
-            <p className="text-[11px] text-text-muted text-center mx-4 -mt-1 mb-2 italic font-editorial">
+            <p className="text-xs text-text-muted text-center mx-4 -mt-1 mb-2 italic font-editorial">
               Powered by strokes gained, OWGR trends, recent finishes &amp; course DNA
             </p>
           )}
@@ -823,15 +823,13 @@ const SkillMatchCard = ({ player, course }) => {
   return (
     <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
       <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Skill Match</h3>
-      {/* Column headers — same flex structure as data rows */}
-      <div className="flex items-center gap-2 mb-1.5 pb-1 border-b border-[var(--card-border)]">
-        <span className="text-xs w-[72px] flex-shrink-0" />
-        <HoverTip tip="Strokes Gained per round vs the tour field. Positive is good. +0.50 is strong, +1.00 is elite, negative is a weakness." className="text-xs w-12 flex-shrink-0 text-right">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Player</span>
+      {/* Column headers */}
+      <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-[var(--card-border)]">
+        <HoverTip tip="Strokes Gained per round vs the tour field. Positive is good. +0.50 is strong, +1.00 is elite, negative is a weakness.">
+          <span className="text-[10px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Player</span>
         </HoverTip>
-        <div className="flex-1 h-2" />
-        <HoverTip tip="How much this course rewards each skill. Premium/High = critical to scoring well here. Average/Low = matters less this week." className="text-[10px] w-16 flex-shrink-0 text-right">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Course</span>
+        <HoverTip tip="How much this course rewards each skill. Premium/High = critical to scoring well here. Average/Low = matters less this week.">
+          <span className="text-[10px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Course</span>
         </HoverTip>
       </div>
       <div className="space-y-2.5">
