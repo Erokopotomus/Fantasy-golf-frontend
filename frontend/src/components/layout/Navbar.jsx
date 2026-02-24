@@ -9,6 +9,106 @@ import ClutchLogo from '../common/ClutchLogo'
 import Button from '../common/Button'
 import SearchButton from '../search/SearchButton'
 
+const navDropdownItems = {
+  golf: [
+    { label: 'Golf Hub', to: '/golf' },
+    { label: 'Players', to: '/players' },
+    { label: 'Tournaments', to: '/tournaments' },
+    { label: 'Courses', to: '/courses' },
+  ],
+  nfl: [
+    { label: 'NFL Hub', to: '/nfl' },
+    { label: 'Players', to: '/nfl/players' },
+    { label: 'Teams', to: '/nfl/teams' },
+    { label: 'Schedule', to: '/nfl/schedule' },
+    { label: 'Leaderboards', to: '/nfl/leaderboards' },
+    { label: 'Compare', to: '/nfl/compare' },
+  ],
+  lab: [
+    { label: 'Lab Hub', to: '/lab' },
+    { label: 'Watch List', to: '/lab/watch-list' },
+    { label: 'Decision Journal', to: '/lab/journal' },
+    { label: 'Mock Draft', to: '/mock-draft' },
+    { label: 'Draft History', to: '/draft/history' },
+  ],
+}
+
+const NavDropdown = ({ label, to, items, isActiveGroup, location, onNavigate }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const timeoutRef = useRef(null)
+
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const handleEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setOpen(true)
+  }
+  const handleLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150)
+  }
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <Link
+        to={to}
+        onClick={() => { setOpen(false); onNavigate?.() }}
+        className={`
+          px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1
+          ${isActiveGroup
+            ? 'text-white bg-white/15'
+            : 'text-white/60 hover:text-white hover:bg-white/10'
+          }
+        `}
+      >
+        {label}
+        <svg
+          className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </Link>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 w-44 bg-[var(--nav-bg)] border border-white/10 rounded-xl shadow-lg z-50 py-1">
+          {items.map(item => (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setOpen(false)}
+              className={`block px-4 py-2 text-sm transition-colors ${
+                location.pathname === item.to
+                  ? 'text-white bg-white/10'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const Navbar = () => {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -40,6 +140,7 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path
   const isGolfActive = ['/golf', '/players', '/tournaments', '/courses'].some(p => location.pathname.startsWith(p))
   const isNflActive = location.pathname.startsWith('/nfl')
+  const isLabActive = ['/lab', '/mock-draft', '/draft/history'].some(p => location.pathname.startsWith(p))
   const isTournamentActive = location.pathname.startsWith('/tournaments/')
 
   const tournamentLink = currentTournament ? `/tournaments/${currentTournament.id}` : null
@@ -89,37 +190,27 @@ const Navbar = () => {
                 <Link to="/dashboard" className={navLinkStyles('/dashboard')}>
                   Dashboard
                 </Link>
-                <Link to="/lab" className={`
-                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
-                  ${location.pathname.startsWith('/lab')
-                    ? 'text-white bg-white/15'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                  }
-                `}>
-                  The Lab
-                </Link>
-
-                {/* Golf Hub */}
-                <Link to="/golf" className={`
-                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
-                  ${isGolfActive
-                    ? 'text-white bg-white/15'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                  }
-                `}>
-                  Golf
-                </Link>
-
-                {/* NFL Hub */}
-                <Link to="/nfl" className={`
-                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
-                  ${isNflActive
-                    ? 'text-white bg-white/15'
-                    : 'text-white/60 hover:text-white hover:bg-white/10'
-                  }
-                `}>
-                  NFL
-                </Link>
+                <NavDropdown
+                  label="Golf"
+                  to="/golf"
+                  items={navDropdownItems.golf}
+                  isActiveGroup={isGolfActive}
+                  location={location}
+                />
+                <NavDropdown
+                  label="NFL"
+                  to="/nfl"
+                  items={navDropdownItems.nfl}
+                  isActiveGroup={isNflActive}
+                  location={location}
+                />
+                <NavDropdown
+                  label="The Lab"
+                  to="/lab"
+                  items={navDropdownItems.lab}
+                  isActiveGroup={isLabActive}
+                  location={location}
+                />
                 <Link
                   to={tournamentLink || '/tournaments'}
                   className={`
@@ -406,27 +497,56 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
-                  to="/lab"
-                  className={mobileNavLinkStyles('/lab')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  The Lab
-                </Link>
-
-                <Link
                   to="/golf"
-                  className={mobileNavLinkStyles('/golf')}
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 ${isGolfActive ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Golf
                 </Link>
+                {navDropdownItems.golf.filter(i => i.to !== '/golf').map(item => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="block pl-8 pr-4 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
                 <Link
                   to="/nfl"
-                  className={mobileNavLinkStyles('/nfl')}
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 ${isNflActive ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   NFL
                 </Link>
+                {navDropdownItems.nfl.filter(i => i.to !== '/nfl').map(item => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="block pl-8 pr-4 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <Link
+                  to="/lab"
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 ${isLabActive ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  The Lab
+                </Link>
+                {navDropdownItems.lab.filter(i => i.to !== '/lab').map(item => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="block pl-8 pr-4 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
 
                 <Link
                   to={`/manager/${user.id}`}

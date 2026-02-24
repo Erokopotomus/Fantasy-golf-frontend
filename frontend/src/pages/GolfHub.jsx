@@ -331,45 +331,55 @@ const GolfHub = () => {
                   const rosterInField = rosterPlayers.filter(rp =>
                     (t.field || []).some(fp => fp.playerId === rp.id)
                   )
+                  const hasImage = !!t.course?.imageUrl
                   return (
                     <Link
                       key={t.id}
                       to={`/tournaments/${t.id}`}
-                      className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 hover:bg-[var(--surface-alt)] hover:border-emerald-500/20 transition-all group shadow-card"
+                      className={`rounded-xl overflow-hidden relative border border-[var(--card-border)] hover:border-emerald-500/20 transition-all group shadow-card ${hasImage ? '' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-sm font-display font-semibold text-text-primary group-hover:text-emerald-400 transition-colors">
-                              {t.shortName || t.name}
-                            </h3>
-                            <EventBadge tournament={t} />
-                          </div>
-                          {t.course && (
-                            <p className="text-xs text-text-muted mt-0.5">{t.course.nickname || t.course.name}</p>
-                          )}
-                          <p className="text-xs text-text-muted mt-1 font-mono">{formatDateRange(t.startDate, t.endDate)}</p>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          {t.purse && <span className="text-xs font-mono text-text-muted">{formatPurse(t.purse)}</span>}
-                          <div className="mt-1">
-                            {fieldAnnounced ? (
-                              <span className="text-[10px] font-mono text-emerald-400/80">{t.fieldSize || t.field?.length} in field</span>
-                            ) : (
-                              <span className="text-[10px] font-mono text-text-muted/50">Field TBD</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {/* Roster indicator */}
-                      {rosterInField.length > 0 && (
-                        <div className="mt-2 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                          <span className="text-[10px] text-emerald-400/80">
-                            {rosterInField.length} roster player{rosterInField.length !== 1 ? 's' : ''} confirmed
-                          </span>
-                        </div>
+                      {hasImage && (
+                        <>
+                          <img src={t.course.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/60 to-black/40" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                        </>
                       )}
+                      <div className="relative p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className={`text-sm font-display font-semibold transition-colors ${hasImage ? 'text-white group-hover:text-emerald-300' : 'text-text-primary group-hover:text-emerald-400'}`}>
+                                {t.shortName || t.name}
+                              </h3>
+                              <EventBadge tournament={t} />
+                            </div>
+                            {t.course && (
+                              <p className={`text-xs mt-0.5 ${hasImage ? 'text-gold drop-shadow-sm' : 'text-text-muted'}`}>{t.course.nickname || t.course.name}</p>
+                            )}
+                            <p className={`text-xs mt-1 font-mono ${hasImage ? 'text-white/60' : 'text-text-muted'}`}>{formatDateRange(t.startDate, t.endDate)}</p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            {t.purse && <span className={`text-xs font-mono ${hasImage ? 'text-white/60' : 'text-text-muted'}`}>{formatPurse(t.purse)}</span>}
+                            <div className="mt-1">
+                              {fieldAnnounced ? (
+                                <span className="text-[10px] font-mono text-emerald-400/80">{t.fieldSize || t.field?.length} in field</span>
+                              ) : (
+                                <span className={`text-[10px] font-mono ${hasImage ? 'text-white/40' : 'text-text-muted/50'}`}>Field TBD</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Roster indicator */}
+                        {rosterInField.length > 0 && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                            <span className="text-[10px] text-emerald-400/80">
+                              {rosterInField.length} roster player{rosterInField.length !== 1 ? 's' : ''} confirmed
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </Link>
                   )
                 })}
