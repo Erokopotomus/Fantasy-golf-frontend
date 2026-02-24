@@ -158,6 +158,19 @@ router.get('/:id/schedule', async (req, res, next) => {
 // GET /api/players/:id - Get player details with performances, upcoming, and projection
 router.get('/:id', optionalAuth, async (req, res, next) => {
   try {
+    // Year filtering: ?year=2026 (default: current year), ?year=all (career totals)
+    const yearParam = req.query.year
+    const currentYear = new Date().getFullYear()
+    const selectedYear = yearParam === 'all' ? 'all' : parseInt(yearParam) || currentYear
+    const yearFilter = selectedYear === 'all' ? {} : {
+      tournament: {
+        startDate: {
+          gte: new Date(`${selectedYear}-01-01T00:00:00Z`),
+          lt: new Date(`${selectedYear + 1}-01-01T00:00:00Z`),
+        }
+      }
+    }
+
     // Find the current or next upcoming tournament for predictions
     const activeTournament = await prisma.tournament.findFirst({
       where: { status: 'IN_PROGRESS' },
@@ -169,24 +182,24 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       select: { id: true, name: true }
     })
 
-    const [player, allPerformances, upcomingTournaments, predictions, liveScore] = await Promise.all([
+    const [player, allPerformances, upcomingTournaments, predictions, liveScore, availableYearsRaw] = await Promise.all([
       prisma.player.findUnique({
         where: { id: req.params.id },
         include: {
           performances: {
+            where: yearFilter,
             include: {
               tournament: {
                 select: { id: true, name: true, startDate: true, endDate: true, tour: true, isMajor: true, purse: true, location: true }
               }
             },
             orderBy: { tournament: { startDate: 'desc' } },
-            take: 10
           }
         }
       }),
-      // Get ALL performances for season stats computation
+      // Get performances filtered by year for stats computation
       prisma.performance.findMany({
-        where: { playerId: req.params.id },
+        where: { playerId: req.params.id, ...yearFilter },
         include: {
           tournament: { select: { id: true, name: true, startDate: true, status: true } }
         }
@@ -217,7 +230,15 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
             playerId: req.params.id
           }
         }
-      }) : null
+      }) : null,
+      // Get distinct years this player has performances in
+      prisma.$queryRaw`
+        SELECT DISTINCT EXTRACT(YEAR FROM t."startDate")::int AS year
+        FROM "Performance" p
+        JOIN "Tournament" t ON p."tournamentId" = t.id
+        WHERE p."playerId" = ${req.params.id}
+        ORDER BY year DESC
+      `
     ])
 
     if (!player) {
@@ -326,7 +347,9 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       computedAt: clutchMetricsWeekly?.computedAt ?? null,
     }
 
-    res.json({ player, upcomingTournaments, projection, predictions, liveScore, seasonStats, clutchMetrics })
+    const availableYears = (availableYearsRaw || []).map(r => r.year).filter(Boolean)
+
+    res.json({ player, upcomingTournaments, projection, predictions, liveScore, seasonStats, clutchMetrics, availableYears, selectedYear })
   } catch (error) {
     next(error)
   }

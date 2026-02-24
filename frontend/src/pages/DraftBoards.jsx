@@ -4,6 +4,8 @@ import useDraftBoards from '../hooks/useDraftBoards'
 import api from '../services/api'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
 import LeagueCockpit from '../components/lab/LeagueCockpit'
+import LabScientist from '../components/lab/LabScientist'
+import LabNeuralCluster from '../components/lab/LabNeuralCluster'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -505,14 +507,46 @@ export default function DraftBoards() {
     </div>
   )
 
-  // ── Section Ordering ──────────────────────────────────────────────────────
-  const renderSections = () => (
-    <>
-      <LeagueCockpit leagues={leagues} boards={boards} currentTournament={currentTournament} onBoardLinked={refetch} />
-      {renderMyBoards()}
-      {renderWatchList()}
-      {renderCaptures()}
-    </>
+  // ── Hero Banner ────────────────────────────────────────────────────────────
+  const renderBanner = () => (
+    <div className="relative mb-8 rounded-2xl overflow-hidden bg-gradient-to-r from-[var(--surface)] via-[var(--surface)] to-[var(--bg-alt)] border border-[var(--card-border)] shadow-card">
+      <div className="flex items-center px-6 py-5 gap-4 sm:gap-6">
+        {/* Scientist illustration */}
+        <div className="flex-shrink-0 hidden sm:block">
+          <LabScientist className="w-24 h-32 opacity-90" />
+        </div>
+
+        {/* Copy */}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-display font-bold text-text-primary tracking-wide mb-1">THE LAB</h1>
+          <p className="text-sm text-text-secondary leading-relaxed max-w-md">
+            Your draft prep workbench. Build boards to rank players your way, capture notes and hot takes, then link everything to your leagues.
+          </p>
+          <div className="flex items-center gap-3 mt-3">
+            <button
+              onClick={openCreateModal}
+              className="px-4 py-2 bg-gold text-slate text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Board
+            </button>
+            <button
+              onClick={() => setShowCaptureModal(true)}
+              className="px-4 py-2 text-sm font-medium text-text-secondary border border-[var(--card-border)] rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
+            >
+              Quick Note
+            </button>
+          </div>
+        </div>
+
+        {/* Neural Cluster */}
+        <div className="flex-shrink-0 hidden md:block">
+          <LabNeuralCluster className="w-36 h-36 opacity-80" />
+        </div>
+      </div>
+    </div>
   )
 
   // ── Full Layout ────────────────────────────────────────────────────────────
@@ -532,25 +566,25 @@ export default function DraftBoards() {
 
       {!loading && !error && (
         <>
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-display font-bold text-text-primary tracking-wide">THE LAB</h1>
-              <p className="text-sm text-text-primary/40">Your draft prep workbench. Build boards, capture notes, then link to your leagues.</p>
+          {/* Hero Banner */}
+          {renderBanner()}
+
+          {/* Split Layout: Boards left, Notes right */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+            {/* Left: Boards (3/5 width) */}
+            <div className="lg:col-span-3">
+              {renderMyBoards()}
             </div>
-            <button
-              onClick={openCreateModal}
-              className="px-4 py-2 bg-gold text-slate text-sm font-semibold rounded-lg hover:bg-gold/90 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              New Board
-            </button>
+
+            {/* Right: Notes + Watch List (2/5 width) */}
+            <div className="lg:col-span-2 space-y-6">
+              {renderCaptures()}
+              {renderWatchList()}
+            </div>
           </div>
 
-          {/* Sections */}
-          {renderSections()}
+          {/* Leagues below */}
+          <LeagueCockpit leagues={leagues} boards={boards} currentTournament={currentTournament} onBoardLinked={refetch} />
         </>
       )}
 

@@ -40,7 +40,10 @@ const PlayerProfile = () => {
     courseHistory,
     tournamentHistory,
     loading,
-    error
+    error,
+    selectedYear,
+    availableYears,
+    changeYear,
   } = usePlayerProfile(playerId)
 
   const [playerSchedule, setPlayerSchedule] = useState([])
@@ -135,6 +138,9 @@ const PlayerProfile = () => {
           isOnMyTeam={player.owned}
           onAddToRoster={() => {}}
           onProposeTrade={() => {}}
+          selectedYear={selectedYear}
+          availableYears={availableYears}
+          onYearChange={changeYear}
         />
         {user && (
           <div className="mt-3 flex items-center gap-2">
@@ -174,7 +180,7 @@ const PlayerProfile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
-          <PlayerStats player={player} clutchMetrics={clutchMetrics} />
+          <PlayerStats player={player} clutchMetrics={clutchMetrics} selectedYear={selectedYear} />
         </div>
 
         {/* Right Column */}

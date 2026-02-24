@@ -151,16 +151,20 @@ class ApiService {
     return this.request(`/players${params ? '?' + params : ''}`)
   }
 
-  async getPlayer(id) {
-    return this.request(`/players/${id}`)
+  async getPlayer(id, params = {}) {
+    const filtered = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null))
+    const qs = new URLSearchParams(filtered).toString()
+    return this.request(`/players/${id}${qs ? '?' + qs : ''}`)
   }
 
   async getPlayerStats(id) {
     return this.request(`/players/${id}/stats`)
   }
 
-  async getPlayerProfile(id) {
-    return this.request(`/players/${id}`)
+  async getPlayerProfile(id, params = {}) {
+    const filtered = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null))
+    const qs = new URLSearchParams(filtered).toString()
+    return this.request(`/players/${id}${qs ? '?' + qs : ''}`)
   }
 
   // Teams

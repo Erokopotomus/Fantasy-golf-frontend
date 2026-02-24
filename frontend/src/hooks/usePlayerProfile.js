@@ -64,16 +64,20 @@ export const usePlayerProfile = (playerId) => {
   const [tournamentHistory, setTournamentHistory] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [availableYears, setAvailableYears] = useState([])
 
-  const fetchPlayerProfile = useCallback(async () => {
+  const fetchPlayerProfile = useCallback(async (year) => {
     if (!playerId) {
       setLoading(false)
       return
     }
 
+    const yearToFetch = year !== undefined ? year : selectedYear
+
     try {
       setError(null)
-      const data = await api.getPlayer(playerId)
+      const data = await api.getPlayer(playerId, { year: yearToFetch })
       const p = data.player
 
       // Transform player to match frontend expectations
@@ -124,6 +128,8 @@ export const usePlayerProfile = (playerId) => {
       setLiveScore(data.liveScore || null)
       setClutchMetrics(data.clutchMetrics || null)
       setUpcomingTournaments(data.upcomingTournaments || [])
+      if (data.availableYears) setAvailableYears(data.availableYears)
+      if (data.selectedYear) setSelectedYear(data.selectedYear)
 
       // Tournament history from performances
       setTournamentHistory(performances.map(perf => {
@@ -147,12 +153,18 @@ export const usePlayerProfile = (playerId) => {
     } finally {
       setLoading(false)
     }
-  }, [playerId])
+  }, [playerId, selectedYear])
 
   useEffect(() => {
     setLoading(true)
     fetchPlayerProfile()
   }, [playerId, fetchPlayerProfile])
+
+  const changeYear = useCallback((year) => {
+    setSelectedYear(year)
+    setLoading(true)
+    fetchPlayerProfile(year)
+  }, [fetchPlayerProfile])
 
   return {
     player,
@@ -165,7 +177,10 @@ export const usePlayerProfile = (playerId) => {
     tournamentHistory,
     loading,
     error,
-    refetch: fetchPlayerProfile
+    refetch: fetchPlayerProfile,
+    selectedYear,
+    availableYears,
+    changeYear,
   }
 }
 

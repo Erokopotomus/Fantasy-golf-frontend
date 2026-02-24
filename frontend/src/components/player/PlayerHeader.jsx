@@ -1,4 +1,4 @@
-const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, isOwned, isOnMyTeam }) => {
+const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, isOwned, isOnMyTeam, selectedYear, availableYears, onYearChange }) => {
   if (!player) return null
 
   const getRankBadge = (rank) => {
@@ -239,7 +239,24 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
 
       {/* Season Stats Row */}
       <div className="mt-5 pt-5 border-t border-[var(--card-border)]">
-        <p className="text-xs text-text-muted mb-3 text-center sm:text-left">2025–26 Season</p>
+        <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
+          {availableYears && availableYears.length > 1 ? (
+            <select
+              value={selectedYear || new Date().getFullYear()}
+              onChange={(e) => onYearChange?.(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              className="bg-[var(--surface)] border border-[var(--card-border)] rounded px-2 py-0.5 text-xs font-mono text-text-secondary cursor-pointer focus:outline-none focus:border-gold/50"
+            >
+              {availableYears.map(y => (
+                <option key={y} value={y}>{y} Stats</option>
+              ))}
+              <option value="all">All Time</option>
+            </select>
+          ) : (
+            <p className="text-xs text-text-muted">
+              {selectedYear === 'all' ? 'All Time' : `${selectedYear} Stats`}
+            </p>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {quickStats.map((stat) => (

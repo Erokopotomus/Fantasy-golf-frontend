@@ -1,6 +1,6 @@
 import Card from '../common/Card'
 
-const PlayerStats = ({ player, clutchMetrics }) => {
+const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
   if (!player) return null
 
   const { stats } = player
@@ -33,7 +33,7 @@ const PlayerStats = ({ player, clutchMetrics }) => {
     { label: 'Top 5s', value: player.top5s || 0 },
     { label: 'Top 10s', value: player.top10s || 0 },
     { label: 'Cuts Made', value: player.cutsMade || 0 },
-    { label: 'Earnings', value: player.earnings > 0 ? `$${(player.earnings / 1e6).toFixed(2)}M` : '$0' },
+    ...(player.earnings > 0 ? [{ label: 'Earnings', value: `$${(player.earnings / 1e6).toFixed(2)}M` }] : []),
   ]
 
   const hasSeasonData = player.events > 0
@@ -176,7 +176,9 @@ const PlayerStats = ({ player, clutchMetrics }) => {
 
       {/* Season Stats */}
       <Card>
-        <h4 className="text-sm font-semibold text-text-muted mb-3">Season Stats</h4>
+        <h4 className="text-sm font-semibold text-text-muted mb-3">
+          {selectedYear === 'all' ? 'All Time Stats' : `${selectedYear || new Date().getFullYear()} Stats`}
+        </h4>
         {hasSeasonData ? (
           <div className="grid grid-cols-2 gap-3">
             {seasonStats.map((stat) => (

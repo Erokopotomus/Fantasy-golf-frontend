@@ -47,12 +47,15 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
   const [upcoming, setUpcoming] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+  const [drawerYear, setDrawerYear] = useState(new Date().getFullYear())
+  const [drawerAvailableYears, setDrawerAvailableYears] = useState([])
 
   const hasTournament = !!tournamentContext?.entry
 
-  const fetchPlayer = useCallback(async () => {
+  const fetchPlayer = useCallback(async (yearOverride) => {
     if (!playerId) return
     setLoading(true)
+    const yearToUse = yearOverride !== undefined ? yearOverride : drawerYear
     try {
       if (isNfl) {
         const data = await api.getNflPlayer(playerId, { season: 2024 })
@@ -74,7 +77,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
         })
         setUpcoming([])
       } else {
-        const data = await api.getPlayerProfile(playerId)
+        const data = await api.getPlayerProfile(playerId, { year: yearToUse })
         // Merge seasonStats into player so wins/top10s/etc. reflect derived values
         const ss = data.seasonStats || {}
         const p = {
@@ -90,13 +93,15 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
         setPlayer(p)
         setProjection(data.projection)
         setUpcoming(data.upcomingTournaments || [])
+        if (data.availableYears) setDrawerAvailableYears(data.availableYears)
+        if (data.selectedYear) setDrawerYear(data.selectedYear)
       }
     } catch (err) {
       console.error('Failed to load player:', err)
     } finally {
       setLoading(false)
     }
-  }, [playerId, isNfl])
+  }, [playerId, isNfl, drawerYear])
 
   useEffect(() => {
     if (isOpen && playerId) {
@@ -635,6 +640,25 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
               {/* Results Tab */}
               {activeTab === 'results' && (
                 <div className="p-4 space-y-2">
+                  {/* Year filter */}
+                  {!isNfl && drawerAvailableYears.length > 1 && (
+                    <div className="flex items-center justify-end mb-2">
+                      <select
+                        value={drawerYear}
+                        onChange={(e) => {
+                          const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value)
+                          setDrawerYear(val)
+                          fetchPlayer(val)
+                        }}
+                        className="bg-[var(--surface)] border border-[var(--card-border)] rounded px-2 py-1 text-xs font-mono text-text-secondary cursor-pointer focus:outline-none focus:border-emerald-500/50"
+                      >
+                        {drawerAvailableYears.map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                        <option value="all">All Time</option>
+                      </select>
+                    </div>
+                  )}
                   {/* Season Results Summary */}
                   {(player.performances || []).length > 0 && (() => {
                     const perfs = player.performances.filter(p => p.position != null)
