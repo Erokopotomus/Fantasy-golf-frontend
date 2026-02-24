@@ -438,6 +438,35 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                         </div>
                       )}
 
+                      {/* Season Results Summary */}
+                      {(player.performances || []).length > 0 && (() => {
+                        const perfs = player.performances.filter(p => p.position != null)
+                        const wins = perfs.filter(p => p.position === 1).length
+                        const top5 = perfs.filter(p => p.position <= 5).length
+                        const top10 = perfs.filter(p => p.position <= 10).length
+                        const top25 = perfs.filter(p => p.position <= 25).length
+                        return (
+                          <div className="grid grid-cols-4 gap-px rounded-lg bg-[var(--card-border)] overflow-hidden">
+                            <div className="bg-[var(--surface)] p-2 text-center">
+                              <p className={`text-sm font-bold font-mono ${wins > 0 ? 'text-gold' : 'text-text-muted'}`}>{wins}</p>
+                              <p className="text-[9px] text-text-muted uppercase">1st</p>
+                            </div>
+                            <div className="bg-[var(--surface)] p-2 text-center">
+                              <p className={`text-sm font-bold font-mono ${top5 > 0 ? 'text-emerald-400' : 'text-text-muted'}`}>{top5}</p>
+                              <p className="text-[9px] text-text-muted uppercase">Top 5</p>
+                            </div>
+                            <div className="bg-[var(--surface)] p-2 text-center">
+                              <p className={`text-sm font-bold font-mono ${top10 > 0 ? 'text-green-400' : 'text-text-muted'}`}>{top10}</p>
+                              <p className="text-[9px] text-text-muted uppercase">Top 10</p>
+                            </div>
+                            <div className="bg-[var(--surface)] p-2 text-center">
+                              <p className={`text-sm font-bold font-mono ${top25 > 0 ? 'text-text-primary' : 'text-text-muted'}`}>{top25}</p>
+                              <p className="text-[9px] text-text-muted uppercase">Top 25</p>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
                       {/* Recent Results (from profile API) */}
                       {(player.performances || []).length > 0 && (
                         <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
@@ -579,6 +608,35 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
               {/* Results Tab */}
               {activeTab === 'results' && (
                 <div className="p-4 space-y-2">
+                  {/* Season Results Summary */}
+                  {(player.performances || []).length > 0 && (() => {
+                    const perfs = player.performances.filter(p => p.position != null)
+                    const wins = perfs.filter(p => p.position === 1).length
+                    const top5 = perfs.filter(p => p.position <= 5).length
+                    const top10 = perfs.filter(p => p.position <= 10).length
+                    const top25 = perfs.filter(p => p.position <= 25).length
+                    return (
+                      <div className="grid grid-cols-4 gap-px rounded-lg bg-[var(--card-border)] overflow-hidden mb-3">
+                        <div className="bg-[var(--surface)] p-2.5 text-center">
+                          <p className={`text-lg font-bold font-mono ${wins > 0 ? 'text-gold' : 'text-text-muted'}`}>{wins}</p>
+                          <p className="text-[10px] text-text-muted uppercase">1st</p>
+                        </div>
+                        <div className="bg-[var(--surface)] p-2.5 text-center">
+                          <p className={`text-lg font-bold font-mono ${top5 > 0 ? 'text-emerald-400' : 'text-text-muted'}`}>{top5}</p>
+                          <p className="text-[10px] text-text-muted uppercase">Top 5</p>
+                        </div>
+                        <div className="bg-[var(--surface)] p-2.5 text-center">
+                          <p className={`text-lg font-bold font-mono ${top10 > 0 ? 'text-green-400' : 'text-text-muted'}`}>{top10}</p>
+                          <p className="text-[10px] text-text-muted uppercase">Top 10</p>
+                        </div>
+                        <div className="bg-[var(--surface)] p-2.5 text-center">
+                          <p className={`text-lg font-bold font-mono ${top25 > 0 ? 'text-text-primary' : 'text-text-muted'}`}>{top25}</p>
+                          <p className="text-[10px] text-text-muted uppercase">Top 25</p>
+                        </div>
+                      </div>
+                    )
+                  })()}
+
                   <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Recent Tournaments</h3>
                   {(player.performances || []).length === 0 ? (
                     <div className="text-center py-8 text-text-muted">No tournament results yet</div>
