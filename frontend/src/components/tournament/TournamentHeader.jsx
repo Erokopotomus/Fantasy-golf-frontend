@@ -250,28 +250,48 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
             <div className="hidden md:flex gap-3 flex-shrink-0">
               {/* Field Snapshot */}
               {leaderboard.length > 0 && (() => {
+                const total = leaderboard.length
                 const top25 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 25).length
                 const top50 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 50).length
                 const top100 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 100).length
+                // Segment widths as % of total field
+                const pct25 = (top25 / total) * 100
+                const pct50 = ((top50 - top25) / total) * 100
+                const pct100 = ((top100 - top50) / total) * 100
+                const pctRest = ((total - top100) / total) * 100
                 return (
                   <div className={`flex flex-col w-36 rounded-lg ${panelBg} border p-3`}>
-                    <span className={`text-[10px] ${txtMuted} uppercase tracking-wider font-bold mb-2`}>Field Strength</span>
-                    <div className="grid grid-cols-2 gap-1.5 flex-1">
-                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
-                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold mb-0.5`}>Field</p>
-                        <p className={`text-sm font-bold font-mono ${txtPrimary}`}>{leaderboard.length}</p>
+                    <span className={`text-[10px] ${txtMuted} uppercase tracking-wider font-bold mb-1`}>Field Strength</span>
+                    <p className={`text-lg font-bold font-mono ${txtPrimary} mb-2`}>{total} <span className={`text-[10px] font-normal ${txtMuted}`}>players</span></p>
+                    {/* Segmented bar */}
+                    <div className="flex h-2 rounded-full overflow-hidden mb-2">
+                      {pct25 > 0 && <div className="bg-gold" style={{ width: `${pct25}%` }} />}
+                      {pct50 > 0 && <div className="bg-emerald-400" style={{ width: `${pct50}%` }} />}
+                      {pct100 > 0 && <div className={img ? 'bg-white/30' : 'bg-slate-400'} style={{ width: `${pct100}%` }} />}
+                      {pctRest > 0 && <div className={img ? 'bg-white/10' : 'bg-[var(--stone)]'} style={{ width: `${pctRest}%` }} />}
+                    </div>
+                    {/* Tier legend */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-sm bg-gold flex-shrink-0" />
+                          <span className={`text-[10px] ${txtSecondary}`}>Top 25</span>
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-gold">{top25}</span>
                       </div>
-                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
-                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold mb-0.5`}>Top 25</p>
-                        <p className="text-sm font-bold font-mono text-gold">{top25}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-sm bg-emerald-400 flex-shrink-0" />
+                          <span className={`text-[10px] ${txtSecondary}`}>Top 50</span>
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-emerald-400">{top50}</span>
                       </div>
-                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
-                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold mb-0.5`}>Top 50</p>
-                        <p className="text-sm font-bold font-mono text-emerald-400">{top50}</p>
-                      </div>
-                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
-                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold mb-0.5`}>Top 100</p>
-                        <p className={`text-sm font-bold font-mono ${txtSecondary}`}>{top100}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-sm ${img ? 'bg-white/30' : 'bg-slate-400'} flex-shrink-0`} />
+                          <span className={`text-[10px] ${txtSecondary}`}>Top 100</span>
+                        </div>
+                        <span className={`text-[10px] font-mono font-bold ${txtSecondary}`}>{top100}</span>
                       </div>
                     </div>
                   </div>
