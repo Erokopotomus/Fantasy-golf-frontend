@@ -396,6 +396,7 @@ const LeagueHome = () => {
                 { to: isNflLeague ? `/nfl/players?league=${leagueId}` : `/players?league=${leagueId}`, label: 'Players' },
                 { to: existingBoardId ? `/lab/${existingBoardId}` : buildLabUrl(league), label: 'Lab' },
                 { to: `/leagues/${leagueId}/standings`, label: 'Standings' },
+                { to: `/leagues/${leagueId}/vault`, label: 'Vault' },
                 { to: `/leagues/${leagueId}/scoring`, label: 'Scoring' },
                 { to: `/leagues/${leagueId}/settings`, label: 'Settings' },
               ].map(nav => (
@@ -974,11 +975,6 @@ const LeagueHome = () => {
                 <Link to={`/leagues/${leagueId}/recap`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
                   Recap
                 </Link>
-                {league?.settings?.importedFrom && (
-                  <Link to={`/leagues/${leagueId}/vault`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
-                    Vault
-                  </Link>
-                )}
               </div>
 
               {/* Commissioner Blog — full width for rich content */}
