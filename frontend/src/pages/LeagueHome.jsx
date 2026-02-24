@@ -4,6 +4,7 @@ import { useLeagues } from '../hooks/useLeagues'
 import { useLeagueFormat, LEAGUE_FORMATS } from '../hooks/useLeagueFormat'
 import { useAuth } from '../context/AuthContext'
 import useActivity from '../hooks/useActivity'
+import { useLeagueLiveScoring } from '../hooks/useLeagueLiveScoring'
 import useMatchups from '../hooks/useMatchups'
 import api from '../services/api'
 import Card from '../components/common/Card'
@@ -52,6 +53,12 @@ const LeagueHome = () => {
   // Fetch matchup data for H2H NFL leagues (hero card)
   const { schedule: matchupSchedule, standings: matchupStandings } = useMatchups(
     isHeadToHead ? leagueId : null
+  )
+
+  // Fetch live tournament scoring for "This Week" column (golf leagues only)
+  const isTournamentLive = !isNflLeague && currentTournament?.status === 'IN_PROGRESS'
+  const { teams: liveTeams, isLive: isLiveScoring } = useLeagueLiveScoring(
+    isTournamentLive ? leagueId : null
   )
 
   // Derive current matchup for the hero card
@@ -794,6 +801,7 @@ const LeagueHome = () => {
                         <th className="pb-2 text-left">Owner</th>
                         <th className="pb-2 text-center">Players</th>
                         <th className="pb-2 text-center">W-L</th>
+                        {!isNflLeague && <th className="pb-2 text-center">This Week</th>}
                         <th className="pb-2 text-right">Points</th>
                       </tr>
                     </thead>
@@ -839,6 +847,22 @@ const LeagueHome = () => {
                             <td className="py-3 text-center text-text-secondary">
                               {team.wins != null ? `${team.wins}-${team.losses || 0}` : '–'}
                             </td>
+                            {!isNflLeague && (() => {
+                              const liveTeam = liveTeams?.find(lt => lt.teamId === team.id)
+                              const livePoints = liveTeam?.totalPoints
+                              return (
+                                <td className="py-3 text-center">
+                                  {isTournamentLive && livePoints != null ? (
+                                    <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-emerald-500">
+                                      {isLiveScoring && <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />}
+                                      {livePoints.toFixed(1)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-text-muted">–</span>
+                                  )}
+                                </td>
+                              )
+                            })()}
                             <td className="py-3 text-right font-semibold text-text-primary">
                               {team.totalPoints?.toLocaleString() || '0'}
                             </td>

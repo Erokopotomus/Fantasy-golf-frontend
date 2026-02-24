@@ -414,6 +414,9 @@ httpServer.listen(PORT, () => {
       try {
         const result = await espnSync.syncHoleScores(t.id, cronPrisma)
         cronLog('espn', `Done: ${result.matched} players, ${result.holes} holes`)
+        // Aggregate hole data into Performance + RoundScore for fantasy scoring
+        const aggResult = await espnSync.aggregateHoleScoresToPerformance(t.id, cronPrisma)
+        cronLog('espn', `Aggregated: ${aggResult.performances} performances, ${aggResult.rounds} rounds`)
       } catch (e) { cronLog('espn', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 

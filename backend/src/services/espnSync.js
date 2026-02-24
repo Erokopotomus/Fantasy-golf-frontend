@@ -276,21 +276,44 @@ async function syncHoleScores(tournamentId, prisma) {
 function computeRoundStats(holeEntries) {
   let eagles = 0, birdies = 0, pars = 0, bogeys = 0, doubleBogeys = 0, worseThanDouble = 0
 
-  for (const h of holeEntries) {
+  // Track consecutive birdie-or-better streak
+  let currentStreak = 0
+  let maxStreak = 0
+
+  // Sort by hole number to ensure correct streak tracking
+  const sorted = [...holeEntries].sort((a, b) => (a.period || 0) - (b.period || 0))
+
+  for (const h of sorted) {
     const scoreType = h.scoreType?.displayValue
     if (!scoreType) continue
-    if (scoreType === 'E') pars++
-    else {
+    if (scoreType === 'E') {
+      pars++
+      currentStreak = 0
+    } else {
       const diff = parseInt(scoreType)
-      if (diff <= -2) eagles++
-      else if (diff === -1) birdies++
-      else if (diff === 1) bogeys++
-      else if (diff === 2) doubleBogeys++
-      else if (diff > 2) worseThanDouble++
+      if (diff <= -2) {
+        eagles++
+        currentStreak++
+      } else if (diff === -1) {
+        birdies++
+        currentStreak++
+      } else if (diff === 1) {
+        bogeys++
+        currentStreak = 0
+      } else if (diff === 2) {
+        doubleBogeys++
+        currentStreak = 0
+      } else if (diff > 2) {
+        worseThanDouble++
+        currentStreak = 0
+      }
     }
+    if (currentStreak > maxStreak) maxStreak = currentStreak
   }
 
-  return { eagles, birdies, pars, bogeys, doubleBogeys, worseThanDouble }
+  const bogeyFree = bogeys === 0 && doubleBogeys === 0 && worseThanDouble === 0 && sorted.length === 18
+
+  return { eagles, birdies, pars, bogeys, doubleBogeys, worseThanDouble, bogeyFree, consecutiveBirdies: maxStreak }
 }
 
 /** Normalize player name for fuzzy matching (strips diacriticals + Nordic chars) */
@@ -529,8 +552,152 @@ async function syncPlayerBios(prisma) {
   return { fetched, updated }
 }
 
+/**
+ * Aggregate HoleScore data up into Performance + RoundScore records.
+ * This bridges the gap between ESPN hole-by-hole data and the fantasy
+ * scoring engine which reads eagles/birdies/bogeys from Performance
+ * and bogeyFree/consecutiveBirdies from RoundScore.
+ *
+ * @param {string} tournamentId - Our internal tournament ID
+ * @param {import('@prisma/client').PrismaClient} prisma
+ */
+async function aggregateHoleScoresToPerformance(tournamentId, prisma) {
+  console.log(`[ESPN Agg] Aggregating hole scores for tournament ${tournamentId}`)
+
+  // 1. Load all HoleScores for this tournament, grouped by roundScore
+  const holeScores = await prisma.holeScore.findMany({
+    where: { tournamentId },
+    include: {
+      roundScore: {
+        select: { id: true, playerId: true, roundNumber: true },
+      },
+    },
+    orderBy: { holeNumber: 'asc' },
+  })
+
+  if (!holeScores.length) {
+    console.log(`[ESPN Agg] No hole scores found for tournament ${tournamentId}`)
+    return { performances: 0, rounds: 0 }
+  }
+
+  // 2. Group by playerId → roundNumber → holes
+  const playerRounds = new Map() // playerId -> Map(roundNumber -> holes[])
+  for (const hs of holeScores) {
+    if (!hs.roundScore) continue
+    const { playerId, roundNumber } = hs.roundScore
+
+    if (!playerRounds.has(playerId)) playerRounds.set(playerId, new Map())
+    const rounds = playerRounds.get(playerId)
+    if (!rounds.has(roundNumber)) rounds.set(roundNumber, [])
+    rounds.get(roundNumber).push(hs)
+  }
+
+  // 3. Compute per-round and per-player aggregates
+  const roundUpdates = [] // { roundScoreId, data }
+  const playerTotals = new Map() // playerId -> { eagles, birdies, pars, bogeys, doubleBogeys, worseThanDouble }
+
+  for (const [playerId, rounds] of playerRounds) {
+    if (!playerTotals.has(playerId)) {
+      playerTotals.set(playerId, { eagles: 0, birdies: 0, pars: 0, bogeys: 0, doubleBogeys: 0, worseThanDouble: 0 })
+    }
+    const totals = playerTotals.get(playerId)
+
+    for (const [roundNumber, holes] of rounds) {
+      // Classify each hole by toPar
+      let rEagles = 0, rBirdies = 0, rPars = 0, rBogeys = 0, rDoubleBogeys = 0, rWorseThanDouble = 0
+
+      // Track consecutive birdie-or-better streak
+      let currentStreak = 0
+      let maxStreak = 0
+
+      // Sort by hole number for streak tracking
+      const sorted = [...holes].sort((a, b) => a.holeNumber - b.holeNumber)
+
+      for (const h of sorted) {
+        const tp = h.toPar
+        if (tp == null) continue
+
+        if (tp <= -2) {
+          rEagles++
+          currentStreak++
+        } else if (tp === -1) {
+          rBirdies++
+          currentStreak++
+        } else if (tp === 0) {
+          rPars++
+          currentStreak = 0
+        } else if (tp === 1) {
+          rBogeys++
+          currentStreak = 0
+        } else if (tp === 2) {
+          rDoubleBogeys++
+          currentStreak = 0
+        } else {
+          rWorseThanDouble++
+          currentStreak = 0
+        }
+        if (currentStreak > maxStreak) maxStreak = currentStreak
+      }
+
+      const bogeyFree = rBogeys === 0 && rDoubleBogeys === 0 && rWorseThanDouble === 0 && sorted.length === 18
+
+      // Accumulate into player totals
+      totals.eagles += rEagles
+      totals.birdies += rBirdies
+      totals.pars += rPars
+      totals.bogeys += rBogeys
+      totals.doubleBogeys += rDoubleBogeys
+      totals.worseThanDouble += rWorseThanDouble
+
+      // Queue round score update
+      const roundScoreId = sorted[0]?.roundScore?.id
+      if (roundScoreId) {
+        roundUpdates.push({
+          id: roundScoreId,
+          data: {
+            eagles: rEagles, birdies: rBirdies, pars: rPars,
+            bogeys: rBogeys, doubleBogeys: rDoubleBogeys, worseThanDouble: rWorseThanDouble,
+            bogeyFree, consecutiveBirdies: maxStreak,
+          },
+        })
+      }
+    }
+  }
+
+  // 4. Batch update RoundScore records
+  if (roundUpdates.length > 0) {
+    const rsOps = roundUpdates.map((u) =>
+      prisma.roundScore.update({ where: { id: u.id }, data: u.data })
+    )
+    await batchTransaction(prisma, rsOps)
+  }
+
+  // 5. Batch update Performance records
+  const perfUpdates = []
+  for (const [playerId, totals] of playerTotals) {
+    perfUpdates.push(
+      prisma.performance.updateMany({
+        where: { tournamentId, playerId },
+        data: {
+          eagles: totals.eagles,
+          birdies: totals.birdies,
+          pars: totals.pars,
+          bogeys: totals.bogeys,
+          doubleBogeys: totals.doubleBogeys,
+          worseThanDouble: totals.worseThanDouble,
+        },
+      })
+    )
+  }
+  await batchTransaction(prisma, perfUpdates)
+
+  console.log(`[ESPN Agg] Done: ${playerTotals.size} performances, ${roundUpdates.length} round scores updated`)
+  return { performances: playerTotals.size, rounds: roundUpdates.length }
+}
+
 module.exports = {
   syncHoleScores,
   syncEspnIds,
   syncPlayerBios,
+  aggregateHoleScoresToPerformance,
 }

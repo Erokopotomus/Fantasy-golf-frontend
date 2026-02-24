@@ -9,7 +9,7 @@ const {
   syncFantasyProjections,
   syncTournamentResults,
 } = require('../services/datagolfSync')
-const { syncHoleScores, syncEspnIds, syncPlayerBios } = require('../services/espnSync')
+const { syncHoleScores, syncEspnIds, syncPlayerBios, aggregateHoleScoresToPerformance } = require('../services/espnSync')
 const nflSync = require('../services/nflSync')
 
 const router = express.Router()
@@ -99,6 +99,20 @@ router.post('/tournament/:dgId/finalize', async (req, res) => {
 router.post('/tournament/:tournamentId/espn', async (req, res) => {
   const { tournamentId } = req.params
   await runSync(`espn-${tournamentId}`, () => syncHoleScores(tournamentId, prisma), res)
+})
+
+// POST /api/sync/aggregate-hole-scores — Aggregate ESPN hole data into Performance + RoundScore
+router.post('/aggregate-hole-scores', async (req, res) => {
+  // Find current in-progress tournament
+  const tournament = await prisma.tournament.findFirst({
+    where: { status: 'IN_PROGRESS' },
+    orderBy: { startDate: 'asc' },
+    select: { id: true, name: true },
+  })
+  if (!tournament) {
+    return res.status(404).json({ error: 'No in-progress tournament found' })
+  }
+  await runSync('aggregate-hole-scores', () => aggregateHoleScoresToPerformance(tournament.id, prisma), res)
 })
 
 // POST /api/sync/espn-ids — Match ESPN athlete IDs to our players
