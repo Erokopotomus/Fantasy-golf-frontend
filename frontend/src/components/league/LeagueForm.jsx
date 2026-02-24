@@ -57,9 +57,9 @@ const LeagueForm = ({ onSubmit, loading }) => {
     label: `${i + 4} players`,
   }))
 
-  const maxMembersOptions = Array.from({ length: 13 }, (_, i) => ({
-    value: String(i + 4),
-    label: `${i + 4} members`,
+  const maxMembersOptions = Array.from({ length: 15 }, (_, i) => ({
+    value: String(i + 2),
+    label: `${i + 2} members`,
   }))
 
   const budgetOptions = [
