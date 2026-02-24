@@ -235,11 +235,11 @@ const Dashboard = () => {
             </div>
 
             {leaguesLoading ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <LeagueCardSkeleton />
               </div>
             ) : prioritizedLeagues.length > 0 ? (
-              <div className={`space-y-4 ${prioritizedLeagues.length >= 4 ? 'max-h-[500px] overflow-y-auto scrollbar-thin pr-1' : ''}`}>
+              <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${prioritizedLeagues.length >= 6 ? 'max-h-[540px] overflow-y-auto scrollbar-thin pr-1' : ''}`}>
                 {prioritizedLeagues.map((league) => (
                   <LeagueCard
                     key={league.id}
