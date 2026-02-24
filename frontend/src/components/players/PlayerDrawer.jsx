@@ -297,8 +297,8 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
 
           {/* Clutch insights tagline */}
           {showClutchStrip && (
-            <p className="text-[9px] text-text-muted/60 text-center mx-4 -mt-1.5 mb-2 italic font-editorial">
-              Powered by strokes gained, OWGR trends, recent finishes &amp; course DNA analysis
+            <p className="text-[11px] text-text-muted text-center mx-4 -mt-1 mb-2 italic font-editorial">
+              Powered by strokes gained, OWGR trends, recent finishes &amp; course DNA
             </p>
           )}
 
@@ -400,6 +400,14 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                       {(player.performances || []).length > 0 && (
                         <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                           <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Recent Results</h3>
+                          {/* Table header */}
+                          <div className="flex items-center justify-between pb-1 mb-1 border-b border-[var(--card-border)]">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold w-8 flex-shrink-0">Pos</span>
+                              <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold">Tournament</span>
+                            </div>
+                            <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold flex-shrink-0 ml-2">Score</span>
+                          </div>
                           <div className="space-y-1.5">
                             {player.performances.slice(0, 5).map((perf) => (
                               <div key={perf.id} className="flex items-center justify-between py-1">
@@ -815,15 +823,15 @@ const SkillMatchCard = ({ player, course }) => {
   return (
     <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
       <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Skill Match</h3>
-      {/* Column headers — mirrors data row widths exactly */}
+      {/* Column headers — same flex structure as data rows */}
       <div className="flex items-center gap-2 mb-1.5 pb-1 border-b border-[var(--card-border)]">
-        <span className="w-[72px] flex-shrink-0" />
-        <HoverTip tip="Strokes Gained per round vs the tour field. Positive is good. +0.50 is strong, +1.00 is elite, negative is a weakness." className="w-12 flex-shrink-0">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap text-right block">Player</span>
+        <span className="text-xs w-[72px] flex-shrink-0" />
+        <HoverTip tip="Strokes Gained per round vs the tour field. Positive is good. +0.50 is strong, +1.00 is elite, negative is a weakness." className="text-xs w-12 flex-shrink-0 text-right">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Player</span>
         </HoverTip>
-        <div className="flex-1" />
-        <HoverTip tip="How much this course rewards each skill. Premium/High = critical to scoring well here. Average/Low = matters less this week." className="w-16 flex-shrink-0">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap text-right block">Course</span>
+        <div className="flex-1 h-2" />
+        <HoverTip tip="How much this course rewards each skill. Premium/High = critical to scoring well here. Average/Low = matters less this week." className="text-[10px] w-16 flex-shrink-0 text-right">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Course</span>
         </HoverTip>
       </div>
       <div className="space-y-2.5">
