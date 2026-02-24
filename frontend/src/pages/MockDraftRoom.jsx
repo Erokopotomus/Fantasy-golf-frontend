@@ -2262,7 +2262,7 @@ const MockDraftRoom = () => {
                         <div />
                       </div>
                     ) : (
-                      <div className="grid grid-cols-[28px_1fr_42px_28px_28px_28px_40px_40px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                      <div className="grid grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
                         <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
                           Rk <SortIcon field="rank" />
                         </button>
@@ -2296,7 +2296,7 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[28px_1fr_42px_28px_28px_28px_40px_40px_48px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
+                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
                           player.isDrafted
                             ? 'opacity-40 bg-[var(--bg-alt)]/50'
                             : `cursor-pointer hover:bg-[var(--surface-alt)] ${inQueue ? 'bg-orange/5' : ''}`

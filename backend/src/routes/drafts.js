@@ -205,8 +205,46 @@ router.get('/:id/players', authenticate, async (req, res, next) => {
       prisma.player.count({ where })
     ])
 
+    // Compute current-season stats from performances (career totals on Player model span all years)
+    const draftPlayerIds = players.map(p => p.id)
+    const currentYear = new Date().getFullYear()
+    const seasonStart = new Date(`${currentYear}-01-01T00:00:00Z`)
+    const seasonEnd = new Date(`${currentYear + 1}-01-01T00:00:00Z`)
+
+    const seasonPerfs = draftPlayerIds.length > 0 ? await prisma.performance.findMany({
+      where: {
+        playerId: { in: draftPlayerIds },
+        tournament: { startDate: { gte: seasonStart, lt: seasonEnd } },
+      },
+      select: { playerId: true, position: true, status: true },
+    }) : []
+
+    const seasonMap = new Map()
+    for (const perf of seasonPerfs) {
+      if (!seasonMap.has(perf.playerId)) {
+        seasonMap.set(perf.playerId, { events: 0, wins: 0, top5s: 0, top10s: 0, top25s: 0, cutsMade: 0 })
+      }
+      const s = seasonMap.get(perf.playerId)
+      s.events++
+      if (perf.status !== 'CUT' && perf.status !== 'WD' && perf.status !== 'DQ') {
+        s.cutsMade++
+        const pos = perf.position
+        if (pos != null) {
+          if (pos === 1) s.wins++
+          if (pos <= 5) s.top5s++
+          if (pos <= 10) s.top10s++
+          if (pos <= 25) s.top25s++
+        }
+      }
+    }
+
+    const playersWithSeasonStats = players.map(p => {
+      const ss = seasonMap.get(p.id)
+      return ss ? { ...p, events: ss.events, wins: ss.wins, top5s: ss.top5s, top10s: ss.top10s, top25s: ss.top25s, cutsMade: ss.cutsMade } : p
+    })
+
     res.json({
-      players,
+      players: playersWithSeasonStats,
       draftedPlayerIds,
       pagination: {
         total,

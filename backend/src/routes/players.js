@@ -66,8 +66,47 @@ router.get('/', optionalAuth, async (req, res, next) => {
       prisma.player.count({ where })
     ])
 
-    // Batch-fetch ClutchScores for listed players (latest weekly snapshot)
+    // Batch-fetch current-season stats from performances (not career totals)
     const playerIds = players.map(p => p.id)
+    const currentYear = new Date().getFullYear()
+    const seasonStart = new Date(`${currentYear}-01-01T00:00:00Z`)
+    const seasonEnd = new Date(`${currentYear + 1}-01-01T00:00:00Z`)
+
+    const seasonPerfs = playerIds.length > 0 ? await prisma.performance.findMany({
+      where: {
+        playerId: { in: playerIds },
+        tournament: {
+          startDate: { gte: seasonStart, lt: seasonEnd },
+        },
+      },
+      select: {
+        playerId: true,
+        position: true,
+        status: true,
+      },
+    }) : []
+
+    // Aggregate per-player season stats
+    const seasonStatsMap = new Map()
+    for (const perf of seasonPerfs) {
+      if (!seasonStatsMap.has(perf.playerId)) {
+        seasonStatsMap.set(perf.playerId, { events: 0, wins: 0, top5s: 0, top10s: 0, top25s: 0, cutsMade: 0 })
+      }
+      const s = seasonStatsMap.get(perf.playerId)
+      s.events++
+      if (perf.status !== 'CUT' && perf.status !== 'WD' && perf.status !== 'DQ') {
+        s.cutsMade++
+        const pos = perf.position
+        if (pos != null) {
+          if (pos === 1) s.wins++
+          if (pos <= 5) s.top5s++
+          if (pos <= 10) s.top10s++
+          if (pos <= 25) s.top25s++
+        }
+      }
+    }
+
+    // Batch-fetch ClutchScores for listed players (latest weekly snapshot)
     const clutchScores = playerIds.length > 0 ? await prisma.clutchScore.findMany({
       where: {
         playerId: { in: playerIds },
@@ -91,8 +130,18 @@ router.get('/', optionalAuth, async (req, res, next) => {
         .filter(Boolean)
       const { performances, ...rest } = p
       const cs = clutchMap.get(p.id)
+      const ss = seasonStatsMap.get(p.id)
       return {
         ...rest,
+        // Override career totals with current-season stats when available
+        ...(ss ? {
+          events: ss.events,
+          wins: ss.wins,
+          top5s: ss.top5s,
+          top10s: ss.top10s,
+          top25s: ss.top25s,
+          cutsMade: ss.cutsMade,
+        } : {}),
         recentForm,
         clutchMetrics: cs ? {
           cpi: cs.cpi,

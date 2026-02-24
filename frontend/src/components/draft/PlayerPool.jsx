@@ -120,7 +120,7 @@ const PlayerPool = ({
       <div className="flex-1 overflow-auto min-h-0">
         {/* Header */}
         <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
-          <div className="grid grid-cols-[28px_1fr_38px_42px_28px_28px_28px_40px_40px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+          <div className="grid grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
             <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
               Rk <SortIcon field="rank" />
             </button>
@@ -158,7 +158,7 @@ const PlayerPool = ({
           return (
             <div
               key={player.id}
-              className={`grid grid-cols-[28px_1fr_38px_42px_28px_28px_28px_40px_40px_48px] px-3 py-2 border-b border-[var(--card-border)] items-center transition-colors cursor-pointer hover:bg-[var(--surface-alt)] ${
+              className={`grid grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px] px-3 py-2 border-b border-[var(--card-border)] items-center transition-colors cursor-pointer hover:bg-[var(--surface-alt)] ${
                 inQueue ? 'bg-orange/5' : ''
               }`}
               onClick={() => onViewPlayer?.(player)}
