@@ -46,10 +46,23 @@ const WaiverWire = () => {
 
   // Fetch upcoming tournaments for schedule dots (golf only)
   const [upcomingTournaments, setUpcomingTournaments] = useState([])
+  const [nextTournamentCourse, setNextTournamentCourse] = useState(null)
+  const [nextTournamentName, setNextTournamentName] = useState(null)
   useEffect(() => {
     if (isNfl) return
     api.getUpcomingTournamentsWithFields()
-      .then(data => setUpcomingTournaments(data.tournaments || []))
+      .then(data => {
+        const tourneys = data.tournaments || []
+        setUpcomingTournaments(tourneys)
+        // Fetch full course data (with DNA) for the first upcoming tournament
+        const next = tourneys.find(t => t.status === 'UPCOMING' || t.status === 'IN_PROGRESS')
+        if (next?.id) {
+          setNextTournamentName(next.shortName || next.name)
+          api.getTournament(next.id)
+            .then(tData => setNextTournamentCourse(tData?.tournament?.course || null))
+            .catch(() => {})
+        }
+      })
       .catch(() => setUpcomingTournaments([]))
   }, [isNfl])
 
@@ -584,6 +597,14 @@ const WaiverWire = () => {
           isOnRoster: false,
           onAdd: handleAddFromDrawer,
         }}
+        tournamentContext={!isNfl && nextTournamentCourse ? {
+          entry: (() => {
+            const p = availablePlayers.find(pl => pl.id === drawerPlayerId)
+            return p ? { ...p, clutchMetrics: null, courseHistory: null } : null
+          })(),
+          course: nextTournamentCourse,
+          tournamentName: nextTournamentName,
+        } : undefined}
       />
     </div>
   )

@@ -120,10 +120,20 @@ const LeagueHome = () => {
   }, [leagueId])
 
   // Fetch current tournament for the widget (golf leagues only)
+  const [tournamentField, setTournamentField] = useState([])
   useEffect(() => {
     if (isNflLeague) return
     api.getCurrentTournament()
-      .then(data => setCurrentTournament(data.tournament || data))
+      .then(data => {
+        const t = data.tournament || data
+        setCurrentTournament(t)
+        // Fetch leaderboard/field for Field Strength in header
+        if (t?.id) {
+          api.getTournamentLeaderboard(t.id)
+            .then(lbData => setTournamentField(lbData?.leaderboard || []))
+            .catch(() => {})
+        }
+      })
       .catch(() => {})
   }, [isNflLeague])
 
@@ -601,7 +611,7 @@ const LeagueHome = () => {
           {!isNflLeague && currentTournament && (currentTournament.status === 'UPCOMING' || currentTournament.status === 'IN_PROGRESS') && (
             <Link to="/golf" className="block mb-6 group">
               <div className="relative">
-                <TournamentHeader tournament={currentTournament} leaderboard={[]} />
+                <TournamentHeader tournament={currentTournament} leaderboard={tournamentField} />
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-[10px] font-mono font-bold text-gold bg-gold/10 px-2 py-1 rounded-full">
                     Golf Hub →

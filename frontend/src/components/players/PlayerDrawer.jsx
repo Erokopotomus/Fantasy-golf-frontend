@@ -161,7 +161,9 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
   const ch = entry?.courseHistory
 
   // Whether to hide the generic projection bar (show clutch metrics strip instead, or hide if zeros)
-  const showClutchStrip = hasTournament
+  const hasClutchData = cm.cpi != null || cm.formScore != null || cm.courseFitScore != null
+  const showClutchStrip = hasTournament && hasClutchData
+  const showScoutStrip = hasTournament && !hasClutchData  // Waiver wire: show SG/OWGR instead
   const showProjectionBar = !hasTournament && projection
   const hasNonZeroProjection = projection && (projection.floor > 0 || projection.ceiling > 0)
 
@@ -295,8 +297,48 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
             </div>
           )}
 
+          {/* Scout strip (waiver wire — no clutch metrics, show SG-based data) */}
+          {showScoutStrip && player && (
+            <div className="grid grid-cols-4 gap-px mx-4 mb-3 rounded-lg bg-[var(--card-border)]" style={{ isolation: 'isolate' }}>
+              <HoverTip tip="Strokes Gained Total — overall performance vs the field per round. Positive is better than average." className="rounded-l-lg bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
+                  <p className={`text-lg font-bold font-mono ${
+                    (player.sgTotal || entry?.sgTotal) > 0.5 ? 'text-emerald-400' : (player.sgTotal || entry?.sgTotal) > 0 ? 'text-green-400' : (player.sgTotal ?? entry?.sgTotal) != null ? 'text-red-400' : 'text-text-muted'
+                  }`}>
+                    {(player.sgTotal ?? entry?.sgTotal) != null ? ((player.sgTotal ?? entry?.sgTotal) > 0 ? '+' : '') + (player.sgTotal ?? entry?.sgTotal).toFixed(1) : '\u2014'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">SG Total</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="Official World Golf Ranking. Lower is better. Top 50 is elite, top 100 is strong." className="bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
+                  <p className="text-lg font-bold font-mono text-text-primary">
+                    {entry?.owgrRank || player?.owgrRank ? `#${entry?.owgrRank || player?.owgrRank}` : '\u2014'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">OWGR</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="Career wins on tour." className="bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
+                  <p className={`text-lg font-bold font-mono ${player.wins > 0 ? 'text-gold' : 'text-text-muted'}`}>
+                    {player.wins || 0}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">Wins</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="Average score per round." className="rounded-r-lg bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
+                  <p className="text-lg font-bold font-mono text-text-primary">
+                    {player.avgScore ? player.avgScore.toFixed(1) : '\u2014'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">Avg</p>
+                </div>
+              </HoverTip>
+            </div>
+          )}
+
           {/* Clutch insights tagline */}
-          {showClutchStrip && (
+          {(showClutchStrip || showScoutStrip) && (
             <p className="text-xs text-text-muted text-center mx-4 -mt-1 mb-2 italic font-editorial">
               Powered by strokes gained, OWGR trends, recent finishes &amp; course DNA
             </p>
