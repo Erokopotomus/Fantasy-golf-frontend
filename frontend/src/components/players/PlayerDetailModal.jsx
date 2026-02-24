@@ -116,25 +116,25 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                   <p className={`text-2xl font-bold ${getStatColor(player.stats?.sgTotal)}`}>
                     {formatStat(player.stats?.sgTotal, '+')}
                   </p>
-                  <p className="text-text-muted text-sm mt-1">SG: Total</p>
+                  <p className="text-text-muted text-sm mt-1" title="Overall strokes gained per round vs. the field">SG: Total</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.drivingDistance?.toFixed(0) || '—'}
                   </p>
-                  <p className="text-text-muted text-sm mt-1">Driving (yds)</p>
+                  <p className="text-text-muted text-sm mt-1" title="Average driving distance in yards">Driving (yds)</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.gir?.toFixed(1) || '—'}%
                   </p>
-                  <p className="text-text-muted text-sm mt-1">GIR %</p>
+                  <p className="text-text-muted text-sm mt-1" title="Greens in Regulation — percentage of greens hit in the regulation number of strokes">GIR %</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold font-display text-text-primary">
                     {player.stats?.scoringAvg?.toFixed(1) || '—'}
                   </p>
-                  <p className="text-text-muted text-sm mt-1">Scoring Avg</p>
+                  <p className="text-text-muted text-sm mt-1" title="Average strokes per round">Scoring Avg</p>
                 </div>
               </div>
 

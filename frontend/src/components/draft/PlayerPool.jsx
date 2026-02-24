@@ -41,9 +41,21 @@ const PlayerPool = ({
           aVal = a.sgTotal || 0
           bVal = b.sgTotal || 0
           break
+        case 'top5':
+          aVal = a.top5s || 0
+          bVal = b.top5s || 0
+          break
         case 'top10':
-          aVal = a.events > 0 ? (a.top10s || 0) / a.events : 0
-          bVal = b.events > 0 ? (b.top10s || 0) / b.events : 0
+          aVal = a.top10s || 0
+          bVal = b.top10s || 0
+          break
+        case 'top25':
+          aVal = a.top25s || 0
+          bVal = b.top25s || 0
+          break
+        case 'cuts':
+          aVal = a.cutsMade || 0
+          bVal = b.cutsMade || 0
           break
         default:
           aVal = a.rank || a.owgrRank || 999
@@ -63,7 +75,7 @@ const PlayerPool = ({
       setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     } else {
       setSortBy(field)
-      setSortDir(field === 'sgTotal' || field === 'top10' || field === 'cpi' ? 'desc' : 'asc')
+      setSortDir(field === 'sgTotal' || field === 'top5' || field === 'top10' || field === 'top25' || field === 'cuts' || field === 'cpi' ? 'desc' : 'asc')
     }
   }
 
@@ -108,24 +120,32 @@ const PlayerPool = ({
       <div className="flex-1 overflow-auto min-h-0">
         {/* Header */}
         <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
-          <div className="grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-            <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
+          <div className="grid grid-cols-[28px_1fr_38px_42px_28px_28px_28px_40px_40px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+            <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
               Rk <SortIcon field="rank" />
             </button>
             <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
               Player <SortIcon field="name" />
             </button>
-            <button onClick={() => handleSort('cpi')} className="text-right hover:text-text-primary transition-colors">
+            <button onClick={() => handleSort('cpi')} className="text-right hover:text-text-primary transition-colors" title="Clutch Performance Index — proprietary rating from -3.0 to +3.0">
               CPI <SortIcon field="cpi" />
             </button>
-            <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-text-primary transition-colors">
+            <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-text-primary transition-colors" title="Strokes Gained: Total per round vs. field average">
               SG <SortIcon field="sgTotal" />
             </button>
-            <button onClick={() => handleSort('top10')} className="text-right hover:text-text-primary transition-colors">
+            <button onClick={() => handleSort('top5')} className="text-right hover:text-text-primary transition-colors" title="Top-5 finishes this season">
+              T5 <SortIcon field="top5" />
+            </button>
+            <button onClick={() => handleSort('top10')} className="text-right hover:text-text-primary transition-colors" title="Top-10 finishes this season">
               T10 <SortIcon field="top10" />
             </button>
-            <span className="text-center">Evt</span>
-            <span className="text-center">Form</span>
+            <button onClick={() => handleSort('top25')} className="text-right hover:text-text-primary transition-colors" title="Top-25 finishes this season">
+              T25 <SortIcon field="top25" />
+            </button>
+            <button onClick={() => handleSort('cuts')} className="text-center hover:text-text-primary transition-colors" title="Cuts made / events entered">
+              MC <SortIcon field="cuts" />
+            </button>
+            <span className="text-center" title="Last 4 tournament finishes (most recent first)">Form</span>
             <div />
           </div>
         </div>
@@ -134,12 +154,11 @@ const PlayerPool = ({
         {filteredPlayers.map((player) => {
           const inQueue = isInQueue(player.id)
           const sgTotal = player.sgTotal || 0
-          const top10Pct = player.events > 0 ? Math.round((player.top10s || 0) / player.events * 100) : 0
 
           return (
             <div
               key={player.id}
-              className={`grid grid-cols-[30px_1fr_40px_44px_36px_30px_44px_48px] px-3 py-2 border-b border-[var(--card-border)] items-center transition-colors cursor-pointer hover:bg-[var(--surface-alt)] ${
+              className={`grid grid-cols-[28px_1fr_38px_42px_28px_28px_28px_40px_40px_48px] px-3 py-2 border-b border-[var(--card-border)] items-center transition-colors cursor-pointer hover:bg-[var(--surface-alt)] ${
                 inQueue ? 'bg-orange/5' : ''
               }`}
               onClick={() => onViewPlayer?.(player)}
@@ -178,10 +197,16 @@ const PlayerPool = ({
                 {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '—'}
               </span>
               <span className="text-xs text-right text-text-secondary tabular-nums">
-                {top10Pct > 0 ? `${top10Pct}%` : '—'}
+                {player.top5s || '—'}
+              </span>
+              <span className="text-xs text-right text-text-secondary tabular-nums">
+                {player.top10s || '—'}
+              </span>
+              <span className="text-xs text-right text-text-secondary tabular-nums">
+                {player.top25s || '—'}
               </span>
               <span className="text-xs text-center text-text-muted tabular-nums">
-                {player.events || '—'}
+                {player.cutsMade || 0}/{player.events || 0}
               </span>
               <div className="flex items-center justify-center gap-1">
                 {(player.recentForm || []).slice(0, 4).map((f, i) => {

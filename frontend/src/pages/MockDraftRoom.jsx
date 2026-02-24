@@ -398,21 +398,21 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
             <>
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
-                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">SG Total</p>
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5" title="Strokes Gained: Total — overall performance vs. the field per round">SG Total</p>
                   <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-text-primary' : 'text-red-400'}`}>
                     {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
                   </p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
-                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Top 10</p>
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5" title="Percentage of events with a top-10 finish">Top 10</p>
                   <p className="text-text-primary text-base font-bold">{player.top10}%</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
-                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Cuts</p>
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5" title="Percentage of events where the player made the cut">Cuts</p>
                   <p className="text-text-primary text-base font-bold">{player.cutsPct || 0}%</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
-                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Events</p>
+                  <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5" title="Total tournaments played this season">Events</p>
                   <p className="text-text-primary text-base font-bold">{player.tournaments}</p>
                 </div>
               </div>
@@ -422,13 +422,13 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                 <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wider mb-2">Strokes Gained</p>
                 <div className="space-y-1.5">
                   {[
-                    { label: 'OTT', value: player.sgOTT },
-                    { label: 'APP', value: player.sgAPP },
-                    { label: 'ATG', value: player.sgATG },
-                    { label: 'Putt', value: player.sgPutt },
-                  ].map(({ label, value }) => (
+                    { label: 'OTT', value: player.sgOTT, title: 'Strokes Gained: Off-the-Tee — driving performance' },
+                    { label: 'APP', value: player.sgAPP, title: 'Strokes Gained: Approach — iron play into greens' },
+                    { label: 'ATG', value: player.sgATG, title: 'Strokes Gained: Around-the-Green — chipping and pitching' },
+                    { label: 'Putt', value: player.sgPutt, title: 'Strokes Gained: Putting — putting efficiency' },
+                  ].map(({ label, value, title }) => (
                     <div key={label} className="flex items-center gap-2">
-                      <span className="text-text-muted text-xs w-8 text-right">{label}</span>
+                      <span className="text-text-muted text-xs w-8 text-right" title={title}>{label}</span>
                       <div className="flex-1 h-1.5 bg-[var(--bg-alt)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${value >= 0 ? 'bg-gold' : 'bg-red-400'}`}
@@ -828,7 +828,10 @@ const MockDraftRoom = () => {
       let aVal, bVal
       if (sortBy === 'name') { aVal = a.name; bVal = b.name }
       else if (sortBy === 'sg') { aVal = a.sg; bVal = b.sg }
-      else if (sortBy === 'top10') { aVal = a.top10; bVal = b.top10 }
+      else if (sortBy === 'top5') { aVal = a.top5s || 0; bVal = b.top5s || 0 }
+      else if (sortBy === 'top10') { aVal = a.top10s || 0; bVal = b.top10s || 0 }
+      else if (sortBy === 'top25') { aVal = a.top25s || 0; bVal = b.top25s || 0 }
+      else if (sortBy === 'cuts') { aVal = a.cutsMade || 0; bVal = b.cutsMade || 0 }
       else if (sortBy === 'ppg') { aVal = a.ppg; bVal = b.ppg }
       else if (sortBy === 'totalPts') { aVal = a.totalPts; bVal = b.totalPts }
       else { aVal = a.rank; bVal = b.rank }
@@ -1407,7 +1410,7 @@ const MockDraftRoom = () => {
       setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     } else {
       setSortBy(field)
-      setSortDir(field === 'sg' || field === 'top10' || field === 'ppg' || field === 'totalPts' ? 'desc' : 'asc')
+      setSortDir(field === 'sg' || field === 'top5' || field === 'top10' || field === 'top25' || field === 'cuts' || field === 'ppg' || field === 'totalPts' ? 'desc' : 'asc')
     }
   }
 
@@ -1943,16 +1946,16 @@ const MockDraftRoom = () => {
                 {/* Stats grid */}
                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                   {[
-                    { label: 'Events', value: enriched.tournaments },
-                    { label: 'Wins', value: enriched.wins, highlight: enriched.wins > 0 },
-                    { label: 'Top 5s', value: enriched.top5s },
-                    { label: 'Top 10s', value: enriched.top10s },
-                    { label: 'Top 25s', value: enriched.top25s },
-                    { label: 'Cuts', value: `${enriched.cutsMade}/${enriched.tournaments}` },
-                    { label: 'Cut %', value: `${enriched.cutsPct}%` },
+                    { label: 'Events', value: enriched.tournaments, title: 'Total tournaments played this season' },
+                    { label: 'Wins', value: enriched.wins, highlight: enriched.wins > 0, title: 'Tournament wins this season' },
+                    { label: 'Top 5s', value: enriched.top5s, title: 'Top-5 finishes this season' },
+                    { label: 'Top 10s', value: enriched.top10s, title: 'Top-10 finishes this season' },
+                    { label: 'Top 25s', value: enriched.top25s, title: 'Top-25 finishes this season' },
+                    { label: 'Cuts', value: `${enriched.cutsMade}/${enriched.tournaments}`, title: 'Cuts made / events entered' },
+                    { label: 'Cut %', value: `${enriched.cutsPct}%`, title: 'Percentage of events where the player made the cut' },
                   ].map(stat => (
                     <div key={stat.label} className="text-center py-1.5">
-                      <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{stat.label}</p>
+                      <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5" title={stat.title}>{stat.label}</p>
                       <p className={`text-sm font-bold tabular-nums ${stat.highlight ? 'text-yellow-400' : 'text-text-primary'}`}>{stat.value}</p>
                     </div>
                   ))}
@@ -1962,14 +1965,14 @@ const MockDraftRoom = () => {
                 <div className="mt-2.5 pt-2.5 border-t border-[var(--card-border)]/40">
                   <div className="grid grid-cols-5 gap-2">
                     {[
-                      { label: 'SG Total', value: enriched.sg },
-                      { label: 'OTT', value: enriched.sgOTT },
-                      { label: 'APP', value: enriched.sgAPP },
-                      { label: 'ATG', value: enriched.sgATG },
-                      { label: 'Putt', value: enriched.sgPutt },
+                      { label: 'SG Total', value: enriched.sg, title: 'Strokes Gained: Total — overall performance vs. the field per round' },
+                      { label: 'OTT', value: enriched.sgOTT, title: 'Strokes Gained: Off-the-Tee — driving performance' },
+                      { label: 'APP', value: enriched.sgAPP, title: 'Strokes Gained: Approach — iron play into greens' },
+                      { label: 'ATG', value: enriched.sgATG, title: 'Strokes Gained: Around-the-Green — chipping and pitching' },
+                      { label: 'Putt', value: enriched.sgPutt, title: 'Strokes Gained: Putting — putting efficiency' },
                     ].map(stat => (
                       <div key={stat.label} className="text-center py-1">
-                        <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5">{stat.label}</p>
+                        <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5" title={stat.title}>{stat.label}</p>
                         <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-gold' : stat.value >= 0 ? 'text-text-primary' : 'text-red-400'}`}>
                           {stat.value > 0 ? '+' : ''}{stat.value?.toFixed(2)}
                         </p>
@@ -2259,21 +2262,29 @@ const MockDraftRoom = () => {
                         <div />
                       </div>
                     ) : (
-                      <div className="grid grid-cols-[30px_1fr_44px_36px_30px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-                        <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
+                      <div className="grid grid-cols-[28px_1fr_42px_28px_28px_28px_40px_40px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                        <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
                           Rk <SortIcon field="rank" />
                         </button>
                         <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
                           Player <SortIcon field="name" />
                         </button>
-                        <button onClick={() => handleSort('sg')} className="text-right hover:text-text-primary transition-colors">
+                        <button onClick={() => handleSort('sg')} className="text-right hover:text-text-primary transition-colors" title="Strokes Gained: Total per round vs. field average">
                           SG <SortIcon field="sg" />
                         </button>
-                        <button onClick={() => handleSort('top10')} className="text-right hover:text-text-primary transition-colors">
+                        <button onClick={() => handleSort('top5')} className="text-right hover:text-text-primary transition-colors" title="Top-5 finishes this season">
+                          T5 <SortIcon field="top5" />
+                        </button>
+                        <button onClick={() => handleSort('top10')} className="text-right hover:text-text-primary transition-colors" title="Top-10 finishes this season">
                           T10 <SortIcon field="top10" />
                         </button>
-                        <span className="text-center" title="Tournaments played">Evt</span>
-                        <span className="text-center">Form</span>
+                        <button onClick={() => handleSort('top25')} className="text-right hover:text-text-primary transition-colors" title="Top-25 finishes this season">
+                          T25 <SortIcon field="top25" />
+                        </button>
+                        <button onClick={() => handleSort('cuts')} className="text-center hover:text-text-primary transition-colors" title="Cuts made / events entered">
+                          MC <SortIcon field="cuts" />
+                        </button>
+                        <span className="text-center" title="Last 4 tournament finishes (most recent first)">Form</span>
                         <div />
                       </div>
                     )}
@@ -2285,7 +2296,7 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[30px_1fr_44px_36px_30px_44px_48px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
+                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[28px_1fr_42px_28px_28px_28px_40px_40px_48px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
                           player.isDrafted
                             ? 'opacity-40 bg-[var(--bg-alt)]/50'
                             : `cursor-pointer hover:bg-[var(--surface-alt)] ${inQueue ? 'bg-orange/5' : ''}`
@@ -2345,10 +2356,16 @@ const MockDraftRoom = () => {
                               {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
                             </span>
                             <span className="text-xs text-right text-text-secondary tabular-nums">
-                              {player.top10}%
+                              {player.top5s || '—'}
+                            </span>
+                            <span className="text-xs text-right text-text-secondary tabular-nums">
+                              {player.top10s || '—'}
+                            </span>
+                            <span className="text-xs text-right text-text-secondary tabular-nums">
+                              {player.top25s || '—'}
                             </span>
                             <span className="text-xs text-center text-text-muted tabular-nums">
-                              {player.tournaments}
+                              {player.cutsMade || 0}/{player.tournaments || 0}
                             </span>
                             <div className="flex items-center justify-center gap-1">
                               {player.form?.slice(0, 4).map((f, i) => {
