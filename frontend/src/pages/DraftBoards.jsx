@@ -4,7 +4,6 @@ import useDraftBoards from '../hooks/useDraftBoards'
 import api from '../services/api'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
 import LeagueCockpit from '../components/lab/LeagueCockpit'
-import LabScientist from '../components/lab/LabScientist'
 import LabNeuralCluster from '../components/lab/LabNeuralCluster'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -511,9 +510,9 @@ export default function DraftBoards() {
   const renderBanner = () => (
     <div className="relative mb-8 rounded-2xl overflow-hidden bg-gradient-to-r from-[var(--surface)] via-[var(--surface)] to-[var(--bg-alt)] border border-[var(--card-border)] shadow-card">
       <div className="flex items-center px-6 py-5 gap-4 sm:gap-6">
-        {/* Scientist illustration */}
+        {/* Neural Cluster — left accent */}
         <div className="flex-shrink-0 hidden sm:block">
-          <LabScientist className="w-24 h-32 opacity-90" />
+          <LabNeuralCluster className="w-20 h-20 opacity-70" />
         </div>
 
         {/* Copy */}
@@ -541,9 +540,9 @@ export default function DraftBoards() {
           </div>
         </div>
 
-        {/* Neural Cluster */}
+        {/* Neural Cluster — larger on right */}
         <div className="flex-shrink-0 hidden md:block">
-          <LabNeuralCluster className="w-36 h-36 opacity-80" />
+          <LabNeuralCluster className="w-32 h-32 opacity-80" />
         </div>
       </div>
     </div>
