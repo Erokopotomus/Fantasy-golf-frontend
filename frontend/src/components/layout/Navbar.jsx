@@ -10,30 +10,46 @@ import Button from '../common/Button'
 import SearchButton from '../search/SearchButton'
 
 const navDropdownItems = {
-  golf: [
-    { label: 'Golf Hub', to: '/golf' },
-    { label: 'Players', to: '/players' },
-    { label: 'Tournaments', to: '/tournaments' },
-    { label: 'Courses', to: '/courses' },
-  ],
-  nfl: [
-    { label: 'NFL Hub', to: '/nfl' },
-    { label: 'Players', to: '/nfl/players' },
-    { label: 'Teams', to: '/nfl/teams' },
-    { label: 'Schedule', to: '/nfl/schedule' },
-    { label: 'Leaderboards', to: '/nfl/leaderboards' },
-    { label: 'Compare', to: '/nfl/compare' },
-  ],
-  lab: [
-    { label: 'Lab Hub', to: '/lab' },
-    { label: 'Watch List', to: '/lab/watch-list' },
-    { label: 'Decision Journal', to: '/lab/journal' },
-    { label: 'Mock Draft', to: '/mock-draft' },
-    { label: 'Draft History', to: '/draft/history' },
-  ],
+  golf: {
+    accent: 'emerald',
+    items: [
+      { label: 'Golf Hub', to: '/golf', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg> },
+      { label: 'Players', to: '/players', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
+      { label: 'Tournaments', to: '/tournaments', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+      { label: 'Courses', to: '/courses', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
+    ],
+  },
+  nfl: {
+    accent: 'orange',
+    items: [
+      { label: 'NFL Hub', to: '/nfl', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" /></svg> },
+      { label: 'Players', to: '/nfl/players', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
+      { label: 'Teams', to: '/nfl/teams', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg> },
+      { label: 'Schedule', to: '/nfl/schedule', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+      { label: 'Leaderboards', to: '/nfl/leaderboards', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
+      { label: 'Compare', to: '/nfl/compare', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg> },
+    ],
+  },
+  lab: {
+    accent: 'purple',
+    items: [
+      { label: 'Lab Hub', to: '/lab', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg> },
+      { label: 'Watch List', to: '/lab/watch-list', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> },
+      { label: 'Decision Journal', to: '/lab/journal', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
+      { label: 'Mock Draft', to: '/mock-draft', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg> },
+      { label: 'Draft History', to: '/draft/history', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    ],
+  },
 }
 
-const NavDropdown = ({ label, to, items, isActiveGroup, location, onNavigate }) => {
+const accentColors = {
+  emerald: { icon: 'text-emerald-400', hover: 'hover:text-emerald-400', active: 'text-emerald-400', border: 'border-emerald-500/20' },
+  orange: { icon: 'text-orange-400', hover: 'hover:text-orange-400', active: 'text-orange-400', border: 'border-orange-500/20' },
+  purple: { icon: 'text-purple-400', hover: 'hover:text-purple-400', active: 'text-purple-400', border: 'border-purple-500/20' },
+}
+
+const NavDropdown = ({ label, to, items, accent = 'emerald', isActiveGroup, location, onNavigate }) => {
+  const colors = accentColors[accent]
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const timeoutRef = useRef(null)
@@ -88,18 +104,19 @@ const NavDropdown = ({ label, to, items, isActiveGroup, location, onNavigate }) 
         </svg>
       </Link>
       {open && (
-        <div className="absolute left-0 top-full mt-1 w-44 bg-[var(--nav-bg)] border border-white/10 rounded-xl shadow-lg z-50 py-1">
+        <div className={`absolute left-0 top-full mt-1 w-48 bg-[var(--nav-bg)] border border-white/10 ${colors.border} rounded-xl shadow-lg z-50 py-1.5`}>
           {items.map(item => (
             <Link
               key={item.to}
               to={item.to}
               onClick={() => setOpen(false)}
-              className={`block px-4 py-2 text-sm transition-colors ${
+              className={`flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
                 location.pathname === item.to
-                  ? 'text-white bg-white/10'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
+                  ? `${colors.active} bg-white/10`
+                  : `text-white/60 ${colors.hover} hover:bg-white/10`
               }`}
             >
+              <span className={location.pathname === item.to ? colors.icon : 'text-white/30'}>{item.icon}</span>
               {item.label}
             </Link>
           ))}
@@ -193,21 +210,24 @@ const Navbar = () => {
                 <NavDropdown
                   label="Golf"
                   to="/golf"
-                  items={navDropdownItems.golf}
+                  items={navDropdownItems.golf.items}
+                  accent={navDropdownItems.golf.accent}
                   isActiveGroup={isGolfActive}
                   location={location}
                 />
                 <NavDropdown
                   label="NFL"
                   to="/nfl"
-                  items={navDropdownItems.nfl}
+                  items={navDropdownItems.nfl.items}
+                  accent={navDropdownItems.nfl.accent}
                   isActiveGroup={isNflActive}
                   location={location}
                 />
                 <NavDropdown
                   label="The Lab"
                   to="/lab"
-                  items={navDropdownItems.lab}
+                  items={navDropdownItems.lab.items}
+                  accent={navDropdownItems.lab.accent}
                   isActiveGroup={isLabActive}
                   location={location}
                 />
@@ -503,7 +523,7 @@ const Navbar = () => {
                 >
                   Golf
                 </Link>
-                {navDropdownItems.golf.filter(i => i.to !== '/golf').map(item => (
+                {navDropdownItems.golf.items.filter(i => i.to !== '/golf').map(item => (
                   <Link
                     key={item.to}
                     to={item.to}
@@ -520,7 +540,7 @@ const Navbar = () => {
                 >
                   NFL
                 </Link>
-                {navDropdownItems.nfl.filter(i => i.to !== '/nfl').map(item => (
+                {navDropdownItems.nfl.items.filter(i => i.to !== '/nfl').map(item => (
                   <Link
                     key={item.to}
                     to={item.to}
@@ -537,7 +557,7 @@ const Navbar = () => {
                 >
                   The Lab
                 </Link>
-                {navDropdownItems.lab.filter(i => i.to !== '/lab').map(item => (
+                {navDropdownItems.lab.items.filter(i => i.to !== '/lab').map(item => (
                   <Link
                     key={item.to}
                     to={item.to}
