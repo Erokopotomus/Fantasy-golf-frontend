@@ -179,6 +179,12 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
   const showProjectionBar = !hasTournament && projection
   const hasNonZeroProjection = projection && (projection.floor > 0 || projection.ceiling > 0)
 
+  // Calculate average finish from performances
+  const perfsWithPos = (player?.performances || []).filter(p => p.position != null)
+  const avgFinish = perfsWithPos.length > 0
+    ? perfsWithPos.reduce((sum, p) => sum + p.position, 0) / perfsWithPos.length
+    : null
+
   // Quick stats — hide if all zeros in tournament context
   const hasQuickStats = !hasTournament || (player && (player.wins > 0 || player.top10s > 0 || player.cutsMade > 0 || player.earnings > 0))
 
@@ -330,20 +336,22 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                   <p className="text-[10px] text-text-muted uppercase">OWGR</p>
                 </div>
               </HoverTip>
-              <HoverTip tip="Career wins on tour." className="bg-[var(--surface)]">
+              <HoverTip tip="Average finishing position this season. Lower is better." className="bg-[var(--surface)]">
                 <div className="p-2 text-center cursor-default">
-                  <p className={`text-lg font-bold font-mono ${player.wins > 0 ? 'text-gold' : 'text-text-muted'}`}>
-                    {player.wins || 0}
+                  <p className={`text-lg font-bold font-mono ${
+                    avgFinish != null ? (avgFinish <= 10 ? 'text-emerald-400' : avgFinish <= 25 ? 'text-text-primary' : 'text-text-secondary') : 'text-text-muted'
+                  }`}>
+                    {avgFinish != null ? avgFinish.toFixed(0) : '\u2014'}
                   </p>
-                  <p className="text-[10px] text-text-muted uppercase">Wins</p>
+                  <p className="text-[10px] text-text-muted uppercase">Avg Fin</p>
                 </div>
               </HoverTip>
-              <HoverTip tip="Average score per round." className="rounded-r-lg bg-[var(--surface)]">
+              <HoverTip tip="Number of events played this season." className="rounded-r-lg bg-[var(--surface)]">
                 <div className="p-2 text-center cursor-default">
                   <p className="text-lg font-bold font-mono text-text-primary">
-                    {player.avgScore ? player.avgScore.toFixed(1) : '\u2014'}
+                    {perfsWithPos.length || player.events || 0}
                   </p>
-                  <p className="text-[10px] text-text-muted uppercase">Avg</p>
+                  <p className="text-[10px] text-text-muted uppercase">Events</p>
                 </div>
               </HoverTip>
             </div>
@@ -457,8 +465,9 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                         const top5 = perfs.filter(p => p.position <= 5).length
                         const top10 = perfs.filter(p => p.position <= 10).length
                         const top25 = perfs.filter(p => p.position <= 25).length
+                        const avg = perfs.length > 0 ? perfs.reduce((s, p) => s + p.position, 0) / perfs.length : null
                         return (
-                          <div className="grid grid-cols-4 gap-px rounded-lg bg-[var(--card-border)] overflow-hidden">
+                          <div className="grid grid-cols-5 gap-px rounded-lg bg-[var(--card-border)] overflow-hidden">
                             <div className="bg-[var(--surface)] p-2 text-center">
                               <p className={`text-sm font-bold font-mono ${wins > 0 ? 'text-gold' : 'text-text-muted'}`}>{wins}</p>
                               <p className="text-[9px] text-text-muted uppercase">1st</p>
@@ -474,6 +483,12 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                             <div className="bg-[var(--surface)] p-2 text-center">
                               <p className={`text-sm font-bold font-mono ${top25 > 0 ? 'text-text-primary' : 'text-text-muted'}`}>{top25}</p>
                               <p className="text-[9px] text-text-muted uppercase">Top 25</p>
+                            </div>
+                            <div className="bg-[var(--surface)] p-2 text-center">
+                              <p className={`text-sm font-bold font-mono ${avg != null ? (avg <= 10 ? 'text-emerald-400' : avg <= 25 ? 'text-text-primary' : 'text-text-secondary') : 'text-text-muted'}`}>
+                                {avg != null ? avg.toFixed(0) : '\u2014'}
+                              </p>
+                              <p className="text-[9px] text-text-muted uppercase">Avg</p>
                             </div>
                           </div>
                         )
@@ -627,29 +642,44 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                     const top5 = perfs.filter(p => p.position <= 5).length
                     const top10 = perfs.filter(p => p.position <= 10).length
                     const top25 = perfs.filter(p => p.position <= 25).length
+                    const avg = perfs.length > 0 ? perfs.reduce((s, p) => s + p.position, 0) / perfs.length : null
                     return (
-                      <div className="grid grid-cols-4 gap-px rounded-lg bg-[var(--card-border)] overflow-hidden mb-3">
+                      <div className="grid grid-cols-5 gap-px rounded-lg bg-[var(--card-border)] overflow-hidden mb-3">
                         <div className="bg-[var(--surface)] p-2.5 text-center">
                           <p className={`text-lg font-bold font-mono ${wins > 0 ? 'text-gold' : 'text-text-muted'}`}>{wins}</p>
-                          <p className="text-[10px] text-text-muted uppercase">1st</p>
+                          <p className="text-[9px] text-text-muted uppercase">1st</p>
                         </div>
                         <div className="bg-[var(--surface)] p-2.5 text-center">
                           <p className={`text-lg font-bold font-mono ${top5 > 0 ? 'text-emerald-400' : 'text-text-muted'}`}>{top5}</p>
-                          <p className="text-[10px] text-text-muted uppercase">Top 5</p>
+                          <p className="text-[9px] text-text-muted uppercase">Top 5</p>
                         </div>
                         <div className="bg-[var(--surface)] p-2.5 text-center">
                           <p className={`text-lg font-bold font-mono ${top10 > 0 ? 'text-green-400' : 'text-text-muted'}`}>{top10}</p>
-                          <p className="text-[10px] text-text-muted uppercase">Top 10</p>
+                          <p className="text-[9px] text-text-muted uppercase">Top 10</p>
                         </div>
                         <div className="bg-[var(--surface)] p-2.5 text-center">
                           <p className={`text-lg font-bold font-mono ${top25 > 0 ? 'text-text-primary' : 'text-text-muted'}`}>{top25}</p>
-                          <p className="text-[10px] text-text-muted uppercase">Top 25</p>
+                          <p className="text-[9px] text-text-muted uppercase">Top 25</p>
+                        </div>
+                        <div className="bg-[var(--surface)] p-2.5 text-center">
+                          <p className={`text-lg font-bold font-mono ${avg != null ? (avg <= 10 ? 'text-emerald-400' : avg <= 25 ? 'text-text-primary' : 'text-text-secondary') : 'text-text-muted'}`}>
+                            {avg != null ? avg.toFixed(0) : '\u2014'}
+                          </p>
+                          <p className="text-[9px] text-text-muted uppercase">Avg</p>
                         </div>
                       </div>
                     )
                   })()}
 
-                  <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Recent Tournaments</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">Recent Tournaments</h3>
+                    {(player.performances || []).length > 0 && (
+                      <div className="flex items-center gap-3 text-[9px] text-text-muted uppercase tracking-wider font-semibold">
+                        <span>Score</span>
+                        <span className="w-6 text-right">Pos</span>
+                      </div>
+                    )}
+                  </div>
                   {(player.performances || []).length === 0 ? (
                     <div className="text-center py-8 text-text-muted">No tournament results yet</div>
                   ) : (
