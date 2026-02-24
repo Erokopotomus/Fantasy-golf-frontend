@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../services/api'
 
@@ -9,6 +9,36 @@ const getDnaLabel = (val) => {
   if (val >= 0.27) return { text: 'High', color: 'text-emerald-400' }
   if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary' }
   return { text: 'Low', color: 'text-text-muted' }
+}
+
+/** Subtle hover tooltip — shows after 400ms delay */
+const HoverTip = ({ tip, children, className = '' }) => {
+  const [show, setShow] = useState(false)
+  const timeoutRef = useRef(null)
+  const handleEnter = () => { timeoutRef.current = setTimeout(() => setShow(true), 400) }
+  const handleLeave = () => { clearTimeout(timeoutRef.current); setShow(false) }
+
+  return (
+    <div className={`relative ${className}`} onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      {children}
+      {show && (
+        <div className="absolute z-50 top-full mt-1.5 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] shadow-xl pointer-events-none">
+          <p className="text-[10px] text-text-secondary font-normal leading-snug">{tip}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Human-readable SG verdict */
+const sgVerdict = (val) => {
+  if (val == null) return 'No data available'
+  if (val > 1.0) return 'Elite — one of the best on tour'
+  if (val > 0.5) return 'Well above average'
+  if (val > 0.2) return 'Above average'
+  if (val > -0.2) return 'About average'
+  if (val > -0.5) return 'Below average'
+  return 'Well below average'
 }
 
 const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false, tournamentContext }) => {
@@ -224,36 +254,44 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
           {/* Clutch Metrics strip (tournament context) */}
           {showClutchStrip && (
             <div className="grid grid-cols-4 gap-px bg-[var(--card-border)] mx-4 mb-3 rounded-lg overflow-hidden">
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className={`text-lg font-bold font-mono ${
-                  cm.cpi > 1 ? 'text-emerald-400' : cm.cpi > 0 ? 'text-green-400' : cm.cpi != null ? 'text-red-400' : 'text-text-muted'
-                }`}>
-                  {cm.cpi != null ? (cm.cpi > 0 ? `+${cm.cpi.toFixed(1)}` : cm.cpi.toFixed(1)) : '\u2014'}
-                </p>
-                <p className="text-[10px] text-text-muted uppercase">CPI</p>
-              </div>
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className={`text-lg font-bold font-mono ${
-                  cm.formScore >= 80 ? 'text-emerald-400' : cm.formScore >= 60 ? 'text-green-400' : cm.formScore != null ? 'text-text-secondary' : 'text-text-muted'
-                }`}>
-                  {cm.formScore != null ? Math.round(cm.formScore) : '\u2014'}
-                </p>
-                <p className="text-[10px] text-text-muted uppercase">Form</p>
-              </div>
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className={`text-lg font-bold font-mono ${
-                  cm.courseFitScore >= 80 ? 'text-gold' : cm.courseFitScore >= 60 ? 'text-yellow-400' : cm.courseFitScore != null ? 'text-text-secondary' : 'text-text-muted'
-                }`}>
-                  {cm.courseFitScore != null ? Math.round(cm.courseFitScore) : '\u2014'}
-                </p>
-                <p className="text-[10px] text-text-muted uppercase">Fit</p>
-              </div>
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className="text-lg font-bold font-mono text-text-primary">
-                  {entry?.owgrRank || player?.owgrRank || '\u2014'}
-                </p>
-                <p className="text-[10px] text-text-muted uppercase">OWGR</p>
-              </div>
+              <HoverTip tip="Clutch Performance Index (−3 to +3). A weighted blend of all strokes gained skills. Above +1 is elite, above 0 is above average, below 0 is a weakness.">
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className={`text-lg font-bold font-mono ${
+                    cm.cpi > 1 ? 'text-emerald-400' : cm.cpi > 0 ? 'text-green-400' : cm.cpi != null ? 'text-red-400' : 'text-text-muted'
+                  }`}>
+                    {cm.cpi != null ? (cm.cpi > 0 ? `+${cm.cpi.toFixed(1)}` : cm.cpi.toFixed(1)) : '\u2014'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">CPI</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="Current form rating (0–100). Blends recent results with world ranking momentum. 80+ means hot form, 60+ is solid, below 50 is cold.">
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className={`text-lg font-bold font-mono ${
+                    cm.formScore >= 80 ? 'text-emerald-400' : cm.formScore >= 60 ? 'text-green-400' : cm.formScore != null ? 'text-text-secondary' : 'text-text-muted'
+                  }`}>
+                    {cm.formScore != null ? Math.round(cm.formScore) : '\u2014'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">Form</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="Course Fit score (0–100). How well this player's skill profile matches what this specific course demands. 80+ is a strong matchup, 60+ is decent.">
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className={`text-lg font-bold font-mono ${
+                    cm.courseFitScore >= 80 ? 'text-gold' : cm.courseFitScore >= 60 ? 'text-yellow-400' : cm.courseFitScore != null ? 'text-text-secondary' : 'text-text-muted'
+                  }`}>
+                    {cm.courseFitScore != null ? Math.round(cm.courseFitScore) : '\u2014'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">Fit</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="Official World Golf Ranking. Lower is better — #1 is the top-ranked player in the world. Top 50 is elite, top 100 is strong.">
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className="text-lg font-bold font-mono text-text-primary">
+                    {entry?.owgrRank || player?.owgrRank || '\u2014'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">OWGR</p>
+                </div>
+              </HoverTip>
             </div>
           )}
 
@@ -749,6 +787,13 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
 }
 
 /** SG vs Course DNA — the killer scouting insight */
+const SKILL_DESCRIPTIONS = {
+  Driving: 'tee shots (distance + accuracy off the tee)',
+  Approach: 'approach shots (iron play into greens)',
+  'Short Game': 'shots around the green (chipping, pitching, bunker play)',
+  Putting: 'putting (reads, speed control, holing out)',
+}
+
 const SkillMatchCard = ({ player, course }) => {
   const skills = [
     { label: 'Driving', sg: player.sgOffTee, importance: course.drivingImportance },
@@ -762,7 +807,9 @@ const SkillMatchCard = ({ player, course }) => {
 
   return (
     <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Skill Match</h3>
+      <HoverTip tip="Compares this player's strengths to what the course rewards. The number is strokes gained vs the field. The label on the right is how much this course demands that skill. 'Match' means the player is strong where the course is demanding." className="inline-block">
+        <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 border-b border-dotted border-text-muted/30 pb-0.5 cursor-default">Skill Match</h3>
+      </HoverTip>
       <div className="space-y-2.5">
         {skills.map((skill) => {
           const dna = getDnaLabel(skill.importance)
@@ -780,29 +827,42 @@ const SkillMatchCard = ({ player, course }) => {
             : skill.sg > -0.3 ? 'bg-yellow-400'
             : 'bg-red-400'
 
+          // Build contextual tooltip
+          const skillDesc = SKILL_DESCRIPTIONS[skill.label]
+          const sgText = skill.sg != null
+            ? `${sgVerdict(skill.sg)} at ${skillDesc}. Gains ${skill.sg > 0 ? '+' : ''}${skill.sg.toFixed(2)} strokes per round vs the field.`
+            : `No strokes gained data for ${skillDesc}.`
+          const courseText = skill.importance != null
+            ? `This course rates ${skill.label.toLowerCase()} as "${dna.text}" importance.`
+            : ''
+          const matchText = isMatch ? ' Strong matchup — player excels where the course demands it.' : ''
+          const tipText = `${sgText} ${courseText}${matchText}`
+
           return (
-            <div key={skill.label} className="flex items-center gap-2">
-              <span className="text-xs text-text-muted w-[72px] flex-shrink-0">{skill.label}</span>
-              <span className={`text-xs font-mono font-bold w-12 text-right flex-shrink-0 ${sgColor}`}>
-                {skill.sg != null ? (skill.sg > 0 ? '+' : '') + skill.sg.toFixed(2) : '\u2014'}
-              </span>
-              <div className="flex-1 h-2 bg-[var(--stone)] rounded-full overflow-hidden">
-                {skill.sg != null && (
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                    style={{ width: `${barPct}%` }}
-                  />
+            <HoverTip key={skill.label} tip={tipText}>
+              <div className="flex items-center gap-2 cursor-default">
+                <span className="text-xs text-text-muted w-[72px] flex-shrink-0">{skill.label}</span>
+                <span className={`text-xs font-mono font-bold w-12 text-right flex-shrink-0 ${sgColor}`}>
+                  {skill.sg != null ? (skill.sg > 0 ? '+' : '') + skill.sg.toFixed(2) : '\u2014'}
+                </span>
+                <div className="flex-1 h-2 bg-[var(--stone)] rounded-full overflow-hidden">
+                  {skill.sg != null && (
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                      style={{ width: `${barPct}%` }}
+                    />
+                  )}
+                </div>
+                <span className={`text-[10px] font-medium w-16 text-right flex-shrink-0 ${dna.color}`}>
+                  {dna.text}
+                </span>
+                {isMatch && (
+                  <span className="text-[10px] text-gold font-bold flex-shrink-0">
+                    Match
+                  </span>
                 )}
               </div>
-              <span className={`text-[10px] font-medium w-16 text-right flex-shrink-0 ${dna.color}`}>
-                {dna.text}
-              </span>
-              {isMatch && (
-                <span className="text-[10px] text-gold font-bold flex-shrink-0" title="Player strength matches course demand">
-                  Match
-                </span>
-              )}
-            </div>
+            </HoverTip>
           )
         })}
       </div>
