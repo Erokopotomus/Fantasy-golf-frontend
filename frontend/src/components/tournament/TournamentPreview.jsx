@@ -238,7 +238,11 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       </td>
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${
-                          cm.cpi > 1 ? 'text-emerald-400' : cm.cpi > 0 ? 'text-green-400' : cm.cpi != null ? 'text-red-400' : 'text-text-muted'
+                          cm.cpi > 1.5 ? 'text-emerald-400' :
+                          cm.cpi > 1.0 ? 'text-green-400' :
+                          cm.cpi > 0.5 ? 'text-green-300/80' :
+                          cm.cpi > 0 ? 'text-text-secondary' :
+                          cm.cpi != null ? 'text-red-400' : 'text-text-muted'
                         }`}>
                           {cm.cpi != null ? (cm.cpi > 0 ? `+${cm.cpi.toFixed(1)}` : cm.cpi.toFixed(1)) : '—'}
                         </span>
@@ -246,7 +250,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                           <div className="mt-0.5 mx-auto w-12 h-1 bg-[var(--stone)] rounded-full overflow-hidden relative">
                             <div
                               className={`absolute h-full rounded-full ${
-                                cm.cpi > 1 ? 'bg-emerald-400' : cm.cpi > 0 ? 'bg-green-400' : 'bg-red-400'
+                                cm.cpi > 1.5 ? 'bg-emerald-400' : cm.cpi > 1.0 ? 'bg-green-400' : cm.cpi > 0.5 ? 'bg-green-300/60' : cm.cpi > 0 ? 'bg-green-300/30' : 'bg-red-400'
                               }`}
                               style={{
                                 left: cm.cpi >= 0 ? '50%' : `${Math.max(50 - Math.abs(cm.cpi) / 3 * 50, 5)}%`,
@@ -259,14 +263,22 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       </td>
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${
-                          cm.formScore >= 80 ? 'text-emerald-400' : cm.formScore >= 60 ? 'text-green-400' : cm.formScore != null ? 'text-text-secondary' : 'text-text-muted'
+                          cm.formScore >= 90 ? 'text-emerald-400' :
+                          cm.formScore >= 80 ? 'text-green-400' :
+                          cm.formScore >= 70 ? 'text-green-300/80' :
+                          cm.formScore >= 60 ? 'text-text-secondary' :
+                          cm.formScore != null ? 'text-text-muted' : 'text-text-muted'
                         }`}>
                           {cm.formScore != null ? Math.round(cm.formScore) : '—'}
                         </span>
                       </td>
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${
-                          cm.courseFitScore >= 80 ? 'text-gold' : cm.courseFitScore >= 60 ? 'text-yellow-400' : cm.courseFitScore != null ? 'text-text-secondary' : 'text-text-muted'
+                          cm.courseFitScore >= 85 ? 'text-gold' :
+                          cm.courseFitScore >= 78 ? 'text-yellow-400' :
+                          cm.courseFitScore >= 70 ? 'text-yellow-300/70' :
+                          cm.courseFitScore >= 60 ? 'text-text-secondary' :
+                          cm.courseFitScore != null ? 'text-text-muted' : 'text-text-muted'
                         }`}>
                           {cm.courseFitScore != null ? Math.round(cm.courseFitScore) : '—'}
                         </span>
