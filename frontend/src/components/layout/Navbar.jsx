@@ -43,9 +43,9 @@ const navDropdownItems = {
 }
 
 const accentColors = {
-  emerald: { icon: 'text-emerald-400', hover: 'hover:text-emerald-400', active: 'text-emerald-400', border: 'border-emerald-500/20' },
-  orange: { icon: 'text-orange-400', hover: 'hover:text-orange-400', active: 'text-orange-400', border: 'border-orange-500/20' },
-  purple: { icon: 'text-purple-400', hover: 'hover:text-purple-400', active: 'text-purple-400', border: 'border-purple-500/20' },
+  emerald: { icon: 'text-emerald-400', hover: 'hover:text-emerald-400', active: 'text-emerald-400', border: 'border-emerald-500/20', hubBg: 'bg-emerald-500/10', hubText: 'text-emerald-400', hubIcon: 'text-emerald-400' },
+  orange: { icon: 'text-orange-400', hover: 'hover:text-orange-400', active: 'text-orange-400', border: 'border-orange-500/20', hubBg: 'bg-orange-500/10', hubText: 'text-orange-400', hubIcon: 'text-orange-400' },
+  purple: { icon: 'text-purple-400', hover: 'hover:text-purple-400', active: 'text-purple-400', border: 'border-purple-500/20', hubBg: 'bg-purple-500/10', hubText: 'text-purple-400', hubIcon: 'text-purple-400' },
 }
 
 const NavDropdown = ({ label, to, items, accent = 'emerald', isActiveGroup, location, onNavigate }) => {
@@ -104,22 +104,39 @@ const NavDropdown = ({ label, to, items, accent = 'emerald', isActiveGroup, loca
         </svg>
       </Link>
       {open && (
-        <div className={`absolute left-0 top-full mt-1 w-48 bg-[var(--nav-bg)] border border-white/10 ${colors.border} rounded-xl shadow-lg z-50 py-1.5`}>
-          {items.map(item => (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
-                location.pathname === item.to
-                  ? `${colors.active} bg-white/10`
-                  : `text-white/60 ${colors.hover} hover:bg-white/10`
-              }`}
-            >
-              <span className={location.pathname === item.to ? colors.icon : 'text-white/30'}>{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
+        <div className={`absolute left-0 top-full mt-1 w-48 bg-[var(--nav-bg)] border border-white/10 ${colors.border} rounded-xl shadow-lg z-50 overflow-hidden`}>
+          {items.map((item, idx) => {
+            const isHub = idx === 0
+            const isCurrentPage = location.pathname === item.to
+            if (isHub) {
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 text-sm font-semibold transition-colors ${colors.hubBg} ${isCurrentPage ? `${colors.hubText}` : `${colors.hubText} hover:brightness-125`} border-b border-white/5`}
+                >
+                  <span className={colors.hubIcon}>{item.icon}</span>
+                  {item.label}
+                </Link>
+              )
+            }
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
+                  isCurrentPage
+                    ? `${colors.active} bg-white/10`
+                    : `text-white/60 ${colors.hover} hover:bg-white/10`
+                }`}
+              >
+                <span className={isCurrentPage ? colors.icon : 'text-white/30'}>{item.icon}</span>
+                {item.label}
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>
