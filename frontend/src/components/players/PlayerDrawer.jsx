@@ -295,6 +295,13 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
             </div>
           )}
 
+          {/* Clutch insights tagline */}
+          {showClutchStrip && (
+            <p className="text-[9px] text-text-muted/60 text-center mx-4 -mt-1.5 mb-2 italic font-editorial">
+              Powered by strokes gained, OWGR trends, recent finishes &amp; course DNA analysis
+            </p>
+          )}
+
           {/* Projection quick bar (generic mode) */}
           {showProjectionBar && (
             <div className="grid grid-cols-4 gap-px bg-[var(--card-border)] mx-4 mb-3 rounded-lg overflow-hidden">
@@ -807,20 +814,17 @@ const SkillMatchCard = ({ player, course }) => {
 
   return (
     <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-      <div className="flex items-baseline justify-between mb-2">
-        <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">Skill Match</h3>
-      </div>
-      {/* Column headers */}
+      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Skill Match</h3>
+      {/* Column headers — mirrors data row widths exactly */}
       <div className="flex items-center gap-2 mb-1.5 pb-1 border-b border-[var(--card-border)]">
         <span className="w-[72px] flex-shrink-0" />
-        <HoverTip tip="Strokes Gained per round vs the tour field. Positive is good. +0.50 is strong, +1.00 is elite, negative is a weakness.">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap">Player</span>
+        <HoverTip tip="Strokes Gained per round vs the tour field. Positive is good. +0.50 is strong, +1.00 is elite, negative is a weakness." className="w-12 flex-shrink-0">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap text-right block">Player</span>
         </HoverTip>
         <div className="flex-1" />
-        <HoverTip tip="How much this course rewards each skill. Premium/High = critical to scoring well here. Average/Low = matters less this week.">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap">Course</span>
+        <HoverTip tip="How much this course rewards each skill. Premium/High = critical to scoring well here. Average/Low = matters less this week." className="w-16 flex-shrink-0">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap text-right block">Course</span>
         </HoverTip>
-        <span className="w-[34px] flex-shrink-0" />
       </div>
       <div className="space-y-2.5">
         {skills.map((skill) => {
