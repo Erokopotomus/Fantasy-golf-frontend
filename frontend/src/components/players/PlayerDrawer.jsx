@@ -75,7 +75,19 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
         setUpcoming([])
       } else {
         const data = await api.getPlayerProfile(playerId)
-        setPlayer(data.player)
+        // Merge seasonStats into player so wins/top10s/etc. reflect derived values
+        const ss = data.seasonStats || {}
+        const p = {
+          ...data.player,
+          wins: ss.wins ?? data.player?.wins ?? 0,
+          top5s: ss.top5s ?? data.player?.top5s ?? 0,
+          top10s: ss.top10s ?? data.player?.top10s ?? 0,
+          top25s: ss.top25s ?? data.player?.top25s ?? 0,
+          cutsMade: ss.cutsMade ?? data.player?.cutsMade ?? 0,
+          earnings: ss.earnings ?? data.player?.earnings ?? 0,
+          events: ss.events ?? data.player?.events ?? 0,
+        }
+        setPlayer(p)
         setProjection(data.projection)
         setUpcoming(data.upcomingTournaments || [])
       }

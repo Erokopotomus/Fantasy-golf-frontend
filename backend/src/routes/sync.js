@@ -192,6 +192,28 @@ router.post('/pga-tour-stats', async (req, res) => {
   await runSync('pga-tour-stats', () => pgaTourSync.syncPgaTourStats(prisma), res)
 })
 
+// ─── Historical Backfill Endpoints ──────────────────────────────────────────
+
+const historicalBackfill = require('../services/historicalBackfill')
+
+// POST /api/sync/backfill-historical — Backfill historical results from DataGolf
+// Body: { year: 2024 } or { years: [2023, 2024] }
+router.post('/backfill-historical', async (req, res) => {
+  const { year, years } = req.body
+  if (years && Array.isArray(years)) {
+    await runSync('backfill-historical', () => historicalBackfill.backfillMultipleYears(years, prisma), res)
+  } else if (year) {
+    await runSync(`backfill-${year}`, () => historicalBackfill.backfillYear(year, prisma), res)
+  } else {
+    res.status(400).json({ error: 'year or years[] is required' })
+  }
+})
+
+// POST /api/sync/recalculate-stats — Recalculate all player career stats from Performance table
+router.post('/recalculate-stats', async (req, res) => {
+  await runSync('recalculate-stats', () => historicalBackfill.recalculatePlayerCareerStats(prisma), res)
+})
+
 // GET /api/sync/status
 router.get('/status', async (req, res) => {
   // Find active tournament
