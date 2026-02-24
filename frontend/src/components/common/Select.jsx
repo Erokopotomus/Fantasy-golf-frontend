@@ -42,7 +42,7 @@ const Select = ({
           `}
           {...props}
         >
-          {placeholder && (
+          {placeholder && !options.some(o => o.value === '' || o.value == null) && (
             <option value="" disabled className="text-text-muted">
               {placeholder}
             </option>

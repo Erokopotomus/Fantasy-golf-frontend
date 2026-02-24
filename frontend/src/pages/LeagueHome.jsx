@@ -130,7 +130,14 @@ const LeagueHome = () => {
         // Fetch leaderboard/field for Field Strength in header
         if (t?.id) {
           api.getTournamentLeaderboard(t.id)
-            .then(lbData => setTournamentField(lbData?.leaderboard || []))
+            .then(lbData => {
+              // Flatten nested player data so TournamentHeader can access owgrRank at top level
+              const flat = (lbData?.leaderboard || []).map(entry => {
+                const p = entry.player || {}
+                return { ...entry, id: p.id, name: p.name, owgrRank: p.owgrRank, countryFlag: p.countryFlag }
+              })
+              setTournamentField(flat)
+            })
             .catch(() => {})
         }
       })

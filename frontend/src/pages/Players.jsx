@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { usePlayerComparison } from '../hooks/usePlayerComparison'
 import Card from '../components/common/Card'
@@ -8,10 +8,10 @@ import PlayerSearch from '../components/players/PlayerSearch'
 import PlayerFilters from '../components/players/PlayerFilters'
 import PlayerTable from '../components/players/PlayerTable'
 import PlayerComparison from '../components/players/PlayerComparison'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 import api from '../services/api'
 
 const Players = () => {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const leagueId = searchParams.get('league')
   const [compareMode, setCompareMode] = useState(false)
@@ -37,11 +37,25 @@ const Players = () => {
     canCompare,
   } = usePlayerComparison(3)
 
-  // Fetch upcoming tournaments for schedule dots
+  const [drawerPlayerId, setDrawerPlayerId] = useState(null)
+
+  // Fetch upcoming tournaments for schedule dots + course DNA for drawer
   const [upcomingTournaments, setUpcomingTournaments] = useState([])
+  const [nextTournamentCourse, setNextTournamentCourse] = useState(null)
+  const [nextTournamentName, setNextTournamentName] = useState(null)
   useEffect(() => {
     api.getUpcomingTournamentsWithFields()
-      .then(data => setUpcomingTournaments(data.tournaments || []))
+      .then(data => {
+        const tourneys = data.tournaments || []
+        setUpcomingTournaments(tourneys)
+        const next = tourneys.find(t => t.status === 'UPCOMING' || t.status === 'IN_PROGRESS')
+        if (next?.id) {
+          setNextTournamentName(next.shortName || next.name)
+          api.getTournament(next.id)
+            .then(tData => setNextTournamentCourse(tData?.tournament?.course || null))
+            .catch(() => {})
+        }
+      })
       .catch(() => setUpcomingTournaments([]))
   }, [])
 
@@ -201,7 +215,7 @@ const Players = () => {
                       selectedIds={selectedPlayers.map(p => p.id)}
                       canSelect={canAddMore}
                       compareMode={compareMode}
-                      onViewPlayer={(player) => navigate(`/players/${player.id}`)}
+                      onViewPlayer={(player) => setDrawerPlayerId(player.id)}
                       upcomingTournaments={upcomingTournaments}
                     />
 
@@ -253,6 +267,17 @@ const Players = () => {
         </div>
       </main>
 
+      {/* Player Drawer */}
+      <PlayerDrawer
+        playerId={drawerPlayerId}
+        isOpen={!!drawerPlayerId}
+        onClose={() => setDrawerPlayerId(null)}
+        tournamentContext={nextTournamentCourse ? {
+          entry: { id: drawerPlayerId, clutchMetrics: null, courseHistory: null },
+          course: nextTournamentCourse,
+          tournamentName: nextTournamentName,
+        } : undefined}
+      />
     </div>
   )
 }

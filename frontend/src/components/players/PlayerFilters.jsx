@@ -67,7 +67,7 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="w-36">
+      <div className="w-40">
         <Select
           label="Rank Range"
           value={getRankValue()}
@@ -76,7 +76,7 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
         />
       </div>
 
-      <div className="w-36">
+      <div className="w-40">
         <Select
           label="Availability"
           value={params.availability}
@@ -85,7 +85,7 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
         />
       </div>
 
-      <div className="w-36">
+      <div className="w-40">
         <Select
           label="Tour"
           value={params.tour || ''}
@@ -94,7 +94,7 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
         />
       </div>
 
-      <div className="w-36">
+      <div className="w-40">
         <Select
           label="Min SG Total"
           value={params.minSgTotal?.toString() || ''}
@@ -103,7 +103,7 @@ const PlayerFilters = ({ params, onUpdate, onReset }) => {
         />
       </div>
 
-      <div className="w-36">
+      <div className="w-40">
         <Select
           label="Country"
           value={params.country}
