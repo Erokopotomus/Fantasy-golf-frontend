@@ -980,17 +980,17 @@ const LeagueHome = () => {
                   </Link>
                 )}
               </div>
-            </div>
 
-            {/* Right Column — Blog, Activity, Chat */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Commissioner Blog */}
+              {/* Commissioner Blog — full width for rich content */}
               <CommissionerNotes
                 leagueId={leagueId}
                 isCommissioner={isCommissioner}
                 leagueName={league.name}
               />
+            </div>
 
+            {/* Right Column — Activity, Chat */}
+            <div className="lg:col-span-1 space-y-6">
               {/* Activity Feed */}
               <Card>
                 <h3 className="text-sm font-semibold font-display text-text-primary mb-3">Recent Activity</h3>
