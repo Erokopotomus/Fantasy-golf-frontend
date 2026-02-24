@@ -13,22 +13,18 @@ const JoinLeague = () => {
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState('')
 
-  // Auto-fill code from URL parameter
+  // Auto-fill code from URL parameter and auto-validate
   useEffect(() => {
     const urlCode = searchParams.get('code')
-    if (urlCode) {
-      const cleanCode = urlCode.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+    if (urlCode && urlCode.trim()) {
+      const cleanCode = urlCode.trim()
       setCode(cleanCode)
-      // Auto-validate if we have a full code
-      if (cleanCode.length === 6) {
-        validateCode(cleanCode).catch(() => {})
-      }
+      validateCode(cleanCode).catch(() => {})
     }
   }, [searchParams, validateCode])
 
   const handleCodeChange = (e) => {
-    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
-    setCode(value)
+    setCode(e.target.value)
     setCodeError('')
     if (previewLeague) {
       clearPreview()
@@ -37,12 +33,12 @@ const JoinLeague = () => {
 
   const handleValidate = async (e) => {
     e.preventDefault()
-    if (code.length !== 6) {
-      setCodeError('Code must be 6 characters')
+    if (!code.trim()) {
+      setCodeError('Please enter an invite code')
       return
     }
     try {
-      await validateCode(code)
+      await validateCode(code.trim())
     } catch (err) {
       // Error handled by hook
     }
@@ -84,7 +80,7 @@ const JoinLeague = () => {
               Join a League
             </h1>
             <p className="text-text-secondary">
-              Enter the 6-character code shared by your league commissioner.
+              Enter the invite code shared by your league commissioner.
             </p>
           </div>
 
@@ -107,22 +103,16 @@ const JoinLeague = () => {
                 label="League Code"
                 value={code}
                 onChange={handleCodeChange}
-                placeholder="Enter 6-character code"
+                placeholder="Paste your invite code"
                 error={codeError}
-                maxLength={6}
-                className="mb-4"
+                className="mb-4 font-mono"
               />
-              <div className="text-center mb-4">
-                <span className="text-4xl font-mono tracking-[0.5em] text-text-primary">
-                  {code.padEnd(6, '_').split('').join('')}
-                </span>
-              </div>
               {!previewLeague && (
                 <Button
                   type="submit"
                   fullWidth
                   loading={loading}
-                  disabled={code.length !== 6}
+                  disabled={!code.trim()}
                 >
                   Find League
                 </Button>
