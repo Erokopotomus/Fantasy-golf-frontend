@@ -1,36 +1,50 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
- * Animated lab scientist (Einstein-esque character in a lab coat)
- * Subtle idle animation: slight floating + blinking
+ * Animated lab scientist — flat/modern illustration style
+ * Think: Notion-style character, not realistic portrait
+ * Subtle idle animation: floating + bubbling beaker
  */
 const LabScientist = ({ className = '' }) => {
   const svgRef = useRef(null)
-  const eyeLeftRef = useRef(null)
-  const eyeRightRef = useRef(null)
+  const bubble1Ref = useRef(null)
+  const bubble2Ref = useRef(null)
+  const bubble3Ref = useRef(null)
 
   useEffect(() => {
     let frame = 0
     const interval = setInterval(() => {
       frame++
-      const t = frame * 0.02
+      const t = frame * 0.025
 
       // Gentle floating
       if (svgRef.current) {
-        const float = Math.sin(t * 0.8) * 2
+        const float = Math.sin(t * 0.7) * 2.5
         svgRef.current.style.transform = `translateY(${float}px)`
       }
 
-      // Blinking every ~4 seconds
-      const blinkCycle = (frame % 120)
-      const isBlinking = blinkCycle >= 0 && blinkCycle <= 3
-      const eyeScaleY = isBlinking ? 0.1 : 1
+      // Animated bubbles rising in the beaker
+      const bubbleY1 = 108 - ((frame * 0.4) % 30)
+      const bubbleY2 = 112 - ((frame * 0.3 + 10) % 28)
+      const bubbleY3 = 110 - ((frame * 0.5 + 20) % 32)
+      const wobble1 = Math.sin(t * 2) * 1.5
+      const wobble2 = Math.sin(t * 2.5 + 1) * 1.5
+      const wobble3 = Math.sin(t * 1.8 + 2) * 1
 
-      if (eyeLeftRef.current) {
-        eyeLeftRef.current.setAttribute('ry', isBlinking ? 0.3 : 2.5)
+      if (bubble1Ref.current) {
+        bubble1Ref.current.setAttribute('cy', bubbleY1)
+        bubble1Ref.current.setAttribute('cx', 93 + wobble1)
+        bubble1Ref.current.setAttribute('opacity', bubbleY1 > 82 ? 0.5 : 0)
       }
-      if (eyeRightRef.current) {
-        eyeRightRef.current.setAttribute('ry', isBlinking ? 0.3 : 2.5)
+      if (bubble2Ref.current) {
+        bubble2Ref.current.setAttribute('cy', bubbleY2)
+        bubble2Ref.current.setAttribute('cx', 98 + wobble2)
+        bubble2Ref.current.setAttribute('opacity', bubbleY2 > 82 ? 0.4 : 0)
+      }
+      if (bubble3Ref.current) {
+        bubble3Ref.current.setAttribute('cy', bubbleY3)
+        bubble3Ref.current.setAttribute('cx', 88 + wobble3)
+        bubble3Ref.current.setAttribute('opacity', bubbleY3 > 82 ? 0.35 : 0)
       }
     }, 33)
 
@@ -45,73 +59,129 @@ const LabScientist = ({ className = '' }) => {
       style={{ willChange: 'transform' }}
       aria-hidden="true"
     >
-      {/* Lab Coat / Body */}
-      <rect x="30" y="70" width="60" height="80" rx="8" fill="#F0F0F0" stroke="#E0E0E0" strokeWidth="1" />
-      {/* Coat collar */}
-      <path d="M 40 70 L 60 82 L 80 70" fill="none" stroke="#E0E0E0" strokeWidth="1.5" />
-      {/* Coat pockets */}
-      <rect x="36" y="110" width="16" height="12" rx="2" fill="none" stroke="#D0D0D0" strokeWidth="0.8" />
-      <rect x="68" y="110" width="16" height="12" rx="2" fill="none" stroke="#D0D0D0" strokeWidth="0.8" />
-      {/* Pocket pen */}
-      <rect x="40" y="106" width="2" height="8" rx="1" fill="#3B82F6" />
-      <circle cx="41" cy="106" r="1.2" fill="#3B82F6" />
+      <defs>
+        <linearGradient id="coat-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#F8FAFC" />
+          <stop offset="100%" stopColor="#E2E8F0" />
+        </linearGradient>
+        <linearGradient id="beaker-liquid" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#34D399" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#10B981" stopOpacity="0.8" />
+        </linearGradient>
+        <linearGradient id="hair-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#E5E7EB" />
+          <stop offset="100%" stopColor="#D1D5DB" />
+        </linearGradient>
+      </defs>
 
-      {/* Neck */}
-      <rect x="52" y="62" width="16" height="12" rx="3" fill="#F5D0B0" />
+      {/* === BODY / LAB COAT === */}
+      {/* Coat body */}
+      <path d="M 35 76 L 35 148 Q 35 152 39 152 L 81 152 Q 85 152 85 148 L 85 76 Q 85 72 78 70 L 60 65 L 42 70 Q 35 72 35 76 Z"
+        fill="url(#coat-grad)" stroke="#CBD5E1" strokeWidth="0.8" />
+      {/* Coat lapels */}
+      <path d="M 50 70 L 60 82 L 52 76" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="0.5" />
+      <path d="M 70 70 L 60 82 L 68 76" fill="#E2E8F0" stroke="#CBD5E1" strokeWidth="0.5" />
+      {/* Center button line */}
+      <line x1="60" y1="85" x2="60" y2="145" stroke="#CBD5E1" strokeWidth="0.5" strokeDasharray="0" />
+      {/* Buttons */}
+      <circle cx="60" cy="92" r="1.5" fill="#CBD5E1" />
+      <circle cx="60" cy="106" r="1.5" fill="#CBD5E1" />
+      <circle cx="60" cy="120" r="1.5" fill="#CBD5E1" />
+      {/* Breast pocket */}
+      <rect x="64" y="78" width="12" height="9" rx="1.5" fill="none" stroke="#CBD5E1" strokeWidth="0.6" />
+      {/* Pen in pocket */}
+      <rect x="68" y="74" width="1.8" height="9" rx="0.9" fill="#F59E0B" />
+      <circle cx="68.9" cy="74" r="1.2" fill="#F59E0B" />
 
-      {/* Head */}
-      <ellipse cx="60" cy="42" rx="22" ry="26" fill="#F5D0B0" />
+      {/* === NECK & SHIRT === */}
+      <rect x="52" y="60" width="16" height="14" rx="4" fill="#FDE68A" opacity="0.4" />
+      {/* Shirt collar visible */}
+      <path d="M 50 68 L 55 74 L 60 69 L 65 74 L 70 68" fill="none" stroke="#D97706" strokeWidth="0.6" opacity="0.4" />
 
-      {/* Wild Einstein hair */}
-      <path d="M 38 35 Q 30 20 36 12 Q 42 4 50 10 Q 55 2 62 6 Q 68 2 74 8 Q 82 4 86 14 Q 92 22 84 34"
-        fill="#D1D5DB" stroke="#B0B5BD" strokeWidth="0.8" />
-      {/* Side hair tufts */}
-      <path d="M 38 35 Q 28 32 30 42 Q 26 48 34 50" fill="#D1D5DB" stroke="#B0B5BD" strokeWidth="0.5" />
-      <path d="M 84 34 Q 92 30 92 42 Q 96 48 88 50" fill="#D1D5DB" stroke="#B0B5BD" strokeWidth="0.5" />
+      {/* === HEAD === */}
+      <ellipse cx="60" cy="40" rx="20" ry="23" fill="#D2A679" />
 
-      {/* Eyebrows (bushy) */}
-      <path d="M 44 32 Q 48 28 54 31" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M 66 31 Q 72 28 76 32" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
+      {/* === HAIR — wild Einstein style === */}
+      {/* Main hair mass on top */}
+      <path d="M 40 32 Q 35 18 42 10 Q 48 4 55 12 Q 58 6 64 8 Q 70 4 76 12 Q 82 6 84 16 Q 90 22 82 32"
+        fill="url(#hair-grad)" />
+      {/* Left side poof */}
+      <path d="M 40 32 Q 32 28 34 38 Q 30 42 36 46 Q 34 48 38 48" fill="url(#hair-grad)" />
+      {/* Right side poof */}
+      <path d="M 82 32 Q 88 26 88 36 Q 92 40 86 44 Q 88 48 84 48" fill="url(#hair-grad)" />
+      {/* A few wispy strands */}
+      <path d="M 45 14 Q 42 8 46 6" fill="none" stroke="#C8CCD3" strokeWidth="0.8" strokeLinecap="round" />
+      <path d="M 72 10 Q 76 4 78 8" fill="none" stroke="#C8CCD3" strokeWidth="0.8" strokeLinecap="round" />
 
-      {/* Eyes */}
-      <ellipse ref={eyeLeftRef} cx="50" cy="38" rx="3" ry="2.5" fill="#374151" />
-      <ellipse ref={eyeRightRef} cx="70" cy="38" rx="3" ry="2.5" fill="#374151" />
+      {/* === FACE === */}
+      {/* Glasses — round frames */}
+      <circle cx="51" cy="38" r="8" fill="none" stroke="#64748B" strokeWidth="1.4" />
+      <circle cx="69" cy="38" r="8" fill="none" stroke="#64748B" strokeWidth="1.4" />
+      {/* Glasses bridge */}
+      <path d="M 59 37 Q 60 35 61 37" fill="none" stroke="#64748B" strokeWidth="1.2" />
+      {/* Temple arms */}
+      <path d="M 43 36 Q 38 34 36 36" fill="none" stroke="#64748B" strokeWidth="1" />
+      <path d="M 77 36 Q 82 34 84 36" fill="none" stroke="#64748B" strokeWidth="1" />
+      {/* Lens shine */}
+      <path d="M 46 34 Q 48 32 50 33" fill="none" stroke="white" strokeWidth="0.6" opacity="0.5" strokeLinecap="round" />
+      <path d="M 64 34 Q 66 32 68 33" fill="none" stroke="white" strokeWidth="0.6" opacity="0.5" strokeLinecap="round" />
+
+      {/* Eyes — simple friendly dots */}
+      <circle cx="51" cy="39" r="2.5" fill="#1E293B" />
+      <circle cx="69" cy="39" r="2.5" fill="#1E293B" />
       {/* Eye highlights */}
-      <circle cx="51.5" cy="37" r="1" fill="white" />
-      <circle cx="71.5" cy="37" r="1" fill="white" />
+      <circle cx="52" cy="38" r="0.9" fill="white" />
+      <circle cx="70" cy="38" r="0.9" fill="white" />
 
-      {/* Nose */}
-      <path d="M 59 42 Q 56 48 58 50 Q 60 52 64 50 Q 66 48 63 42" fill="#E8C4A0" />
+      {/* Eyebrows — expressive, slightly raised */}
+      <path d="M 45 30 Q 49 27 56 30" fill="none" stroke="#94A3B8" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M 64 30 Q 71 27 75 30" fill="none" stroke="#94A3B8" strokeWidth="1.6" strokeLinecap="round" />
 
-      {/* Gentle smile */}
-      <path d="M 52 54 Q 60 60 68 54" fill="none" stroke="#9CA3AF" strokeWidth="1" strokeLinecap="round" />
+      {/* Nose — simple */}
+      <path d="M 60 42 Q 57 47 59 49 Q 61 50 63 49 Q 65 47 62 42" fill="#C08A5C" opacity="0.6" />
 
-      {/* Mustache */}
-      <path d="M 50 50 Q 55 54 60 51 Q 65 54 70 50" fill="#C0C5CD" stroke="#B0B5BD" strokeWidth="0.5" />
+      {/* Mustache — bushy */}
+      <path d="M 50 50 Q 53 53 57 51 Q 60 53 63 51 Q 67 53 70 50"
+        fill="#D1D5DB" stroke="#C0C5CD" strokeWidth="0.6" />
 
-      {/* Arms holding beaker */}
-      <path d="M 30 80 Q 18 95 22 110" fill="none" stroke="#F0F0F0" strokeWidth="8" strokeLinecap="round" />
-      <path d="M 90 80 Q 102 95 98 110" fill="none" stroke="#F0F0F0" strokeWidth="8" strokeLinecap="round" />
+      {/* Smile */}
+      <path d="M 53 54 Q 60 59 67 54" fill="none" stroke="#94A3B8" strokeWidth="0.9" strokeLinecap="round" />
 
-      {/* Hands */}
-      <circle cx="22" cy="112" r="5" fill="#F5D0B0" />
-      <circle cx="98" cy="112" r="5" fill="#F5D0B0" />
+      {/* === ARMS === */}
+      {/* Left arm — resting at side */}
+      <path d="M 35 80 Q 24 95 20 115 Q 18 120 22 122"
+        fill="none" stroke="url(#coat-grad)" strokeWidth="10" strokeLinecap="round" />
+      {/* Left hand */}
+      <circle cx="22" cy="122" r="5.5" fill="#D2A679" />
 
-      {/* Beaker in right hand */}
-      <path d="M 92 100 L 88 90 L 88 82 L 108 82 L 108 90 L 104 100 Z" fill="none" stroke="#60A5FA" strokeWidth="1.2" />
-      {/* Liquid in beaker */}
-      <path d="M 93 98 L 89.5 90.5 L 106.5 90.5 L 103 98 Z" fill="#60A5FA" opacity="0.3" />
-      {/* Bubbles */}
-      <circle cx="95" cy="92" r="1.5" fill="#60A5FA" opacity="0.4" />
-      <circle cx="100" cy="88" r="1" fill="#60A5FA" opacity="0.3" />
-      <circle cx="102" cy="94" r="1.2" fill="#60A5FA" opacity="0.35" />
+      {/* Right arm — holding beaker up */}
+      <path d="M 85 80 Q 92 88 96 95 Q 100 100 98 105"
+        fill="none" stroke="url(#coat-grad)" strokeWidth="10" strokeLinecap="round" />
+      {/* Right hand */}
+      <circle cx="96" cy="107" r="5.5" fill="#D2A679" />
 
-      {/* Glasses */}
-      <circle cx="50" cy="38" r="7" fill="none" stroke="#6B7280" strokeWidth="1.2" />
-      <circle cx="70" cy="38" r="7" fill="none" stroke="#6B7280" strokeWidth="1.2" />
-      <path d="M 57 38 L 63 38" stroke="#6B7280" strokeWidth="1" />
-      <path d="M 43 36 L 38 34" stroke="#6B7280" strokeWidth="1" />
-      <path d="M 77 36 L 82 34" stroke="#6B7280" strokeWidth="1" />
+      {/* === BEAKER (Erlenmeyer flask shape) === */}
+      <path d="M 86 82 L 86 100 L 78 118 Q 76 122 80 122 L 108 122 Q 112 122 110 118 L 102 100 L 102 82 Z"
+        fill="none" stroke="#60A5FA" strokeWidth="1.2" strokeLinejoin="round" />
+      {/* Flask neck ring */}
+      <ellipse cx="94" cy="82" rx="9" ry="2" fill="none" stroke="#60A5FA" strokeWidth="0.8" />
+      {/* Liquid */}
+      <path d="M 82 110 L 86 102 L 102 102 L 106 110 Q 108 114 106 116 L 82 116 Q 80 114 82 110 Z"
+        fill="url(#beaker-liquid)" />
+
+      {/* Animated bubbles */}
+      <circle ref={bubble1Ref} cx="93" cy="108" r="2" fill="#34D399" opacity="0.5" />
+      <circle ref={bubble2Ref} cx="98" cy="112" r="1.5" fill="#34D399" opacity="0.4" />
+      <circle ref={bubble3Ref} cx="88" cy="110" r="1.2" fill="#34D399" opacity="0.35" />
+
+      {/* === CLIPBOARD IN LEFT HAND === */}
+      <rect x="10" y="110" width="18" height="24" rx="2" fill="#FDE68A" stroke="#D97706" strokeWidth="0.6" opacity="0.7" />
+      <rect x="15" y="108" width="8" height="4" rx="1" fill="#D97706" opacity="0.5" />
+      {/* Clipboard lines */}
+      <line x1="14" y1="117" x2="24" y2="117" stroke="#D97706" strokeWidth="0.5" opacity="0.3" />
+      <line x1="14" y1="120" x2="22" y2="120" stroke="#D97706" strokeWidth="0.5" opacity="0.3" />
+      <line x1="14" y1="123" x2="24" y2="123" stroke="#D97706" strokeWidth="0.5" opacity="0.3" />
+      <line x1="14" y1="126" x2="20" y2="126" stroke="#D97706" strokeWidth="0.5" opacity="0.3" />
     </svg>
   )
 }
