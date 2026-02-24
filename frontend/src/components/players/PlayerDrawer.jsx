@@ -1,12 +1,24 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../../services/api'
 
-const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false }) => {
+/** Course DNA importance → label (same thresholds as TournamentHeader) */
+const getDnaLabel = (val) => {
+  if (val == null) return { text: '—', color: 'text-text-muted' }
+  if (val >= 0.32) return { text: 'Premium', color: 'text-gold' }
+  if (val >= 0.27) return { text: 'High', color: 'text-emerald-400' }
+  if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary' }
+  return { text: 'Low', color: 'text-text-muted' }
+}
+
+const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false, tournamentContext }) => {
   const [player, setPlayer] = useState(null)
   const [projection, setProjection] = useState(null)
   const [upcoming, setUpcoming] = useState([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
+
+  const hasTournament = !!tournamentContext?.entry
 
   const fetchPlayer = useCallback(async () => {
     if (!playerId) return
@@ -65,12 +77,18 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
         { id: 'overview', label: 'Overview' },
         { id: 'gamelog', label: 'Game Log' },
       ]
-    : [
-        { id: 'overview', label: 'Overview' },
-        { id: 'results', label: 'Results' },
-        { id: 'schedule', label: 'Schedule' },
-        { id: 'sg', label: 'Strokes Gained' },
-      ]
+    : hasTournament
+      ? [
+          { id: 'overview', label: 'This Week' },
+          { id: 'results', label: 'Results' },
+          { id: 'sg', label: 'Strokes Gained' },
+        ]
+      : [
+          { id: 'overview', label: 'Overview' },
+          { id: 'results', label: 'Results' },
+          { id: 'schedule', label: 'Schedule' },
+          { id: 'sg', label: 'Strokes Gained' },
+        ]
 
   const formatStat = (value, prefix = '') => {
     if (value == null) return '\u2014'
@@ -105,6 +123,20 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
     if (pos <= 25) return 'text-text-primary'
     return 'text-text-secondary'
   }
+
+  // Tournament context data
+  const entry = tournamentContext?.entry
+  const course = tournamentContext?.course
+  const cm = entry?.clutchMetrics || {}
+  const ch = entry?.courseHistory
+
+  // Whether to hide the generic projection bar (show clutch metrics strip instead, or hide if zeros)
+  const showClutchStrip = hasTournament
+  const showProjectionBar = !hasTournament && projection
+  const hasNonZeroProjection = projection && (projection.floor > 0 || projection.ceiling > 0)
+
+  // Quick stats — hide if all zeros in tournament context
+  const hasQuickStats = !hasTournament || (player && (player.wins > 0 || player.top10s > 0 || player.cutsMade > 0 || player.earnings > 0))
 
   return (
     <>
@@ -165,6 +197,12 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                     </>
                   )}
                 </div>
+                {/* Tournament name badge */}
+                {hasTournament && tournamentContext.tournamentName && (
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-gold/10 text-gold text-[11px] font-medium rounded truncate max-w-[200px]">
+                    {tournamentContext.tournamentName}
+                  </span>
+                )}
                 {/* Roster badge */}
                 {rosterContext?.isOnRoster && (
                   <span className="inline-block mt-1 px-2 py-0.5 bg-emerald-500/15 text-emerald-400 text-[11px] font-medium rounded">
@@ -183,8 +221,44 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
             </button>
           </div>
 
-          {/* Projection quick bar */}
-          {projection && (
+          {/* Clutch Metrics strip (tournament context) */}
+          {showClutchStrip && (
+            <div className="grid grid-cols-4 gap-px bg-[var(--card-border)] mx-4 mb-3 rounded-lg overflow-hidden">
+              <div className="bg-[var(--surface)] p-2 text-center">
+                <p className={`text-lg font-bold font-mono ${
+                  cm.cpi > 1 ? 'text-emerald-400' : cm.cpi > 0 ? 'text-green-400' : cm.cpi != null ? 'text-red-400' : 'text-text-muted'
+                }`}>
+                  {cm.cpi != null ? (cm.cpi > 0 ? `+${cm.cpi.toFixed(1)}` : cm.cpi.toFixed(1)) : '\u2014'}
+                </p>
+                <p className="text-[10px] text-text-muted uppercase">CPI</p>
+              </div>
+              <div className="bg-[var(--surface)] p-2 text-center">
+                <p className={`text-lg font-bold font-mono ${
+                  cm.formScore >= 80 ? 'text-emerald-400' : cm.formScore >= 60 ? 'text-green-400' : cm.formScore != null ? 'text-text-secondary' : 'text-text-muted'
+                }`}>
+                  {cm.formScore != null ? Math.round(cm.formScore) : '\u2014'}
+                </p>
+                <p className="text-[10px] text-text-muted uppercase">Form</p>
+              </div>
+              <div className="bg-[var(--surface)] p-2 text-center">
+                <p className={`text-lg font-bold font-mono ${
+                  cm.courseFitScore >= 80 ? 'text-gold' : cm.courseFitScore >= 60 ? 'text-yellow-400' : cm.courseFitScore != null ? 'text-text-secondary' : 'text-text-muted'
+                }`}>
+                  {cm.courseFitScore != null ? Math.round(cm.courseFitScore) : '\u2014'}
+                </p>
+                <p className="text-[10px] text-text-muted uppercase">Fit</p>
+              </div>
+              <div className="bg-[var(--surface)] p-2 text-center">
+                <p className="text-lg font-bold font-mono text-text-primary">
+                  {entry?.owgrRank || player?.owgrRank || '\u2014'}
+                </p>
+                <p className="text-[10px] text-text-muted uppercase">OWGR</p>
+              </div>
+            </div>
+          )}
+
+          {/* Projection quick bar (generic mode) */}
+          {showProjectionBar && (
             <div className="grid grid-cols-4 gap-px bg-[var(--card-border)] mx-4 mb-3 rounded-lg overflow-hidden">
               <div className="bg-[var(--surface)] p-2 text-center">
                 <p className="text-emerald-400 text-lg font-bold font-display">{projection.projected}</p>
@@ -229,95 +303,180 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
         <div className="flex-1 overflow-y-auto">
           {!player ? null : (
             <>
-              {/* Overview Tab */}
+              {/* Overview / This Week Tab */}
               {activeTab === 'overview' && (
                 <div className="p-4 space-y-4">
-                  {/* Projection detail card */}
-                  {projection && (
-                    <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-                      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Fantasy Projection</h3>
-                      <div className="space-y-3">
-                        {/* Range bar */}
-                        <div>
-                          <div className="flex items-center justify-between text-xs text-text-muted mb-1">
-                            <span>Floor: {projection.floor}</span>
-                            <span>Ceiling: {projection.ceiling}</span>
-                          </div>
-                          <div className="h-3 bg-[var(--stone)] rounded-full relative overflow-hidden">
-                            {projection.ceiling > 0 && (
-                              <>
-                                <div
-                                  className="absolute h-full bg-emerald-500/20 rounded-full"
-                                  style={{
-                                    left: `${(projection.floor / projection.ceiling) * 100}%`,
-                                    width: `${100 - (projection.floor / projection.ceiling) * 100}%`,
-                                  }}
-                                />
-                                <div
-                                  className="absolute h-full w-1 bg-emerald-400 rounded-full"
-                                  style={{ left: `${(projection.projected / projection.ceiling) * 100}%` }}
-                                />
-                              </>
+                  {/* === TOURNAMENT SCOUTING LAYOUT === */}
+                  {hasTournament ? (
+                    <>
+                      {/* SG vs Course DNA */}
+                      {course && player && (
+                        <SkillMatchCard player={player} course={course} />
+                      )}
+
+                      {/* Course History */}
+                      {ch && (
+                        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Course History</h3>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                              <p className={`text-sm font-bold font-mono ${
+                                ch.avgToPar != null ? (ch.avgToPar <= -1 ? 'text-gold' : ch.avgToPar <= 0 ? 'text-green-400' : 'text-red-400') : 'text-text-muted'
+                              }`}>
+                                {ch.avgToPar != null ? (ch.avgToPar > 0 ? `+${ch.avgToPar.toFixed(1)}` : ch.avgToPar === 0 ? 'E' : ch.avgToPar.toFixed(1)) : '\u2014'}
+                              </p>
+                              <p className="text-[10px] text-text-muted">Avg to Par</p>
+                            </div>
+                            <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                              <p className="text-sm font-bold text-text-primary">{ch.rounds || 0}</p>
+                              <p className="text-[10px] text-text-muted">Rounds</p>
+                            </div>
+                            {ch.bestFinish != null && (
+                              <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                                <p className={`text-sm font-bold ${getPositionColor(ch.bestFinish)}`}>
+                                  {ch.bestFinish}
+                                </p>
+                                <p className="text-[10px] text-text-muted">Best Finish</p>
+                              </div>
+                            )}
+                            {ch.cutsMade != null && (
+                              <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                                <p className="text-sm font-bold text-text-primary">
+                                  {ch.cutsMade}{ch.appearances ? `/${ch.appearances}` : ''}
+                                </p>
+                                <p className="text-[10px] text-text-muted">Cuts Made</p>
+                              </div>
                             )}
                           </div>
-                          <p className="text-center text-sm font-bold text-emerald-400 mt-1">
-                            Projected: {projection.projected} pts
-                          </p>
                         </div>
+                      )}
 
-                        {/* Stats row */}
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="bg-[var(--bg-alt)] rounded p-2">
-                            <p className="text-text-primary text-sm font-bold">{projection.totalEvents}</p>
-                            <p className="text-[10px] text-text-muted">Events</p>
+                      {/* Recent Results (from profile API) */}
+                      {(player.performances || []).length > 0 && (
+                        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Recent Results</h3>
+                          <div className="space-y-1.5">
+                            {player.performances.slice(0, 5).map((perf) => (
+                              <div key={perf.id} className="flex items-center justify-between py-1">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <span className={`text-sm font-bold w-8 flex-shrink-0 ${getPositionColor(perf.position)}`}>
+                                    {formatPosition(perf.position, perf.positionTied)}
+                                  </span>
+                                  <span className="text-xs text-text-primary truncate">{perf.tournament?.name}</span>
+                                </div>
+                                <span className={`text-xs font-mono flex-shrink-0 ml-2 ${
+                                  perf.totalToPar != null ? (perf.totalToPar < 0 ? 'text-emerald-400' : perf.totalToPar > 0 ? 'text-red-400' : 'text-text-primary') : 'text-text-muted'
+                                }`}>
+                                  {perf.totalToPar != null ? (perf.totalToPar > 0 ? '+' : '') + perf.totalToPar : '\u2014'}
+                                </span>
+                              </div>
+                            ))}
                           </div>
-                          <div className="bg-[var(--bg-alt)] rounded p-2">
-                            <p className="text-text-primary text-sm font-bold">{projection.recentAvg}</p>
-                            <p className="text-[10px] text-text-muted">Recent Avg</p>
-                          </div>
-                          <div className="bg-[var(--bg-alt)] rounded p-2">
-                            <p className={`text-sm font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
-                              {projection.trend > 0 ? '\u2191' : projection.trend < 0 ? '\u2193' : '\u2192'} {Math.abs(projection.trend)}%
-                            </p>
-                            <p className="text-[10px] text-text-muted">Trend</p>
-                          </div>
+                        </div>
+                      )}
+
+                      {/* SG Summary (keep exactly as-is) */}
+                      <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                        <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Strokes Gained Summary</h3>
+                        <div className="space-y-2">
+                          <SGBar label="Off the Tee" value={player.sgOffTee} />
+                          <SGBar label="Approach" value={player.sgApproach} />
+                          <SGBar label="Around Green" value={player.sgAroundGreen} />
+                          <SGBar label="Putting" value={player.sgPutting} />
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Quick Stats */}
-                  {isNfl ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <StatCard label="Position" value={player.nflPosition || '\u2014'} color="text-emerald-400" />
-                      <StatCard label="Team" value={player.nflTeamAbbr || '\u2014'} color="text-text-primary" />
-                      <StatCard label="Games" value={player.gamesPlayed || 0} color="text-text-primary" />
-                      <StatCard label="Fantasy Pts" value={player.fantasyPtsHalf?.toFixed(1) || player.seasonFantasyPts?.toFixed(1) || '\u2014'} color="text-emerald-400" />
-                      <StatCard label="Pts/Game" value={player.fantasyPtsPerGame?.toFixed(1) || '\u2014'} color="text-text-primary" />
-                      <StatCard label="Status" value={player.injuryStatus || 'Active'} color={player.injuryStatus ? 'text-red-400' : 'text-emerald-400'} />
-                    </div>
+                    </>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      <StatCard label="SG: Total" value={formatStat(player.sgTotal, '+')} color={getStatColor(player.sgTotal)} />
-                      <StatCard label="Avg Score" value={player.avgScore?.toFixed(1) || '\u2014'} color="text-text-primary" />
-                      <StatCard label="Wins" value={player.wins || 0} color={player.wins > 0 ? 'text-yellow-400' : 'text-text-primary'} />
-                      <StatCard label="Top 10s" value={player.top10s || 0} color="text-text-primary" />
-                      <StatCard label="Cuts Made" value={player.cutsMade || 0} color="text-text-primary" />
-                      <StatCard label="Earnings" value={player.earnings > 0 ? `$${(player.earnings / 1e6).toFixed(1)}M` : '\u2014'} color="text-emerald-400" />
-                    </div>
-                  )}
+                    <>
+                      {/* === GENERIC OVERVIEW LAYOUT (unchanged) === */}
+                      {/* Projection detail card */}
+                      {projection && hasNonZeroProjection && (
+                        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Fantasy Projection</h3>
+                          <div className="space-y-3">
+                            {/* Range bar */}
+                            <div>
+                              <div className="flex items-center justify-between text-xs text-text-muted mb-1">
+                                <span>Floor: {projection.floor}</span>
+                                <span>Ceiling: {projection.ceiling}</span>
+                              </div>
+                              <div className="h-3 bg-[var(--stone)] rounded-full relative overflow-hidden">
+                                {projection.ceiling > 0 && (
+                                  <>
+                                    <div
+                                      className="absolute h-full bg-emerald-500/20 rounded-full"
+                                      style={{
+                                        left: `${(projection.floor / projection.ceiling) * 100}%`,
+                                        width: `${100 - (projection.floor / projection.ceiling) * 100}%`,
+                                      }}
+                                    />
+                                    <div
+                                      className="absolute h-full w-1 bg-emerald-400 rounded-full"
+                                      style={{ left: `${(projection.projected / projection.ceiling) * 100}%` }}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                              <p className="text-center text-sm font-bold text-emerald-400 mt-1">
+                                Projected: {projection.projected} pts
+                              </p>
+                            </div>
 
-                  {/* SG Summary (golf only) */}
-                  {!isNfl && (
-                    <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-                      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Strokes Gained Summary</h3>
-                      <div className="space-y-2">
-                        <SGBar label="Off the Tee" value={player.sgOffTee} />
-                        <SGBar label="Approach" value={player.sgApproach} />
-                        <SGBar label="Around Green" value={player.sgAroundGreen} />
-                        <SGBar label="Putting" value={player.sgPutting} />
-                      </div>
-                    </div>
+                            {/* Stats row */}
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="bg-[var(--bg-alt)] rounded p-2">
+                                <p className="text-text-primary text-sm font-bold">{projection.totalEvents}</p>
+                                <p className="text-[10px] text-text-muted">Events</p>
+                              </div>
+                              <div className="bg-[var(--bg-alt)] rounded p-2">
+                                <p className="text-text-primary text-sm font-bold">{projection.recentAvg}</p>
+                                <p className="text-[10px] text-text-muted">Recent Avg</p>
+                              </div>
+                              <div className="bg-[var(--bg-alt)] rounded p-2">
+                                <p className={`text-sm font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
+                                  {projection.trend > 0 ? '\u2191' : projection.trend < 0 ? '\u2193' : '\u2192'} {Math.abs(projection.trend)}%
+                                </p>
+                                <p className="text-[10px] text-text-muted">Trend</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quick Stats */}
+                      {isNfl ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <StatCard label="Position" value={player.nflPosition || '\u2014'} color="text-emerald-400" />
+                          <StatCard label="Team" value={player.nflTeamAbbr || '\u2014'} color="text-text-primary" />
+                          <StatCard label="Games" value={player.gamesPlayed || 0} color="text-text-primary" />
+                          <StatCard label="Fantasy Pts" value={player.fantasyPtsHalf?.toFixed(1) || player.seasonFantasyPts?.toFixed(1) || '\u2014'} color="text-emerald-400" />
+                          <StatCard label="Pts/Game" value={player.fantasyPtsPerGame?.toFixed(1) || '\u2014'} color="text-text-primary" />
+                          <StatCard label="Status" value={player.injuryStatus || 'Active'} color={player.injuryStatus ? 'text-red-400' : 'text-emerald-400'} />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          <StatCard label="SG: Total" value={formatStat(player.sgTotal, '+')} color={getStatColor(player.sgTotal)} />
+                          <StatCard label="Avg Score" value={player.avgScore?.toFixed(1) || '\u2014'} color="text-text-primary" />
+                          <StatCard label="Wins" value={player.wins || 0} color={player.wins > 0 ? 'text-yellow-400' : 'text-text-primary'} />
+                          <StatCard label="Top 10s" value={player.top10s || 0} color="text-text-primary" />
+                          <StatCard label="Cuts Made" value={player.cutsMade || 0} color="text-text-primary" />
+                          <StatCard label="Earnings" value={player.earnings > 0 ? `$${(player.earnings / 1e6).toFixed(1)}M` : '\u2014'} color="text-emerald-400" />
+                        </div>
+                      )}
+
+                      {/* SG Summary (golf only) */}
+                      {!isNfl && (
+                        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Strokes Gained Summary</h3>
+                          <div className="space-y-2">
+                            <SGBar label="Off the Tee" value={player.sgOffTee} />
+                            <SGBar label="Approach" value={player.sgApproach} />
+                            <SGBar label="Around Green" value={player.sgAroundGreen} />
+                            <SGBar label="Putting" value={player.sgPutting} />
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -370,7 +529,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
                 </div>
               )}
 
-              {/* Schedule Tab */}
+              {/* Schedule Tab (generic mode only) */}
               {activeTab === 'schedule' && (
                 <div className="p-4 space-y-4">
                   <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Upcoming Tournaments</h3>
@@ -527,49 +686,127 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false 
           )}
         </div>
 
-        {/* Footer Actions */}
-        {player && rosterContext && (
+        {/* Footer */}
+        {player && (
           <div className="flex-shrink-0 border-t border-[var(--card-border)] bg-[var(--surface)] p-3 flex gap-2">
-            {rosterContext.isOnRoster ? (
-              <>
-                {rosterContext.onMovePosition && (
-                  <button
-                    onClick={() => {
-                      rosterContext.onMovePosition(player.id, rosterContext.position === 'ACTIVE' ? 'BENCH' : 'ACTIVE')
-                      onClose()
-                    }}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-[var(--stone)] text-text-primary hover:bg-[var(--surface-alt)] transition-colors"
-                  >
-                    Move to {rosterContext.position === 'ACTIVE' ? 'Bench' : 'Active'}
-                  </button>
-                )}
-                {rosterContext.onDrop && (
-                  <button
-                    onClick={() => {
-                      rosterContext.onDrop(player.id)
-                      onClose()
-                    }}
-                    className="py-2.5 px-4 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                  >
-                    Drop
-                  </button>
-                )}
-              </>
-            ) : rosterContext.onAdd ? (
-              <button
-                onClick={() => {
-                  rosterContext.onAdd(player)
-                  onClose()
-                }}
-                className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-emerald-500 text-text-primary hover:bg-emerald-600 transition-colors"
+            {rosterContext ? (
+              rosterContext.isOnRoster ? (
+                <>
+                  {rosterContext.onMovePosition && (
+                    <button
+                      onClick={() => {
+                        rosterContext.onMovePosition(player.id, rosterContext.position === 'ACTIVE' ? 'BENCH' : 'ACTIVE')
+                        onClose()
+                      }}
+                      className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-[var(--stone)] text-text-primary hover:bg-[var(--surface-alt)] transition-colors"
+                    >
+                      Move to {rosterContext.position === 'ACTIVE' ? 'Bench' : 'Active'}
+                    </button>
+                  )}
+                  {rosterContext.onDrop && (
+                    <button
+                      onClick={() => {
+                        rosterContext.onDrop(player.id)
+                        onClose()
+                      }}
+                      className="py-2.5 px-4 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                    >
+                      Drop
+                    </button>
+                  )}
+                </>
+              ) : rosterContext.onAdd ? (
+                <button
+                  onClick={() => {
+                    rosterContext.onAdd(player)
+                    onClose()
+                  }}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-emerald-500 text-text-primary hover:bg-emerald-600 transition-colors"
+                >
+                  Add to Roster
+                </button>
+              ) : (
+                <Link
+                  to={`/players/${playerId}`}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                >
+                  View Full Profile &rarr;
+                </Link>
+              )
+            ) : (
+              <Link
+                to={`/players/${playerId}`}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center text-emerald-400 hover:bg-emerald-500/10 transition-colors"
               >
-                Add to Roster
-              </button>
-            ) : null}
+                View Full Profile &rarr;
+              </Link>
+            )}
           </div>
         )}
       </div>
     </>
+  )
+}
+
+/** SG vs Course DNA — the killer scouting insight */
+const SkillMatchCard = ({ player, course }) => {
+  const skills = [
+    { label: 'Driving', sg: player.sgOffTee, importance: course.drivingImportance },
+    { label: 'Approach', sg: player.sgApproach, importance: course.approachImportance },
+    { label: 'Short Game', sg: player.sgAroundGreen, importance: course.aroundGreenImportance },
+    { label: 'Putting', sg: player.sgPutting, importance: course.puttingImportance },
+  ]
+
+  const hasAnyData = skills.some(s => s.sg != null) && skills.some(s => s.importance != null)
+  if (!hasAnyData) return null
+
+  return (
+    <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Skill Match</h3>
+      <div className="space-y-2.5">
+        {skills.map((skill) => {
+          const dna = getDnaLabel(skill.importance)
+          const isMatch = skill.sg > 0.2 && skill.importance >= 0.27
+          const sgColor = skill.sg == null ? 'text-text-muted'
+            : skill.sg > 0.5 ? 'text-emerald-400'
+            : skill.sg > 0 ? 'text-green-400'
+            : skill.sg > -0.3 ? 'text-yellow-400'
+            : 'text-red-400'
+          // Bar width: map SG roughly to 0-100% (±1.5 range covers most players)
+          const barPct = skill.sg != null ? Math.min(Math.max((skill.sg + 1.5) / 3 * 100, 5), 100) : 0
+          const barColor = skill.sg == null ? 'bg-[var(--stone)]'
+            : skill.sg > 0.5 ? 'bg-emerald-400'
+            : skill.sg > 0 ? 'bg-green-400'
+            : skill.sg > -0.3 ? 'bg-yellow-400'
+            : 'bg-red-400'
+
+          return (
+            <div key={skill.label} className="flex items-center gap-2">
+              <span className="text-xs text-text-muted w-[72px] flex-shrink-0">{skill.label}</span>
+              <span className={`text-xs font-mono font-bold w-12 text-right flex-shrink-0 ${sgColor}`}>
+                {skill.sg != null ? (skill.sg > 0 ? '+' : '') + skill.sg.toFixed(2) : '\u2014'}
+              </span>
+              <div className="flex-1 h-2 bg-[var(--stone)] rounded-full overflow-hidden">
+                {skill.sg != null && (
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                    style={{ width: `${barPct}%` }}
+                  />
+                )}
+              </div>
+              <span className={`text-[10px] font-medium w-16 text-right flex-shrink-0 ${dna.color}`}>
+                {dna.text}
+              </span>
+              {isMatch && (
+                <span className="text-[10px] text-gold font-bold flex-shrink-0" title="Player strength matches course demand">
+                  Match
+                </span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 

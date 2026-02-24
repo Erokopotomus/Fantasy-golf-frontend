@@ -316,6 +316,11 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
         playerId={drawerPlayerId}
         isOpen={!!drawerPlayerId}
         onClose={() => setDrawerPlayerId(null)}
+        tournamentContext={{
+          entry: leaderboard.find(p => p.id === drawerPlayerId),
+          course: tournament?.course,
+          tournamentName: tournament?.name,
+        }}
       />
     </div>
   )
