@@ -25,7 +25,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 | Real-time | Socket.IO |
 | AI/ML | Claude API (Anthropic) |
 | Hosting | Vercel (frontend) + Railway (backend/DB) |
-| Data Feeds | DataGolf API (golf), nflverse (NFL) |
+| Data Feeds | DataGolf API (golf), ESPN API (golf historical + news), nflverse (NFL) |
 | File Storage | Cloudinary (images) |
 
 ---
@@ -53,7 +53,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 ## DEVELOPMENT PHASES
 
 ### Current Status: PHASE 5 — IN PROGRESS
-> Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 (owner assignment, reveal, sharing) built. Commissioner blog system built. Prisma singleton + connection pooling deployed. Next: finish Phase 5 remaining items.
+> Phases 1-4 complete (4E partially complete). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 (owner assignment, reveal, sharing) built. Commissioner blog system built. Prisma singleton + connection pooling deployed. ESPN historical backfill (2023-2025) complete. Tournament intelligence features (Power Rank, Scouting Drawer) live. Next: finish Phase 5 remaining items.
 
 ### Phase 1: Core Platform — COMPLETE
 Auth (JWT), league CRUD, commissioner tools, invite codes, snake+auction drafts (Socket.IO), roster management (add/drop/FAAB/rolling waivers), live scoring (DataGolf, 12 sync functions, 7 crons), H2H matchups, trading (veto voting, draft dollars), notifications (Socket.IO + web push), in-league chat, standings (H2H/Roto/Survivor/OAD/Segment), playoffs (bracket, seeding, auto-advance, history), IR slots, season recap & awards, security hardening (rate-limit + input validation), analytics foundation (Sport/Season/FantasyWeek/ScoringSystem models, 32 achievements), keeper leagues (no-cost/round penalty/auction/escalator), divisions, mobile responsive.
@@ -65,9 +65,11 @@ Event tracking (42+ events, console logging, PostHog-ready). Prediction engine (
 ### Phase 3: League Vault & Migration — COMPLETE
 5 import platforms (Sleeper, ESPN, Yahoo, Fantrax, MFL). League Vault v1 (timeline + records). Player matching service. League history schema. League Vault V2 (owner assignment wizard, cinematic reveal, dual-mode display, public landing, sharing, settings auto-detection). Commissioner blog system (TipTap rich text, cover images via Cloudinary, emoji reactions, comments, view tracking).
 
-### Phase 4: Data Architecture & Proprietary Metrics — COMPLETE (4E deferred)
+### Phase 4: Data Architecture & Proprietary Metrics — COMPLETE (4E partially complete)
 4-layer database architecture (RawProviderData → canonical → ClutchScore → display). Rosetta Stone player/event ID mapping. ETL pipeline (DataGolf → canonical, raw data cleanup cron). Proprietary metrics: CPI (-3.0 to +3.0), Form Score (0-100), Pressure Score (-2.0 to +2.0), Course Fit (0-100). Transformation rules: never display raw provider numbers, always blend multiple inputs, always add Clutch branding, log formula version.
-- [ ] **4E: Tier 1 Public Data Sources** — PGA Tour scraper, ESPN Golf endpoints, OWGR rankings. Evaluate SlashGolf API and SportsDataIO.
+- [x] **4E (partial): ESPN Historical Backfill** — ESPN free API used to backfill 2023-2025 tournament results (148 tournaments, 17,447 performances, 1,270 players with career stats). Service: `backend/src/services/historicalBackfill.js`. Routes: `POST /api/sync/backfill-historical`, `POST /api/sync/recalculate-stats`. ESPN player ID matching with name normalization fallback. 1,054 ESPN ID mappings saved.
+- [x] **4E (partial): ESPN player bios/headshots + hole-by-hole scores** — `backend/src/services/espnSync.js`
+- [ ] **4E (remaining): PGA Tour scraper, OWGR rankings sync** — OWGR sync service exists (`owgrSync.js`) but needs validation. Evaluate SlashGolf API and SportsDataIO.
 
 ### Phase 5: Manager Analytics & Clutch Rating — IN PROGRESS
 
@@ -110,6 +112,16 @@ Platform reframe: AI coach is the main character, visible on every surface (Dash
 - **Quick Actions**: Contextual 4-button grid — users with leagues get Create League / The Lab / Prove It / Ask Coach; new users get Create / Join / Golf Hub / NFL Hub.
 - **Coaching Corner upgrade**: NeuralCluster animation, "Your coach has been watching..." prefix on insights, engaging empty state with clickable prompt chips.
 - **League Home coach line**: Compact italic `font-editorial` briefing below league header with NeuralCluster sm accent.
+
+#### Tournament Intelligence & Scouting (Feb 2026) — COMPLETE
+
+Tournament field analysis and player scouting features for upcoming events:
+
+- **Clutch Power Rank**: Composite ranking for each tournament field. Formula: Form (35%) + CPI (25%) + Course Fit (25%) + OWGR (15%). Each normalized to 0-100. Stable rank regardless of sort column. Top 5 highlighted gold.
+- **Field Analysis Table** (`TournamentPreview.jsx`): Sortable columns for CPI, Form, Fit, History, OWGR with hover tooltips. CPI column has mini sliding-scale bars with zero-line. 5-tier color gradients for CPI/Form/Fit.
+- **Tournament-Aware Scouting Drawer**: `PlayerDrawer.jsx` accepts optional `tournamentContext` prop. When present, shows "This Week" tab with: Clutch metrics strip (CPI/Form/Fit/OWGR), SG vs Course DNA visual (player strength bars vs course demand with zero-line), course history card, recent results with avg finish. Hides empty/zero sections.
+- **Players Table** (`PlayerTable.jsx`): Left-aligned Player column, SG column headers with hover tooltips explaining each metric.
+- **Historical Backfill**: ESPN-powered backfill of 2023-2025 (148 tournaments, 17,447 performances). Career stats recalculated for 1,270 players (wins, top-10s, events, cuts made, etc.).
 
 ---
 
@@ -356,7 +368,7 @@ Every feature should answer: "Which persona is this for?" When in doubt, optimiz
 - **Seasonal Flywheel:** Feed auto-adjusts by sports calendar. Golf fills NFL gaps (Feb-May). No dead months.
 
 ### Current Build Priority
-Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → **Next: Build out Golf/NFL Hubs as sport homepages, finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E public data sources**
+Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill done → **Next: Build out Golf/NFL Hubs as sport homepages, finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E remaining (OWGR sync validation)**
 
 **Backlog:** NFL team pages need polish. Kicker/DST stats missing. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags).
 
@@ -405,8 +417,8 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 
 ---
 
-*Last updated: February 22, 2026*
-*Phases 1-4 complete (4E deferred). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. 335+ commits. 91+ database models. 161+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
+*Last updated: February 23, 2026*
+*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & Scouting complete. ESPN historical backfill (2023-2025) complete. 345+ commits. 91+ database models. 161+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
 
 **All migrations (1-45) deployed to Railway.**
 

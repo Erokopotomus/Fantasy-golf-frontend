@@ -1,8 +1,8 @@
 # CLUTCH FANTASY SPORTS — Project Status Report
 
-> Generated: February 22, 2026
+> Generated: February 23, 2026
 > Repository: github.com/Erokopotomus/Clutch
-> Branch: master (330+ commits)
+> Branch: master (345+ commits)
 
 ---
 
@@ -15,7 +15,7 @@
 | Phase 3: League History & Migration | COMPLETE |
 | Phase 3F-3G: Vault V2 + Commissioner Blog | COMPLETE |
 | Phase 4: Data Architecture & Metrics (4A-4D) | COMPLETE |
-| Phase 4E: Tier 1 Public Data Sources | DEFERRED |
+| Phase 4E: Tier 1 Public Data Sources | PARTIAL (ESPN done, OWGR pending) |
 | Data Layer Steps 1-7 + Lab Phases 1-5 | COMPLETE |
 | Phase 5B: Clutch Rating V2 | COMPLETE |
 | Phase 6: AI Engine (all sub-phases + admin) | COMPLETE |
@@ -34,8 +34,9 @@
 | Database | PostgreSQL + Prisma 6 | Deployed (Railway) |
 | Real-time | Socket.IO | Live |
 | Auth | JWT (custom) | Live |
-| Data (Golf) | DataGolf API | Live |
+| Data (Golf) | DataGolf API + ESPN API | Live |
 | Data (NFL) | nflverse CSVs | Live (2024 season) |
+| Historical (Golf) | ESPN Free API | Live (2023-2025 backfilled) |
 | News | ESPN API | Live (2-hour sync) |
 | Projections | Sleeper API + FFC ADP | Live (daily sync) |
 | AI/ML | Claude API (Anthropic) | Live (Phase 6 complete) |
@@ -134,11 +135,11 @@
 3. **Known Gaps**
    - NFL 2025 season data not yet synced (only 2024)
    - Kicker + DST stats missing from NFL data
-   - Phase 4E: Tier 1 Public Data Sources (PGA Tour scraper, ESPN Golf, OWGR)
+   - Phase 4E remaining: OWGR rankings sync validation, PGA Tour scraper
    - Redis not yet deployed (planned for leaderboard caching)
    - PWA not configured
    - Stripe payments not integrated
 
 ---
 
-*330+ commits. 91+ database models. 160+ API endpoints. 65+ frontend pages. 34 cron jobs. 25+ backend services. 44 migrations. 2 sports live.*
+*345+ commits. 91+ database models. 163+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
