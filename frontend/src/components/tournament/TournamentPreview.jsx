@@ -175,7 +175,10 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       className={`hover:bg-[var(--surface-alt)] transition-colors ${isMyPlayer ? 'bg-gold/[0.04]' : ''}`}
                     >
                       <td className="px-4 py-2.5">
-                        <button onClick={() => setDrawerPlayerId(entry.id)} className="flex items-center gap-2.5 group text-left">
+                        <button onClick={() => setDrawerPlayerId(entry.id)} className="flex items-center gap-2 group text-left">
+                          <span className="text-[10px] font-mono text-text-muted/60 w-5 text-right flex-shrink-0">
+                            {entry.owgrRank || '—'}
+                          </span>
                           {entry.headshotUrl ? (
                             <img src={entry.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)]" />
                           ) : (
@@ -195,6 +198,20 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                         }`}>
                           {cm.cpi != null ? (cm.cpi > 0 ? `+${cm.cpi.toFixed(1)}` : cm.cpi.toFixed(1)) : '—'}
                         </span>
+                        {cm.cpi != null && (
+                          <div className="mt-0.5 mx-auto w-12 h-1 bg-[var(--stone)] rounded-full overflow-hidden relative">
+                            <div
+                              className={`absolute h-full rounded-full ${
+                                cm.cpi > 1 ? 'bg-emerald-400' : cm.cpi > 0 ? 'bg-green-400' : 'bg-red-400'
+                              }`}
+                              style={{
+                                left: cm.cpi >= 0 ? '50%' : `${Math.max(50 - Math.abs(cm.cpi) / 3 * 50, 5)}%`,
+                                width: `${Math.min(Math.abs(cm.cpi) / 3 * 50, 50)}%`,
+                              }}
+                            />
+                            <div className="absolute left-1/2 top-0 w-[2px] h-full bg-text-muted/70 rounded-full" />
+                          </div>
+                        )}
                       </td>
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${

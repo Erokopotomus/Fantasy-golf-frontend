@@ -1019,7 +1019,7 @@ const SkillMatchCard = ({ player, course }) => {
                     />
                   )}
                   {/* Zero line — SG=0 maps to 50% */}
-                  <div className="absolute left-1/2 top-0 w-px h-full bg-text-muted/40" />
+                  <div className="absolute left-1/2 top-0 w-[2px] h-full bg-text-muted/70 rounded-full" />
                 </div>
                 <span className={`text-[10px] font-medium w-16 text-right flex-shrink-0 ${dna.color}`}>
                   {dna.text}
