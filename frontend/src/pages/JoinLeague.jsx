@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Input from '../components/common/Input'
@@ -12,11 +12,14 @@ const JoinLeague = () => {
   const { validateCode, joinLeague, loading, error, previewLeague, clearPreview } = useJoinLeague()
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState('')
+  const autoValidated = useRef(false)
 
-  // Auto-fill code from URL parameter and auto-validate
+  // Auto-fill code from URL parameter and auto-validate (once)
   useEffect(() => {
+    if (autoValidated.current) return
     const urlCode = searchParams.get('code')
     if (urlCode && urlCode.trim()) {
+      autoValidated.current = true
       const cleanCode = urlCode.trim()
       setCode(cleanCode)
       validateCode(cleanCode).catch(() => {})
