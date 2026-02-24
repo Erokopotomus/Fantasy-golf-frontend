@@ -253,9 +253,9 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
 
           {/* Clutch Metrics strip (tournament context) */}
           {showClutchStrip && (
-            <div className="grid grid-cols-4 gap-px bg-[var(--card-border)] mx-4 mb-3 rounded-lg overflow-hidden">
-              <HoverTip tip="Clutch Performance Index (−3 to +3). A weighted blend of all strokes gained skills. Above +1 is elite, above 0 is above average, below 0 is a weakness.">
-                <div className="bg-[var(--surface)] p-2 text-center">
+            <div className="grid grid-cols-4 gap-px mx-4 mb-3 rounded-lg bg-[var(--card-border)]" style={{ isolation: 'isolate' }}>
+              <HoverTip tip="Clutch Performance Index. Scale: -3 to +3. Above +1 is elite, above 0 is above average, below 0 is a weakness." className="rounded-l-lg bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
                   <p className={`text-lg font-bold font-mono ${
                     cm.cpi > 1 ? 'text-emerald-400' : cm.cpi > 0 ? 'text-green-400' : cm.cpi != null ? 'text-red-400' : 'text-text-muted'
                   }`}>
@@ -264,8 +264,8 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                   <p className="text-[10px] text-text-muted uppercase">CPI</p>
                 </div>
               </HoverTip>
-              <HoverTip tip="Current form rating (0–100). Blends recent results with world ranking momentum. 80+ means hot form, 60+ is solid, below 50 is cold.">
-                <div className="bg-[var(--surface)] p-2 text-center">
+              <HoverTip tip="Current form rating. Scale: 0-100. 80+ is hot form, 60+ is solid, below 50 is cold." className="bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
                   <p className={`text-lg font-bold font-mono ${
                     cm.formScore >= 80 ? 'text-emerald-400' : cm.formScore >= 60 ? 'text-green-400' : cm.formScore != null ? 'text-text-secondary' : 'text-text-muted'
                   }`}>
@@ -274,8 +274,8 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                   <p className="text-[10px] text-text-muted uppercase">Form</p>
                 </div>
               </HoverTip>
-              <HoverTip tip="Course Fit score (0–100). How well this player's skill profile matches what this specific course demands. 80+ is a strong matchup, 60+ is decent.">
-                <div className="bg-[var(--surface)] p-2 text-center">
+              <HoverTip tip="Course Fit score. Scale: 0-100. How well this player's skills match what this course demands. 80+ is a strong matchup, 60+ is decent." className="bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
                   <p className={`text-lg font-bold font-mono ${
                     cm.courseFitScore >= 80 ? 'text-gold' : cm.courseFitScore >= 60 ? 'text-yellow-400' : cm.courseFitScore != null ? 'text-text-secondary' : 'text-text-muted'
                   }`}>
@@ -284,8 +284,8 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                   <p className="text-[10px] text-text-muted uppercase">Fit</p>
                 </div>
               </HoverTip>
-              <HoverTip tip="Official World Golf Ranking. Lower is better — #1 is the top-ranked player in the world. Top 50 is elite, top 100 is strong.">
-                <div className="bg-[var(--surface)] p-2 text-center">
+              <HoverTip tip="Official World Golf Ranking. Lower is better. Top 50 is elite, top 100 is strong." className="rounded-r-lg bg-[var(--surface)]">
+                <div className="p-2 text-center cursor-default">
                   <p className="text-lg font-bold font-mono text-text-primary">
                     {entry?.owgrRank || player?.owgrRank || '\u2014'}
                   </p>
@@ -807,16 +807,18 @@ const SkillMatchCard = ({ player, course }) => {
 
   return (
     <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Skill Match</h3>
+      <div className="flex items-baseline justify-between mb-2">
+        <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">Skill Match</h3>
+      </div>
       {/* Column headers */}
-      <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--card-border)]">
+      <div className="flex items-center gap-2 mb-1.5 pb-1 border-b border-[var(--card-border)]">
         <span className="w-[72px] flex-shrink-0" />
-        <HoverTip tip="Strokes Gained measures how many strokes per round this player gains (or loses) vs the tour average in each skill. Positive is good — +0.50 is strong, +1.00 is elite." className="flex-shrink-0 w-12">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Player SG</span>
+        <HoverTip tip="Strokes Gained per round vs the tour field. Positive is good. +0.50 is strong, +1.00 is elite, negative is a weakness.">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap">Player</span>
         </HoverTip>
         <div className="flex-1" />
-        <HoverTip tip="How much this specific course rewards each skill. Premium and High mean the skill is critical to scoring well here. Low means it matters less this week.">
-          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 w-16 text-right block flex-shrink-0">Course</span>
+        <HoverTip tip="How much this course rewards each skill. Premium/High = critical to scoring well here. Average/Low = matters less this week.">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 whitespace-nowrap">Course</span>
         </HoverTip>
         <span className="w-[34px] flex-shrink-0" />
       </div>
