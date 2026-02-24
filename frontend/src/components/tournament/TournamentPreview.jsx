@@ -12,7 +12,7 @@ import QuickInsights from './QuickInsights'
 import PlayerDrawer from '../players/PlayerDrawer'
 
 /** Tooltip wrapper for column headers — shows explanation on hover */
-const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, className = '' }) => {
+const HeaderTooltip = ({ label, tip, align = 'center', tooltipAlign, sortBy, sortKey, onSort, className = '' }) => {
   const [show, setShow] = useState(false)
   const timeoutRef = useRef(null)
 
@@ -24,6 +24,13 @@ const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, 
     setShow(false)
   }
 
+  // Position classes for tooltip: left-aligned for leftmost columns, right-aligned for rightmost, centered default
+  const posClass = tooltipAlign === 'left'
+    ? 'left-0'
+    : tooltipAlign === 'right'
+      ? 'right-0'
+      : 'left-1/2 -translate-x-1/2'
+
   return (
     <th
       className={`text-${align} px-2 py-2 font-medium cursor-pointer hover:text-text-primary transition-colors relative ${sortBy === sortKey ? 'text-gold' : ''} ${className}`}
@@ -33,7 +40,7 @@ const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, 
     >
       <span className="border-b border-dotted border-current">{label}</span>
       {show && (
-        <div className="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] shadow-xl text-left normal-case tracking-normal pointer-events-none">
+        <div className={`absolute z-50 top-full mt-1 ${posClass} w-52 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] shadow-xl text-left normal-case tracking-normal pointer-events-none`}>
           <p className="text-[11px] text-text-primary font-semibold mb-0.5 leading-tight">{label}</p>
           <p className="text-[10px] text-text-muted font-normal leading-snug">{tip}</p>
         </div>
@@ -160,7 +167,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--card-border)] text-text-muted text-[10px] uppercase tracking-wider">
@@ -168,6 +175,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                     label="#"
                     tip="Clutch Power Rank — our composite tournament ranking. Blends Form (35%), CPI (25%), Course Fit (25%), and OWGR (15%) into one overall projection."
                     align="center"
+                    tooltipAlign="left"
                     sortBy={sortBy} sortKey="powerRank" onSort={setSortBy}
                     className="w-8 px-1"
                   />
