@@ -9,6 +9,7 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import WeatherStrip from './WeatherStrip'
 import QuickInsights from './QuickInsights'
+import PlayerDrawer from '../players/PlayerDrawer'
 
 /** Tooltip wrapper for column headers — shows explanation on hover */
 const HeaderTooltip = ({ label, tip, align = 'center', sortBy, sortKey, onSort, className = '' }) => {
@@ -54,6 +55,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
 
   const [filter, setFilter] = useState('all')
   const [sortBy, setSortBy] = useState(hasClutchData ? 'courseFit' : 'owgr')
+  const [drawerPlayerId, setDrawerPlayerId] = useState(null)
 
   // Filter leaderboard
   let filteredField = [...leaderboard]
@@ -173,7 +175,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       className={`hover:bg-[var(--surface-alt)] transition-colors ${isMyPlayer ? 'bg-gold/[0.04]' : ''}`}
                     >
                       <td className="px-4 py-2.5">
-                        <Link to={`/players/${entry.id}`} className="flex items-center gap-2.5 group">
+                        <button onClick={() => setDrawerPlayerId(entry.id)} className="flex items-center gap-2.5 group text-left">
                           {entry.headshotUrl ? (
                             <img src={entry.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)]" />
                           ) : (
@@ -185,7 +187,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                             {entry.name}
                           </span>
                           {isMyPlayer && <span className="text-[10px] text-gold">★</span>}
-                        </Link>
+                        </button>
                       </td>
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${
@@ -262,7 +264,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                   .sort((a, b) => a.owgrRank - b.owgrRank)
                   .slice(0, 5)
                   .map((p, i) => (
-                    <Link key={p.id || i} to={`/players/${p.id}`} className="flex items-center justify-between py-1 hover:bg-[var(--surface-alt)] -mx-1 px-1 rounded transition-colors">
+                    <button key={p.id || i} onClick={() => setDrawerPlayerId(p.id)} className="flex items-center justify-between py-1 hover:bg-[var(--surface-alt)] -mx-1 px-1 rounded transition-colors w-full text-left">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-xs font-mono text-text-muted w-4">{i + 1}.</span>
                         {p.headshotUrl ? (
@@ -273,7 +275,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                         <span className="text-xs font-medium text-text-primary truncate">{p.name}</span>
                       </div>
                       <span className="text-xs font-mono text-gold ml-2 flex-shrink-0">#{p.owgrRank}</span>
-                    </Link>
+                    </button>
                   ))
                 }
               </div>
@@ -308,6 +310,13 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
           </div>
         )}
       </div>
+
+      {/* Player info drawer */}
+      <PlayerDrawer
+        playerId={drawerPlayerId}
+        isOpen={!!drawerPlayerId}
+        onClose={() => setDrawerPlayerId(null)}
+      />
     </div>
   )
 }
