@@ -44,6 +44,8 @@ function flattenEntry(entry) {
   }
 }
 
+export { flattenEntry }
+
 export const useTournamentScoring = (tournamentId, leagueId = null) => {
   const [tournament, setTournament] = useState(null)
   const [leaderboard, setLeaderboard] = useState([])

@@ -1,9 +1,14 @@
-import { useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import useLeagueLiveScoring from '../hooks/useLeagueLiveScoring'
+import { flattenEntry } from '../hooks/useTournamentScoring'
 import { useLeague } from '../hooks/useLeague'
 import Card from '../components/common/Card'
+import TournamentLeaderboard from '../components/tournament/TournamentLeaderboard'
 import NflWeeklyScoring from '../components/nfl/NflWeeklyScoring'
+import api from '../services/api'
+
+// ── Helpers ──────────────────────────────────────────────────────
 
 const formatToPar = (toPar) => {
   if (toPar == null) return '–'
@@ -35,8 +40,10 @@ const formatPosition = (pos, status) => {
   return pos
 }
 
-const PlayerRow = ({ player, isBench }) => (
-  <div className={`flex items-center gap-3 py-2.5 px-3 rounded-lg ${isBench ? 'opacity-50' : 'bg-[var(--surface)]'}`}>
+// ── UserTeamWidget ───────────────────────────────────────────────
+
+const StarterRow = ({ player }) => (
+  <div className="flex items-center gap-2.5 py-2 px-2 rounded-lg bg-[var(--surface)]">
     {/* Headshot */}
     <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex-shrink-0 overflow-hidden">
       {player.headshotUrl ? (
@@ -47,123 +54,263 @@ const PlayerRow = ({ player, isBench }) => (
         </div>
       )}
     </div>
-
-    {/* Name + tour */}
+    {/* Name + Position */}
     <div className="flex-1 min-w-0">
       <p className="text-sm font-medium text-text-primary truncate">{player.playerName}</p>
-      {player.primaryTour && (
-        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-          player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
-          player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
-          'bg-purple-500/20 text-purple-400'
-        }`}>
-          {player.primaryTour}
+      <div className="flex items-center gap-2 text-[10px] text-text-muted">
+        <span className={positionColor(player.position, player.status)}>
+          {formatPosition(player.position, player.status)}
         </span>
+        <span className={toParColor(player.totalToPar)}>{formatToPar(player.totalToPar)}</span>
+        <span>{player.thru ?? '–'} holes</span>
+      </div>
+    </div>
+    {/* Fantasy points */}
+    <div className="text-right flex-shrink-0">
+      <p className="text-sm font-bold text-emerald-400">{player.fantasyPoints?.toFixed(1) || '0.0'}</p>
+    </div>
+  </div>
+)
+
+const BreakdownLine = ({ player }) => {
+  const parts = []
+  if (player.positionPoints != null) parts.push(`pos: ${player.positionPoints.toFixed(1)}`)
+  if (player.holesPoints != null) parts.push(`holes: ${player.holesPoints.toFixed(1)}`)
+  if (player.bonusPoints != null && player.bonusPoints > 0) parts.push(`bonus: ${player.bonusPoints.toFixed(1)}`)
+  if (parts.length === 0) return null
+  return <p className="text-[10px] text-text-muted px-2 -mt-1 mb-1">{parts.join(' | ')}</p>
+}
+
+const UserTeamWidget = ({ userTeam }) => {
+  const [benchOpen, setBenchOpen] = useState(false)
+
+  if (!userTeam) {
+    return (
+      <Card className="text-center py-8">
+        <svg className="w-10 h-10 text-text-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <p className="text-sm text-text-muted">You don't have a team in this league.</p>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Header: rank + points */}
+      <div className="flex items-center gap-3">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold font-display ${
+          userTeam.rank === 1 ? 'bg-yellow-500/15 text-yellow-400' :
+          userTeam.rank === 2 ? 'bg-gray-300/10 text-gray-300' :
+          userTeam.rank === 3 ? 'bg-amber-600/10 text-amber-500' :
+          'bg-[var(--bg-alt)] text-text-secondary'
+        }`}>
+          #{userTeam.rank}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold font-display text-text-primary truncate">{userTeam.teamName}</h3>
+          <p className="text-xs text-text-muted">{userTeam.starters.length} starters, {userTeam.bench.length} bench</p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold font-display text-emerald-400">{userTeam.totalPoints.toFixed(1)}</p>
+          <p className="text-[10px] text-text-muted">fantasy pts</p>
+        </div>
+      </div>
+
+      {/* Optimal alert */}
+      {userTeam.optimalPoints > userTeam.totalPoints && (
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+          <svg className="w-4 h-4 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <p className="text-xs text-yellow-400">
+            Optimal lineup: <span className="font-bold">{userTeam.optimalPoints.toFixed(1)}</span> pts
+            <span className="text-yellow-400/70"> (+{(userTeam.optimalPoints - userTeam.totalPoints).toFixed(1)} on bench)</span>
+          </p>
+        </div>
+      )}
+
+      {/* Starters */}
+      <div className="space-y-1">
+        {userTeam.starters.map((p) => (
+          <div key={p.playerId}>
+            <StarterRow player={p} />
+            <BreakdownLine player={p} />
+          </div>
+        ))}
+      </div>
+
+      {/* Bench */}
+      {userTeam.bench.length > 0 && (
+        <div>
+          <button
+            onClick={() => setBenchOpen(!benchOpen)}
+            className="flex items-center gap-2 w-full py-1.5 group"
+          >
+            <span className="text-[10px] text-text-muted uppercase tracking-wider font-medium">Bench</span>
+            <div className="flex-1 border-t border-[var(--card-border)]/30" />
+            <span className="text-xs text-text-muted">{userTeam.benchPoints.toFixed(1)} pts</span>
+            <svg className={`w-3.5 h-3.5 text-text-muted transition-transform ${benchOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {benchOpen && (
+            <div className="space-y-1 mt-1">
+              {userTeam.bench.map((p) => (
+                <div key={p.playerId} className="opacity-50">
+                  <StarterRow player={p} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
+  )
+}
 
-    {/* Position */}
-    <div className={`text-sm font-semibold w-10 text-center ${positionColor(player.position, player.status)}`}>
-      {formatPosition(player.position, player.status)}
-    </div>
+// ── LeagueMiniStandings ──────────────────────────────────────────
 
-    {/* Score */}
-    <div className={`text-sm font-medium w-10 text-center ${toParColor(player.totalToPar)}`}>
-      {formatToPar(player.totalToPar)}
-    </div>
+const LeagueMiniStandings = ({ teams, userTeam }) => {
+  const [expandedTeamId, setExpandedTeamId] = useState(null)
 
-    {/* Today */}
-    <div className={`text-sm w-10 text-center hidden sm:block ${toParColor(player.todayToPar)}`}>
-      {formatToPar(player.todayToPar)}
-    </div>
+  if (teams.length === 0) {
+    return <p className="text-center text-text-muted py-4 text-sm">No teams have rostered players yet.</p>
+  }
 
-    {/* Thru */}
-    <div className="text-sm text-text-muted w-8 text-center hidden sm:block">
-      {player.thru ?? '–'}
-    </div>
+  return (
+    <div className="space-y-1">
+      {teams.map((team) => {
+        const isUser = team.userId === userTeam?.userId
+        const isExpanded = expandedTeamId === team.teamId
 
-    {/* Fantasy Points */}
-    <div className="text-sm font-bold text-emerald-400 w-14 text-right">
-      {player.fantasyPoints?.toFixed(1) || '0.0'}
-    </div>
-  </div>
-)
-
-const TeamCard = ({ team, isUser, isExpanded, onToggle }) => (
-  <div
-    onClick={onToggle}
-    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-      isUser
-        ? 'bg-emerald-500/10 border border-emerald-500/30'
-        : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      <span className={`text-lg font-bold w-7 text-center ${
-        team.rank === 1 ? 'text-yellow-400' :
-        team.rank === 2 ? 'text-gray-300' :
-        team.rank === 3 ? 'text-amber-500' : 'text-text-muted'
-      }`}>
-        {team.rank}
-      </span>
-      <div className="w-8 h-8 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
-        {(team.userName || team.teamName || '?').charAt(0).toUpperCase()}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className={`font-medium truncate ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
-          {team.teamName}
-          {isUser && <span className="text-xs ml-1 text-emerald-400/60">(You)</span>}
-        </p>
-        <p className="text-xs text-text-muted">{team.userName}</p>
-      </div>
-      <div className="text-right">
-        <p className="text-lg font-bold font-display text-text-primary">{team.totalPoints.toFixed(1)}</p>
-        <p className="text-[10px] text-text-muted">pts</p>
-      </div>
-      <svg className={`w-4 h-4 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    </div>
-
-    {/* Expanded roster */}
-    {isExpanded && (
-      <div className="mt-3 space-y-1 border-t border-[var(--card-border)]/50 pt-3">
-        {/* Header */}
-        <div className="flex items-center gap-3 px-3 text-[10px] text-text-muted uppercase tracking-wider mb-1">
-          <div className="w-8" />
-          <div className="flex-1">Player</div>
-          <div className="w-10 text-center">Pos</div>
-          <div className="w-10 text-center">Score</div>
-          <div className="w-10 text-center hidden sm:block">Today</div>
-          <div className="w-8 text-center hidden sm:block">Thru</div>
-          <div className="w-14 text-right">Pts</div>
-        </div>
-        {team.starters.map((p) => (
-          <PlayerRow key={p.playerId} player={p} isBench={false} />
-        ))}
-        {team.bench.length > 0 && (
-          <>
-            <div className="flex items-center gap-2 pt-2 px-3">
-              <span className="text-[10px] text-text-muted uppercase tracking-wider">Bench</span>
-              <div className="flex-1 border-t border-[var(--card-border)]/30" />
-              <span className="text-xs text-text-muted">{team.benchPoints.toFixed(1)} pts on bench</span>
+        return (
+          <div key={team.teamId}>
+            <div
+              onClick={() => setExpandedTeamId(isExpanded ? null : team.teamId)}
+              className={`flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
+                isUser
+                  ? 'bg-emerald-500/10 border border-emerald-500/20'
+                  : 'hover:bg-[var(--surface-alt)]'
+              }`}
+            >
+              {/* Rank */}
+              <span className={`text-sm font-bold w-6 text-center ${
+                team.rank === 1 ? 'text-yellow-400' :
+                team.rank === 2 ? 'text-gray-300' :
+                team.rank === 3 ? 'text-amber-500' :
+                'text-text-muted'
+              }`}>
+                {team.rank}
+              </span>
+              {/* Name */}
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium truncate ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
+                  {team.teamName}
+                  {isUser && <span className="text-emerald-400/60 ml-1 text-xs">You</span>}
+                </p>
+              </div>
+              {/* Points */}
+              <span className="text-sm font-bold font-display text-text-primary">{team.totalPoints.toFixed(1)}</span>
+              <svg className={`w-3.5 h-3.5 text-text-muted transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
-            {team.bench.map((p) => (
-              <PlayerRow key={p.playerId} player={p} isBench={true} />
-            ))}
-          </>
-        )}
+
+            {/* Expanded roster */}
+            {isExpanded && (
+              <div className="ml-8 mr-2 mt-1 mb-2 space-y-0.5">
+                {team.starters.map((p) => (
+                  <div key={p.playerId} className="flex items-center gap-2 py-1 text-xs">
+                    <div className="w-5 h-5 rounded-full bg-[var(--bg-alt)] flex-shrink-0 overflow-hidden">
+                      {p.headshotUrl ? (
+                        <img src={p.headshotUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[8px] text-text-muted">
+                          {p.playerName?.charAt(0) || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <span className="flex-1 text-text-primary truncate">{p.playerName}</span>
+                    <span className={`${positionColor(p.position, p.status)} text-[10px]`}>
+                      {formatPosition(p.position, p.status)}
+                    </span>
+                    <span className="font-bold text-emerald-400 w-10 text-right">{p.fantasyPoints?.toFixed(1) || '0.0'}</span>
+                  </div>
+                ))}
+                {team.bench.length > 0 && (
+                  <div className="border-t border-[var(--card-border)]/30 pt-1 mt-1">
+                    {team.bench.map((p) => (
+                      <div key={p.playerId} className="flex items-center gap-2 py-0.5 text-xs opacity-50">
+                        <div className="w-5 h-5" />
+                        <span className="flex-1 text-text-secondary truncate">{p.playerName}</span>
+                        <span className="text-text-muted w-10 text-right">{p.fantasyPoints?.toFixed(1) || '0.0'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Tournament Banner ────────────────────────────────────────────
+
+const TournamentBanner = ({ tournament, isLive, leagueId }) => (
+  <div className={`rounded-xl border p-4 mb-6 ${
+    isLive
+      ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]'
+      : 'border-[var(--card-border)] bg-[var(--surface)]'
+  }`}>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="flex items-center gap-3">
+        <Link
+          to={`/leagues/${leagueId}`}
+          className="text-text-secondary hover:text-text-primary transition-colors flex-shrink-0"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </Link>
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-bold font-display text-text-primary">{tournament.name}</h2>
+            {isLive && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                LIVE
+              </span>
+            )}
+            {tournament.status === 'COMPLETED' && (
+              <span className="px-2 py-0.5 rounded-full bg-[var(--bg-alt)] text-text-muted text-xs font-semibold">
+                FINAL
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-text-secondary">
+            {tournament.courseName && <span>{tournament.courseName}</span>}
+            {tournament.currentRound && <span> &middot; Round {tournament.currentRound}</span>}
+          </p>
+        </div>
       </div>
-    )}
+      {isLive && (
+        <p className="text-xs text-text-muted">Updates every 60s</p>
+      )}
+    </div>
   </div>
 )
+
+// ── Main Component ───────────────────────────────────────────────
 
 const LeagueLiveScoring = () => {
   const { leagueId } = useParams()
   const { league: leagueData } = useLeague(leagueId)
   const isNfl = (leagueData?.sport || 'GOLF').toUpperCase() === 'NFL'
 
-  // Route NFL leagues to the NFL-specific scoring component
   if (isNfl) {
     return <NflWeeklyScoring leagueId={leagueId} />
   }
@@ -172,11 +319,48 @@ const LeagueLiveScoring = () => {
 }
 
 const GolfLiveScoring = ({ leagueId }) => {
-  const navigate = useNavigate()
   const { tournament, isLive, teams, userTeam, loading, error } = useLeagueLiveScoring(leagueId)
-  const [mobileTab, setMobileTab] = useState('myteam')
-  const [expandedTeamId, setExpandedTeamId] = useState(null)
+  const [mobileTab, setMobileTab] = useState('leaderboard')
+  const [leaderboard, setLeaderboard] = useState([])
+  const [lbLoading, setLbLoading] = useState(true)
+  const pollRef = useRef(null)
 
+  // Fetch leaderboard data independently
+  const fetchLeaderboard = useCallback(async (tournamentId) => {
+    if (!tournamentId) return
+    try {
+      const data = await api.getTournamentLeaderboard(tournamentId)
+      const raw = data?.leaderboard || []
+      setLeaderboard(raw.map(flattenEntry))
+    } catch (err) {
+      console.warn('Leaderboard fetch failed:', err.message)
+    } finally {
+      setLbLoading(false)
+    }
+  }, [])
+
+  // Fetch + poll leaderboard when tournament is available
+  useEffect(() => {
+    if (!tournament?.id) return
+    setLbLoading(true)
+    fetchLeaderboard(tournament.id)
+
+    // Poll every 60s when live
+    if (pollRef.current) clearInterval(pollRef.current)
+    if (isLive) {
+      pollRef.current = setInterval(() => fetchLeaderboard(tournament.id), 60000)
+    }
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [tournament?.id, isLive, fetchLeaderboard])
+
+  // Derive myPlayerIds from user's full roster
+  const myPlayerIds = userTeam
+    ? [...(userTeam.starters || []), ...(userTeam.bench || [])].map(p => p.playerId)
+    : []
+
+  // ── Loading state ──
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -188,6 +372,7 @@ const GolfLiveScoring = ({ leagueId }) => {
     )
   }
 
+  // ── Error state ──
   if (error) {
     return (
       <div className="min-h-screen pt-8 px-4">
@@ -202,6 +387,7 @@ const GolfLiveScoring = ({ leagueId }) => {
     )
   }
 
+  // ── No tournament ──
   if (!tournament) {
     return (
       <div className="min-h-screen pt-8 px-4">
@@ -224,176 +410,81 @@ const GolfLiveScoring = ({ leagueId }) => {
     )
   }
 
-  const myTeamContent = userTeam ? (
-    <div>
-      {/* User team header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <span className={`text-2xl font-bold ${
-            userTeam.rank === 1 ? 'text-yellow-400' :
-            userTeam.rank <= 3 ? 'text-emerald-400' : 'text-text-primary'
-          }`}>
-            #{userTeam.rank}
-          </span>
-          <div>
-            <h3 className="text-lg font-semibold font-display text-text-primary">{userTeam.teamName}</h3>
-            <p className="text-xs text-text-muted">{userTeam.starters.length} starters, {userTeam.bench.length} bench</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold font-display text-emerald-400">{userTeam.totalPoints.toFixed(1)}</p>
-          <p className="text-xs text-text-muted">fantasy pts</p>
-        </div>
+  // ── Sidebar content (used for both desktop + mobile Fantasy tab) ──
+  const sidebarContent = (
+    <div className="space-y-6">
+      {/* Your Team */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">Your Team</h3>
+        <UserTeamWidget userTeam={userTeam} />
       </div>
 
-      {/* Optimal points bar */}
-      {userTeam.optimalPoints > userTeam.totalPoints && (
-        <div className="mb-4 p-2 rounded bg-yellow-500/10 border border-yellow-500/20 text-xs text-yellow-400">
-          Optimal lineup: {userTeam.optimalPoints.toFixed(1)} pts ({(userTeam.optimalPoints - userTeam.totalPoints).toFixed(1)} pts left on bench)
-        </div>
-      )}
-
-      {/* Player header row */}
-      <div className="flex items-center gap-3 px-3 mb-1 text-[10px] text-text-muted uppercase tracking-wider">
-        <div className="w-8" />
-        <div className="flex-1">Player</div>
-        <div className="w-10 text-center">Pos</div>
-        <div className="w-10 text-center">Score</div>
-        <div className="w-10 text-center hidden sm:block">Today</div>
-        <div className="w-8 text-center hidden sm:block">Thru</div>
-        <div className="w-14 text-right">Pts</div>
+      {/* League Standings */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">League Standings</h3>
+        <LeagueMiniStandings teams={teams} userTeam={userTeam} />
       </div>
-
-      {/* Starters */}
-      <div className="space-y-1">
-        {userTeam.starters.map((p) => (
-          <PlayerRow key={p.playerId} player={p} isBench={false} />
-        ))}
-      </div>
-
-      {/* Bench */}
-      {userTeam.bench.length > 0 && (
-        <div className="mt-3">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] text-text-muted uppercase tracking-wider">Bench</span>
-            <div className="flex-1 border-t border-[var(--card-border)]/30" />
-            <span className="text-xs text-text-muted">{userTeam.benchPoints.toFixed(1)} pts on bench</span>
-          </div>
-          <div className="space-y-1">
-            {userTeam.bench.map((p) => (
-              <PlayerRow key={p.playerId} player={p} isBench={true} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  ) : (
-    <div className="text-center py-8 text-text-muted">
-      <p>You don't have a team in this league.</p>
     </div>
   )
 
-  const leagueContent = (
-    <div className="space-y-2">
-      {teams.map((team) => (
-        <TeamCard
-          key={team.teamId}
-          team={team}
-          isUser={team.userId === userTeam?.userId}
-          isExpanded={expandedTeamId === team.teamId}
-          onToggle={() => setExpandedTeamId(expandedTeamId === team.teamId ? null : team.teamId)}
-        />
-      ))}
-      {teams.length === 0 && (
-        <p className="text-center text-text-muted py-8">No teams have rostered players yet.</p>
-      )}
+  // ── Leaderboard content ──
+  const leaderboardContent = lbLoading ? (
+    <div className="flex items-center justify-center py-16">
+      <div className="text-center">
+        <div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-sm text-text-muted">Loading leaderboard...</p>
+      </div>
     </div>
+  ) : (
+    <TournamentLeaderboard
+      leaderboard={leaderboard}
+      myPlayerIds={myPlayerIds}
+      tournamentId={tournament.id}
+      currentRound={tournament.currentRound}
+    />
   )
 
   return (
     <div className="min-h-screen">
-      <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
+      <main className="pt-6 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <Link to={`/leagues/${leagueId}`} className="inline-flex items-center text-text-secondary hover:text-text-primary">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to League
-            </Link>
-            <h1 className="text-xl font-bold font-display text-text-primary">Live Scoring</h1>
-          </div>
-
           {/* Tournament Banner */}
-          <Card className={`mb-6 ${isLive ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]' : ''}`}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold font-display text-text-primary">{tournament.name}</h2>
-                  {isLive && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold">
-                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                      LIVE
-                    </span>
-                  )}
-                  {tournament.status === 'COMPLETED' && (
-                    <span className="px-2 py-0.5 rounded-full bg-[var(--bg-alt)] text-text-muted text-xs font-semibold">
-                      FINAL
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-text-secondary">
-                  {tournament.courseName && <span>{tournament.courseName}</span>}
-                  {tournament.currentRound && <span> &middot; Round {tournament.currentRound}</span>}
-                </p>
-              </div>
-              {isLive && (
-                <p className="text-xs text-text-muted">Updates every 60s</p>
-              )}
-            </div>
-          </Card>
+          <TournamentBanner tournament={tournament} isLive={isLive} leagueId={leagueId} />
 
-          {/* Mobile tabs */}
-          <div className="sm:hidden flex border-b border-[var(--card-border)] mb-4">
+          {/* Mobile tab bar */}
+          <div className="lg:hidden flex border-b border-[var(--card-border)] mb-4">
             <button
-              className={`flex-1 py-2 text-sm font-medium text-center transition-colors ${
-                mobileTab === 'myteam' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-text-muted'
+              className={`flex-1 py-2.5 text-sm font-medium text-center transition-colors ${
+                mobileTab === 'leaderboard' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-text-muted'
               }`}
-              onClick={() => setMobileTab('myteam')}
+              onClick={() => setMobileTab('leaderboard')}
             >
-              My Team
+              Leaderboard
             </button>
             <button
-              className={`flex-1 py-2 text-sm font-medium text-center transition-colors ${
-                mobileTab === 'league' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-text-muted'
+              className={`flex-1 py-2.5 text-sm font-medium text-center transition-colors ${
+                mobileTab === 'fantasy' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-text-muted'
               }`}
-              onClick={() => setMobileTab('league')}
+              onClick={() => setMobileTab('fantasy')}
             >
-              League
+              Fantasy
             </button>
           </div>
 
-          {/* Desktop: side by side */}
-          <div className="hidden sm:grid sm:grid-cols-2 gap-6">
-            <Card>
-              <h3 className="text-base font-semibold text-text-primary mb-4">My Team</h3>
-              {myTeamContent}
-            </Card>
-            <Card>
-              <h3 className="text-base font-semibold text-text-primary mb-4">League Standings</h3>
-              {leagueContent}
-            </Card>
+          {/* Desktop: 3/5 leaderboard + 2/5 sidebar */}
+          <div className="hidden lg:grid lg:grid-cols-5 gap-6">
+            <div className="col-span-3">
+              {leaderboardContent}
+            </div>
+            <div className="col-span-2">
+              {sidebarContent}
+            </div>
           </div>
 
           {/* Mobile: tabbed */}
-          <div className="sm:hidden">
-            {mobileTab === 'myteam' && (
-              <Card>{myTeamContent}</Card>
-            )}
-            {mobileTab === 'league' && (
-              <Card>{leagueContent}</Card>
-            )}
+          <div className="lg:hidden">
+            {mobileTab === 'leaderboard' && leaderboardContent}
+            {mobileTab === 'fantasy' && sidebarContent}
           </div>
         </div>
       </main>
