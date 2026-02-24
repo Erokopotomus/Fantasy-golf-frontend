@@ -49,16 +49,46 @@ const FILTER_OPTIONS = [
   { key: 'myRoster', label: 'My Roster' },
 ]
 
+/**
+ * Clutch Power Rank — composite tournament ranking.
+ * Weights: Form 35%, CPI 25%, Fit 25%, OWGR 15%
+ * Each component is normalized to 0-100 before weighting.
+ */
+function computePowerScore(entry) {
+  const cm = entry.clutchMetrics || {}
+  if (cm.formScore == null && cm.cpi == null && cm.courseFitScore == null) return null
+
+  // Normalize CPI (-3 to +3) → 0-100
+  const cpiNorm = cm.cpi != null ? Math.min(Math.max((cm.cpi + 3) / 6 * 100, 0), 100) : 50
+  // Form is already 0-100
+  const formNorm = cm.formScore ?? 50
+  // Fit is already 0-100
+  const fitNorm = cm.courseFitScore ?? 50
+  // OWGR: rank 1→100, rank 200→0 (inverted, lower rank = better)
+  const owgrNorm = entry.owgrRank ? Math.max(100 - (entry.owgrRank - 1) * 0.5, 0) : 25
+
+  return formNorm * 0.35 + cpiNorm * 0.25 + fitNorm * 0.25 + owgrNorm * 0.15
+}
+
 const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlayerIds = [] }) => {
   // Auto-detect whether clutch metrics exist to pick smart defaults
   const hasClutchData = leaderboard.some(p => p.clutchMetrics?.courseFitScore != null)
 
   const [filter, setFilter] = useState('all')
-  const [sortBy, setSortBy] = useState(hasClutchData ? 'courseFit' : 'owgr')
+  const [sortBy, setSortBy] = useState(hasClutchData ? 'powerRank' : 'owgr')
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
 
-  // Filter leaderboard
-  let filteredField = [...leaderboard]
+  // Compute power ranks once (stable ranking regardless of sort/filter)
+  const powerRanked = [...leaderboard]
+    .map(p => ({ ...p, _powerScore: computePowerScore(p) }))
+    .sort((a, b) => (b._powerScore ?? -999) - (a._powerScore ?? -999))
+    .map((p, i) => ({ ...p, _powerRank: p._powerScore != null ? i + 1 : null }))
+
+  // Build lookup by player id
+  const powerRankMap = new Map(powerRanked.map(p => [p.id, p._powerRank]))
+
+  // Filter leaderboard (use powerRanked so we have _powerScore)
+  let filteredField = [...powerRanked]
 
   if (filter === 'top20fit') {
     filteredField = filteredField
@@ -72,7 +102,9 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
   }
 
   // Sort
-  if (sortBy === 'courseFit') {
+  if (sortBy === 'powerRank') {
+    filteredField.sort((a, b) => (b._powerScore ?? -999) - (a._powerScore ?? -999))
+  } else if (sortBy === 'courseFit') {
     filteredField.sort((a, b) => (b.clutchMetrics?.courseFitScore || 0) - (a.clutchMetrics?.courseFitScore || 0))
   } else if (sortBy === 'form') {
     filteredField.sort((a, b) => (b.clutchMetrics?.formScore || 0) - (a.clutchMetrics?.formScore || 0))
@@ -132,7 +164,14 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--card-border)] text-text-muted text-[10px] uppercase tracking-wider">
-                  <th className="text-left px-4 py-2 font-medium">Player</th>
+                  <HeaderTooltip
+                    label="#"
+                    tip="Clutch Power Rank — our composite tournament ranking. Blends Form (35%), CPI (25%), Course Fit (25%), and OWGR (15%) into one overall projection."
+                    align="center"
+                    sortBy={sortBy} sortKey="powerRank" onSort={setSortBy}
+                    className="w-8 px-1"
+                  />
+                  <th className="text-left px-2 py-2 font-medium">Player</th>
                   <HeaderTooltip
                     label="CPI"
                     tip="Clutch Performance Index (-3 to +3). A weighted blend of strokes gained skills — higher means a stronger all-around player."
@@ -174,11 +213,16 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       key={entry.id || i}
                       className={`hover:bg-[var(--surface-alt)] transition-colors ${isMyPlayer ? 'bg-gold/[0.04]' : ''}`}
                     >
-                      <td className="px-4 py-2.5">
-                        <button onClick={() => setDrawerPlayerId(entry.id)} className="flex items-center gap-2 group text-left">
-                          <span className="text-[10px] font-mono text-text-muted/60 w-5 text-right flex-shrink-0">
-                            {i + 1}
-                          </span>
+                      <td className="w-8 px-1 py-2.5 text-center">
+                        <span className={`text-[11px] font-mono font-bold ${
+                          (powerRankMap.get(entry.id) || 999) <= 5 ? 'text-gold' :
+                          (powerRankMap.get(entry.id) || 999) <= 15 ? 'text-text-primary' : 'text-text-muted'
+                        }`}>
+                          {powerRankMap.get(entry.id) || '—'}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2.5">
+                        <button onClick={() => setDrawerPlayerId(entry.id)} className="flex items-center gap-2.5 group text-left">
                           {entry.headshotUrl ? (
                             <img src={entry.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)]" />
                           ) : (
