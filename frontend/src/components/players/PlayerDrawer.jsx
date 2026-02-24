@@ -807,9 +807,19 @@ const SkillMatchCard = ({ player, course }) => {
 
   return (
     <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-      <HoverTip tip="Compares this player's strengths to what the course rewards. The number is strokes gained vs the field. The label on the right is how much this course demands that skill. 'Match' means the player is strong where the course is demanding." className="inline-block">
-        <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 border-b border-dotted border-text-muted/30 pb-0.5 cursor-default">Skill Match</h3>
-      </HoverTip>
+      <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Skill Match</h3>
+      {/* Column headers */}
+      <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-[var(--card-border)]">
+        <span className="w-[72px] flex-shrink-0" />
+        <HoverTip tip="Strokes Gained measures how many strokes per round this player gains (or loses) vs the tour average in each skill. Positive is good — +0.50 is strong, +1.00 is elite." className="flex-shrink-0 w-12">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30">Player SG</span>
+        </HoverTip>
+        <div className="flex-1" />
+        <HoverTip tip="How much this specific course rewards each skill. Premium and High mean the skill is critical to scoring well here. Low means it matters less this week.">
+          <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold cursor-default border-b border-dotted border-text-muted/30 w-16 text-right block flex-shrink-0">Course</span>
+        </HoverTip>
+        <span className="w-[34px] flex-shrink-0" />
+      </div>
       <div className="space-y-2.5">
         {skills.map((skill) => {
           const dna = getDnaLabel(skill.importance)
