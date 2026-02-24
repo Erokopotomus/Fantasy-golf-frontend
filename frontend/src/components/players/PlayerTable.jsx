@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react'
 import Button from '../common/Button'
 
 const ScheduleDots = ({ playerId, tournaments = [] }) => {
@@ -37,24 +38,38 @@ const PlayerTable = ({
   onViewPlayer,
   upcomingTournaments = [],
 }) => {
-  const SortHeader = ({ field, children, className = '' }) => (
-    <th className={`p-3 ${className}`}>
-      <button
-        onClick={() => onSort(field)}
-        className={`flex items-center gap-1 hover:text-text-primary transition-colors mx-auto ${
-          sortBy === field ? 'text-gold' : 'text-text-muted'
-        }`}
+  const SortHeader = ({ field, children, tip, className = '', align = 'center' }) => {
+    const [showTip, setShowTip] = useState(false)
+    const timerRef = useRef(null)
+    return (
+      <th
+        className={`p-3 relative ${className}`}
+        onMouseEnter={() => { if (tip) timerRef.current = setTimeout(() => setShowTip(true), 400) }}
+        onMouseLeave={() => { clearTimeout(timerRef.current); setShowTip(false) }}
       >
-        {children}
-        {sortBy === field && (
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d={sortDir === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'} />
-          </svg>
+        <button
+          onClick={() => onSort(field)}
+          className={`flex items-center gap-1 hover:text-text-primary transition-colors ${align === 'left' ? '' : 'mx-auto'} ${
+            sortBy === field ? 'text-gold' : 'text-text-muted'
+          }`}
+        >
+          <span className={tip ? 'border-b border-dotted border-current' : ''}>{children}</span>
+          {sortBy === field && (
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d={sortDir === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'} />
+            </svg>
+          )}
+        </button>
+        {showTip && tip && (
+          <div className="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-52 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] shadow-xl text-left normal-case tracking-normal pointer-events-none">
+            <p className="text-[11px] text-text-primary font-semibold mb-0.5 leading-tight">{children}</p>
+            <p className="text-[10px] text-text-muted font-normal leading-snug">{tip}</p>
+          </div>
         )}
-      </button>
-    </th>
-  )
+      </th>
+    )
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -63,11 +78,11 @@ const PlayerTable = ({
           <tr className="border-b border-[var(--card-border)] text-xs">
             {compareMode && <th className="p-3 w-12"></th>}
             <SortHeader field="rank" className="w-16">Rank</SortHeader>
-            <SortHeader field="name">Player</SortHeader>
-            <SortHeader field="sgTotal" className="text-center">SG Total</SortHeader>
-            <SortHeader field="sgOffTee" className="text-center">SG OTT</SortHeader>
-            <SortHeader field="sgApproach" className="text-center">SG APP</SortHeader>
-            <SortHeader field="sgPutting" className="text-center">SG Putt</SortHeader>
+            <SortHeader field="name" align="left">Player</SortHeader>
+            <SortHeader field="sgTotal" className="text-center" tip="Total Strokes Gained per round vs. the PGA Tour field average. The single best measure of overall player skill.">SG Total</SortHeader>
+            <SortHeader field="sgOffTee" className="text-center" tip="Strokes Gained Off the Tee — measures driving performance (distance + accuracy) vs. the field.">SG OTT</SortHeader>
+            <SortHeader field="sgApproach" className="text-center" tip="Strokes Gained on Approach — measures iron play and shots into the green from the fairway.">SG APP</SortHeader>
+            <SortHeader field="sgPutting" className="text-center" tip="Strokes Gained Putting — measures putting performance on the greens vs. the field.">SG Putt</SortHeader>
             <th className="p-3 text-text-muted text-center">Schedule</th>
             <th className="p-3 w-20"></th>
           </tr>
