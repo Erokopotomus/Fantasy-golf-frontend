@@ -699,7 +699,9 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                                 {perf.totalToPar > 0 ? '+' : ''}{perf.totalToPar}
                               </span>
                             )}
-                            <span className="text-emerald-400 font-medium">{(perf.fantasyPoints || 0).toFixed(1)} pts</span>
+                            {perf.fantasyPoints > 0 && (
+                              <span className="text-emerald-400 font-medium">{perf.fantasyPoints.toFixed(1)} pts</span>
+                            )}
                           </div>
                         </div>
                         {/* Round scores */}
@@ -1009,13 +1011,15 @@ const SkillMatchCard = ({ player, course }) => {
                 <span className={`text-xs font-mono font-bold w-12 text-right flex-shrink-0 ${sgColor}`}>
                   {skill.sg != null ? (skill.sg > 0 ? '+' : '') + skill.sg.toFixed(2) : '\u2014'}
                 </span>
-                <div className="flex-1 h-2 bg-[var(--stone)] rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-[var(--stone)] rounded-full overflow-hidden relative">
                   {skill.sg != null && (
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${barColor}`}
                       style={{ width: `${barPct}%` }}
                     />
                   )}
+                  {/* Zero line — SG=0 maps to 50% */}
+                  <div className="absolute left-1/2 top-0 w-px h-full bg-text-muted/40" />
                 </div>
                 <span className={`text-[10px] font-medium w-16 text-right flex-shrink-0 ${dna.color}`}>
                   {dna.text}
