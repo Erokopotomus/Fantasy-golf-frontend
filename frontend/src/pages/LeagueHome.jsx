@@ -388,7 +388,7 @@ const LeagueHome = () => {
               {[
                 // Core — always show (except OAD)
                 ...(!isOneAndDone ? [
-                  { to: `/leagues/${leagueId}/roster`, label: 'Roster' },
+                  { to: `/leagues/${leagueId}/roster`, label: 'My Team' },
                   ...(hasDraft && isDraftScheduledOrInProgress ? [{ to: `/leagues/${leagueId}/draft`, label: 'Draft Room' }] : []),
                   { to: `/leagues/${leagueId}/waivers`, label: 'Waivers' },
                 ] : []),

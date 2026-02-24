@@ -325,6 +325,11 @@ const TeamRoster = () => {
   }
 
   if (!userTeam || roster.length === 0) {
+    const emptyMaxActive = league?.settings?.maxActiveLineup || 4
+    const emptyRosterSize = league?.settings?.rosterSize || 6
+    const emptyIrSlots = league?.settings?.irSlots || 0
+    const benchSlots = emptyRosterSize - emptyMaxActive
+
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
@@ -337,29 +342,117 @@ const TeamRoster = () => {
             </svg>
             Back to League
           </Link>
-          <h1 className="text-2xl font-bold font-display text-text-primary">My Roster</h1>
+          <h1 className="text-2xl font-bold font-display text-text-primary">My Team</h1>
           <p className="text-text-secondary">{league?.name}</p>
         </div>
 
-        <Card className="text-center py-12">
-          <div className="w-16 h-16 bg-[var(--stone)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold font-display text-text-primary mb-2">Empty Roster</h2>
-          <p className="text-text-secondary mb-6 max-w-sm mx-auto">
-            Your roster is empty. Draft players or browse free agents to build your team.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
-              Browse Free Agents
-            </Button>
-            <Button variant="secondary" onClick={() => navigate(`/leagues/${leagueId}`)}>
-              Back to League
+        {/* Team Identity Card */}
+        <Card className="mb-6">
+          <div className="flex items-center gap-4 p-4">
+            <div className="w-16 h-16 rounded-full bg-[var(--stone)] flex items-center justify-center text-3xl flex-shrink-0 overflow-hidden">
+              {userTeam?.avatarUrl ? (
+                <img src={userTeam.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : userTeam?.avatar ? (
+                <span>{userTeam.avatar}</span>
+              ) : (
+                <span className="text-text-muted text-2xl">?</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold font-display text-text-primary truncate">
+                {userTeam?.name || 'My Team'}
+              </h2>
+              <p className="text-text-muted text-sm">{league?.name}</p>
+              <p className="text-text-secondary text-sm font-mono mt-0.5">
+                {userTeam?.wins || 0}-{userTeam?.losses || 0}-{userTeam?.ties || 0}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate(`/leagues/${leagueId}/team-settings`)}
+            >
+              Edit Team
             </Button>
           </div>
         </Card>
+
+        {/* Roster Skeleton — Starters */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Starters</h2>
+            <span className="text-xs text-text-muted">(0 / {emptyMaxActive})</span>
+          </div>
+          <div className="space-y-2">
+            {Array.from({ length: emptyMaxActive }, (_, i) => (
+              <div
+                key={`starter-${i}`}
+                className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[var(--card-border)] bg-[var(--surface)]"
+              >
+                <div className="w-10 h-10 rounded-full border-2 border-dashed border-[var(--card-border)] flex items-center justify-center flex-shrink-0">
+                  <span className="text-text-muted/30 text-sm font-bold">{isNflLeague ? i + 1 : `G${i + 1}`}</span>
+                </div>
+                <span className="text-text-muted/40 text-sm">Empty starter slot</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Roster Skeleton — Bench */}
+        {benchSlots > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider">Bench</h2>
+              <span className="text-xs text-text-muted">(0 / {benchSlots})</span>
+            </div>
+            <div className="space-y-2">
+              {Array.from({ length: benchSlots }, (_, i) => (
+                <div
+                  key={`bench-${i}`}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[var(--card-border)] bg-[var(--surface)]"
+                >
+                  <div className="w-10 h-10 rounded-full border-2 border-dashed border-[var(--card-border)] flex items-center justify-center flex-shrink-0">
+                    <span className="text-text-muted/30 text-sm font-bold">BN</span>
+                  </div>
+                  <span className="text-text-muted/40 text-sm">Empty bench slot</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Roster Skeleton — IR */}
+        {emptyIrSlots > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-sm font-bold text-red-400 uppercase tracking-wider">Injured Reserve</h2>
+              <span className="text-xs text-text-muted">(0 / {emptyIrSlots})</span>
+            </div>
+            <div className="space-y-2">
+              {Array.from({ length: emptyIrSlots }, (_, i) => (
+                <div
+                  key={`ir-${i}`}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[var(--card-border)] bg-[var(--surface)]"
+                >
+                  <div className="w-10 h-10 rounded-full border-2 border-dashed border-red-500/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-red-400/30 text-sm font-bold">IR</span>
+                  </div>
+                  <span className="text-text-muted/40 text-sm">Empty IR slot</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
+            Browse Free Agents
+          </Button>
+          <Button variant="secondary" onClick={() => navigate(`/leagues/${leagueId}`)}>
+            Back to League
+          </Button>
+        </div>
       </div>
     )
   }
@@ -395,7 +488,7 @@ const TeamRoster = () => {
             </svg>
             {league?.name}
           </Link>
-          <h1 className="text-2xl font-bold font-display text-text-primary">My Roster</h1>
+          <h1 className="text-2xl font-bold font-display text-text-primary">My Team</h1>
           <p className="text-text-muted text-sm">{roster.length} / {rosterSize} players</p>
         </div>
         <div className="flex gap-2">
