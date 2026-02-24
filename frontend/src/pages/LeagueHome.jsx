@@ -829,8 +829,14 @@ const LeagueHome = () => {
                             </td>
                             <td className="py-3">
                               <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0">
-                                  {(team.name || ownerName || '?').charAt(0).toUpperCase()}
+                                <div className="w-7 h-7 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-xs font-semibold text-text-secondary flex-shrink-0 overflow-hidden">
+                                  {team.avatarUrl ? (
+                                    <img src={team.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                  ) : team.avatar ? (
+                                    <span className="text-base">{team.avatar}</span>
+                                  ) : (
+                                    (team.name || ownerName || '?').charAt(0).toUpperCase()
+                                  )}
                                 </div>
                                 <span className={`font-medium truncate ${isMe ? 'text-emerald-400' : 'text-text-primary'}`}>
                                   {team.name || 'Team ' + rank}
