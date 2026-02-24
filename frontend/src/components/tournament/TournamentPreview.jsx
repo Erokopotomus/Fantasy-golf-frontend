@@ -177,7 +177,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       <td className="px-4 py-2.5">
                         <button onClick={() => setDrawerPlayerId(entry.id)} className="flex items-center gap-2 group text-left">
                           <span className="text-[10px] font-mono text-text-muted/60 w-5 text-right flex-shrink-0">
-                            {entry.owgrRank || '—'}
+                            {i + 1}
                           </span>
                           {entry.headshotUrl ? (
                             <img src={entry.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)]" />
