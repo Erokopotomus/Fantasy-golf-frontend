@@ -246,8 +246,38 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
           </div>
 
           {/* Right side panels (UPCOMING only) */}
-          {isUpcoming && (dnaCategories.length > 0 || weather.length > 0) && (
+          {isUpcoming && (dnaCategories.length > 0 || weather.length > 0 || leaderboard.length > 0) && (
             <div className="hidden md:flex gap-3 flex-shrink-0">
+              {/* Field Snapshot */}
+              {leaderboard.length > 0 && (() => {
+                const top25 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 25).length
+                const top50 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 50).length
+                const top100 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 100).length
+                return (
+                  <div className={`flex flex-col w-36 rounded-lg ${panelBg} border p-3`}>
+                    <span className={`text-[10px] ${txtMuted} uppercase tracking-wider font-bold mb-2`}>Field Strength</span>
+                    <div className="grid grid-cols-2 gap-1.5 flex-1">
+                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
+                        <p className={`text-sm font-bold font-mono ${txtPrimary}`}>{leaderboard.length}</p>
+                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold`}>Field</p>
+                      </div>
+                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
+                        <p className="text-sm font-bold font-mono text-gold">{top25}</p>
+                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold`}>Top 25</p>
+                      </div>
+                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
+                        <p className="text-sm font-bold font-mono text-emerald-400">{top50}</p>
+                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold`}>Top 50</p>
+                      </div>
+                      <div className={`rounded p-1.5 text-center ${img ? 'bg-white/10' : 'bg-[var(--stone)]'}`}>
+                        <p className={`text-sm font-bold font-mono ${txtSecondary}`}>{top100}</p>
+                        <p className={`text-[8px] ${txtMuted} uppercase tracking-wider font-semibold`}>Top 100</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {/* 4-Day Forecast */}
               {weather.length > 0 && (
                 <div className={`flex flex-col w-36 rounded-lg ${panelBg} border p-3`}>
