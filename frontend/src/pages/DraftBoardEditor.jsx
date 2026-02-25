@@ -15,6 +15,7 @@ import DivergenceSummary from '../components/workspace/DivergenceSummary'
 import BoardTimeline from '../components/workspace/BoardTimeline'
 import BoardWelcomeCard from '../components/workspace/BoardWelcomeCard'
 import BoardProgressTracker from '../components/workspace/BoardProgressTracker'
+import BoardInsightsPanel from '../components/workspace/BoardInsightsPanel'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 
 // ── Reason Chip Definitions ──────────────────────────────────────────────────
@@ -173,6 +174,36 @@ function ReasonChipRow({ movedEntry, existingChips, onUpdateChips, onDismiss }) 
   )
 }
 
+// ── Sortable Column Header ───────────────────────────────────────────────────
+
+function SortHeader({ label, sortKey: key, currentKey, dir, onSort, className = '', tip }) {
+  const isActive = currentKey === key
+  const [showTip, setShowTip] = useState(false)
+  const tipTimer = useRef(null)
+
+  return (
+    <div className={`relative shrink-0 ${className}`}>
+      <button
+        onClick={() => onSort(key)}
+        onMouseEnter={() => { tipTimer.current = setTimeout(() => setShowTip(true), 500) }}
+        onMouseLeave={() => { clearTimeout(tipTimer.current); setShowTip(false) }}
+        className={`text-[9px] font-semibold uppercase tracking-wider transition-colors w-full text-center
+          ${isActive ? 'text-gold' : 'text-text-primary/25 hover:text-text-primary/50'}`}
+      >
+        {label}
+        {isActive && (
+          <span className="ml-0.5 text-[7px]">{dir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+        )}
+      </button>
+      {showTip && tip && (
+        <div className="absolute z-50 top-full mt-1.5 left-1/2 -translate-x-1/2 w-48 px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--card-border)] shadow-xl pointer-events-none">
+          <p className="text-[10px] text-text-primary/60 leading-snug whitespace-normal">{tip}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Editor ──────────────────────────────────────────────────────────────
 
 export default function DraftBoardEditor() {
@@ -196,6 +227,8 @@ export default function DraftBoardEditor() {
   const [posFilter, setPosFilter] = useState('All')
   const [showDivergence, setShowDivergence] = useState(true)
   const [showTimeline, setShowTimeline] = useState(false)
+  const [sortKey, setSortKey] = useState('rank') // rank | auctionValue | cpi | owgrRank | sgTotal | sgOffTee | sgApproach | sgPutting
+  const [sortDir, setSortDir] = useState('asc') // asc | desc
   const [coachingCard, setCoachingCard] = useState(null)
   const [leagueStatusMap, setLeagueStatusMap] = useState({}) // playerId → [{ leagueName, status }]
   const [welcomeDismissed, setWelcomeDismissed] = useState(() =>
@@ -398,7 +431,49 @@ export default function DraftBoardEditor() {
     filteredEntries = filteredEntries.filter(e => e.player?.position === posFilter)
   }
 
+  // Apply sorting (only when not sorting by rank, which is the default order)
+  if (sortKey !== 'rank') {
+    const sorted = [...filteredEntries]
+    sorted.sort((a, b) => {
+      let aVal, bVal
+      if (sortKey === 'auctionValue') {
+        aVal = a.auctionValue ?? -1
+        bVal = b.auctionValue ?? -1
+      } else if (sortKey === 'owgrRank') {
+        // Lower rank = better, so nulls go to bottom
+        aVal = a.player?.owgrRank ?? 9999
+        bVal = b.player?.owgrRank ?? 9999
+        // For OWGR, ascending means best first (lowest number)
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+      } else {
+        aVal = a.player?.[sortKey] ?? -999
+        bVal = b.player?.[sortKey] ?? -999
+      }
+      return sortDir === 'desc' ? bVal - aVal : aVal - bVal
+    })
+    filteredEntries = sorted
+  }
+
   const hasBaselines = entries.some(e => e.baselineRank != null)
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      // Toggle direction, or reset to rank if already toggled both ways
+      if (sortDir === 'desc') {
+        setSortKey('rank')
+        setSortDir('asc')
+      } else {
+        setSortDir('desc')
+      }
+    } else {
+      setSortKey(key)
+      // Default: descending for stats (higher = better), ascending for rank/OWGR
+      setSortDir(key === 'owgrRank' ? 'asc' : 'desc')
+    }
+  }
+
+  // Determine if right panel should show insights vs search
+  const allPlayersLoaded = entries.length > 0 && !isNfl // Only for golf boards for now
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
@@ -511,21 +586,21 @@ export default function DraftBoardEditor() {
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={filteredEntries.map(e => e.playerId)} strategy={verticalListSortingStrategy}>
-                {/* Column header row for golf boards */}
+                {/* Sortable column header row for golf boards */}
                 {!isNfl && (
                   <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border-b border-[var(--card-border)] bg-[var(--surface)] sticky top-0 z-10">
                     <span className="w-4 shrink-0" />
-                    <span className="w-8 text-center text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 shrink-0">#</span>
-                    <span className="w-12 text-right text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 shrink-0">$</span>
+                    <SortHeader label="#" sortKey="rank" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-8 text-center" tip="Board ranking position" />
+                    <SortHeader label="$" sortKey="auctionValue" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-12 text-center" tip="Auction draft value" />
                     <span className="w-8 shrink-0" />
                     <span className="flex-1 text-[9px] font-semibold uppercase tracking-wider text-text-primary/25">Player</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-[104px] text-center shrink-0">Tags</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Clutch Performance Index">CPI</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="World Golf Ranking">OWGR</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Total">SG Tot</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Off the Tee">OTT</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Approach">APP</span>
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Putting">Putt</span>
+                    <span className="w-[104px] text-center text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 shrink-0">Tags</span>
+                    <SortHeader label="CPI" sortKey="cpi" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-14 text-center" tip="Clutch Performance Index: proprietary composite of form, consistency, and clutch play (-3.0 to +3.0)" />
+                    <SortHeader label="OWGR" sortKey="owgrRank" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-11 text-center" tip="Official World Golf Ranking position" />
+                    <SortHeader label="SG Tot" sortKey="sgTotal" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-11 text-center" tip="Strokes Gained: Total \u2014 overall strokes better/worse than field average per round" />
+                    <SortHeader label="OTT" sortKey="sgOffTee" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-11 text-center" tip="Strokes Gained: Off the Tee \u2014 driving distance + accuracy vs field" />
+                    <SortHeader label="APP" sortKey="sgApproach" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-11 text-center" tip="Strokes Gained: Approach \u2014 iron play accuracy into greens vs field" />
+                    <SortHeader label="Putt" sortKey="sgPutting" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-11 text-center" tip="Strokes Gained: Putting \u2014 putting performance vs field from all distances" />
                     <span className="w-[72px] shrink-0" />
                   </div>
                 )}
@@ -580,13 +655,31 @@ export default function DraftBoardEditor() {
           )}
         </div>
 
-        {/* Right: Player Search */}
-        <div className={`md:w-[40%] md:block md:border-l border-[var(--card-border)] bg-[var(--surface)] ${mobileTab === 'search' ? 'flex-1' : mobileTab === 'timeline' ? 'hidden md:block' : 'hidden'}`}>
-          <PlayerSearchPanel
-            sport={board?.sport || 'nfl'}
-            onAdd={handleAddPlayer}
-            existingPlayerIds={existingPlayerIds}
-          />
+        {/* Right: Player Search + Board Insights (golf) */}
+        <div className={`md:w-[40%] md:flex md:flex-col md:border-l border-[var(--card-border)] bg-[var(--surface)] ${mobileTab === 'search' ? 'flex flex-col flex-1' : mobileTab === 'timeline' ? 'hidden md:flex md:flex-col' : 'hidden'}`}>
+          {allPlayersLoaded ? (
+            <>
+              <PlayerSearchPanel
+                sport={board?.sport || 'nfl'}
+                onAdd={handleAddPlayer}
+                existingPlayerIds={existingPlayerIds}
+                compact
+              />
+              <div className="flex-1 overflow-y-auto border-t border-[var(--card-border)]">
+                <BoardInsightsPanel
+                  entries={entries}
+                  sport={board?.sport}
+                  onClickPlayer={(pid) => setDrawerPlayerId(pid)}
+                />
+              </div>
+            </>
+          ) : (
+            <PlayerSearchPanel
+              sport={board?.sport || 'nfl'}
+              onAdd={handleAddPlayer}
+              existingPlayerIds={existingPlayerIds}
+            />
+          )}
         </div>
 
         {/* Timeline panel (mobile only — on desktop it's a modal/overlay) */}

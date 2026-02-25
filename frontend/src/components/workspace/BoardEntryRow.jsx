@@ -12,9 +12,9 @@ const POSITION_COLORS = {
 }
 
 const TAG_CONFIG = {
-  target:  { label: 'TGT', active: 'bg-emerald-100 dark:bg-emerald-500/25 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40', inactive: 'border-emerald-200 dark:border-emerald-500/15 text-emerald-600/40 dark:text-emerald-500/30 hover:text-emerald-600/60 dark:hover:text-emerald-400/60 hover:border-emerald-300 dark:hover:border-emerald-500/30' },
-  sleeper: { label: 'SLP', active: 'bg-amber-100 dark:bg-gold/25 text-amber-700 dark:text-gold border-amber-300 dark:border-gold/40', inactive: 'border-amber-200 dark:border-gold/15 text-amber-600/40 dark:text-gold/30 hover:text-amber-600/60 dark:hover:text-gold/60 hover:border-amber-300 dark:hover:border-gold/30' },
-  avoid:   { label: 'AVD', active: 'bg-red-100 dark:bg-red-500/25 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40', inactive: 'border-red-200 dark:border-red-500/15 text-red-600/40 dark:text-red-500/30 hover:text-red-600/60 dark:hover:text-red-400/60 hover:border-red-300 dark:hover:border-red-500/30' },
+  target:  { label: 'TGT', active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold', inactive: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-400/70 hover:border-emerald-500/30' },
+  sleeper: { label: 'SLP', active: 'bg-gold/20 text-gold border-gold/40 font-bold', inactive: 'bg-gold/5 border-gold/20 text-gold/50 hover:bg-gold/10 hover:text-gold/70 hover:border-gold/30' },
+  avoid:   { label: 'AVD', active: 'bg-red-500/20 text-red-400 border-red-500/40 font-bold', inactive: 'bg-red-500/5 border-red-500/20 text-red-500/50 hover:bg-red-500/10 hover:text-red-400/70 hover:border-red-500/30' },
 }
 
 // Country to flag emoji helper
@@ -91,10 +91,10 @@ function AuctionInput({ value, onChange }) {
 }
 
 function SgCell({ value, label }) {
-  if (value == null) return <span className="text-[10px] font-mono text-text-primary/15 w-10 text-right">{'\u2014'}</span>
+  if (value == null) return <span className="text-[10px] font-mono text-text-primary/15 w-11 text-center">{'\u2014'}</span>
   const color = value > 0.3 ? 'text-emerald-600 dark:text-emerald-400' : value > 0 ? 'text-emerald-600/60 dark:text-emerald-400/60' : value > -0.3 ? 'text-red-600/60 dark:text-red-400/60' : 'text-red-600 dark:text-red-400'
   return (
-    <span className={`text-[10px] font-mono ${color} w-10 text-right`} title={`${label}: ${value > 0 ? '+' : ''}${value.toFixed(2)}`}>
+    <span className={`text-[10px] font-mono ${color} w-11 text-center`} title={`${label}: ${value > 0 ? '+' : ''}${value.toFixed(2)}`}>
       {value > 0 ? '+' : ''}{value.toFixed(1)}
     </span>
   )
@@ -215,7 +215,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
         )}
       </div>
 
-      {/* Tag pills — always visible at low opacity */}
+      {/* Tag pills */}
       <div className="hidden sm:flex items-center gap-1 shrink-0">
         {Object.entries(TAG_CONFIG).map(([key, cfg]) => {
           const isActive = activeTags.includes(key)
@@ -224,7 +224,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
               key={key}
               onClick={() => handleTagToggle(key)}
               className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all
-                ${isActive ? cfg.active : `${cfg.inactive} opacity-35 group-hover:opacity-60`}`}
+                ${isActive ? cfg.active : cfg.inactive}`}
             >
               {cfg.label}
             </button>
@@ -249,13 +249,15 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
           )}
         </div>
       ) : (
-        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-          {player.cpi != null && (
-            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400'}`}>
-              CPI {player.cpi > 0 ? '+' : ''}{player.cpi.toFixed(1)}
+        <div className="hidden sm:flex items-center gap-1 shrink-0">
+          {player.cpi != null ? (
+            <span className={`w-14 text-center px-1 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+              {player.cpi > 0 ? '+' : ''}{player.cpi.toFixed(1)}
             </span>
+          ) : (
+            <span className="w-14 text-center text-[10px] font-mono text-text-primary/15">{'\u2014'}</span>
           )}
-          {player.owgrRank && <span className="text-[10px] text-text-primary/40 font-mono">#{player.owgrRank}</span>}
+          <span className="w-11 text-center text-[10px] text-text-primary/50 font-mono">{player.owgrRank ? `#${player.owgrRank}` : '\u2014'}</span>
           <SgCell value={player.sgTotal} label="SG Total" />
           <SgCell value={player.sgOffTee} label="SG Off Tee" />
           <SgCell value={player.sgApproach} label="SG Approach" />
