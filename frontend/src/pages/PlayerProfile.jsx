@@ -50,6 +50,7 @@ const PlayerProfile = () => {
   const [playerSchedule, setPlayerSchedule] = useState([])
   const [sgTrend, setSgTrend] = useState(null)
   const [sgTrendLoading, setSgTrendLoading] = useState(false)
+  const [sgTrendExpanded, setSgTrendExpanded] = useState(false)
 
   useEffect(() => {
     api.getCurrentTournament()
@@ -189,6 +190,62 @@ const PlayerProfile = () => {
         />
       )}
 
+      {/* SG Trend — expanded (full width above grid) */}
+      {sgTrendExpanded && sgTrend && sgTrend.trend && sgTrend.trend.length >= 2 && (
+        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
+            <h3 className="text-sm font-display font-bold text-text-primary">Strokes Gained Trend</h3>
+            <div className="flex items-center gap-3">
+              {sgTrend.summary?.momentum != null && (
+                <span className={`text-xs font-mono font-semibold ${
+                  sgTrend.summary.momentum > 0.1 ? 'text-emerald-400' : sgTrend.summary.momentum < -0.1 ? 'text-red-400' : 'text-text-muted'
+                }`}>
+                  {sgTrend.summary.momentum > 0 ? '+' : ''}{sgTrend.summary.momentum.toFixed(2)} momentum
+                </span>
+              )}
+              <button
+                onClick={() => setSgTrendExpanded(false)}
+                className="text-text-muted hover:text-text-primary transition-colors"
+                title="Collapse"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 6l5 5m0 0v-4m0 4h-4" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="p-4">
+            <SgTrendChart performances={sgTrend.trend} height={360} />
+            {sgTrend.summary && (
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[var(--card-border)]">
+                <div className="text-center">
+                  <p className="text-xs text-text-muted">Avg SG Total</p>
+                  <p className={`text-sm font-mono font-bold ${
+                    sgTrend.summary.avgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.avgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                  }`}>
+                    {sgTrend.summary.avgSgTotal != null ? (sgTrend.summary.avgSgTotal > 0 ? '+' : '') + sgTrend.summary.avgSgTotal.toFixed(2) : '\u2014'}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-text-muted">Recent (6)</p>
+                  <p className={`text-sm font-mono font-bold ${
+                    sgTrend.summary.recentAvgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.recentAvgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                  }`}>
+                    {sgTrend.summary.recentAvgSgTotal != null ? (sgTrend.summary.recentAvgSgTotal > 0 ? '+' : '') + sgTrend.summary.recentAvgSgTotal.toFixed(2) : '\u2014'}
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-text-muted">Consistency</p>
+                  <p className="text-sm font-mono font-bold text-text-secondary">
+                    {sgTrend.summary.consistency != null ? sgTrend.summary.consistency.toFixed(2) : '\u2014'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Main Content — 2-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
@@ -198,18 +255,29 @@ const PlayerProfile = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
-          {/* SG Trend (Multi-Year) */}
-          {sgTrend && sgTrend.trend && sgTrend.trend.length >= 2 && (
+          {/* SG Trend (Multi-Year) — collapsed */}
+          {!sgTrendExpanded && sgTrend && sgTrend.trend && sgTrend.trend.length >= 2 && (
             <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
                 <h3 className="text-sm font-display font-bold text-text-primary">Strokes Gained Trend</h3>
-                {sgTrend.summary?.momentum != null && (
-                  <span className={`text-xs font-mono font-semibold ${
-                    sgTrend.summary.momentum > 0.1 ? 'text-emerald-400' : sgTrend.summary.momentum < -0.1 ? 'text-red-400' : 'text-text-muted'
-                  }`}>
-                    {sgTrend.summary.momentum > 0 ? '+' : ''}{sgTrend.summary.momentum.toFixed(2)} momentum
-                  </span>
-                )}
+                <div className="flex items-center gap-3">
+                  {sgTrend.summary?.momentum != null && (
+                    <span className={`text-xs font-mono font-semibold ${
+                      sgTrend.summary.momentum > 0.1 ? 'text-emerald-400' : sgTrend.summary.momentum < -0.1 ? 'text-red-400' : 'text-text-muted'
+                    }`}>
+                      {sgTrend.summary.momentum > 0 ? '+' : ''}{sgTrend.summary.momentum.toFixed(2)} momentum
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setSgTrendExpanded(true)}
+                    className="text-text-muted hover:text-text-primary transition-colors"
+                    title="Expand"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div className="p-4">
                 <SgTrendChart performances={sgTrend.trend} height={220} />
