@@ -372,24 +372,32 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
           {/* Projection quick bar (generic mode) */}
           {showProjectionBar && (
             <div className="grid grid-cols-4 gap-px bg-[var(--card-border)] mx-4 mb-3 rounded-lg overflow-hidden">
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className="text-emerald-400 text-lg font-bold font-display">{projection.projected}</p>
-                <p className="text-[10px] text-text-muted uppercase">Proj</p>
-              </div>
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className="text-text-primary text-lg font-bold font-display">{projection.avgFantasyPoints}</p>
-                <p className="text-[10px] text-text-muted uppercase">Avg FPts</p>
-              </div>
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className={`text-lg font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
-                  {projection.trend > 0 ? '+' : ''}{projection.trend}%
-                </p>
-                <p className="text-[10px] text-text-muted uppercase">Trend</p>
-              </div>
-              <div className="bg-[var(--surface)] p-2 text-center">
-                <p className="text-text-primary text-lg font-bold font-display">{projection.consistency}</p>
-                <p className="text-[10px] text-text-muted uppercase">Consist</p>
-              </div>
+              <HoverTip tip="Projected fantasy points based on recent form (60%) and season SG stats (40%).">
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className="text-emerald-400 text-lg font-bold font-display">{projection.projected}</p>
+                  <p className="text-[10px] text-text-muted uppercase">Proj</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip={`Average fantasy points across ${projection.totalEvents || 0} events this season. Derived from tournament scores relative to par.`}>
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className="text-text-primary text-lg font-bold font-display">{projection.avgFantasyPoints}</p>
+                  <p className="text-[10px] text-text-muted uppercase">Avg FPts</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="Performance trend: recent 3 events vs previous 3. Capped at ±50%. Needs 4+ scored events for meaningful data.">
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className={`text-lg font-bold ${projection.trend > 0 ? 'text-emerald-400' : projection.trend < 0 ? 'text-red-400' : 'text-text-primary'}`}>
+                    {projection.trend !== 0 ? (projection.trend > 0 ? '+' : '') + projection.trend + '%' : '—'}
+                  </p>
+                  <p className="text-[10px] text-text-muted uppercase">Trend</p>
+                </div>
+              </HoverTip>
+              <HoverTip tip="How consistent their scoring is. 100 = identical every week, 50 = moderate variance, 0 = wildly inconsistent. Needs 3+ events.">
+                <div className="bg-[var(--surface)] p-2 text-center">
+                  <p className="text-text-primary text-lg font-bold font-display">{projection.consistency != null ? projection.consistency : '—'}</p>
+                  <p className="text-[10px] text-text-muted uppercase">Consist</p>
+                </div>
+              </HoverTip>
             </div>
           )}
 

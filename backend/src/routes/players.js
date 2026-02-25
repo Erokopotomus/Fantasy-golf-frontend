@@ -314,12 +314,15 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       ? recentPerfs.reduce((s, p) => s + getPoints(p), 0) / recentPerfs.length
       : 0
 
-    // Trend: compare recent 3 vs previous 3
-    const last3 = completedPerfs.slice(0, 3)
-    const prev3 = completedPerfs.slice(3, 6)
-    const last3avg = last3.length > 0 ? last3.reduce((s, p) => s + getPoints(p), 0) / last3.length : 0
-    const prev3avg = prev3.length > 0 ? prev3.reduce((s, p) => s + getPoints(p), 0) / prev3.length : 0
-    const trend = prev3avg > 0 ? ((last3avg - prev3avg) / prev3avg * 100) : 0
+    // Trend: compare recent 3 vs previous 3 (only if enough data for both buckets)
+    const scoredPerfs = completedPerfs.filter(p => getPoints(p) > 0)
+    const last3 = scoredPerfs.slice(0, 3)
+    const prev3 = scoredPerfs.slice(3, 6)
+    const last3avg = last3.length >= 2 ? last3.reduce((s, p) => s + getPoints(p), 0) / last3.length : 0
+    const prev3avg = prev3.length >= 2 ? prev3.reduce((s, p) => s + getPoints(p), 0) / prev3.length : 0
+    const rawTrend = prev3avg > 0 ? ((last3avg - prev3avg) / prev3avg * 100) : 0
+    // Cap trend at ±50% — anything higher is noise from small samples
+    const trend = Math.max(-50, Math.min(50, rawTrend))
 
     // SG-based projected points: weight recent form (60%) and season SG (40%)
     const sgProjected = (player.sgTotal || 0) * 25 + 20 // calibrated: SG 2.45 -> ~81 pts
@@ -332,14 +335,17 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
     const floor = fptValues.length > 0 ? Math.round(Math.min(...fptValues) * 10) / 10 : 0
     const ceiling = fptValues.length > 0 ? Math.round(Math.max(...fptValues) * 10) / 10 : 0
 
-    // Consistency: std deviation of fantasy points
+    // Consistency: coefficient of variation (stddev / mean) → 0-100 scale
+    // CV of 0% = perfectly consistent (100), CV of 30%+ = very inconsistent (0)
     const mean = avgFpts
     const variance = fptValues.length > 1
       ? fptValues.reduce((s, v) => s + (v - mean) ** 2, 0) / (fptValues.length - 1)
       : 0
-    // Scale: stddev of 0 = 100 consistency, stddev of 40+ = 0 consistency
     const stddev = Math.sqrt(variance)
-    const consistency = Math.round(Math.max(0, 100 - stddev * 2.5) * 10) / 10
+    const cv = mean > 0 ? (stddev / mean) : 0 // coefficient of variation (0.0 to ~0.5)
+    const consistency = fptValues.length >= 3
+      ? Math.round(Math.max(0, Math.min(100, 100 - cv * 333)) * 10) / 10 // CV 0%=100, CV 15%=50, CV 30%=0
+      : null // not enough data
 
     // Avg score from performances or player's scoringAvg
     const scoresWithTotal = completedPerfs.filter(p => p.totalScore != null)
