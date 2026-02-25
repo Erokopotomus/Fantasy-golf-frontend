@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -16,7 +17,90 @@ const TAG_CONFIG = {
   avoid:   { label: 'AVD', active: 'bg-red-100 dark:bg-red-500/25 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40', inactive: 'border-red-200 dark:border-red-500/15 text-red-600/40 dark:text-red-500/30 hover:text-red-600/60 dark:hover:text-red-400/60 hover:border-red-300 dark:hover:border-red-500/30' },
 }
 
-export default function BoardEntryRow({ entry, index, sport, positionRank, leagueStatus, onRemove, onClickNotes, onUpdateTags, isWatched, onToggleWatch }) {
+// Country to flag emoji helper
+function countryFlag(country) {
+  if (!country) return null
+  const flags = {
+    'United States': '\u{1F1FA}\u{1F1F8}', 'USA': '\u{1F1FA}\u{1F1F8}',
+    'England': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}',
+    'Scotland': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}',
+    'Northern Ireland': '\u{1F3F4}\u{E0067}\u{E0062}\u{E006E}\u{E0069}\u{E0072}\u{E007F}',
+    'Wales': '\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}',
+    'Ireland': '\u{1F1EE}\u{1F1EA}', 'Australia': '\u{1F1E6}\u{1F1FA}',
+    'Canada': '\u{1F1E8}\u{1F1E6}', 'South Korea': '\u{1F1F0}\u{1F1F7}', 'Korea': '\u{1F1F0}\u{1F1F7}',
+    'Japan': '\u{1F1EF}\u{1F1F5}', 'Spain': '\u{1F1EA}\u{1F1F8}',
+    'Sweden': '\u{1F1F8}\u{1F1EA}', 'Norway': '\u{1F1F3}\u{1F1F4}',
+    'South Africa': '\u{1F1FF}\u{1F1E6}', 'Mexico': '\u{1F1F2}\u{1F1FD}',
+    'Colombia': '\u{1F1E8}\u{1F1F4}', 'Germany': '\u{1F1E9}\u{1F1EA}',
+    'France': '\u{1F1EB}\u{1F1F7}', 'Italy': '\u{1F1EE}\u{1F1F9}',
+    'Thailand': '\u{1F1F9}\u{1F1ED}', 'China': '\u{1F1E8}\u{1F1F3}',
+    'India': '\u{1F1EE}\u{1F1F3}', 'Chile': '\u{1F1E8}\u{1F1F1}',
+    'Argentina': '\u{1F1E6}\u{1F1F7}', 'Denmark': '\u{1F1E9}\u{1F1F0}',
+    'Belgium': '\u{1F1E7}\u{1F1EA}', 'Netherlands': '\u{1F1F3}\u{1F1F1}',
+    'Austria': '\u{1F1E6}\u{1F1F9}', 'Finland': '\u{1F1EB}\u{1F1EE}',
+    'New Zealand': '\u{1F1F3}\u{1F1FF}', 'Chinese Taipei': '\u{1F1F9}\u{1F1FC}',
+    'Taiwan': '\u{1F1F9}\u{1F1FC}', 'Philippines': '\u{1F1F5}\u{1F1ED}',
+    'Zimbabwe': '\u{1F1FF}\u{1F1FC}', 'Venezuela': '\u{1F1FB}\u{1F1EA}',
+    'Paraguay': '\u{1F1F5}\u{1F1FE}', 'Puerto Rico': '\u{1F1F5}\u{1F1F7}',
+  }
+  return flags[country] || null
+}
+
+function AuctionInput({ value, onChange }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value != null ? String(value) : '')
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (editing && inputRef.current) inputRef.current.focus()
+  }, [editing])
+
+  const commit = () => {
+    setEditing(false)
+    const parsed = parseInt(draft, 10)
+    onChange(isNaN(parsed) ? null : parsed)
+  }
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => { setDraft(value != null ? String(value) : ''); setEditing(true) }}
+        className="w-12 text-right text-[11px] font-mono text-text-primary/30 hover:text-gold transition-colors shrink-0"
+        title="Set auction value"
+      >
+        {value != null ? `$${value}` : '$\u2014'}
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center w-12 shrink-0">
+      <span className="text-[11px] font-mono text-gold">$</span>
+      <input
+        ref={inputRef}
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        onChange={e => setDraft(e.target.value.replace(/[^0-9]/g, ''))}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+        className="w-9 bg-transparent border-b border-gold/40 text-[11px] font-mono text-gold text-right outline-none"
+      />
+    </div>
+  )
+}
+
+function SgCell({ value, label }) {
+  if (value == null) return <span className="text-[10px] font-mono text-text-primary/15 w-10 text-right">{'\u2014'}</span>
+  const color = value > 0.3 ? 'text-emerald-600 dark:text-emerald-400' : value > 0 ? 'text-emerald-600/60 dark:text-emerald-400/60' : value > -0.3 ? 'text-red-600/60 dark:text-red-400/60' : 'text-red-600 dark:text-red-400'
+  return (
+    <span className={`text-[10px] font-mono ${color} w-10 text-right`} title={`${label}: ${value > 0 ? '+' : ''}${value.toFixed(2)}`}>
+      {value > 0 ? '+' : ''}{value.toFixed(1)}
+    </span>
+  )
+}
+
+export default function BoardEntryRow({ entry, index, sport, positionRank, leagueStatus, onRemove, onClickNotes, onUpdateTags, onClickPlayer, onUpdateAuctionValue, isWatched, onToggleWatch }) {
   const {
     attributes,
     listeners,
@@ -35,16 +119,18 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
 
   const player = entry.player || {}
   const activeTags = entry.tags || []
+  const isGolf = sport === 'golf'
 
   const handleTagToggle = (tagName) => {
     if (!onUpdateTags) return
-    // Mutually exclusive: if already active, remove it; otherwise set only this one
     if (activeTags.includes(tagName)) {
       onUpdateTags(entry.playerId, [])
     } else {
       onUpdateTags(entry.playerId, [tagName])
     }
   }
+
+  const flag = isGolf ? countryFlag(player.country) : null
 
   return (
     <div
@@ -76,20 +162,40 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
         )
       })()}
 
-      {/* Headshot */}
-      <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] overflow-hidden shrink-0">
-        {player.headshotUrl ? (
-          <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-text-primary/20 text-xs font-bold">
-            {player.name?.charAt(0) || '?'}
-          </div>
+      {/* Auction value */}
+      {onUpdateAuctionValue && (
+        <AuctionInput
+          value={entry.auctionValue}
+          onChange={(val) => onUpdateAuctionValue(entry.playerId, val)}
+        />
+      )}
+
+      {/* Headshot + Country flag */}
+      <div className="relative w-8 h-8 shrink-0">
+        <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] overflow-hidden">
+          {player.headshotUrl ? (
+            <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-text-primary/20 text-xs font-bold">
+              {player.name?.charAt(0) || '?'}
+            </div>
+          )}
+        </div>
+        {flag && (
+          <span className="absolute -bottom-0.5 -right-0.5 text-[10px] leading-none" title={player.country}>
+            {flag}
+          </span>
         )}
       </div>
 
-      {/* Name + League status */}
+      {/* Name (clickable) + League status */}
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-        <span className="text-sm text-text-primary font-medium truncate">{player.name || 'Unknown'}</span>
+        <button
+          onClick={() => onClickPlayer?.(entry.playerId)}
+          className="text-sm text-text-primary font-medium truncate hover:underline cursor-pointer text-left"
+        >
+          {player.name || 'Unknown'}
+        </button>
         {leagueStatus && leagueStatus.length > 0 && (
           <div className="hidden sm:flex items-center gap-1 shrink-0">
             {leagueStatus.slice(0, 1).map((ls, i) => (
@@ -109,7 +215,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
         )}
       </div>
 
-      {/* Tag pills */}
+      {/* Tag pills — always visible at low opacity */}
       <div className="hidden sm:flex items-center gap-1 shrink-0">
         {Object.entries(TAG_CONFIG).map(([key, cfg]) => {
           const isActive = activeTags.includes(key)
@@ -118,7 +224,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
               key={key}
               onClick={() => handleTagToggle(key)}
               className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all
-                ${isActive ? cfg.active : `${cfg.inactive} opacity-0 group-hover:opacity-100`}`}
+                ${isActive ? cfg.active : `${cfg.inactive} opacity-35 group-hover:opacity-60`}`}
             >
               {cfg.label}
             </button>
@@ -143,21 +249,17 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
           )}
         </div>
       ) : (
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
+        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
           {player.cpi != null && (
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400'}`}>
               CPI {player.cpi > 0 ? '+' : ''}{player.cpi.toFixed(1)}
             </span>
           )}
-          {player.formScore != null && (
-            <span className="text-xs font-mono text-text-primary/50">Form {Math.round(player.formScore)}</span>
-          )}
-          {player.owgrRank && <span className="text-xs text-text-primary/40">#{player.owgrRank}</span>}
-          {player.sgTotal != null && (
-            <span className={`text-xs ${player.sgTotal > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-              SG {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}
-            </span>
-          )}
+          {player.owgrRank && <span className="text-[10px] text-text-primary/40 font-mono">#{player.owgrRank}</span>}
+          <SgCell value={player.sgTotal} label="SG Total" />
+          <SgCell value={player.sgOffTee} label="SG Off Tee" />
+          <SgCell value={player.sgApproach} label="SG Approach" />
+          <SgCell value={player.sgPutting} label="SG Putting" />
         </div>
       )}
 

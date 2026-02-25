@@ -57,6 +57,7 @@ export default function useDraftBoardEditor(boardId) {
           tags: e.tags ?? null,
           reasonChips: e.reasonChips ?? null,
           baselineRank: e.baselineRank ?? null,
+          auctionValue: e.auctionValue ?? null,
         }))
         await api.saveDraftBoardEntries(boardId, payload)
         setLastSaved(new Date())
@@ -107,9 +108,6 @@ export default function useDraftBoardEditor(boardId) {
         playerName: movedPlayer.player?.name || 'Player',
         delta,
       })
-      movedDismissTimer.current = setTimeout(() => {
-        setMovedEntry(null)
-      }, 5000)
       // Log activity (fire and forget)
       api.logBoardActivity(boardId, {
         action: 'player_moved',
@@ -212,6 +210,13 @@ export default function useDraftBoardEditor(boardId) {
     scheduleSave()
   }, [scheduleSave])
 
+  const updateAuctionValue = useCallback((playerId, value) => {
+    setEntries(prev => prev.map(e =>
+      e.playerId === playerId ? { ...e, auctionValue: value } : e
+    ))
+    scheduleSave()
+  }, [scheduleSave])
+
   const updateBoardMeta = useCallback(async (data) => {
     try {
       const result = await api.updateDraftBoard(boardId, data)
@@ -232,6 +237,7 @@ export default function useDraftBoardEditor(boardId) {
     updateNotes,
     updateTags,
     updateReasonChips,
+    updateAuctionValue,
     insertTierBreak,
     removeTierBreak,
     updateBoardMeta,

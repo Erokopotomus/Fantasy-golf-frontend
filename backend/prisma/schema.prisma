@@ -2814,6 +2814,7 @@ model DraftBoardEntry {
   tags         Json?
   reasonChips  Json?      @map("reason_chips")
   baselineRank Int?       @map("baseline_rank")
+  auctionValue Int?       @map("auction_value")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 

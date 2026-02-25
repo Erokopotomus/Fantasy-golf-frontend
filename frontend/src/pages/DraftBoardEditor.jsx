@@ -15,6 +15,7 @@ import DivergenceSummary from '../components/workspace/DivergenceSummary'
 import BoardTimeline from '../components/workspace/BoardTimeline'
 import BoardWelcomeCard from '../components/workspace/BoardWelcomeCard'
 import BoardProgressTracker from '../components/workspace/BoardProgressTracker'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 
 // ── Reason Chip Definitions ──────────────────────────────────────────────────
 
@@ -124,18 +125,9 @@ function PositionTabBar({ activePos, onPosChange, entries }) {
 // ── Reason Chip Row ──────────────────────────────────────────────────────────
 
 function ReasonChipRow({ movedEntry, existingChips, onUpdateChips, onDismiss }) {
-  const dismissTimer = useRef(null)
   const [selectedChips, setSelectedChips] = useState(existingChips || [])
 
-  useEffect(() => {
-    dismissTimer.current = setTimeout(() => onDismiss(), 5000)
-    return () => { if (dismissTimer.current) clearTimeout(dismissTimer.current) }
-  }, [onDismiss])
-
   const handleChipToggle = (chipId) => {
-    if (dismissTimer.current) clearTimeout(dismissTimer.current)
-    dismissTimer.current = setTimeout(() => onDismiss(), 5000)
-
     setSelectedChips(prev => {
       const next = prev.includes(chipId) ? prev.filter(c => c !== chipId) : [...prev, chipId]
       onUpdateChips(movedEntry.playerId, next)
@@ -148,11 +140,19 @@ function ReasonChipRow({ movedEntry, existingChips, onUpdateChips, onDismiss }) 
 
   return (
     <div className="px-3 py-2.5 bg-[var(--bg-alt)] border-b border-[var(--card-border)]">
-      <p className="text-[11px] text-text-primary/50 mb-2">
-        Moved <span className="text-text-primary font-medium">{movedEntry.playerName}</span>{' '}
-        <span className={delta > 0 ? 'text-emerald-400' : 'text-red-400'}>{direction} spots</span>.{' '}
-        Why? <span className="text-text-primary/25">(optional)</span>
-      </p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[11px] text-text-primary/50">
+          Moved <span className="text-text-primary font-medium">{movedEntry.playerName}</span>{' '}
+          <span className={delta > 0 ? 'text-emerald-400' : 'text-red-400'}>{direction} spots</span>.{' '}
+          Why? <span className="text-text-primary/25">(optional)</span>
+        </p>
+        <button
+          onClick={onDismiss}
+          className="px-2 py-0.5 rounded text-[10px] font-semibold text-text-primary/40 hover:text-text-primary/70 border border-[var(--card-border)] hover:border-[var(--stone)]/50 transition-colors"
+        >
+          Done
+        </button>
+      </div>
       <div className="flex flex-wrap gap-1.5">
         {REASON_CHIPS.map(chip => {
           const isActive = selectedChips.includes(chip.id)
@@ -180,7 +180,7 @@ export default function DraftBoardEditor() {
   const {
     board, entries, loading, error,
     moveEntry, addPlayer, removePlayer,
-    updateNotes, updateTags, updateReasonChips,
+    updateNotes, updateTags, updateReasonChips, updateAuctionValue,
     insertTierBreak, removeTierBreak,
     updateBoardMeta, isSaving, lastSaved,
     movedEntry, clearMovedEntry,
@@ -190,6 +190,7 @@ export default function DraftBoardEditor() {
   const { readiness } = useBoardReadiness(boardId)
 
   const [noteEntry, setNoteEntry] = useState(null)
+  const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [mobileTab, setMobileTab] = useState('rankings')
   const [tagFilter, setTagFilter] = useState('all')
   const [posFilter, setPosFilter] = useState('All')
@@ -510,6 +511,24 @@ export default function DraftBoardEditor() {
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={filteredEntries.map(e => e.playerId)} strategy={verticalListSortingStrategy}>
+                {/* Column header row for golf boards */}
+                {!isNfl && (
+                  <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 border-b border-[var(--card-border)] bg-[var(--surface)] sticky top-0 z-10">
+                    <span className="w-4 shrink-0" />
+                    <span className="w-8 text-center text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 shrink-0">#</span>
+                    <span className="w-12 text-right text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 shrink-0">$</span>
+                    <span className="w-8 shrink-0" />
+                    <span className="flex-1 text-[9px] font-semibold uppercase tracking-wider text-text-primary/25">Player</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-[104px] text-center shrink-0">Tags</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Clutch Performance Index">CPI</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="World Golf Ranking">OWGR</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Total">SG Tot</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Off the Tee">OTT</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Approach">APP</span>
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 w-10 text-right shrink-0" title="Strokes Gained: Putting">Putt</span>
+                    <span className="w-[72px] shrink-0" />
+                  </div>
+                )}
                 {filteredEntries.map((entry, i) => {
                   const originalIndex = entries.findIndex(e => e.playerId === entry.playerId)
                   const prevOriginal = originalIndex > 0 ? entries[originalIndex - 1] : null
@@ -530,6 +549,8 @@ export default function DraftBoardEditor() {
                         onRemove={removePlayer}
                         onClickNotes={(e) => setNoteEntry(e)}
                         onUpdateTags={updateTags}
+                        onClickPlayer={(pid) => setDrawerPlayerId(pid)}
+                        onUpdateAuctionValue={updateAuctionValue}
                         isWatched={isWatched(entry.playerId)}
                         onToggleWatch={toggleWatch}
                       />
@@ -545,7 +566,7 @@ export default function DraftBoardEditor() {
                         <div className="relative h-0 group/tier">
                           <button
                             onClick={() => insertTierBreak(originalIndex)}
-                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold/0 bg-gold/0 rounded-full border border-gold/0 transition-all group-hover/tier:text-gold/70 group-hover/tier:bg-gold/10 group-hover/tier:border-gold/20"
+                            className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold/25 bg-transparent rounded-full border border-transparent transition-all hover:text-gold/70 hover:bg-gold/10 hover:border-gold/20 group-hover/tier:text-gold/70 group-hover/tier:bg-gold/10 group-hover/tier:border-gold/20"
                           >
                             + Tier
                           </button>
@@ -644,6 +665,14 @@ export default function DraftBoardEditor() {
           </div>
         </div>
       )}
+
+      {/* Player Drawer */}
+      <PlayerDrawer
+        playerId={drawerPlayerId}
+        isOpen={!!drawerPlayerId}
+        onClose={() => setDrawerPlayerId(null)}
+        isNfl={isNfl}
+      />
     </div>
   )
 }
