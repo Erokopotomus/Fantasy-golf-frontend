@@ -194,8 +194,11 @@ const PlayerProfile = () => {
         {/* Left Column */}
         <div className="space-y-6">
           <PlayerStats player={player} clutchMetrics={clutchMetrics} selectedYear={selectedYear} performances={player?.performances} />
+        </div>
 
-          {/* SG Trend (Multi-Year) — right below SG DNA */}
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* SG Trend (Multi-Year) */}
           {sgTrend && sgTrend.trend && sgTrend.trend.length >= 2 && (
             <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
@@ -239,10 +242,6 @@ const PlayerProfile = () => {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
           <PlayerBenchmarkCard player={player} eventId={currentEventId} tournamentStatus={tournamentStatus} />
           <PlayerPredictions predictions={predictions} liveScore={liveScore} />
           <PlayerProjection projection={projection} />
