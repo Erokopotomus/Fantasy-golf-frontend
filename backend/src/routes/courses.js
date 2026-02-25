@@ -183,7 +183,7 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
               headshotUrl: true,
               countryFlag: true,
               sgTotal: true,
-              owgr: true,
+              owgrRank: true,
             },
           },
         },

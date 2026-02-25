@@ -101,8 +101,11 @@ const CourseDetail = () => {
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       {/* Header */}
       <div className="relative overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-[var(--surface)] to-[var(--surface)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] via-transparent to-transparent" />
+        {course.imageUrl && (
+          <img src={course.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--surface)] via-[var(--surface)]/80 to-[var(--surface)]/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] via-[var(--surface)]/40 to-transparent" />
 
         <div className="relative p-6">
           <h1 className="text-3xl font-bold font-display text-text-primary mb-1 tracking-tight">
@@ -364,8 +367,8 @@ const CourseDetail = () => {
                     <p className="text-xs font-semibold text-text-primary group-hover:text-gold transition-colors truncate">
                       {p.name}
                     </p>
-                    {p.owgr && (
-                      <p className="text-[10px] text-text-muted font-mono">OWGR #{p.owgr}</p>
+                    {p.owgrRank && (
+                      <p className="text-[10px] text-text-muted font-mono">OWGR #{p.owgrRank}</p>
                     )}
                   </div>
                 </div>
