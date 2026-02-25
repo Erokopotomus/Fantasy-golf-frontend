@@ -8,11 +8,6 @@ const AXES = [
   { key: 'sgTotal', label: 'Total' },
 ]
 
-const SIZE = 280
-const CENTER = SIZE / 2
-const RADIUS = 100
-const RINGS = [0.25, 0.5, 0.75, 1.0]
-
 // Map SG value (-2 to +3 range) into 0-1
 function normalize(val) {
   if (val == null) return 0.3 // neutral default for missing data
@@ -20,35 +15,40 @@ function normalize(val) {
 }
 
 // Get x,y for a given axis index and radius fraction (0-1)
-function getPoint(axisIndex, fraction) {
+function getPoint(axisIndex, fraction, center, radius) {
   const angle = (Math.PI * 2 * axisIndex) / AXES.length - Math.PI / 2
   return {
-    x: CENTER + RADIUS * fraction * Math.cos(angle),
-    y: CENTER + RADIUS * fraction * Math.sin(angle),
+    x: center + radius * fraction * Math.cos(angle),
+    y: center + radius * fraction * Math.sin(angle),
   }
 }
 
-// Build polygon points string for a player
-function polygonPoints(player) {
-  return AXES.map((axis, i) => {
-    const val = normalize(player[axis.key])
-    const pt = getPoint(i, val)
-    return `${pt.x},${pt.y}`
-  }).join(' ')
-}
+const RINGS = [0.25, 0.5, 0.75, 1.0]
 
-export default function SgRadarChart({ players }) {
+export default function SgRadarChart({ players, size = 280 }) {
   if (!players || players.length === 0) return null
+
+  const center = size / 2
+  const radius = size * 0.357 // ~100 at size 280
+
+  // Build polygon points string for a player
+  function polygonPoints(player) {
+    return AXES.map((axis, i) => {
+      const val = normalize(player[axis.key])
+      const pt = getPoint(i, val, center, radius)
+      return `${pt.x},${pt.y}`
+    }).join(' ')
+  }
 
   return (
     <div className="flex flex-col items-center">
-      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
         {/* Concentric rings */}
         {RINGS.map((r) => (
           <polygon
             key={r}
             points={AXES.map((_, i) => {
-              const pt = getPoint(i, r)
+              const pt = getPoint(i, r, center, radius)
               return `${pt.x},${pt.y}`
             }).join(' ')}
             fill="none"
@@ -60,12 +60,12 @@ export default function SgRadarChart({ players }) {
 
         {/* Axis lines */}
         {AXES.map((_, i) => {
-          const pt = getPoint(i, 1)
+          const pt = getPoint(i, 1, center, radius)
           return (
             <line
               key={i}
-              x1={CENTER}
-              y1={CENTER}
+              x1={center}
+              y1={center}
               x2={pt.x}
               y2={pt.y}
               stroke="var(--card-border)"
@@ -75,10 +75,10 @@ export default function SgRadarChart({ players }) {
           )
         })}
 
-        {/* SG reference labels on 0.5 ring */}
-        <text x={CENTER + 4} y={CENTER - RADIUS * 0.5 - 4} fontSize={8} fill="var(--text-1)" opacity={0.25} textAnchor="start">+0.5</text>
-        <text x={CENTER + 4} y={CENTER - RADIUS * 0.25 - 4} fontSize={8} fill="var(--text-1)" opacity={0.2} textAnchor="start">-0.75</text>
-        <text x={CENTER + 4} y={CENTER - RADIUS * 0.75 - 4} fontSize={8} fill="var(--text-1)" opacity={0.2} textAnchor="start">+1.75</text>
+        {/* SG reference labels on rings */}
+        <text x={center + 4} y={center - radius * 0.5 - 4} fontSize={8} fill="var(--text-1)" opacity={0.25} textAnchor="start">+0.5</text>
+        <text x={center + 4} y={center - radius * 0.25 - 4} fontSize={8} fill="var(--text-1)" opacity={0.2} textAnchor="start">-0.75</text>
+        <text x={center + 4} y={center - radius * 0.75 - 4} fontSize={8} fill="var(--text-1)" opacity={0.2} textAnchor="start">+1.75</text>
 
         {/* Player polygons */}
         {players.map((player, pi) => {
@@ -101,7 +101,7 @@ export default function SgRadarChart({ players }) {
           const color = COLORS[pi % COLORS.length]
           return AXES.map((axis, ai) => {
             const val = normalize(player[axis.key])
-            const pt = getPoint(ai, val)
+            const pt = getPoint(ai, val, center, radius)
             return (
               <circle
                 key={`${pi}-${ai}`}
@@ -118,7 +118,7 @@ export default function SgRadarChart({ players }) {
 
         {/* Axis labels */}
         {AXES.map((axis, i) => {
-          const pt = getPoint(i, 1.18)
+          const pt = getPoint(i, 1.18, center, radius)
           return (
             <text
               key={i}
@@ -126,7 +126,7 @@ export default function SgRadarChart({ players }) {
               y={pt.y}
               textAnchor="middle"
               dominantBaseline="central"
-              fontSize={10}
+              fontSize={size < 260 ? 9 : 10}
               fontWeight={600}
               fill="var(--text-1)"
               opacity={0.5}
@@ -139,17 +139,21 @@ export default function SgRadarChart({ players }) {
 
       {/* Legend */}
       <div className="flex flex-wrap justify-center gap-3 mt-2">
-        {players.map((player, pi) => (
-          <div key={player.id || pi} className="flex items-center gap-1.5">
-            <span
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: COLORS[pi % COLORS.length] }}
-            />
-            <span className="text-xs text-text-primary/60 font-medium">
-              {player.name?.split(' ').pop() || 'Player'}
-            </span>
-          </div>
-        ))}
+        {players.map((player, pi) => {
+          const label = player.label || player.name?.split(' ').pop() || 'Player'
+          const eventCount = player.events
+          return (
+            <div key={player.id || pi} className="flex items-center gap-1.5">
+              <span
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: COLORS[pi % COLORS.length] }}
+              />
+              <span className="text-xs text-text-primary/60 font-medium">
+                {label}{eventCount ? ` (${eventCount} events)` : ''}
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

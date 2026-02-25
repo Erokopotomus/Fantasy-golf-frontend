@@ -161,6 +161,10 @@ class ApiService {
     return this.request(`/players/${id}/stats`)
   }
 
+  async getPlayerSgTrend(id, years = 3) {
+    return this.request(`/players/${id}/sg-trend?years=${years}`)
+  }
+
   async getPlayerProfile(id, params = {}) {
     const filtered = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null))
     const qs = new URLSearchParams(filtered).toString()

@@ -1,12 +1,14 @@
+import { useMemo } from 'react'
 import Card from '../common/Card'
+import SgRadarChart from '../players/SgRadarChart'
 
-const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
+const PlayerStats = ({ player, clutchMetrics, selectedYear, performances }) => {
   if (!player) return null
 
   const { stats } = player
 
   const formatSG = (value) => {
-    if (typeof value !== 'number') return '—'
+    if (typeof value !== 'number') return '\u2014'
     const prefix = value > 0 ? '+' : ''
     return `${prefix}${value.toFixed(2)}`
   }
@@ -38,7 +40,53 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
 
   const hasSeasonData = player.events > 0
 
-  const formatRankValue = (val) => val != null ? `#${val}` : '—'
+  const formatRankValue = (val) => val != null ? `#${val}` : '\u2014'
+
+  // Compute season SG averages from performances for radar chart
+  const currentYear = typeof selectedYear === 'number' ? selectedYear : new Date().getFullYear()
+  const seasonSgAvg = useMemo(() => {
+    const perfs = (performances || []).filter(p => {
+      if (p.sgTotal == null) return false
+      const date = p.tournament?.startDate
+      if (!date) return true
+      return new Date(date).getFullYear() === currentYear
+    })
+    if (perfs.length === 0) return null
+    const avg = (key) => {
+      const vals = perfs.filter(p => p[key] != null).map(p => p[key])
+      return vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : null
+    }
+    return {
+      sgTotal: avg('sgTotal'),
+      sgOffTee: avg('sgOffTee'),
+      sgApproach: avg('sgApproach'),
+      sgAroundGreen: avg('sgAroundGreen'),
+      sgPutting: avg('sgPutting'),
+      events: perfs.length,
+    }
+  }, [performances, currentYear])
+
+  // Radar chart: career vs season
+  const hasCareerSg = player.sgTotal != null || stats?.sgTotal != null
+  const radarPlayers = useMemo(() => {
+    const career = {
+      id: 'career',
+      label: 'Career',
+      sgTotal: player.sgTotal ?? stats?.sgTotal,
+      sgOffTee: player.sgOffTee ?? stats?.sgOffTee,
+      sgApproach: player.sgApproach ?? stats?.sgApproach,
+      sgAroundGreen: player.sgAroundGreen ?? stats?.sgAroundGreen,
+      sgPutting: player.sgPutting ?? stats?.sgPutting,
+    }
+    if (!seasonSgAvg || seasonSgAvg.sgTotal == null) return [career]
+    const season = {
+      id: 'season',
+      label: `${currentYear} Season`,
+      events: seasonSgAvg.events,
+      ...seasonSgAvg,
+    }
+    return [career, season]
+  }, [player, stats, seasonSgAvg, currentYear])
 
   // Clutch metric helpers
   const getCPIColor = (v) => {
@@ -56,7 +104,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
     return 'text-blue-300'
   }
   const getFormLabel = (v) => {
-    if (v == null) return '—'
+    if (v == null) return '\u2014'
     if (v >= 80) return 'Hot'
     if (v >= 60) return 'Warm'
     if (v >= 40) return 'Cool'
@@ -69,7 +117,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
     return 'text-red-400'
   }
   const getPressureLabel = (v) => {
-    if (v == null) return '—'
+    if (v == null) return '\u2014'
     if (v > 0.5) return 'Clutch'
     if (v > -0.5) return 'Steady'
     return 'Fades'
@@ -113,7 +161,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-text-secondary text-sm">Form</span>
-                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getFormColor(clutchMetrics.formScore)} bg-dark-primary`}>
+                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getFormColor(clutchMetrics.formScore)} bg-[var(--bg-alt)]`}>
                     {getFormLabel(clutchMetrics.formScore)}
                   </span>
                 </div>
@@ -126,7 +174,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-text-secondary text-sm">Pressure</span>
-                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getPressureColor(clutchMetrics.pressureScore)} bg-dark-primary`}>
+                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getPressureColor(clutchMetrics.pressureScore)} bg-[var(--bg-alt)]`}>
                     {getPressureLabel(clutchMetrics.pressureScore)}
                   </span>
                 </div>
@@ -139,7 +187,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-text-secondary text-sm">Course Fit</span>
-                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getFitColor(clutchMetrics.courseFitScore)} bg-dark-primary`}>
+                  <span className={`text-xs ml-2 px-1.5 py-0.5 rounded ${getFitColor(clutchMetrics.courseFitScore)} bg-[var(--bg-alt)]`}>
                     {getFitLabel(clutchMetrics.courseFitScore)}
                   </span>
                 </div>
@@ -157,20 +205,24 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
         </Card>
       )}
 
-      {/* Strokes Gained */}
-      {stats && (
+      {/* SG DNA Radar Chart */}
+      {hasCareerSg && (
         <Card>
-          <h4 className="text-sm font-semibold text-text-muted mb-3">Strokes Gained</h4>
-          <div className="space-y-2">
-            {sgStats.map((stat) => (
-              <div key={stat.label} className="flex items-center justify-between">
-                <span className="text-text-secondary text-sm">{stat.label}</span>
-                <span className={`font-semibold ${stat.color || getSGColor(stat.value)}`}>
-                  {formatSG(stat.value)}
-                </span>
-              </div>
-            ))}
-          </div>
+          <h4 className="text-sm font-semibold text-text-muted mb-3">Strokes Gained DNA</h4>
+          <SgRadarChart players={radarPlayers} size={280} />
+          {/* SG stat rows below radar */}
+          {stats && (
+            <div className="space-y-2 mt-4 pt-3 border-t border-[var(--card-border)]">
+              {sgStats.map((stat) => (
+                <div key={stat.label} className="flex items-center justify-between">
+                  <span className="text-text-secondary text-sm">{stat.label}</span>
+                  <span className={`font-semibold ${stat.color || getSGColor(stat.value)}`}>
+                    {formatSG(stat.value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 
@@ -182,7 +234,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
         {hasSeasonData ? (
           <div className="grid grid-cols-2 gap-3">
             {seasonStats.map((stat) => (
-              <div key={stat.label} className="bg-dark-primary rounded-lg p-3 text-center">
+              <div key={stat.label} className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
                 <p className="text-lg font-bold font-display text-text-primary">{stat.value}</p>
                 <p className="text-xs text-text-muted">{stat.label}</p>
               </div>
@@ -208,7 +260,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear }) => {
           <div className="flex items-center justify-between">
             <span className="text-text-secondary text-sm">DataGolf Skill</span>
             <span className="font-semibold text-gold">
-              {player.datagolfSkill != null ? player.datagolfSkill.toFixed(2) : '—'}
+              {player.datagolfSkill != null ? player.datagolfSkill.toFixed(2) : '\u2014'}
             </span>
           </div>
         </div>

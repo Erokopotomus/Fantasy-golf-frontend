@@ -11,6 +11,7 @@ import PlayerCourseHistory from '../components/player/PlayerCourseHistory'
 import PlayerBenchmarkCard from '../components/predictions/PlayerBenchmarkCard'
 import AddToBoardModal from '../components/workspace/AddToBoardModal'
 import CaptureFormModal from '../components/lab/CaptureFormModal'
+import SgTrendChart from '../components/players/SgTrendChart'
 import usePlayerProfile from '../hooks/usePlayerProfile'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
@@ -47,6 +48,8 @@ const PlayerProfile = () => {
   } = usePlayerProfile(playerId)
 
   const [playerSchedule, setPlayerSchedule] = useState([])
+  const [sgTrend, setSgTrend] = useState(null)
+  const [sgTrendLoading, setSgTrendLoading] = useState(false)
 
   useEffect(() => {
     api.getCurrentTournament()
@@ -77,6 +80,16 @@ const PlayerProfile = () => {
     api.getPlayerSchedule(playerId)
       .then(data => setPlayerSchedule(data.schedule || []))
       .catch(() => setPlayerSchedule([]))
+  }, [playerId])
+
+  // Fetch multi-year SG trend for profile page
+  useEffect(() => {
+    if (!playerId) return
+    setSgTrendLoading(true)
+    api.getPlayerSgTrend(playerId, 3)
+      .then(data => setSgTrend(data))
+      .catch(() => setSgTrend(null))
+      .finally(() => setSgTrendLoading(false))
   }, [playerId])
 
   useEffect(() => {
@@ -180,7 +193,7 @@ const PlayerProfile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
-          <PlayerStats player={player} clutchMetrics={clutchMetrics} selectedYear={selectedYear} />
+          <PlayerStats player={player} clutchMetrics={clutchMetrics} selectedYear={selectedYear} performances={player?.performances} />
         </div>
 
         {/* Right Column */}
@@ -192,6 +205,52 @@ const PlayerProfile = () => {
             recentForm={player.recentForm}
             tournamentHistory={tournamentHistory}
           />
+
+          {/* SG Trend (Multi-Year) */}
+          {sgTrend && sgTrend.trend && sgTrend.trend.length >= 2 && (
+            <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
+                <h3 className="text-sm font-display font-bold text-text-primary">Strokes Gained Trend</h3>
+                {sgTrend.summary?.momentum != null && (
+                  <span className={`text-xs font-mono font-semibold ${
+                    sgTrend.summary.momentum > 0.1 ? 'text-emerald-400' : sgTrend.summary.momentum < -0.1 ? 'text-red-400' : 'text-text-muted'
+                  }`}>
+                    {sgTrend.summary.momentum > 0 ? '+' : ''}{sgTrend.summary.momentum.toFixed(2)} momentum
+                  </span>
+                )}
+              </div>
+              <div className="p-4">
+                <SgTrendChart performances={sgTrend.trend} height={200} />
+                {sgTrend.summary && (
+                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[var(--card-border)]">
+                    <div className="text-center">
+                      <p className="text-xs text-text-muted">Avg SG Total</p>
+                      <p className={`text-sm font-mono font-bold ${
+                        sgTrend.summary.avgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.avgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                      }`}>
+                        {sgTrend.summary.avgSgTotal != null ? (sgTrend.summary.avgSgTotal > 0 ? '+' : '') + sgTrend.summary.avgSgTotal.toFixed(2) : '\u2014'}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-text-muted">Recent (6)</p>
+                      <p className={`text-sm font-mono font-bold ${
+                        sgTrend.summary.recentAvgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.recentAvgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                      }`}>
+                        {sgTrend.summary.recentAvgSgTotal != null ? (sgTrend.summary.recentAvgSgTotal > 0 ? '+' : '') + sgTrend.summary.recentAvgSgTotal.toFixed(2) : '\u2014'}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-text-muted">Consistency</p>
+                      <p className="text-sm font-mono font-bold text-text-secondary">
+                        {sgTrend.summary.consistency != null ? sgTrend.summary.consistency.toFixed(2) : '\u2014'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <PlayerCourseHistory courseHistory={courseHistory} />
 
           {/* Your Notes (Captures) */}

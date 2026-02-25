@@ -8,7 +8,7 @@
  *   Course Fit Score: 0-100 (Build 3)
  */
 
-const FORMULA_VERSION = 'v1.0'
+const FORMULA_VERSION = 'v1.1'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -52,6 +52,18 @@ function weeksAgo(date) {
   const now = new Date()
   const diff = now.getTime() - new Date(date).getTime()
   return Math.max(0, diff / (7 * 24 * 60 * 60 * 1000))
+}
+
+function cosineSimilarity(a, b) {
+  if (a.length !== b.length || a.length === 0) return 0
+  let dot = 0, magA = 0, magB = 0
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i]
+    magA += a[i] * a[i]
+    magB += b[i] * b[i]
+  }
+  const denom = Math.sqrt(magA) * Math.sqrt(magB)
+  return denom > 0 ? dot / denom : 0
 }
 
 // ─── Metric 1: CPI (Clutch Performance Index) ────────────────────────────────
@@ -152,12 +164,24 @@ async function computeCPI(playerId, prisma) {
 
   const m = mean(allValues)
   const sd = stddev(allValues)
-  const cpi = sd > 0 ? clamp((rawCPI - m * performances.length * 0.5) / (sd * Math.sqrt(performances.length)), -3.0, 3.0) : 0
+  let cpi = sd > 0 ? clamp((rawCPI - m * performances.length * 0.5) / (sd * Math.sqrt(performances.length)), -3.0, 3.0) : 0
+
+  // Consistency adjustment: reward low variance, penalize high variance
+  // Uses last 8 events' sgTotal stddev
+  const recentSgTotals = performances.slice(0, 8).map(p => p.sgTotal).filter(v => v != null)
+  let consistencyAdj = 0
+  if (recentSgTotals.length >= 4) {
+    const sgStddev = stddev(recentSgTotals)
+    // Map: stddev 0.3 → +0.15, stddev 1.0 → 0, stddev 1.7 → -0.15
+    consistencyAdj = clamp(0.15 - (sgStddev - 0.3) * (0.3 / 1.4), -0.15, 0.15)
+    cpi = clamp(cpi + consistencyAdj, -3.0, 3.0)
+  }
 
   return {
     value: Math.round(cpi * 1000) / 1000,
     components: {
       rawCPI: Math.round(rawCPI * 1000) / 1000,
+      consistencyAdj: Math.round(consistencyAdj * 1000) / 1000,
       eventsUsed: performances.length,
       details: componentDetails,
     },
@@ -239,13 +263,29 @@ async function computeFormScore(playerId, prisma) {
   const normalizedWeights = weights.map((w) => w / weightSum)
 
   const weightedSum = adjustedPerfs.reduce((s, p, i) => s + normalizedWeights[i] * p.adjustedPerf, 0)
-  const formScore = clamp(weightedSum * 100, 0, 100)
+  let formScore = clamp(weightedSum * 100, 0, 100)
+
+  // Momentum bonus: compare avg sgTotal of last 3 vs previous 3
+  let momentumBonus = 0
+  if (performances.length >= 6) {
+    const last3sg = performances.slice(0, 3).map(p => p.sgTotal).filter(v => v != null)
+    const prev3sg = performances.slice(3, 6).map(p => p.sgTotal).filter(v => v != null)
+    if (last3sg.length >= 2 && prev3sg.length >= 2) {
+      const last3avg = mean(last3sg)
+      const prev3avg = mean(prev3sg)
+      const delta = last3avg - prev3avg
+      // +0.5 SG improvement = +5 form points, capped at ±8
+      momentumBonus = clamp(delta * 10, -8, 8)
+      formScore = clamp(formScore + momentumBonus, 0, 100)
+    }
+  }
 
   return {
     value: Math.round(formScore * 10) / 10,
     components: {
       eventsUsed: adjustedPerfs.length,
       weightedSum: Math.round(weightedSum * 1000) / 1000,
+      momentumBonus: Math.round(momentumBonus * 10) / 10,
       details: adjustedPerfs,
     },
   }
@@ -373,6 +413,34 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
   if (!player || player.events < 8) return null
   if (player.sgOffTee == null || player.sgApproach == null || player.sgAroundGreen == null || player.sgPutting == null) return null
 
+  // 8A — Recent-form SG blend: 60% recent-6 + 40% career
+  const recentPerfs = await prisma.performance.findMany({
+    where: {
+      playerId,
+      sgTotal: { not: null },
+      sgOffTee: { not: null },
+      sgApproach: { not: null },
+      sgAroundGreen: { not: null },
+      sgPutting: { not: null },
+    },
+    orderBy: { tournament: { startDate: 'desc' } },
+    take: 6,
+    select: { sgOffTee: true, sgApproach: true, sgAroundGreen: true, sgPutting: true, sgTotal: true },
+  })
+
+  const blendSg = (key) => {
+    if (recentPerfs.length >= 3) {
+      const recentAvg = mean(recentPerfs.map(p => p[key]))
+      return recentAvg * 0.6 + player[key] * 0.4
+    }
+    return player[key]
+  }
+  const blendedOTT = blendSg('sgOffTee')
+  const blendedAPP = blendSg('sgApproach')
+  const blendedARG = blendSg('sgAroundGreen')
+  const blendedPUT = blendSg('sgPutting')
+  const blendedTotal = blendSg('sgTotal')
+
   // Compute percentiles across all active players with 8+ events
   const allPlayers = await prisma.player.findMany({
     where: {
@@ -394,10 +462,10 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
   const sortedTotal = allPlayers.map((p) => p.sgTotal).sort((a, b) => a - b)
 
   const playerProfile = [
-    percentileRank(player.sgOffTee, sortedOTT),
-    percentileRank(player.sgApproach, sortedAPP),
-    percentileRank(player.sgAroundGreen, sortedARG),
-    percentileRank(player.sgPutting, sortedPUT),
+    percentileRank(blendedOTT, sortedOTT),
+    percentileRank(blendedAPP, sortedAPP),
+    percentileRank(blendedARG, sortedARG),
+    percentileRank(blendedPUT, sortedPUT),
   ]
 
   const courseProfile = [
@@ -413,19 +481,68 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
   const rawFit = weightSum > 0 ? dotProduct / weightSum : 0
 
   // Quality multiplier (elite generalists get a floor)
-  const overallPercentile = percentileRank(player.sgTotal, sortedTotal)
+  const overallPercentile = percentileRank(blendedTotal, sortedTotal)
   const qualityMult = 0.7 + 0.3 * overallPercentile
 
-  // History bonus
+  // 8B — History bonus: increased for deep course history
   let historyBonus = 0
   const courseHistory = await prisma.playerCourseHistory.findUnique({
     where: { playerId_courseId: { playerId, courseId: course.id } },
   })
   if (courseHistory && courseHistory.rounds >= 4 && courseHistory.sgTotal != null) {
-    historyBonus = clamp(courseHistory.rounds * courseHistory.sgTotal * 2, -5, 10)
+    if (courseHistory.rounds >= 8) {
+      // Deep history: 3x multiplier, cap at 15
+      historyBonus = clamp(courseHistory.rounds * courseHistory.sgTotal * 3, -8, 15)
+    } else {
+      historyBonus = clamp(courseHistory.rounds * courseHistory.sgTotal * 2, -5, 10)
+    }
   }
 
-  const courseFitScore = clamp(rawFit * 100 * qualityMult + historyBonus, 0, 100)
+  // 8C — Similar-course fallback when player has <4 rounds at THIS course
+  let similarCourseBonus = 0
+  if (!courseHistory || courseHistory.rounds < 4) {
+    // Find courses with similar DNA (cosine similarity > 0.85)
+    const similarCourses = await prisma.course.findMany({
+      where: {
+        id: { not: course.id },
+        drivingImportance: { not: null },
+        approachImportance: { not: null },
+        aroundGreenImportance: { not: null },
+        puttingImportance: { not: null },
+      },
+      select: { id: true, drivingImportance: true, approachImportance: true, aroundGreenImportance: true, puttingImportance: true },
+    })
+
+    const thisDna = [course.drivingImportance, course.approachImportance, course.aroundGreenImportance, course.puttingImportance]
+    const matchingCourseIds = []
+    for (const sc of similarCourses) {
+      const scDna = [sc.drivingImportance, sc.approachImportance, sc.aroundGreenImportance, sc.puttingImportance]
+      if (cosineSimilarity(thisDna, scDna) > 0.85) {
+        matchingCourseIds.push(sc.id)
+      }
+    }
+
+    if (matchingCourseIds.length > 0) {
+      const similarHistories = await prisma.playerCourseHistory.findMany({
+        where: {
+          playerId,
+          courseId: { in: matchingCourseIds },
+          rounds: { gte: 4 },
+          sgTotal: { not: null },
+        },
+        select: { sgTotal: true, rounds: true },
+      })
+
+      if (similarHistories.length > 0) {
+        const totalRounds = similarHistories.reduce((s, h) => s + h.rounds, 0)
+        const weightedSg = similarHistories.reduce((s, h) => s + h.sgTotal * h.rounds, 0) / totalRounds
+        // 50% weight, capped at ±6
+        similarCourseBonus = clamp(weightedSg * 3, -6, 6)
+      }
+    }
+  }
+
+  const courseFitScore = clamp(rawFit * 100 * qualityMult + historyBonus + similarCourseBonus, 0, 100)
 
   return {
     value: Math.round(courseFitScore * 10) / 10,
@@ -435,6 +552,8 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
       rawFit: Math.round(rawFit * 1000) / 1000,
       qualityMult: Math.round(qualityMult * 1000) / 1000,
       historyBonus: Math.round(historyBonus * 10) / 10,
+      similarCourseBonus: Math.round(similarCourseBonus * 10) / 10,
+      recentFormBlend: recentPerfs.length >= 3,
       courseName: course.name,
     },
   }

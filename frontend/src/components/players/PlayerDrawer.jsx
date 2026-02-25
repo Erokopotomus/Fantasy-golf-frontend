@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../services/api'
+import SgRadarChart from './SgRadarChart'
+import SgTrendChart from './SgTrendChart'
 
 /** Course DNA importance → label (same thresholds as TournamentHeader) */
 const getDnaLabel = (val) => {
@@ -850,66 +852,9 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                 </div>
               )}
 
-              {/* Strokes Gained Tab */}
+              {/* Strokes Gained Tab — Redesigned */}
               {activeTab === 'sg' && (
-                <div className="p-4 space-y-4">
-                  <p className="text-text-secondary text-xs">
-                    Strokes Gained measures performance relative to the field average. Positive = better than average.
-                  </p>
-
-                  {[
-                    { label: 'SG: Total', value: player.sgTotal, desc: 'Overall performance' },
-                    { label: 'SG: Off-the-Tee', value: player.sgOffTee, desc: 'Tee shot performance' },
-                    { label: 'SG: Approach', value: player.sgApproach, desc: 'Approach shot quality' },
-                    { label: 'SG: Around-the-Green', value: player.sgAroundGreen, desc: 'Short game' },
-                    { label: 'SG: Putting', value: player.sgPutting, desc: 'Putting efficiency' },
-                  ].map((stat, idx) => (
-                    <div key={idx} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div>
-                          <p className="text-text-primary font-medium text-sm">{stat.label}</p>
-                          <p className="text-text-muted text-[11px]">{stat.desc}</p>
-                        </div>
-                        <p className={`text-xl font-bold ${getStatColor(stat.value)}`}>
-                          {formatStat(stat.value, '+')}
-                        </p>
-                      </div>
-                      <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden relative">
-                        {stat.value != null && (
-                          <div
-                            className={`absolute h-full rounded-full transition-all duration-500 ${
-                              stat.value >= 0 ? 'bg-emerald-400' : 'bg-red-400'
-                            }`}
-                            style={{
-                              left: stat.value >= 0 ? '50%' : `${50 - Math.min(Math.abs(stat.value) * 20, 50)}%`,
-                              width: `${Math.min(Math.abs(stat.value) * 20, 50)}%`,
-                            }}
-                          />
-                        )}
-                        {/* Center line */}
-                        <div className="absolute left-1/2 top-0 w-px h-full bg-[var(--card-border)]" />
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Tee-to-Green combined */}
-                  <div className="bg-[var(--surface)] rounded-lg border border-emerald-500/20 p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-text-primary font-medium text-sm">SG: Tee-to-Green</p>
-                        <p className="text-text-muted text-[11px]">Combined ball-striking</p>
-                      </div>
-                      <p className={`text-xl font-bold ${getStatColor(
-                        (player.sgOffTee || 0) + (player.sgApproach || 0) + (player.sgAroundGreen || 0)
-                      )}`}>
-                        {formatStat(
-                          (player.sgOffTee || 0) + (player.sgApproach || 0) + (player.sgAroundGreen || 0),
-                          '+'
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <SgTabContent player={player} formatStat={formatStat} getStatColor={getStatColor} drawerYear={drawerYear} />
               )}
             </>
           )}
@@ -974,6 +919,161 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
         )}
       </div>
     </>
+  )
+}
+
+/** SG Tab Content — Radar + Trend + Enhanced Stats */
+const SgTabContent = ({ player, formatStat, getStatColor, drawerYear }) => {
+  // Compute season SG averages from performances
+  const currentYear = typeof drawerYear === 'number' ? drawerYear : new Date().getFullYear()
+  const seasonPerfs = useMemo(() => {
+    return (player?.performances || []).filter(p => {
+      if (p.sgTotal == null) return false
+      const date = p.tournament?.startDate
+      if (!date) return true
+      return new Date(date).getFullYear() === currentYear
+    })
+  }, [player?.performances, currentYear])
+
+  const seasonAvg = useMemo(() => {
+    if (seasonPerfs.length === 0) return null
+    const avg = (key) => {
+      const vals = seasonPerfs.filter(p => p[key] != null).map(p => p[key])
+      return vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : null
+    }
+    return {
+      sgTotal: avg('sgTotal'),
+      sgOffTee: avg('sgOffTee'),
+      sgApproach: avg('sgApproach'),
+      sgAroundGreen: avg('sgAroundGreen'),
+      sgPutting: avg('sgPutting'),
+    }
+  }, [seasonPerfs])
+
+  // Radar chart data: career vs season
+  const radarPlayers = useMemo(() => {
+    const career = {
+      id: 'career',
+      label: 'Career',
+      sgTotal: player?.sgTotal,
+      sgOffTee: player?.sgOffTee,
+      sgApproach: player?.sgApproach,
+      sgAroundGreen: player?.sgAroundGreen,
+      sgPutting: player?.sgPutting,
+    }
+    if (!seasonAvg || seasonAvg.sgTotal == null) return [career]
+    const season = {
+      id: 'season',
+      label: `${currentYear} Season`,
+      events: seasonPerfs.length,
+      ...seasonAvg,
+    }
+    return [career, season]
+  }, [player, seasonAvg, currentYear, seasonPerfs.length])
+
+  const hasCareerSg = player?.sgTotal != null
+
+  // Enhanced stat cards data
+  const sgCategories = [
+    { label: 'Total', key: 'sgTotal' },
+    { label: 'Off the Tee', key: 'sgOffTee' },
+    { label: 'Approach', key: 'sgApproach' },
+    { label: 'Around Green', key: 'sgAroundGreen' },
+    { label: 'Putting', key: 'sgPutting' },
+  ]
+
+  return (
+    <div className="p-4 space-y-4">
+      {/* SG DNA Radar */}
+      {hasCareerSg && (
+        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2 text-center">SG DNA</h3>
+          <SgRadarChart players={radarPlayers} size={240} />
+        </div>
+      )}
+
+      {/* SG Trend Chart */}
+      {(player?.performances || []).filter(p => p.sgTotal != null).length >= 2 && (
+        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">SG Trend</h3>
+          <SgTrendChart performances={player.performances} height={160} />
+        </div>
+      )}
+
+      {/* Enhanced Stat Cards */}
+      <div className="space-y-2">
+        {sgCategories.map((cat) => {
+          const career = player?.[cat.key]
+          const season = seasonAvg?.[cat.key]
+          const delta = career != null && season != null ? season - career : null
+          const showDelta = delta != null && Math.abs(delta) > 0.1
+
+          return (
+            <div key={cat.key} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-text-primary font-medium text-sm">SG: {cat.label}</p>
+                <p className={`text-lg font-bold font-mono ${getStatColor(career)}`}>
+                  {formatStat(career, '+')}
+                </p>
+              </div>
+              {seasonAvg && season != null && (
+                <div className="flex items-center gap-3 mt-1.5">
+                  <span className="text-[10px] text-text-muted">
+                    Season: <span className={`font-mono font-semibold ${getStatColor(season)}`}>
+                      {formatStat(season, '+')}
+                    </span>
+                  </span>
+                  <span className="text-[10px] text-text-muted">
+                    Career: <span className="font-mono font-semibold text-text-secondary">
+                      {formatStat(career, '+')}
+                    </span>
+                  </span>
+                  {showDelta && (
+                    <span className={`text-[10px] font-mono font-bold ${
+                      delta > 0 ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      {delta > 0 ? '\u25B2' : '\u25BC'}{Math.abs(delta).toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden relative mt-2">
+                {career != null && (
+                  <div
+                    className={`absolute h-full rounded-full transition-all duration-500 ${
+                      career >= 0 ? 'bg-emerald-400' : 'bg-red-400'
+                    }`}
+                    style={{
+                      left: career >= 0 ? '50%' : `${50 - Math.min(Math.abs(career) * 20, 50)}%`,
+                      width: `${Math.min(Math.abs(career) * 20, 50)}%`,
+                    }}
+                  />
+                )}
+                <div className="absolute left-1/2 top-0 w-px h-full bg-[var(--card-border)]" />
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Tee-to-Green combined */}
+        <div className="bg-[var(--surface)] rounded-lg border border-emerald-500/20 p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-text-primary font-medium text-sm">SG: Tee-to-Green</p>
+              <p className="text-text-muted text-[11px]">Combined ball-striking</p>
+            </div>
+            <p className={`text-xl font-bold ${getStatColor(
+              (player?.sgOffTee || 0) + (player?.sgApproach || 0) + (player?.sgAroundGreen || 0)
+            )}`}>
+              {formatStat(
+                (player?.sgOffTee || 0) + (player?.sgApproach || 0) + (player?.sgAroundGreen || 0),
+                '+'
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 

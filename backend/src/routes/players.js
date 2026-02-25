@@ -111,7 +111,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
       where: {
         playerId: { in: playerIds },
         tournamentId: null,
-        formulaVersion: 'v1.0',
+        formulaVersion: { in: ['v1.0', 'v1.1'] },
       },
       orderBy: { computedAt: 'desc' },
       distinct: ['playerId'],
@@ -421,6 +421,80 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
     const availableYears = (availableYearsRaw || []).map(r => r.year).filter(Boolean)
 
     res.json({ player, upcomingTournaments, projection, predictions, liveScore, seasonStats, clutchMetrics, availableYears, selectedYear })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/players/:id/sg-trend - SG trend over time with summary stats
+router.get('/:id/sg-trend', async (req, res, next) => {
+  try {
+    const playerId = req.params.id
+    const years = parseInt(req.query.years) || 3
+
+    const cutoffDate = new Date()
+    cutoffDate.setFullYear(cutoffDate.getFullYear() - years)
+
+    const performances = await prisma.performance.findMany({
+      where: {
+        playerId,
+        sgTotal: { not: null },
+        tournament: { startDate: { gte: cutoffDate } },
+      },
+      include: {
+        tournament: {
+          select: { id: true, name: true, startDate: true },
+        },
+      },
+      orderBy: { tournament: { startDate: 'asc' } },
+    })
+
+    const trend = performances.map(p => ({
+      tournamentId: p.tournament.id,
+      tournamentName: p.tournament.name,
+      date: p.tournament.startDate,
+      sgTotal: p.sgTotal,
+      sgOffTee: p.sgOffTee,
+      sgApproach: p.sgApproach,
+      sgAroundGreen: p.sgAroundGreen,
+      sgPutting: p.sgPutting,
+    }))
+
+    // Compute summary
+    const sgTotals = performances.map(p => p.sgTotal).filter(v => v != null)
+    const avgSgTotal = sgTotals.length > 0
+      ? sgTotals.reduce((s, v) => s + v, 0) / sgTotals.length
+      : null
+
+    const recent6 = sgTotals.slice(-6)
+    const prev6 = sgTotals.slice(-12, -6)
+    const recentAvgSgTotal = recent6.length > 0
+      ? recent6.reduce((s, v) => s + v, 0) / recent6.length
+      : null
+    const prevAvgSgTotal = prev6.length > 0
+      ? prev6.reduce((s, v) => s + v, 0) / prev6.length
+      : null
+    const momentum = recentAvgSgTotal != null && prevAvgSgTotal != null
+      ? Math.round((recentAvgSgTotal - prevAvgSgTotal) * 1000) / 1000
+      : null
+
+    // Consistency = stddev of sgTotal
+    let consistency = null
+    if (sgTotals.length >= 4) {
+      const m = sgTotals.reduce((s, v) => s + v, 0) / sgTotals.length
+      const variance = sgTotals.reduce((s, v) => s + (v - m) ** 2, 0) / (sgTotals.length - 1)
+      consistency = Math.round(Math.sqrt(variance) * 1000) / 1000
+    }
+
+    res.json({
+      trend,
+      summary: {
+        avgSgTotal: avgSgTotal != null ? Math.round(avgSgTotal * 1000) / 1000 : null,
+        recentAvgSgTotal: recentAvgSgTotal != null ? Math.round(recentAvgSgTotal * 1000) / 1000 : null,
+        momentum,
+        consistency,
+      },
+    })
   } catch (error) {
     next(error)
   }
