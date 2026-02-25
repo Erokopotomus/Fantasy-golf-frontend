@@ -928,6 +928,7 @@ async function syncTournamentResults(tournamentDgId, prisma) {
 }
 
 module.exports = {
+  stageRaw,
   syncPlayers,
   syncSchedule,
   syncFieldAndTeeTimesForTournament,

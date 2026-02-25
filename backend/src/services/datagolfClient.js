@@ -104,6 +104,11 @@ function getOutrightOdds(tourEvent, market = 'win', sportsbook) {
 
 // --- Historical data ---
 
+/** Historical event list with SG category availability */
+function getHistoricalEventList(tour = 'pga') {
+  return client.get('/historical-raw-data/event-list', { params: { tour } })
+}
+
 /** Historical round-level data */
 function getHistoricalRounds(tour = 'pga', eventId, year) {
   const params = { tour }
@@ -124,5 +129,6 @@ module.exports = {
   getPlayerDecompositions,
   getFantasyProjections,
   getOutrightOdds,
+  getHistoricalEventList,
   getHistoricalRounds,
 }

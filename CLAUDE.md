@@ -123,6 +123,16 @@ Tournament field analysis and player scouting features for upcoming events:
 - **Players Table** (`PlayerTable.jsx`): Left-aligned Player column, SG column headers with hover tooltips explaining each metric.
 - **Historical Backfill**: ESPN-powered backfill of 2023-2025 (148 tournaments, 17,447 performances). Career stats recalculated for 1,270 players (wins, top-10s, events, cuts made, etc.).
 
+#### Board Editor Compare Mode (Feb 2026) — COMPLETE
+
+Compare 2-5 players side by side from the draft board editor with SG radar chart overlay.
+
+- **Compare Mode**: Toggle via pill button next to tag filters. Checkbox rows, gold tint on selected, banner with count + "Compare Now" button.
+- **SgRadarChart** (`components/players/SgRadarChart.jsx`): Custom SVG radar/spider chart — 5 axes (Off the Tee, Approach, Around Green, Putting, Total), concentric pentagon rings, colored polygon overlays per player. No external library.
+- **PlayerComparison** (`components/players/PlayerComparison.jsx`): Radar chart at top, player header cards with headshots + OWGR + CPI, stat bars for each category, categories-won summary with player-specific colors.
+- **usePlayerComparison hook**: Supports flat fields (`p.sgTotal`) and nested (`p.stats?.sgTotal`), max 5 players, skips zero-data stats.
+- **BoardEntryRow**: `compareMode`/`isCompareSelected`/`onToggleCompare` props — checkbox before drag handle, click override.
+
 ---
 
 ### Phase 7: Multi-Sport Expansion
@@ -417,8 +427,8 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 
 ---
 
-*Last updated: February 23, 2026*
-*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & Scouting complete. ESPN historical backfill (2023-2025) complete. 345+ commits. 91+ database models. 161+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
+*Last updated: February 24, 2026*
+*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & Scouting complete. ESPN historical backfill (2023-2025) complete. Board editor compare mode complete. 346+ commits. 91+ database models. 161+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
 
 **All migrations (1-45) deployed to Railway.**
 

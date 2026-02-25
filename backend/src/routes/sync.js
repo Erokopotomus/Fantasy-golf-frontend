@@ -228,6 +228,25 @@ router.post('/recalculate-stats', async (req, res) => {
   await runSync('recalculate-stats', () => historicalBackfill.recalculatePlayerCareerStats(prisma), res)
 })
 
+// ─── DataGolf Historical SG Backfill ─────────────────────────────────────────
+
+const dgHistorical = require('../services/datagolfHistoricalSync')
+
+// POST /api/sync/datagolf-map-events — Map DataGolf event IDs to our tournaments
+router.post('/datagolf-map-events', async (req, res) => {
+  await runSync('datagolf-map-events', () => dgHistorical.mapDataGolfEvents(prisma), res)
+})
+
+// POST /api/sync/backfill-datagolf-sg — Backfill SG data from DataGolf historical rounds
+// Body: { year?: number, years?: number[], force?: boolean }
+router.post('/backfill-datagolf-sg', async (req, res) => {
+  const { year, years, force } = req.body
+  const options = { forceReprocess: !!force }
+  if (years && Array.isArray(years)) options.years = years
+  else if (year) options.year = year
+  await runSync('backfill-datagolf-sg', () => dgHistorical.backfillAllSG(prisma, options), res)
+})
+
 // GET /api/sync/status
 router.get('/status', async (req, res) => {
   // Find active tournament
