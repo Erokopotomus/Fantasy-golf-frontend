@@ -171,11 +171,13 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Board Summary */}
       <div className="p-4 border-b border-[var(--card-border)]">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/50 mb-3">Board Insights</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/50 mb-1">Board Insights</h3>
+        <p className="text-[10px] text-text-primary/20 mb-3">A snapshot of your board's composition, strengths, and how your rankings differ from the baseline.</p>
 
         {/* Tag Distribution */}
         <div className="mb-4">
-          <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-1.5">Tag Distribution</p>
+          <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-0.5">Tag Distribution</p>
+          <p className="text-[9px] text-text-primary/15 mb-1.5">How many players you've marked as targets, sleepers, or avoids.</p>
           <div className="flex gap-1.5">
             {[
               { key: 'target', label: 'TGT', count: stats.tags.target, color: 'bg-emerald-500', text: 'text-emerald-400' },
@@ -200,7 +202,8 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
         {/* Board SG Profile */}
         {isGolf && stats.sgAvg.sgTotal != null && (
           <div className="mb-4">
-            <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-1.5">Board SG Profile (avg)</p>
+            <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-0.5">Board SG Profile (avg)</p>
+            <p className="text-[9px] text-text-primary/15 mb-1.5">Average Strokes Gained across all players on your board. Shows where your roster is strongest and weakest.</p>
             <div className="space-y-1">
               <StatBar label="OTT" value={stats.sgAvg.sgOffTee} max={maxSg} color="bg-sky-500" />
               <StatBar label="APP" value={stats.sgAvg.sgApproach} max={maxSg} color="bg-violet-500" />
@@ -225,7 +228,8 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
         {/* Tier Breakdown */}
         {stats.tiers.length > 1 && isGolf && (
           <div className="mb-4">
-            <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-1.5">Tier Breakdown</p>
+            <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-0.5">Tier Breakdown</p>
+            <p className="text-[9px] text-text-primary/15 mb-1.5">Player count and average SG per tier. Use "+ Tier" buttons on the left to create tier breaks.</p>
             <div className="space-y-1">
               {stats.tiers.map(t => (
                 <div key={t.tier} className="flex items-center gap-2">
@@ -246,7 +250,8 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
         {/* Top Risers & Fallers */}
         {(stats.risers.length > 0 || stats.fallers.length > 0) && (
           <div>
-            <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-1.5">Biggest Moves vs Baseline</p>
+            <p className="text-[10px] text-text-primary/30 uppercase tracking-wider mb-0.5">Biggest Moves vs Baseline</p>
+            <p className="text-[9px] text-text-primary/15 mb-1.5">Players you've ranked significantly higher or lower than the default order. Green = you're higher on them, red = you've dropped them.</p>
             <div className="space-y-0.5">
               {stats.risers.slice(0, 3).map((r, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[10px]">
@@ -269,7 +274,8 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
 
       {/* Player Compare Tool */}
       <div className="p-4 flex-1">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/50 mb-3">Compare Players</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/50 mb-0.5">Compare Players</h3>
+        <p className="text-[9px] text-text-primary/15 mb-3">Search for 2-3 players from your board to compare their Strokes Gained profiles head-to-head. Gold highlights the leader in each category.</p>
 
         {/* Selected players */}
         <div className="flex flex-wrap gap-1.5 mb-2">

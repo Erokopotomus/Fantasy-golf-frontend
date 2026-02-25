@@ -43,11 +43,11 @@ function enrichPlayer(player, sport, extras = {}) {
   }
 }
 
-// Batch-load ClutchScore weekly snapshots for golf players
+// Batch-load most recent ClutchScore for golf players
 async function batchLoadClutchScores(playerIds) {
   if (playerIds.length === 0) return new Map()
   const scores = await prisma.clutchScore.findMany({
-    where: { playerId: { in: playerIds }, tournamentId: null },
+    where: { playerId: { in: playerIds } },
     orderBy: { computedAt: 'desc' },
     distinct: ['playerId'],
     select: { playerId: true, cpi: true, formScore: true, pressureScore: true },
