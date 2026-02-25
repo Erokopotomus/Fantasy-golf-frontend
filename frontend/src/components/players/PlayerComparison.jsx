@@ -92,8 +92,10 @@ const PlayerComparison = ({
                 </div>
               )}
             </div>
-            <span className="text-xl mb-1 block">{player.countryFlag}</span>
             <p className="text-text-primary font-bold text-sm">{player.name}</p>
+            {player.countryFlag && (
+              <p className="text-[10px] text-text-primary/30 mt-0.5">{player.countryFlag}</p>
+            )}
             <div className="flex items-center justify-center gap-2 mt-1">
               {player.owgrRank && (
                 <span className="text-[10px] font-mono text-text-primary/50">OWGR #{player.owgrRank}</span>
