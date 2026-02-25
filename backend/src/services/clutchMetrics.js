@@ -787,17 +787,29 @@ async function computeAllMetrics(playerId, tournamentId, prisma) {
   }
 
   // Upsert into ClutchScore
-  await prisma.clutchScore.upsert({
-    where: {
-      playerId_tournamentId_formulaVersion: {
-        playerId,
-        tournamentId: tournamentId || null,
-        formulaVersion: FORMULA_VERSION,
+  // Prisma can't use null in compound unique key for upsert, so handle weekly (no tournament) separately
+  if (tournamentId) {
+    await prisma.clutchScore.upsert({
+      where: {
+        playerId_tournamentId_formulaVersion: {
+          playerId,
+          tournamentId,
+          formulaVersion: FORMULA_VERSION,
+        },
       },
-    },
-    update: data,
-    create: data,
-  })
+      update: data,
+      create: data,
+    })
+  } else {
+    const existing = await prisma.clutchScore.findFirst({
+      where: { playerId, tournamentId: null, formulaVersion: FORMULA_VERSION },
+    })
+    if (existing) {
+      await prisma.clutchScore.update({ where: { id: existing.id }, data })
+    } else {
+      await prisma.clutchScore.create({ data })
+    }
+  }
 
   return data
 }
