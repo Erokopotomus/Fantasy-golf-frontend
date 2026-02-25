@@ -36,7 +36,7 @@ const RotoSettings = ({ settings, onChange }) => {
           Select 4-10 categories. Teams are ranked in each category, and those ranks are summed for final standings.
         </p>
 
-        <div className="flex items-center justify-between mb-4 p-3 bg-dark-tertiary rounded-lg">
+        <div className="flex items-center justify-between mb-4 p-3 bg-[var(--bg-alt)] rounded-lg">
           <span className="text-sm text-text-secondary">Selected Categories</span>
           <span className={`font-semibold ${localSettings.categories.length >= 4 && localSettings.categories.length <= 10 ? 'text-gold' : 'text-red-400'}`}>
             {localSettings.categories.length} / 10
@@ -52,11 +52,11 @@ const RotoSettings = ({ settings, onChange }) => {
               className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
                 isSelected(category.id)
                   ? 'border-gold bg-gold/10'
-                  : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                  : 'border-[var(--card-border)] bg-[var(--bg-alt)] hover:border-text-muted'
               }`}
             >
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                isSelected(category.id) ? 'border-gold bg-gold' : 'border-dark-border'
+                isSelected(category.id) ? 'border-gold bg-gold' : 'border-[var(--card-border)]'
               }`}>
                 {isSelected(category.id) && (
                   <svg className="w-4 h-4 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@ const RotoSettings = ({ settings, onChange }) => {
         </div>
       </Card>
 
-      <div className="bg-dark-tertiary rounded-lg p-4 border border-dark-border">
+      <div className="bg-[var(--bg-alt)] rounded-lg p-4 border border-[var(--card-border)]">
         <h4 className="text-sm font-medium text-text-primary mb-2">How Roto Scoring Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
           <li>- Teams are ranked 1st to last in each category</li>
@@ -89,7 +89,7 @@ const RotoSettings = ({ settings, onChange }) => {
           <li>- Highest total roto points wins the league</li>
         </ul>
 
-        <div className="mt-3 pt-3 border-t border-dark-border">
+        <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
           <p className="text-xs text-text-muted">
             <span className="text-gold font-medium">Example:</span> In a 6-team league, 1st place in a category gets 6 points, 2nd gets 5 points, etc.
           </p>

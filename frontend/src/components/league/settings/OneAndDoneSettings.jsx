@@ -50,7 +50,7 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
                 <span className={`font-semibold ${tierColors[index]}`}>
                   Tier {tier.tier}
                 </span>
-                <span className={`text-sm px-2 py-1 rounded ${tierColors[index]} bg-dark-primary`}>
+                <span className={`text-sm px-2 py-1 rounded ${tierColors[index]} bg-[var(--surface)]`}>
                   {tier.multiplier}x Points
                 </span>
               </div>
@@ -61,7 +61,7 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
                     {index === 0 ? 'Rank Range' : 'Max World Rank'}
                   </label>
                   {index === localSettings.tiers.length - 1 ? (
-                    <div className="p-2 bg-dark-primary rounded text-sm text-text-secondary">
+                    <div className="p-2 bg-[var(--surface)] rounded text-sm text-text-secondary">
                       {localSettings.tiers[index - 1].maxRank + 1}+
                     </div>
                   ) : (
@@ -70,7 +70,7 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
                       min={index === 0 ? 1 : localSettings.tiers[index - 1].maxRank + 1}
                       value={tier.maxRank || ''}
                       onChange={(e) => handleTierChange(index, 'maxRank', parseInt(e.target.value) || null)}
-                      className="w-full p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="w-full p-2 bg-[var(--surface)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:border-gold focus:outline-none"
                     />
                   )}
                 </div>
@@ -79,7 +79,7 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
                   <select
                     value={tier.multiplier}
                     onChange={(e) => handleTierChange(index, 'multiplier', parseFloat(e.target.value))}
-                    className="w-full p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-gold focus:outline-none"
+                    className="w-full p-2 bg-[var(--surface)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:border-gold focus:outline-none"
                   >
                     <option value={1.0}>1.0x</option>
                     <option value={1.25}>1.25x</option>
@@ -111,7 +111,7 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
           <select
             value={localSettings.majorMultiplier}
             onChange={(e) => handleMajorMultiplierChange(e.target.value)}
-            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+            className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
           >
             <option value={1.0}>1.0x (No Bonus)</option>
             <option value={1.25}>1.25x</option>
@@ -124,7 +124,7 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
         </div>
       </Card>
 
-      <div className="bg-dark-tertiary rounded-lg p-4 border border-dark-border">
+      <div className="bg-[var(--bg-alt)] rounded-lg p-4 border border-[var(--card-border)]">
         <h4 className="text-sm font-medium text-text-primary mb-2">How One & Done Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
           <li>- Pick any golfer for each tournament - no draft required</li>
@@ -133,9 +133,9 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
           <li>- Tier multipliers reward picking lower-ranked players</li>
         </ul>
 
-        <div className="mt-4 pt-3 border-t border-dark-border">
+        <div className="mt-4 pt-3 border-t border-[var(--card-border)]">
           <h5 className="text-xs font-medium text-text-primary mb-2">Example Points Calculation</h5>
-          <div className="bg-dark-primary rounded p-3 text-xs">
+          <div className="bg-[var(--surface)] rounded p-3 text-xs">
             <div className="flex justify-between mb-1">
               <span className="text-text-muted">Scottie Scheffler (Tier 1) wins tournament</span>
               <span className="text-text-primary">100 pts x 1.0x = <span className="text-gold">100 pts</span></span>

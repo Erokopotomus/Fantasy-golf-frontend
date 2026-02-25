@@ -97,7 +97,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 className={`p-4 rounded-lg border-2 text-left transition-all ${
                   active
                     ? `${c.border} ${c.bg} ring-1 ${c.ring}`
-                    : 'border-dark-border bg-dark-tertiary hover:border-dark-border/80'
+                    : 'border-[var(--card-border)] bg-[var(--bg-alt)] hover:border-[var(--card-border)]/80'
                 }`}
               >
                 <p className={`font-semibold ${active ? c.text : 'text-text-primary'}`}>{p.name}</p>
@@ -123,19 +123,19 @@ const ScoringSettings = ({ settings, onChange }) => {
           Example: 5th place finish, 22 birdies, 2 eagles, 38 pars, 8 bogeys, 1 double, 1 bogey-free round, 1 birdie streak
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
+          <div className="bg-[var(--surface)] rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Position</p>
             <p className="text-xl font-bold font-display text-gold">{preview.position}</p>
           </div>
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
+          <div className="bg-[var(--surface)] rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Holes</p>
             <p className="text-xl font-bold font-display text-blue-400">{preview.holes}</p>
           </div>
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
+          <div className="bg-[var(--surface)] rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Bonuses</p>
             <p className="text-xl font-bold font-display text-purple-400">{preview.bonuses}</p>
           </div>
-          <div className="bg-dark-primary rounded-lg p-3 text-center">
+          <div className="bg-[var(--surface)] rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">SG</p>
             <p className="text-xl font-bold font-display text-yellow-400">{preview.strokesGained}</p>
           </div>
@@ -151,7 +151,7 @@ const ScoringSettings = ({ settings, onChange }) => {
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-semibold font-display text-text-primary">Position Points</h3>
           {!isCustom && (
-            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+            <span className="text-[10px] font-mono text-text-muted bg-[var(--bg-alt)] px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
             </span>
           )}
@@ -167,7 +167,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.positionPoints[key] ?? 0}
                 onChange={(e) => updateConfig(`positionPoints.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -181,7 +181,7 @@ const ScoringSettings = ({ settings, onChange }) => {
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-semibold font-display text-text-primary">Hole Scoring</h3>
           {!isCustom && (
-            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+            <span className="text-[10px] font-mono text-text-muted bg-[var(--bg-alt)] px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
             </span>
           )}
@@ -197,7 +197,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.holeScoring[key] ?? 0}
                 onChange={(e) => updateConfig(`holeScoring.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -211,7 +211,7 @@ const ScoringSettings = ({ settings, onChange }) => {
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-semibold font-display text-text-primary">Bonuses</h3>
           {!isCustom && (
-            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+            <span className="text-[10px] font-mono text-text-muted bg-[var(--bg-alt)] px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
             </span>
           )}
@@ -227,7 +227,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.bonuses[key] ?? 0}
                 onChange={(e) => updateConfig(`bonuses.${key}`, parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-full p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />
@@ -241,7 +241,7 @@ const ScoringSettings = ({ settings, onChange }) => {
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-semibold font-display text-text-primary">Strokes Gained</h3>
           {!isCustom && (
-            <span className="text-[10px] font-mono text-text-muted bg-dark-tertiary px-2 py-0.5 rounded">
+            <span className="text-[10px] font-mono text-text-muted bg-[var(--bg-alt)] px-2 py-0.5 rounded">
               {config.preset?.toUpperCase()} PRESET
             </span>
           )}
@@ -254,7 +254,7 @@ const ScoringSettings = ({ settings, onChange }) => {
               checked={config.strokesGained?.enabled || false}
               onChange={(e) => updateConfig('strokesGained.enabled', e.target.checked)}
               disabled={!isCustom}
-              className="rounded border-dark-border text-gold focus:ring-gold"
+              className="rounded border-[var(--card-border)] text-gold focus:ring-gold"
             />
             <span className="text-sm text-text-primary">Enable SG scoring</span>
           </label>
@@ -268,7 +268,7 @@ const ScoringSettings = ({ settings, onChange }) => {
                 value={config.strokesGained.multiplier || 5}
                 onChange={(e) => updateConfig('strokesGained.multiplier', parseFloat(e.target.value) || 0)}
                 disabled={!isCustom}
-                className={`w-20 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
+                className={`w-20 p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                   !isCustom ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               />

@@ -58,7 +58,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
             <select
               value={localSettings.regularSeasonWeeks}
               onChange={(e) => handleChange('regularSeasonWeeks', parseInt(e.target.value))}
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+              className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
             >
               {[8, 10, 12, 14, 16, 18].map(weeks => (
                 <option key={weeks} value={weeks}>{weeks} Weeks</option>
@@ -89,11 +89,11 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
               onChange?.({ ...updated, divisionsEnabled: undefined })
             }}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              localSettings.divisionsEnabled ? 'bg-gold' : 'bg-dark-border'
+              localSettings.divisionsEnabled ? 'bg-gold' : 'bg-[var(--card-border)]'
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-dark-tertiary transition-transform ${
+              className={`inline-block h-4 w-4 transform rounded-full bg-[var(--bg-alt)] transition-transform ${
                 localSettings.divisionsEnabled ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -126,7 +126,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                         setLocalSettings(updated)
                         onChange?.({ ...updated, divisionsEnabled: undefined })
                       }}
-                      className="flex-1 p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="flex-1 p-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                     />
                     {localSettings.divisions.length > 2 && (
                       <button
@@ -162,7 +162,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                     setLocalSettings(updated)
                     onChange?.({ ...updated, divisionsEnabled: undefined })
                   }}
-                  className="mt-2 px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-text-primary hover:border-gold transition-colors"
+                  className="mt-2 px-3 py-1 text-xs bg-[var(--surface)] border border-[var(--card-border)] rounded-full text-text-muted hover:text-text-primary hover:border-gold transition-colors"
                 >
                   + Add Division
                 </button>
@@ -177,7 +177,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 </label>
                 <div className="space-y-2">
                   {teams.map(team => (
-                    <div key={team.id} className="flex items-center gap-3 p-2 bg-dark-tertiary rounded-lg">
+                    <div key={team.id} className="flex items-center gap-3 p-2 bg-[var(--bg-alt)] rounded-lg">
                       <span className="text-text-primary text-sm flex-1 truncate">{team.name || team.user?.name || 'Unknown'}</span>
                       <select
                         value={localSettings.divisionAssignments[team.id] || ''}
@@ -192,7 +192,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                           setLocalSettings(updated)
                           onChange?.({ ...updated, divisionsEnabled: undefined })
                         }}
-                        className="p-1 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-gold focus:outline-none"
+                        className="p-1 bg-[var(--surface)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:border-gold focus:outline-none"
                       >
                         <option value="">Unassigned</option>
                         {localSettings.divisions.map(div => (
@@ -224,7 +224,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   className={`p-3 rounded-lg border-2 font-semibold transition-all ${
                     localSettings.playoffTeams === num
                       ? 'border-gold bg-gold/10 text-text-primary'
-                      : 'border-dark-border bg-dark-tertiary text-text-secondary hover:border-text-muted'
+                      : 'border-[var(--card-border)] bg-[var(--bg-alt)] text-text-secondary hover:border-text-muted'
                   }`}
                 >
                   {num}
@@ -248,7 +248,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
               Playoff Format
             </label>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffFormat"
@@ -262,7 +262,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   <p className="text-text-muted text-xs">One loss and you're out</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffFormat"
@@ -284,7 +284,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
               Playoff Weeks Per Round
             </label>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffWeeksPerRound"
@@ -298,7 +298,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   <p className="text-text-muted text-xs">Each playoff round is a single tournament</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffWeeksPerRound"
@@ -312,7 +312,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   <p className="text-text-muted text-xs">Only the finals span two tournaments</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffWeeksPerRound"
@@ -334,7 +334,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
               Playoff Seeding
             </label>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffSeeding"
@@ -348,7 +348,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   <p className="text-text-muted text-xs">Seeding locked after regular season (1v8, 2v7, etc.)</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffSeeding"
@@ -362,7 +362,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   <p className="text-text-muted text-xs">Remaining teams re-seeded after each round</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="playoffSeeding"
@@ -384,7 +384,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
               Consolation Bracket
             </label>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="consolationBracket"
@@ -398,7 +398,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   <p className="text-text-muted text-xs">Eliminated teams are done</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="consolationBracket"
@@ -412,7 +412,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                   <p className="text-text-muted text-xs">Non-playoff teams play for pride</p>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 bg-dark-tertiary rounded-lg cursor-pointer">
+              <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
                 <input
                   type="radio"
                   name="consolationBracket"
@@ -440,7 +440,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
           {localSettings.tiebreakers.map((tb, index) => {
             const option = tiebreakerOptions.find(o => o.id === tb)
             return (
-              <div key={tb} className="flex items-center gap-2 p-3 bg-dark-tertiary rounded-lg">
+              <div key={tb} className="flex items-center gap-2 p-3 bg-[var(--bg-alt)] rounded-lg">
                 <span className="text-gold font-semibold w-6">{index + 1}.</span>
                 <span className="text-text-primary flex-1">{option?.label}</span>
                 <button
@@ -484,7 +484,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 key={opt.id}
                 type="button"
                 onClick={() => toggleTiebreaker(opt.id)}
-                className="px-3 py-1 text-xs bg-dark-primary border border-dark-border rounded-full text-text-muted hover:text-text-primary hover:border-gold transition-colors"
+                className="px-3 py-1 text-xs bg-[var(--surface)] border border-[var(--card-border)] rounded-full text-text-muted hover:text-text-primary hover:border-gold transition-colors"
               >
                 + {opt.label}
               </button>

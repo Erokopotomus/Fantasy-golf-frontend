@@ -168,7 +168,7 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
                 endWeekNumber: endWeekId ? weeks.find(w => w.id === endWeekId)?.weekNumber : null,
               })
             }}
-            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none text-sm"
+            className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none text-sm"
           >
             <option value="">First tournament of season</option>
             {weeks.map((w) => (
@@ -196,13 +196,13 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
                 endWeekNumber: week?.weekNumber || null,
               })
             }}
-            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none text-sm"
+            className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none text-sm"
           >
             <option value="">Last tournament of season</option>
             {endOptions.map((opt, i) => {
               if (opt.type === 'divider') {
                 return (
-                  <option key={`div-${i}`} disabled className="text-text-muted bg-dark-primary">
+                  <option key={`div-${i}`} disabled className="text-text-muted bg-[var(--surface)]">
                     {opt.label}
                   </option>
                 )

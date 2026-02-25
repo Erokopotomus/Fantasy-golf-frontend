@@ -50,7 +50,7 @@ const FullLeagueSettings = ({ settings, onChange, seasonWeeks }) => {
           <select
             value={localSettings.segments}
             onChange={(e) => handleChange('segments', parseInt(e.target.value))}
-            className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+            className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
           >
             <option value={1}>1 Segment (Full Season)</option>
             <option value={2}>2 Segments</option>
@@ -72,7 +72,7 @@ const FullLeagueSettings = ({ settings, onChange, seasonWeeks }) => {
               max="100"
               value={localSettings.segmentBonus}
               onChange={(e) => handleChange('segmentBonus', parseInt(e.target.value) || 0)}
-              className="w-32 p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+              className="w-32 p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
             />
             <p className="text-xs text-text-muted mt-2">
               Bonus points awarded to the winner of each segment (0-100)
@@ -81,7 +81,7 @@ const FullLeagueSettings = ({ settings, onChange, seasonWeeks }) => {
         )}
       </Card>
 
-      <div className="bg-dark-tertiary rounded-lg p-4 border border-dark-border">
+      <div className="bg-[var(--bg-alt)] rounded-lg p-4 border border-[var(--card-border)]">
         <h4 className="text-sm font-medium text-text-primary mb-2">How Full League Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
           <li>- Each player on your roster earns points based on their tournament finish</li>
