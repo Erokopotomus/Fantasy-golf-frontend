@@ -283,8 +283,8 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       // Get distinct years this player has performances in
       prisma.$queryRaw`
         SELECT DISTINCT EXTRACT(YEAR FROM t."startDate")::int AS year
-        FROM "Performance" p
-        JOIN "Tournament" t ON p."tournamentId" = t.id
+        FROM "performances" p
+        JOIN "tournaments" t ON p."tournamentId" = t.id
         WHERE p."playerId" = ${req.params.id}
         ORDER BY year DESC
       `
