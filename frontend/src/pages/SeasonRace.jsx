@@ -213,7 +213,7 @@ const SeasonRace = () => {
       }
       // Default direction depends on field: ranks asc, stats desc
       const defaultDesc = ['sgTotal', 'sgOffTee', 'sgApproach', 'sgAroundGreen', 'sgPutting', 'sgTeeToGreen',
-        'wins', 'top5s', 'top10s', 'top25s', 'events', 'cutsMade', 'datagolfSkill']
+        'wins', 'top5s', 'top10s', 'top25s', 'events', 'cutsMade']
       setSortDir(defaultDesc.includes(field) ? 'desc' : 'asc')
       return field
     })
@@ -250,10 +250,6 @@ const SeasonRace = () => {
           return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
         case 'owgrRank':
           aVal = a.owgrRank || 9999; bVal = b.owgrRank || 9999; break
-        case 'datagolfRank':
-          aVal = a.datagolfRank || 9999; bVal = b.datagolfRank || 9999; break
-        case 'datagolfSkill':
-          aVal = a.datagolfSkill || -99; bVal = b.datagolfSkill || -99; break
         case 'sgTotal': aVal = a.sgTotal ?? -99; bVal = b.sgTotal ?? -99; break
         case 'sgOffTee': aVal = a.sgOffTee ?? -99; bVal = b.sgOffTee ?? -99; break
         case 'sgApproach': aVal = a.sgApproach ?? -99; bVal = b.sgApproach ?? -99; break
@@ -431,14 +427,6 @@ const SeasonRace = () => {
                               tip="Official World Golf Ranking — updated weekly based on tournament results over a rolling 2-year window.">
                               OWGR
                             </SortHeader>
-                            <SortHeader field="datagolfRank" sortBy={sortKey} sortDir={sortDir} onSort={handleSort}
-                              tip="DataGolf's model-based ranking — considers course fit and field strength for a more predictive ranking.">
-                              DG Rank
-                            </SortHeader>
-                            <SortHeader field="datagolfSkill" sortBy={sortKey} sortDir={sortDir} onSort={handleSort}
-                              tip="DataGolf skill estimate — higher is better. Represents expected strokes vs. an average PGA Tour player.">
-                              Skill
-                            </SortHeader>
                             <SortHeader field="sgTotal" sortBy={sortKey} sortDir={sortDir} onSort={handleSort}
                               tip="Total Strokes Gained per round vs. the PGA Tour field average.">
                               SG Total
@@ -549,12 +537,6 @@ const SeasonRace = () => {
                               <>
                                 <td className="p-2.5 text-center text-sm font-mono text-text-primary">
                                   {p.owgrRank || '—'}
-                                </td>
-                                <td className="p-2.5 text-center text-sm font-mono text-text-primary">
-                                  {p.datagolfRank || '—'}
-                                </td>
-                                <td className="p-2.5 text-center text-sm font-mono text-text-primary">
-                                  {p.datagolfSkill != null ? p.datagolfSkill.toFixed(1) : '—'}
                                 </td>
                                 <td className={`p-2.5 text-center text-sm font-mono ${sgColor(p.sgTotal)}`}>
                                   {sgFmt(p.sgTotal)}
