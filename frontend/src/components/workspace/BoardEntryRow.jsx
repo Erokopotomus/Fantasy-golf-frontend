@@ -100,7 +100,7 @@ function SgCell({ value, label }) {
   )
 }
 
-export default function BoardEntryRow({ entry, index, sport, positionRank, leagueStatus, onRemove, onClickNotes, onUpdateTags, onClickPlayer, onUpdateAuctionValue, isWatched, onToggleWatch, isNewlyAdded }) {
+export default function BoardEntryRow({ entry, index, sport, positionRank, leagueStatus, onRemove, onClickNotes, onUpdateTags, onClickPlayer, onUpdateAuctionValue, isWatched, onToggleWatch, isNewlyAdded, compareMode, isCompareSelected, onToggleCompare }) {
   const {
     attributes,
     listeners,
@@ -137,9 +137,25 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
       ref={setNodeRef}
       style={style}
       data-player-id={entry.playerId}
+      onClick={compareMode ? () => onToggleCompare?.(entry) : undefined}
       className={`flex items-center gap-2 px-3 py-2 border-b border-[var(--card-border)] transition-colors group
-        ${isDragging ? 'bg-[var(--surface-alt)] shadow-lg' : isNewlyAdded ? 'bg-gold/10 animate-pulse' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
+        ${isDragging ? 'bg-[var(--surface-alt)] shadow-lg' : isCompareSelected ? 'bg-gold/5' : isNewlyAdded ? 'bg-gold/10 animate-pulse' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}
+        ${compareMode ? 'cursor-pointer' : ''}`}
     >
+      {/* Compare checkbox */}
+      {compareMode && (
+        <div className="shrink-0 flex items-center justify-center w-5">
+          <div className={`w-4 h-4 rounded border-2 transition-colors flex items-center justify-center
+            ${isCompareSelected ? 'bg-gold border-gold' : 'border-text-primary/20 hover:border-gold/50'}`}>
+            {isCompareSelected && (
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Drag handle */}
       <button
         {...attributes}
@@ -192,7 +208,10 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
       {/* Name (clickable) + League status */}
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
         <button
-          onClick={() => onClickPlayer?.(entry.playerId)}
+          onClick={(e) => {
+            if (compareMode) { e.stopPropagation(); onToggleCompare?.(entry); return }
+            onClickPlayer?.(entry.playerId)
+          }}
           className="text-sm text-text-primary font-medium truncate hover:underline cursor-pointer text-left"
         >
           {player.name || 'Unknown'}

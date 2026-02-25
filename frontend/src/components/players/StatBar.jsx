@@ -13,7 +13,7 @@ const StatBar = ({ value, maxValue, label, isBest = false, showValue = true }) =
           )}
         </div>
       )}
-      <div className="h-2 bg-dark-primary rounded-full overflow-hidden">
+      <div className="h-2 bg-[var(--bg-alt)] rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-500 ${
             isBest ? 'bg-gold' : 'bg-orange'

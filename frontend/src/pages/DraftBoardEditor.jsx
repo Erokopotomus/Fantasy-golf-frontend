@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import useDraftBoardEditor from '../hooks/useDraftBoardEditor'
 import useWatchList from '../hooks/useWatchList'
 import useBoardReadiness from '../hooks/useBoardReadiness'
+import usePlayerComparison from '../hooks/usePlayerComparison'
 import api from '../services/api'
 import BoardHeader from '../components/workspace/BoardHeader'
 import BoardEntryRow from '../components/workspace/BoardEntryRow'
@@ -17,6 +18,7 @@ import BoardWelcomeCard from '../components/workspace/BoardWelcomeCard'
 import BoardProgressTracker from '../components/workspace/BoardProgressTracker'
 import BoardInsightsPanel from '../components/workspace/BoardInsightsPanel'
 import PlayerDrawer from '../components/players/PlayerDrawer'
+import PlayerComparison from '../components/players/PlayerComparison'
 
 // ── Reason Chip Definitions ──────────────────────────────────────────────────
 
@@ -219,6 +221,15 @@ export default function DraftBoardEditor() {
 
   const { isWatched, toggleWatch } = useWatchList()
   const { readiness } = useBoardReadiness(boardId)
+  const {
+    selectedPlayers: comparePlayers,
+    togglePlayer: toggleComparePlayer,
+    clearAll: clearCompare,
+    isSelected: isCompareSelected,
+    removePlayer: removeComparePlayer,
+    comparisonData,
+    canCompare,
+  } = usePlayerComparison(5)
 
   const [noteEntry, setNoteEntry] = useState(null)
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
@@ -227,6 +238,8 @@ export default function DraftBoardEditor() {
   const [posFilter, setPosFilter] = useState('All')
   const [showDivergence, setShowDivergence] = useState(true)
   const [showTimeline, setShowTimeline] = useState(false)
+  const [compareMode, setCompareMode] = useState(false)
+  const [showCompareModal, setShowCompareModal] = useState(false)
   const [sortKey, setSortKey] = useState('rank') // rank | auctionValue | cpi | owgrRank | sgTotal | sgOffTee | sgApproach | sgPutting
   const [sortDir, setSortDir] = useState('asc') // asc | desc
   const [coachingCard, setCoachingCard] = useState(null)
@@ -448,6 +461,28 @@ export default function DraftBoardEditor() {
     } catch (err) {}
   }, [addPlayer, moveEntry, entries.length])
 
+  const handleToggleCompare = useCallback((entry) => {
+    const player = entry.player || {}
+    toggleComparePlayer({
+      id: entry.playerId,
+      name: player.name,
+      headshotUrl: player.headshotUrl,
+      countryFlag: player.country,
+      owgrRank: player.owgrRank,
+      cpi: player.cpi,
+      sgTotal: player.sgTotal,
+      sgOffTee: player.sgOffTee,
+      sgApproach: player.sgApproach,
+      sgAroundGreen: player.sgAroundGreen,
+      sgPutting: player.sgPutting,
+    })
+  }, [toggleComparePlayer])
+
+  const handleExitCompareMode = useCallback(() => {
+    setCompareMode(false)
+    clearCompare()
+  }, [clearCompare])
+
   const handleDelete = useCallback(async () => {
     await api.deleteDraftBoard(boardId)
   }, [boardId])
@@ -596,13 +631,65 @@ export default function DraftBoardEditor() {
           className={`md:block md:flex-none overflow-y-auto ${mobileTab !== 'rankings' ? 'hidden' : 'flex-1'}`}
           style={{ width: leftWidth + '%' }}
         >
-          {/* Filter bars */}
+          {/* Filter bars + Compare toggle */}
           {entries.length > 0 && (
             <div className="border-b border-[var(--card-border)]">
-              <TagFilterBar entries={entries} activeFilter={tagFilter} onFilterChange={setTagFilter} />
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <TagFilterBar entries={entries} activeFilter={tagFilter} onFilterChange={setTagFilter} />
+                </div>
+                <button
+                  onClick={() => compareMode ? handleExitCompareMode() : setCompareMode(true)}
+                  className={`mr-3 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border transition-all whitespace-nowrap shrink-0
+                    ${compareMode
+                      ? 'bg-gold/15 text-gold border-gold/40'
+                      : 'text-text-primary/40 border-[var(--stone)]/40 hover:text-text-primary/60 hover:border-[var(--stone)]/60'
+                    }`}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Compare{compareMode && comparePlayers.length > 0 ? ` (${comparePlayers.length})` : ''}
+                  </span>
+                </button>
+              </div>
               {isNfl && (
                 <PositionTabBar activePos={posFilter} onPosChange={setPosFilter} entries={entries} />
               )}
+            </div>
+          )}
+
+          {/* Compare mode banner */}
+          {compareMode && (
+            <div className="flex items-center justify-between px-3 py-2 bg-gold/5 border-b border-gold/20">
+              <p className="text-[11px] text-text-primary/50">
+                Select <span className="font-semibold text-gold">2-5</span> players to compare
+                {comparePlayers.length > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-gold/15 text-gold text-[10px] font-bold">
+                    {comparePlayers.length} selected
+                  </span>
+                )}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowCompareModal(true)}
+                  disabled={!canCompare}
+                  className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-all
+                    ${canCompare
+                      ? 'bg-gold text-white hover:bg-gold/90'
+                      : 'bg-[var(--bg-alt)] text-text-primary/20 cursor-not-allowed'
+                    }`}
+                >
+                  Compare Now
+                </button>
+                <button
+                  onClick={handleExitCompareMode}
+                  className="text-text-primary/30 hover:text-text-primary/60 text-xs"
+                >
+                  {'\u2715'}
+                </button>
+              </div>
             </div>
           )}
 
@@ -700,6 +787,9 @@ export default function DraftBoardEditor() {
                         isWatched={isWatched(entry.playerId)}
                         onToggleWatch={toggleWatch}
                         isNewlyAdded={newlyAddedId === entry.playerId}
+                        compareMode={compareMode}
+                        isCompareSelected={isCompareSelected(entry.playerId)}
+                        onToggleCompare={handleToggleCompare}
                       />
                       {movedEntry && movedEntry.playerId === entry.playerId && movedEntry.delta !== 0 && (
                         <ReasonChipRow
@@ -806,6 +896,34 @@ export default function DraftBoardEditor() {
             </div>
             <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
               <BoardTimeline boardId={boardId} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compare modal */}
+      {showCompareModal && canCompare && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowCompareModal(false)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-[800px] max-h-[85vh] bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-[var(--card-border)] flex items-center justify-between">
+              <h2 className="text-sm font-bold text-text-primary font-display">Compare Players</h2>
+              <button onClick={() => setShowCompareModal(false)} className="text-text-primary/30 hover:text-text-primary/60">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[calc(85vh-60px)]">
+              <PlayerComparison
+                players={comparePlayers}
+                comparisonData={comparisonData}
+                onRemovePlayer={removeComparePlayer}
+                onClear={() => { clearCompare(); setShowCompareModal(false) }}
+              />
             </div>
           </div>
         </div>

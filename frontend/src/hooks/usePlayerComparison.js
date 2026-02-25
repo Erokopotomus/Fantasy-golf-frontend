@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 
-export const usePlayerComparison = (maxPlayers = 3) => {
+export const usePlayerComparison = (maxPlayers = 5) => {
   const [selectedPlayers, setSelectedPlayers] = useState([])
 
   const addPlayer = useCallback((player) => {
@@ -32,30 +32,36 @@ export const usePlayerComparison = (maxPlayers = 3) => {
   }, [isSelected, removePlayer, addPlayer])
 
   // Calculate comparison stats with percentiles
+  // Supports both flat fields (p.sgTotal) and nested (p.stats?.sgTotal)
   const comparisonData = useMemo(() => {
     if (selectedPlayers.length < 2) return null
 
-    const stats = ['sgTotal', 'sgOffTee', 'sgApproach', 'sgAroundGreen', 'sgPutting', 'drivingDistance', 'drivingAccuracy', 'gir', 'scoringAvg']
+    const stats = ['sgTotal', 'sgOffTee', 'sgApproach', 'sgAroundGreen', 'sgPutting', 'owgrRank', 'cpi', 'drivingDistance', 'drivingAccuracy', 'gir', 'scoringAvg']
+    const lowerIsBetter = new Set(['scoringAvg', 'owgrRank'])
+
+    const getStat = (p, stat) => p[stat] ?? p.stats?.[stat] ?? 0
 
     const comparison = {}
 
     stats.forEach(stat => {
-      const values = selectedPlayers.map(p => p.stats?.[stat] || 0)
+      const values = selectedPlayers.map(p => getStat(p, stat))
+      // Skip stats where all values are 0 (no data)
+      if (values.every(v => v === 0)) return
+
       const max = Math.max(...values)
       const min = Math.min(...values)
       const range = max - min || 1
 
       comparison[stat] = selectedPlayers.map(p => {
-        const value = p.stats?.[stat] || 0
-        // For scoring avg, lower is better
-        const percentile = stat === 'scoringAvg'
+        const value = getStat(p, stat)
+        const percentile = lowerIsBetter.has(stat)
           ? ((max - value) / range) * 100
           : ((value - min) / range) * 100
         return {
           playerId: p.id,
           value,
           percentile: range === 0 ? 50 : percentile,
-          isBest: stat === 'scoringAvg' ? value === min : value === max,
+          isBest: lowerIsBetter.has(stat) ? value === min : value === max,
         }
       })
     })
