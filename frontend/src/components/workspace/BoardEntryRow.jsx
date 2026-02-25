@@ -136,6 +136,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
     <div
       ref={setNodeRef}
       style={style}
+      data-player-id={entry.playerId}
       className={`flex items-center gap-2 px-3 py-2 border-b border-[var(--card-border)] transition-colors group
         ${isDragging ? 'bg-[var(--surface-alt)] shadow-lg' : isNewlyAdded ? 'bg-gold/10 animate-pulse' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
     >

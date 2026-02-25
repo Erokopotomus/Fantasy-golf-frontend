@@ -417,21 +417,36 @@ export default function DraftBoardEditor() {
 
   const [newlyAddedId, setNewlyAddedId] = useState(null)
 
-  const handleAddPlayer = useCallback(async (playerId) => {
+  const handleAddPlayer = useCallback(async (playerId, targetPosition) => {
     try {
       await addPlayer(playerId)
+      // Move from end to target position if specified
+      const currentLength = entries.length + 1 // after add, new entry is at end
+      const targetIdx = targetPosition ? Math.min(targetPosition, currentLength) - 1 : currentLength - 1
+      if (targetIdx < currentLength - 1) {
+        // Need to move from last position to target
+        moveEntry(currentLength - 1, targetIdx)
+      }
       setNewlyAddedId(playerId)
-      // Switch to rankings tab on mobile so user sees the new entry
       setMobileTab('rankings')
-      // Clear highlight after animation
       setTimeout(() => setNewlyAddedId(null), 2000)
-      // Scroll to bottom of rankings to show new entry
+      // Scroll to the inserted position
       requestAnimationFrame(() => {
         const container = document.querySelector('[data-rankings-list]')
-        if (container) container.scrollTop = container.scrollHeight
+        if (container) {
+          const rows = container.querySelectorAll('[data-player-id]')
+          const targetRow = Array.from(rows).find(r => r.dataset.playerId === playerId)
+          if (targetRow) {
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          } else {
+            // Fallback: scroll to approximate position
+            const rowHeight = 48
+            container.scrollTop = targetIdx * rowHeight - container.clientHeight / 2
+          }
+        }
       })
     } catch (err) {}
-  }, [addPlayer])
+  }, [addPlayer, moveEntry, entries.length])
 
   const handleDelete = useCallback(async () => {
     await api.deleteDraftBoard(boardId)
@@ -732,6 +747,7 @@ export default function DraftBoardEditor() {
                 onAdd={handleAddPlayer}
                 existingPlayerIds={existingPlayerIds}
                 entryCount={entries.length}
+                entries={entries}
                 compact
               />
               <div className="flex-1 overflow-y-auto border-t border-[var(--card-border)]">
@@ -748,6 +764,7 @@ export default function DraftBoardEditor() {
               onAdd={handleAddPlayer}
               existingPlayerIds={existingPlayerIds}
               entryCount={entries.length}
+              entries={entries}
             />
           )}
         </div>

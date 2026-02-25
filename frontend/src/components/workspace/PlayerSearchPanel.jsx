@@ -3,11 +3,50 @@ import api from '../../services/api'
 
 const NFL_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']
 
-export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = [], compact = false, entryCount = 0 }) {
+// Find where a player would slot into the board based on OWGR/SG
+function suggestPosition(player, entries, sport) {
+  if (!entries || entries.length === 0) return 1
+
+  if (sport === 'golf') {
+    // Try OWGR first — find position where this player's OWGR fits
+    const owgr = player.owgrRank
+    if (owgr) {
+      for (let i = 0; i < entries.length; i++) {
+        const entryOwgr = entries[i].player?.owgrRank
+        if (entryOwgr && owgr < entryOwgr) return i + 1
+      }
+    }
+    // Fallback to SG Total
+    const sg = player.sgTotal
+    if (sg != null) {
+      for (let i = 0; i < entries.length; i++) {
+        const entrySg = entries[i].player?.sgTotal
+        if (entrySg != null && sg > entrySg) return i + 1
+      }
+    }
+  } else {
+    // NFL: use fantasy points per game
+    const ppg = player.fantasyPtsPerGame || player.fantasyPtsPpr
+    if (ppg) {
+      for (let i = 0; i < entries.length; i++) {
+        const entryPpg = entries[i].player?.fantasyPtsPerGame || entries[i].player?.fantasyPtsPpr
+        if (entryPpg != null && ppg > entryPpg) return i + 1
+      }
+    }
+  }
+
+  // Default: end of board
+  return entries.length + 1
+}
+
+export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = [], compact = false, entryCount = 0, entries = [] }) {
   const [search, setSearch] = useState('')
   const [position, setPosition] = useState(null)
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(false)
+  const [addingPlayerId, setAddingPlayerId] = useState(null) // which player has position picker open
+  const [insertPos, setInsertPos] = useState('')
+  const insertInputRef = useRef(null)
   const debounceRef = useRef(null)
   const existingSet = new Set(existingPlayerIds)
 
@@ -45,6 +84,38 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
     }, 300)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [search, position, fetchPlayers])
+
+  // Focus the position input when picker opens
+  useEffect(() => {
+    if (addingPlayerId && insertInputRef.current) {
+      insertInputRef.current.focus()
+      insertInputRef.current.select()
+    }
+  }, [addingPlayerId])
+
+  const handleAddClick = (player) => {
+    if (entryCount === 0) {
+      // Empty board, just add
+      onAdd(player.id, 1)
+      return
+    }
+    const suggested = suggestPosition(player, entries, sport)
+    setAddingPlayerId(player.id)
+    setInsertPos(String(suggested))
+  }
+
+  const confirmAdd = (playerId) => {
+    const pos = parseInt(insertPos, 10)
+    const targetPos = (isNaN(pos) || pos < 1) ? entryCount + 1 : Math.min(pos, entryCount + 1)
+    onAdd(playerId, targetPos)
+    setAddingPlayerId(null)
+    setInsertPos('')
+  }
+
+  const cancelAdd = () => {
+    setAddingPlayerId(null)
+    setInsertPos('')
+  }
 
   const filteredPlayers = players.filter(p => !existingSet.has(p.id))
 
@@ -119,43 +190,83 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
             </div>
           )
         ) : (
-          filteredPlayers.map(player => (
-            <div
-              key={player.id}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-[var(--surface-alt)] transition-colors group"
-            >
-              {/* Headshot */}
-              <div className="w-7 h-7 rounded-full bg-[var(--bg-alt)] overflow-hidden shrink-0">
-                {player.headshotUrl ? (
-                  <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-text-primary/20 text-[10px] font-bold">
-                    {player.name?.charAt(0) || '?'}
+          filteredPlayers.map(player => {
+            const isPickerOpen = addingPlayerId === player.id
+            const suggested = entryCount > 0 ? suggestPosition(player, entries, sport) : 1
+
+            return (
+              <div key={player.id}>
+                <div className="flex items-center gap-2 px-3 py-2 hover:bg-[var(--surface-alt)] transition-colors">
+                  {/* Headshot */}
+                  <div className="w-7 h-7 rounded-full bg-[var(--bg-alt)] overflow-hidden shrink-0">
+                    {player.headshotUrl ? (
+                      <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-text-primary/20 text-[10px] font-bold">
+                        {player.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-text-primary truncate">{player.name}</div>
+                    <div className="text-[11px] text-text-primary/40">
+                      {sport === 'nfl' ? (
+                        <>{player.nflPosition || player.position} {player.nflTeamAbbr || player.team && `· ${player.nflTeamAbbr || player.team}`}</>
+                      ) : (
+                        <>#{player.owgrRank || '\u2014'} {player.sgTotal != null && `· SG ${player.sgTotal > 0 ? '+' : ''}${Number(player.sgTotal).toFixed(1)}`}</>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Add button */}
+                  {isPickerOpen ? (
+                    <button
+                      onClick={cancelAdd}
+                      className="px-2 py-1 text-[10px] font-bold uppercase text-text-primary/30 hover:text-text-primary/50 transition-colors shrink-0"
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAddClick(player)}
+                      className="px-2 py-1 text-[10px] font-bold uppercase bg-gold/10 text-gold rounded hover:bg-gold/20 transition-colors shrink-0"
+                      title={entryCount > 0 ? `Suggested: #${suggested}` : 'Add to board'}
+                    >
+                      Add {entryCount > 0 ? `~#${suggested}` : ''}
+                    </button>
+                  )}
+                </div>
+
+                {/* Inline position picker */}
+                {isPickerOpen && (
+                  <div className="flex items-center gap-2 px-3 pb-2 pl-12">
+                    <span className="text-[10px] text-text-primary/40">Insert at #</span>
+                    <input
+                      ref={insertInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      value={insertPos}
+                      onChange={e => setInsertPos(e.target.value.replace(/[^0-9]/g, ''))}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') confirmAdd(player.id)
+                        if (e.key === 'Escape') cancelAdd()
+                      }}
+                      className="w-12 px-1.5 py-0.5 text-xs font-mono text-gold bg-gold/5 border border-gold/30 rounded text-center outline-none focus:border-gold/60"
+                    />
+                    <button
+                      onClick={() => confirmAdd(player.id)}
+                      className="px-2.5 py-1 text-[10px] font-bold uppercase bg-gold text-[var(--bg)] rounded hover:bg-gold/90 transition-colors"
+                    >
+                      Go
+                    </button>
+                    <span className="text-[9px] text-text-primary/20">of {entryCount + 1}</span>
                   </div>
                 )}
               </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-text-primary truncate">{player.name}</div>
-                <div className="text-[11px] text-text-primary/40">
-                  {sport === 'nfl' ? (
-                    <>{player.nflPosition || player.position} {player.nflTeamAbbr || player.team && `· ${player.nflTeamAbbr || player.team}`}</>
-                  ) : (
-                    <>#{player.owgrRank || '—'} {player.sgTotal != null && `· SG ${player.sgTotal > 0 ? '+' : ''}${Number(player.sgTotal).toFixed(1)}`}</>
-                  )}
-                </div>
-              </div>
-
-              {/* Add button — always visible, shows landing position */}
-              <button
-                onClick={() => onAdd(player.id)}
-                className="px-2 py-1 text-[10px] font-bold uppercase bg-gold/10 text-gold rounded hover:bg-gold/20 transition-colors shrink-0"
-              >
-                Add {entryCount > 0 ? `#${entryCount + 1}` : ''}
-              </button>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>
