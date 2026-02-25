@@ -83,6 +83,7 @@ import WatchList from './pages/WatchList'
 import DecisionJournal from './pages/DecisionJournal'
 import LabCaptures from './pages/LabCaptures'
 import LabCheatSheet from './pages/LabCheatSheet'
+import SeasonRace from './pages/SeasonRace'
 import FloatingCaptureButton from './components/lab/FloatingCaptureButton'
 
 function WorkspaceRedirect() {
@@ -539,6 +540,7 @@ function App() {
           <Route path="/feed" element={<Feed />} />
           <Route path="/nfl" element={<NflHub />} />
           <Route path="/golf" element={<GolfHub />} />
+          <Route path="/season-race" element={<SeasonRace />} />
           {/* NFL routes */}
           <Route path="/nfl/players" element={<NflPlayers />} />
           <Route path="/nfl/players/:playerId" element={<NflPlayerDetail />} />
