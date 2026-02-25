@@ -13,6 +13,7 @@ import BidPanel from '../components/draft/BidPanel'
 import PickAnnouncement from '../components/draft/PickAnnouncement'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
 import Card from '../components/common/Card'
+import api from '../services/api'
 
 const DraftRoomContent = () => {
   const { leagueId } = useParams()
@@ -53,6 +54,31 @@ const DraftRoomContent = () => {
   const [chatInput, setChatInput] = useState('')
   const chatEndRef = useRef(null)
   const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
+
+  // Board integration
+  const [boards, setBoards] = useState([])
+  const [selectedBoardId, setSelectedBoardId] = useState(null)
+  const [boardEntries, setBoardEntries] = useState([])
+
+  // Fetch user's boards on mount
+  useEffect(() => {
+    api.getDraftBoards().then(res => {
+      const allBoards = res.boards || []
+      setBoards(allBoards)
+      // Auto-select if only one board
+      if (allBoards.length === 1) {
+        setSelectedBoardId(allBoards[0].id)
+      }
+    }).catch(() => {})
+  }, [])
+
+  // Fetch board entries when a board is selected
+  useEffect(() => {
+    if (!selectedBoardId) { setBoardEntries([]); return }
+    api.getDraftBoard(selectedBoardId).then(res => {
+      setBoardEntries(res.board?.entries || [])
+    }).catch(() => setBoardEntries([]))
+  }, [selectedBoardId])
 
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim()) return
@@ -243,16 +269,35 @@ const DraftRoomContent = () => {
           {/* Bottom: Player Pool + Queue */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
             {/* Left: Player Pool */}
-            <div className="flex-1 lg:w-[60%] lg:border-r lg:border-[var(--card-border)] min-h-0">
-              <PlayerPool
-                players={availablePlayers}
-                onSelectPlayer={handleSelectPlayer}
-                onAddToQueue={addToQueue}
-                isUserTurn={isUserTurn}
-                queue={queue}
-                draftType={draft?.type}
-                onViewPlayer={openPlayerDetail}
-              />
+            <div className="flex-1 lg:w-[60%] lg:border-r lg:border-[var(--card-border)] min-h-0 flex flex-col">
+              {/* Board selector */}
+              {boards.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--card-border)] bg-[var(--surface)] shrink-0">
+                  <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wide">Board:</span>
+                  <select
+                    value={selectedBoardId || ''}
+                    onChange={e => setSelectedBoardId(e.target.value || null)}
+                    className="text-xs bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-text-primary focus:border-gold focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    {boards.map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="flex-1 min-h-0">
+                <PlayerPool
+                  players={availablePlayers}
+                  onSelectPlayer={handleSelectPlayer}
+                  onAddToQueue={addToQueue}
+                  isUserTurn={isUserTurn}
+                  queue={queue}
+                  draftType={draft?.type}
+                  onViewPlayer={openPlayerDetail}
+                  boardEntries={boardEntries}
+                />
+              </div>
             </div>
             {/* Right: Queue / Chat */}
             <div className="lg:w-[40%] flex flex-col min-h-0">

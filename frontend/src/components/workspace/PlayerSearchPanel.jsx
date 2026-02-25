@@ -3,7 +3,7 @@ import api from '../../services/api'
 
 const NFL_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF']
 
-export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = [], compact = false }) {
+export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = [], compact = false, entryCount = 0 }) {
   const [search, setSearch] = useState('')
   const [position, setPosition] = useState(null)
   const [players, setPlayers] = useState([])
@@ -147,12 +147,12 @@ export default function PlayerSearchPanel({ sport, onAdd, existingPlayerIds = []
                 </div>
               </div>
 
-              {/* Add button */}
+              {/* Add button — always visible, shows landing position */}
               <button
                 onClick={() => onAdd(player.id)}
-                className="px-2 py-1 text-[10px] font-bold uppercase bg-gold/10 text-gold rounded hover:bg-gold/20 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                className="px-2 py-1 text-[10px] font-bold uppercase bg-gold/10 text-gold rounded hover:bg-gold/20 transition-colors shrink-0"
               >
-                Add
+                Add {entryCount > 0 ? `#${entryCount + 1}` : ''}
               </button>
             </div>
           ))

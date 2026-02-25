@@ -235,6 +235,14 @@ export default function DraftBoardEditor() {
     !!localStorage.getItem(`lab-welcome-dismissed-${boardId}`)
   )
 
+  // Draggable divider state
+  const [leftWidth, setLeftWidth] = useState(() => {
+    const saved = localStorage.getItem(`lab-divider-${boardId}`)
+    return saved ? Number(saved) : 60
+  })
+  const isDraggingDivider = useRef(false)
+  const dividerContainerRef = useRef(null)
+
   // Fetch league roster map for availability badges
   useEffect(() => {
     if (!board?.sport) return
@@ -362,6 +370,36 @@ export default function DraftBoardEditor() {
     }
   }, [entries, board, fireTrigger])
 
+  // Draggable divider mouse handlers
+  const handleDividerMouseDown = useCallback((e) => {
+    e.preventDefault()
+    isDraggingDivider.current = true
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const handleMouseMove = (e) => {
+      if (!isDraggingDivider.current || !dividerContainerRef.current) return
+      const rect = dividerContainerRef.current.getBoundingClientRect()
+      const pct = ((e.clientX - rect.left) / rect.width) * 100
+      setLeftWidth(Math.min(80, Math.max(30, pct)))
+    }
+
+    const handleMouseUp = () => {
+      isDraggingDivider.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      setLeftWidth(w => {
+        localStorage.setItem(`lab-divider-${boardId}`, String(Math.round(w)))
+        return w
+      })
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }, [boardId])
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
@@ -377,8 +415,22 @@ export default function DraftBoardEditor() {
     }
   }, [entries, moveEntry])
 
+  const [newlyAddedId, setNewlyAddedId] = useState(null)
+
   const handleAddPlayer = useCallback(async (playerId) => {
-    try { await addPlayer(playerId) } catch (err) {}
+    try {
+      await addPlayer(playerId)
+      setNewlyAddedId(playerId)
+      // Switch to rankings tab on mobile so user sees the new entry
+      setMobileTab('rankings')
+      // Clear highlight after animation
+      setTimeout(() => setNewlyAddedId(null), 2000)
+      // Scroll to bottom of rankings to show new entry
+      requestAnimationFrame(() => {
+        const container = document.querySelector('[data-rankings-list]')
+        if (container) container.scrollTop = container.scrollHeight
+      })
+    } catch (err) {}
   }, [addPlayer])
 
   const handleDelete = useCallback(async () => {
@@ -522,9 +574,13 @@ export default function DraftBoardEditor() {
       </div>
 
       {/* Two-panel layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div ref={dividerContainerRef} className="flex-1 flex overflow-hidden">
         {/* Left: Rankings */}
-        <div className={`flex-1 md:w-[60%] md:block overflow-y-auto ${mobileTab !== 'rankings' ? 'hidden' : ''}`}>
+        <div
+          data-rankings-list
+          className={`md:block md:flex-none overflow-y-auto ${mobileTab !== 'rankings' ? 'hidden' : 'flex-1'}`}
+          style={{ width: leftWidth + '%' }}
+        >
           {/* Filter bars */}
           {entries.length > 0 && (
             <div className="border-b border-[var(--card-border)]">
@@ -628,6 +684,7 @@ export default function DraftBoardEditor() {
                         onUpdateAuctionValue={updateAuctionValue}
                         isWatched={isWatched(entry.playerId)}
                         onToggleWatch={toggleWatch}
+                        isNewlyAdded={newlyAddedId === entry.playerId}
                       />
                       {movedEntry && movedEntry.playerId === entry.playerId && movedEntry.delta !== 0 && (
                         <ReasonChipRow
@@ -655,14 +712,26 @@ export default function DraftBoardEditor() {
           )}
         </div>
 
+        {/* Resize handle (desktop only) */}
+        <div
+          className="hidden md:flex items-center justify-center w-1.5 cursor-col-resize group/divider hover:bg-gold/10 transition-colors shrink-0"
+          onMouseDown={handleDividerMouseDown}
+        >
+          <div className="w-0.5 h-8 rounded-full bg-[var(--card-border)] group-hover/divider:bg-gold/40 transition-colors" />
+        </div>
+
         {/* Right: Player Search + Board Insights (golf) */}
-        <div className={`md:w-[40%] md:flex md:flex-col md:border-l border-[var(--card-border)] bg-[var(--surface)] ${mobileTab === 'search' ? 'flex flex-col flex-1' : mobileTab === 'timeline' ? 'hidden md:flex md:flex-col' : 'hidden'}`}>
+        <div
+          className={`md:flex md:flex-col md:flex-none border-l border-[var(--card-border)] bg-[var(--surface)] ${mobileTab === 'search' ? 'flex flex-col flex-1' : mobileTab === 'timeline' ? 'hidden md:flex md:flex-col' : 'hidden'}`}
+          style={{ width: (100 - leftWidth) + '%' }}
+        >
           {allPlayersLoaded ? (
             <>
               <PlayerSearchPanel
                 sport={board?.sport || 'nfl'}
                 onAdd={handleAddPlayer}
                 existingPlayerIds={existingPlayerIds}
+                entryCount={entries.length}
                 compact
               />
               <div className="flex-1 overflow-y-auto border-t border-[var(--card-border)]">
@@ -678,6 +747,7 @@ export default function DraftBoardEditor() {
               sport={board?.sport || 'nfl'}
               onAdd={handleAddPlayer}
               existingPlayerIds={existingPlayerIds}
+              entryCount={entries.length}
             />
           )}
         </div>

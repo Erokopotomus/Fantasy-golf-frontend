@@ -834,12 +834,13 @@ const MockDraftRoom = () => {
       else if (sortBy === 'cuts') { aVal = a.cutsMade || 0; bVal = b.cutsMade || 0 }
       else if (sortBy === 'ppg') { aVal = a.ppg; bVal = b.ppg }
       else if (sortBy === 'totalPts') { aVal = a.totalPts; bVal = b.totalPts }
+      else if (sortBy === 'boardRank') { aVal = getBoardRank(a); bVal = getBoardRank(b) }
       else { aVal = a.rank; bVal = b.rank }
       if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
       return sortDir === 'asc' ? aVal - bVal : bVal - aVal
     })
     return result
-  }, [availablePlayers, allPlayers, draftedIds, showDrafted, searchQuery, sortBy, sortDir, isNfl, posFilter])
+  }, [availablePlayers, allPlayers, draftedIds, showDrafted, searchQuery, sortBy, sortDir, isNfl, posFilter, getBoardRank])
 
   // Stable ref for makePick to avoid stale closures in timers
   const makePickRef = useRef(null)
@@ -1413,6 +1414,11 @@ const MockDraftRoom = () => {
       setSortDir(field === 'sg' || field === 'top5' || field === 'top10' || field === 'top25' || field === 'cuts' || field === 'ppg' || field === 'totalPts' ? 'desc' : 'asc')
     }
   }
+
+  const getBoardRank = useCallback((player) => {
+    const entry = getBoardEntry(player)
+    return entry?.rank ?? 9999
+  }, [getBoardEntry])
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -2262,10 +2268,15 @@ const MockDraftRoom = () => {
                         <div />
                       </div>
                     ) : (
-                      <div className="grid grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+                      <div className={`grid ${boardEntries.length > 0 ? 'grid-cols-[26px_26px_1fr_40px_30px_30px_30px_46px_38px_44px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide`}>
                         <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
                           Rk <SortIcon field="rank" />
                         </button>
+                        {boardEntries.length > 0 && (
+                          <button onClick={() => handleSort('boardRank')} className="text-center hover:text-text-primary transition-colors" title="Your board rank">
+                            Bd <SortIcon field="boardRank" />
+                          </button>
+                        )}
                         <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
                           Player <SortIcon field="name" />
                         </button>
@@ -2296,7 +2307,7 @@ const MockDraftRoom = () => {
                     return (
                       <div
                         key={player.id}
-                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
+                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : boardEntries.length > 0 ? 'grid-cols-[26px_26px_1fr_40px_30px_30px_30px_46px_38px_44px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
                           player.isDrafted
                             ? 'opacity-40 bg-[var(--bg-alt)]/50'
                             : `cursor-pointer hover:bg-[var(--surface-alt)] ${inQueue ? 'bg-orange/5' : ''}`
@@ -2304,6 +2315,11 @@ const MockDraftRoom = () => {
                         onClick={() => !player.isDrafted && setSelectedPlayer(player)}
                       >
                         <span className="text-text-muted text-xs">{player.rank}</span>
+                        {!isNfl && boardEntries.length > 0 && (
+                          <span className="text-[9px] text-gold/50 font-mono text-center">
+                            {getBoardEntry(player) ? `B${getBoardEntry(player).rank}` : ''}
+                          </span>
+                        )}
                         <div className="flex items-center gap-2 min-w-0">
                           {isNfl ? (
                             player.headshot ? (
@@ -2322,16 +2338,11 @@ const MockDraftRoom = () => {
                           )}
                           <div className="flex items-center gap-1 min-w-0">
                             <span className="text-text-primary text-sm truncate">{player.name}</span>
-                            {getBoardEntry(player) && (
-                              <>
-                                <span className="text-[9px] text-gold/50 font-mono shrink-0">B{getBoardEntry(player).rank}</span>
-                                {getBoardEntry(player).tags?.[0] && (
-                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                    getBoardEntry(player).tags[0] === 'target' ? 'bg-emerald-400' :
-                                    getBoardEntry(player).tags[0] === 'sleeper' ? 'bg-gold' : 'bg-red-400'
-                                  }`} />
-                                )}
-                              </>
+                            {getBoardEntry(player)?.tags?.[0] && (
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                getBoardEntry(player).tags[0] === 'target' ? 'bg-emerald-400' :
+                                getBoardEntry(player).tags[0] === 'sleeper' ? 'bg-gold' : 'bg-red-400'
+                              }`} />
                             )}
                           </div>
                         </div>

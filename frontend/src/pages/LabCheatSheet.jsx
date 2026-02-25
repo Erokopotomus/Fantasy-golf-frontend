@@ -407,10 +407,29 @@ export default function LabCheatSheet() {
       {/* Print styles */}
       <style>{`
         @media print {
-          body { background: white !important; }
-          .bg-dark-primary, .bg-dark-secondary, .bg-dark-secondary\\/60, [class*="bg-\\[var\\(--surface\\)\\]"], [class*="bg-\\[var\\(--bg-alt\\)\\]"] { background: white !important; }
-          nav, .print\\:hidden { display: none !important; }
-          * { color-adjust: exact; -webkit-print-color-adjust: exact; }
+          @page { margin: 0.5in; size: letter; }
+          html, body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          * { background: transparent !important; color: black !important; box-shadow: none !important; text-shadow: none !important; }
+          nav, header, .print\\:hidden, [class*="AuroraBackground"] { display: none !important; }
+
+          /* Restore key colored elements */
+          .bg-emerald-500\\/20, .bg-emerald-500\\/10, .bg-emerald-100 { background: #d1fae5 !important; }
+          .bg-red-500\\/20, .bg-red-500\\/10, .bg-red-100 { background: #fee2e2 !important; }
+          .bg-gold\\/20, .bg-amber-100, .bg-orange\\/20 { background: #fef3c7 !important; }
+          .bg-blue-500\\/20, .bg-blue-100 { background: #dbeafe !important; }
+          .bg-purple-500\\/20, .bg-purple-100 { background: #ede9fe !important; }
+          .text-emerald-400, .text-emerald-700, .text-emerald-600 { color: #047857 !important; }
+          .text-red-400, .text-red-700, .text-red-600 { color: #b91c1c !important; }
+          .text-gold, .text-amber-700 { color: #b45309 !important; }
+
+          /* Tier break lines */
+          .border-gold\\/20, .border-gold { border-color: #d4930d !important; }
+
+          /* Table rows don't break across pages */
+          tr, .border-b { break-inside: avoid; }
+
+          /* Surface/card backgrounds → white with light border */
+          [class*="rounded-xl"], [class*="bg-\\[var"] { background: white !important; border-color: #e5e7eb !important; }
         }
       `}</style>
     </div>

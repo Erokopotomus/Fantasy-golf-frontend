@@ -100,7 +100,7 @@ function SgCell({ value, label }) {
   )
 }
 
-export default function BoardEntryRow({ entry, index, sport, positionRank, leagueStatus, onRemove, onClickNotes, onUpdateTags, onClickPlayer, onUpdateAuctionValue, isWatched, onToggleWatch }) {
+export default function BoardEntryRow({ entry, index, sport, positionRank, leagueStatus, onRemove, onClickNotes, onUpdateTags, onClickPlayer, onUpdateAuctionValue, isWatched, onToggleWatch, isNewlyAdded }) {
   const {
     attributes,
     listeners,
@@ -137,7 +137,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
       ref={setNodeRef}
       style={style}
       className={`flex items-center gap-2 px-3 py-2 border-b border-[var(--card-border)] transition-colors group
-        ${isDragging ? 'bg-[var(--surface-alt)] shadow-lg' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
+        ${isDragging ? 'bg-[var(--surface-alt)] shadow-lg' : isNewlyAdded ? 'bg-gold/10 animate-pulse' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
     >
       {/* Drag handle */}
       <button
@@ -292,7 +292,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
       {/* Remove */}
       <button
         onClick={() => onRemove(entry.playerId)}
-        className="p-1 text-text-primary/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+        className="p-1 text-text-primary/20 hover:text-red-400 transition-colors opacity-40 hover:opacity-100 shrink-0"
         title="Remove"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

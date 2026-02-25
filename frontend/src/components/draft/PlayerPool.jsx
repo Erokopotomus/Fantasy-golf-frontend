@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import Button from '../common/Button'
 import Card from '../common/Card'
 
@@ -10,10 +10,28 @@ const PlayerPool = ({
   queue,
   draftType,
   onViewPlayer,
+  boardEntries = [],
 }) => {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('rank')
   const [sortDir, setSortDir] = useState('asc')
+
+  const hasBoard = boardEntries.length > 0
+
+  // Build board lookup (byId + byName)
+  const boardLookup = useMemo(() => {
+    const byId = new Map()
+    const byName = new Map()
+    for (const e of boardEntries) {
+      byId.set(e.playerId, e)
+      if (e.player?.name) byName.set(e.player.name.toLowerCase(), e)
+    }
+    return { byId, byName }
+  }, [boardEntries])
+
+  const getBoardEntry = useCallback((player) => {
+    return boardLookup.byId.get(player.id) || boardLookup.byName.get(player.name?.toLowerCase())
+  }, [boardLookup])
 
   const filteredPlayers = useMemo(() => {
     let result = players.filter(p => !p.drafted)
@@ -57,6 +75,10 @@ const PlayerPool = ({
           aVal = a.cutsMade || 0
           bVal = b.cutsMade || 0
           break
+        case 'boardRank':
+          aVal = getBoardEntry(a)?.rank ?? 9999
+          bVal = getBoardEntry(b)?.rank ?? 9999
+          break
         default:
           aVal = a.rank || a.owgrRank || 999
           bVal = b.rank || b.owgrRank || 999
@@ -68,7 +90,7 @@ const PlayerPool = ({
     })
 
     return result
-  }, [players, search, sortBy, sortDir])
+  }, [players, search, sortBy, sortDir, getBoardEntry])
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -90,6 +112,10 @@ const PlayerPool = ({
       </svg>
     )
   }
+
+  const gridCols = hasBoard
+    ? 'grid-cols-[26px_26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
+    : 'grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
 
   return (
     <Card className="h-full flex flex-col" padding="none">
@@ -120,10 +146,15 @@ const PlayerPool = ({
       <div className="flex-1 overflow-auto min-h-0">
         {/* Header */}
         <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
-          <div className="grid grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
+          <div className={`grid ${gridCols} px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide`}>
             <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
               Rk <SortIcon field="rank" />
             </button>
+            {hasBoard && (
+              <button onClick={() => handleSort('boardRank')} className="text-center hover:text-text-primary transition-colors" title="Your board rank">
+                Bd <SortIcon field="boardRank" />
+              </button>
+            )}
             <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
               Player <SortIcon field="name" />
             </button>
@@ -154,30 +185,42 @@ const PlayerPool = ({
         {filteredPlayers.map((player) => {
           const inQueue = isInQueue(player.id)
           const sgTotal = player.sgTotal || 0
+          const boardEntry = hasBoard ? getBoardEntry(player) : null
 
           return (
             <div
               key={player.id}
-              className={`grid grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px] px-3 py-2 border-b border-[var(--card-border)] items-center transition-colors cursor-pointer hover:bg-[var(--surface-alt)] ${
+              className={`grid ${gridCols} px-3 py-2 border-b border-[var(--card-border)] items-center transition-colors cursor-pointer hover:bg-[var(--surface-alt)] ${
                 inQueue ? 'bg-orange/5' : ''
               }`}
               onClick={() => onViewPlayer?.(player)}
             >
               <span className="text-text-muted text-xs">{player.rank || player.owgrRank || '—'}</span>
+              {hasBoard && (
+                <span className="text-[9px] text-gold/50 font-mono text-center">
+                  {boardEntry ? `B${boardEntry.rank}` : ''}
+                </span>
+              )}
               <div className="flex items-center gap-2 min-w-0">
                 {player.headshotUrl ? (
                   <img src={player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0" />
                 ) : (
-                  <span className="text-sm flex-shrink-0">{player.countryFlag || '🏳️'}</span>
+                  <span className="text-sm flex-shrink-0">{player.countryFlag || '\uD83C\uDFF3\uFE0F'}</span>
                 )}
-                <div className="min-w-0">
-                  <span className="text-text-primary text-sm truncate block">{player.name}</span>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="text-text-primary text-sm truncate">{player.name}</span>
                   {player.primaryTour && (
-                    <span className={`text-[9px] px-1 py-0.5 rounded font-medium ${
+                    <span className={`text-[9px] px-1 py-0.5 rounded font-medium shrink-0 ${
                       player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
                       player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
                       'bg-purple-500/20 text-purple-400'
                     }`}>{player.primaryTour}</span>
+                  )}
+                  {boardEntry?.tags?.[0] && (
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      boardEntry.tags[0] === 'target' ? 'bg-emerald-400' :
+                      boardEntry.tags[0] === 'sleeper' ? 'bg-gold' : 'bg-red-400'
+                    }`} />
                   )}
                 </div>
               </div>
@@ -189,21 +232,21 @@ const PlayerPool = ({
               }`}>
                 {player.clutchMetrics?.cpi != null
                   ? `${player.clutchMetrics.cpi > 0 ? '+' : ''}${player.clutchMetrics.cpi.toFixed(1)}`
-                  : '—'}
+                  : '\u2014'}
               </span>
               <span className={`text-xs text-right font-medium tabular-nums ${
                 sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-text-primary' : 'text-red-400'
               }`}>
-                {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '—'}
+                {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '\u2014'}
               </span>
               <span className="text-xs text-right text-text-secondary tabular-nums">
-                {player.top5s || '—'}
+                {player.top5s || '\u2014'}
               </span>
               <span className="text-xs text-right text-text-secondary tabular-nums">
-                {player.top10s || '—'}
+                {player.top10s || '\u2014'}
               </span>
               <span className="text-xs text-right text-text-secondary tabular-nums">
-                {player.top25s || '—'}
+                {player.top25s || '\u2014'}
               </span>
               <span className="text-xs text-center text-text-muted tabular-nums">
                 {player.cutsMade || 0}/{player.events || 0}
