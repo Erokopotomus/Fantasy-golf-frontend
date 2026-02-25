@@ -298,18 +298,27 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
     const perfs = player.performances || []
     const completedPerfs = perfs.filter(p => p.status !== 'WD' && p.status !== 'DQ')
     const recentPerfs = completedPerfs.slice(0, 5)
+
+    // Fantasy points: use stored value if populated, otherwise derive from totalScore
+    // totalScore is relative to par (e.g., -20 = 20 under par). Convert to points: 100 + (-totalScore * 3)
+    const getPoints = (p) => {
+      if (p.fantasyPoints > 0) return p.fantasyPoints
+      if (p.totalScore != null) return Math.max(0, 100 + (-p.totalScore * 3))
+      return 0
+    }
+
     const avgFpts = completedPerfs.length > 0
-      ? completedPerfs.reduce((s, p) => s + (p.fantasyPoints || 0), 0) / completedPerfs.length
+      ? completedPerfs.reduce((s, p) => s + getPoints(p), 0) / completedPerfs.length
       : 0
     const recentFpts = recentPerfs.length > 0
-      ? recentPerfs.reduce((s, p) => s + (p.fantasyPoints || 0), 0) / recentPerfs.length
+      ? recentPerfs.reduce((s, p) => s + getPoints(p), 0) / recentPerfs.length
       : 0
 
     // Trend: compare recent 3 vs previous 3
     const last3 = completedPerfs.slice(0, 3)
     const prev3 = completedPerfs.slice(3, 6)
-    const last3avg = last3.length > 0 ? last3.reduce((s, p) => s + (p.fantasyPoints || 0), 0) / last3.length : 0
-    const prev3avg = prev3.length > 0 ? prev3.reduce((s, p) => s + (p.fantasyPoints || 0), 0) / prev3.length : 0
+    const last3avg = last3.length > 0 ? last3.reduce((s, p) => s + getPoints(p), 0) / last3.length : 0
+    const prev3avg = prev3.length > 0 ? prev3.reduce((s, p) => s + getPoints(p), 0) / prev3.length : 0
     const trend = prev3avg > 0 ? ((last3avg - prev3avg) / prev3avg * 100) : 0
 
     // SG-based projected points: weight recent form (60%) and season SG (40%)
@@ -319,7 +328,7 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       : Math.round(sgProjected * 10) / 10
 
     // Floor/ceiling from variance in recent results
-    const fptValues = completedPerfs.map(p => p.fantasyPoints || 0)
+    const fptValues = completedPerfs.map(p => getPoints(p)).filter(v => v > 0)
     const floor = fptValues.length > 0 ? Math.round(Math.min(...fptValues) * 10) / 10 : 0
     const ceiling = fptValues.length > 0 ? Math.round(Math.max(...fptValues) * 10) / 10 : 0
 
@@ -332,6 +341,12 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
     const stddev = Math.sqrt(variance)
     const consistency = Math.round(Math.max(0, 100 - stddev * 2.5) * 10) / 10
 
+    // Avg score from performances or player's scoringAvg
+    const scoresWithTotal = completedPerfs.filter(p => p.totalScore != null)
+    const avgScore = scoresWithTotal.length > 0
+      ? scoresWithTotal.reduce((s, p) => s + p.totalScore, 0) / scoresWithTotal.length
+      : (player.scoringAvg || null)
+
     const projection = {
       projected: Math.max(projected, 0),
       floor: Math.max(floor, 0),
@@ -341,6 +356,7 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       trend: Math.round(trend * 10) / 10, // positive = trending up
       consistency, // 0-100, higher = more consistent
       totalEvents: completedPerfs.length,
+      avgScore, // avg total score relative to par (e.g., -18.3)
     }
 
     // Compute season stats dynamically from all performances

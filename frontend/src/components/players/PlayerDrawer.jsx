@@ -612,7 +612,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                       ) : (
                         <div className="grid grid-cols-2 gap-2">
                           <StatCard label="SG: Total" value={formatStat(player.sgTotal, '+')} color={getStatColor(player.sgTotal)} />
-                          <StatCard label="Avg Score" value={player.avgScore?.toFixed(1) || '\u2014'} color="text-text-primary" />
+                          <StatCard label="Scoring Avg" value={player.scoringAvg?.toFixed(1) || '\u2014'} color="text-text-primary" />
                           <StatCard label="Wins" value={player.wins || 0} color={player.wins > 0 ? 'text-yellow-400' : 'text-text-primary'} />
                           <StatCard label="Top 10s" value={player.top10s || 0} color="text-text-primary" />
                           <StatCard label="Cuts Made" value={player.cutsMade || 0} color="text-text-primary" />
