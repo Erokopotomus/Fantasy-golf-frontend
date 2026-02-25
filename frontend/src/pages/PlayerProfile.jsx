@@ -194,19 +194,8 @@ const PlayerProfile = () => {
         {/* Left Column */}
         <div className="space-y-6">
           <PlayerStats player={player} clutchMetrics={clutchMetrics} selectedYear={selectedYear} performances={player?.performances} />
-        </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          <PlayerBenchmarkCard player={player} eventId={currentEventId} tournamentStatus={tournamentStatus} />
-          <PlayerPredictions predictions={predictions} liveScore={liveScore} />
-          <PlayerProjection projection={projection} />
-          <PlayerFormChart
-            recentForm={player.recentForm}
-            tournamentHistory={tournamentHistory}
-          />
-
-          {/* SG Trend (Multi-Year) */}
+          {/* SG Trend (Multi-Year) — right below SG DNA */}
           {sgTrend && sgTrend.trend && sgTrend.trend.length >= 2 && (
             <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-[var(--card-border)] flex items-center justify-between">
@@ -220,7 +209,7 @@ const PlayerProfile = () => {
                 )}
               </div>
               <div className="p-4">
-                <SgTrendChart performances={sgTrend.trend} height={200} />
+                <SgTrendChart performances={sgTrend.trend} height={220} />
                 {sgTrend.summary && (
                   <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[var(--card-border)]">
                     <div className="text-center">
@@ -250,7 +239,17 @@ const PlayerProfile = () => {
               </div>
             </div>
           )}
+        </div>
 
+        {/* Right Column */}
+        <div className="space-y-6">
+          <PlayerBenchmarkCard player={player} eventId={currentEventId} tournamentStatus={tournamentStatus} />
+          <PlayerPredictions predictions={predictions} liveScore={liveScore} />
+          <PlayerProjection projection={projection} />
+          <PlayerFormChart
+            recentForm={player.recentForm}
+            tournamentHistory={tournamentHistory}
+          />
           <PlayerCourseHistory courseHistory={courseHistory} />
 
           {/* Your Notes (Captures) */}

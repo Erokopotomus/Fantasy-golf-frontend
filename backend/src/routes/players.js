@@ -383,16 +383,20 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       }
       if (perf.earnings) derivedStats.earnings += perf.earnings
     }
-    // Prefer DB values if they're non-zero (from syncTournamentResults), otherwise use derived
-    const seasonStats = {
-      events: player.events > 0 ? player.events : derivedStats.events,
-      wins: player.wins > 0 ? player.wins : derivedStats.wins,
-      top5s: player.top5s > 0 ? player.top5s : derivedStats.top5s,
-      top10s: player.top10s > 0 ? player.top10s : derivedStats.top10s,
-      top25s: player.top25s > 0 ? player.top25s : derivedStats.top25s,
-      cutsMade: player.cutsMade > 0 ? player.cutsMade : derivedStats.cutsMade,
-      earnings: player.earnings > 0 ? player.earnings : derivedStats.earnings,
-    }
+    // When viewing a specific year, ALWAYS use derived stats from year-filtered performances.
+    // Player model fields (player.events, player.wins, etc.) are career totals from DataGolf sync
+    // and should only be used as fallback for "all time" view.
+    const seasonStats = selectedYear === 'all'
+      ? {
+          events: player.events > 0 ? player.events : derivedStats.events,
+          wins: player.wins > 0 ? player.wins : derivedStats.wins,
+          top5s: player.top5s > 0 ? player.top5s : derivedStats.top5s,
+          top10s: player.top10s > 0 ? player.top10s : derivedStats.top10s,
+          top25s: player.top25s > 0 ? player.top25s : derivedStats.top25s,
+          cutsMade: player.cutsMade > 0 ? player.cutsMade : derivedStats.cutsMade,
+          earnings: player.earnings > 0 ? player.earnings : derivedStats.earnings,
+        }
+      : derivedStats
 
     // Fetch latest Clutch metrics (weekly snapshot + event-specific if applicable)
     const [clutchMetricsWeekly, clutchMetricsEvent] = await Promise.all([
