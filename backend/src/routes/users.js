@@ -57,7 +57,7 @@ router.patch('/me', authenticate, async (req, res, next) => {
 
     const updateData = {}
     if (name) updateData.name = name
-    if (avatar) updateData.avatar = avatar
+    if (avatar !== undefined) updateData.avatar = avatar || null
     if (bio !== undefined) updateData.bio = bio ? String(bio).slice(0, 2000) : null
     if (tagline !== undefined) updateData.tagline = tagline ? String(tagline).slice(0, 280) : null
     if (socialLinks !== undefined) {

@@ -79,11 +79,16 @@ export const AuthProvider = ({ children }) => {
     reset()
   }
 
-  const updateUser = (updates) => {
-    const updatedUser = { ...user, ...updates }
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-    setUser(updatedUser)
-    return { success: true }
+  const updateUser = async (updates) => {
+    try {
+      const data = await api.updateProfile(updates)
+      const updatedUser = data.user || { ...user, ...updates }
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      setUser(updatedUser)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
   }
 
   const value = {

@@ -5,15 +5,20 @@ import { useStats } from '../hooks/useStats'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
+import ImageUpload from '../components/common/ImageUpload'
 
 const Profile = () => {
   const { user, updateUser } = useAuth()
   const { stats, loading: statsLoading } = useStats()
   const [isEditing, setIsEditing] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
+    username: user?.username || '',
+    avatar: user?.avatar || null,
   })
 
   // Update form data when user changes
@@ -21,23 +26,78 @@ const Profile = () => {
     setFormData({
       name: user?.name || '',
       email: user?.email || '',
+      username: user?.username || '',
+      avatar: user?.avatar || null,
     })
   }, [user])
 
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    if (name === 'username') {
+      setFormData(prev => ({ ...prev, username: value.toLowerCase().trim() }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
+    setError(null)
   }
 
-  const handleSave = () => {
-    updateUser(formData)
+  const handleSave = async () => {
+    setError(null)
+    setSaving(true)
+
+    // Client-side username validation
+    if (formData.username && (formData.username.length < 3 || formData.username.length > 30)) {
+      setError('Username must be 3-30 characters')
+      setSaving(false)
+      return
+    }
+    if (formData.username && !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(formData.username)) {
+      setError('Username must contain only lowercase letters, numbers, and hyphens. Cannot start or end with a hyphen.')
+      setSaving(false)
+      return
+    }
+
+    const updates = { name: formData.name }
+    if (formData.username !== (user?.username || '')) {
+      updates.username = formData.username || null
+    }
+    if (formData.avatar !== (user?.avatar || null)) {
+      updates.avatar = formData.avatar
+    }
+
+    const result = await updateUser(updates)
+
+    if (result.success) {
+      setIsEditing(false)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } else {
+      if (result.error?.includes('already taken') || result.error?.includes('409')) {
+        setError('Username is already taken')
+      } else {
+        setError(result.error || 'Failed to save changes')
+      }
+    }
+
+    setSaving(false)
+  }
+
+  const handleCancel = () => {
     setIsEditing(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    setError(null)
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      username: user?.username || '',
+      avatar: user?.avatar || null,
+    })
   }
 
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : 'January 2024'
+
+  const initial = user?.name?.charAt(0).toUpperCase() || 'U'
 
   return (
     <div className="min-h-screen">
@@ -59,18 +119,45 @@ const Profile = () => {
           {/* Profile Card */}
           <Card className="mb-6">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-20 h-20 bg-gold rounded-full flex items-center justify-center text-text-primary text-3xl font-bold font-display shadow-button">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              <div className="flex-1">
+              {/* Avatar */}
+              {isEditing ? (
+                <div className="w-[120px] flex-shrink-0">
+                  <ImageUpload
+                    currentImage={formData.avatar}
+                    onUpload={(url) => setFormData(prev => ({ ...prev, avatar: url }))}
+                    size={120}
+                  />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full flex-shrink-0 overflow-hidden shadow-button">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gold flex items-center justify-center text-text-primary text-3xl font-bold font-display">
+                      {initial}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
                 <h2 className="text-xl font-bold font-display text-text-primary">{user?.name || 'User'}</h2>
-                <p className="text-text-secondary">{user?.email}</p>
+                {user?.username ? (
+                  <p className="text-gold text-sm font-medium">@{user.username}</p>
+                ) : !isEditing ? (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-gold text-sm font-medium hover:text-gold/80 transition-colors"
+                  >
+                    Set a username
+                  </button>
+                ) : null}
+                <p className="text-text-secondary truncate">{user?.email}</p>
                 <p className="text-text-muted text-sm mt-1">Member since {memberSince}</p>
               </div>
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={isEditing ? handleCancel : () => setIsEditing(true)}
               >
                 {isEditing ? 'Cancel' : 'Edit'}
               </Button>
@@ -84,14 +171,35 @@ const Profile = () => {
                   value={formData.name}
                   onChange={handleChange}
                 />
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Username</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">@</span>
+                    <input
+                      name="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      placeholder="your-username"
+                      maxLength={30}
+                      className="w-full pl-7 pr-3 py-2 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)] text-text-primary text-sm focus:outline-none focus:border-gold transition-colors"
+                    />
+                  </div>
+                  <p className="text-text-muted text-xs mt-1">3-30 characters, lowercase letters, numbers, and hyphens</p>
+                </div>
                 <Input
                   label="Email"
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
+                  disabled
                 />
-                <Button onClick={handleSave}>Save Changes</Button>
+                {error && (
+                  <p className="text-red-400 text-sm">{error}</p>
+                )}
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

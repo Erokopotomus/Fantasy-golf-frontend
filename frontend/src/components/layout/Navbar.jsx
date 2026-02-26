@@ -482,9 +482,13 @@ const Navbar = () => {
                     }}
                     className="hidden sm:flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-gold to-orange rounded-full flex items-center justify-center text-slate font-semibold shadow-button">
-                      {user.name?.charAt(0).toUpperCase() || 'U'}
-                    </div>
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover shadow-button" />
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-br from-gold to-orange rounded-full flex items-center justify-center text-slate font-semibold shadow-button">
+                        {user.name?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                    )}
                     <span className="hidden lg:block">{user.name || user.email}</span>
                     <svg className={`w-4 h-4 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -496,6 +500,7 @@ const Navbar = () => {
                       <div className="absolute right-0 mt-2 w-52 bg-[var(--nav-bg)] border border-white/10 rounded-card shadow-lg z-20 py-1">
                         <div className="px-4 py-2 border-b border-white/10">
                           <p className="text-sm font-medium text-white truncate">{user.name || 'User'}</p>
+                          {user.username && <p className="text-xs text-gold truncate">@{user.username}</p>}
                           <p className="text-xs text-white/50 truncate">{user.email}</p>
                         </div>
                         <Link
