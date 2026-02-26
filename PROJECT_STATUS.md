@@ -1,8 +1,8 @@
 # CLUTCH FANTASY SPORTS — Project Status Report
 
-> Generated: February 23, 2026
+> Generated: February 26, 2026
 > Repository: github.com/Erokopotomus/Clutch
-> Branch: master (345+ commits)
+> Branch: master (567 commits)
 
 ---
 
@@ -15,13 +15,18 @@
 | Phase 3: League History & Migration | COMPLETE |
 | Phase 3F-3G: Vault V2 + Commissioner Blog | COMPLETE |
 | Phase 4: Data Architecture & Metrics (4A-4D) | COMPLETE |
-| Phase 4E: Tier 1 Public Data Sources | PARTIAL (ESPN done, OWGR pending) |
+| Phase 4E: Tier 1 Public Data Sources | PARTIAL (ESPN + DataGolf SG done, OWGR pending) |
 | Data Layer Steps 1-7 + Lab Phases 1-5 | COMPLETE |
 | Phase 5B: Clutch Rating V2 | COMPLETE |
 | Phase 6: AI Engine (all sub-phases + admin) | COMPLETE |
 | Import Intelligence Pipeline (all 4 parts) | COMPLETE |
 | Phase 7: NFL (partial), NBA/MLB pending | PARTIAL |
 | Infrastructure: Prisma singleton + pooling | COMPLETE |
+| iPod Reframe (6 phases) | COMPLETE |
+| SG Intelligence + Golf Hub + Season Race | COMPLETE |
+| Live Scoring Pipeline + Scoring Redesign | COMPLETE |
+| Board Editor Overhaul + Compare Mode | COMPLETE |
+| Profile Enhancement + Nav/League UX | COMPLETE |
 
 ---
 
@@ -36,7 +41,7 @@
 | Auth | JWT (custom) | Live |
 | Data (Golf) | DataGolf API + ESPN API | Live |
 | Data (NFL) | nflverse CSVs | Live (2024 season) |
-| Historical (Golf) | ESPN Free API | Live (2023-2025 backfilled) |
+| Historical (Golf) | ESPN Free API + DataGolf SG | Live (2018-2026 backfilled) |
 | News | ESPN API | Live (2-hour sync) |
 | Projections | Sleeper API + FFC ADP | Live (daily sync) |
 | AI/ML | Claude API (Anthropic) | Live (Phase 6 complete) |
@@ -49,11 +54,11 @@
 ## Platform Scale
 
 - **91+ database models** — see `backend/prisma/schema.prisma`
-- **160+ API endpoints** across 35 route files — see `backend/src/routes/`
-- **65+ frontend pages/routes** — see `frontend/src/App.jsx`
+- **165+ API endpoints** across 37 route files — see `backend/src/routes/`
+- **70+ frontend pages/routes** — see `frontend/src/App.jsx`
 - **34 cron jobs** — see schedule tables below
-- **25+ backend services** — see `backend/src/services/`
-- **44 migrations** (42 applied to Railway, 43-44 pending)
+- **66 backend services** — see `backend/src/services/`
+- **49 migrations** (1-47 deployed to Railway)
 
 ---
 
@@ -108,31 +113,30 @@
 
 ---
 
-## Pending Migrations
+## Recent Migrations
 
 | # | Migration | Purpose | Status |
 |---|-----------|---------|--------|
-| **43** | `clutch_rating_v2` | Rating snapshots, 14 component columns, confidence | NOT DEPLOYED |
-| **44** | `league_posts_blog_upgrade` | Cover image, images JSONB, view_count, league_post_views | NOT DEPLOYED |
+| **43** | `clutch_rating_v2` | Rating snapshots, 14 component columns, confidence | DEPLOYED |
+| **44** | `league_posts_blog_upgrade` | Cover image, images JSONB, view_count, league_post_views | DEPLOYED |
+| **45** | `weekly_roster_overrides` | Weekly roster override support | DEPLOYED |
+| **46** | `draft_board_league_link` | Link draft boards to leagues | DEPLOYED |
+| **47** | `draft_board_auction_value` | Auction value column on board entries | DEPLOYED |
 
-> Full migration history (0-42): all applied. See `backend/prisma/migrations/` for details.
+> Full migration history (0-47): all applied. See `backend/prisma/migrations/` for details.
 
 ---
 
 ## What's Next
 
-1. **Deploy Migrations 43-44** to Railway
-   - Migration 43: Clutch Rating V2 (rating_snapshots, component columns)
-   - Migration 44: League Posts blog upgrade (cover_image, views)
-
-2. **Phase 5 Remaining**
+1. **Phase 5 Remaining**
    - 5A: Enhanced Manager Profile Page (redesigned with Clutch Rating display)
    - 5C: Enhanced Prediction Categories (per-sport expansion)
    - 5D: Enhanced Leaderboard (filters, special leaderboards)
    - 5E: Badge & Achievement System v2 (social cards)
    - 5F: Consensus Engine (weighted by Clutch Rating)
 
-3. **Known Gaps**
+2. **Known Gaps**
    - NFL 2025 season data not yet synced (only 2024)
    - Kicker + DST stats missing from NFL data
    - Phase 4E remaining: OWGR rankings sync validation, PGA Tour scraper
@@ -142,4 +146,4 @@
 
 ---
 
-*345+ commits. 91+ database models. 163+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
+*567 commits. 91+ database models. 165+ API endpoints. 70+ frontend pages. 34 cron jobs. 66 backend services. 49 migrations. 2 sports live.*

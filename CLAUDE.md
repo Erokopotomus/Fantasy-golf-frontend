@@ -53,7 +53,7 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 ## DEVELOPMENT PHASES
 
 ### Current Status: PHASE 5 — IN PROGRESS
-> Phases 1-4 complete (4E partially complete). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 (owner assignment, reveal, sharing) built. Commissioner blog system built. Prisma singleton + connection pooling deployed. ESPN historical backfill (2023-2025) complete. Tournament intelligence features (Power Rank, Scouting Drawer) live. Next: finish Phase 5 remaining items.
+> Phases 1-4 complete (4E partially complete). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 + Commissioner blog built. ESPN historical backfill (2018-2026, 9 years) complete. DataGolf SG backfill (2018-2026) complete. Tournament intelligence + SG Intelligence (radar charts, trend viz) live. Golf Hub + Season Race + Compare page live. Live fantasy scoring pipeline + scoring page redesign live. Board editor overhauled (compare mode, SG columns, auction values, reason chips). Draft room season stats + tooltips. iPod Reframe (all 6 phases) complete. Profile enhancement (avatar upload, username, backend persist) complete. Leagues dropdown nav. Next: finish Phase 5 remaining items.
 
 ### Phase 1: Core Platform — COMPLETE
 Auth (JWT), league CRUD, commissioner tools, invite codes, snake+auction drafts (Socket.IO), roster management (add/drop/FAAB/rolling waivers), live scoring (DataGolf, 12 sync functions, 7 crons), H2H matchups, trading (veto voting, draft dollars), notifications (Socket.IO + web push), in-league chat, standings (H2H/Roto/Survivor/OAD/Segment), playoffs (bracket, seeding, auto-advance, history), IR slots, season recap & awards, security hardening (rate-limit + input validation), analytics foundation (Sport/Season/FantasyWeek/ScoringSystem models, 32 achievements), keeper leagues (no-cost/round penalty/auction/escalator), divisions, mobile responsive.
@@ -67,8 +67,9 @@ Event tracking (42+ events, console logging, PostHog-ready). Prediction engine (
 
 ### Phase 4: Data Architecture & Proprietary Metrics — COMPLETE (4E partially complete)
 4-layer database architecture (RawProviderData → canonical → ClutchScore → display). Rosetta Stone player/event ID mapping. ETL pipeline (DataGolf → canonical, raw data cleanup cron). Proprietary metrics: CPI (-3.0 to +3.0), Form Score (0-100), Pressure Score (-2.0 to +2.0), Course Fit (0-100). Transformation rules: never display raw provider numbers, always blend multiple inputs, always add Clutch branding, log formula version.
-- [x] **4E (partial): ESPN Historical Backfill** — ESPN free API used to backfill 2023-2025 tournament results (148 tournaments, 17,447 performances, 1,270 players with career stats). Service: `backend/src/services/historicalBackfill.js`. Routes: `POST /api/sync/backfill-historical`, `POST /api/sync/recalculate-stats`. ESPN player ID matching with name normalization fallback. 1,054 ESPN ID mappings saved.
-- [x] **4E (partial): ESPN player bios/headshots + hole-by-hole scores** — `backend/src/services/espnSync.js`
+- [x] **4E: ESPN Historical Backfill (2018-2026)** — ESPN free API used to backfill 9 years of tournament results (~338 tournaments, ~41,986 performances, 1,670 players with career stats, 2,510 ESPN ID mappings). Service: `backend/src/services/historicalBackfill.js`. Runner scripts: `backend/scripts/backfill-2026.js`, `backend/scripts/backfill-2018-2022.js`. Limitation: ESPN provides positions/scores/round-by-round only — no Strokes Gained, earnings, or FedEx points.
+- [x] **4E: DataGolf Historical SG Backfill (2018-2026)** — Fills `sgTotal`, `sgPutting`, `sgApproach`, `sgOffTee`, `sgAroundGreen`, `sgTeeToGreen` on Performance + RoundScore records. ~274 tournaments with SG data, 25,085 performances updated, 77,142 rounds upserted. Service: `backend/src/services/datagolfHistoricalSync.js`. Bulk raw SQL INSERT ON CONFLICT for speed (~12 min total). Runner: `backend/scripts/backfill-datagolf-sg.js` (resumable, skips existing).
+- [x] **4E: ESPN player bios/headshots + hole-by-hole scores** — `backend/src/services/espnSync.js`
 - [ ] **4E (remaining): PGA Tour scraper, OWGR rankings sync** — OWGR sync service exists (`owgrSync.js`) but needs validation. Evaluate SlashGolf API and SportsDataIO.
 
 ### Phase 5: Manager Analytics & Clutch Rating — IN PROGRESS
@@ -121,7 +122,7 @@ Tournament field analysis and player scouting features for upcoming events:
 - **Field Analysis Table** (`TournamentPreview.jsx`): Sortable columns for CPI, Form, Fit, History, OWGR with hover tooltips. CPI column has mini sliding-scale bars with zero-line. 5-tier color gradients for CPI/Form/Fit.
 - **Tournament-Aware Scouting Drawer**: `PlayerDrawer.jsx` accepts optional `tournamentContext` prop. When present, shows "This Week" tab with: Clutch metrics strip (CPI/Form/Fit/OWGR), SG vs Course DNA visual (player strength bars vs course demand with zero-line), course history card, recent results with avg finish. Hides empty/zero sections.
 - **Players Table** (`PlayerTable.jsx`): Left-aligned Player column, SG column headers with hover tooltips explaining each metric.
-- **Historical Backfill**: ESPN-powered backfill of 2023-2025 (148 tournaments, 17,447 performances). Career stats recalculated for 1,270 players (wins, top-10s, events, cuts made, etc.).
+- **Historical Backfill**: ESPN-powered backfill of 2018-2026 (~338 tournaments, ~41,986 performances). Career stats recalculated for 1,670 players. DataGolf SG backfill: 25,085 performances + 77,142 rounds with Strokes Gained data.
 
 #### Board Editor Compare Mode (Feb 2026) — COMPLETE
 
@@ -132,6 +133,71 @@ Compare 2-5 players side by side from the draft board editor with SG radar chart
 - **PlayerComparison** (`components/players/PlayerComparison.jsx`): Radar chart at top, player header cards with headshots + OWGR + CPI, stat bars for each category, categories-won summary with player-specific colors.
 - **usePlayerComparison hook**: Supports flat fields (`p.sgTotal`) and nested (`p.stats?.sgTotal`), max 5 players, skips zero-data stats.
 - **BoardEntryRow**: `compareMode`/`isCompareSelected`/`onToggleCompare` props — checkbox before drag handle, click override.
+
+#### SG Intelligence & Player Insights (Feb 2026) — COMPLETE
+
+Strokes Gained analytics surfaced across player pages, drawers, and tools:
+
+- **SG Radar Chart on PlayerDrawer**: DNA radar chart in overview tab showing player's SG profile. Compare links to board editor and standalone Compare page.
+- **SG Trend Visualization**: Time-series chart showing SG metrics over recent tournaments. Expand/collapse toggle. Positioned next to DNA radar on player profile.
+- **Per-Season Stats**: `?year=` param on `GET /api/players/:id`, year dropdown in PlayerHeader + PlayerDrawer for season-filtered stats.
+- **QuickInsights**: Contextual SG insights surfaced alongside player data.
+
+#### Golf Hub, Season Race & Compare Page (Feb 2026) — COMPLETE
+
+- **Golf Hub Enhancements**: Hub page upgraded with Tournament Recap section, richer upcoming schedule cards with course images.
+- **Season Race Page**: Zoomed-out season view with rankings, SG data, and stats. Accessible from Golf Hub.
+- **Standalone Compare Page**: Compare players outside the board editor context. Linked from PlayerDrawer and Golf Hub.
+
+#### Live Scoring Pipeline & Scoring Page Redesign (Feb 2026) — COMPLETE
+
+- **Live Fantasy Points Pipeline**: Aggregates ESPN hole-by-hole scores into Performance + RoundScore records for real-time fantasy scoring.
+- **Scoring Page Redesign**: Transformed into live tournament experience with leaderboard + fantasy sidebar. Rich banner, "Next Up" card, player click routing.
+
+#### Board Editor Overhaul (Feb 2026) — COMPLETE
+
+- **Major UX upgrade**: Clickable player names (open drawer), persistent reason chips, auction value column, SG stat columns, sortable columns with tooltip headers, insights panel with CPI descriptions.
+- **Smart Position Picker**: Intelligent position selection when adding players to board.
+- **Lab-to-Draft Flow**: Print CSS for board export, board bridge to draft room, divider UX, remove confirmation.
+- **Draft Board ↔ League Link**: Migration 46 (`draft_board_league_link`), migration 47 (`draft_board_auction_value`).
+
+#### Draft Room Stats (Feb 2026) — COMPLETE
+
+- Current season stats displayed instead of career totals.
+- Stat tooltips explaining each column.
+- Season stats columns added to draft room player lists.
+
+#### iPod Reframe (Feb 2026) — ALL 6 PHASES COMPLETE
+
+Strategic reset of the platform's information architecture. Spec: `docs/CLUTCH_IPOD_SPEC.md`.
+
+- **Phase 1**: Dashboard stripped to league router (595 → 223 lines)
+- **Phase 2**: League Home nav pills (15 buttons → compact pills)
+- **Phase 3**: Coach briefing templates upgraded with real data (board stats, standings, live events)
+- **Phase 4**: Board accessible from league context, waiver wire shows board tags
+- **Phase 5**: Decision capture — opinion events for adds/drops/claims
+- **Phase 6**: Coach references history — board cross-refs, roster loyalty, recent moves
+
+#### Navigation & League UX (Feb 2026) — COMPLETE
+
+- **Leagues Dropdown**: Top nav dropdown for one-click league access.
+- **Nav Dropdown Menus**: Icons, sport-specific accent colors, bold accent entry points for hubs.
+- **Vault Promoted**: Moved to top nav pills, always visible.
+- **"My Team" Rename**: Roster → My Team, pre-draft team profile with roster skeleton.
+- **Team Avatars**: Team avatar/emoji shown in Teams table on League Home.
+- **2-Member Leagues**: Allowed in creation form.
+- **Invite Code Fix**: Accept full CUID codes, auto-validate from URL.
+
+#### Profile Enhancement (Feb 2026) — COMPLETE
+
+- **Avatar Upload**: Cloudinary-powered `ImageUpload` component, avatar shown in Navbar instead of initial.
+- **Username Field**: `@` prefix, client+server validation (3-30 chars, lowercase alphanumeric + hyphens), 409 duplicate detection.
+- **Backend Persist**: `AuthContext.updateUser()` calls `PATCH /api/users/me` instead of localStorage-only.
+
+#### Lab Hub & Dashboard Redesign (Feb 2026) — COMPLETE
+
+- **Lab Hub** (`DraftBoards.jsx`): Hero banner with animated visuals + descriptive text. Split layout: boards left (3/5), notes+watchlist right (2/5), leagues below.
+- **Dashboard**: League cards in 2-column grid (was full-width stacked). Cards tightened — sport accent border, compact stats, smaller buttons.
 
 ---
 
@@ -184,7 +250,7 @@ All 5 platforms enhanced with raw data preservation, transaction import, opinion
 ## DATABASE SCHEMA
 
 > Full SQL CREATE statements moved to **`docs/SCHEMA_REFERENCE.md`**.
-> Authoritative schema: `backend/prisma/schema.prisma` (~2,800 lines, 91+ models, 44 migrations).
+> Authoritative schema: `backend/prisma/schema.prisma` (~2,800 lines, 91+ models, 49 migrations).
 
 ---
 
@@ -378,7 +444,7 @@ Every feature should answer: "Which persona is this for?" When in doubt, optimiz
 - **Seasonal Flywheel:** Feed auto-adjusts by sports calendar. Golf fills NFL gaps (Feb-May). No dead months.
 
 ### Current Build Priority
-Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill done → **Next: Build out Golf/NFL Hubs as sport homepages, finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E remaining (OWGR sync validation)**
+Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill (2018-2026) done → DataGolf SG Backfill done → SG Intelligence done → Golf Hub + Season Race + Compare done → Live Scoring Pipeline done → Scoring Page Redesign done → Board Editor Overhaul done → iPod Reframe (6 phases) done → Profile Enhancement done → Nav + League UX done → **Next: Finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E remaining (OWGR sync validation), Golf/NFL Hub polish**
 
 **Backlog:** NFL team pages need polish. Kicker/DST stats missing. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags).
 
@@ -427,9 +493,9 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 
 ---
 
-*Last updated: February 24, 2026*
-*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & Scouting complete. ESPN historical backfill (2023-2025) complete. Board editor compare mode complete. 346+ commits. 91+ database models. 161+ API endpoints. 65+ frontend pages. 34 cron jobs. 27+ backend services. 44 migrations. 2 sports live.*
+*Last updated: February 26, 2026*
+*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & SG Intelligence complete. ESPN historical backfill (2018-2026) complete. DataGolf SG backfill complete. Golf Hub + Season Race + Compare page live. Live scoring pipeline + scoring page redesign live. Board editor overhauled + compare mode. iPod Reframe (6 phases) complete. Profile enhancement complete. Nav + League UX improvements live. 567 commits. 91+ database models. 165+ API endpoints. 70+ frontend pages. 34 cron jobs. 66 backend services. 49 migrations. 2 sports live.*
 
-**All migrations (1-45) deployed to Railway.**
+**All migrations (1-47) deployed to Railway.**
 
 **Infrastructure fix (Feb 2026):** All backend route files now import from `src/lib/prisma.js` singleton instead of creating individual PrismaClient instances. Pool: 20 connections, 30s timeout.
