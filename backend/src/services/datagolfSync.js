@@ -651,9 +651,14 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     }
     if (position != null) perfUpdate.position = position
     // DataGolf uses uppercase R1, R2, R3, R4 for round scores
+    // Clear rounds beyond current to prevent stale data from previous events
     for (let r = 1; r <= 4; r++) {
       const roundScore = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
-      if (roundScore != null) perfUpdate[`round${r}`] = roundScore
+      if (roundScore != null) {
+        perfUpdate[`round${r}`] = roundScore
+      } else if (r > currentRound) {
+        perfUpdate[`round${r}`] = null
+      }
     }
 
     perfOps.push(

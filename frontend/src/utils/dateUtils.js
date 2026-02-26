@@ -39,11 +39,11 @@ export function formatDateTimeET(iso) {
 }
 
 /**
- * "Feb 20" — tournament dates (date-only, no TZ concern)
+ * "Feb 20" — tournament dates (date-only, uses UTC to avoid day shift from midnight ISO)
  */
 export function formatDate(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
 /**
