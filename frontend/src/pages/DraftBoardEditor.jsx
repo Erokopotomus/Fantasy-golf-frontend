@@ -1,5 +1,5 @@
 import { useState, Fragment, useCallback, useEffect, useRef, useMemo } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import useDraftBoardEditor from '../hooks/useDraftBoardEditor'
@@ -683,6 +683,14 @@ export default function DraftBoardEditor() {
                 >
                   Compare Now
                 </button>
+                {canCompare && (
+                  <Link
+                    to={`/golf/compare?players=${comparePlayers.map(p => p.id).join(',')}`}
+                    className="px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-all border border-gold/20 text-gold hover:bg-gold/10"
+                  >
+                    Full Page
+                  </Link>
+                )}
                 <button
                   onClick={handleExitCompareMode}
                   className="text-text-primary/30 hover:text-text-primary/60 text-xs"

@@ -91,6 +91,21 @@ const QuickInsights = ({ leaderboard = [] }) => {
         <InsightSection title="Hottest Form" emoji="🔥" players={hotForm} valueLabel="Form" />
         <InsightSection title="Under the Radar" emoji="👀" players={underRadar} valueLabel="OWGR" />
         <InsightSection title="Course History Kings" emoji="👑" players={historyKings} valueLabel="Avg" />
+
+        {/* Compare link */}
+        {bestFit.length >= 2 && (
+          <div className="pt-3 border-t border-[var(--card-border)]">
+            <Link
+              to={`/golf/compare?players=${bestFit.slice(0, 3).map(p => p.id).join(',')}`}
+              className="flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-gold hover:text-gold/80 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Compare Top Players
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

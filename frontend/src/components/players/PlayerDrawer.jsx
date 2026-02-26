@@ -630,6 +630,26 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                         </div>
                       )}
 
+                      {/* SG DNA Radar (golf only, overview tab) */}
+                      {!isNfl && player.sgTotal != null && (
+                        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2 text-center">SG DNA</h3>
+                          <SgRadarChart
+                            players={[{
+                              id: player.id,
+                              name: player.name,
+                              label: 'Career',
+                              sgTotal: player.sgTotal,
+                              sgOffTee: player.sgOffTee,
+                              sgApproach: player.sgApproach,
+                              sgAroundGreen: player.sgAroundGreen,
+                              sgPutting: player.sgPutting,
+                            }]}
+                            size={200}
+                          />
+                        </div>
+                      )}
+
                       {/* SG Summary (golf only) */}
                       {!isNfl && (
                         <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
