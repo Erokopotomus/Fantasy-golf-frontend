@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import useNotificationInbox from '../../hooks/useNotificationInbox'
 import useTournaments from '../../hooks/useTournaments'
+import useLeagues from '../../hooks/useLeagues'
 import NotificationDropdown from '../notifications/NotificationDropdown'
 import ClutchLogo from '../common/ClutchLogo'
 import Button from '../common/Button'
@@ -143,6 +144,116 @@ const NavDropdown = ({ label, to, items, accent = 'emerald', isActiveGroup, loca
   )
 }
 
+const leagueSportConfig = {
+  GOLF: { label: 'Golf', dot: 'bg-emerald-400', text: 'text-emerald-400' },
+  NFL:  { label: 'NFL',  dot: 'bg-orange-400',  text: 'text-orange-400' },
+}
+
+const LeagueDropdown = ({ groupedLeagues, hasLeagues, leaguesLoading, location, onNavigate }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const timeoutRef = useRef(null)
+  const isLeagueActive = location.pathname.startsWith('/leagues')
+
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const handleEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setOpen(true)
+  }
+  const handleLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 150)
+  }
+
+  return (
+    <div ref={ref} className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <Link
+        to="/leagues"
+        onClick={() => { setOpen(false); onNavigate?.() }}
+        className={`
+          px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1
+          ${isLeagueActive ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}
+        `}
+      >
+        Leagues
+        <svg className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </Link>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 w-56 bg-[var(--nav-bg)] border border-white/10 border-gold/20 rounded-xl shadow-lg z-50 overflow-hidden">
+          <Link
+            to="/leagues"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm font-semibold transition-colors bg-gold/10 text-gold hover:brightness-125 border-b border-white/5"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            All Leagues
+          </Link>
+          {leaguesLoading ? (
+            <div className="px-3.5 py-3 text-xs text-white/40">Loading...</div>
+          ) : !hasLeagues ? (
+            <div className="px-3.5 py-3">
+              <p className="text-xs text-white/40 mb-2">No leagues yet</p>
+              <Link
+                to="/leagues/create"
+                onClick={() => setOpen(false)}
+                className="text-xs text-gold hover:text-gold/80 font-medium transition-colors"
+              >
+                + Create a League
+              </Link>
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto">
+              {groupedLeagues.map(({ sport, leagues }) => {
+                const config = leagueSportConfig[sport] || { label: sport, dot: 'bg-white/40', text: 'text-white/40' }
+                return (
+                  <div key={sport}>
+                    <div className="px-3.5 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/30">
+                      {config.label}
+                    </div>
+                    {leagues.map(league => {
+                      const isActive = location.pathname.startsWith(`/leagues/${league.id}`)
+                      return (
+                        <Link
+                          key={league.id}
+                          to={`/leagues/${league.id}`}
+                          onClick={() => setOpen(false)}
+                          className={`flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
+                            isActive
+                              ? `${config.text} bg-white/10`
+                              : 'text-white/60 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
+                          <span className="truncate">{league.name}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const Navbar = () => {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -155,6 +266,29 @@ const Navbar = () => {
   const notifRef = useRef(null)
   const inbox = useNotificationInbox()
   const { currentTournament } = useTournaments()
+  const { leagues, loading: leaguesLoading } = useLeagues()
+
+  const sportSortOrder = ['GOLF', 'NFL']
+  const groupedLeagues = useMemo(() => {
+    if (!leagues?.length) return []
+    const groups = {}
+    leagues.forEach(league => {
+      const sport = (league.sport || 'GOLF').toUpperCase()
+      if (!groups[sport]) groups[sport] = []
+      groups[sport].push(league)
+    })
+    return Object.entries(groups)
+      .sort(([a], [b]) => {
+        const ai = sportSortOrder.indexOf(a)
+        const bi = sportSortOrder.indexOf(b)
+        if (ai !== -1 && bi !== -1) return ai - bi
+        if (ai !== -1) return -1
+        if (bi !== -1) return 1
+        return a.localeCompare(b)
+      })
+      .map(([sport, leagues]) => ({ sport, leagues }))
+  }, [leagues])
+  const hasLeagues = leagues?.length > 0
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -224,6 +358,12 @@ const Navbar = () => {
                 <Link to="/dashboard" className={navLinkStyles('/dashboard')}>
                   Dashboard
                 </Link>
+                <LeagueDropdown
+                  groupedLeagues={groupedLeagues}
+                  hasLeagues={hasLeagues}
+                  leaguesLoading={leaguesLoading}
+                  location={location}
+                />
                 <NavDropdown
                   label="Golf"
                   to="/golf"
@@ -533,6 +673,34 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  to="/leagues"
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 ${location.pathname.startsWith('/leagues') ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Leagues
+                </Link>
+                {groupedLeagues.map(({ sport, leagues: sportLeagues }) => {
+                  const config = leagueSportConfig[sport] || { label: sport, dot: 'bg-white/40' }
+                  return (
+                    <div key={sport}>
+                      <div className="pl-8 pr-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-white/30">
+                        {config.label}
+                      </div>
+                      {sportLeagues.map(league => (
+                        <Link
+                          key={league.id}
+                          to={`/leagues/${league.id}`}
+                          className="flex items-center gap-2 pl-8 pr-4 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/10 transition-all duration-300"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${config.dot}`} />
+                          <span className="truncate">{league.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )
+                })}
                 <Link
                   to="/golf"
                   className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 ${isGolfActive ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
