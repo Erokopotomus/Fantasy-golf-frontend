@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import FeedList from '../components/feed/FeedList'
 import { formatDate, formatDateRange, formatPurse } from '../utils/dateUtils'
+import { computePowerScore } from '../utils/clutchMetrics'
 
 const daysUntil = (dateStr) => {
   if (!dateStr) return null
@@ -39,6 +40,11 @@ const quickLinks = [
     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
   },
   {
+    label: 'Compare',
+    href: '/golf/compare',
+    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
+  },
+  {
     label: 'News',
     href: '/news',
     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>,
@@ -54,6 +60,8 @@ const GolfHub = () => {
   const [leagues, setLeagues] = useState([])
   const [rosterPlayers, setRosterPlayers] = useState([]) // [{id, name, leagueId, teamId}]
   const [heroIntel, setHeroIntel] = useState(null) // { weather, leaderboard, course }
+  const [lastWeekTournament, setLastWeekTournament] = useState(null)
+  const [lastWeekTop5, setLastWeekTop5] = useState([])
 
   // Fetch tournaments with fields
   useEffect(() => {
@@ -132,6 +140,35 @@ const GolfHub = () => {
     })
   }, [heroTournament?.id, heroTournament?.status])
 
+  // Fetch last week's completed tournament
+  useEffect(() => {
+    api.getTournaments({ status: 'COMPLETED', limit: 1 })
+      .then(async (data) => {
+        const t = (data.tournaments || [])[0]
+        if (!t) return
+        setLastWeekTournament(t)
+        const lbData = await api.getTournamentLeaderboard(t.id).catch(() => ({ leaderboard: [] }))
+        const lb = lbData?.leaderboard || []
+        setLastWeekTop5(lb.filter(e => e.position && e.position <= 5).slice(0, 5))
+      })
+      .catch(() => {})
+  }, [])
+
+  // Trending players derived from heroIntel leaderboard
+  const trendingPlayers = useMemo(() => {
+    const lb = heroIntel?.leaderboard || []
+    if (!lb.some(p => p.clutchMetrics?.formScore != null)) return null
+    const hotForm = [...lb]
+      .filter(p => p.clutchMetrics?.formScore != null)
+      .sort((a, b) => (b.clutchMetrics.formScore || 0) - (a.clutchMetrics.formScore || 0))
+      .slice(0, 5)
+    const bestFit = [...lb]
+      .filter(p => p.clutchMetrics?.courseFitScore != null)
+      .sort((a, b) => (b.clutchMetrics.courseFitScore || 0) - (a.clutchMetrics.courseFitScore || 0))
+      .slice(0, 5)
+    return (hotForm.length > 0 || bestFit.length > 0) ? { hotForm, bestFit } : null
+  }, [heroIntel])
+
   // Upcoming schedule (exclude the hero)
   const upcomingSchedule = useMemo(() => {
     return tournaments
@@ -172,7 +209,7 @@ const GolfHub = () => {
           </div>
 
           {/* Quick Links */}
-          <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-8">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-8">
             {quickLinks.map(link => (
               <Link
                 key={link.label}
@@ -321,6 +358,100 @@ const GolfHub = () => {
           ) : null}
 
 
+          {/* Trending Players — Form + Course Fit */}
+          {trendingPlayers && (
+            <div className="mb-8">
+              <h2 className="text-lg font-display font-bold text-text-primary mb-4">Trending This Week</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {/* Hottest Form */}
+                {trendingPlayers.hotForm.length > 0 && (
+                  <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-card overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-[var(--card-border)] bg-gradient-to-r from-orange-500/5 to-transparent">
+                      <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                        <span className="text-orange-400">Hottest Form</span>
+                      </h3>
+                    </div>
+                    <div className="p-3 space-y-1">
+                      {trendingPlayers.hotForm.map((entry, i) => (
+                        <Link
+                          key={entry.player?.id || i}
+                          to={`/players/${entry.player?.id}`}
+                          className="flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-[10px] font-mono text-text-muted w-4">{i + 1}.</span>
+                            {entry.player?.headshotUrl ? (
+                              <img src={entry.player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--stone)]" />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-[var(--stone)] flex items-center justify-center text-xs">
+                                {entry.player?.countryFlag || '?'}
+                              </div>
+                            )}
+                            <span className="text-xs font-semibold text-text-primary truncate">{entry.player?.name || entry.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className={`font-mono text-xs font-bold ${
+                              entry.clutchMetrics.formScore >= 80 ? 'text-orange-400' : 'text-text-secondary'
+                            }`}>
+                              {Math.round(entry.clutchMetrics.formScore)}
+                            </span>
+                            {entry.clutchMetrics.formScore >= 80 && (
+                              <span className="text-[10px]" title="On fire">
+                                <svg className="w-3.5 h-3.5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" /></svg>
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Best Course Fits */}
+                {trendingPlayers.bestFit.length > 0 && (
+                  <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-card overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-[var(--card-border)] bg-gradient-to-r from-gold/5 to-transparent">
+                      <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+                        <span className="text-gold">Best Course Fits</span>
+                      </h3>
+                    </div>
+                    <div className="p-3 space-y-1">
+                      {trendingPlayers.bestFit.map((entry, i) => {
+                        const fit = entry.clutchMetrics.courseFitScore
+                        const fitLabel = fit >= 85 ? 'Elite Fit' : fit >= 75 ? 'Strong Fit' : 'Neutral'
+                        const fitColor = fit >= 85 ? 'text-gold' : fit >= 75 ? 'text-yellow-400' : 'text-text-muted'
+                        return (
+                          <Link
+                            key={entry.player?.id || i}
+                            to={`/players/${entry.player?.id}`}
+                            className="flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="text-[10px] font-mono text-text-muted w-4">{i + 1}.</span>
+                              {entry.player?.headshotUrl ? (
+                                <img src={entry.player.headshotUrl} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--stone)]" />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-[var(--stone)] flex items-center justify-center text-xs">
+                                  {entry.player?.countryFlag || '?'}
+                                </div>
+                              )}
+                              <span className="text-xs font-semibold text-text-primary truncate">{entry.player?.name || entry.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className={`font-mono text-xs font-bold ${fitColor}`}>
+                                {Math.round(fit)}
+                              </span>
+                              <span className={`text-[9px] font-medium ${fitColor}`}>{fitLabel}</span>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Section 3: Upcoming Schedule */}
           {upcomingSchedule.length > 0 && (
             <div className="mb-8">
@@ -466,6 +597,65 @@ const GolfHub = () => {
                     )}
                   </>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Last Week's Results */}
+          {lastWeekTournament && lastWeekTop5.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-display font-bold text-text-primary mb-4">Last Week's Results</h2>
+              <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-card overflow-hidden">
+                <div className="px-4 py-3 border-b border-[var(--card-border)]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">{lastWeekTournament.name}</h3>
+                      <p className="text-[10px] font-mono text-text-muted mt-0.5">
+                        {formatDateRange(lastWeekTournament.startDate, lastWeekTournament.endDate)}
+                        {lastWeekTournament.course && ` — ${lastWeekTournament.course.nickname || lastWeekTournament.course.name}`}
+                      </p>
+                    </div>
+                    <Link
+                      to={`/tournaments/${lastWeekTournament.id}/recap`}
+                      className="text-xs font-semibold text-gold hover:text-gold/80 transition-colors"
+                    >
+                      View Full Recap →
+                    </Link>
+                  </div>
+                </div>
+                <div className="divide-y divide-[var(--card-border)]">
+                  {lastWeekTop5.map((entry, i) => (
+                    <div key={entry.player?.id || i} className="flex items-center gap-3 px-4 py-2.5">
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-bold shrink-0 ${
+                        entry.position === 1
+                          ? 'bg-gold/20 text-gold'
+                          : 'bg-[var(--stone)] text-text-muted'
+                      }`}>
+                        {entry.positionTied ? `T${entry.position}` : entry.position}
+                      </span>
+                      {entry.player?.headshotUrl ? (
+                        <img src={entry.player.headshotUrl} alt="" className="w-7 h-7 rounded-full object-cover bg-[var(--stone)] shrink-0" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-[var(--stone)] flex items-center justify-center text-xs shrink-0">
+                          {entry.player?.countryFlag || '?'}
+                        </div>
+                      )}
+                      <Link to={`/players/${entry.player?.id}`} className="text-xs font-semibold text-text-primary hover:text-gold transition-colors truncate min-w-0 flex-1">
+                        {entry.player?.name}
+                      </Link>
+                      <span className={`font-mono text-xs font-bold shrink-0 ${
+                        (entry.totalToPar ?? 0) < 0 ? 'text-emerald-400' : (entry.totalToPar ?? 0) === 0 ? 'text-text-secondary' : 'text-red-400'
+                      }`}>
+                        {entry.totalToPar != null ? (entry.totalToPar > 0 ? `+${entry.totalToPar}` : entry.totalToPar === 0 ? 'E' : entry.totalToPar) : '—'}
+                      </span>
+                      {entry.sgTotal != null && (
+                        <span className={`font-mono text-[10px] shrink-0 ${entry.sgTotal > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          SG {entry.sgTotal > 0 ? '+' : ''}{entry.sgTotal.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

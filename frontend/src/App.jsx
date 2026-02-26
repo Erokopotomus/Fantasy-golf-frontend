@@ -60,6 +60,8 @@ import CourseDetail from './pages/CourseDetail'
 // Sport Hubs + Feed
 import NflHub from './pages/NflHub'
 import GolfHub from './pages/GolfHub'
+import GolfCompare from './pages/GolfCompare'
+import TournamentRecap from './pages/TournamentRecap'
 import Feed from './pages/Feed'
 // NFL pages
 import NflPlayers from './pages/NflPlayers'
@@ -231,6 +233,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/tournaments/:tournamentId/recap" element={<TournamentRecap />} />
           <Route
             path="/tournaments/:tournamentId/preview"
             element={
@@ -540,6 +543,7 @@ function App() {
           <Route path="/feed" element={<Feed />} />
           <Route path="/nfl" element={<NflHub />} />
           <Route path="/golf" element={<GolfHub />} />
+          <Route path="/golf/compare" element={<GolfCompare />} />
           <Route path="/season-race" element={<SeasonRace />} />
           {/* NFL routes */}
           <Route path="/nfl/players" element={<NflPlayers />} />

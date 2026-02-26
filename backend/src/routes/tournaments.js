@@ -390,6 +390,11 @@ router.get('/:id/leaderboard', async (req, res, next) => {
         birdies: perf.birdies,
         bogeys: perf.bogeys,
         teeTimes: teeTimesByPlayer[perf.playerId] || null,
+        sgTotal: perf.sgTotal,
+        sgOffTee: perf.sgOffTee,
+        sgApproach: perf.sgApproach,
+        sgAroundGreen: perf.sgAroundGreen,
+        sgPutting: perf.sgPutting,
       }
 
       // Include Clutch metrics
