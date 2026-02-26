@@ -288,8 +288,20 @@ async function syncSchedule(prisma) {
     // in the evening US time. Add 29 hours buffer (end of day ET + margin).
     const effectiveEnd = endDate ? new Date(endDate.getTime() + 29 * 60 * 60 * 1000) : null
     let status = 'UPCOMING'
-    if (effectiveEnd && effectiveEnd < now) status = 'COMPLETED'
-    else if (startDate && startDate <= now && (!effectiveEnd || effectiveEnd >= now)) status = 'IN_PROGRESS'
+    if (effectiveEnd && effectiveEnd < now) {
+      status = 'COMPLETED'
+    } else if (startDate) {
+      // Timezone-aware: check if the tournament date has arrived in Eastern time
+      // and it's past 7 AM local (typical first tee time)
+      const tz = 'America/New_York'
+      const todayLocal = new Intl.DateTimeFormat('sv-SE', { timeZone: tz }).format(now)
+      const startStr = new Intl.DateTimeFormat('sv-SE', { timeZone: 'UTC' }).format(startDate)
+      const hourLocal = parseInt(new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hour: 'numeric', hour12: false,
+      }).format(now))
+      const started = todayLocal > startStr || (todayLocal === startStr && hourLocal >= 7)
+      if (started && (!effectiveEnd || effectiveEnd >= now)) status = 'IN_PROGRESS'
+    }
 
     rows.push({
       id: existingMap.get(dgId) || genId(),

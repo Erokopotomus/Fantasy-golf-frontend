@@ -527,17 +527,36 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('waivers', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Helper: check if a tournament has started in its local timezone
+    // Golf tournaments typically have first tee times around 7 AM local
+    function hasTournamentStarted(startDate, timezone) {
+      const tz = timezone || 'America/New_York'
+      const now = new Date()
+      // Get today's date in the tournament's timezone (sv-SE gives reliable YYYY-MM-DD)
+      const todayLocal = new Intl.DateTimeFormat('sv-SE', { timeZone: tz }).format(now)
+      // Get start date as YYYY-MM-DD (stored as midnight UTC)
+      const startLocal = new Intl.DateTimeFormat('sv-SE', { timeZone: 'UTC' }).format(new Date(startDate))
+      if (todayLocal < startLocal) return false // before start date
+      if (todayLocal > startLocal) return true  // after start date
+      // Same day — check if past 7 AM local
+      const hourLocal = parseInt(new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hour: 'numeric', hour12: false,
+      }).format(now))
+      return hourLocal >= 7
+    }
+
     // Every 5 min — Tournament + Fantasy week status transitions
     cron.schedule('*/5 * * * *', async () => {
       try {
         const now = new Date()
 
-        // Tournament status: UPCOMING → IN_PROGRESS when startDate has passed
+        // Tournament status: UPCOMING → IN_PROGRESS (timezone-aware)
         const upcomingTournaments = await cronPrisma.tournament.findMany({
-          where: { status: 'UPCOMING', startDate: { lte: now } },
-          select: { id: true, name: true, startDate: true },
+          where: { status: 'UPCOMING' },
+          select: { id: true, name: true, startDate: true, timezone: true },
         })
         for (const t of upcomingTournaments) {
+          if (!t.startDate || !hasTournamentStarted(t.startDate, t.timezone)) continue
           const daysSinceStart = Math.floor((now - new Date(t.startDate).getTime()) / 86400000)
           const currentRound = Math.min(Math.max(daysSinceStart + 1, 1), 4)
           await cronPrisma.tournament.update({
@@ -547,14 +566,15 @@ httpServer.listen(PORT, () => {
           cronLog('tournamentTransition', `${t.name}: UPCOMING → IN_PROGRESS (round ${currentRound})`)
         }
 
-        // Transition UPCOMING → LOCKED when tournament starts
+        // Transition UPCOMING → LOCKED when tournament starts (timezone-aware)
         const upcomingWeeks = await cronPrisma.fantasyWeek.findMany({
           where: { status: 'UPCOMING' },
-          include: { tournament: { select: { id: true, startDate: true, status: true } } },
+          include: { tournament: { select: { id: true, startDate: true, status: true, timezone: true } } },
         })
         for (const week of upcomingWeeks) {
           const lockTime = week.tournament?.startDate || week.startDate
-          if (lockTime && now >= new Date(lockTime)) {
+          const tz = week.tournament?.timezone || null
+          if (lockTime && hasTournamentStarted(lockTime, tz)) {
             await cronPrisma.fantasyWeek.update({
               where: { id: week.id },
               data: { status: 'LOCKED' },

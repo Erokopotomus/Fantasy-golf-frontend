@@ -45,7 +45,7 @@ const navDropdownItems = {
 
 const accentColors = {
   emerald: { icon: 'text-emerald-400', hover: 'hover:text-emerald-400', active: 'text-emerald-400', border: 'border-emerald-500/20', hubBg: 'bg-emerald-500/10', hubText: 'text-emerald-400', hubIcon: 'text-emerald-400' },
-  orange: { icon: 'text-orange-400', hover: 'hover:text-orange-400', active: 'text-orange-400', border: 'border-orange-500/20', hubBg: 'bg-orange-500/10', hubText: 'text-orange-400', hubIcon: 'text-orange-400' },
+  orange: { icon: 'text-orange', hover: 'hover:text-orange', active: 'text-orange', border: 'border-orange/20', hubBg: 'bg-orange/10', hubText: 'text-orange', hubIcon: 'text-orange' },
   purple: { icon: 'text-purple-400', hover: 'hover:text-purple-400', active: 'text-purple-400', border: 'border-purple-500/20', hubBg: 'bg-purple-500/10', hubText: 'text-purple-400', hubIcon: 'text-purple-400' },
 }
 
