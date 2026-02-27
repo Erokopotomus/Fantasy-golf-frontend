@@ -653,57 +653,95 @@ const Step2AssignTeams = ({ wizard }) => {
 
           <div className={`${sidebarOpen ? 'block' : 'hidden'} lg:block`}>
             <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-3 sticky top-24 max-h-[65vh] overflow-y-auto">
-              {activeOwnerId && activeOwner ? (
-                <>
-                  {/* Active owner header */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-display font-bold text-slate"
-                      style={{ backgroundColor: activeOwner.color }}
-                    >
-                      {activeOwnerId.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="text-sm font-display font-bold text-text-primary">{activeOwnerId}</div>
-                      <div className="text-[10px] font-mono text-text-muted">
-                        {(ownerClaimedEntries.get(activeOwnerId) || []).length} team{(ownerClaimedEntries.get(activeOwnerId) || []).length !== 1 ? 's' : ''}
+              {activeOwnerId && activeOwner ? (() => {
+                const claimed = ownerClaimedEntries.get(activeOwnerId) || []
+                // Flatten all entries for this owner into season-by-season view
+                const seasonMap = new Map()
+                for (const { rawName, entries } of claimed) {
+                  for (const e of entries) {
+                    seasonMap.set(e.seasonYear, { ...e, rawName })
+                  }
+                }
+                const seasons = [...seasonMap.entries()].sort((a, b) => b[0] - a[0])
+                // Detect year gaps
+                const years = seasons.map(([y]) => y)
+                const minYear = Math.min(...years)
+                const maxYear = Math.max(...years)
+                const missingYears = []
+                if (years.length > 1) {
+                  for (let y = minYear + 1; y < maxYear; y++) {
+                    if (!years.includes(y)) missingYears.push(y)
+                  }
+                }
+                // Totals
+                const totalW = seasons.reduce((s, [, e]) => s + (e.wins || 0), 0)
+                const totalL = seasons.reduce((s, [, e]) => s + (e.losses || 0), 0)
+                const championships = seasons.filter(([, e]) => e.playoffResult === 'CHAMPION').length
+
+                return (
+                  <>
+                    {/* Active owner header */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-display font-bold text-slate"
+                        style={{ backgroundColor: activeOwner.color }}
+                      >
+                        {activeOwnerId.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-display font-bold text-text-primary">{activeOwnerId}</div>
+                        <div className="text-[10px] font-mono text-text-muted">
+                          {seasons.length} season{seasons.length !== 1 ? 's' : ''} &middot; {totalW}-{totalL}{championships > 0 ? ` · ${championships} title${championships > 1 ? 's' : ''}` : ''}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Claimed teams */}
-                  <div className="space-y-1">
-                    {(ownerClaimedEntries.get(activeOwnerId) || []).map(({ rawName, entries }) => {
-                      const years = entries.map(e => e.seasonYear).sort()
-                      const isFlashing = lastClaimedName === rawName
-                      return (
-                        <button
-                          key={rawName}
-                          onClick={() => unassignTeam(rawName)}
-                          className={`w-full text-left flex items-center justify-between px-2.5 py-2 rounded-lg transition-all duration-500 group ${
-                            isFlashing ? 'bg-accent-gold/20' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'
-                          }`}
-                          title="Click to unassign"
-                        >
-                          <div className="min-w-0">
-                            <div className="text-xs text-text-primary font-display truncate">{rawName}</div>
-                            <div className="text-[10px] font-mono text-text-muted">
-                              {formatYearRanges(years)}
-                            </div>
+                    {/* Missing years warning */}
+                    {missingYears.length > 0 && (
+                      <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/30 rounded-lg px-2.5 py-2 mb-3">
+                        <svg className="w-3.5 h-3.5 text-orange-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-[10px] text-orange-300 font-mono">
+                          Missing: {missingYears.join(', ')} — check if import missed a year
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Season-by-season breakdown */}
+                    <div className="space-y-0.5">
+                      {seasons.map(([year, entry]) => (
+                        <div key={year} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-[var(--surface-alt)] transition-colors">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-[10px] font-mono text-text-muted w-8 flex-shrink-0">{year}</span>
+                            <span className="text-xs text-text-primary font-display truncate">{entry.rawName}</span>
                           </div>
-                          <svg className="w-3.5 h-3.5 text-text-muted group-hover:text-red-400 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )
-                    })}
-                    {(ownerClaimedEntries.get(activeOwnerId) || []).length === 0 && (
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[10px] font-mono text-text-secondary">{entry.wins}-{entry.losses}</span>
+                            {entry.playoffResult === 'CHAMPION' && <span className="text-[9px]">🏆</span>}
+                            {entry.playoffResult === 'RUNNER_UP' && <span className="text-[9px]">🥈</span>}
+                            <button
+                              onClick={() => unassignTeam(entry.rawName)}
+                              className="text-text-muted hover:text-red-400 transition-colors"
+                              title="Unassign"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {claimed.length === 0 && (
                       <p className="text-[11px] text-text-muted py-3 text-center font-mono">
                         Tap cards to assign teams
                       </p>
                     )}
-                  </div>
-                </>
+                  </>
+                )
+              })()
               ) : (
                 <div className="py-6 text-center">
                   <div className="w-12 h-12 border-2 border-dashed border-[var(--card-border)] rounded-xl flex items-center justify-center mx-auto mb-2">
