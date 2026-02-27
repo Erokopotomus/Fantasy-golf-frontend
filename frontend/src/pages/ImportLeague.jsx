@@ -287,7 +287,18 @@ const ImportLeague = () => {
         setSelectedOwner(autoMatched?.ownerName || null)
       }
 
-      setStep(4) // Go to confirmation step
+      // Skip settings confirmation when merging into an existing league —
+      // the league already has its settings from the original import
+      if (mergeTarget) {
+        setStep(5)
+        const lid = data.leagueId
+        if (lid) {
+          setHealthLoading(true)
+          api.getImportHealth(lid).then(h => setHealth(h)).catch(() => {}).finally(() => setHealthLoading(false))
+        }
+      } else {
+        setStep(4) // New league — confirm settings
+      }
     } else {
       track(Events.IMPORT_FAILED, { source_platform: platform.id, error_type: 'import_error' })
       setStep(2)
