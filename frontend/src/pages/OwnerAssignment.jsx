@@ -408,6 +408,16 @@ const Step1IdentifyOwners = ({ wizard }) => {
           )
         })()}
 
+        {/* Helpful note */}
+        <div className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-xl px-4 py-3">
+          <p className="text-xs text-text-secondary">
+            <strong className="text-text-primary">See a team name instead of an owner name?</strong> Use the pencil icon to rename it to the real person. Use <strong>Merge</strong> to combine duplicates (same person, different name across platforms).
+          </p>
+          <p className="text-xs text-text-muted mt-1.5">
+            Don't worry about getting everything perfect right now — you can come back and update this anytime from your Vault.
+          </p>
+        </div>
+
         {/* Continue button */}
         <button
           onClick={() => setStep(2)}
