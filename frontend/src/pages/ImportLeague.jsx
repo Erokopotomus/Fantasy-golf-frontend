@@ -658,12 +658,12 @@ const ImportLeague = () => {
                   <HelpGuide
                     title="How do I find my Yahoo league ID?"
                     steps={[
-                      <span key="y1">Go to <span className="font-mono text-accent-gold">football.fantasysports.yahoo.com</span> and log in</span>,
-                      'Click on your league name to open it',
-                      <span key="y3">Look at the URL — the number at the end is your league ID</span>,
-                      <span key="y4">Example: football.fantasysports.yahoo.com/f1/<span className="text-accent-gold font-bold">123456</span></span>,
+                      <span key="y1">Log in to Yahoo, then go to <span className="font-mono text-accent-gold">profiles.sports.yahoo.com/#</span></span>,
+                      <span key="y2">Select your <strong>sport</strong> (Football, Basketball, etc.) and the <strong>year</strong> you want</span>,
+                      <span key="y3">Click the <strong>History</strong> tab — this shows all your leagues for that year (and links to other years)</span>,
+                      <span key="y4">Click into your league — the number in the URL is your league ID: football.fantasysports.yahoo.com/f1/<span className="text-accent-gold font-bold">123456</span></span>,
                     ]}
-                    tip="You don't need to be commissioner — any league member can import. We'll pull all available history automatically."
+                    tip="Yahoo keeps data back to 2007-2009 for most leagues. You don't need to be commissioner — any member can import. If your league history spans multiple platforms (e.g. Yahoo then Sleeper), import each separately from your Vault's Import Seasons button."
                   />
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">League ID (number only)</label>
