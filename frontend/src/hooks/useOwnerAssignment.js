@@ -434,6 +434,29 @@ export function useOwnerAssignment(leagueId) {
     return true
   }, [owners, activeOwnerId])
 
+  // Merge sourceOwner INTO targetOwner — all assignments transfer, source is removed
+  const mergeOwner = useCallback((sourceName, targetName) => {
+    if (!sourceName || !targetName || sourceName === targetName) return false
+    if (!owners.has(sourceName) || !owners.has(targetName)) return false
+    // Transfer all assignments from source to target
+    setAssignments(prev => {
+      const next = new Map(prev)
+      for (const [rawName, ownerName] of prev) {
+        if (ownerName === sourceName) next.set(rawName, targetName)
+      }
+      return next
+    })
+    // Remove source owner
+    setOwners(prev => {
+      const next = new Map(prev)
+      next.delete(sourceName)
+      return next
+    })
+    if (activeOwnerId === sourceName) setActiveOwnerId(targetName)
+    setHasChanges(true)
+    return true
+  }, [owners, activeOwnerId])
+
   const toggleOwnerActive = useCallback((name) => {
     setOwners(prev => {
       const next = new Map(prev)
@@ -647,7 +670,7 @@ export function useOwnerAssignment(leagueId) {
 
     // Step 1
     owners, detectedNames, uniqueRawNames, rawNameToEntries, availableYears,
-    addOwner, removeOwner, renameOwner, toggleOwnerActive, dismissDetection,
+    addOwner, removeOwner, renameOwner, mergeOwner, toggleOwnerActive, dismissDetection,
 
     // Step 2
     activeOwnerId, setActiveOwnerId, assignments,

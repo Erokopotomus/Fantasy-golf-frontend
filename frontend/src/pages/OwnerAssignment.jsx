@@ -153,10 +153,11 @@ const OwnerChipBar = ({ owners, activeOwnerId, setActiveOwnerId, progress }) => 
 
 const Step1IdentifyOwners = ({ wizard }) => {
   const [manualInput, setManualInput] = useState('')
+  const [mergeSource, setMergeSource] = useState(null) // owner name being merged FROM
   const inputRef = useRef(null)
   const {
     owners, detectedNames, uniqueRawNames, rawNameToEntries, nameToYears, availableYears,
-    addOwner, removeOwner, renameOwner, toggleOwnerActive, dismissDetection,
+    addOwner, removeOwner, renameOwner, mergeOwner, toggleOwnerActive, dismissDetection,
     canProceedToStep2, setStep, assignments,
   } = wizard
 
@@ -269,7 +270,9 @@ const Step1IdentifyOwners = ({ wizard }) => {
           const OwnerRow = ({ name, data, index }) => {
             const years = nameToYears[name] || []
             return (
-              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-[var(--card-border)]/50">
+              <div className={`relative flex items-center justify-between px-3 py-2.5 rounded-lg border ${
+                mergeSource && mergeSource !== name ? 'bg-accent-gold/5 border-accent-gold/30 cursor-pointer' : 'bg-[var(--surface)] border-[var(--card-border)]/50'
+              }`}>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className="text-xs font-mono text-text-muted/60 w-5 text-right flex-shrink-0">{index}</span>
                   <span
@@ -296,6 +299,17 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     {data.isActive ? 'MARK FORMER' : 'MARK ACTIVE'}
                   </button>
                   <button
+                    onClick={() => setMergeSource(mergeSource === name ? null : name)}
+                    className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
+                      mergeSource === name
+                        ? 'text-accent-gold bg-accent-gold/20 border border-accent-gold/40'
+                        : 'text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-accent-gold hover:border-accent-gold/30'
+                    }`}
+                    title="Merge this owner into another"
+                  >
+                    MERGE
+                  </button>
+                  <button
                     onClick={() => {
                       const newName = window.prompt('Rename owner:', name)
                       if (newName) renameOwner(name, newName)
@@ -317,12 +331,40 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     </svg>
                   </button>
                 </div>
+                {/* Merge target selector — shown on OTHER rows when this row's MERGE is active */}
+                {mergeSource && mergeSource !== name && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Merge "${mergeSource}" into "${name}"? All of ${mergeSource}'s history will move under ${name}.`)) {
+                        mergeOwner(mergeSource, name)
+                        setMergeSource(null)
+                      }
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg hover:bg-accent-gold/80 transition-colors shadow-lg z-10"
+                  >
+                    MERGE {mergeSource} HERE
+                  </button>
+                )}
               </div>
             )
           }
 
           return (
             <div className="space-y-5">
+              {/* Merge mode banner */}
+              {mergeSource && (
+                <div className="flex items-center justify-between px-4 py-2.5 bg-accent-gold/10 border border-accent-gold/30 rounded-xl">
+                  <p className="text-xs font-mono text-accent-gold">
+                    Click an owner below to merge <strong>{mergeSource}</strong> into them
+                  </p>
+                  <button
+                    onClick={() => setMergeSource(null)}
+                    className="text-xs font-mono text-text-muted hover:text-text-primary transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
               {/* Active Owners */}
               <div className="border border-accent-green/20 rounded-xl overflow-hidden">
                 <div className="px-4 py-2.5 bg-accent-green/5 border-b border-accent-green/20 flex items-center justify-between">
