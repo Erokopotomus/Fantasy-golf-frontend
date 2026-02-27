@@ -296,9 +296,11 @@ export function useOwnerAssignment(leagueId) {
 
   // ─── Derived: Vault Reveal Stats ──────────────────────────────────────────
 
-  // Owner stats for the vault reveal — sorted by all-time win%
+  // Owner stats for the vault reveal — active members only, sorted by all-time win%
   const vaultOwnerStats = useMemo(() => {
-    return ownerSummaries.map(summary => {
+    return ownerSummaries
+      .filter(summary => summary.isActive !== false) // Only active members
+      .map(summary => {
       const totalGames = summary.totalWins + summary.totalLosses
       const winPct = totalGames > 0 ? summary.totalWins / totalGames : 0
 
@@ -333,17 +335,19 @@ export function useOwnerAssignment(leagueId) {
     }).sort((a, b) => b.winPct - a.winPct)
   }, [ownerSummaries])
 
-  // Aggregate league-level stats for the vault reveal header
+  // Aggregate league-level stats for the vault reveal header (active members only)
   const vaultLeagueStats = useMemo(() => {
+    const activeOwnerSummaries = ownerSummaries.filter(o => o.isActive !== false)
     const totalSeasons = new Set(teamEntries.map(e => e.seasonYear)).size
     const totalGames = Math.round(
-      ownerSummaries.reduce((s, o) => s + o.totalWins + o.totalLosses, 0) / 2
+      activeOwnerSummaries.reduce((s, o) => s + o.totalWins + o.totalLosses, 0) / 2
     )
     const totalPoints = Math.round(
-      ownerSummaries.reduce((s, o) => s + o.totalPF, 0)
+      activeOwnerSummaries.reduce((s, o) => s + o.totalPF, 0)
     )
-    const totalTitles = ownerSummaries.reduce((s, o) => s + o.championships.length, 0)
-    return { totalSeasons, totalOwners: owners.size, totalGames, totalPoints, totalTitles }
+    const totalTitles = activeOwnerSummaries.reduce((s, o) => s + o.championships.length, 0)
+    const activeOwnerCount = [...owners.values()].filter(o => o.isActive !== false).length
+    return { totalSeasons, totalOwners: activeOwnerCount, totalGames, totalPoints, totalTitles }
   }, [ownerSummaries, teamEntries, owners])
 
   // Unassigned entries for Step 3
