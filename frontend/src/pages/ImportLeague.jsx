@@ -145,8 +145,8 @@ const ImportLeague = () => {
   // MFL-specific
   const [mflApiKey, setMflApiKey] = useState('')
 
-  // Target league for cross-platform merging
-  const [targetLeagueId, setTargetLeagueId] = useState('')
+  // Target league for cross-platform merging (pre-fill from URL if coming from Vault)
+  const [targetLeagueId, setTargetLeagueId] = useState(searchParams.get('targetLeagueId') || '')
   const [existingLeagues, setExistingLeagues] = useState([])
 
   // Season selection (checkboxes on Step 2)
