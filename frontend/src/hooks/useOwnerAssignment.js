@@ -83,6 +83,16 @@ export function useOwnerAssignment(leagueId) {
     return () => { cancelled = true }
   }, [leagueId])
 
+  // ─── Refetch History (for manual additions) ──────────────────────────────
+  const refetchHistory = useCallback(async () => {
+    try {
+      const historyRes = await api.getLeagueHistory(leagueId)
+      setHistory(historyRes)
+    } catch (err) {
+      // Silent — derived data just won't update
+    }
+  }, [leagueId])
+
   // ─── Derived: Team Entries ─────────────────────────────────────────────────
   // Flatten history into team entries
   const teamEntries = useMemo(() => {
@@ -677,7 +687,7 @@ export function useOwnerAssignment(leagueId) {
 
   return {
     // Data
-    loading, error, league, history, teamEntries, nameToYears,
+    loading, error, league, history, teamEntries, nameToYears, refetchHistory,
     inviteCode: league?.inviteCode || null,
 
     // Step navigation

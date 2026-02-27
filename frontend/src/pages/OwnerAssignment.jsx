@@ -5,6 +5,7 @@ import { useOwnerAssignment, formatYearRanges } from '../hooks/useOwnerAssignmen
 import VaultLoadingScreen from '../components/vault/VaultLoadingScreen'
 import VaultRevealView from '../components/vault/VaultRevealView'
 import ShareModal from '../components/vault/ShareModal'
+import AddHistoryModal from '../components/vault/AddHistoryModal'
 
 // ─── Step Indicator ──────────────────────────────────────────────────────────
 
@@ -154,12 +155,14 @@ const OwnerChipBar = ({ owners, activeOwnerId, setActiveOwnerId, progress }) => 
 const Step1IdentifyOwners = ({ wizard }) => {
   const [manualInput, setManualInput] = useState('')
   const [mergeSource, setMergeSource] = useState(null) // owner name being merged FROM
+  const [historyModal, setHistoryModal] = useState(null) // null | { mode: 'season' } | { mode: 'team', seasonYear: number }
   const inputRef = useRef(null)
   const {
     owners, detectedNames, uniqueRawNames, rawNameToEntries, nameToYears, availableYears,
     addOwner, removeOwner, renameOwner, mergeOwner, toggleOwnerActive, dismissDetection,
-    canProceedToStep2, setStep, assignments,
+    canProceedToStep2, setStep, assignments, refetchHistory,
   } = wizard
+  const leagueId = wizard.league?.id
 
   // Already-added owner names (to filter them from detected)
   const ownerNameSet = new Set([...owners.keys()].map(n => n.toLowerCase()))
@@ -431,12 +434,33 @@ const Step1IdentifyOwners = ({ wizard }) => {
       {/* Right: Reference panel */}
       <div className="lg:col-span-1">
         <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-4 max-h-[70vh] overflow-y-auto sticky top-24">
-          <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-3">
-            All Imported Teams
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-mono text-text-secondary uppercase tracking-wider">
+              All Imported Teams
+            </h3>
+            {leagueId && (
+              <button
+                onClick={() => setHistoryModal({ mode: 'season' })}
+                className="text-[10px] font-mono text-accent-gold/70 hover:text-accent-gold transition-colors"
+              >
+                + Add Season
+              </button>
+            )}
+          </div>
           {seasonGroups.map(({ year, entries }) => (
             <div key={year} className="mb-4">
-              <div className="text-[11px] font-mono text-accent-gold/70 mb-1.5">{year}</div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-mono text-accent-gold/70">{year}</span>
+                {leagueId && (
+                  <button
+                    onClick={() => setHistoryModal({ mode: 'team', seasonYear: year })}
+                    className="text-[10px] font-mono text-text-muted hover:text-accent-gold transition-colors leading-none"
+                    title={`Add teams to ${year}`}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
               <div className="space-y-0.5">
                 {entries.map((e, i) => (
                   <div key={`${e.rawName}-${i}`} className="flex items-center justify-between px-2 py-1 text-[11px] rounded hover:bg-[var(--surface)]">
@@ -454,6 +478,21 @@ const Step1IdentifyOwners = ({ wizard }) => {
           )}
         </div>
       </div>
+
+      {/* Add History Modal */}
+      {historyModal && leagueId && (
+        <AddHistoryModal
+          leagueId={leagueId}
+          mode={historyModal.mode}
+          seasonYear={historyModal.seasonYear}
+          existingYears={availableYears}
+          onClose={() => setHistoryModal(null)}
+          onSaved={() => {
+            setHistoryModal(null)
+            refetchHistory()
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -741,8 +780,7 @@ const Step2AssignTeams = ({ wizard }) => {
                     )}
                   </>
                 )
-              })()
-              ) : (
+              })() : (
                 <div className="py-6 text-center">
                   <div className="w-12 h-12 border-2 border-dashed border-[var(--card-border)] rounded-xl flex items-center justify-center mx-auto mb-2">
                     <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
