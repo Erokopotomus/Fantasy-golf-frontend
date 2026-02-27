@@ -642,6 +642,18 @@ export function useOwnerAssignment(leagueId) {
       }
     }
 
+    // Also add owners from older seasons who aren't in the most recent year (as former)
+    for (const rawName of uniqueRawNames) {
+      if (!ownersMap.has(rawName)) {
+        ownersMap.set(rawName, {
+          name: rawName,
+          color: OWNER_COLORS[ci % OWNER_COLORS.length],
+          isActive: false, // former member — not in most recent season
+        })
+        ci++
+      }
+    }
+
     // Pre-assign team-seasons where the rawName exactly matches an owner
     const assignMap = new Map()
     for (const rawName of uniqueRawNames) {
