@@ -663,7 +663,7 @@ const ImportLeague = () => {
                       <span key="y3">Select your <strong>sport</strong> (Football, Basketball, etc.) and the <strong>year</strong> from when the league was active</span>,
                       <span key="y4">Click the <strong>History</strong> tab — this shows all your leagues for that year and links to other years</span>,
                     ]}
-                    tip="Yahoo keeps data back to 2007-2009. This is especially useful if you've since moved to another platform (like Sleeper) and need to grab your older Yahoo seasons. You don't need to be commissioner — any member can import."
+                    tip="Yahoo keeps data back to 2007-2009. Start with the most recent year's URL — we'll try to pull all seasons automatically. If some years are missing, go to those years on Yahoo's site and import using that year's URL. Sorry if it's a bit of a hassle, but you only have to do it once — blame Yahoo, not us! You don't need to be commissioner — any member can import."
                   />
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-text-secondary mb-1">League ID (number only)</label>
