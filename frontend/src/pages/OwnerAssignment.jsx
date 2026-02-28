@@ -322,24 +322,32 @@ const Step1IdentifyOwners = ({ wizard }) => {
               >
                 <div className="flex items-center justify-between px-3 py-2.5">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {/* Checkbox for multi-select merge */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleMergeSelect(name) }}
-                    className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
-                      isSelected
-                        ? 'bg-accent-gold border-accent-gold text-white'
-                        : 'border-text-muted/40 hover:border-accent-gold/70'
-                    }`}
-                    title={isSelected ? 'Deselect' : 'Select for merge'}
-                  >
-                    {isSelected && (
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  {/* Checkbox for multi-select merge — hidden when row is a merge target */}
+                  {!isTarget ? (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleMergeSelect(name) }}
+                      className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                        isSelected
+                          ? 'bg-accent-gold border-accent-gold text-white'
+                          : 'border-text-muted/40 hover:border-accent-gold/70'
+                      }`}
+                      title={isSelected ? 'Deselect' : 'Select for merge'}
+                    >
+                      {isSelected && (
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  ) : (
+                    <span className="w-5 h-5 rounded border-2 border-accent-gold/30 flex-shrink-0 flex items-center justify-center text-accent-gold">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
-                    )}
-                  </button>
+                    </span>
+                  )}
                   <div
-                    className="flex items-center gap-2 min-w-0 cursor-pointer"
+                    className={`flex items-center gap-2 min-w-0 ${isTarget ? '' : 'cursor-pointer'}`}
                     onClick={isTarget ? undefined : (e) => { e.stopPropagation(); setExpandedOwner(isExpanded ? null : name) }}
                   >
                     <span
@@ -358,9 +366,12 @@ const Step1IdentifyOwners = ({ wizard }) => {
                   </div>
                 </div>
                 {isTarget ? (
-                  <span className="px-3 py-1.5 text-xs font-mono font-bold text-white bg-accent-gold rounded-lg shadow-lg flex-shrink-0">
+                  <button
+                    onClick={() => mergeSelectedInto(name)}
+                    className="px-3 py-1.5 text-xs font-mono font-bold text-white bg-accent-gold rounded-lg shadow-lg flex-shrink-0 hover:bg-accent-gold/90 transition-colors"
+                  >
                     MERGE HERE
-                  </span>
+                  </button>
                 ) : !isSelected ? (
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
@@ -398,8 +409,8 @@ const Step1IdentifyOwners = ({ wizard }) => {
                   </div>
                 ) : null}
                 </div>
-                {/* Expanded: season-by-season breakdown with unassign */}
-                {isExpanded && (
+                {/* Expanded: season-by-season breakdown with unassign (hidden during merge mode) */}
+                {isExpanded && !mergeMode && (
                   <div className="px-3 pb-2.5 border-t border-[var(--card-border)]/30 mt-1">
                     <div className="mt-2 space-y-0.5">
                       {assignedEntries.length > 0 ? assignedEntries.map((e) => (
