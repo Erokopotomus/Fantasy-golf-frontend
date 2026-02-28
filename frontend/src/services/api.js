@@ -788,6 +788,13 @@ class ApiService {
     })
   }
 
+  async sendVaultInviteEmails(leagueId, invites) {
+    return this.request('/imports/vault-invite-emails', {
+      method: 'POST',
+      body: JSON.stringify({ leagueId, invites }),
+    })
+  }
+
   async claimImportOwner(leagueId, ownerName) {
     return this.request('/imports/claim-owner', {
       method: 'POST',

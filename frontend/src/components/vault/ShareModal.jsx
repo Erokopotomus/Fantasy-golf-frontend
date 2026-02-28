@@ -1,6 +1,5 @@
 // Commissioner share interface — triggered post-save and from LeagueVault header.
-// Copy-link sharing (generic + per-owner personalized), in-app notifications.
-// Email sending deferred to Phase 2D.
+// Copy-link sharing (generic + per-owner personalized), in-app notifications, server-side email invites.
 
 import { useState, useCallback } from 'react'
 import api from '../../services/api'
@@ -22,11 +21,16 @@ export default function ShareModal({
   const [notified, setNotified] = useState(false)
   const [notifyError, setNotifyError] = useState(null)
   const [ownerEmails, setOwnerEmails] = useState({}) // { ownerName: email }
-  const [emailSent, setEmailSent] = useState({}) // { ownerName: true }
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailResult, setEmailResult] = useState(null) // { sent, failed, errors }
+  const [emailError, setEmailError] = useState(null)
 
   if (!isOpen) return null
 
   const baseUrl = `${window.location.origin}/vault/invite/${inviteCode}`
+
+  // Count how many emails are filled in
+  const filledEmails = Object.entries(ownerEmails).filter(([, v]) => v?.trim()).length
 
   const copyToClipboard = useCallback(async (text, ownerName = null) => {
     try {
@@ -71,20 +75,24 @@ export default function ShareModal({
     }
   }, [leagueName, baseUrl])
 
-  const sendEmailInvite = useCallback((ownerName, email, personalUrl) => {
-    if (!email?.trim()) return
-    const subject = encodeURIComponent(`${leagueName} — Your All-Time Stats on Clutch`)
-    const body = encodeURIComponent(
-      `Hey ${ownerName},\n\n` +
-      `I just set up our league history on Clutch Fantasy Sports. ` +
-      `Check out your all-time stats and ranking:\n\n` +
-      `${personalUrl}\n\n` +
-      `See where you stack up!`
-    )
-    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, '_self')
-    setEmailSent(prev => ({ ...prev, [ownerName]: true }))
-    setTimeout(() => setEmailSent(prev => ({ ...prev, [ownerName]: false })), 3000)
-  }, [leagueName])
+  const handleSendAllEmails = useCallback(async () => {
+    const invites = Object.entries(ownerEmails)
+      .filter(([, email]) => email?.trim())
+      .map(([ownerName, email]) => ({ ownerName, email: email.trim() }))
+    if (invites.length === 0) return
+
+    setEmailSending(true)
+    setEmailError(null)
+    setEmailResult(null)
+    try {
+      const result = await api.sendVaultInviteEmails(leagueId, invites)
+      setEmailResult(result)
+    } catch (err) {
+      setEmailError(err.message || 'Failed to send emails')
+    } finally {
+      setEmailSending(false)
+    }
+  }, [leagueId, ownerEmails])
 
   const handleNotify = useCallback(async () => {
     setNotifying(true)
@@ -197,7 +205,7 @@ export default function ShareModal({
                 Personalized Invites
               </div>
               <p className="text-[10px] font-mono text-text-muted/50 mb-3 leading-relaxed">
-                Each link highlights the owner's stats when they open it.
+                Each link highlights the owner's stats. Add emails to send invites directly.
               </p>
               <div className="space-y-1.5">
                 {ownerStats.map((owner, idx) => {
@@ -206,14 +214,15 @@ export default function ShareModal({
                   const isCopied = copiedOwner === owner.name
                   const isClaimed = !!owner.ownerUserId
                   const email = ownerEmails[owner.name] || ''
-                  const sent = emailSent[owner.name]
+                  const wasSent = emailResult?.sent > 0 && email?.trim()
+                  const hadError = emailResult?.errors?.some(e => e.ownerName === owner.name)
 
                   return (
                     <div
                       key={owner.name}
                       className="rounded-lg py-2 px-2.5"
                       style={{
-                        background: isCopied || sent ? 'rgba(107,203,119,0.04)' : 'transparent',
+                        background: isCopied || wasSent ? 'rgba(107,203,119,0.04)' : 'transparent',
                       }}
                     >
                       <div className="flex items-center gap-2.5">
@@ -268,40 +277,68 @@ export default function ShareModal({
                         </button>
                       </div>
 
-                      {/* Email invite row */}
+                      {/* Email input */}
                       <div className="flex items-center gap-1.5 mt-1.5 ml-[42px]">
                         <input
                           type="email"
                           value={email}
                           onChange={e => setOwnerEmails(prev => ({ ...prev, [owner.name]: e.target.value }))}
-                          onKeyDown={e => { if (e.key === 'Enter' && email.trim()) sendEmailInvite(owner.name, email, personalUrl) }}
                           placeholder="email@example.com"
-                          className="flex-1 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-[var(--surface)] border border-[var(--card-border)] text-text-primary placeholder:text-text-muted/30 focus:outline-none focus:border-accent-gold/50"
+                          disabled={emailResult?.sent > 0}
+                          className="flex-1 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-[var(--surface)] border border-[var(--card-border)] text-text-primary placeholder:text-text-muted/30 focus:outline-none focus:border-accent-gold/50 disabled:opacity-50"
                         />
-                        <button
-                          onClick={() => sendEmailInvite(owner.name, email, personalUrl)}
-                          disabled={!email?.trim() || sent}
-                          className="px-2.5 py-1.5 rounded-md text-[10px] font-mono font-semibold flex items-center gap-1 transition-all duration-200 flex-shrink-0 disabled:opacity-30"
-                          style={{
-                            background: sent ? 'rgba(107,203,119,0.15)' : '#1A1D1B',
-                            color: sent ? '#6BCB77' : '#D4A853',
-                            border: `1px solid ${sent ? 'rgba(107,203,119,0.2)' : '#2A2D2B'}`,
-                          }}
-                        >
-                          {sent ? '✓ Opened' : (
-                            <>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                              </svg>
-                              Email
-                            </>
-                          )}
-                        </button>
+                        {wasSent && !hadError && (
+                          <span className="text-[10px] font-mono text-accent-green flex items-center gap-1 flex-shrink-0">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Sent
+                          </span>
+                        )}
+                        {hadError && (
+                          <span className="text-[10px] font-mono text-red-400 flex-shrink-0">Failed</span>
+                        )}
                       </div>
                     </div>
                   )
                 })}
               </div>
+
+              {/* Send All Invites button */}
+              <button
+                onClick={handleSendAllEmails}
+                disabled={filledEmails === 0 || emailSending || emailResult?.sent > 0}
+                className="w-full mt-4 py-2.5 rounded-lg text-xs font-display font-bold flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-40 disabled:cursor-default"
+                style={{
+                  background: emailResult?.sent > 0
+                    ? 'rgba(107,203,119,0.1)'
+                    : filledEmails > 0
+                      ? 'linear-gradient(135deg, #D4A853 0%, #B8922E 100%)'
+                      : '#1A1D1B',
+                  color: emailResult?.sent > 0 ? '#6BCB77' : filledEmails > 0 ? '#0A0908' : '#D4A853',
+                }}
+              >
+                {emailSending ? (
+                  'Sending...'
+                ) : emailResult?.sent > 0 ? (
+                  `${emailResult.sent} invite${emailResult.sent !== 1 ? 's' : ''} sent!`
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Send All Invites{filledEmails > 0 ? ` (${filledEmails})` : ''}
+                  </>
+                )}
+              </button>
+              {emailError && (
+                <p className="text-[10px] font-mono text-red-400 mt-1.5 text-center">{emailError}</p>
+              )}
+              {emailResult?.failed > 0 && (
+                <p className="text-[10px] font-mono text-red-400/70 mt-1 text-center">
+                  {emailResult.failed} failed to send
+                </p>
+              )}
             </div>
 
             {/* Notify league members button */}

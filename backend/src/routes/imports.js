@@ -10,6 +10,7 @@ const fantraxImport = require('../services/fantraxImport')
 const mflImport = require('../services/mflImport')
 const importHealthService = require('../services/importHealthService')
 const clutchRatingService = require('../services/clutchRatingService')
+const emailService = require('../services/emailService')
 
 const prisma = require('../lib/prisma.js')
 
@@ -1165,6 +1166,62 @@ router.post('/vault-notify', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Vault notify error:', err)
     res.status(500).json({ error: 'Failed to send notifications' })
+  }
+})
+
+// ─── Send Vault Invite Emails (Resend) ──────────────────────────────────────
+// POST /api/imports/vault-invite-emails
+// Commissioner-only — sends personalized vault invite emails via Resend
+router.post('/vault-invite-emails', authenticate, async (req, res) => {
+  try {
+    const { leagueId, invites } = req.body
+    if (!leagueId || !Array.isArray(invites) || invites.length === 0) {
+      return res.status(400).json({ error: { message: 'leagueId and invites array required' } })
+    }
+
+    // Verify user is commissioner
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { id: true, name: true, ownerId: true, inviteCode: true },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can send invite emails' } })
+    }
+
+    const baseUrl = `https://clutchfantasysports.com/vault/invite/${league.inviteCode}`
+
+    const results = await Promise.allSettled(
+      invites.map(({ ownerName, email }) => {
+        if (!email?.trim() || !ownerName) return Promise.resolve({ success: false, error: 'Missing fields' })
+        const personalUrl = `${baseUrl}?member=${encodeURIComponent(ownerName)}`
+        return emailService.sendVaultInviteEmail({
+          to: email.trim(),
+          ownerName,
+          leagueName: league.name,
+          personalUrl,
+          fromName: req.user.name,
+        })
+      })
+    )
+
+    let sent = 0
+    let failed = 0
+    const errors = []
+    results.forEach((r, i) => {
+      const result = r.status === 'fulfilled' ? r.value : { success: false, error: r.reason?.message }
+      if (result.success) {
+        sent++
+      } else {
+        failed++
+        errors.push({ ownerName: invites[i].ownerName, error: result.error })
+      }
+    })
+
+    res.json({ sent, failed, errors })
+  } catch (err) {
+    console.error('Vault invite email error:', err)
+    res.status(500).json({ error: { message: 'Failed to send invite emails' } })
   }
 })
 
