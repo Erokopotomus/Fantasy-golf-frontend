@@ -272,10 +272,23 @@ const Step1IdentifyOwners = ({ wizard }) => {
 
           const OwnerRow = ({ name, data, index }) => {
             const years = nameToYears[name] || []
+            // Compute all assigned seasons for this owner (including merged names)
+            const assignedYears = new Set()
+            for (const [rawName, ownerName] of assignments) {
+              if (ownerName === name) {
+                const ys = nameToYears[rawName] || []
+                for (const y of ys) assignedYears.add(y)
+              }
+            }
+            const assignedCount = assignedYears.size
+            const assignedRange = assignedCount > 0 ? formatYearRanges([...assignedYears].sort((a, b) => a - b)) : ''
+            // Show assigned line only when it differs from the raw name years (i.e., merges happened)
+            const hasExtraAssignments = assignedCount > years.length
             return (
-              <div className={`relative flex items-center justify-between px-3 py-2.5 rounded-lg border ${
+              <div className={`relative px-3 py-2.5 rounded-lg border ${
                 mergeSource && mergeSource !== name ? 'bg-accent-gold/5 border-accent-gold/30 cursor-pointer' : 'bg-[var(--surface)] border-[var(--card-border)]/50'
               }`}>
+                <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className="text-xs font-mono text-text-muted/60 w-5 text-right flex-shrink-0">{index}</span>
                   <span
@@ -334,6 +347,18 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     </svg>
                   </button>
                 </div>
+                </div>
+                {/* Assigned seasons summary — shows after merges */}
+                {assignedCount > 0 && (
+                  <div className="flex items-center gap-2 mt-1.5 ml-[2.125rem]">
+                    <span className="text-[10px] font-mono text-text-muted">
+                      {assignedCount} season{assignedCount !== 1 ? 's' : ''} assigned
+                    </span>
+                    {hasExtraAssignments && (
+                      <span className="text-[10px] font-mono text-accent-gold/60">{assignedRange}</span>
+                    )}
+                  </div>
+                )}
                 {/* Merge target selector — shown on OTHER rows when this row's MERGE is active */}
                 {mergeSource && mergeSource !== name && (
                   <button
