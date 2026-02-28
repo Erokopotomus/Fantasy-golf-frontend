@@ -427,52 +427,185 @@ const HeadToHeadTab = ({ history }) => {
 }
 
 // ─── Draft History Tab ─────────────────────────────────────────────────────────
-const DraftHistoryTab = ({ history }) => {
+const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
   const years = history?.seasons ? Object.keys(history.seasons).sort((a, b) => b - a) : []
   const [selectedYear, setSelectedYear] = useState(years[0] || '')
+
+  // Edit mode state
+  const [editMode, setEditMode] = useState(false)
+  const [editedPicks, setEditedPicks] = useState([])
+  const [draftType, setDraftType] = useState('snake')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Build owner list for datalist autocomplete
+  const ownerNames = useMemo(() => {
+    if (!selectedYear || !history?.seasons?.[selectedYear]) return []
+    const teams = history.seasons[selectedYear]
+    return [...new Set(teams.map(t => t.ownerName || t.teamName).filter(Boolean))]
+  }, [selectedYear, history])
 
   // Get draft data for selected year
   const draftInfo = useMemo(() => {
     if (!selectedYear || !history?.seasons?.[selectedYear]) return null
     const teams = history.seasons[selectedYear]
-    // draftData is the same across all teams for a season (it's league-level)
     const teamWithDraft = teams.find(t => t.draftData?.picks?.length > 0)
     if (!teamWithDraft?.draftData) return null
 
     const draft = teamWithDraft.draftData
-    // Build owner map: try teamKey → ownerName, then rosterId → ownerName
     const teamKeyMap = {}
     const rosterMap = {}
     for (let i = 0; i < teams.length; i++) {
       const t = teams[i]
       const name = t.ownerName || t.teamName
       rosterMap[i + 1] = name
-      // Yahoo teamKeys look like "461.l.202974.t.4" — extract the team number
       if (t.teamKey) teamKeyMap[t.teamKey] = name
     }
 
-    // Group picks by round
-    const rounds = {}
-    for (const pick of draft.picks || []) {
-      if (!rounds[pick.round]) rounds[pick.round] = []
-      // Resolve owner: prefer pick's own ownerName, then teamKey lookup, then rosterId lookup
+    // Flat picks with resolved owners
+    const flatPicks = (draft.picks || []).map(pick => {
       const resolvedOwner = pick.ownerName
         || (pick.teamKey && teamKeyMap[pick.teamKey])
         || (pick.rosterId != null && rosterMap[pick.rosterId])
         || null
-      rounds[pick.round].push({
-        ...pick,
-        ownerName: resolvedOwner,
-      })
-    }
+      return { ...pick, ownerName: resolvedOwner }
+    })
 
-    // Sort picks within each round
+    // Group picks by round for view mode
+    const rounds = {}
+    for (const pick of flatPicks) {
+      if (!rounds[pick.round]) rounds[pick.round] = []
+      rounds[pick.round].push(pick)
+    }
     for (const round of Object.values(rounds)) {
       round.sort((a, b) => a.pick - b.pick)
     }
 
-    return { type: draft.type, totalRounds: draft.rounds, rounds }
+    return { type: draft.type, totalRounds: draft.rounds, rounds, flatPicks }
   }, [selectedYear, history])
+
+  // Enter edit mode
+  const enterEditMode = useCallback((startEmpty = false) => {
+    setError(null)
+    if (startEmpty) {
+      setEditedPicks([])
+      setDraftType('auction')
+    } else if (draftInfo) {
+      setDraftType(draftInfo.type || 'snake')
+      setEditedPicks(draftInfo.flatPicks.map(p => ({
+        round: p.round || 0,
+        pick: p.pick || 0,
+        playerName: p.playerName || '',
+        position: p.position || '',
+        ownerName: p.ownerName || '',
+        amount: p.amount || p.cost || 0,
+        isKeeper: p.isKeeper || false,
+        _original: { ...p },
+        _isNew: false,
+      })))
+    }
+    setEditMode(true)
+  }, [draftInfo])
+
+  const cancelEdit = useCallback(() => {
+    setEditMode(false)
+    setEditedPicks([])
+    setError(null)
+  }, [])
+
+  const updatePick = (idx, field, value) => {
+    setEditedPicks(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p))
+  }
+
+  const addPick = () => {
+    const lastPick = editedPicks[editedPicks.length - 1]
+    const nextRound = lastPick ? lastPick.round : 1
+    const nextPick = lastPick ? lastPick.pick + 1 : 1
+    setEditedPicks(prev => [...prev, {
+      round: nextRound,
+      pick: nextPick,
+      playerName: '',
+      position: '',
+      ownerName: '',
+      amount: 0,
+      isKeeper: false,
+      _original: null,
+      _isNew: true,
+    }])
+  }
+
+  const removePick = (idx) => {
+    setEditedPicks(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const hasPickChanged = (pick) => {
+    if (pick._isNew) return pick.playerName.trim().length > 0 || pick.ownerName.trim().length > 0
+    if (!pick._original) return true
+    const o = pick._original
+    return (
+      pick.playerName !== (o.playerName || '') ||
+      pick.position !== (o.position || '') ||
+      pick.ownerName !== (o.ownerName || '') ||
+      parseInt(pick.round) !== (o.round || 0) ||
+      parseInt(pick.pick) !== (o.pick || 0) ||
+      parseFloat(pick.amount) !== (o.amount || o.cost || 0) ||
+      pick.isKeeper !== (o.isKeeper || false)
+    )
+  }
+
+  const changeCount = editedPicks.filter(hasPickChanged).length
+  const deletedCount = draftInfo?.flatPicks ? draftInfo.flatPicks.length - editedPicks.filter(p => !p._isNew).length : 0
+  const totalChanges = changeCount + (deletedCount > 0 ? deletedCount : 0)
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      // Strip tracking fields, build clean picks
+      const cleanPicks = editedPicks.map(p => {
+        const clean = {
+          playerName: p.playerName?.trim() || '',
+          position: p.position?.trim() || '',
+          ownerName: p.ownerName?.trim() || '',
+          isKeeper: Boolean(p.isKeeper),
+        }
+        if (draftType === 'auction') {
+          clean.amount = parseFloat(p.amount) || 0
+          // For auction, auto-number picks sequentially
+          clean.round = 1
+          clean.pick = 0 // will be set below
+        } else {
+          clean.round = parseInt(p.round) || 1
+          clean.pick = parseInt(p.pick) || 0
+        }
+        return clean
+      }).filter(p => p.playerName || p.ownerName) // Remove totally empty rows
+
+      // Auto-number auction picks
+      if (draftType === 'auction') {
+        cleanPicks.forEach((p, i) => { p.pick = i + 1 })
+      }
+
+      // Compute rounds
+      const maxRound = cleanPicks.reduce((max, p) => Math.max(max, p.round || 0), 0)
+
+      await api.updateDraftData(leagueId, selectedYear, {
+        type: draftType,
+        rounds: maxRound || null,
+        picks: cleanPicks,
+      })
+
+      setEditMode(false)
+      setEditedPicks([])
+      if (onSaved) onSaved()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const isAuction = draftType === 'auction'
 
   return (
     <div className="space-y-4">
@@ -483,7 +616,7 @@ const DraftHistoryTab = ({ history }) => {
           {years.map(y => (
             <button
               key={y}
-              onClick={() => setSelectedYear(y)}
+              onClick={() => { setSelectedYear(y); if (editMode) cancelEdit() }}
               className={`px-3 py-1.5 rounded-lg text-sm font-mono font-bold transition-colors ${
                 selectedYear === y ? 'bg-accent-gold text-slate' : 'bg-[var(--bg-alt)] text-text-secondary hover:text-text-primary'
               }`}
@@ -494,18 +627,199 @@ const DraftHistoryTab = ({ history }) => {
         </div>
       </Card>
 
-      {/* Draft board */}
-      {draftInfo ? (
+      {/* Edit mode header bar */}
+      {editMode && (
+        <Card className="!bg-accent-gold/5 border border-accent-gold/20">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-mono text-text-secondary">Type:</span>
+              <select
+                value={draftType}
+                onChange={(e) => setDraftType(e.target.value)}
+                className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm font-mono text-text-primary"
+              >
+                <option value="snake">Snake</option>
+                <option value="auction">Auction</option>
+                <option value="linear">Linear</option>
+              </select>
+              {totalChanges > 0 && (
+                <span className="text-xs font-mono text-accent-gold">
+                  {totalChanges} change{totalChanges !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={cancelEdit}
+                disabled={saving}
+                className="px-3 py-1.5 text-sm font-mono text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || totalChanges === 0}
+                className="px-4 py-1.5 bg-accent-gold text-slate rounded-lg text-sm font-mono font-bold disabled:opacity-40 hover:bg-accent-gold/90 transition-colors"
+              >
+                {saving ? 'Saving...' : `Save ${totalChanges} Change${totalChanges !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          </div>
+          {error && (
+            <p className="text-red-400 text-xs font-mono mt-2">{error}</p>
+          )}
+        </Card>
+      )}
+
+      {/* Draft board — edit mode */}
+      {editMode ? (
+        <Card>
+          <div className="mb-3">
+            <h3 className="font-display font-bold text-text-primary">
+              {selectedYear} Draft — Editing
+            </h3>
+          </div>
+
+          {/* Column headers */}
+          <div className="grid gap-2 mb-2 px-1 text-xs font-mono text-text-secondary uppercase tracking-wider"
+            style={{ gridTemplateColumns: isAuction ? '1fr 70px 1fr 80px 40px 32px' : '50px 50px 1fr 70px 1fr 40px 32px' }}
+          >
+            {!isAuction && <span>Rd</span>}
+            {!isAuction && <span>Pick</span>}
+            <span>Player</span>
+            <span>Pos</span>
+            <span>Owner</span>
+            {isAuction && <span>$</span>}
+            <span>Kpr</span>
+            <span></span>
+          </div>
+
+          {/* Editable rows */}
+          <div className="space-y-1">
+            {editedPicks.map((pick, idx) => {
+              const changed = hasPickChanged(pick)
+              const bgClass = pick._isNew && changed
+                ? 'bg-green-500/5 border border-green-500/20'
+                : changed
+                  ? 'bg-accent-gold/5 border border-accent-gold/10'
+                  : 'border border-transparent'
+              return (
+                <div
+                  key={idx}
+                  className={`grid gap-2 items-center py-1 px-1 rounded-lg ${bgClass}`}
+                  style={{ gridTemplateColumns: isAuction ? '1fr 70px 1fr 80px 40px 32px' : '50px 50px 1fr 70px 1fr 40px 32px' }}
+                >
+                  {!isAuction && (
+                    <input
+                      type="number"
+                      min="1"
+                      value={pick.round}
+                      onChange={(e) => updatePick(idx, 'round', parseInt(e.target.value) || 0)}
+                      className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-sm font-mono text-text-primary w-full"
+                    />
+                  )}
+                  {!isAuction && (
+                    <input
+                      type="number"
+                      min="1"
+                      value={pick.pick}
+                      onChange={(e) => updatePick(idx, 'pick', parseInt(e.target.value) || 0)}
+                      className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-sm font-mono text-text-primary w-full"
+                    />
+                  )}
+                  <input
+                    type="text"
+                    value={pick.playerName}
+                    onChange={(e) => updatePick(idx, 'playerName', e.target.value)}
+                    placeholder="Player name"
+                    className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-sm font-display text-text-primary w-full"
+                  />
+                  <input
+                    type="text"
+                    value={pick.position}
+                    onChange={(e) => updatePick(idx, 'position', e.target.value)}
+                    placeholder="Pos"
+                    className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-sm font-mono text-text-primary w-full"
+                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={pick.ownerName}
+                      onChange={(e) => updatePick(idx, 'ownerName', e.target.value)}
+                      placeholder="Owner"
+                      list="draft-owners"
+                      className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-sm font-mono text-text-primary w-full"
+                    />
+                  </div>
+                  {isAuction && (
+                    <div className="relative">
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-mono text-text-secondary">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={pick.amount}
+                        onChange={(e) => updatePick(idx, 'amount', e.target.value)}
+                        className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded pl-5 pr-2 py-1 text-sm font-mono text-accent-gold w-full"
+                      />
+                    </div>
+                  )}
+                  <div className="flex justify-center">
+                    <input
+                      type="checkbox"
+                      checked={pick.isKeeper}
+                      onChange={(e) => updatePick(idx, 'isKeeper', e.target.checked)}
+                      className="w-4 h-4 accent-accent-gold"
+                    />
+                  </div>
+                  <button
+                    onClick={() => removePick(idx)}
+                    className="text-red-400 hover:text-red-300 text-sm font-mono transition-colors"
+                    title="Remove pick"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Add pick button */}
+          <button
+            onClick={addPick}
+            className="w-full mt-3 py-2 border-2 border-dashed border-[var(--card-border)] rounded-lg text-sm font-mono text-text-secondary hover:text-text-primary hover:border-accent-gold/30 transition-colors"
+          >
+            + Add Pick
+          </button>
+
+          {/* Owner datalist for autocomplete */}
+          <datalist id="draft-owners">
+            {ownerNames.map(name => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
+        </Card>
+      ) : draftInfo ? (
+        /* Draft board — view mode */
         <Card>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display font-bold text-text-primary">
               {selectedYear} Draft
             </h3>
-            {draftInfo.type && (
-              <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-2 py-1 rounded uppercase">
-                {draftInfo.type}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {draftInfo.type && (
+                <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-2 py-1 rounded uppercase">
+                  {draftInfo.type}
+                </span>
+              )}
+              {isCommissioner && (
+                <button
+                  onClick={() => enterEditMode(false)}
+                  className="px-3 py-1 text-xs font-mono font-bold bg-accent-gold/10 text-accent-gold rounded-lg hover:bg-accent-gold/20 transition-colors"
+                >
+                  Edit Draft
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -530,6 +844,9 @@ const DraftHistoryTab = ({ history }) => {
                         {pick.position && (
                           <span className="ml-2 text-xs font-mono text-text-secondary">{pick.position}</span>
                         )}
+                        {pick.isKeeper && (
+                          <span className="ml-2 text-xs font-mono text-green-400">K</span>
+                        )}
                       </div>
                       {pick.ownerName && (
                         <span className="text-xs text-text-secondary font-mono">{pick.ownerName}</span>
@@ -545,10 +862,19 @@ const DraftHistoryTab = ({ history }) => {
           </div>
         </Card>
       ) : (
+        /* Empty state */
         <Card className="text-center py-8">
           <p className="text-text-secondary">
             {selectedYear ? 'No draft data available for this season.' : 'Select a season to view draft results.'}
           </p>
+          {isCommissioner && selectedYear && (
+            <button
+              onClick={() => enterEditMode(true)}
+              className="mt-4 px-4 py-2 bg-accent-gold text-slate rounded-lg text-sm font-mono font-bold hover:bg-accent-gold/90 transition-colors"
+            >
+              + Add Draft Data
+            </button>
+          )}
         </Card>
       )}
     </div>
@@ -2938,7 +3264,7 @@ const LeagueVault = () => {
           {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} avatarMap={avatarMap} isCommissioner={isCommissioner} leagueId={leagueId} onAvatarSaved={handleAvatarSaved} inactiveOwnerSet={inactiveOwnerSet} />}
 
           {/* Drafts Tab */}
-          {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
+          {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} isCommissioner={isCommissioner} leagueId={leagueId} onSaved={() => { refetch(); refetchHealth() }} />}
 
           {/* Custom Data Tab */}
           {tab === 'custom' && <CustomDataTab leagueId={leagueId} />}

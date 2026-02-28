@@ -650,6 +650,77 @@ router.put('/historical-season/:id', authenticate, async (req, res) => {
   }
 })
 
+// ─── Update Draft Data for a League Season ──────────────────────────────────
+// PUT /api/imports/draft-data/:leagueId/:seasonYear
+router.put('/draft-data/:leagueId/:seasonYear', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.params
+    const seasonYear = parseInt(req.params.seasonYear)
+    if (!seasonYear || seasonYear < 1990 || seasonYear > 2100) {
+      return res.status(400).json({ error: { message: 'Invalid season year' } })
+    }
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can edit draft data' } })
+    }
+
+    const { draftData } = req.body
+    if (!draftData || typeof draftData !== 'object') {
+      return res.status(400).json({ error: { message: 'draftData is required' } })
+    }
+
+    // Validate structure
+    const type = draftData.type
+    if (type && !['snake', 'auction', 'linear'].includes(type)) {
+      return res.status(400).json({ error: { message: 'draftData.type must be snake, auction, or linear' } })
+    }
+
+    if (!Array.isArray(draftData.picks)) {
+      return res.status(400).json({ error: { message: 'draftData.picks must be an array' } })
+    }
+
+    // Sanitize picks
+    const sanitizedPicks = draftData.picks.map(pick => {
+      const clean = {}
+      if (pick.round != null) clean.round = parseInt(pick.round) || 0
+      if (pick.pick != null) clean.pick = parseInt(pick.pick) || 0
+      if (pick.playerName) clean.playerName = String(pick.playerName).trim().slice(0, 100)
+      if (pick.position) clean.position = String(pick.position).trim().slice(0, 10)
+      if (pick.ownerName) clean.ownerName = String(pick.ownerName).trim().slice(0, 100)
+      if (pick.amount != null) clean.amount = parseFloat(pick.amount) || 0
+      if (pick.cost != null) clean.cost = parseFloat(pick.cost) || 0
+      if (pick.isKeeper != null) clean.isKeeper = Boolean(pick.isKeeper)
+      if (pick.playerId) clean.playerId = String(pick.playerId).trim()
+      if (pick.rosterId != null) clean.rosterId = pick.rosterId
+      if (pick.teamKey) clean.teamKey = String(pick.teamKey).trim()
+      return clean
+    })
+
+    const sanitizedDraftData = {
+      type: type || null,
+      rounds: draftData.rounds ? parseInt(draftData.rounds) : null,
+      picks: sanitizedPicks,
+    }
+
+    // Update ALL team rows for this league+season so draft data stays in sync
+    const result = await prisma.historicalSeason.updateMany({
+      where: { leagueId, seasonYear },
+      data: { draftData: sanitizedDraftData },
+    })
+
+    if (result.count === 0) {
+      return res.status(404).json({ error: { message: 'No season entries found for this league and year' } })
+    }
+
+    res.json({ updated: result.count, draftData: sanitizedDraftData })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 // ─── Create Historical Season Entry (add a team to a season) ────────────────
 // POST /api/imports/historical-season
 router.post('/historical-season', authenticate, async (req, res) => {

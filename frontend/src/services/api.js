@@ -719,6 +719,13 @@ class ApiService {
     })
   }
 
+  async updateDraftData(leagueId, seasonYear, draftData) {
+    return this.request(`/imports/draft-data/${leagueId}/${seasonYear}`, {
+      method: 'PUT',
+      body: JSON.stringify({ draftData }),
+    })
+  }
+
   async createHistoricalSeason(data) {
     return this.request('/imports/historical-season', {
       method: 'POST',
