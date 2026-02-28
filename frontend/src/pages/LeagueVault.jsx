@@ -991,7 +991,86 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
             </Card>
           </div>
 
-          {/* Section 3 — H2H Records (sortable) */}
+          {/* Section 3 — Season-by-Season (sortable) */}
+          <Card>
+            <h3 className="font-display font-bold text-text-primary mb-3">Season-by-Season</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
+                    {[
+                      { key: 'year', label: 'Year', align: 'text-left' },
+                      { key: 'place', label: '#', align: 'text-center' },
+                      { key: 'teamName', label: 'Team', align: 'text-left' },
+                      { key: 'wins', label: 'W', align: 'text-center' },
+                      { key: 'losses', label: 'L', align: 'text-center' },
+                      { key: 'ties', label: 'T', align: 'text-center' },
+                      { key: 'pf', label: 'PF', align: 'text-right' },
+                      { key: 'pa', label: 'PA', align: 'text-right' },
+                      { key: 'pfAvg', label: 'Avg', align: 'text-right' },
+                      { key: 'streak', label: 'Streak', align: 'text-right pr-2' },
+                    ].map(col => (
+                      <th
+                        key={col.key}
+                        className={`${col.align} pb-2 cursor-pointer select-none hover:text-text-primary transition-colors ${seasonSort.key === col.key ? 'text-accent-gold' : ''}`}
+                        onClick={() => setSeasonSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
+                      >
+                        {col.label}
+                        {seasonSort.key === col.key && (
+                          <span className="ml-0.5">{seasonSort.dir === 'desc' ? '▼' : '▲'}</span>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...profileData.seasonTable].sort((a, b) => {
+                    const aVal = a[seasonSort.key]
+                    const bVal = b[seasonSort.key]
+                    if (aVal == null && bVal == null) return 0
+                    if (aVal == null) return 1
+                    if (bVal == null) return -1
+                    const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
+                    return seasonSort.dir === 'desc' ? -cmp : cmp
+                  }).map(s => {
+                    const playoff = PLAYOFF_LABELS[s.playoffResult] || {}
+                    return (
+                      <tr key={s.year} className="border-t border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
+                        <td className="py-2 font-mono font-bold text-accent-gold">{s.year}</td>
+                        <td className="py-2 text-center font-mono text-text-secondary">{s.place || '—'}</td>
+                        <td className="py-2 font-display text-text-primary text-xs">
+                          <span>{s.teamName}</span>
+                          {playoff.text && (
+                            <span className={`ml-1.5 text-xs font-mono px-1 py-0.5 rounded ${playoff.color}`}>{playoff.text}</span>
+                          )}
+                        </td>
+                        <td className="py-2 text-center font-mono text-green-400">{s.wins}</td>
+                        <td className="py-2 text-center font-mono text-red-400">{s.losses}</td>
+                        <td className="py-2 text-center font-mono text-text-secondary">{s.ties || '—'}</td>
+                        <td className="py-2 text-right font-mono text-text-primary">{s.pf.toFixed(1)}</td>
+                        <td className="py-2 text-right font-mono text-text-secondary">{s.pa.toFixed(1)}</td>
+                        <td className="py-2 text-right font-mono text-text-primary">{s.pfAvg > 0 ? s.pfAvg.toFixed(1) : '—'}</td>
+                        <td className="py-2 text-right pr-2 font-mono text-text-secondary">{s.streak}</td>
+                      </tr>
+                    )
+                  })}
+                  {/* Totals row */}
+                  <tr className="border-t-2 border-accent-gold/30">
+                    <td className="py-2 font-mono font-bold text-accent-gold" colSpan={3}>Career Totals</td>
+                    <td className="py-2 text-center font-mono font-bold text-green-400">{profileData.summary.totalW}</td>
+                    <td className="py-2 text-center font-mono font-bold text-red-400">{profileData.summary.totalL}</td>
+                    <td className="py-2 text-center font-mono font-bold text-text-secondary">{profileData.summary.totalT || '—'}</td>
+                    <td className="py-2 text-right font-mono font-bold text-text-primary">{profileData.summary.totalPF.toFixed(1)}</td>
+                    <td className="py-2 text-right font-mono font-bold text-text-secondary">{profileData.summary.totalPA.toFixed(1)}</td>
+                    <td className="py-2 text-right font-mono font-bold text-text-primary">{profileData.summary.winPct}%</td>
+                    <td className="py-2" />
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Section 4 — H2H Records (sortable) */}
           {profileData.h2hRecords.length > 0 && (() => {
             const hasFormer = inactiveOwnerSet.size > 0 && profileData.h2hRecords.some(r => inactiveOwnerSet.has(r.name))
             const filteredRecords = showFormerH2h
@@ -1071,85 +1150,6 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
             </Card>
             )
           })()}
-
-          {/* Section 4 — Season-by-Season (sortable) */}
-          <Card>
-            <h3 className="font-display font-bold text-text-primary mb-3">Season-by-Season</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
-                    {[
-                      { key: 'year', label: 'Year', align: 'text-left' },
-                      { key: 'place', label: '#', align: 'text-center' },
-                      { key: 'teamName', label: 'Team', align: 'text-left' },
-                      { key: 'wins', label: 'W', align: 'text-center' },
-                      { key: 'losses', label: 'L', align: 'text-center' },
-                      { key: 'ties', label: 'T', align: 'text-center' },
-                      { key: 'pf', label: 'PF', align: 'text-right' },
-                      { key: 'pa', label: 'PA', align: 'text-right' },
-                      { key: 'pfAvg', label: 'Avg', align: 'text-right' },
-                      { key: 'streak', label: 'Streak', align: 'text-right pr-2' },
-                    ].map(col => (
-                      <th
-                        key={col.key}
-                        className={`${col.align} pb-2 cursor-pointer select-none hover:text-text-primary transition-colors ${seasonSort.key === col.key ? 'text-accent-gold' : ''}`}
-                        onClick={() => setSeasonSort(prev => ({ key: col.key, dir: prev.key === col.key && prev.dir === 'desc' ? 'asc' : 'desc' }))}
-                      >
-                        {col.label}
-                        {seasonSort.key === col.key && (
-                          <span className="ml-0.5">{seasonSort.dir === 'desc' ? '▼' : '▲'}</span>
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...profileData.seasonTable].sort((a, b) => {
-                    const aVal = a[seasonSort.key]
-                    const bVal = b[seasonSort.key]
-                    if (aVal == null && bVal == null) return 0
-                    if (aVal == null) return 1
-                    if (bVal == null) return -1
-                    const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
-                    return seasonSort.dir === 'desc' ? -cmp : cmp
-                  }).map(s => {
-                    const playoff = PLAYOFF_LABELS[s.playoffResult] || {}
-                    return (
-                      <tr key={s.year} className="border-t border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
-                        <td className="py-2 font-mono font-bold text-accent-gold">{s.year}</td>
-                        <td className="py-2 text-center font-mono text-text-secondary">{s.place || '—'}</td>
-                        <td className="py-2 font-display text-text-primary text-xs">
-                          <span>{s.teamName}</span>
-                          {playoff.text && (
-                            <span className={`ml-1.5 text-xs font-mono px-1 py-0.5 rounded ${playoff.color}`}>{playoff.text}</span>
-                          )}
-                        </td>
-                        <td className="py-2 text-center font-mono text-green-400">{s.wins}</td>
-                        <td className="py-2 text-center font-mono text-red-400">{s.losses}</td>
-                        <td className="py-2 text-center font-mono text-text-secondary">{s.ties || '—'}</td>
-                        <td className="py-2 text-right font-mono text-text-primary">{s.pf.toFixed(1)}</td>
-                        <td className="py-2 text-right font-mono text-text-secondary">{s.pa.toFixed(1)}</td>
-                        <td className="py-2 text-right font-mono text-text-primary">{s.pfAvg > 0 ? s.pfAvg.toFixed(1) : '—'}</td>
-                        <td className="py-2 text-right pr-2 font-mono text-text-secondary">{s.streak}</td>
-                      </tr>
-                    )
-                  })}
-                  {/* Totals row */}
-                  <tr className="border-t-2 border-accent-gold/30">
-                    <td className="py-2 font-mono font-bold text-accent-gold" colSpan={3}>Career Totals</td>
-                    <td className="py-2 text-center font-mono font-bold text-green-400">{profileData.summary.totalW}</td>
-                    <td className="py-2 text-center font-mono font-bold text-red-400">{profileData.summary.totalL}</td>
-                    <td className="py-2 text-center font-mono font-bold text-text-secondary">{profileData.summary.totalT || '—'}</td>
-                    <td className="py-2 text-right font-mono font-bold text-text-primary">{profileData.summary.totalPF.toFixed(1)}</td>
-                    <td className="py-2 text-right font-mono font-bold text-text-secondary">{profileData.summary.totalPA.toFixed(1)}</td>
-                    <td className="py-2 text-right font-mono font-bold text-text-primary">{profileData.summary.winPct}%</td>
-                    <td className="py-2" />
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </Card>
 
           {/* Section 5 — Weekly Matchup Log */}
           {/* Section 6 — Draft History */}
