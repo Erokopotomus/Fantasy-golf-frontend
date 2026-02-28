@@ -546,12 +546,13 @@ const DraftHistoryTab = ({ history }) => {
 }
 
 // ─── Owner Profile Tab ────────────────────────────────────────────────────────
-const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, onAvatarSaved }) => {
+const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, onAvatarSaved, inactiveOwnerSet = new Set() }) => {
   const [selectedOwner, setSelectedOwner] = useState('')
   const [expandedYear, setExpandedYear] = useState(null)
   const [expandedDraftYear, setExpandedDraftYear] = useState(null)
   const [h2hSort, setH2hSort] = useState({ key: 'w', dir: 'desc' })
   const [seasonSort, setSeasonSort] = useState({ key: 'year', dir: 'desc' })
+  const [showFormerH2h, setShowFormerH2h] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
 
@@ -984,9 +985,29 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           </div>
 
           {/* Section 3 — H2H Records (sortable) */}
-          {profileData.h2hRecords.length > 0 && (
+          {profileData.h2hRecords.length > 0 && (() => {
+            const hasFormer = inactiveOwnerSet.size > 0 && profileData.h2hRecords.some(r => inactiveOwnerSet.has(r.name))
+            const filteredRecords = showFormerH2h
+              ? profileData.h2hRecords
+              : profileData.h2hRecords.filter(r => !inactiveOwnerSet.has(r.name))
+            return (
             <Card>
-              <h3 className="font-display font-bold text-text-primary mb-3">Head-to-Head Records</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-display font-bold text-text-primary">Head-to-Head Records</h3>
+                {hasFormer && (
+                  <button
+                    onClick={() => setShowFormerH2h(prev => !prev)}
+                    className="text-[10px] font-mono px-2.5 py-1 rounded-md transition-colors"
+                    style={{
+                      background: showFormerH2h ? 'rgba(212,169,83,0.1)' : 'var(--surface)',
+                      color: showFormerH2h ? '#D4A853' : 'var(--text-muted)',
+                      border: `1px solid ${showFormerH2h ? 'rgba(212,169,83,0.25)' : 'var(--card-border)'}`,
+                    }}
+                  >
+                    {showFormerH2h ? 'Hide Former' : 'Show Former Members'}
+                  </button>
+                )}
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -1014,14 +1035,19 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                     </tr>
                   </thead>
                   <tbody>
-                    {[...profileData.h2hRecords].sort((a, b) => {
+                    {[...filteredRecords].sort((a, b) => {
                       const aVal = a[h2hSort.key]
                       const bVal = b[h2hSort.key]
                       const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal) : aVal - bVal
                       return h2hSort.dir === 'desc' ? -cmp : cmp
                     }).map(r => (
-                      <tr key={r.name} className="border-t border-[var(--card-border)]">
-                        <td className="py-2 font-display font-semibold text-text-primary">{r.name}</td>
+                      <tr key={r.name} className={`border-t border-[var(--card-border)] ${inactiveOwnerSet.has(r.name) ? 'opacity-50' : ''}`}>
+                        <td className="py-2 font-display font-semibold text-text-primary">
+                          {r.name}
+                          {inactiveOwnerSet.has(r.name) && (
+                            <span className="ml-1.5 text-[9px] font-mono text-text-muted bg-[var(--surface)] px-1.5 py-0.5 rounded">FORMER</span>
+                          )}
+                        </td>
                         <td className="py-2 text-center font-mono text-green-400">{r.w}</td>
                         <td className="py-2 text-center font-mono text-red-400">{r.l}</td>
                         <td className="py-2 text-center font-mono text-text-secondary">{r.t || '—'}</td>
@@ -1036,7 +1062,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                 </table>
               </div>
             </Card>
-          )}
+            )
+          })()}
 
           {/* Section 4 — Season-by-Season (sortable) */}
           <Card>
@@ -2873,7 +2900,7 @@ const LeagueVault = () => {
           {tab === 'h2h' && <HeadToHeadTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
 
           {/* Profiles Tab */}
-          {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} avatarMap={avatarMap} isCommissioner={isCommissioner} leagueId={leagueId} onAvatarSaved={handleAvatarSaved} />}
+          {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} avatarMap={avatarMap} isCommissioner={isCommissioner} leagueId={leagueId} onAvatarSaved={handleAvatarSaved} inactiveOwnerSet={inactiveOwnerSet} />}
 
           {/* Drafts Tab */}
           {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
