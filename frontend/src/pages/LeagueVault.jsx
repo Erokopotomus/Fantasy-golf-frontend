@@ -7,6 +7,7 @@ import ShareModal from '../components/vault/ShareModal'
 import { useAuth } from '../context/AuthContext'
 import { computeVaultStats } from '../hooks/useVaultStats'
 import api from '../services/api'
+import { uploadToCloudinary } from '../utils/uploadImage'
 import LeagueChat from '../components/ai/LeagueChat'
 
 // Error boundary to catch rendering crashes
@@ -441,6 +442,69 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
   // Resolved positions cache (name → position from DB)
   const [resolvedPositions, setResolvedPositions] = useState({})
 
+  // Screenshot upload state
+  const [parsing, setParsing] = useState(false)
+  const [parseError, setParseError] = useState(null)
+  const screenshotInputRef = useRef(null)
+
+  // Handle screenshot upload → Cloudinary → AI parse → populate editor
+  const handleScreenshotUpload = useCallback(async (file) => {
+    if (!file) return
+    setParsing(true)
+    setParseError(null)
+    setError(null)
+    try {
+      // Upload full-res to Cloudinary (no resize — need readable text)
+      const blob = file
+      const imageUrl = await uploadToCloudinary(blob, { folder: 'clutch-draft-screenshots' })
+
+      // Call AI vision parse
+      const result = await api.parseDraftImage(imageUrl, selectedYear, ownerNames)
+
+      // Auto-detect type from result
+      if (result.type) setDraftType(result.type)
+
+      // Build editor picks from parsed data
+      const picks = (result.picks || []).map((p, i) => ({
+        round: p.round || 1,
+        pick: p.pick || i + 1,
+        playerName: p.playerName || '',
+        position: p.position || '',
+        ownerName: p.ownerName || '',
+        amount: p.amount || 0,
+        isKeeper: p.isKeeper || false,
+        keeperPrice: p.keeperPrice || 0,
+        _original: null,
+        _isNew: true,
+      }))
+
+      setEditedPicks(picks)
+      if (!editMode) setEditMode(true)
+
+      // Auto-resolve positions from DB for any missing
+      const missingPosNames = picks.filter(p => !p.position && p.playerName).map(p => p.playerName)
+      if (missingPosNames.length > 0) {
+        try {
+          const { positions } = await api.resolvePositions([...new Set(missingPosNames)])
+          setResolvedPositions(prev => ({ ...prev, ...positions }))
+          setEditedPicks(prev => prev.map(p => {
+            if (!p.position && positions[p.playerName]) {
+              return { ...p, position: positions[p.playerName] }
+            }
+            return p
+          }))
+        } catch (e) {
+          // Non-fatal
+        }
+      }
+    } catch (err) {
+      setParseError(err.message)
+    } finally {
+      setParsing(false)
+      if (screenshotInputRef.current) screenshotInputRef.current.value = ''
+    }
+  }, [selectedYear, ownerNames, editMode])
+
   // Build owner list for datalist autocomplete
   const ownerNames = useMemo(() => {
     if (!selectedYear || !history?.seasons?.[selectedYear]) return []
@@ -685,6 +749,20 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                 <option value="auction">Auction</option>
                 <option value="linear">Linear</option>
               </select>
+              <button
+                onClick={() => screenshotInputRef.current?.click()}
+                disabled={parsing}
+                className="px-3 py-1.5 text-sm font-mono font-bold bg-[var(--bg-alt)] border border-[var(--card-border)] text-text-secondary hover:text-text-primary hover:border-accent-gold/30 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {parsing ? 'Reading draft...' : 'Upload Screenshot'}
+              </button>
+              <input
+                ref={screenshotInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleScreenshotUpload(e.target.files?.[0])}
+              />
               {totalChanges > 0 && (
                 <span className="text-xs font-mono text-accent-gold">
                   {totalChanges} change{totalChanges !== 1 ? 's' : ''}
@@ -710,6 +788,9 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
           </div>
           {error && (
             <p className="text-red-400 text-xs font-mono mt-2">{error}</p>
+          )}
+          {parseError && (
+            <p className="text-red-400 text-xs font-mono mt-2">Screenshot parse failed: {parseError}</p>
           )}
         </Card>
       )}
@@ -932,12 +1013,25 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
             {selectedYear ? 'No draft data available for this season.' : 'Select a season to view draft results.'}
           </p>
           {isCommissioner && selectedYear && (
-            <button
-              onClick={() => enterEditMode(true)}
-              className="mt-4 px-4 py-2 bg-accent-gold text-slate rounded-lg text-sm font-mono font-bold hover:bg-accent-gold/90 transition-colors"
-            >
-              + Add Draft Data
-            </button>
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <button
+                onClick={() => enterEditMode(true)}
+                className="px-4 py-2 bg-accent-gold text-slate rounded-lg text-sm font-mono font-bold hover:bg-accent-gold/90 transition-colors"
+              >
+                + Add Draft Data
+              </button>
+              <button
+                onClick={() => {
+                  enterEditMode(true)
+                  // Delay to let edit mode render, then trigger file picker
+                  setTimeout(() => screenshotInputRef.current?.click(), 100)
+                }}
+                disabled={parsing}
+                className="px-4 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] text-text-secondary rounded-lg text-sm font-mono font-bold hover:text-text-primary hover:border-accent-gold/30 transition-colors disabled:opacity-50"
+              >
+                {parsing ? 'Reading draft...' : 'Upload Screenshot'}
+              </button>
+            </div>
           )}
         </Card>
       )}

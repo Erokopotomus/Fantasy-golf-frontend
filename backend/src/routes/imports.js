@@ -1430,4 +1430,107 @@ router.post('/confirm-settings', authenticate, async (req, res) => {
   }
 })
 
+// ─── Parse draft screenshot with AI vision ─────────────────────────────────
+// POST /api/imports/parse-draft-image
+router.post('/parse-draft-image', authenticate, async (req, res) => {
+  try {
+    const { imageUrl, seasonYear, leagueContext } = req.body
+    if (!imageUrl) {
+      return res.status(400).json({ error: { message: 'imageUrl is required' } })
+    }
+
+    const claudeService = require('../services/claudeService')
+
+    const ownerHint = leagueContext?.ownerNames?.length
+      ? `\n\nKnown owner/team names in this league: ${leagueContext.ownerNames.join(', ')}`
+      : ''
+
+    const systemPrompt = `You are a fantasy sports draft data extractor. You will be shown a screenshot of a draft board (typically from Google Sheets, Excel, or a similar spreadsheet).
+
+Your job is to extract every draft pick visible in the image and return them as a JSON array.
+
+IMPORTANT RULES:
+- Return ONLY valid JSON. No markdown, no code fences, no explanation.
+- Each pick should be an object with these fields:
+  - "playerName" (string) — the player's full name as shown
+  - "ownerName" (string) — the team owner or team name who drafted this player
+  - "amount" (number) — the auction/draft dollar amount if visible, otherwise 0
+  - "position" (string) — the position if visible (QB, RB, WR, TE, K, DEF, G, F, C, etc.), otherwise ""
+  - "isKeeper" (boolean) — true if marked as a keeper, otherwise false
+  - "keeperPrice" (number) — keeper price if visible and isKeeper is true, otherwise 0
+- Read the image carefully. Columns typically represent owners/teams, rows typically represent positions or pick order.
+- If the layout is columns-per-owner with rows per position slot, map each cell to the correct owner column.
+- Player names may be abbreviated — include them exactly as shown.
+- If you see dollar amounts next to player names, those are auction values.
+- If you cannot read a name clearly, include your best guess with the text as shown.${ownerHint}`
+
+    const userPrompt = seasonYear
+      ? `Extract all draft picks from this ${seasonYear} draft board screenshot. Return a JSON array of pick objects.`
+      : 'Extract all draft picks from this draft board screenshot. Return a JSON array of pick objects.'
+
+    const result = await claudeService.generateVisionCompletion(
+      systemPrompt,
+      userPrompt,
+      imageUrl,
+      {
+        skipConfigCheck: true,
+        model: 'claude-sonnet-4-5-20250929',
+        maxTokens: 8192,
+        timeout: 90000,
+      }
+    )
+
+    if (!result) {
+      return res.status(500).json({ error: { message: 'AI vision call failed — check API key and try again' } })
+    }
+
+    // Parse JSON from response
+    let picks
+    try {
+      let text = result.text.trim()
+      if (text.startsWith('```')) {
+        text = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+      }
+      picks = JSON.parse(text)
+    } catch (parseErr) {
+      console.error('[ParseDraftImage] Failed to parse AI response:', parseErr.message)
+      console.error('[ParseDraftImage] Raw response:', result.text.substring(0, 500))
+      return res.status(422).json({ error: { message: 'AI returned unparseable response — try a clearer screenshot' } })
+    }
+
+    if (!Array.isArray(picks)) {
+      picks = picks.picks || picks.data || []
+    }
+
+    // Normalize picks
+    const normalized = picks.map((p, i) => ({
+      playerName: (p.playerName || p.player || p.name || '').trim(),
+      ownerName: (p.ownerName || p.owner || p.team || '').trim(),
+      position: (p.position || p.pos || '').trim().toUpperCase(),
+      amount: parseFloat(p.amount || p.cost || p.price || 0) || 0,
+      isKeeper: Boolean(p.isKeeper || p.keeper),
+      keeperPrice: parseFloat(p.keeperPrice || 0) || 0,
+      round: 1,
+      pick: i + 1,
+    })).filter(p => p.playerName) // Remove empty rows
+
+    // Detect draft type from data
+    const hasAmounts = normalized.some(p => p.amount > 0)
+    const type = hasAmounts ? 'auction' : 'snake'
+
+    res.json({
+      type,
+      picks: normalized,
+      meta: {
+        totalParsed: normalized.length,
+        inputTokens: result.inputTokens,
+        outputTokens: result.outputTokens,
+      },
+    })
+  } catch (err) {
+    console.error('Parse draft image error:', err)
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 module.exports = router

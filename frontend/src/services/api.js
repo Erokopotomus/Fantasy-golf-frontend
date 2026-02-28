@@ -733,6 +733,13 @@ class ApiService {
     })
   }
 
+  async parseDraftImage(imageUrl, seasonYear, ownerNames) {
+    return this.request('/imports/parse-draft-image', {
+      method: 'POST',
+      body: JSON.stringify({ imageUrl, seasonYear, leagueContext: { ownerNames } }),
+    })
+  }
+
   async createHistoricalSeason(data) {
     return this.request('/imports/historical-season', {
       method: 'POST',

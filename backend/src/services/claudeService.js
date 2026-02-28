@@ -168,9 +168,105 @@ async function generateJsonCompletion(systemPrompt, userPrompt, options = {}) {
   }
 }
 
+/**
+ * Generate a completion from Claude using an image URL (vision).
+ * Returns { text, inputTokens, outputTokens } or null on failure.
+ *
+ * @param {string} systemPrompt
+ * @param {string} userPrompt
+ * @param {string} imageUrl - Public URL of the image to analyze
+ * @param {object} options - Same options as generateCompletion
+ */
+async function generateVisionCompletion(systemPrompt, userPrompt, imageUrl, options = {}) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.warn('[Claude] No ANTHROPIC_API_KEY set — skipping AI call')
+    return null
+  }
+
+  // ── AI Engine Config Gate ──
+  if (!options.skipConfigCheck) {
+    if (options.feature) {
+      const featureEnabled = await aiConfig.isFeatureEnabled(options.feature)
+      if (!featureEnabled) {
+        console.info(`[Claude] Feature "${options.feature}" is disabled — skipping AI call`)
+        return null
+      }
+    } else {
+      const config = await aiConfig.getConfig()
+      if (!config.enabled) {
+        console.info('[Claude] AI Engine kill switch is OFF — skipping AI call')
+        return null
+      }
+    }
+
+    const budgetExceeded = await aiConfig.isBudgetExceeded()
+    if (budgetExceeded) {
+      console.warn('[Claude] Daily token budget exceeded — skipping AI call')
+      return null
+    }
+  }
+
+  if (!checkRateLimit()) {
+    console.warn('[Claude] Rate limit exceeded — skipping AI call')
+    return null
+  }
+
+  const model = options.premium ? PREMIUM_MODEL : (options.model || DEFAULT_MODEL)
+  const maxTokens = options.maxTokens || 4096
+  const timeout = options.timeout || 60000 // longer default for vision
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await Promise.race([
+        client.messages.create({
+          model,
+          max_tokens: maxTokens,
+          system: systemPrompt,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'url', url: imageUrl } },
+              { type: 'text', text: userPrompt },
+            ],
+          }],
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Claude API timeout')), timeout)
+        ),
+      ])
+
+      const text = response.content
+        .filter(block => block.type === 'text')
+        .map(block => block.text)
+        .join('')
+
+      const inputTokens = response.usage?.input_tokens || 0
+      const outputTokens = response.usage?.output_tokens || 0
+
+      // Track token usage (fire-and-forget)
+      aiConfig.trackTokenUsage(inputTokens, outputTokens).catch(() => {})
+
+      return { text, inputTokens, outputTokens, model }
+    } catch (err) {
+      const isRetryable = err.status === 429 || err.status === 529 || err.status >= 500
+      if (isRetryable && attempt < MAX_RETRIES) {
+        const delay = Math.pow(2, attempt) * 1000
+        console.warn(`[Claude] Vision attempt ${attempt} failed (${err.message}), retrying in ${delay}ms`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        continue
+      }
+      console.error(`[Claude] Vision failed after ${attempt} attempts:`, err.message)
+      return null
+    }
+  }
+
+  return null
+}
+
 module.exports = {
   generateCompletion,
   generateJsonCompletion,
+  generateVisionCompletion,
   DEFAULT_MODEL,
   PREMIUM_MODEL,
 }
