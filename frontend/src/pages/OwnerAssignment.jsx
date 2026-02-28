@@ -289,8 +289,8 @@ const Step1IdentifyOwners = ({ wizard }) => {
             const assignedYearSet = new Set(assignedEntries.map(e => e.seasonYear))
             const assignedRange = assignedYearSet.size > 0 ? formatYearRanges([...assignedYearSet].sort((a, b) => a - b)) : ''
             return (
-              <div className={`relative rounded-lg border ${
-                mergeSource && mergeSource !== name ? 'bg-accent-gold/5 border-accent-gold/30 cursor-pointer' : 'bg-[var(--surface)] border-[var(--card-border)]/50'
+              <div className={`rounded-lg border ${
+                mergeSource && mergeSource !== name ? 'bg-accent-gold/5 border-accent-gold/30' : 'bg-[var(--surface)] border-[var(--card-border)]/50'
               }`}>
                 <div className="flex items-center justify-between px-3 py-2.5">
                 <div
@@ -312,51 +312,65 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     </svg>
                   )}
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => toggleOwnerActive(name)}
-                    className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
-                      data.isActive
-                        ? 'text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-secondary'
-                        : 'text-accent-green bg-accent-green/10 border border-accent-green/20 hover:bg-accent-green/20'
-                    }`}
-                    title={data.isActive ? 'Mark as former member' : 'Mark as active member'}
-                  >
-                    {data.isActive ? 'MARK FORMER' : 'MARK ACTIVE'}
-                  </button>
-                  <button
-                    onClick={() => setMergeSource(mergeSource === name ? null : name)}
-                    className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
-                      mergeSource === name
-                        ? 'text-accent-gold bg-accent-gold/20 border border-accent-gold/40'
-                        : 'text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-accent-gold hover:border-accent-gold/30'
-                    }`}
-                    title="Merge this owner into another"
-                  >
-                    MERGE
-                  </button>
+                {mergeSource && mergeSource !== name ? (
                   <button
                     onClick={() => {
-                      const newName = window.prompt('Rename owner:', name)
-                      if (newName) renameOwner(name, newName)
+                      if (confirm(`Merge "${mergeSource}" into "${name}"? All of ${mergeSource}'s history will move under ${name}.`)) {
+                        mergeOwner(mergeSource, name)
+                        setMergeSource(null)
+                      }
                     }}
-                    className="text-xs text-text-muted hover:text-accent-gold transition-colors"
-                    title="Rename"
+                    className="px-3 py-1 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg hover:bg-accent-gold/80 transition-colors shadow-lg flex-shrink-0"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
+                    MERGE HERE
                   </button>
-                  <button
-                    onClick={() => { if (confirm(`Remove ${name}?`)) removeOwner(name) }}
-                    className="text-xs text-text-muted hover:text-red-400 transition-colors"
-                    title="Remove"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => toggleOwnerActive(name)}
+                      className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
+                        data.isActive
+                          ? 'text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-secondary'
+                          : 'text-accent-green bg-accent-green/10 border border-accent-green/20 hover:bg-accent-green/20'
+                      }`}
+                      title={data.isActive ? 'Mark as former member' : 'Mark as active member'}
+                    >
+                      {data.isActive ? 'MARK FORMER' : 'MARK ACTIVE'}
+                    </button>
+                    <button
+                      onClick={() => setMergeSource(mergeSource === name ? null : name)}
+                      className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
+                        mergeSource === name
+                          ? 'text-accent-gold bg-accent-gold/20 border border-accent-gold/40'
+                          : 'text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-accent-gold hover:border-accent-gold/30'
+                      }`}
+                      title="Merge this owner into another"
+                    >
+                      MERGE
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newName = window.prompt('Rename owner:', name)
+                        if (newName) renameOwner(name, newName)
+                      }}
+                      className="text-xs text-text-muted hover:text-accent-gold transition-colors"
+                      title="Rename"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => { if (confirm(`Remove ${name}?`)) removeOwner(name) }}
+                      className="text-xs text-text-muted hover:text-red-400 transition-colors"
+                      title="Remove"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
                 </div>
                 {/* Expanded: season-by-season breakdown with unassign */}
                 {isExpanded && (
@@ -394,20 +408,6 @@ const Step1IdentifyOwners = ({ wizard }) => {
                       {assignedCount} season{assignedCount !== 1 ? 's' : ''} assigned
                     </div>
                   </div>
-                )}
-                {/* Merge target selector — shown on OTHER rows when this row's MERGE is active */}
-                {mergeSource && mergeSource !== name && (
-                  <button
-                    onClick={() => {
-                      if (confirm(`Merge "${mergeSource}" into "${name}"? All of ${mergeSource}'s history will move under ${name}.`)) {
-                        mergeOwner(mergeSource, name)
-                        setMergeSource(null)
-                      }
-                    }}
-                    className="absolute right-2 top-4 px-2.5 py-1 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg hover:bg-accent-gold/80 transition-colors shadow-lg z-10"
-                  >
-                    MERGE {mergeSource} HERE
-                  </button>
                 )}
               </div>
             )
