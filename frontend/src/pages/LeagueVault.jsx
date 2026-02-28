@@ -792,7 +792,10 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       if (weeks.length > 0) {
         weeks.sort((a, b) => a.week - b.week)
         const regSeasonWeeks = (s.wins || 0) + (s.losses || 0) + (s.ties || 0)
-        weeklyLog[s.year] = { weeks, regSeasonWeeks }
+        const teamsCount = (history.seasons[String(s.year)] || []).length
+        const playoffSpots = Math.floor(teamsCount / 2)
+        const madePlayoffs = s.finalStanding && playoffSpots > 0 && s.finalStanding <= playoffSpots
+        weeklyLog[s.year] = { weeks, regSeasonWeeks, madePlayoffs }
       }
     }
 
@@ -1239,8 +1242,9 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                     {Object.entries(profileData.weeklyLog)
                       .sort(([a], [b]) => parseInt(b) - parseInt(a))
                       .map(([year, data]) => {
-                        const { weeks, regSeasonWeeks } = data
+                        const { weeks, regSeasonWeeks, madePlayoffs } = data
                         const hasPlayoffWeeks = regSeasonWeeks > 0 && weeks.some(w => w.week > regSeasonWeeks)
+                        const postseasonLabel = madePlayoffs ? 'Playoffs' : 'Consolation'
                         return (
                         <div key={year}>
                           <button
@@ -1267,9 +1271,9 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                                   <div key={w.week}>
                                     {showDivider && (
                                       <div className="flex items-center gap-2 py-2 my-1">
-                                        <div className="flex-1 h-px bg-accent-gold/30" />
-                                        <span className="text-[10px] font-mono font-semibold text-accent-gold/70 uppercase tracking-wider">Playoffs</span>
-                                        <div className="flex-1 h-px bg-accent-gold/30" />
+                                        <div className={`flex-1 h-px ${madePlayoffs ? 'bg-accent-gold/30' : 'bg-text-muted/20'}`} />
+                                        <span className={`text-[10px] font-mono font-semibold uppercase tracking-wider ${madePlayoffs ? 'text-accent-gold/70' : 'text-text-muted/50'}`}>{postseasonLabel}</span>
+                                        <div className={`flex-1 h-px ${madePlayoffs ? 'bg-accent-gold/30' : 'bg-text-muted/20'}`} />
                                       </div>
                                     )}
                                     <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--surface-alt)] text-sm">
