@@ -315,7 +315,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
               <div
                 className={`rounded-lg border transition-colors ${
                   isSelected ? 'bg-accent-gold/10 border-accent-gold/40' :
-                  isTarget ? 'bg-accent-gold/5 border-accent-gold/20 cursor-pointer hover:border-accent-gold/50' :
+                  isTarget ? 'bg-accent-gold/5 border-accent-gold/30 cursor-pointer hover:bg-accent-gold/15 hover:border-accent-gold' :
                   'bg-[var(--surface)] border-[var(--card-border)]/50'
                 }`}
                 onClick={isTarget ? () => mergeSelectedInto(name) : undefined}
@@ -325,22 +325,22 @@ const Step1IdentifyOwners = ({ wizard }) => {
                   {/* Checkbox for multi-select merge */}
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleMergeSelect(name) }}
-                    className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
+                    className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                       isSelected
-                        ? 'bg-accent-gold border-accent-gold text-slate'
-                        : 'border-[var(--card-border)] hover:border-accent-gold/50'
+                        ? 'bg-accent-gold border-accent-gold text-white'
+                        : 'border-text-muted/40 hover:border-accent-gold/70'
                     }`}
                     title={isSelected ? 'Deselect' : 'Select for merge'}
                   >
                     {isSelected && (
-                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </button>
                   <div
                     className="flex items-center gap-2 min-w-0 cursor-pointer"
-                    onClick={(e) => { e.stopPropagation(); setExpandedOwner(isExpanded ? null : name) }}
+                    onClick={isTarget ? undefined : (e) => { e.stopPropagation(); setExpandedOwner(isExpanded ? null : name) }}
                   >
                     <span
                       className="w-3 h-3 rounded-full flex-shrink-0"
@@ -350,7 +350,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
                       {assignedRange || formatYearRanges(years)}
                     </span>
-                    {assignedCount > 0 && (
+                    {assignedCount > 0 && !isTarget && (
                       <svg className={`w-3 h-3 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -358,7 +358,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                   </div>
                 </div>
                 {isTarget ? (
-                  <span className="px-3 py-1.5 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg shadow-lg flex-shrink-0">
+                  <span className="px-3 py-1.5 text-xs font-mono font-bold text-white bg-accent-gold rounded-lg shadow-lg flex-shrink-0">
                     MERGE HERE
                   </span>
                 ) : !isSelected ? (
