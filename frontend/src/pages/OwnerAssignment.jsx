@@ -162,8 +162,10 @@ const Step1IdentifyOwners = ({ wizard }) => {
     owners, detectedNames, uniqueRawNames, rawNameToEntries, nameToYears, availableYears,
     addOwner, removeOwner, renameOwner, mergeOwner, toggleOwnerActive, dismissDetection,
     canProceedToStep2, setStep, assignments, refetchHistory, unassignTeam,
+    save, saving, hasChanges,
   } = wizard
   const leagueId = wizard.league?.id
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   // Already-added owner names (to filter them from detected)
   const ownerNameSet = new Set([...owners.keys()].map(n => n.toLowerCase()))
@@ -482,14 +484,37 @@ const Step1IdentifyOwners = ({ wizard }) => {
           </p>
         </div>
 
-        {/* Continue button */}
-        <button
-          onClick={() => setStep(2)}
-          disabled={!canProceedToStep2}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-orange text-slate rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 disabled:opacity-30 disabled:cursor-default transition-all"
-        >
-          Continue to Team Assignment &rarr;
-        </button>
+        {/* Action buttons */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={async () => {
+              const ok = await save()
+              if (ok) {
+                setSaveSuccess(true)
+                setTimeout(() => setSaveSuccess(false), 2000)
+              }
+            }}
+            disabled={saving || !hasChanges}
+            className="px-5 py-3 border border-[var(--card-border)] rounded-lg font-display font-bold text-sm text-text-primary hover:border-accent-gold/50 disabled:opacity-30 disabled:cursor-default transition-all"
+          >
+            {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Progress'}
+          </button>
+          {leagueId && (
+            <Link
+              to={`/leagues/${leagueId}/vault`}
+              className="px-4 py-3 text-sm font-display text-text-secondary hover:text-accent-gold transition-colors"
+            >
+              Import More History
+            </Link>
+          )}
+          <button
+            onClick={() => setStep(2)}
+            disabled={!canProceedToStep2}
+            className="px-6 py-3 bg-gradient-to-r from-gold to-orange text-slate rounded-lg font-display font-bold text-sm hover:shadow-lg hover:shadow-gold/20 disabled:opacity-30 disabled:cursor-default transition-all ml-auto"
+          >
+            Continue to Team Assignment &rarr;
+          </button>
+        </div>
       </div>
 
       {/* Right: Reference panel */}

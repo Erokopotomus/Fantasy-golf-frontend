@@ -466,6 +466,8 @@ export function useOwnerAssignment(leagueId) {
       next.delete(sourceName)
       return next
     })
+    // Dismiss merged name from auto-detection so it doesn't reappear
+    setDismissedDetections(prev => new Set(prev).add(sourceName))
     if (activeOwnerId === sourceName) setActiveOwnerId(targetName)
     setHasChanges(true)
     return true
