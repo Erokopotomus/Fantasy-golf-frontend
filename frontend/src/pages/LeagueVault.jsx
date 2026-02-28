@@ -440,21 +440,29 @@ const DraftHistoryTab = ({ history }) => {
     if (!teamWithDraft?.draftData) return null
 
     const draft = teamWithDraft.draftData
-    // Build owner map from rosterId → ownerName
+    // Build owner map: try teamKey → ownerName, then rosterId → ownerName
+    const teamKeyMap = {}
     const rosterMap = {}
-    for (const t of teams) {
-      // The rosterId in the draft picks corresponds to the team's position in the roster array
-      // We need to map them using the index or a lookup
-      rosterMap[teams.indexOf(t) + 1] = t.ownerName || t.teamName
+    for (let i = 0; i < teams.length; i++) {
+      const t = teams[i]
+      const name = t.ownerName || t.teamName
+      rosterMap[i + 1] = name
+      // Yahoo teamKeys look like "461.l.202974.t.4" — extract the team number
+      if (t.teamKey) teamKeyMap[t.teamKey] = name
     }
 
     // Group picks by round
     const rounds = {}
     for (const pick of draft.picks || []) {
       if (!rounds[pick.round]) rounds[pick.round] = []
+      // Resolve owner: prefer pick's own ownerName, then teamKey lookup, then rosterId lookup
+      const resolvedOwner = pick.ownerName
+        || (pick.teamKey && teamKeyMap[pick.teamKey])
+        || (pick.rosterId != null && rosterMap[pick.rosterId])
+        || null
       rounds[pick.round].push({
         ...pick,
-        ownerName: rosterMap[pick.rosterId] || `Team ${pick.rosterId}`,
+        ownerName: resolvedOwner,
       })
     }
 
@@ -516,14 +524,16 @@ const DraftHistoryTab = ({ history }) => {
                         {pick.pick}.
                       </span>
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm text-text-primary font-display font-semibold">
-                          {pick.playerName || `Player ${pick.playerId}`}
+                        <span className={`text-sm font-display font-semibold ${pick.playerName ? 'text-text-primary' : 'text-text-muted'}`}>
+                          {pick.playerName || `Player #${(pick.playerId || '').replace(/^\d+\.p\./, '')}`}
                         </span>
                         {pick.position && (
                           <span className="ml-2 text-xs font-mono text-text-secondary">{pick.position}</span>
                         )}
                       </div>
-                      <span className="text-xs text-text-secondary font-mono">{pick.ownerName}</span>
+                      {pick.ownerName && (
+                        <span className="text-xs text-text-secondary font-mono">{pick.ownerName}</span>
+                      )}
                       {pick.amount && (
                         <span className="text-xs font-mono text-accent-gold">${pick.amount}</span>
                       )}
