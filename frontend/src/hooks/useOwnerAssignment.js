@@ -148,11 +148,11 @@ export function useOwnerAssignment(leagueId) {
     return map
   }, [teamEntries])
 
-  // Auto-detected names
+  // Auto-detected names — exclude dismissed AND already-assigned raw names
   const detectedNames = useMemo(() => {
-    const rawNames = [...uniqueRawNames].filter(n => !dismissedDetections.has(n))
+    const rawNames = [...uniqueRawNames].filter(n => !dismissedDetections.has(n) && !assignments.has(n))
     return detectNames(rawNames, nameToYears)
-  }, [uniqueRawNames, nameToYears, dismissedDetections])
+  }, [uniqueRawNames, nameToYears, dismissedDetections, assignments])
 
   // Available years for filter pills
   const availableYears = useMemo(() => {
