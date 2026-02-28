@@ -485,7 +485,11 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
         _isNew: true,
       }))
 
-      setEditedPicks(picks)
+      // Append to existing picks (supports multi-screenshot uploads)
+      setEditedPicks(prev => {
+        const startPick = prev.length > 0 ? Math.max(...prev.map(p => p.pick || 0)) + 1 : 1
+        return [...prev, ...picks.map((p, i) => ({ ...p, pick: startPick + i }))]
+      })
       if (!editMode) setEditMode(true)
 
       // Auto-resolve positions from DB for any missing
