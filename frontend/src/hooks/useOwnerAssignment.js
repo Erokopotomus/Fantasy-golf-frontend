@@ -603,8 +603,10 @@ export function useOwnerAssignment(leagueId) {
 
       // Supplement with any most-recent-season names missing from saved aliases
       // The most recent season is the best indicator of who's currently active
-      if (teamEntries.length > 0) {
-        const mostRecentYear = Math.max(...teamEntries.map(e => e.seasonYear))
+      const mostRecentYear = teamEntries.length > 0
+        ? Math.max(...teamEntries.map(e => e.seasonYear))
+        : null
+      if (mostRecentYear) {
         const mostRecentEntries = teamEntries.filter(e => e.seasonYear === mostRecentYear)
         for (const entry of mostRecentEntries) {
           const name = entry.rawName
@@ -619,6 +621,19 @@ export function useOwnerAssignment(leagueId) {
         }
       }
 
+      // Add any remaining raw names not yet in owners (e.g., newly imported older seasons)
+      for (const rawName of uniqueRawNames) {
+        if (!ownersMap.has(rawName) && !assignMap.has(rawName)) {
+          ownersMap.set(rawName, {
+            name: rawName,
+            color: OWNER_COLORS[ci % OWNER_COLORS.length],
+            isActive: false, // not in most recent season → former
+          })
+          ci++
+        }
+      }
+
+      // Self-assign exact name matches
       for (const rawName of uniqueRawNames) {
         if (ownersMap.has(rawName) && !assignMap.has(rawName)) {
           assignMap.set(rawName, rawName)
