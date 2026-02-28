@@ -237,7 +237,7 @@ Strategic reset of the platform's information architecture. Spec: `docs/CLUTCH_I
 
 > **Specs:** `docs/CLUTCH_IMPORT_ADDENDUM_SPEC.md`, `docs/PLATFORM_DATA_MAP.md`
 
-All 5 platforms enhanced with raw data preservation, transaction import, opinion timeline bridge, settings snapshots, owner matching. Custom data import (spreadsheet/CSV/Google Sheets/website crawling with AI column mapping). Conversational league intelligence (Claude-powered league Q&A with context builder, session management, LeagueChat drawer component).
+All 5 platforms enhanced with raw data preservation, transaction import, opinion timeline bridge, settings snapshots, owner matching. Custom data import (spreadsheet/CSV/Google Sheets/website crawling with AI column mapping). Conversational league intelligence (Claude-powered league Q&A with context builder, session management, LeagueChat drawer component). Yahoo player cache (migration 48): persistent `yahoo_player_cache` table for Yahoo player ID → name resolution. 3-tier lookup: DB cache → Yahoo API → Sleeper fallback. All 53K+ Yahoo draft picks fully resolved.
 
 ### Backlog (Low Priority)
 - League Vault v3: H2H historical records, transaction log, "On This Day", PDF export
@@ -250,7 +250,7 @@ All 5 platforms enhanced with raw data preservation, transaction import, opinion
 ## DATABASE SCHEMA
 
 > Full SQL CREATE statements moved to **`docs/SCHEMA_REFERENCE.md`**.
-> Authoritative schema: `backend/prisma/schema.prisma` (~2,800 lines, 91+ models, 49 migrations).
+> Authoritative schema: `backend/prisma/schema.prisma` (~2,800 lines, 91+ models, 51 migrations).
 
 ---
 
@@ -494,8 +494,8 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 ---
 
 *Last updated: February 26, 2026*
-*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & SG Intelligence complete. ESPN historical backfill (2018-2026) complete. DataGolf SG backfill complete. Golf Hub + Season Race + Compare page live. Live scoring pipeline + scoring page redesign live. Board editor overhauled + compare mode. iPod Reframe (6 phases) complete. Profile enhancement complete. Nav + League UX improvements live. 567 commits. 91+ database models. 165+ API endpoints. 70+ frontend pages. 34 cron jobs. 66 backend services. 49 migrations. 2 sports live.*
+*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & SG Intelligence complete. ESPN historical backfill (2018-2026) complete. DataGolf SG backfill complete. Golf Hub + Season Race + Compare page live. Live scoring pipeline + scoring page redesign live. Board editor overhauled + compare mode. iPod Reframe (6 phases) complete. Profile enhancement complete. Nav + League UX improvements live. 567 commits. 91+ database models. 165+ API endpoints. 70+ frontend pages. 34 cron jobs. 66 backend services. 51 migrations. 2 sports live.*
 
-**All migrations (1-47) deployed to Railway.**
+**All migrations (1-48) deployed to Railway.**
 
 **Infrastructure fix (Feb 2026):** All backend route files now import from `src/lib/prisma.js` singleton instead of creating individual PrismaClient instances. Pool: 20 connections, 30s timeout.
