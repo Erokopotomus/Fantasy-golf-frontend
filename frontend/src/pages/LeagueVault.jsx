@@ -7,7 +7,7 @@ import ShareModal from '../components/vault/ShareModal'
 import { useAuth } from '../context/AuthContext'
 import { computeVaultStats } from '../hooks/useVaultStats'
 import api from '../services/api'
-import { uploadToCloudinary } from '../utils/uploadImage'
+import { resizeImage, uploadToCloudinary } from '../utils/uploadImage'
 import LeagueChat from '../components/ai/LeagueChat'
 
 // Error boundary to catch rendering crashes
@@ -461,8 +461,8 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
     setParseError(null)
     setError(null)
     try {
-      // Upload full-res to Cloudinary (no resize — need readable text)
-      const blob = file
+      // Resize to stay under API limits while keeping text readable
+      const blob = await resizeImage(file, { maxWidth: 2000, maxHeight: 2000, quality: 0.92 })
       const imageUrl = await uploadToCloudinary(blob, { folder: 'clutch-draft-screenshots' })
 
       // Call AI vision parse
