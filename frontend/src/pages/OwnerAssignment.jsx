@@ -156,11 +156,12 @@ const Step1IdentifyOwners = ({ wizard }) => {
   const [manualInput, setManualInput] = useState('')
   const [mergeSource, setMergeSource] = useState(null) // owner name being merged FROM
   const [historyModal, setHistoryModal] = useState(null) // null | { mode: 'season' } | { mode: 'team', seasonYear: number }
+  const [expandedOwner, setExpandedOwner] = useState(null) // owner name currently expanded
   const inputRef = useRef(null)
   const {
     owners, detectedNames, uniqueRawNames, rawNameToEntries, nameToYears, availableYears,
     addOwner, removeOwner, renameOwner, mergeOwner, toggleOwnerActive, dismissDetection,
-    canProceedToStep2, setStep, assignments, refetchHistory,
+    canProceedToStep2, setStep, assignments, refetchHistory, unassignTeam,
   } = wizard
   const leagueId = wizard.league?.id
 
@@ -272,34 +273,43 @@ const Step1IdentifyOwners = ({ wizard }) => {
 
           const OwnerRow = ({ name, data, index }) => {
             const years = nameToYears[name] || []
-            // Compute all assigned seasons for this owner (including merged names)
-            const assignedYears = new Set()
+            const isExpanded = expandedOwner === name
+            // Collect all assigned entries for this owner (including merged names)
+            const assignedEntries = []
             for (const [rawName, ownerName] of assignments) {
               if (ownerName === name) {
-                const ys = nameToYears[rawName] || []
-                for (const y of ys) assignedYears.add(y)
+                const entries = rawNameToEntries.get(rawName) || []
+                for (const e of entries) {
+                  assignedEntries.push({ ...e, rawName })
+                }
               }
             }
-            const assignedCount = assignedYears.size
-            const assignedRange = assignedCount > 0 ? formatYearRanges([...assignedYears].sort((a, b) => a - b)) : ''
-            // Show assigned line only when it differs from the raw name years (i.e., merges happened)
-            const hasExtraAssignments = assignedCount > years.length
+            assignedEntries.sort((a, b) => b.seasonYear - a.seasonYear)
+            const assignedCount = assignedEntries.length
+            const assignedYearSet = new Set(assignedEntries.map(e => e.seasonYear))
+            const assignedRange = assignedYearSet.size > 0 ? formatYearRanges([...assignedYearSet].sort((a, b) => a - b)) : ''
             return (
-              <div className={`relative px-3 py-2.5 rounded-lg border ${
+              <div className={`relative rounded-lg border ${
                 mergeSource && mergeSource !== name ? 'bg-accent-gold/5 border-accent-gold/30 cursor-pointer' : 'bg-[var(--surface)] border-[var(--card-border)]/50'
               }`}>
-                <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center justify-between px-3 py-2.5">
+                <div
+                  className="flex items-center gap-2.5 min-w-0 cursor-pointer"
+                  onClick={() => setExpandedOwner(isExpanded ? null : name)}
+                >
                   <span className="text-xs font-mono text-text-muted/60 w-5 text-right flex-shrink-0">{index}</span>
                   <span
                     className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: data.color }}
                   />
                   <span className="text-sm text-text-primary font-display font-bold truncate">{name}</span>
-                  {years.length > 0 && (
-                    <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
-                      {formatYearRanges(years)}
-                    </span>
+                  <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
+                    {assignedRange || formatYearRanges(years)}
+                  </span>
+                  {assignedCount > 0 && (
+                    <svg className={`w-3 h-3 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -348,15 +358,41 @@ const Step1IdentifyOwners = ({ wizard }) => {
                   </button>
                 </div>
                 </div>
-                {/* Assigned seasons summary — shows after merges */}
-                {assignedCount > 0 && (
-                  <div className="flex items-center gap-2 mt-1.5 ml-[2.125rem]">
-                    <span className="text-[10px] font-mono text-text-muted">
+                {/* Expanded: season-by-season breakdown with unassign */}
+                {isExpanded && (
+                  <div className="px-3 pb-2.5 border-t border-[var(--card-border)]/30 mt-1">
+                    <div className="mt-2 space-y-0.5">
+                      {assignedEntries.length > 0 ? assignedEntries.map((e) => (
+                        <div key={`${e.rawName}-${e.seasonYear}`} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--bg-alt)] transition-colors group">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-[10px] font-mono text-text-muted w-8 flex-shrink-0">{e.seasonYear}</span>
+                            <span className="text-[11px] text-text-primary font-display truncate">{e.rawName}</span>
+                            {e.teamName && e.teamName !== e.rawName && (
+                              <span className="text-[10px] text-text-muted truncate">({e.teamName})</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[10px] font-mono text-text-secondary">{e.wins}-{e.losses}</span>
+                            {e.playoffResult === 'champion' && <span className="text-[9px]">&#127942;</span>}
+                            {e.playoffResult === 'runner_up' && <span className="text-[9px]">&#129352;</span>}
+                            <button
+                              onClick={() => unassignTeam(e.rawName)}
+                              className="text-text-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                              title={`Unassign "${e.rawName}" from ${name}`}
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      )) : (
+                        <p className="text-[10px] text-text-muted font-mono py-2 text-center">No seasons assigned yet</p>
+                      )}
+                    </div>
+                    <div className="mt-1.5 text-[10px] font-mono text-text-muted text-center">
                       {assignedCount} season{assignedCount !== 1 ? 's' : ''} assigned
-                    </span>
-                    {hasExtraAssignments && (
-                      <span className="text-[10px] font-mono text-accent-gold/60">{assignedRange}</span>
-                    )}
+                    </div>
                   </div>
                 )}
                 {/* Merge target selector — shown on OTHER rows when this row's MERGE is active */}
@@ -368,7 +404,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                         setMergeSource(null)
                       }
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg hover:bg-accent-gold/80 transition-colors shadow-lg z-10"
+                    className="absolute right-2 top-4 px-2.5 py-1 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg hover:bg-accent-gold/80 transition-colors shadow-lg z-10"
                   >
                     MERGE {mergeSource} HERE
                   </button>
