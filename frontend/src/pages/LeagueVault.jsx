@@ -500,6 +500,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
         ownerName: p.ownerName || '',
         amount: p.amount || p.cost || 0,
         isKeeper: p.isKeeper || false,
+        keeperPrice: p.keeperPrice || 0,
         _original: { ...p },
         _isNew: false,
       })))
@@ -529,6 +530,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
       ownerName: '',
       amount: 0,
       isKeeper: false,
+      keeperPrice: 0,
       _original: null,
       _isNew: true,
     }])
@@ -549,7 +551,8 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
       parseInt(pick.round) !== (o.round || 0) ||
       parseInt(pick.pick) !== (o.pick || 0) ||
       parseFloat(pick.amount) !== (o.amount || o.cost || 0) ||
-      pick.isKeeper !== (o.isKeeper || false)
+      pick.isKeeper !== (o.isKeeper || false) ||
+      parseFloat(pick.keeperPrice) !== (o.keeperPrice || 0)
     )
   }
 
@@ -568,6 +571,9 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
           position: p.position?.trim() || '',
           ownerName: p.ownerName?.trim() || '',
           isKeeper: Boolean(p.isKeeper),
+        }
+        if (p.isKeeper && draftType === 'auction') {
+          clean.keeperPrice = parseFloat(p.keeperPrice) || 0
         }
         if (draftType === 'auction') {
           clean.amount = parseFloat(p.amount) || 0
@@ -659,7 +665,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
               <button
                 onClick={handleSave}
                 disabled={saving || totalChanges === 0}
-                className="px-4 py-1.5 bg-accent-gold text-slate rounded-lg text-sm font-mono font-bold disabled:opacity-40 hover:bg-accent-gold/90 transition-colors"
+                className="px-4 py-1.5 bg-accent-gold text-white rounded-lg text-sm font-mono font-bold disabled:opacity-40 hover:bg-accent-gold/90 transition-colors"
               >
                 {saving ? 'Saving...' : `Save ${totalChanges} Change${totalChanges !== 1 ? 's' : ''}`}
               </button>
@@ -682,7 +688,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
 
           {/* Column headers */}
           <div className="grid gap-2 mb-2 px-1 text-xs font-mono text-text-secondary uppercase tracking-wider"
-            style={{ gridTemplateColumns: isAuction ? '1fr 70px 1fr 80px 40px 32px' : '50px 50px 1fr 70px 1fr 40px 32px' }}
+            style={{ gridTemplateColumns: isAuction ? '1fr 70px 1fr 80px 50px 80px 32px' : '50px 50px 1fr 70px 1fr 50px 32px' }}
           >
             {!isAuction && <span>Rd</span>}
             {!isAuction && <span>Pick</span>}
@@ -690,7 +696,8 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
             <span>Pos</span>
             <span>Owner</span>
             {isAuction && <span>$</span>}
-            <span>Kpr</span>
+            <span>Keeper</span>
+            {isAuction && <span>Kpr $</span>}
             <span></span>
           </div>
 
@@ -707,7 +714,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                 <div
                   key={idx}
                   className={`grid gap-2 items-center py-1 px-1 rounded-lg ${bgClass}`}
-                  style={{ gridTemplateColumns: isAuction ? '1fr 70px 1fr 80px 40px 32px' : '50px 50px 1fr 70px 1fr 40px 32px' }}
+                  style={{ gridTemplateColumns: isAuction ? '1fr 70px 1fr 80px 50px 80px 32px' : '50px 50px 1fr 70px 1fr 50px 32px' }}
                 >
                   {!isAuction && (
                     <input
@@ -771,6 +778,24 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                       className="w-4 h-4 accent-accent-gold"
                     />
                   </div>
+                  {isAuction && (
+                    <div className="relative">
+                      {pick.isKeeper ? (
+                        <>
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-mono text-text-secondary">$</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={pick.keeperPrice}
+                            onChange={(e) => updatePick(idx, 'keeperPrice', e.target.value)}
+                            className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded pl-5 pr-2 py-1 text-sm font-mono text-green-400 w-full"
+                          />
+                        </>
+                      ) : (
+                        <span className="text-xs font-mono text-text-muted px-2">—</span>
+                      )}
+                    </div>
+                  )}
                   <button
                     onClick={() => removePick(idx)}
                     className="text-red-400 hover:text-red-300 text-sm font-mono transition-colors"
@@ -845,7 +870,9 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                           <span className="ml-2 text-xs font-mono text-text-secondary">{pick.position}</span>
                         )}
                         {pick.isKeeper && (
-                          <span className="ml-2 text-xs font-mono text-green-400">K</span>
+                          <span className="ml-2 text-xs font-mono text-green-400">
+                            K{pick.keeperPrice ? ` $${pick.keeperPrice}` : ''}
+                          </span>
                         )}
                       </div>
                       {pick.ownerName && (

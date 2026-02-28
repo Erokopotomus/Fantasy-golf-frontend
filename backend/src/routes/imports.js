@@ -693,6 +693,7 @@ router.put('/draft-data/:leagueId/:seasonYear', authenticate, async (req, res) =
       if (pick.amount != null) clean.amount = parseFloat(pick.amount) || 0
       if (pick.cost != null) clean.cost = parseFloat(pick.cost) || 0
       if (pick.isKeeper != null) clean.isKeeper = Boolean(pick.isKeeper)
+      if (pick.keeperPrice != null) clean.keeperPrice = parseFloat(pick.keeperPrice) || 0
       if (pick.playerId) clean.playerId = String(pick.playerId).trim()
       if (pick.rosterId != null) clean.rosterId = pick.rosterId
       if (pick.teamKey) clean.teamKey = String(pick.teamKey).trim()
