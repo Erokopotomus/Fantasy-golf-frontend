@@ -447,6 +447,13 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
   const [parseError, setParseError] = useState(null)
   const screenshotInputRef = useRef(null)
 
+  // Build owner list for datalist autocomplete
+  const ownerNames = useMemo(() => {
+    if (!selectedYear || !history?.seasons?.[selectedYear]) return []
+    const teams = history.seasons[selectedYear]
+    return [...new Set(teams.map(t => t.ownerName || t.teamName).filter(Boolean))]
+  }, [selectedYear, history])
+
   // Handle screenshot upload → Cloudinary → AI parse → populate editor
   const handleScreenshotUpload = useCallback(async (file) => {
     if (!file) return
@@ -504,13 +511,6 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
       if (screenshotInputRef.current) screenshotInputRef.current.value = ''
     }
   }, [selectedYear, ownerNames, editMode])
-
-  // Build owner list for datalist autocomplete
-  const ownerNames = useMemo(() => {
-    if (!selectedYear || !history?.seasons?.[selectedYear]) return []
-    const teams = history.seasons[selectedYear]
-    return [...new Set(teams.map(t => t.ownerName || t.teamName).filter(Boolean))]
-  }, [selectedYear, history])
 
   // Get draft data for selected year
   const draftInfo = useMemo(() => {
