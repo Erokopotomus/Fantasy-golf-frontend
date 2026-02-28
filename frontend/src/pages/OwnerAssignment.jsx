@@ -180,8 +180,6 @@ const Step1IdentifyOwners = ({ wizard }) => {
   const mergeSelectedInto = useCallback((targetName) => {
     const sources = [...mergeSelection]
     if (sources.length === 0) return
-    const names = sources.map(s => `"${s}"`).join(', ')
-    if (!confirm(`Merge ${names} into "${targetName}"?`)) return
     for (const source of sources) {
       mergeOwner(source, targetName)
     }
@@ -314,16 +312,19 @@ const Step1IdentifyOwners = ({ wizard }) => {
             const assignedYearSet = new Set(assignedEntries.map(e => e.seasonYear))
             const assignedRange = assignedYearSet.size > 0 ? formatYearRanges([...assignedYearSet].sort((a, b) => a - b)) : ''
             return (
-              <div className={`rounded-lg border transition-colors ${
-                isSelected ? 'bg-accent-gold/10 border-accent-gold/40' :
-                isTarget ? 'bg-accent-gold/5 border-accent-gold/20' :
-                'bg-[var(--surface)] border-[var(--card-border)]/50'
-              }`}>
+              <div
+                className={`rounded-lg border transition-colors ${
+                  isSelected ? 'bg-accent-gold/10 border-accent-gold/40' :
+                  isTarget ? 'bg-accent-gold/5 border-accent-gold/20 cursor-pointer hover:border-accent-gold/50' :
+                  'bg-[var(--surface)] border-[var(--card-border)]/50'
+                }`}
+                onClick={isTarget ? () => mergeSelectedInto(name) : undefined}
+              >
                 <div className="flex items-center justify-between px-3 py-2.5">
                 <div className="flex items-center gap-2.5 min-w-0">
                   {/* Checkbox for multi-select merge */}
                   <button
-                    onClick={() => toggleMergeSelect(name)}
+                    onClick={(e) => { e.stopPropagation(); toggleMergeSelect(name) }}
                     className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
                       isSelected
                         ? 'bg-accent-gold border-accent-gold text-slate'
@@ -339,7 +340,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                   </button>
                   <div
                     className="flex items-center gap-2 min-w-0 cursor-pointer"
-                    onClick={() => setExpandedOwner(isExpanded ? null : name)}
+                    onClick={(e) => { e.stopPropagation(); setExpandedOwner(isExpanded ? null : name) }}
                   >
                     <span
                       className="w-3 h-3 rounded-full flex-shrink-0"
@@ -357,12 +358,9 @@ const Step1IdentifyOwners = ({ wizard }) => {
                   </div>
                 </div>
                 {isTarget ? (
-                  <button
-                    onClick={() => mergeSelectedInto(name)}
-                    className="px-3 py-1 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg hover:bg-accent-gold/80 transition-colors shadow-lg flex-shrink-0"
-                  >
+                  <span className="px-3 py-1.5 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg shadow-lg flex-shrink-0">
                     MERGE HERE
-                  </button>
+                  </span>
                 ) : !isSelected ? (
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
