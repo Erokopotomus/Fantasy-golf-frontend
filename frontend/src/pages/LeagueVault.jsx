@@ -791,7 +791,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       }
       if (weeks.length > 0) {
         weeks.sort((a, b) => a.week - b.week)
-        weeklyLog[s.year] = weeks
+        const regSeasonWeeks = (s.wins || 0) + (s.losses || 0) + (s.ties || 0)
+        weeklyLog[s.year] = { weeks, regSeasonWeeks }
       }
     }
 
@@ -1237,7 +1238,10 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   <div className="space-y-1">
                     {Object.entries(profileData.weeklyLog)
                       .sort(([a], [b]) => parseInt(b) - parseInt(a))
-                      .map(([year, weeks]) => (
+                      .map(([year, data]) => {
+                        const { weeks, regSeasonWeeks } = data
+                        const hasPlayoffWeeks = regSeasonWeeks > 0 && weeks.some(w => w.week > regSeasonWeeks)
+                        return (
                         <div key={year}>
                           <button
                             onClick={() => setExpandedYear(expandedYear === year ? null : year)}
@@ -1256,32 +1260,43 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                           </button>
                           {expandedYear === year && (
                             <div className="ml-2 mb-3 border-l-2 border-[var(--card-border)] pl-3 space-y-0.5">
-                              {weeks.map(w => (
-                                <div
-                                  key={w.week}
-                                  className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--surface-alt)] text-sm"
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-text-secondary w-8">W{w.week}</span>
-                                    <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${RESULT_BADGE[w.result]}`}>
-                                      {w.result}
-                                    </span>
-                                    <span className="text-text-primary text-xs font-display">vs {w.opponent}</span>
+                              {weeks.map((w, i) => {
+                                const prevWeek = i > 0 ? weeks[i - 1].week : 0
+                                const showDivider = hasPlayoffWeeks && prevWeek <= regSeasonWeeks && w.week > regSeasonWeeks
+                                return (
+                                  <div key={w.week}>
+                                    {showDivider && (
+                                      <div className="flex items-center gap-2 py-2 my-1">
+                                        <div className="flex-1 h-px bg-accent-gold/30" />
+                                        <span className="text-[10px] font-mono font-semibold text-accent-gold/70 uppercase tracking-wider">Playoffs</span>
+                                        <div className="flex-1 h-px bg-accent-gold/30" />
+                                      </div>
+                                    )}
+                                    <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--surface-alt)] text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono text-text-secondary w-8">W{w.week}</span>
+                                        <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded ${RESULT_BADGE[w.result]}`}>
+                                          {w.result}
+                                        </span>
+                                        <span className="text-text-primary text-xs font-display">vs {w.opponent}</span>
+                                      </div>
+                                      <div className="flex items-center gap-3 font-mono text-xs">
+                                        <span className="text-text-primary">{w.pf.toFixed(1)}</span>
+                                        <span className="text-text-secondary">-</span>
+                                        <span className="text-text-secondary">{w.pa.toFixed(1)}</span>
+                                        <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                          {w.margin >= 0 ? '+' : ''}{w.margin.toFixed(1)}
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-3 font-mono text-xs">
-                                    <span className="text-text-primary">{w.pf.toFixed(1)}</span>
-                                    <span className="text-text-secondary">-</span>
-                                    <span className="text-text-secondary">{w.pa.toFixed(1)}</span>
-                                    <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                      {w.margin >= 0 ? '+' : ''}{w.margin.toFixed(1)}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
+                                )
+                              })}
                             </div>
                           )}
                         </div>
-                      ))}
+                        )
+                      })}
                   </div>
                 ) : (
                   <p className="text-text-secondary text-sm">No weekly matchup data available.</p>
