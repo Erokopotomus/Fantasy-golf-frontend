@@ -438,6 +438,9 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
+  // Resolved positions cache (name → position from DB)
+  const [resolvedPositions, setResolvedPositions] = useState({})
+
   // Build owner list for datalist autocomplete
   const ownerNames = useMemo(() => {
     if (!selectedYear || !history?.seasons?.[selectedYear]) return []
@@ -484,29 +487,63 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
     return { type: draft.type, totalRounds: draft.rounds, rounds, flatPicks }
   }, [selectedYear, history])
 
+  // Auto-resolve positions for picks missing them
+  useEffect(() => {
+    if (!draftInfo?.flatPicks) return
+    const missingNames = draftInfo.flatPicks
+      .filter(p => !p.position && p.playerName && !resolvedPositions[p.playerName])
+      .map(p => p.playerName)
+    if (missingNames.length === 0) return
+    const uniqueNames = [...new Set(missingNames)]
+    api.resolvePositions(uniqueNames).then(({ positions }) => {
+      if (Object.keys(positions).length > 0) {
+        setResolvedPositions(prev => ({ ...prev, ...positions }))
+      }
+    }).catch(() => {})
+  }, [draftInfo]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Enter edit mode
-  const enterEditMode = useCallback((startEmpty = false) => {
+  const enterEditMode = useCallback(async (startEmpty = false) => {
     setError(null)
     if (startEmpty) {
       setEditedPicks([])
       setDraftType('auction')
     } else if (draftInfo) {
       setDraftType(draftInfo.type || 'snake')
-      setEditedPicks(draftInfo.flatPicks.map(p => ({
+      const picks = draftInfo.flatPicks.map(p => ({
         round: p.round || 0,
         pick: p.pick || 0,
         playerName: p.playerName || '',
-        position: p.position || '',
+        position: p.position || resolvedPositions[p.playerName] || '',
         ownerName: p.ownerName || '',
         amount: p.amount || p.cost || 0,
         isKeeper: p.isKeeper || false,
         keeperPrice: p.keeperPrice || 0,
-        _original: { ...p },
+        _original: { ...p, position: p.position || resolvedPositions[p.playerName] || '' },
         _isNew: false,
-      })))
+      }))
+
+      // Resolve any still-missing positions from player DB
+      const missingPosNames = picks.filter(p => !p.position && p.playerName).map(p => p.playerName)
+      if (missingPosNames.length > 0) {
+        try {
+          const { positions } = await api.resolvePositions(missingPosNames)
+          setResolvedPositions(prev => ({ ...prev, ...positions }))
+          for (const pick of picks) {
+            if (!pick.position && positions[pick.playerName]) {
+              pick.position = positions[pick.playerName]
+              if (pick._original) pick._original.position = positions[pick.playerName]
+            }
+          }
+        } catch (e) {
+          // Non-fatal — positions just stay empty
+        }
+      }
+
+      setEditedPicks(picks)
     }
     setEditMode(true)
-  }, [draftInfo])
+  }, [draftInfo, resolvedPositions])
 
   const cancelEdit = useCallback(() => {
     setEditMode(false)
@@ -866,8 +903,8 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                         <span className={`text-sm font-display font-semibold ${pick.playerName ? 'text-text-primary' : 'text-text-muted'}`}>
                           {pick.playerName || `Player #${(pick.playerId || '').replace(/^\d+\.p\./, '')}`}
                         </span>
-                        {pick.position && (
-                          <span className="ml-2 text-xs font-mono text-text-secondary">{pick.position}</span>
+                        {(pick.position || resolvedPositions[pick.playerName]) && (
+                          <span className="ml-2 text-xs font-mono text-text-secondary">{pick.position || resolvedPositions[pick.playerName]}</span>
                         )}
                         {pick.isKeeper && (
                           <span className="ml-2 text-xs font-mono text-green-400">

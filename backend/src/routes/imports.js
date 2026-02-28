@@ -650,6 +650,43 @@ router.put('/historical-season/:id', authenticate, async (req, res) => {
   }
 })
 
+// ─── Bulk resolve player positions from names ───────────────────────────────
+// POST /api/imports/resolve-positions
+router.post('/resolve-positions', authenticate, async (req, res) => {
+  try {
+    const { names } = req.body
+    if (!Array.isArray(names) || names.length === 0) {
+      return res.json({ positions: {} })
+    }
+
+    // Limit to 500 names per request
+    const lookupNames = names.slice(0, 500).map(n => String(n).trim()).filter(Boolean)
+
+    // Find players by exact name match (case-insensitive via lower())
+    const players = await prisma.player.findMany({
+      where: {
+        name: { in: lookupNames, mode: 'insensitive' },
+        nflPosition: { not: null },
+      },
+      select: { name: true, nflPosition: true },
+    })
+
+    // Build name → position map (first match wins)
+    const positions = {}
+    for (const p of players) {
+      // Use the original casing from the request for the key
+      const matchedName = lookupNames.find(n => n.toLowerCase() === p.name.toLowerCase())
+      if (matchedName && !positions[matchedName]) {
+        positions[matchedName] = p.nflPosition
+      }
+    }
+
+    res.json({ positions })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 // ─── Update Draft Data for a League Season ──────────────────────────────────
 // PUT /api/imports/draft-data/:leagueId/:seasonYear
 router.put('/draft-data/:leagueId/:seasonYear', authenticate, async (req, res) => {

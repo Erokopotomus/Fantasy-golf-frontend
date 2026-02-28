@@ -719,6 +719,13 @@ class ApiService {
     })
   }
 
+  async resolvePositions(names) {
+    return this.request('/imports/resolve-positions', {
+      method: 'POST',
+      body: JSON.stringify({ names }),
+    })
+  }
+
   async updateDraftData(leagueId, seasonYear, draftData) {
     return this.request(`/imports/draft-data/${leagueId}/${seasonYear}`, {
       method: 'PUT',
