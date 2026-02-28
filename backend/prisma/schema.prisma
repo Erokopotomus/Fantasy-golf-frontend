@@ -3183,3 +3183,14 @@ model LeaguePostView {
   @@index([postId])
   @@map("league_post_views")
 }
+
+// ============ YAHOO PLAYER CACHE ============
+
+model YahooPlayerCache {
+  yahooId   Int      @id          // Permanent Yahoo player ID (e.g., 30971)
+  fullName  String                // "Patrick Mahomes"
+  position  String?               // "QB", "WR", etc.
+  updatedAt DateTime @updatedAt
+
+  @@map("yahoo_player_cache")
+}

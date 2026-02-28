@@ -16,6 +16,7 @@
  */
 
 const opinionTimeline = require('./opinionTimelineService')
+const yahooPlayerCache = require('./yahooPlayerCache')
 
 const prisma = require('../lib/prisma.js')
 const BASE = 'https://fantasysports.yahooapis.com/fantasy/v2'
@@ -715,38 +716,84 @@ async function importSeason(leagueKey, year, accessToken, onTokenRefresh) {
         pick.ownerName = teamKeyToOwner[pick.teamKey]
       }
     }
-    // Resolve player names — first via Yahoo's own API, then Sleeper as fallback
+    // Resolve player names — 3-tier: DB cache → Yahoo API → Sleeper fallback
     const unresolvedKeys = parsedDraft.picks
       .filter(p => !p.playerName && p.playerId)
       .map(p => p.playerId)
 
     if (unresolvedKeys.length > 0) {
-      // Primary: batch fetch from Yahoo (has all players including rookies)
-      try {
-        const yahooNames = await fetchYahooPlayerNames(unresolvedKeys, accessToken, onTokenRefresh)
-        for (const pick of parsedDraft.picks) {
-          if (!pick.playerName && pick.playerId && yahooNames[pick.playerId]) {
-            pick.playerName = yahooNames[pick.playerId]
+      // Extract numeric IDs for cache lookup
+      const keyToNumericId = {}
+      for (const key of unresolvedKeys) {
+        const numId = extractYahooPlayerId(key)
+        if (numId) keyToNumericId[key] = Number(numId)
+      }
+      const numericIds = Object.values(keyToNumericId)
+
+      // Tier 1: Check persistent DB cache (instant, no API call)
+      let cacheHits = {}
+      if (numericIds.length > 0) {
+        try {
+          cacheHits = await yahooPlayerCache.lookupNames(numericIds)
+          for (const pick of parsedDraft.picks) {
+            if (!pick.playerName && pick.playerId) {
+              const numId = keyToNumericId[pick.playerId]
+              if (numId && cacheHits[numId]) {
+                pick.playerName = cacheHits[numId]
+              }
+            }
           }
+          if (Object.keys(cacheHits).length > 0) {
+            console.log(`[YahooImport] Resolved ${Object.keys(cacheHits).length} names from DB cache`)
+          }
+        } catch (err) {
+          console.error('[YahooImport] Cache lookup failed (non-fatal):', err.message)
         }
-      } catch (err) {
-        console.error('[YahooImport] Yahoo player name batch fetch failed (non-fatal):', err.message)
       }
 
-      // Fallback: Sleeper's public API for any still unresolved
-      const stillUnresolved = parsedDraft.picks.filter(p => !p.playerName && p.playerId)
-      if (stillUnresolved.length > 0) {
+      // Tier 2: Yahoo API for remaining (has rookies + current players)
+      const afterCache = parsedDraft.picks.filter(p => !p.playerName && p.playerId)
+      const newlyResolved = [] // collect for cache upsert
+      if (afterCache.length > 0) {
+        const stillUnresolvedKeys = afterCache.map(p => p.playerId)
+        try {
+          const yahooNames = await fetchYahooPlayerNames(stillUnresolvedKeys, accessToken, onTokenRefresh)
+          for (const pick of parsedDraft.picks) {
+            if (!pick.playerName && pick.playerId && yahooNames[pick.playerId]) {
+              pick.playerName = yahooNames[pick.playerId]
+              const numId = keyToNumericId[pick.playerId]
+              if (numId) {
+                newlyResolved.push({ yahooId: numId, fullName: yahooNames[pick.playerId] })
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[YahooImport] Yahoo player name batch fetch failed (non-fatal):', err.message)
+        }
+      }
+
+      // Tier 3: Sleeper fallback for any still unresolved
+      const afterYahoo = parsedDraft.picks.filter(p => !p.playerName && p.playerId)
+      if (afterYahoo.length > 0) {
         try {
           const nameMap = await getYahooPlayerNameMap()
-          for (const pick of stillUnresolved) {
+          for (const pick of afterYahoo) {
             const yahooId = extractYahooPlayerId(pick.playerId)
             if (yahooId && nameMap[yahooId]) {
               pick.playerName = nameMap[yahooId]
+              newlyResolved.push({ yahooId: Number(yahooId), fullName: nameMap[yahooId] })
             }
           }
         } catch (err) {
           console.error('[YahooImport] Sleeper fallback name resolution failed (non-fatal):', err.message)
         }
+      }
+
+      // Update cache with all newly resolved names (fire-and-forget)
+      if (newlyResolved.length > 0) {
+        yahooPlayerCache.upsertPlayers(newlyResolved).catch(err =>
+          console.error('[YahooImport] Cache upsert failed (non-fatal):', err.message)
+        )
       }
     }
   }
