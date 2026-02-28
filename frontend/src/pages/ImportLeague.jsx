@@ -867,7 +867,14 @@ const ImportLeague = () => {
               )}
 
               {activeHook.error && (
-                <p className="text-sm text-red-400 mb-4">{activeHook.error}</p>
+                <div className="mb-4">
+                  <p className="text-sm text-red-400">{activeHook.error}</p>
+                  {platform?.id === 'yahoo' && (activeHook.error.includes('No Yahoo league data') || activeHook.error.includes('OAuth') || activeHook.error.includes('re-authorize') || activeHook.error.includes('token')) && (
+                    <p className="text-xs text-text-secondary mt-2">
+                      <strong className="text-text-primary">Try this:</strong> Disconnect Yahoo above and reconnect — your token may have expired. If importing an older season, make sure you're using that season's league ID (Yahoo assigns a new ID each year).
+                    </p>
+                  )}
+                </div>
               )}
 
               <div className="flex gap-3">
