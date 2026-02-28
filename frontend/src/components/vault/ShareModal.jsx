@@ -21,6 +21,8 @@ export default function ShareModal({
   const [notifying, setNotifying] = useState(false)
   const [notified, setNotified] = useState(false)
   const [notifyError, setNotifyError] = useState(null)
+  const [ownerEmails, setOwnerEmails] = useState({}) // { ownerName: email }
+  const [emailSent, setEmailSent] = useState({}) // { ownerName: true }
 
   if (!isOpen) return null
 
@@ -68,6 +70,21 @@ export default function ShareModal({
       // User cancelled — that's fine
     }
   }, [leagueName, baseUrl])
+
+  const sendEmailInvite = useCallback((ownerName, email, personalUrl) => {
+    if (!email?.trim()) return
+    const subject = encodeURIComponent(`${leagueName} — Your All-Time Stats on Clutch`)
+    const body = encodeURIComponent(
+      `Hey ${ownerName},\n\n` +
+      `I just set up our league history on Clutch Fantasy Sports. ` +
+      `Check out your all-time stats and ranking:\n\n` +
+      `${personalUrl}\n\n` +
+      `See where you stack up!`
+    )
+    window.open(`mailto:${email.trim()}?subject=${subject}&body=${body}`, '_self')
+    setEmailSent(prev => ({ ...prev, [ownerName]: true }))
+    setTimeout(() => setEmailSent(prev => ({ ...prev, [ownerName]: false })), 3000)
+  }, [leagueName])
 
   const handleNotify = useCallback(async () => {
     setNotifying(true)
@@ -188,64 +205,99 @@ export default function ShareModal({
                   const personalUrl = `${baseUrl}?member=${encodeURIComponent(owner.name)}`
                   const isCopied = copiedOwner === owner.name
                   const isClaimed = !!owner.ownerUserId
+                  const email = ownerEmails[owner.name] || ''
+                  const sent = emailSent[owner.name]
 
                   return (
                     <div
                       key={owner.name}
-                      className="flex items-center gap-2.5 py-2 px-2.5 rounded-lg"
+                      className="rounded-lg py-2 px-2.5"
                       style={{
-                        background: isCopied ? 'rgba(107,203,119,0.04)' : 'transparent',
+                        background: isCopied || sent ? 'rgba(107,203,119,0.04)' : 'transparent',
                       }}
                     >
-                      {/* Avatar */}
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-display font-bold flex-shrink-0"
-                        style={{
-                          background: `${owner.color}15`,
-                          border: `1.5px solid ${owner.color}50`,
-                          color: owner.color,
-                        }}
-                      >
-                        {owner.name[0]}
+                      <div className="flex items-center gap-2.5">
+                        {/* Avatar */}
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-display font-bold flex-shrink-0"
+                          style={{
+                            background: `${owner.color}15`,
+                            border: `1.5px solid ${owner.color}50`,
+                            color: owner.color,
+                          }}
+                        >
+                          {owner.name[0]}
+                        </div>
+
+                        {/* Name + rank */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-display font-semibold text-text-primary truncate">
+                              {owner.name}
+                            </span>
+                            {ratings[owner.name]?.tier && (
+                              <RatingTierBadge tier={ratings[owner.name].tier} size="sm" />
+                            )}
+                            {isClaimed && (
+                              <span className="text-[9px] font-mono text-accent-green bg-accent-green/10 px-1.5 py-0.5 rounded flex-shrink-0">
+                                Claimed
+                              </span>
+                            )}
+                            {!owner.isActive && (
+                              <span className="text-[9px] font-mono text-text-muted bg-[var(--bg-alt)] px-1.5 py-0.5 rounded flex-shrink-0">
+                                FORMER
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] font-mono text-text-muted">
+                            #{rank} · {owner.totalWins}-{owner.totalLosses}
+                          </div>
+                        </div>
+
+                        {/* Copy personalized link */}
+                        <button
+                          onClick={() => copyToClipboard(personalUrl, owner.name)}
+                          className="px-3 py-1.5 rounded-md text-[10px] font-mono font-semibold transition-all duration-200 flex-shrink-0"
+                          style={{
+                            background: isCopied ? 'rgba(107,203,119,0.15)' : '#1A1D1B',
+                            color: isCopied ? '#6BCB77' : '#D4A853',
+                            border: `1px solid ${isCopied ? 'rgba(107,203,119,0.2)' : '#2A2D2B'}`,
+                          }}
+                        >
+                          {isCopied ? '✓ Copied' : 'Copy Link'}
+                        </button>
                       </div>
 
-                      {/* Name + rank */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-display font-semibold text-text-primary truncate">
-                            {owner.name}
-                          </span>
-                          {ratings[owner.name]?.tier && (
-                            <RatingTierBadge tier={ratings[owner.name].tier} size="sm" />
+                      {/* Email invite row */}
+                      <div className="flex items-center gap-1.5 mt-1.5 ml-[42px]">
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={e => setOwnerEmails(prev => ({ ...prev, [owner.name]: e.target.value }))}
+                          onKeyDown={e => { if (e.key === 'Enter' && email.trim()) sendEmailInvite(owner.name, email, personalUrl) }}
+                          placeholder="email@example.com"
+                          className="flex-1 px-2.5 py-1.5 rounded-md text-[11px] font-mono bg-[var(--surface)] border border-[var(--card-border)] text-text-primary placeholder:text-text-muted/30 focus:outline-none focus:border-accent-gold/50"
+                        />
+                        <button
+                          onClick={() => sendEmailInvite(owner.name, email, personalUrl)}
+                          disabled={!email?.trim() || sent}
+                          className="px-2.5 py-1.5 rounded-md text-[10px] font-mono font-semibold flex items-center gap-1 transition-all duration-200 flex-shrink-0 disabled:opacity-30"
+                          style={{
+                            background: sent ? 'rgba(107,203,119,0.15)' : '#1A1D1B',
+                            color: sent ? '#6BCB77' : '#D4A853',
+                            border: `1px solid ${sent ? 'rgba(107,203,119,0.2)' : '#2A2D2B'}`,
+                          }}
+                        >
+                          {sent ? '✓ Opened' : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                              Email
+                            </>
                           )}
-                          {isClaimed && (
-                            <span className="text-[9px] font-mono text-accent-green bg-accent-green/10 px-1.5 py-0.5 rounded flex-shrink-0">
-                              Claimed
-                            </span>
-                          )}
-                          {!owner.isActive && (
-                            <span className="text-[9px] font-mono text-text-muted bg-[var(--bg-alt)] px-1.5 py-0.5 rounded flex-shrink-0">
-                              FORMER
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[10px] font-mono text-text-muted">
-                          #{rank} · {owner.totalWins}-{owner.totalLosses}
-                        </div>
+                        </button>
                       </div>
-
-                      {/* Copy personalized link */}
-                      <button
-                        onClick={() => copyToClipboard(personalUrl, owner.name)}
-                        className="px-3 py-1.5 rounded-md text-[10px] font-mono font-semibold transition-all duration-200 flex-shrink-0"
-                        style={{
-                          background: isCopied ? 'rgba(107,203,119,0.15)' : '#1A1D1B',
-                          color: isCopied ? '#6BCB77' : '#D4A853',
-                          border: `1px solid ${isCopied ? 'rgba(107,203,119,0.2)' : '#2A2D2B'}`,
-                        }}
-                      >
-                        {isCopied ? '✓ Copied' : 'Copy Link'}
-                      </button>
                     </div>
                   )
                 })}
