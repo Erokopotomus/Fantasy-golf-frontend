@@ -154,7 +154,7 @@ const OwnerChipBar = ({ owners, activeOwnerId, setActiveOwnerId, progress }) => 
 
 const Step1IdentifyOwners = ({ wizard }) => {
   const [manualInput, setManualInput] = useState('')
-  const [mergeSource, setMergeSource] = useState(null) // owner name being merged FROM
+  const [mergeSelection, setMergeSelection] = useState(new Set()) // names selected for merging
   const [historyModal, setHistoryModal] = useState(null) // null | { mode: 'season' } | { mode: 'team', seasonYear: number }
   const [expandedOwner, setExpandedOwner] = useState(null) // owner name currently expanded
   const inputRef = useRef(null)
@@ -166,6 +166,27 @@ const Step1IdentifyOwners = ({ wizard }) => {
   } = wizard
   const leagueId = wizard.league?.id
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const mergeMode = mergeSelection.size > 0
+
+  const toggleMergeSelect = useCallback((name) => {
+    setMergeSelection(prev => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+  }, [])
+
+  const mergeSelectedInto = useCallback((targetName) => {
+    const sources = [...mergeSelection]
+    if (sources.length === 0) return
+    const names = sources.map(s => `"${s}"`).join(', ')
+    if (!confirm(`Merge ${names} into "${targetName}"?`)) return
+    for (const source of sources) {
+      mergeOwner(source, targetName)
+    }
+    setMergeSelection(new Set())
+  }, [mergeSelection, mergeOwner])
 
   // Already-added owner names (to filter them from detected)
   const ownerNameSet = new Set([...owners.keys()].map(n => n.toLowerCase()))
@@ -276,6 +297,8 @@ const Step1IdentifyOwners = ({ wizard }) => {
           const OwnerRow = ({ name, data, index }) => {
             const years = nameToYears[name] || []
             const isExpanded = expandedOwner === name
+            const isSelected = mergeSelection.has(name)
+            const isTarget = mergeMode && !isSelected
             // Collect all assigned entries for this owner (including merged names)
             const assignedEntries = []
             for (const [rawName, ownerName] of assignments) {
@@ -291,42 +314,56 @@ const Step1IdentifyOwners = ({ wizard }) => {
             const assignedYearSet = new Set(assignedEntries.map(e => e.seasonYear))
             const assignedRange = assignedYearSet.size > 0 ? formatYearRanges([...assignedYearSet].sort((a, b) => a - b)) : ''
             return (
-              <div className={`rounded-lg border ${
-                mergeSource && mergeSource !== name ? 'bg-accent-gold/5 border-accent-gold/30' : 'bg-[var(--surface)] border-[var(--card-border)]/50'
+              <div className={`rounded-lg border transition-colors ${
+                isSelected ? 'bg-accent-gold/10 border-accent-gold/40' :
+                isTarget ? 'bg-accent-gold/5 border-accent-gold/20' :
+                'bg-[var(--surface)] border-[var(--card-border)]/50'
               }`}>
                 <div className="flex items-center justify-between px-3 py-2.5">
-                <div
-                  className="flex items-center gap-2.5 min-w-0 cursor-pointer"
-                  onClick={() => setExpandedOwner(isExpanded ? null : name)}
-                >
-                  <span className="text-xs font-mono text-text-muted/60 w-5 text-right flex-shrink-0">{index}</span>
-                  <span
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: data.color }}
-                  />
-                  <span className="text-sm text-text-primary font-display font-bold truncate">{name}</span>
-                  <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
-                    {assignedRange || formatYearRanges(years)}
-                  </span>
-                  {assignedCount > 0 && (
-                    <svg className={`w-3 h-3 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  )}
-                </div>
-                {mergeSource && mergeSource !== name ? (
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {/* Checkbox for multi-select merge */}
                   <button
-                    onClick={() => {
-                      if (confirm(`Merge "${mergeSource}" into "${name}"? All of ${mergeSource}'s history will move under ${name}.`)) {
-                        mergeOwner(mergeSource, name)
-                        setMergeSource(null)
-                      }
-                    }}
+                    onClick={() => toggleMergeSelect(name)}
+                    className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? 'bg-accent-gold border-accent-gold text-slate'
+                        : 'border-[var(--card-border)] hover:border-accent-gold/50'
+                    }`}
+                    title={isSelected ? 'Deselect' : 'Select for merge'}
+                  >
+                    {isSelected && (
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                  <div
+                    className="flex items-center gap-2 min-w-0 cursor-pointer"
+                    onClick={() => setExpandedOwner(isExpanded ? null : name)}
+                  >
+                    <span
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: data.color }}
+                    />
+                    <span className="text-sm text-text-primary font-display font-bold truncate">{name}</span>
+                    <span className="text-[10px] font-mono text-text-secondary/50 flex-shrink-0">
+                      {assignedRange || formatYearRanges(years)}
+                    </span>
+                    {assignedCount > 0 && (
+                      <svg className={`w-3 h-3 text-text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                {isTarget ? (
+                  <button
+                    onClick={() => mergeSelectedInto(name)}
                     className="px-3 py-1 text-[10px] font-mono font-bold text-slate bg-accent-gold rounded-lg hover:bg-accent-gold/80 transition-colors shadow-lg flex-shrink-0"
                   >
                     MERGE HERE
                   </button>
-                ) : (
+                ) : !isSelected ? (
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => toggleOwnerActive(name)}
@@ -338,17 +375,6 @@ const Step1IdentifyOwners = ({ wizard }) => {
                       title={data.isActive ? 'Mark as former member' : 'Mark as active member'}
                     >
                       {data.isActive ? 'MARK FORMER' : 'MARK ACTIVE'}
-                    </button>
-                    <button
-                      onClick={() => setMergeSource(mergeSource === name ? null : name)}
-                      className={`px-2 py-0.5 text-[10px] font-mono rounded transition-colors ${
-                        mergeSource === name
-                          ? 'text-accent-gold bg-accent-gold/20 border border-accent-gold/40'
-                          : 'text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-accent-gold hover:border-accent-gold/30'
-                      }`}
-                      title="Merge this owner into another"
-                    >
-                      MERGE
                     </button>
                     <button
                       onClick={() => {
@@ -372,7 +398,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                       </svg>
                     </button>
                   </div>
-                )}
+                ) : null}
                 </div>
                 {/* Expanded: season-by-season breakdown with unassign */}
                 {isExpanded && (
@@ -418,13 +444,13 @@ const Step1IdentifyOwners = ({ wizard }) => {
           return (
             <div className="space-y-5">
               {/* Merge mode banner */}
-              {mergeSource && (
+              {mergeMode && (
                 <div className="flex items-center justify-between px-4 py-2.5 bg-accent-gold/10 border border-accent-gold/30 rounded-xl">
                   <p className="text-xs font-mono text-accent-gold">
-                    Click an owner below to merge <strong>{mergeSource}</strong> into them
+                    {mergeSelection.size} selected — click <strong>MERGE HERE</strong> on the owner to keep
                   </p>
                   <button
-                    onClick={() => setMergeSource(null)}
+                    onClick={() => setMergeSelection(new Set())}
                     className="text-xs font-mono text-text-muted hover:text-text-primary transition-colors"
                   >
                     Cancel
