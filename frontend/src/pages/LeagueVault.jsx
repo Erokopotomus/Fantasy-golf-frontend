@@ -636,7 +636,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       if (s.playoffResult === 'champion') championships++
       if (s.playoffResult === 'runner_up') runnerUps++
       if (s.playoffResult === 'third_place') thirdPlaces++
-      if (['champion', 'runner_up', 'third_place', 'semifinal', 'playoffs'].includes(s.playoffResult)) playoffApps++
+      if (s.playoffResult && s.playoffResult !== 'missed') playoffApps++
       // Last place = highest finalStanding in the season
       const teamsInYear = history.seasons[String(s.year)] || []
       const maxStanding = Math.max(...teamsInYear.map(t => t.finalStanding || 0))
