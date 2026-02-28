@@ -51,7 +51,7 @@ export default function VaultPersistent({
 
   const statItems = [
     { label: 'Seasons', value: leagueStats.totalSeasons },
-    { label: 'Owners', value: leagueStats.totalOwners },
+    { label: 'Current Owners', value: leagueStats.totalOwners },
     { label: 'Games Played', value: leagueStats.totalGames },
     { label: 'Total Points', value: leagueStats.totalPoints },
     { label: 'Championships', value: leagueStats.totalTitles },
@@ -94,7 +94,7 @@ export default function VaultPersistent({
               League Vault
             </h1>
             <div className="text-[13px] font-mono text-text-muted max-w-lg mx-auto">
-              {seasonCount} season{seasonCount !== 1 ? 's' : ''} &middot; {leagueStats.totalOwners} owner{leagueStats.totalOwners !== 1 ? 's' : ''}
+              {seasonCount} season{seasonCount !== 1 ? 's' : ''} &middot; {leagueStats.totalOwners} current owner{leagueStats.totalOwners !== 1 ? 's' : ''}
               {hasLiveSeason && liveYear && (
                 <span className="ml-2" style={{ color: '#6BCB77' }}>
                   &#9679; {liveYear} Season Live

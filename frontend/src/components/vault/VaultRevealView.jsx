@@ -115,7 +115,7 @@ export default function VaultRevealView({
           >
             {[
               { label: 'Seasons', value: leagueStats.totalSeasons },
-              { label: 'Owners', value: leagueStats.totalOwners },
+              { label: 'Current Owners', value: leagueStats.totalOwners },
               { label: 'Games Played', value: leagueStats.totalGames },
               { label: 'Total Points', value: leagueStats.totalPoints },
               { label: 'Championships', value: leagueStats.totalTitles },

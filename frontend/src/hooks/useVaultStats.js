@@ -123,7 +123,7 @@ export function computeVaultStats(history, aliases) {
       const games = t.wins + t.losses
       const pct = games > 0 ? t.wins / games : 0
       if (!bestSeason || pct > bestSeason.pct) {
-        bestSeason = { team: t.rawName || t.teamName, season: t.seasonYear, pct }
+        bestSeason = { team: t.teamName || t.rawName, season: t.seasonYear, pct }
       }
     }
 
@@ -161,12 +161,14 @@ export function computeVaultStats(history, aliases) {
 
   // League-level stats
   const totalSeasons = new Set(allYears).size
+  const activeStats = ownerStats.filter(o => o.isActive)
   const totalGames = Math.round(ownerStats.reduce((s, o) => s + o.totalWins + o.totalLosses, 0) / 2)
   const totalPoints = Math.round(ownerStats.reduce((s, o) => s + o.totalPF, 0))
   const totalTitles = ownerStats.reduce((s, o) => s + o.titles, 0)
   const leagueStats = {
     totalSeasons,
-    totalOwners: ownerStats.length,
+    totalOwners: activeStats.length,
+    allOwners: ownerStats.length,
     totalGames,
     totalPoints,
     totalTitles,

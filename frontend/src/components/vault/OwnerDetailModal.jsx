@@ -217,7 +217,7 @@ export default function OwnerDetailModal({ owner, rank, onClose, rating = null }
                         style={{ gridTemplateColumns: '48px 1fr 56px 64px 24px' }}
                       >
                         <span className="font-mono font-semibold text-accent-gold">{s.seasonYear}</span>
-                        <span className="font-display text-text-secondary truncate">{s.rawName || s.teamName}</span>
+                        <span className="font-display text-text-secondary truncate">{s.teamName || s.rawName}</span>
                         <span className={`font-mono font-semibold text-right ${recordColor}`}>{s.record}</span>
                         <span className="font-mono text-text-muted text-right">
                           {s.pointsFor ? s.pointsFor.toLocaleString() : '—'}
