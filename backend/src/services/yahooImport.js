@@ -197,6 +197,53 @@ function extractYahooPlayerId(playerKey) {
 }
 
 /**
+ * Batch-fetch player names from Yahoo's own API.
+ * Yahoo supports up to 25 player keys per request.
+ * Returns { playerKey: fullName } map.
+ */
+async function fetchYahooPlayerNames(playerKeys, accessToken, onTokenRefresh) {
+  const nameMap = {}
+  // Yahoo allows up to 25 player keys per batch request
+  const BATCH_SIZE = 25
+  for (let i = 0; i < playerKeys.length; i += BATCH_SIZE) {
+    const batch = playerKeys.slice(i, i + BATCH_SIZE)
+    const keysParam = batch.join(',')
+    try {
+      const data = await yahooFetch(`/players;player_keys=${keysParam}`, accessToken, onTokenRefresh)
+      const players = data?.fantasy_content?.players
+      if (!players || typeof players !== 'object') continue
+
+      for (const entry of Object.values(players)) {
+        const player = entry?.player
+        if (!player) continue
+        const fields = Array.isArray(player) ? player.flat() : [player]
+        let playerKey = null
+        let fullName = null
+        for (const f of fields) {
+          if (!f || typeof f !== 'object') continue
+          if (Array.isArray(f)) {
+            for (const sub of f) {
+              if (sub?.player_key) playerKey = sub.player_key
+              if (sub?.name?.full) fullName = sub.name.full
+            }
+          } else {
+            if (f.player_key) playerKey = f.player_key
+            if (f.name?.full) fullName = f.name.full
+          }
+        }
+        if (playerKey && fullName) {
+          nameMap[playerKey] = fullName
+        }
+      }
+    } catch (err) {
+      console.error(`[YahooImport] Player batch fetch failed for batch ${i / BATCH_SIZE + 1}:`, err.message)
+    }
+  }
+  console.log(`[YahooImport] Resolved ${Object.keys(nameMap).length}/${playerKeys.length} player names from Yahoo API`)
+  return nameMap
+}
+
+/**
  * Parse Yahoo's renew/renewed field into a full league key.
  * Yahoo uses format "gamekey_leagueid" (e.g. "390_643521") — convert to "390.l.643521".
  */
@@ -668,19 +715,39 @@ async function importSeason(leagueKey, year, accessToken, onTokenRefresh) {
         pick.ownerName = teamKeyToOwner[pick.teamKey]
       }
     }
-    // Resolve player names via Sleeper's public API (Yahoo only returns player keys)
-    try {
-      const nameMap = await getYahooPlayerNameMap()
-      for (const pick of parsedDraft.picks) {
-        if (!pick.playerName && pick.playerId) {
-          const yahooId = extractYahooPlayerId(pick.playerId)
-          if (yahooId && nameMap[yahooId]) {
-            pick.playerName = nameMap[yahooId]
+    // Resolve player names — first via Yahoo's own API, then Sleeper as fallback
+    const unresolvedKeys = parsedDraft.picks
+      .filter(p => !p.playerName && p.playerId)
+      .map(p => p.playerId)
+
+    if (unresolvedKeys.length > 0) {
+      // Primary: batch fetch from Yahoo (has all players including rookies)
+      try {
+        const yahooNames = await fetchYahooPlayerNames(unresolvedKeys, accessToken, onTokenRefresh)
+        for (const pick of parsedDraft.picks) {
+          if (!pick.playerName && pick.playerId && yahooNames[pick.playerId]) {
+            pick.playerName = yahooNames[pick.playerId]
           }
         }
+      } catch (err) {
+        console.error('[YahooImport] Yahoo player name batch fetch failed (non-fatal):', err.message)
       }
-    } catch (err) {
-      console.error('[YahooImport] Player name resolution failed (non-fatal):', err.message)
+
+      // Fallback: Sleeper's public API for any still unresolved
+      const stillUnresolved = parsedDraft.picks.filter(p => !p.playerName && p.playerId)
+      if (stillUnresolved.length > 0) {
+        try {
+          const nameMap = await getYahooPlayerNameMap()
+          for (const pick of stillUnresolved) {
+            const yahooId = extractYahooPlayerId(pick.playerId)
+            if (yahooId && nameMap[yahooId]) {
+              pick.playerName = nameMap[yahooId]
+            }
+          }
+        } catch (err) {
+          console.error('[YahooImport] Sleeper fallback name resolution failed (non-fatal):', err.message)
+        }
+      }
     }
   }
 
