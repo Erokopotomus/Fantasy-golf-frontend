@@ -1,0 +1,104 @@
+# Clutch Fantasy Sports — Cowork Instructions
+
+## Project Overview
+Season-long fantasy sports platform. Golf-first, multi-sport by design. Clean, modern UX — think Sleeper's polish with Fantrax's depth plus AI coaching.
+
+## Dev Environment
+- **Frontend:** React 18 + Vite + Tailwind CSS → `http://localhost:5173`
+- **Backend:** Node.js + Express → `http://localhost:3001`
+- **Start frontend:** `cd frontend && npm run dev`
+- **Start backend:** `cd backend && npm run dev`
+- **Vite proxy:** `/api` requests proxy to backend on port 3001
+
+## Brand System
+
+### Colors (CSS Variables + Tailwind)
+- **Background:** Light `#FAFAF6` / Dark `#0E1015` → `bg-[var(--bg)]`
+- **Surface:** Light `#FFFFFF` / Dark `#1A1D26`
+- **Text primary:** Light `#1A1A1A` / Dark `#EEEAE2`
+- **Blaze (primary/CTA):** `#F06820` → `blaze`, `blaze-hot`, `blaze-deep`
+- **Slate (nav/headers):** `#1E2A3A` → `slate`, `slate-mid`, `slate-light`
+- **Field (success/green):** `#0D9668` → `field`, `field-bright`
+- **Crown (premium/gold):** `#D4930D` → `crown`, `crown-bright`
+- **Live red:** `#E83838` → `live-red`
+
+### Typography (Tailwind classes)
+- **Display** (headlines, titles, CTAs): `font-display` → Bricolage Grotesque 700-800
+- **Body** (readable text): `font-body` → DM Sans 400-700
+- **Data** (scores, stats, numbers): `font-mono` → JetBrains Mono 400-700
+- **Editorial** (accent, pull quotes): `font-editorial` → Instrument Serif 400i (always italic)
+
+### Theme
+- **Light-first** — Clutch is the only fantasy platform defaulting to light mode
+- Dark mode via `class="dark"` on `<html>`, toggled by ThemeContext
+- Use `dark:` Tailwind prefix for dark mode variants
+- CSS variables defined in `frontend/src/index.css`
+
+## UI/UX Rules
+1. **Season-long first** — optimize for league experience, not DFS
+2. **Clean over cluttered** — when in doubt, simplify
+3. **Mobile-responsive** — every page must work on phone (test at 375px)
+4. **No gambling aesthetic** — no flashing numbers, no odds, no sportsbook cards
+5. **Commissioner is king** — commissioner tools are priority
+6. **Progressive disclosure** — default UX is simple, depth is one click away
+
+## Component Patterns
+- Pages live in `frontend/src/pages/`
+- Reusable components in `frontend/src/components/` (22 category folders)
+- Common UI: `components/common/` (Button, Card, Input, Modal, Badge, Chip, Avatar, Tabs)
+- Layout: Navbar + MobileNav (bottom), responsive sidebar
+- Data fetching: Custom hooks in `frontend/src/hooks/`
+- API calls: `frontend/src/services/api.js` (100+ methods)
+- Auth: `useAuth()` from AuthContext
+- Theme: `useTheme()` from ThemeContext
+- Sport context: `useSport()` from SportContext
+
+## Styling Conventions
+- Tailwind-first — avoid custom CSS unless necessary
+- Border radius: `rounded-card` (cards), `rounded-button` (buttons), `rounded-badge` (badges)
+- Shadows: `shadow-card`, `shadow-card-hover`, glow effects for emphasis
+- Animations: `animate-pulse-soft`, `animate-slide-down`, `animate-fade-in`, `animate-scale-up`
+- Glass morphism layers for overlay surfaces
+- Tinted card backgrounds: golf green, NFL orange, news gray, rating gold, AI purple
+
+## Key Visual Components
+- **NeuralCluster** — Animated SVG brain (AI coach visual signature). Sizes: sm/md/lg
+- **SgRadarChart** — Custom SVG 5-axis radar chart (no external library)
+- **AuroraBackground** — Animated background (dark mode only)
+- **Coach Briefing** — Template-based, top of dashboard
+
+## Prediction System Visual Rules
+- Cards look like community polls, NOT sportsbook props
+- No green/red flashing numbers or casino animations
+- Use "Calls" not "Picks", "Predictions" not "Bets"
+
+## Screenshot Verification Checklist
+When verifying UI changes, check:
+- [ ] Light mode appearance
+- [ ] Dark mode appearance (toggle via theme button in nav)
+- [ ] Mobile responsive (375px width)
+- [ ] Text readability and contrast
+- [ ] Brand color consistency
+- [ ] Font family correctness (display vs body vs mono vs editorial)
+- [ ] Interactive states (hover, focus, active)
+
+## File Structure Quick Reference
+```
+frontend/src/
+├── App.jsx          — 70+ routes
+├── main.jsx         — Entry (providers)
+├── index.css        — CSS variables, brand system
+├── pages/           — 73 page components
+├── components/      — 176 components (22 categories)
+├── services/api.js  — REST client (100+ methods)
+├── context/         — Auth, Theme, Notification, Sport, Onboarding
+├── hooks/           — Custom React hooks
+└── utils/           — Helpers
+```
+
+## What NOT to Do
+- Don't use raw provider names (ESPN, DataGolf) in user-facing UI — brand as "Clutch"
+- Don't add gambling language (picks, bets, odds, lock it in)
+- Don't break existing Tailwind class patterns with inline styles
+- Don't add new npm dependencies without checking if existing ones cover the need
+- Don't modify backend code — Cowork focuses on frontend visual work
