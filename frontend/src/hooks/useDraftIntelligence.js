@@ -89,7 +89,7 @@ function resolveOwnerFromPick(pick, maps) {
   return null
 }
 
-export function useDraftIntelligence(history, aliasMap = {}) {
+export function useDraftIntelligence(history, aliasMap = {}, resolvedPositions = {}) {
   const allDraftData = useMemo(() => {
     if (!history?.seasons) return null
     const result = {}
@@ -98,12 +98,16 @@ export function useDraftIntelligence(history, aliasMap = {}) {
       if (!teamWithDraft?.draftData) continue
       const draft = teamWithDraft.draftData
       const maps = buildOwnerMaps(teams, aliasMap)
-      const flatPicks = (draft.picks || []).map(pick => ({
-        ...pick,
-        ownerName: resolveOwnerFromPick(pick, maps),
-        positionGroup: getPositionGroup(pick.position),
-        cost: pick.amount || pick.cost || 0,
-      }))
+      const flatPicks = (draft.picks || []).map(pick => {
+        // Use pick's position, or look up from resolved positions cache
+        const pos = pick.position || (pick.playerName && resolvedPositions[pick.playerName]) || null
+        return {
+          ...pick,
+          ownerName: resolveOwnerFromPick(pick, maps),
+          positionGroup: getPositionGroup(pos),
+          cost: pick.amount || pick.cost || 0,
+        }
+      })
       result[year] = {
         type: draft.type || 'snake',
         rounds: draft.rounds,
@@ -112,7 +116,7 @@ export function useDraftIntelligence(history, aliasMap = {}) {
       }
     }
     return Object.keys(result).length > 0 ? result : null
-  }, [history, aliasMap])
+  }, [history, aliasMap, resolvedPositions])
 
   const getSeasonSummary = useMemo(() => {
     if (!allDraftData) return () => null

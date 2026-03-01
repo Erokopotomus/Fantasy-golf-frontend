@@ -434,8 +434,35 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
   const [selectedYear, setSelectedYear] = useState(years[0] || '')
   const [showIntelligence, setShowIntelligence] = useState(false)
 
+  // Bulk-resolve positions for all draft picks across all years (for intelligence)
+  const [allResolvedPositions, setAllResolvedPositions] = useState({})
+  useEffect(() => {
+    if (!history?.seasons) return
+    const allNames = new Set()
+    for (const teams of Object.values(history.seasons)) {
+      const teamWithDraft = teams.find(t => t.draftData?.picks?.length > 0)
+      if (!teamWithDraft?.draftData?.picks) continue
+      for (const pick of teamWithDraft.draftData.picks) {
+        if (pick.playerName && !pick.position) allNames.add(pick.playerName)
+      }
+    }
+    if (allNames.size === 0) return
+    // Batch in chunks of 200 to avoid huge payloads
+    const nameArr = Array.from(allNames)
+    const chunks = []
+    for (let i = 0; i < nameArr.length; i += 200) {
+      chunks.push(nameArr.slice(i, i + 200))
+    }
+    Promise.all(chunks.map(chunk => api.resolvePositions(chunk).catch(() => ({ positions: {} }))))
+      .then(results => {
+        const merged = {}
+        for (const r of results) Object.assign(merged, r.positions)
+        if (Object.keys(merged).length > 0) setAllResolvedPositions(merged)
+      })
+  }, [history])
+
   // Draft intelligence hook
-  const { getSeasonSummary, getTrends, hasDraftData, POS_COLORS } = useDraftIntelligence(history, aliasMap)
+  const { getSeasonSummary, getTrends, hasDraftData, POS_COLORS } = useDraftIntelligence(history, aliasMap, allResolvedPositions)
 
   // Edit mode state
   const [editMode, setEditMode] = useState(false)
@@ -1092,7 +1119,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
                       <input
                         type="number"
                         min="0"
-                        value={pick.amount}
+                        value={pick.amount || pick.cost || ''}
                         onChange={(e) => updatePick(idx, 'amount', e.target.value)}
                         className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded pl-5 pr-2 py-1 text-sm font-mono text-accent-gold w-full"
                       />
@@ -1207,8 +1234,8 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
                       {pick.ownerName && (
                         <span className="text-xs text-text-secondary font-mono">{pick.ownerName}</span>
                       )}
-                      {pick.amount && (
-                        <span className="text-xs font-mono text-accent-gold">${pick.amount}</span>
+                      {(pick.amount || pick.cost) && (
+                        <span className="text-xs font-mono text-accent-gold">${pick.amount || pick.cost}</span>
                       )}
                     </div>
                   ))}
@@ -1449,10 +1476,15 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
                       Position Allocation Trends ({trends.years.length} years)
                     </h4>
                     <div className="space-y-2">
-                      {trends.positionTrends.map(({ year, breakdown, isAuction: isYearAuction }) => (
+                      {trends.positionTrends.map(({ year, breakdown, isAuction: isYearAuction, hasPositionData }) => (
                         <div key={year} className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-accent-gold w-10 text-right">{year}</span>
+                          <span className={`text-xs font-mono w-10 text-right ${hasPositionData ? 'text-accent-gold' : 'text-text-secondary/40'}`}>{year}</span>
                           <div className="flex-1 h-5 rounded overflow-hidden flex">
+                            {!hasPositionData && (
+                              <div className="flex-1 h-full bg-[var(--card-border)] opacity-20 rounded flex items-center justify-center">
+                                <span className="text-[8px] font-mono text-text-secondary">No position data</span>
+                              </div>
+                            )}
                             {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
                               const pct = breakdown[pos] || 0
                               if (pct < 0.5) return null
@@ -1498,8 +1530,32 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
   const [h2hOwnerB, setH2hOwnerB] = useState('')
   const fileInputRef = useRef(null)
 
+  // Bulk-resolve positions for all draft picks (for intelligence)
+  const [allResolvedPositions, setAllResolvedPositions] = useState({})
+  useEffect(() => {
+    if (!history?.seasons) return
+    const allNames = new Set()
+    for (const teams of Object.values(history.seasons)) {
+      const teamWithDraft = teams.find(t => t.draftData?.picks?.length > 0)
+      if (!teamWithDraft?.draftData?.picks) continue
+      for (const pick of teamWithDraft.draftData.picks) {
+        if (pick.playerName && !pick.position) allNames.add(pick.playerName)
+      }
+    }
+    if (allNames.size === 0) return
+    const nameArr = Array.from(allNames)
+    const chunks = []
+    for (let i = 0; i < nameArr.length; i += 200) chunks.push(nameArr.slice(i, i + 200))
+    Promise.all(chunks.map(chunk => api.resolvePositions(chunk).catch(() => ({ positions: {} }))))
+      .then(results => {
+        const merged = {}
+        for (const r of results) Object.assign(merged, r.positions)
+        if (Object.keys(merged).length > 0) setAllResolvedPositions(merged)
+      })
+  }, [history])
+
   // Draft intelligence
-  const { getOwnerProfile: getDraftProfile, getH2HComparison, owners: draftOwners, hasDraftData, POS_COLORS, COMPARE_COLORS } = useDraftIntelligence(history, aliasMap)
+  const { getOwnerProfile: getDraftProfile, getH2HComparison, owners: draftOwners, hasDraftData, POS_COLORS, COMPARE_COLORS } = useDraftIntelligence(history, aliasMap, allResolvedPositions)
 
   const owners = useMemo(() => {
     if (!history?.seasons) return []
