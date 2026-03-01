@@ -22,18 +22,35 @@ function getPositionGroup(position) {
   return 'FLEX'
 }
 
-function resolveOwnerFromPick(pick, teams) {
-  if (pick.ownerName) return pick.ownerName
-  const rosterMap = {}
-  const teamKeyMap = {}
+// Build maps for a given season's teams to resolve pick owners to canonical names
+function buildOwnerMaps(teams) {
+  const rosterMap = {}    // rosterId → canonical name
+  const teamKeyMap = {}   // teamKey → canonical name
+  const rawToCanonical = {} // raw/alias name → canonical name (case-insensitive)
   for (let i = 0; i < teams.length; i++) {
     const t = teams[i]
-    const name = t.ownerName || t.teamName
-    rosterMap[i + 1] = name
-    if (t.teamKey) teamKeyMap[t.teamKey] = name
+    const canonical = t.ownerName || t.teamName
+    rosterMap[i + 1] = canonical
+    if (t.teamKey) teamKeyMap[t.teamKey] = canonical
+    // Map raw import names and team names to canonical
+    if (t.rawOwnerName) rawToCanonical[t.rawOwnerName.toLowerCase()] = canonical
+    if (t.teamName) rawToCanonical[t.teamName.toLowerCase()] = canonical
+    rawToCanonical[canonical.toLowerCase()] = canonical
   }
+  return { rosterMap, teamKeyMap, rawToCanonical }
+}
+
+function resolveOwnerFromPick(pick, maps) {
+  const { rosterMap, teamKeyMap, rawToCanonical } = maps
+  // Try structural IDs first (most reliable — maps to canonical)
   if (pick.teamKey && teamKeyMap[pick.teamKey]) return teamKeyMap[pick.teamKey]
   if (pick.rosterId != null && rosterMap[pick.rosterId]) return rosterMap[pick.rosterId]
+  // Fall back to name matching — canonicalize raw names
+  if (pick.ownerName) {
+    const canonical = rawToCanonical[pick.ownerName.toLowerCase()]
+    if (canonical) return canonical
+    return pick.ownerName // unmatched raw name as last resort
+  }
   return null
 }
 
@@ -45,9 +62,10 @@ export function useDraftIntelligence(history) {
       const teamWithDraft = teams.find(t => t.draftData?.picks?.length > 0)
       if (!teamWithDraft?.draftData) continue
       const draft = teamWithDraft.draftData
+      const maps = buildOwnerMaps(teams)
       const flatPicks = (draft.picks || []).map(pick => ({
         ...pick,
-        ownerName: resolveOwnerFromPick(pick, teams),
+        ownerName: resolveOwnerFromPick(pick, maps),
         positionGroup: getPositionGroup(pick.position),
         cost: pick.amount || pick.cost || 0,
       }))
