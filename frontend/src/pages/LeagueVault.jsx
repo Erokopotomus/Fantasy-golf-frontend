@@ -487,7 +487,22 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
       }))
 
       // Smart merge: match abbreviated names to existing full names
-      // "B. Mayfield" → "Baker Mayfield" by last name + first initial + owner
+      // Uses tiered matching: exact → last+initial → fuzzy last+owner+position
+      const levenshtein = (a, b) => {
+        if (a === b) return 0
+        const m = a.length, n = b.length
+        const dp = Array.from({ length: m + 1 }, (_, i) => i)
+        for (let j = 1; j <= n; j++) {
+          let prev = dp[0]; dp[0] = j
+          for (let i = 1; i <= m; i++) {
+            const tmp = dp[i]
+            dp[i] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[i], dp[i - 1])
+            prev = tmp
+          }
+        }
+        return dp[m]
+      }
+
       const findMatch = (existing, newPick) => {
         const nn = newPick.playerName.trim().toLowerCase()
         if (!nn) return -1
@@ -495,30 +510,58 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
         const newLast = newParts[newParts.length - 1]
         const newFirstInit = newParts[0]?.[0]
         const newOwner = newPick.ownerName.trim().toLowerCase()
+        const newPos = (newPick.position || '').trim().toUpperCase()
+
+        let bestIdx = -1
+        let bestScore = 0 // higher = more confident
 
         for (let i = 0; i < existing.length; i++) {
-          if (existing[i]._matched) continue // already matched this round
+          if (existing[i]._matched) continue
           const en = existing[i].playerName.trim().toLowerCase()
           if (!en) continue
-
-          // Exact match
-          if (en === nn) return i
-
-          // Last name + first initial match
           const existParts = en.split(/\s+/).filter(Boolean)
           const existLast = existParts[existParts.length - 1]
           const existFirstInit = existParts[0]?.[0]
+          const existOwner = existing[i].ownerName.trim().toLowerCase()
+          const existPos = (existing[i].position || '').trim().toUpperCase()
 
-          if (existLast === newLast && existFirstInit === newFirstInit) {
-            // If both have owners, require owner match to avoid wrong-player merges
-            if (newOwner && existing[i].ownerName.trim().toLowerCase()) {
-              if (newOwner === existing[i].ownerName.trim().toLowerCase()) return i
-              continue // different owner, skip
-            }
-            return i
+          // Exact full name match → score 100
+          if (en === nn) return i
+
+          const lastDist = levenshtein(newLast, existLast)
+          const sameFirstInit = newFirstInit && existFirstInit && newFirstInit === existFirstInit
+          const sameOwner = newOwner && existOwner && newOwner === existOwner
+          const samePos = newPos && existPos && (newPos === existPos || newPos.includes(existPos) || existPos.includes(newPos))
+
+          let score = 0
+
+          // Tier 1: Exact last name + first initial (e.g. "B. Mayfield" → "Baker Mayfield")
+          if (lastDist === 0 && sameFirstInit) {
+            score = sameOwner ? 90 : 70
+          }
+          // Tier 2: Fuzzy last name (≤2 edits) + same owner + same position
+          // e.g. "J. Connor" (RB, Scott) → "James Conner" (RB, Scott)
+          else if (lastDist <= 2 && sameFirstInit && sameOwner && samePos) {
+            score = 80
+          }
+          // Tier 3: Fuzzy last name (≤1 edit) + same owner
+          // e.g. misspelling but right team
+          else if (lastDist <= 1 && sameFirstInit && sameOwner) {
+            score = 75
+          }
+          // Tier 4: Exact last name + same owner (no initial needed if unique)
+          // e.g. only one "Conner" on Scott's team
+          else if (lastDist === 0 && sameOwner) {
+            score = 65
+          }
+
+          if (score > bestScore) {
+            bestScore = score
+            bestIdx = i
           }
         }
-        return -1
+
+        return bestScore >= 65 ? bestIdx : -1
       }
 
       setEditedPicks(prev => {
