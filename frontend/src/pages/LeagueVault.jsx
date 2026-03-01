@@ -472,12 +472,22 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
       // Auto-detect type from result
       if (result.type) setDraftType(result.type)
 
+      // Normalize position values to match our dropdown options
+      const normalizePosition = (pos) => {
+        const p = (pos || '').trim().toUpperCase()
+        if (['DEF', 'DST', 'D/ST'].includes(p)) return 'DST'
+        if (['BENCH', 'BN', 'IR'].includes(p)) return '' // slot, not a position
+        if (['W/R/T', 'W/R', 'FLEX', 'FLX'].includes(p)) return 'FLEX'
+        if (['QB', 'RB', 'WR', 'TE', 'K', 'G', 'F', 'C'].includes(p)) return p
+        return '' // unrecognized → leave blank for commissioner
+      }
+
       // Build editor picks from parsed data
       const parsedPicks = (result.picks || []).map((p, i) => ({
         round: p.round || 1,
         pick: p.pick || i + 1,
         playerName: p.playerName || '',
-        position: p.position || '',
+        position: normalizePosition(p.position),
         ownerName: p.ownerName || '',
         amount: p.amount || 0,
         isKeeper: p.isKeeper || false,
@@ -1032,13 +1042,23 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                     placeholder="Player name"
                     className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-sm font-display text-text-primary w-full"
                   />
-                  <input
-                    type="text"
+                  <select
                     value={pick.position}
                     onChange={(e) => updatePick(idx, 'position', e.target.value)}
-                    placeholder="Pos"
                     className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded px-2 py-1 text-sm font-mono text-text-primary w-full"
-                  />
+                  >
+                    <option value="">—</option>
+                    <option value="QB">QB</option>
+                    <option value="RB">RB</option>
+                    <option value="WR">WR</option>
+                    <option value="TE">TE</option>
+                    <option value="K">K</option>
+                    <option value="DST">DST</option>
+                    <option value="FLEX">FLEX</option>
+                    <option value="G">G</option>
+                    <option value="F">F</option>
+                    <option value="C">C</option>
+                  </select>
                   <div className="relative">
                     <input
                       type="text"
