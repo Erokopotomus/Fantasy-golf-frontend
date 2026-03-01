@@ -503,6 +503,23 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
         return dp[m]
       }
 
+      // NFL nickname → full name containment map for tricky abbreviations
+      const DEF_ALIASES = { bucs: 'buccaneers', niners: '49ers', jags: 'jaguars', pats: 'patriots', cards: 'cardinals', bolts: 'chargers' }
+      const DEF_POSITIONS = new Set(['DEF', 'DST', 'D/ST'])
+      const BENCH_POSITIONS = new Set(['BENCH', 'BN', 'IR'])
+
+      const positionsMatch = (a, b) => {
+        if (!a || !b) return false
+        if (a === b) return true
+        // DEF/DST/D/ST are all the same
+        if (DEF_POSITIONS.has(a) && DEF_POSITIONS.has(b)) return true
+        // BENCH can match anything (it's a slot, not a position)
+        if (BENCH_POSITIONS.has(a) || BENCH_POSITIONS.has(b)) return true
+        // W/R/T flex can match WR/RB/TE
+        if (a === 'W/R/T' || b === 'W/R/T') return ['WR', 'RB', 'TE', 'W/R/T'].includes(a) || ['WR', 'RB', 'TE', 'W/R/T'].includes(b)
+        return a.includes(b) || b.includes(a)
+      }
+
       const findMatch = (existing, newPick) => {
         const nn = newPick.playerName.trim().toLowerCase()
         if (!nn) return -1
@@ -511,6 +528,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
         const newFirstInit = newParts[0]?.[0]
         const newOwner = newPick.ownerName.trim().toLowerCase()
         const newPos = (newPick.position || '').trim().toUpperCase()
+        const isDefense = DEF_POSITIONS.has(newPos)
 
         let bestIdx = -1
         let bestScore = 0 // higher = more confident
@@ -524,35 +542,56 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
           const existFirstInit = existParts[0]?.[0]
           const existOwner = existing[i].ownerName.trim().toLowerCase()
           const existPos = (existing[i].position || '').trim().toUpperCase()
+          const existIsDef = DEF_POSITIONS.has(existPos)
 
           // Exact full name match → score 100
           if (en === nn) return i
 
-          const lastDist = levenshtein(newLast, existLast)
-          const sameFirstInit = newFirstInit && existFirstInit && newFirstInit === existFirstInit
           const sameOwner = newOwner && existOwner && newOwner === existOwner
-          const samePos = newPos && existPos && (newPos === existPos || newPos.includes(existPos) || existPos.includes(newPos))
+          const samePos = positionsMatch(newPos, existPos)
 
           let score = 0
 
-          // Tier 1: Exact last name + first initial (e.g. "B. Mayfield" → "Baker Mayfield")
-          if (lastDist === 0 && sameFirstInit) {
-            score = sameOwner ? 90 : 70
+          // ── Defense matching ──
+          // "Eagles" DEF → "Philadelphia Eagles" DST (same owner)
+          if (isDefense && existIsDef && sameOwner) {
+            const alias = DEF_ALIASES[nn] || nn
+            // Check if nickname is contained in full name or vice versa
+            if (en.includes(alias) || en.includes(nn) || nn.includes(existLast)) {
+              score = 95
+            }
+            // Fuzzy: "Bucs" → "Buccaneers" via alias map
+            else if (DEF_ALIASES[nn] && en.includes(DEF_ALIASES[nn])) {
+              score = 90
+            }
           }
-          // Tier 2: Fuzzy last name (≤2 edits) + same owner + same position
-          // e.g. "J. Connor" (RB, Scott) → "James Conner" (RB, Scott)
-          else if (lastDist <= 2 && sameFirstInit && sameOwner && samePos) {
-            score = 80
-          }
-          // Tier 3: Fuzzy last name (≤1 edit) + same owner
-          // e.g. misspelling but right team
-          else if (lastDist <= 1 && sameFirstInit && sameOwner) {
-            score = 75
-          }
-          // Tier 4: Exact last name + same owner (no initial needed if unique)
-          // e.g. only one "Conner" on Scott's team
-          else if (lastDist === 0 && sameOwner) {
-            score = 65
+
+          // ── Player matching ──
+          if (!isDefense && !existIsDef) {
+            const lastDist = levenshtein(newLast, existLast)
+            const sameFirstInit = newFirstInit && existFirstInit && newFirstInit === existFirstInit
+
+            // Tier 1: Exact last name + first initial
+            if (lastDist === 0 && sameFirstInit) {
+              score = Math.max(score, sameOwner ? 90 : 70)
+            }
+            // Tier 2: Fuzzy last name (≤2 edits) + first initial + same owner + compatible position
+            else if (lastDist <= 2 && sameFirstInit && sameOwner && samePos) {
+              score = Math.max(score, 80)
+            }
+            // Tier 3: Fuzzy last name (≤1 edit) + first initial + same owner
+            else if (lastDist <= 1 && sameFirstInit && sameOwner) {
+              score = Math.max(score, 75)
+            }
+            // Tier 4: Exact last name + same owner (no initial needed)
+            else if (lastDist === 0 && sameOwner) {
+              score = Math.max(score, 65)
+            }
+            // Tier 5: Name contained in existing name + same owner
+            // e.g. "Montgome" → "Montgomery" (truncated name)
+            else if (nn.length >= 4 && sameOwner && (en.includes(nn) || existLast.startsWith(nn.replace(/[.\s]/g, '')))) {
+              score = Math.max(score, 70)
+            }
           }
 
           if (score > bestScore) {
