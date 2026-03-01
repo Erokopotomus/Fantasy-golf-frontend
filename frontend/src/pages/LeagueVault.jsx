@@ -1013,6 +1013,246 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
         </Card>
       )}
 
+      {/* ─── Draft Intelligence Card ─────────────────────────────────────── */}
+      {(() => {
+        const summary = selectedYear ? getSeasonSummary(selectedYear) : null
+        const trends = getTrends()
+        if (!summary && !trends) return null
+        const isAuction = summary?.type === 'auction'
+
+        return (
+          <Card>
+            <button
+              onClick={() => setShowIntelligence(prev => !prev)}
+              className="w-full flex items-center justify-between"
+            >
+              <h3 className="font-display font-bold text-text-primary">Draft Intelligence</h3>
+              <svg
+                className={`w-4 h-4 text-text-secondary transition-transform ${showIntelligence ? 'rotate-180' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showIntelligence && summary && (
+              <div className="mt-4 space-y-5">
+                {/* a) Spend Breakdown (auction) / Position Distribution (snake) */}
+                {summary.hasPositionData && (
+                <div>
+                  <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                    {isAuction ? 'Spend by Position' : 'Picks by Position'}
+                  </h4>
+                  {/* Stacked bar */}
+                  <div className="h-8 rounded-lg overflow-hidden flex">
+                    {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                      const pct = isAuction && summary.spendWithPosition > 0
+                        ? ((summary.spendByPosition[pos] || 0) / summary.spendWithPosition * 100)
+                        : summary.picksWithPosition > 0
+                          ? ((summary.picksByPosition[pos] || 0) / summary.picksWithPosition * 100)
+                          : 0
+                      if (pct < 0.5) return null
+                      return (
+                        <div
+                          key={pos}
+                          className="flex items-center justify-center text-xs font-mono font-bold text-white/90 transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] || '#6B7280', minWidth: pct > 3 ? undefined : 0 }}
+                          title={`${pos}: ${pct.toFixed(1)}%`}
+                        >
+                          {pct > 6 ? pos : ''}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                    {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                      const val = isAuction ? (summary.spendByPosition[pos] || 0) : (summary.picksByPosition[pos] || 0)
+                      if (val === 0) return null
+                      const pct = isAuction && summary.spendWithPosition > 0
+                        ? (val / summary.spendWithPosition * 100)
+                        : summary.picksWithPosition > 0
+                          ? (val / summary.picksWithPosition * 100)
+                          : 0
+                      return (
+                        <div key={pos} className="flex items-center gap-1">
+                          <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: POS_COLORS[pos] }} />
+                          <span className="text-xs font-mono text-text-secondary">
+                            {pos} {pct.toFixed(0)}%{isAuction ? ` ($${val})` : ` (${val})`}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {isAuction && (
+                    <p className="text-xs font-mono text-text-secondary mt-1">
+                      Total league spend: <span className="text-accent-gold font-bold">${summary.totalSpend}</span> across {summary.totalPicks} picks
+                    </p>
+                  )}
+                </div>
+                )}
+
+                {/* b) Owner Spending Table (auction) */}
+                {isAuction && summary.ownerSpending.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Owner Spending</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
+                            <th className="text-left pb-2">Owner</th>
+                            <th className="text-right pb-2">Spent</th>
+                            <th className="text-right pb-2">Avg</th>
+                            <th className="text-left pb-2 pl-3">Top Pick</th>
+                            <th className="text-center pb-2">Picks</th>
+                            <th className="text-center pb-2">Keepers</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {summary.ownerSpending.map((owner, idx) => {
+                            const isMax = idx === 0
+                            const isMin = idx === summary.ownerSpending.length - 1 && summary.ownerSpending.length > 1
+                            return (
+                              <tr
+                                key={owner.name}
+                                className={`border-t border-[var(--card-border)] ${isMax ? 'bg-accent-gold/5' : isMin ? 'bg-blue-500/5' : ''}`}
+                              >
+                                <td className="py-1.5 font-display font-semibold text-text-primary">
+                                  {owner.name}
+                                  {isMax && <span className="ml-1.5 text-[9px] font-mono text-accent-gold">MOST</span>}
+                                  {isMin && <span className="ml-1.5 text-[9px] font-mono text-blue-400">LEAST</span>}
+                                </td>
+                                <td className="py-1.5 text-right font-mono text-accent-gold font-bold">${owner.totalSpent}</td>
+                                <td className="py-1.5 text-right font-mono text-text-secondary">${owner.avgCost.toFixed(0)}</td>
+                                <td className="py-1.5 text-left pl-3 font-mono text-xs text-text-primary truncate max-w-[140px]">
+                                  {owner.mostExpensive ? `${owner.mostExpensive.playerName} ($${owner.mostExpensive.cost})` : '—'}
+                                </td>
+                                <td className="py-1.5 text-center font-mono text-text-secondary">{owner.pickCount}</td>
+                                <td className="py-1.5 text-center font-mono text-text-secondary">{owner.keepers || '—'}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* c) Value Leaders */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Most Expensive / Early Picks */}
+                  {(isAuction ? summary.mostExpensive : summary.earlyPicks).length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                        {isAuction ? 'Most Expensive Picks' : 'Early Round Picks'}
+                      </h4>
+                      <div className="space-y-1">
+                        {(isAuction ? summary.mostExpensive : summary.earlyPicks).slice(0, 5).map((pick, i) => (
+                          <div key={i} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--surface-alt)]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-text-secondary w-4">{i + 1}.</span>
+                              <span className="text-sm font-display font-semibold text-text-primary">{pick.playerName || '(Unknown)'}</span>
+                              {pick.positionGroup && (
+                                <span className="text-[10px] font-mono px-1 py-0.5 rounded" style={{ backgroundColor: `${POS_COLORS[pick.positionGroup]}20`, color: POS_COLORS[pick.positionGroup] }}>
+                                  {pick.positionGroup}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isAuction ? (
+                                <span className="text-xs font-mono text-accent-gold font-bold">${pick.cost}</span>
+                              ) : (
+                                <span className="text-xs font-mono text-text-secondary">Rd {pick.round}, #{pick.pick}</span>
+                              )}
+                              {pick.ownerName && <span className="text-xs font-mono text-text-secondary">{pick.ownerName}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Keeper Steals / Late Round Picks */}
+                  {(isAuction ? summary.keeperSteals : summary.lateRoundPicks).length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                        {isAuction ? 'Keeper Steals' : 'Late Round Picks'}
+                      </h4>
+                      <div className="space-y-1">
+                        {(isAuction ? summary.keeperSteals : summary.lateRoundPicks).slice(0, 5).map((pick, i) => (
+                          <div key={i} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--surface-alt)]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-text-secondary w-4">{i + 1}.</span>
+                              <span className="text-sm font-display font-semibold text-text-primary">{pick.playerName || '(Unknown)'}</span>
+                              {pick.positionGroup && (
+                                <span className="text-[10px] font-mono px-1 py-0.5 rounded" style={{ backgroundColor: `${POS_COLORS[pick.positionGroup]}20`, color: POS_COLORS[pick.positionGroup] }}>
+                                  {pick.positionGroup}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isAuction ? (
+                                <span className="text-xs font-mono text-green-400 font-bold">
+                                  ${pick.keeperPrice || 0} <span className="text-text-secondary">→</span> ${pick.cost}
+                                  <span className="text-accent-gold ml-1">(+${pick.discount})</span>
+                                </span>
+                              ) : (
+                                <span className="text-xs font-mono text-text-secondary">Rd {pick.round}, #{pick.pick}</span>
+                              )}
+                              {pick.ownerName && <span className="text-xs font-mono text-text-secondary ml-1">{pick.ownerName}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* d) Multi-Year Trends */}
+                {trends && (
+                  <div>
+                    <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                      Position Allocation Trends ({trends.years.length} years)
+                    </h4>
+                    <div className="space-y-2">
+                      {trends.positionTrends.map(({ year, breakdown, isAuction: isYearAuction, hasPositionData }) => (
+                        <div key={year} className="flex items-center gap-2">
+                          <span className={`text-xs font-mono w-10 text-right ${hasPositionData ? 'text-accent-gold' : 'text-text-secondary/40'}`}>{year}</span>
+                          <div className="flex-1 h-5 rounded overflow-hidden flex">
+                            {!hasPositionData && (
+                              <div className="flex-1 h-full bg-[var(--card-border)] opacity-20 rounded flex items-center justify-center">
+                                <span className="text-[8px] font-mono text-text-secondary">No position data</span>
+                              </div>
+                            )}
+                            {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                              const pct = breakdown[pos] || 0
+                              if (pct < 0.5) return null
+                              return (
+                                <div
+                                  key={pos}
+                                  className="flex items-center justify-center text-[9px] font-mono font-bold text-white/80"
+                                  style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] || '#6B7280' }}
+                                  title={`${pos}: ${pct.toFixed(1)}%`}
+                                >
+                                  {pct > 8 ? pos : ''}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] font-mono text-text-secondary/60 mt-1">
+                      {trends.positionTrends[0]?.isAuction ? 'Based on % of auction budget by position' : 'Based on % of picks by position'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        )
+      })()}
+
       {/* Draft board — edit mode */}
       {editMode ? (
         <Card>
@@ -1273,246 +1513,6 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
           )}
         </Card>
       )}
-
-      {/* ─── Draft Intelligence Card ─────────────────────────────────────── */}
-      {(() => {
-        const summary = selectedYear ? getSeasonSummary(selectedYear) : null
-        const trends = getTrends()
-        if (!summary && !trends) return null
-        const isAuction = summary?.type === 'auction'
-
-        return (
-          <Card>
-            <button
-              onClick={() => setShowIntelligence(prev => !prev)}
-              className="w-full flex items-center justify-between"
-            >
-              <h3 className="font-display font-bold text-text-primary">Draft Intelligence</h3>
-              <svg
-                className={`w-4 h-4 text-text-secondary transition-transform ${showIntelligence ? 'rotate-180' : ''}`}
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {showIntelligence && summary && (
-              <div className="mt-4 space-y-5">
-                {/* a) Spend Breakdown (auction) / Position Distribution (snake) */}
-                {summary.hasPositionData && (
-                <div>
-                  <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
-                    {isAuction ? 'Spend by Position' : 'Picks by Position'}
-                  </h4>
-                  {/* Stacked bar */}
-                  <div className="h-8 rounded-lg overflow-hidden flex">
-                    {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
-                      const pct = isAuction && summary.spendWithPosition > 0
-                        ? ((summary.spendByPosition[pos] || 0) / summary.spendWithPosition * 100)
-                        : summary.picksWithPosition > 0
-                          ? ((summary.picksByPosition[pos] || 0) / summary.picksWithPosition * 100)
-                          : 0
-                      if (pct < 0.5) return null
-                      return (
-                        <div
-                          key={pos}
-                          className="flex items-center justify-center text-xs font-mono font-bold text-white/90 transition-all"
-                          style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] || '#6B7280', minWidth: pct > 3 ? undefined : 0 }}
-                          title={`${pos}: ${pct.toFixed(1)}%`}
-                        >
-                          {pct > 6 ? pos : ''}
-                        </div>
-                      )
-                    })}
-                  </div>
-                  {/* Legend */}
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                    {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
-                      const val = isAuction ? (summary.spendByPosition[pos] || 0) : (summary.picksByPosition[pos] || 0)
-                      if (val === 0) return null
-                      const pct = isAuction && summary.spendWithPosition > 0
-                        ? (val / summary.spendWithPosition * 100)
-                        : summary.picksWithPosition > 0
-                          ? (val / summary.picksWithPosition * 100)
-                          : 0
-                      return (
-                        <div key={pos} className="flex items-center gap-1">
-                          <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: POS_COLORS[pos] }} />
-                          <span className="text-xs font-mono text-text-secondary">
-                            {pos} {pct.toFixed(0)}%{isAuction ? ` ($${val})` : ` (${val})`}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  {isAuction && (
-                    <p className="text-xs font-mono text-text-secondary mt-1">
-                      Total league spend: <span className="text-accent-gold font-bold">${summary.totalSpend}</span> across {summary.totalPicks} picks
-                    </p>
-                  )}
-                </div>
-                )}
-
-                {/* b) Owner Spending Table (auction) */}
-                {isAuction && summary.ownerSpending.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Owner Spending</h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
-                            <th className="text-left pb-2">Owner</th>
-                            <th className="text-right pb-2">Spent</th>
-                            <th className="text-right pb-2">Avg</th>
-                            <th className="text-left pb-2 pl-3">Top Pick</th>
-                            <th className="text-center pb-2">Picks</th>
-                            <th className="text-center pb-2">Keepers</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {summary.ownerSpending.map((owner, idx) => {
-                            const isMax = idx === 0
-                            const isMin = idx === summary.ownerSpending.length - 1 && summary.ownerSpending.length > 1
-                            return (
-                              <tr
-                                key={owner.name}
-                                className={`border-t border-[var(--card-border)] ${isMax ? 'bg-accent-gold/5' : isMin ? 'bg-blue-500/5' : ''}`}
-                              >
-                                <td className="py-1.5 font-display font-semibold text-text-primary">
-                                  {owner.name}
-                                  {isMax && <span className="ml-1.5 text-[9px] font-mono text-accent-gold">MOST</span>}
-                                  {isMin && <span className="ml-1.5 text-[9px] font-mono text-blue-400">LEAST</span>}
-                                </td>
-                                <td className="py-1.5 text-right font-mono text-accent-gold font-bold">${owner.totalSpent}</td>
-                                <td className="py-1.5 text-right font-mono text-text-secondary">${owner.avgCost.toFixed(0)}</td>
-                                <td className="py-1.5 text-left pl-3 font-mono text-xs text-text-primary truncate max-w-[140px]">
-                                  {owner.mostExpensive ? `${owner.mostExpensive.playerName} ($${owner.mostExpensive.cost})` : '—'}
-                                </td>
-                                <td className="py-1.5 text-center font-mono text-text-secondary">{owner.pickCount}</td>
-                                <td className="py-1.5 text-center font-mono text-text-secondary">{owner.keepers || '—'}</td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* c) Value Leaders */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Most Expensive / Early Picks */}
-                  {(isAuction ? summary.mostExpensive : summary.earlyPicks).length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
-                        {isAuction ? 'Most Expensive Picks' : 'Early Round Picks'}
-                      </h4>
-                      <div className="space-y-1">
-                        {(isAuction ? summary.mostExpensive : summary.earlyPicks).slice(0, 5).map((pick, i) => (
-                          <div key={i} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--surface-alt)]">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-text-secondary w-4">{i + 1}.</span>
-                              <span className="text-sm font-display font-semibold text-text-primary">{pick.playerName || '(Unknown)'}</span>
-                              {pick.positionGroup && (
-                                <span className="text-[10px] font-mono px-1 py-0.5 rounded" style={{ backgroundColor: `${POS_COLORS[pick.positionGroup]}20`, color: POS_COLORS[pick.positionGroup] }}>
-                                  {pick.positionGroup}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {isAuction ? (
-                                <span className="text-xs font-mono text-accent-gold font-bold">${pick.cost}</span>
-                              ) : (
-                                <span className="text-xs font-mono text-text-secondary">Rd {pick.round}, #{pick.pick}</span>
-                              )}
-                              {pick.ownerName && <span className="text-xs font-mono text-text-secondary">{pick.ownerName}</span>}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Keeper Steals / Late Round Picks */}
-                  {(isAuction ? summary.keeperSteals : summary.lateRoundPicks).length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
-                        {isAuction ? 'Keeper Steals' : 'Late Round Picks'}
-                      </h4>
-                      <div className="space-y-1">
-                        {(isAuction ? summary.keeperSteals : summary.lateRoundPicks).slice(0, 5).map((pick, i) => (
-                          <div key={i} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--surface-alt)]">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-text-secondary w-4">{i + 1}.</span>
-                              <span className="text-sm font-display font-semibold text-text-primary">{pick.playerName || '(Unknown)'}</span>
-                              {pick.positionGroup && (
-                                <span className="text-[10px] font-mono px-1 py-0.5 rounded" style={{ backgroundColor: `${POS_COLORS[pick.positionGroup]}20`, color: POS_COLORS[pick.positionGroup] }}>
-                                  {pick.positionGroup}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {isAuction ? (
-                                <span className="text-xs font-mono text-green-400 font-bold">
-                                  ${pick.keeperPrice || 0} <span className="text-text-secondary">→</span> ${pick.cost}
-                                  <span className="text-accent-gold ml-1">(+${pick.discount})</span>
-                                </span>
-                              ) : (
-                                <span className="text-xs font-mono text-text-secondary">Rd {pick.round}, #{pick.pick}</span>
-                              )}
-                              {pick.ownerName && <span className="text-xs font-mono text-text-secondary ml-1">{pick.ownerName}</span>}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* d) Multi-Year Trends */}
-                {trends && (
-                  <div>
-                    <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
-                      Position Allocation Trends ({trends.years.length} years)
-                    </h4>
-                    <div className="space-y-2">
-                      {trends.positionTrends.map(({ year, breakdown, isAuction: isYearAuction, hasPositionData }) => (
-                        <div key={year} className="flex items-center gap-2">
-                          <span className={`text-xs font-mono w-10 text-right ${hasPositionData ? 'text-accent-gold' : 'text-text-secondary/40'}`}>{year}</span>
-                          <div className="flex-1 h-5 rounded overflow-hidden flex">
-                            {!hasPositionData && (
-                              <div className="flex-1 h-full bg-[var(--card-border)] opacity-20 rounded flex items-center justify-center">
-                                <span className="text-[8px] font-mono text-text-secondary">No position data</span>
-                              </div>
-                            )}
-                            {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
-                              const pct = breakdown[pos] || 0
-                              if (pct < 0.5) return null
-                              return (
-                                <div
-                                  key={pos}
-                                  className="flex items-center justify-center text-[9px] font-mono font-bold text-white/80"
-                                  style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] || '#6B7280' }}
-                                  title={`${pos}: ${pct.toFixed(1)}%`}
-                                >
-                                  {pct > 8 ? pos : ''}
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-[10px] font-mono text-text-secondary/60 mt-1">
-                      {trends.positionTrends[0]?.isAuction ? 'Based on % of auction budget by position' : 'Based on % of picks by position'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-        )
-      })()}
     </div>
   )
 }
