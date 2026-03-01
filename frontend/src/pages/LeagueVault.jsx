@@ -429,13 +429,13 @@ const HeadToHeadTab = ({ history }) => {
 }
 
 // ─── Draft History Tab ─────────────────────────────────────────────────────────
-const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
+const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap = {} }) => {
   const years = history?.seasons ? Object.keys(history.seasons).sort((a, b) => b - a) : []
   const [selectedYear, setSelectedYear] = useState(years[0] || '')
   const [showIntelligence, setShowIntelligence] = useState(false)
 
   // Draft intelligence hook
-  const { getSeasonSummary, getTrends, hasDraftData, POS_COLORS } = useDraftIntelligence(history)
+  const { getSeasonSummary, getTrends, hasDraftData, POS_COLORS } = useDraftIntelligence(history, aliasMap)
 
   // Edit mode state
   const [editMode, setEditMode] = useState(false)
@@ -1272,6 +1272,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
             {showIntelligence && summary && (
               <div className="mt-4 space-y-5">
                 {/* a) Spend Breakdown (auction) / Position Distribution (snake) */}
+                {summary.hasPositionData && (
                 <div>
                   <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
                     {isAuction ? 'Spend by Position' : 'Picks by Position'}
@@ -1279,10 +1280,10 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                   {/* Stacked bar */}
                   <div className="h-8 rounded-lg overflow-hidden flex">
                     {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
-                      const pct = isAuction && summary.totalSpend > 0
-                        ? ((summary.spendByPosition[pos] || 0) / summary.totalSpend * 100)
-                        : summary.totalPicks > 0
-                          ? ((summary.picksByPosition[pos] || 0) / summary.totalPicks * 100)
+                      const pct = isAuction && summary.spendWithPosition > 0
+                        ? ((summary.spendByPosition[pos] || 0) / summary.spendWithPosition * 100)
+                        : summary.picksWithPosition > 0
+                          ? ((summary.picksByPosition[pos] || 0) / summary.picksWithPosition * 100)
                           : 0
                       if (pct < 0.5) return null
                       return (
@@ -1302,10 +1303,10 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                     {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
                       const val = isAuction ? (summary.spendByPosition[pos] || 0) : (summary.picksByPosition[pos] || 0)
                       if (val === 0) return null
-                      const pct = isAuction && summary.totalSpend > 0
-                        ? (val / summary.totalSpend * 100)
-                        : summary.totalPicks > 0
-                          ? (val / summary.totalPicks * 100)
+                      const pct = isAuction && summary.spendWithPosition > 0
+                        ? (val / summary.spendWithPosition * 100)
+                        : summary.picksWithPosition > 0
+                          ? (val / summary.picksWithPosition * 100)
                           : 0
                       return (
                         <div key={pos} className="flex items-center gap-1">
@@ -1323,6 +1324,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                     </p>
                   )}
                 </div>
+                )}
 
                 {/* b) Owner Spending Table (auction) */}
                 {isAuction && summary.ownerSpending.length > 0 && (
@@ -1484,7 +1486,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
 }
 
 // ─── Owner Profile Tab ────────────────────────────────────────────────────────
-const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, onAvatarSaved, inactiveOwnerSet = new Set() }) => {
+const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, onAvatarSaved, inactiveOwnerSet = new Set(), aliasMap = {} }) => {
   const [selectedOwner, setSelectedOwner] = useState('')
   const [expandedYear, setExpandedYear] = useState(null)
   const [expandedDraftYear, setExpandedDraftYear] = useState(null)
@@ -1497,7 +1499,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
   const fileInputRef = useRef(null)
 
   // Draft intelligence
-  const { getOwnerProfile: getDraftProfile, getH2HComparison, owners: draftOwners, hasDraftData, POS_COLORS, COMPARE_COLORS } = useDraftIntelligence(history)
+  const { getOwnerProfile: getDraftProfile, getH2HComparison, owners: draftOwners, hasDraftData, POS_COLORS, COMPARE_COLORS } = useDraftIntelligence(history, aliasMap)
 
   const owners = useMemo(() => {
     if (!history?.seasons) return []
@@ -2153,7 +2155,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                       </div>
                     </div>
 
-                    {/* Position Allocation Bar */}
+                    {/* Position Allocation Bar — only show if position data exists */}
+                    {Object.values(draftProfile.positionCounts).some(v => v > 0) && (
                     <div>
                       <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-1.5">Position Allocation</h4>
                       <div className="h-6 rounded-lg overflow-hidden flex">
@@ -2173,6 +2176,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                         })}
                       </div>
                     </div>
+                    )}
 
                     {/* Signature Picks */}
                     {(draftProfile.signaturePicks.biggestPick || draftProfile.signaturePicks.mostKeptPlayer) && (
@@ -4249,10 +4253,10 @@ const LeagueVault = () => {
           {tab === 'h2h' && <HeadToHeadTab history={{ ...history, seasons: sanitizedSeasons || {} }} />}
 
           {/* Profiles Tab */}
-          {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} avatarMap={avatarMap} isCommissioner={isCommissioner} leagueId={leagueId} onAvatarSaved={handleAvatarSaved} inactiveOwnerSet={inactiveOwnerSet} />}
+          {tab === 'profiles' && <OwnerProfileTab history={{ ...history, seasons: sanitizedSeasons || {} }} avatarMap={avatarMap} isCommissioner={isCommissioner} leagueId={leagueId} onAvatarSaved={handleAvatarSaved} inactiveOwnerSet={inactiveOwnerSet} aliasMap={aliasMap} />}
 
           {/* Drafts Tab */}
-          {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} isCommissioner={isCommissioner} leagueId={leagueId} onSaved={() => { refetch(); refetchHealth() }} />}
+          {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} isCommissioner={isCommissioner} leagueId={leagueId} onSaved={() => { refetch(); refetchHealth() }} aliasMap={aliasMap} />}
 
           {/* Custom Data Tab */}
           {tab === 'custom' && <CustomDataTab leagueId={leagueId} />}

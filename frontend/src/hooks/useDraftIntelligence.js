@@ -14,47 +14,82 @@ const COMPARE_COLORS = ['#D4930D', '#10B981', '#3B82F6', '#8B5CF6', '#F97316']
 
 function getPositionGroup(position) {
   const p = (position || '').trim().toUpperCase()
+  if (!p) return null // no position data — don't default to FLEX
   if (['DEF', 'DST', 'D/ST'].includes(p)) return 'DST'
   if (['W/R/T', 'W/R', 'FLEX', 'FLX'].includes(p)) return 'FLEX'
   if (['QB', 'RB', 'WR', 'TE', 'K'].includes(p)) return p
   // Basketball / other sports
   if (['G', 'F', 'C', 'PG', 'SG', 'SF', 'PF'].includes(p)) return p
-  return 'FLEX'
+  return null
 }
 
 // Build maps for a given season's teams to resolve pick owners to canonical names
-function buildOwnerMaps(teams) {
+function buildOwnerMaps(teams, aliasMap = {}) {
   const rosterMap = {}    // rosterId → canonical name
   const teamKeyMap = {}   // teamKey → canonical name
   const rawToCanonical = {} // raw/alias name → canonical name (case-insensitive)
+  const canonicalNames = [] // all canonical names for fuzzy matching
+
+  // First, incorporate the vault's alias map (team names, raw names → canonical)
+  for (const [raw, canonical] of Object.entries(aliasMap)) {
+    rawToCanonical[raw.toLowerCase()] = canonical
+  }
+
   for (let i = 0; i < teams.length; i++) {
     const t = teams[i]
     const canonical = t.ownerName || t.teamName
     rosterMap[i + 1] = canonical
+    canonicalNames.push(canonical)
     if (t.teamKey) teamKeyMap[t.teamKey] = canonical
     // Map raw import names and team names to canonical
     if (t.rawOwnerName) rawToCanonical[t.rawOwnerName.toLowerCase()] = canonical
     if (t.teamName) rawToCanonical[t.teamName.toLowerCase()] = canonical
     rawToCanonical[canonical.toLowerCase()] = canonical
   }
-  return { rosterMap, teamKeyMap, rawToCanonical }
+  return { rosterMap, teamKeyMap, rawToCanonical, canonicalNames }
 }
 
 function resolveOwnerFromPick(pick, maps) {
-  const { rosterMap, teamKeyMap, rawToCanonical } = maps
+  const { rosterMap, teamKeyMap, rawToCanonical, canonicalNames } = maps
   // Try structural IDs first (most reliable — maps to canonical)
   if (pick.teamKey && teamKeyMap[pick.teamKey]) return teamKeyMap[pick.teamKey]
   if (pick.rosterId != null && rosterMap[pick.rosterId]) return rosterMap[pick.rosterId]
   // Fall back to name matching — canonicalize raw names
   if (pick.ownerName) {
-    const canonical = rawToCanonical[pick.ownerName.toLowerCase()]
+    const raw = pick.ownerName.toLowerCase()
+    const canonical = rawToCanonical[raw]
     if (canonical) return canonical
+    // Fuzzy fallback: match raw pick name to canonical team names
+    const rawTrimmed = raw.trim()
+    if (rawTrimmed.length >= 3) {
+      // 1. Exact prefix: "Spencer" matches "Spencer H", "Nick" matches "Nick Trow"
+      const prefixMatch = canonicalNames.find(c => c.toLowerCase().startsWith(rawTrimmed))
+      if (prefixMatch) return prefixMatch
+      // 2. Canonical starts with raw first word
+      const firstWord = rawTrimmed.split(/\s+/)[0]
+      if (firstWord.length >= 3) {
+        const wordMatch = canonicalNames.find(c => c.toLowerCase().startsWith(firstWord))
+        if (wordMatch) return wordMatch
+      }
+      // 3. Shared prefix (3+ chars): "Jake" matches "Jakob" (share "jak"), "Mason" matches "Mase R" (share "mas")
+      const match3 = canonicalNames.find(c => {
+        const cl = c.toLowerCase()
+        const shared = Math.min(rawTrimmed.length, cl.length)
+        let common = 0
+        for (let i = 0; i < shared; i++) {
+          if (rawTrimmed[i] === cl[i]) common++
+          else break
+        }
+        return common >= 3
+      })
+      if (match3) return match3
+    }
     return pick.ownerName // unmatched raw name as last resort
   }
   return null
 }
 
-export function useDraftIntelligence(history) {
+export function useDraftIntelligence(history, aliasMap = {}) {
   const allDraftData = useMemo(() => {
     if (!history?.seasons) return null
     const result = {}
@@ -62,7 +97,7 @@ export function useDraftIntelligence(history) {
       const teamWithDraft = teams.find(t => t.draftData?.picks?.length > 0)
       if (!teamWithDraft?.draftData) continue
       const draft = teamWithDraft.draftData
-      const maps = buildOwnerMaps(teams)
+      const maps = buildOwnerMaps(teams, aliasMap)
       const flatPicks = (draft.picks || []).map(pick => ({
         ...pick,
         ownerName: resolveOwnerFromPick(pick, maps),
@@ -77,7 +112,7 @@ export function useDraftIntelligence(history) {
       }
     }
     return Object.keys(result).length > 0 ? result : null
-  }, [history])
+  }, [history, aliasMap])
 
   const getSeasonSummary = useMemo(() => {
     if (!allDraftData) return () => null
@@ -87,17 +122,22 @@ export function useDraftIntelligence(history) {
       const { type, picks, teams } = data
       const isAuction = type === 'auction'
 
-      // Spend by position (auction)
+      // Spend by position (auction) — skip picks without position data
       const spendByPosition = {}
       const picksByPosition = {}
       let totalSpend = 0
+      let picksWithPosition = 0
+      let spendWithPosition = 0
       for (const pick of picks) {
+        totalSpend += pick.cost
         const pos = pick.positionGroup
+        if (!pos) continue // skip picks without position data
         if (!spendByPosition[pos]) spendByPosition[pos] = 0
         if (!picksByPosition[pos]) picksByPosition[pos] = 0
         spendByPosition[pos] += pick.cost
         picksByPosition[pos]++
-        totalSpend += pick.cost
+        picksWithPosition++
+        spendWithPosition += pick.cost
       }
 
       // Owner spending
@@ -144,12 +184,15 @@ export function useDraftIntelligence(history) {
         totalPicks: picks.length,
         totalSpend,
         spendByPosition,
+        spendWithPosition,
         picksByPosition,
+        picksWithPosition,
         ownerSpending,
         mostExpensive,
         keeperSteals,
         earlyPicks,
         lateRoundPicks,
+        hasPositionData: picksWithPosition > 0,
       }
     }
   }, [allDraftData])
@@ -166,27 +209,31 @@ export function useDraftIntelligence(history) {
         const posCounts = {}
         const posSpend = {}
         let totalSpend = 0
+        let totalWithPos = 0
         for (const pick of picks) {
           const pos = pick.positionGroup
+          if (!pos) continue // skip picks without position data
           if (!posCounts[pos]) posCounts[pos] = 0
           if (!posSpend[pos]) posSpend[pos] = 0
           posCounts[pos]++
           posSpend[pos] += pick.cost
           totalSpend += pick.cost
+          totalWithPos++
         }
         // Normalize to percentages
-        const total = picks.length
         const breakdown = {}
         const allPositions = ['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX']
         for (const pos of allPositions) {
           if (isAuction && totalSpend > 0) {
             breakdown[pos] = ((posSpend[pos] || 0) / totalSpend * 100)
           } else {
-            breakdown[pos] = total > 0 ? ((posCounts[pos] || 0) / total * 100) : 0
+            breakdown[pos] = totalWithPos > 0 ? ((posCounts[pos] || 0) / totalWithPos * 100) : 0
           }
         }
-        return { year, breakdown, isAuction }
+        return { year, breakdown, isAuction, hasPositionData: totalWithPos > 0 }
       })
+      // Only return trends if at least some years have position data
+      if (!positionTrends.some(t => t.hasPositionData)) return null
 
       return { positionTrends, years }
     }
@@ -236,8 +283,10 @@ export function useDraftIntelligence(history) {
           yearSpend += pick.cost
           totalPicks++
           const pos = pick.positionGroup
-          if (!positionCounts[pos]) positionCounts[pos] = 0
-          positionCounts[pos]++
+          if (pos) {
+            if (!positionCounts[pos]) positionCounts[pos] = 0
+            positionCounts[pos]++
+          }
           if (pick.playerName) playerSet.add(pick.playerName)
           if (pick.isKeeper && pick.playerName) {
             playerKeeperCounts[pick.playerName] = (playerKeeperCounts[pick.playerName] || 0) + 1
@@ -275,11 +324,12 @@ export function useDraftIntelligence(history) {
       const mostKeptPlayer = Object.entries(playerKeeperCounts)
         .sort(([, a], [, b]) => b - a)[0]
 
-      // Position breakdown as percentages
+      // Position breakdown as percentages (based on picks that have position data)
       const positionBreakdown = {}
+      const totalWithPosition = Object.values(positionCounts).reduce((a, b) => a + b, 0)
       const allPositions = ['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX']
       for (const pos of allPositions) {
-        positionBreakdown[pos] = totalPicks > 0 ? ((positionCounts[pos] || 0) / totalPicks * 100) : 0
+        positionBreakdown[pos] = totalWithPosition > 0 ? ((positionCounts[pos] || 0) / totalWithPosition * 100) : 0
       }
 
       return {
