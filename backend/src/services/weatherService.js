@@ -129,8 +129,56 @@ function getDifficultyLabel(impact) {
   return 'Calm'
 }
 
+/**
+ * Fetch historical weather from Open-Meteo archive API.
+ * Same structure as getTournamentForecast but uses archive.open-meteo.com
+ * for dates in the past (forecast API only covers ~16 days ahead).
+ *
+ * @param {number} lat - Latitude
+ * @param {number} lon - Longitude
+ * @param {string} date - YYYY-MM-DD (single day)
+ * @returns {{ temp, wind, windGust, humidity, condition }}
+ */
+async function getHistoricalWeather(lat, lon, date) {
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}`
+    + `&start_date=${date}&end_date=${date}`
+    + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,windgusts_10m_max,weathercode`
+    + `&hourly=temperature_2m,windspeed_10m,windgusts_10m,relative_humidity_2m,precipitation,weathercode`
+    + `&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch`
+    + `&timezone=auto`
+
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`Open-Meteo archive API error: ${res.status} ${res.statusText}`)
+  }
+
+  const data = await res.json()
+  if (!data.daily?.time || data.daily.time.length === 0) {
+    return null
+  }
+
+  return {
+    date,
+    tempHigh: data.daily.temperature_2m_max[0],
+    tempLow: data.daily.temperature_2m_min[0],
+    precipitation: data.daily.precipitation_sum[0],
+    windSpeed: data.daily.windspeed_10m_max[0],
+    windGust: data.daily.windgusts_10m_max[0],
+    weatherCode: data.daily.weathercode[0],
+    conditions: WMO_CODES[data.daily.weathercode[0]] || 'Unknown',
+    difficultyImpact: computeDifficultyImpact({
+      windSpeed: data.daily.windspeed_10m_max[0],
+      windGust: data.daily.windgusts_10m_max[0],
+      precipitation: data.daily.precipitation_sum[0],
+      tempHigh: data.daily.temperature_2m_max[0],
+      tempLow: data.daily.temperature_2m_min[0],
+    }),
+  }
+}
+
 module.exports = {
   getTournamentForecast,
+  getHistoricalWeather,
   computeDifficultyImpact,
   getDifficultyLabel,
   WMO_CODES,
