@@ -3929,8 +3929,8 @@ const LeagueVault = () => {
             </div>
           )}
 
-          {/* Health Banner */}
-          {!healthLoading && health && health.seasonCount > 0 && (
+          {/* Health Banner — only show when there are issues to address */}
+          {!healthLoading && health && health.seasonCount > 0 && health.overallStatus !== 'green' && (
             <div className={`mb-4 rounded-xl border p-4 ${
               health.overallStatus === 'green'
                 ? 'bg-green-500/5 border-green-500/20'
