@@ -249,15 +249,22 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
         gameId: game.id,
         opponent: opponent?.abbreviation || '???',
         isHome,
-        result: game.status === 'FINAL'
-          ? `${game.homeScore}-${game.awayScore}`
-          : game.status,
+        result: (() => {
+          if (game.status !== 'FINAL') return game.status
+          const teamScore = isHome ? game.homeScore : game.awayScore
+          const oppScore = isHome ? game.awayScore : game.homeScore
+          const prefix = teamScore > oppScore ? 'W' : teamScore < oppScore ? 'L' : 'T'
+          return `${prefix} ${teamScore}-${oppScore}`
+        })(),
+        homeScore: game.homeScore,
+        awayScore: game.awayScore,
         stats: {
           passAttempts: pg.passAttempts,
           passCompletions: pg.passCompletions,
           passYards: pg.passYards,
           passTds: pg.passTds,
           interceptions: pg.interceptions,
+          passerRating: pg.passerRating,
           rushAttempts: pg.rushAttempts,
           rushYards: pg.rushYards,
           rushTds: pg.rushTds,
@@ -269,11 +276,15 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
           fgMade: pg.fgMade,
           fgAttempts: pg.fgAttempts,
           xpMade: pg.xpMade,
+          xpAttempts: pg.xpAttempts,
           sacks: pg.sacks,
           defInterceptions: pg.defInterceptions,
           fumblesRecovered: pg.fumblesRecovered,
           fumblesForced: pg.fumblesForced,
           defTds: pg.defTds,
+          pointsAllowed: pg.pointsAllowed,
+          snapPct: pg.snapPct,
+          targetShare: pg.targetShare,
         },
         fantasyPts: {
           standard: pg.fantasyPtsStd,
@@ -285,30 +296,67 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
 
     // Season totals
     const games = player.nflPlayerGames
+    const sum = (key) => games.reduce((s, g) => s + (g[key] || 0), 0)
+    const avgNonNull = (key) => {
+      const vals = games.filter(g => g[key] != null).map(g => g[key])
+      return vals.length > 0 ? Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 10) / 10 : null
+    }
+    // Weighted passer rating (weighted by attempts per game)
+    const totalPassAtt = sum('passAttempts')
+    const weightedPasserRating = totalPassAtt > 0
+      ? Math.round(games.reduce((s, g) => s + (g.passerRating || 0) * (g.passAttempts || 0), 0) / totalPassAtt * 10) / 10
+      : null
+    const totalFgAtt = sum('fgAttempts')
+    const fgPct = totalFgAtt > 0 ? Math.round(sum('fgMade') / totalFgAtt * 1000) / 10 : null
+
     const seasonTotals = {
       gamesPlayed: games.length,
-      passYards: games.reduce((s, g) => s + (g.passYards || 0), 0),
-      passTds: games.reduce((s, g) => s + (g.passTds || 0), 0),
-      interceptions: games.reduce((s, g) => s + (g.interceptions || 0), 0),
-      rushYards: games.reduce((s, g) => s + (g.rushYards || 0), 0),
-      rushTds: games.reduce((s, g) => s + (g.rushTds || 0), 0),
-      receptions: games.reduce((s, g) => s + (g.receptions || 0), 0),
-      recYards: games.reduce((s, g) => s + (g.recYards || 0), 0),
-      recTds: games.reduce((s, g) => s + (g.recTds || 0), 0),
-      fumblesLost: games.reduce((s, g) => s + (g.fumblesLost || 0), 0),
-      fgMade: games.reduce((s, g) => s + (g.fgMade || 0), 0),
-      fgAttempts: games.reduce((s, g) => s + (g.fgAttempts || 0), 0),
-      xpMade: games.reduce((s, g) => s + (g.xpMade || 0), 0),
-      xpAttempts: games.reduce((s, g) => s + (g.xpAttempts || 0), 0),
+      // Passing
+      passAttempts: sum('passAttempts'),
+      passCompletions: sum('passCompletions'),
+      passYards: sum('passYards'),
+      passTds: sum('passTds'),
+      interceptions: sum('interceptions'),
+      passerRating: weightedPasserRating,
+      // Rushing
+      rushAttempts: sum('rushAttempts'),
+      rushYards: sum('rushYards'),
+      rushTds: sum('rushTds'),
+      // Receiving
+      targets: sum('targets'),
+      receptions: sum('receptions'),
+      recYards: sum('recYards'),
+      recTds: sum('recTds'),
+      fumblesLost: sum('fumblesLost'),
+      // Kicking
+      fgMade: sum('fgMade'),
+      fgAttempts: sum('fgAttempts'),
+      fgPct,
+      fgMade0_19: sum('fgMade0_19'),
+      fgMade20_29: sum('fgMade20_29'),
+      fgMade30_39: sum('fgMade30_39'),
+      fgMade40_49: sum('fgMade40_49'),
+      fgMade50Plus: sum('fgMade50Plus'),
+      xpMade: sum('xpMade'),
+      xpAttempts: sum('xpAttempts'),
       // DST
       sacks: games.reduce((s, g) => s + (g.sacks || 0), 0),
-      defInterceptions: games.reduce((s, g) => s + (g.defInterceptions || 0), 0),
-      fumblesRecovered: games.reduce((s, g) => s + (g.fumblesRecovered || 0), 0),
-      fumblesForced: games.reduce((s, g) => s + (g.fumblesForced || 0), 0),
-      defTds: games.reduce((s, g) => s + (g.defTds || 0), 0),
-      fantasyPtsStd: Math.round(games.reduce((s, g) => s + (g.fantasyPtsStd || 0), 0) * 100) / 100,
-      fantasyPtsPpr: Math.round(games.reduce((s, g) => s + (g.fantasyPtsPpr || 0), 0) * 100) / 100,
-      fantasyPtsHalf: Math.round(games.reduce((s, g) => s + (g.fantasyPtsHalf || 0), 0) * 100) / 100,
+      tacklesSolo: sum('tacklesSolo'),
+      tacklesAssist: sum('tacklesAssist'),
+      passesDefended: sum('passesDefended'),
+      defInterceptions: sum('defInterceptions'),
+      fumblesRecovered: sum('fumblesRecovered'),
+      fumblesForced: sum('fumblesForced'),
+      defTds: sum('defTds'),
+      pointsAllowed: sum('pointsAllowed'),
+      yardsAllowed: sum('yardsAllowed'),
+      // Usage (averages)
+      snapPct: avgNonNull('snapPct'),
+      targetShare: avgNonNull('targetShare'),
+      // Fantasy
+      fantasyPtsStd: Math.round(sum('fantasyPtsStd') * 100) / 100,
+      fantasyPtsPpr: Math.round(sum('fantasyPtsPpr') * 100) / 100,
+      fantasyPtsHalf: Math.round(sum('fantasyPtsHalf') * 100) / 100,
     }
 
     const { nflPlayerGames, ...playerData } = player

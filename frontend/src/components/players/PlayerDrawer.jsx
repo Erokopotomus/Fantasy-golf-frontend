@@ -43,6 +43,118 @@ const sgVerdict = (val) => {
   return 'Well below average'
 }
 
+/** NFL position-specific stat configs for overview + game log */
+const NFL_POSITION_STATS = {
+  QB: {
+    overview: [
+      { key: 'passYards', label: 'Pass YDs' },
+      { key: 'passTds', label: 'Pass TDs' },
+      { key: 'interceptions', label: 'INTs' },
+      { key: 'passerRating', label: 'Rating', fmt: (v) => v?.toFixed(1) },
+      { key: '_cmpAtt', label: 'Cmp/Att', compute: (t) => `${t.passCompletions || 0}/${t.passAttempts || 0}` },
+      { key: 'rushYards', label: 'Rush YDs' },
+      { key: 'rushTds', label: 'Rush TDs' },
+    ],
+    gameLog: [
+      { key: '_cmpAtt', label: 'C/A', render: (s) => `${s.passCompletions || 0}/${s.passAttempts || 0}` },
+      { key: 'passYards', label: 'YDS' },
+      { key: 'passTds', label: 'TD' },
+      { key: 'interceptions', label: 'INT' },
+      { key: 'rushYards', label: 'RSH' },
+    ],
+  },
+  RB: {
+    overview: [
+      { key: 'rushAttempts', label: 'Rush Att' },
+      { key: 'rushYards', label: 'Rush YDs' },
+      { key: 'rushTds', label: 'Rush TDs' },
+      { key: 'receptions', label: 'Rec' },
+      { key: 'recYards', label: 'Rec YDs' },
+      { key: 'recTds', label: 'Rec TDs' },
+    ],
+    gameLog: [
+      { key: 'rushAttempts', label: 'ATT' },
+      { key: 'rushYards', label: 'YDS' },
+      { key: 'rushTds', label: 'TD' },
+      { key: 'receptions', label: 'REC' },
+      { key: 'recYards', label: 'RY' },
+    ],
+  },
+  WR: {
+    overview: [
+      { key: 'targets', label: 'Targets' },
+      { key: 'receptions', label: 'Rec' },
+      { key: 'recYards', label: 'Rec YDs' },
+      { key: 'recTds', label: 'Rec TDs' },
+      { key: 'rushYards', label: 'Rush YDs' },
+    ],
+    gameLog: [
+      { key: 'targets', label: 'TGT' },
+      { key: 'receptions', label: 'REC' },
+      { key: 'recYards', label: 'YDS' },
+      { key: 'recTds', label: 'TD' },
+    ],
+  },
+  TE: {
+    overview: [
+      { key: 'targets', label: 'Targets' },
+      { key: 'receptions', label: 'Rec' },
+      { key: 'recYards', label: 'Rec YDs' },
+      { key: 'recTds', label: 'Rec TDs' },
+      { key: 'rushYards', label: 'Rush YDs' },
+    ],
+    gameLog: [
+      { key: 'targets', label: 'TGT' },
+      { key: 'receptions', label: 'REC' },
+      { key: 'recYards', label: 'YDS' },
+      { key: 'recTds', label: 'TD' },
+    ],
+  },
+  K: {
+    overview: [
+      { key: '_fgma', label: 'FGM/FGA', compute: (t) => `${t.fgMade || 0}/${t.fgAttempts || 0}` },
+      { key: 'fgPct', label: 'FG%', fmt: (v) => v != null ? `${v}%` : null },
+      { key: '_xpma', label: 'XPM/XPA', compute: (t) => `${t.xpMade || 0}/${t.xpAttempts || 0}` },
+      { key: 'fgMade0_19', label: '0-19' },
+      { key: 'fgMade20_29', label: '20-29' },
+      { key: 'fgMade30_39', label: '30-39' },
+      { key: 'fgMade40_49', label: '40-49' },
+      { key: 'fgMade50Plus', label: '50+' },
+    ],
+    gameLog: [
+      { key: '_fgma', label: 'FG', render: (s) => `${s.fgMade || 0}/${s.fgAttempts || 0}` },
+      { key: '_xpma', label: 'XP', render: (s) => `${s.xpMade || 0}/${s.xpAttempts || 0}` },
+    ],
+  },
+  DEF: {
+    overview: [
+      { key: 'sacks', label: 'Sacks', fmt: (v) => v?.toFixed ? v.toFixed(1) : v },
+      { key: 'defInterceptions', label: 'INTs' },
+      { key: 'fumblesRecovered', label: 'Fum Rec' },
+      { key: 'fumblesForced', label: 'Forced Fum' },
+      { key: 'defTds', label: 'Def TDs' },
+      { key: '_ptsPerG', label: 'Pts Allow/G', compute: (t) => t.gamesPlayed > 0 ? (t.pointsAllowed / t.gamesPlayed).toFixed(1) : '—' },
+    ],
+    gameLog: [
+      { key: 'sacks', label: 'SCK' },
+      { key: 'defInterceptions', label: 'INT' },
+      { key: 'fumblesRecovered', label: 'FR' },
+      { key: 'fumblesForced', label: 'FF' },
+      { key: 'pointsAllowed', label: 'PA' },
+    ],
+  },
+}
+// DST alias
+NFL_POSITION_STATS.DST = NFL_POSITION_STATS.DEF
+
+const getNflPositionConfig = (pos) => {
+  if (!pos) return NFL_POSITION_STATS.QB
+  if (NFL_POSITION_STATS[pos]) return NFL_POSITION_STATS[pos]
+  // Fallback: defensive positions → DEF
+  if (['LB', 'CB', 'S', 'DL', 'DE', 'DT', 'SS', 'FS', 'ILB', 'OLB', 'MLB'].includes(pos)) return NFL_POSITION_STATS.DEF
+  return NFL_POSITION_STATS.QB
+}
+
 const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false, tournamentContext }) => {
   const [player, setPlayer] = useState(null)
   const [projection, setProjection] = useState(null)
@@ -51,6 +163,8 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
   const [activeTab, setActiveTab] = useState('overview')
   const [drawerYear, setDrawerYear] = useState(new Date().getFullYear())
   const [drawerAvailableYears, setDrawerAvailableYears] = useState([])
+  const [nflSeason, setNflSeason] = useState(null)
+  const [nflAvailableSeasons, setNflAvailableSeasons] = useState([])
 
   const hasTournament = !!tournamentContext?.entry
 
@@ -60,7 +174,8 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
     const yearToUse = yearOverride !== undefined ? yearOverride : drawerYear
     try {
       if (isNfl) {
-        const data = await api.getNflPlayer(playerId, { season: 2024 })
+        const seasonToUse = typeof yearOverride === 'number' ? yearOverride : nflSeason
+        const data = await api.getNflPlayer(playerId, seasonToUse ? { season: seasonToUse } : {})
         const p = data.player || data
         const totals = data.seasonTotals || {}
         // Merge season totals into player for the stat cards
@@ -68,7 +183,13 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
         p.seasonFantasyPts = totals.fantasyPtsHalf || 0
         p.fantasyPtsPerGame = p.gamesPlayed > 0 ? Math.round((p.seasonFantasyPts / p.gamesPlayed) * 10) / 10 : 0
         p.gameLog = data.gameLog || []
+        p.seasonTotals = totals
         setPlayer(p)
+        // Set available seasons on first load
+        if (data.availableSeasons?.length) {
+          setNflAvailableSeasons(data.availableSeasons)
+          if (!nflSeason) setNflSeason(data.availableSeasons[0])
+        }
         const ppg = p.fantasyPtsPerGame || 0
         setProjection({
           projected: Math.round(ppg),
@@ -103,14 +224,18 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
     } finally {
       setLoading(false)
     }
-  }, [playerId, isNfl, drawerYear])
+  }, [playerId, isNfl, drawerYear, nflSeason])
 
   useEffect(() => {
     if (isOpen && playerId) {
       setActiveTab('overview')
+      if (isNfl) {
+        setNflSeason(null)
+        setNflAvailableSeasons([])
+      }
       fetchPlayer()
     }
-  }, [isOpen, playerId, fetchPlayer])
+  }, [isOpen, playerId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Close on Escape
   useEffect(() => {
@@ -293,6 +418,21 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                     </>
                   )}
                 </div>
+                {/* NFL bio strip */}
+                {isNfl && player && (() => {
+                  const parts = []
+                  if (player.nflNumber != null) parts.push(`#${player.nflNumber}`)
+                  if (player.height) parts.push(player.height)
+                  if (player.weight) parts.push(`${player.weight} lbs`)
+                  if (player.college) parts.push(player.college)
+                  if (player.birthDate) {
+                    const age = Math.floor((Date.now() - new Date(player.birthDate).getTime()) / 31557600000)
+                    parts.push(`Age ${age}`)
+                  }
+                  return parts.length > 0 ? (
+                    <p className="text-xs text-text-muted mt-0.5">{parts.join(' · ')}</p>
+                  ) : null
+                })()}
                 {/* Tournament name badge */}
                 {hasTournament && tournamentContext.tournamentName && (
                   <span className="inline-block mt-1 px-2 py-0.5 bg-gold/10 text-gold text-[11px] font-medium rounded truncate max-w-[200px]">
@@ -442,24 +582,44 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
             </div>
           )}
 
-          {/* Year selector — accessible from all tabs */}
-          {!isNfl && drawerAvailableYears.length > 1 && (
-            <div className="flex items-center justify-end px-4 py-1.5">
-              <select
-                value={drawerYear}
-                onChange={(e) => {
-                  const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value)
-                  setDrawerYear(val)
-                  fetchPlayer(val)
-                }}
-                className="bg-[var(--surface)] border border-[var(--card-border)] rounded px-2 py-1 text-xs font-mono text-text-secondary cursor-pointer focus:outline-none focus:border-emerald-500/50"
-              >
-                {drawerAvailableYears.map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-                <option value="all">All Time</option>
-              </select>
-            </div>
+          {/* Year/Season selector — accessible from all tabs */}
+          {isNfl ? (
+            nflAvailableSeasons.length > 1 && (
+              <div className="flex items-center justify-end px-4 py-1.5">
+                <select
+                  value={nflSeason || ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value)
+                    setNflSeason(val)
+                    fetchPlayer(val)
+                  }}
+                  className="bg-[var(--surface)] border border-[var(--card-border)] rounded px-2 py-1 text-xs font-mono text-text-secondary cursor-pointer focus:outline-none focus:border-emerald-500/50"
+                >
+                  {nflAvailableSeasons.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          ) : (
+            drawerAvailableYears.length > 1 && (
+              <div className="flex items-center justify-end px-4 py-1.5">
+                <select
+                  value={drawerYear}
+                  onChange={(e) => {
+                    const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value)
+                    setDrawerYear(val)
+                    fetchPlayer(val)
+                  }}
+                  className="bg-[var(--surface)] border border-[var(--card-border)] rounded px-2 py-1 text-xs font-mono text-text-secondary cursor-pointer focus:outline-none focus:border-emerald-500/50"
+                >
+                  {drawerAvailableYears.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                  <option value="all">All Time</option>
+                </select>
+              </div>
+            )
           )}
 
           {/* Tabs */}
@@ -670,14 +830,39 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
 
                       {/* Quick Stats */}
                       {isNfl ? (
-                        <div className="grid grid-cols-2 gap-2">
-                          <StatCard label="Position" value={player.nflPosition || '\u2014'} color="text-emerald-400" />
-                          <StatCard label="Team" value={player.nflTeamAbbr || '\u2014'} color="text-text-primary" />
-                          <StatCard label="Games" value={player.gamesPlayed || 0} color="text-text-primary" />
-                          <StatCard label="Fantasy Pts" value={player.fantasyPtsHalf?.toFixed(1) || player.seasonFantasyPts?.toFixed(1) || '\u2014'} color="text-emerald-400" />
-                          <StatCard label="Pts/Game" value={player.fantasyPtsPerGame?.toFixed(1) || '\u2014'} color="text-text-primary" />
-                          <StatCard label="Status" value={player.injuryStatus || 'Active'} color={player.injuryStatus ? 'text-red-400' : 'text-emerald-400'} />
-                        </div>
+                        <>
+                          {/* Universal top row */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <StatCard label="Games" value={player.gamesPlayed || 0} color="text-text-primary" />
+                            <StatCard label="Fantasy Pts" value={player.seasonTotals?.fantasyPtsHalf?.toFixed(1) || player.seasonFantasyPts?.toFixed(1) || '—'} color="text-emerald-400" />
+                            <StatCard label="Pts/Game" value={player.fantasyPtsPerGame?.toFixed(1) || '—'} color="text-text-primary" />
+                            <StatCard label="Status" value={player.injuryStatus || 'Active'} color={player.injuryStatus ? 'text-red-400' : 'text-emerald-400'} />
+                          </div>
+                          {/* Position-specific season stats */}
+                          {player.seasonTotals && (() => {
+                            const cfg = getNflPositionConfig(player.nflPosition)
+                            return (
+                              <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                                <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Season Stats</h3>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                  {cfg.overview.map(stat => {
+                                    const val = stat.compute
+                                      ? stat.compute(player.seasonTotals)
+                                      : stat.fmt
+                                        ? stat.fmt(player.seasonTotals[stat.key])
+                                        : player.seasonTotals[stat.key]
+                                    return (
+                                      <div key={stat.key} className="flex items-center justify-between py-1 border-b border-[var(--card-border)] last:border-0">
+                                        <span className="text-xs text-text-muted">{stat.label}</span>
+                                        <span className="text-sm font-bold font-mono text-text-primary">{val ?? '—'}</span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )
+                          })()}
+                        </>
                       ) : (
                         <div className="grid grid-cols-2 gap-2">
                           <StatCard label="SG: Total" value={formatStat(player.sgTotal, '+')} color={getStatColor(player.sgTotal)} />
@@ -874,32 +1059,55 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                 </div>
               )}
 
-              {/* Game Log Tab (NFL) */}
+              {/* Game Log Tab (NFL) — position-specific columns */}
               {activeTab === 'gamelog' && (
                 <div className="p-4 space-y-2">
-                  <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">2024 Game Log</h3>
+                  <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">{nflSeason || ''} Game Log</h3>
                   {(player.gameLog || []).length === 0 ? (
                     <div className="text-center py-8 text-text-muted">No game data available</div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 px-2 text-[10px] text-text-muted uppercase tracking-wider">
-                        <div className="w-8">Wk</div>
-                        <div className="flex-1">Opp</div>
-                        <div className="w-16 text-right">Half PPR</div>
+                  ) : (() => {
+                    const cfg = getNflPositionConfig(player.nflPosition)
+                    const cols = cfg.gameLog
+                    return (
+                      <div className="overflow-x-auto -mx-4 px-4">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="text-[10px] text-text-muted uppercase tracking-wider border-b border-[var(--card-border)]">
+                              <th className="text-left py-1.5 pr-1 w-8">Wk</th>
+                              <th className="text-left py-1.5 pr-1">Opp</th>
+                              <th className="text-left py-1.5 pr-1">Result</th>
+                              {cols.map(c => (
+                                <th key={c.key} className="text-right py-1.5 pl-1">{c.label}</th>
+                              ))}
+                              <th className="text-right py-1.5 pl-1">FPTS</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {player.gameLog.map((g) => {
+                              const fpts = g.fantasyPts?.half_ppr ?? 0
+                              const fptsColor = fpts >= 20 ? 'text-emerald-400' : fpts >= 10 ? 'text-text-primary' : 'text-text-muted'
+                              const resultColor = g.result?.startsWith('W') ? 'text-emerald-400' : g.result?.startsWith('L') ? 'text-red-400' : 'text-text-muted'
+                              return (
+                                <tr key={g.week} className="border-b border-[var(--card-border)]/50 hover:bg-[var(--bg-alt)]">
+                                  <td className="py-1.5 pr-1 text-text-muted">{g.week}</td>
+                                  <td className="py-1.5 pr-1 text-text-primary font-medium">{g.isHome ? 'vs' : '@'} {g.opponent}</td>
+                                  <td className={`py-1.5 pr-1 ${resultColor}`}>{g.result || '—'}</td>
+                                  {cols.map(c => (
+                                    <td key={c.key} className="py-1.5 pl-1 text-right font-mono text-text-primary">
+                                      {c.render ? c.render(g.stats || {}) : (g.stats?.[c.key] ?? '—')}
+                                    </td>
+                                  ))}
+                                  <td className={`py-1.5 pl-1 text-right font-bold font-mono ${fptsColor}`}>
+                                    {fpts.toFixed(1)}
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
                       </div>
-                      {player.gameLog.map((g) => (
-                        <div key={g.week} className="flex items-center gap-2 py-2 px-2 rounded-lg bg-[var(--bg-alt)]">
-                          <div className="w-8 text-sm text-text-muted">{g.week}</div>
-                          <div className="flex-1 text-sm text-text-primary">
-                            {g.isHome ? 'vs' : '@'} {g.opponent}
-                          </div>
-                          <div className="w-16 text-right text-sm font-bold text-emerald-400">
-                            {g.fantasyPts?.half_ppr?.toFixed(1) || '0.0'}
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
+                    )
+                  })()}
                 </div>
               )}
 
