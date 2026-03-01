@@ -180,7 +180,7 @@ async function generateJsonCompletion(systemPrompt, userPrompt, options = {}) {
 async function generateVisionCompletion(systemPrompt, userPrompt, imageUrl, options = {}) {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn('[Claude] No ANTHROPIC_API_KEY set — skipping AI call')
-    return null
+    return { error: 'No API key configured' }
   }
 
   // ── AI Engine Config Gate ──
@@ -189,26 +189,26 @@ async function generateVisionCompletion(systemPrompt, userPrompt, imageUrl, opti
       const featureEnabled = await aiConfig.isFeatureEnabled(options.feature)
       if (!featureEnabled) {
         console.info(`[Claude] Feature "${options.feature}" is disabled — skipping AI call`)
-        return null
+        return { error: `Feature "${options.feature}" is disabled` }
       }
     } else {
       const config = await aiConfig.getConfig()
       if (!config.enabled) {
         console.info('[Claude] AI Engine kill switch is OFF — skipping AI call')
-        return null
+        return { error: 'AI Engine is disabled' }
       }
     }
 
     const budgetExceeded = await aiConfig.isBudgetExceeded()
     if (budgetExceeded) {
       console.warn('[Claude] Daily token budget exceeded — skipping AI call')
-      return null
+      return { error: 'Daily AI budget exceeded' }
     }
   }
 
   if (!checkRateLimit()) {
     console.warn('[Claude] Rate limit exceeded — skipping AI call')
-    return null
+    return { error: 'Rate limit exceeded — try again in a minute' }
   }
 
   const model = options.premium ? PREMIUM_MODEL : (options.model || DEFAULT_MODEL)
@@ -223,9 +223,10 @@ async function generateVisionCompletion(systemPrompt, userPrompt, imageUrl, opti
     const buffer = Buffer.from(await imgResponse.arrayBuffer())
     imageBase64 = buffer.toString('base64')
     mediaType = imgResponse.headers.get('content-type') || 'image/jpeg'
+    console.info(`[Claude] Image fetched: ${(buffer.length / 1024).toFixed(0)}KB, ${mediaType}`)
   } catch (fetchErr) {
     console.error('[Claude] Failed to fetch image for vision:', fetchErr.message)
-    return null
+    return { error: `Failed to fetch image: ${fetchErr.message}` }
   }
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -269,11 +270,11 @@ async function generateVisionCompletion(systemPrompt, userPrompt, imageUrl, opti
         continue
       }
       console.error(`[Claude] Vision failed after ${attempt} attempts:`, err.message)
-      return null
+      return { error: `AI call failed: ${err.message}` }
     }
   }
 
-  return null
+  return { error: 'AI call failed after all retries' }
 }
 
 module.exports = {

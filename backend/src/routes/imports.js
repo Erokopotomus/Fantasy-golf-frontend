@@ -1480,8 +1480,8 @@ IMPORTANT RULES:
       }
     )
 
-    if (!result) {
-      return res.status(500).json({ error: { message: 'AI vision call failed — check API key and try again' } })
+    if (!result || result.error) {
+      return res.status(500).json({ error: { message: result?.error || 'AI vision call failed' } })
     }
 
     // Parse JSON from response
