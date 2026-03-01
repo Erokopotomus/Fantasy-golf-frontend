@@ -563,16 +563,21 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
           let score = 0
 
           // ── Defense matching ──
-          // "Eagles" DEF → "Philadelphia Eagles" DST (same owner)
+          // Each owner only has one defense slot. Match by owner+position,
+          // since drafted defense often differs from end-of-season defense.
           if (isDefense && existIsDef && sameOwner) {
             const alias = DEF_ALIASES[nn] || nn
-            // Check if nickname is contained in full name or vice versa
+            // Same team name contained → high confidence
             if (en.includes(alias) || en.includes(nn) || nn.includes(existLast)) {
               score = 95
             }
-            // Fuzzy: "Bucs" → "Buccaneers" via alias map
+            // Alias match (Bucs → Buccaneers)
             else if (DEF_ALIASES[nn] && en.includes(DEF_ALIASES[nn])) {
               score = 90
+            }
+            // Different team but same owner's DST slot — replace with drafted defense
+            else {
+              score = 85
             }
           }
 
@@ -626,12 +631,19 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
         for (const newPick of parsedPicks) {
           const idx = findMatch(merged, newPick)
           if (idx >= 0) {
+            const existPos = (merged[idx].position || '').toUpperCase()
+            const newPos = (newPick.position || '').toUpperCase()
+            const bothDef = DEF_POSITIONS.has(existPos) && DEF_POSITIONS.has(newPos)
+
             // Merge: fill in values from screenshot without overwriting good data
             if (newPick.amount > 0) merged[idx].amount = newPick.amount
             if (newPick.position && !merged[idx].position) merged[idx].position = newPick.position
             if (newPick.isKeeper) merged[idx].isKeeper = true
             if (newPick.keeperPrice > 0) merged[idx].keeperPrice = newPick.keeperPrice
             if (newPick.ownerName && !merged[idx].ownerName) merged[idx].ownerName = newPick.ownerName
+            // For defenses: replace team name with what was actually drafted
+            // (existing may be end-of-season roster, screenshot is draft day)
+            if (bothDef && newPick.playerName) merged[idx].playerName = newPick.playerName
             merged[idx]._matched = true // prevent double-matching
             mergedCount++
           } else {
