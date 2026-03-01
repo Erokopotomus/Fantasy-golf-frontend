@@ -472,7 +472,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
       if (result.type) setDraftType(result.type)
 
       // Build editor picks from parsed data
-      const picks = (result.picks || []).map((p, i) => ({
+      const parsedPicks = (result.picks || []).map((p, i) => ({
         round: p.round || 1,
         pick: p.pick || i + 1,
         playerName: p.playerName || '',
@@ -485,15 +485,74 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
         _isNew: true,
       }))
 
-      // Append to existing picks (supports multi-screenshot uploads)
+      // Smart merge: match abbreviated names to existing full names
+      // "B. Mayfield" → "Baker Mayfield" by last name + first initial + owner
+      const findMatch = (existing, newPick) => {
+        const nn = newPick.playerName.trim().toLowerCase()
+        if (!nn) return -1
+        const newParts = nn.split(/[\s.]+/).filter(Boolean)
+        const newLast = newParts[newParts.length - 1]
+        const newFirstInit = newParts[0]?.[0]
+        const newOwner = newPick.ownerName.trim().toLowerCase()
+
+        for (let i = 0; i < existing.length; i++) {
+          if (existing[i]._matched) continue // already matched this round
+          const en = existing[i].playerName.trim().toLowerCase()
+          if (!en) continue
+
+          // Exact match
+          if (en === nn) return i
+
+          // Last name + first initial match
+          const existParts = en.split(/\s+/).filter(Boolean)
+          const existLast = existParts[existParts.length - 1]
+          const existFirstInit = existParts[0]?.[0]
+
+          if (existLast === newLast && existFirstInit === newFirstInit) {
+            // If both have owners, require owner match to avoid wrong-player merges
+            if (newOwner && existing[i].ownerName.trim().toLowerCase()) {
+              if (newOwner === existing[i].ownerName.trim().toLowerCase()) return i
+              continue // different owner, skip
+            }
+            return i
+          }
+        }
+        return -1
+      }
+
       setEditedPicks(prev => {
-        const startPick = prev.length > 0 ? Math.max(...prev.map(p => p.pick || 0)) + 1 : 1
-        return [...prev, ...picks.map((p, i) => ({ ...p, pick: startPick + i }))]
+        if (prev.length === 0) return parsedPicks // no existing picks, just set
+
+        const merged = prev.map(p => ({ ...p })) // shallow clone
+        const unmatched = []
+
+        for (const newPick of parsedPicks) {
+          const idx = findMatch(merged, newPick)
+          if (idx >= 0) {
+            // Merge: fill in values from screenshot without overwriting good data
+            if (newPick.amount > 0) merged[idx].amount = newPick.amount
+            if (newPick.position && !merged[idx].position) merged[idx].position = newPick.position
+            if (newPick.isKeeper) merged[idx].isKeeper = true
+            if (newPick.keeperPrice > 0) merged[idx].keeperPrice = newPick.keeperPrice
+            if (newPick.ownerName && !merged[idx].ownerName) merged[idx].ownerName = newPick.ownerName
+            merged[idx]._matched = true // prevent double-matching
+          } else {
+            unmatched.push(newPick)
+          }
+        }
+
+        // Clean up _matched flags
+        merged.forEach(p => delete p._matched)
+
+        // Append truly new picks
+        const startPick = merged.length > 0 ? Math.max(...merged.map(p => p.pick || 0)) + 1 : 1
+        return [...merged, ...unmatched.map((p, i) => ({ ...p, pick: startPick + i }))]
       })
       if (!editMode) setEditMode(true)
 
       // Auto-resolve positions from DB for any missing
-      const missingPosNames = picks.filter(p => !p.position && p.playerName).map(p => p.playerName)
+      const allPicks = parsedPicks
+      const missingPosNames = allPicks.filter(p => !p.position && p.playerName).map(p => p.playerName)
       if (missingPosNames.length > 0) {
         try {
           const { positions } = await api.resolvePositions([...new Set(missingPosNames)])
