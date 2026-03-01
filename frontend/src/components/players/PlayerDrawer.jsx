@@ -403,6 +403,26 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
             </div>
           )}
 
+          {/* Year selector — accessible from all tabs */}
+          {!isNfl && drawerAvailableYears.length > 1 && (
+            <div className="flex items-center justify-end px-4 py-1.5">
+              <select
+                value={drawerYear}
+                onChange={(e) => {
+                  const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value)
+                  setDrawerYear(val)
+                  fetchPlayer(val)
+                }}
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded px-2 py-1 text-xs font-mono text-text-secondary cursor-pointer focus:outline-none focus:border-emerald-500/50"
+              >
+                {drawerAvailableYears.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+                <option value="all">All Time</option>
+              </select>
+            </div>
+          )}
+
           {/* Tabs */}
           <div className="flex">
             {tabs.map(tab => (
@@ -670,25 +690,6 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
               {/* Results Tab */}
               {activeTab === 'results' && (
                 <div className="p-4 space-y-2">
-                  {/* Year filter */}
-                  {!isNfl && drawerAvailableYears.length > 1 && (
-                    <div className="flex items-center justify-end mb-2">
-                      <select
-                        value={drawerYear}
-                        onChange={(e) => {
-                          const val = e.target.value === 'all' ? 'all' : parseInt(e.target.value)
-                          setDrawerYear(val)
-                          fetchPlayer(val)
-                        }}
-                        className="bg-[var(--surface)] border border-[var(--card-border)] rounded px-2 py-1 text-xs font-mono text-text-secondary cursor-pointer focus:outline-none focus:border-emerald-500/50"
-                      >
-                        {drawerAvailableYears.map(y => (
-                          <option key={y} value={y}>{y}</option>
-                        ))}
-                        <option value="all">All Time</option>
-                      </select>
-                    </div>
-                  )}
                   {/* Season Results Summary */}
                   {(player.performances || []).length > 0 && (() => {
                     const perfs = player.performances.filter(p => p.position != null)
