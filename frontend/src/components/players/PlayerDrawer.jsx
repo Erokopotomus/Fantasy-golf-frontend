@@ -195,6 +195,45 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
   // Quick stats — hide if all zeros in tournament context
   const hasQuickStats = !hasTournament || (player && (player.wins > 0 || player.top10s > 0 || player.cutsMade > 0 || player.earnings > 0))
 
+  // Overview tab: career vs season radar overlay
+  const overviewRadarPlayers = (() => {
+    const career = {
+      id: 'career',
+      label: 'Career',
+      sgTotal: player?.sgTotal,
+      sgOffTee: player?.sgOffTee,
+      sgApproach: player?.sgApproach,
+      sgAroundGreen: player?.sgAroundGreen,
+      sgPutting: player?.sgPutting,
+    }
+    if (typeof drawerYear !== 'number') return [career]
+    const seasonPerfs = (player?.performances || []).filter(p => {
+      if (p.sgTotal == null) return false
+      const date = p.tournament?.startDate
+      if (!date) return true
+      return new Date(date).getFullYear() === drawerYear
+    })
+    if (seasonPerfs.length === 0) return [career]
+    const avg = (key) => {
+      const vals = seasonPerfs.filter(p => p[key] != null).map(p => p[key])
+      return vals.length > 0 ? vals.reduce((s, v) => s + v, 0) / vals.length : null
+    }
+    const seasonAvg = {
+      sgTotal: avg('sgTotal'),
+      sgOffTee: avg('sgOffTee'),
+      sgApproach: avg('sgApproach'),
+      sgAroundGreen: avg('sgAroundGreen'),
+      sgPutting: avg('sgPutting'),
+    }
+    if (seasonAvg.sgTotal == null) return [career]
+    return [career, {
+      id: 'season',
+      label: `${drawerYear} Season`,
+      events: seasonPerfs.length,
+      ...seasonAvg,
+    }]
+  })()
+
   return (
     <>
       {/* Backdrop */}
@@ -655,16 +694,7 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                         <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                           <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2 text-center">SG DNA</h3>
                           <SgRadarChart
-                            players={[{
-                              id: player.id,
-                              name: player.name,
-                              label: 'Career',
-                              sgTotal: player.sgTotal,
-                              sgOffTee: player.sgOffTee,
-                              sgApproach: player.sgApproach,
-                              sgAroundGreen: player.sgAroundGreen,
-                              sgPutting: player.sgPutting,
-                            }]}
+                            players={overviewRadarPlayers}
                             size={200}
                           />
                         </div>
