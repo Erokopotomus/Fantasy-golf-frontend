@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef, Component } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, Component, Fragment } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import { useLeagueHistory, useImportHealth } from '../hooks/useImports'
@@ -445,6 +445,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
   // Screenshot upload state
   const [parsing, setParsing] = useState(false)
   const [parseError, setParseError] = useState(null)
+  const [parseSummary, setParseSummary] = useState(null)
   const screenshotInputRef = useRef(null)
 
   // Build owner list for datalist autocomplete
@@ -521,10 +522,14 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
       }
 
       setEditedPicks(prev => {
-        if (prev.length === 0) return parsedPicks // no existing picks, just set
+        if (prev.length === 0) {
+          setParseSummary({ merged: 0, unmatched: parsedPicks.length, total: parsedPicks.length })
+          return parsedPicks
+        }
 
         const merged = prev.map(p => ({ ...p })) // shallow clone
         const unmatched = []
+        let mergedCount = 0
 
         for (const newPick of parsedPicks) {
           const idx = findMatch(merged, newPick)
@@ -536,15 +541,19 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
             if (newPick.keeperPrice > 0) merged[idx].keeperPrice = newPick.keeperPrice
             if (newPick.ownerName && !merged[idx].ownerName) merged[idx].ownerName = newPick.ownerName
             merged[idx]._matched = true // prevent double-matching
+            mergedCount++
           } else {
-            unmatched.push(newPick)
+            // Flag as unmatched so UI can highlight
+            unmatched.push({ ...newPick, _unmatched: true })
           }
         }
 
         // Clean up _matched flags
         merged.forEach(p => delete p._matched)
 
-        // Append truly new picks
+        setParseSummary({ merged: mergedCount, unmatched: unmatched.length, total: parsedPicks.length })
+
+        // Append unmatched picks at the bottom
         const startPick = merged.length > 0 ? Math.max(...merged.map(p => p.pick || 0)) + 1 : 1
         return [...merged, ...unmatched.map((p, i) => ({ ...p, pick: startPick + i }))]
       })
@@ -676,6 +685,8 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
     setEditMode(false)
     setEditedPicks([])
     setError(null)
+    setParseSummary(null)
+    setParseError(null)
   }, [])
 
   const updatePick = (idx, field, value) => {
@@ -855,6 +866,14 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
           {parseError && (
             <p className="text-red-400 text-xs font-mono mt-2">Screenshot parse failed: {parseError}</p>
           )}
+          {parseSummary && !parseError && (
+            <p className="text-xs font-mono mt-2">
+              <span className="text-field">{parseSummary.merged} merged</span>
+              {parseSummary.unmatched > 0 && (
+                <span className="text-amber-400 ml-2">{parseSummary.unmatched} unmatched — review below</span>
+              )}
+            </p>
+          )}
         </Card>
       )}
 
@@ -886,14 +905,23 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
           <div className="space-y-1">
             {editedPicks.map((pick, idx) => {
               const changed = hasPickChanged(pick)
-              const bgClass = pick._isNew && changed
-                ? 'bg-green-500/5 border border-green-500/20'
-                : changed
-                  ? 'bg-accent-gold/5 border border-accent-gold/10'
-                  : 'border border-transparent'
+              const bgClass = pick._unmatched
+                ? 'bg-amber-500/10 border border-amber-500/30'
+                : pick._isNew && changed
+                  ? 'bg-green-500/5 border border-green-500/20'
+                  : changed
+                    ? 'bg-accent-gold/5 border border-accent-gold/10'
+                    : 'border border-transparent'
+              // Show divider label before first unmatched pick
+              const isFirstUnmatched = pick._unmatched && (idx === 0 || !editedPicks[idx - 1]?._unmatched)
               return (
+                <Fragment key={idx}>
+                {isFirstUnmatched && (
+                  <div className="text-xs font-mono text-amber-400 uppercase tracking-wider pt-3 pb-1 px-1 border-t border-amber-500/20 mt-2">
+                    Unmatched — couldn't identify these picks
+                  </div>
+                )}
                 <div
-                  key={idx}
                   className={`grid gap-2 items-center py-1 px-1 rounded-lg ${bgClass}`}
                   style={{ gridTemplateColumns: isAuction ? '1fr 70px 1fr 80px 50px 80px 32px' : '50px 50px 1fr 70px 1fr 50px 32px' }}
                 >
@@ -985,6 +1013,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
                     &times;
                   </button>
                 </div>
+                </Fragment>
               )
             })}
           </div>
