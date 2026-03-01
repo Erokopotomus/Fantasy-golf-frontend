@@ -215,6 +215,7 @@ Strategic reset of the platform's information architecture. Spec: `docs/CLUTCH_I
   - [x] NFL standings fix: stat cards derive from matchup data
   - [x] NFL test league seeder: `seedNflTestLeague.js` (8 teams, 4 weeks scored)
   - [x] NFL gameday UX spec: `docs/nfl-gameday-ux.md` (v1.2)
+  - [x] NFL PlayerDrawer enrichment: position-specific stats (QB/RB/WR/TE/K/DST), bio strip, season selector (2019-2024), enriched game log with W/L results
   - [ ] NFL 2025 season data sync (only 2024 synced)
   - [ ] NFL prediction categories (game winner, player performance calls, weekly fantasy rankings)
 
@@ -244,6 +245,7 @@ All 5 platforms enhanced with raw data preservation, transaction import, opinion
 - Trading keeper rights between teams
 - **NFL live scoring frequency review**: Current nflSync runs weekly. During game windows need 1-2 min updates. Evaluate nflverse latency, alternative live sources, WebSocket push, caching.
 - **Cleanup NFL test data**: `node backend/prisma/seedNflTestLeague.js cleanup` — run before production deploy
+- **Draft Owner Name Merge Tool**: Yahoo-imported draft picks use short nicknames ("Tank", "AO", "Mase R", "Spencer H") that don't map to canonical owner names. Need a merge UI (similar to the owner assignment wizard in league import) where commissioners can map Yahoo draft nicknames → canonical owners, then persist the mappings. Final step of data backfill cleanup — cosmetic only, draft intelligence shows extra rows for unmapped names.
 
 ---
 
@@ -446,7 +448,7 @@ Every feature should answer: "Which persona is this for?" When in doubt, optimiz
 ### Current Build Priority
 Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill (2018-2026) done → DataGolf SG Backfill done → SG Intelligence done → Golf Hub + Season Race + Compare done → Live Scoring Pipeline done → Scoring Page Redesign done → Board Editor Overhaul done → iPod Reframe (6 phases) done → Profile Enhancement done → Nav + League UX done → **Next: Finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E remaining (OWGR sync validation), Golf/NFL Hub polish**
 
-**Backlog:** NFL team pages need polish. Kicker/DST stats missing. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags).
+**Backlog:** NFL team pages need polish. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags).
 
 ---
 
