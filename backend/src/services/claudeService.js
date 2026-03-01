@@ -215,6 +215,19 @@ async function generateVisionCompletion(systemPrompt, userPrompt, imageUrl, opti
   const maxTokens = options.maxTokens || 4096
   const timeout = options.timeout || 60000 // longer default for vision
 
+  // Fetch image and convert to base64 (more compatible than URL source)
+  let imageBase64, mediaType
+  try {
+    const imgResponse = await fetch(imageUrl)
+    if (!imgResponse.ok) throw new Error(`Failed to fetch image: ${imgResponse.status}`)
+    const buffer = Buffer.from(await imgResponse.arrayBuffer())
+    imageBase64 = buffer.toString('base64')
+    mediaType = imgResponse.headers.get('content-type') || 'image/jpeg'
+  } catch (fetchErr) {
+    console.error('[Claude] Failed to fetch image for vision:', fetchErr.message)
+    return null
+  }
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await Promise.race([
@@ -225,7 +238,7 @@ async function generateVisionCompletion(systemPrompt, userPrompt, imageUrl, opti
           messages: [{
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'url', url: imageUrl } },
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
               { type: 'text', text: userPrompt },
             ],
           }],
