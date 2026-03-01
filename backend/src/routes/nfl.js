@@ -923,13 +923,15 @@ router.get('/schedule', async (req, res, next) => {
 
 // ─── NFL Available Seasons ──────────────────────────────────────────────────
 
-// GET /api/nfl/seasons — Which seasons have game data
+// GET /api/nfl/seasons — Which seasons have player stat data
 router.get('/seasons', async (req, res, next) => {
   try {
-    const seasons = await prisma.nflGame.groupBy({
-      by: ['season'],
-      orderBy: { season: 'desc' },
-    })
+    const seasons = await prisma.$queryRaw`
+      SELECT DISTINCT g.season
+      FROM nfl_games g
+      JOIN nfl_player_games pg ON pg."gameId" = g.id
+      ORDER BY g.season DESC
+    `
     res.json({ seasons: seasons.map(s => s.season) })
   } catch (error) {
     next(error)

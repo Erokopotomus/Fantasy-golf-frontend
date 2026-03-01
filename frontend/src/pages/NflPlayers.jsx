@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 
 const POSITIONS = ['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DST']
 const SCORING_TYPES = [
@@ -16,7 +17,7 @@ export default function NflPlayers() {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [position, setPosition] = useState('ALL')
+  const [position, setPosition] = useState('QB')
   const [scoring, setScoring] = useState('half_ppr')
   const [season, setSeason] = useState('')
   const [availableSeasons, setAvailableSeasons] = useState([])
@@ -25,6 +26,9 @@ export default function NflPlayers() {
   const [pagination, setPagination] = useState({ total: 0, hasMore: false })
   const [offset, setOffset] = useState(0)
   const limit = 50
+
+  // Player drawer
+  const [drawerPlayerId, setDrawerPlayerId] = useState(null)
 
   // Compare mode — just track selection, navigate to /nfl/compare when 2 selected
   const [compareMode, setCompareMode] = useState(false)
@@ -82,7 +86,7 @@ export default function NflPlayers() {
 
   const handleRowClick = (player) => {
     if (!compareMode) {
-      navigate(`/nfl/players/${player.id}`)
+      setDrawerPlayerId(player.id)
       return
     }
 
@@ -256,19 +260,19 @@ export default function NflPlayers() {
                 {statCols.map(col => (
                   <th
                     key={col}
-                    className="text-right px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider cursor-pointer hover:text-text-primary"
+                    className="text-center px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider cursor-pointer hover:text-text-primary"
                     onClick={() => handleSort(col)}
                   >
                     {statLabels[col] || col} <SortIcon field={col} />
                   </th>
                 ))}
                 <th
-                  className="text-right px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider cursor-pointer hover:text-text-primary"
+                  className="text-center px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider cursor-pointer hover:text-text-primary"
                   onClick={() => handleSort('fantasyPts')}
                 >
                   FPTS <SortIcon field="fantasyPts" />
                 </th>
-                <th className="text-right px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider">AVG</th>
+                <th className="text-center px-4 py-3 text-text-primary/50 text-xs font-mono uppercase tracking-wider">AVG</th>
               </tr>
             </thead>
             <tbody>
@@ -325,15 +329,15 @@ export default function NflPlayers() {
                           (['recYards'].includes(col) && ['QB', 'K', 'DST'].includes(pos))
                         )
                         return (
-                          <td key={col} className="px-4 py-3 text-right text-text-primary/70 font-mono text-sm">
+                          <td key={col} className="px-4 py-3 text-center text-text-primary/70 font-mono text-sm">
                             {irrelevant ? '-' : (p.season?.[col] != null ? p.season[col] : '-')}
                           </td>
                         )
                       })}
-                      <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gold">
+                      <td className="px-4 py-3 text-center font-mono text-sm font-bold text-gold">
                         {fmtPts(p.fantasyPts)}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-sm text-text-primary/50">
+                      <td className="px-4 py-3 text-center font-mono text-sm text-text-primary/50">
                         {fmtPts(p.fantasyPtsPerGame)}
                       </td>
                     </tr>
@@ -369,6 +373,13 @@ export default function NflPlayers() {
           </div>
         )}
       </div>
+
+      <PlayerDrawer
+        playerId={drawerPlayerId}
+        isOpen={!!drawerPlayerId}
+        onClose={() => setDrawerPlayerId(null)}
+        isNfl={true}
+      />
     </div>
   )
 }
