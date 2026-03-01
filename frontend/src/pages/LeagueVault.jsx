@@ -6,6 +6,7 @@ import EditSeasonModal from '../components/vault/EditSeasonModal'
 import ShareModal from '../components/vault/ShareModal'
 import { useAuth } from '../context/AuthContext'
 import { computeVaultStats } from '../hooks/useVaultStats'
+import { useDraftIntelligence } from '../hooks/useDraftIntelligence'
 import api from '../services/api'
 import { resizeImage, uploadToCloudinary } from '../utils/uploadImage'
 import LeagueChat from '../components/ai/LeagueChat'
@@ -431,6 +432,10 @@ const HeadToHeadTab = ({ history }) => {
 const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
   const years = history?.seasons ? Object.keys(history.seasons).sort((a, b) => b - a) : []
   const [selectedYear, setSelectedYear] = useState(years[0] || '')
+  const [showIntelligence, setShowIntelligence] = useState(false)
+
+  // Draft intelligence hook
+  const { getSeasonSummary, getTrends, hasDraftData, POS_COLORS } = useDraftIntelligence(history)
 
   // Edit mode state
   const [editMode, setEditMode] = useState(false)
@@ -1241,6 +1246,239 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved }) => {
           )}
         </Card>
       )}
+
+      {/* ─── Draft Intelligence Card ─────────────────────────────────────── */}
+      {(() => {
+        const summary = selectedYear ? getSeasonSummary(selectedYear) : null
+        const trends = getTrends()
+        if (!summary && !trends) return null
+        const isAuction = summary?.type === 'auction'
+
+        return (
+          <Card>
+            <button
+              onClick={() => setShowIntelligence(prev => !prev)}
+              className="w-full flex items-center justify-between"
+            >
+              <h3 className="font-display font-bold text-text-primary">Draft Intelligence</h3>
+              <svg
+                className={`w-4 h-4 text-text-secondary transition-transform ${showIntelligence ? 'rotate-180' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showIntelligence && summary && (
+              <div className="mt-4 space-y-5">
+                {/* a) Spend Breakdown (auction) / Position Distribution (snake) */}
+                <div>
+                  <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                    {isAuction ? 'Spend by Position' : 'Picks by Position'}
+                  </h4>
+                  {/* Stacked bar */}
+                  <div className="h-8 rounded-lg overflow-hidden flex">
+                    {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                      const pct = isAuction && summary.totalSpend > 0
+                        ? ((summary.spendByPosition[pos] || 0) / summary.totalSpend * 100)
+                        : summary.totalPicks > 0
+                          ? ((summary.picksByPosition[pos] || 0) / summary.totalPicks * 100)
+                          : 0
+                      if (pct < 0.5) return null
+                      return (
+                        <div
+                          key={pos}
+                          className="flex items-center justify-center text-xs font-mono font-bold text-white/90 transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] || '#6B7280', minWidth: pct > 3 ? undefined : 0 }}
+                          title={`${pos}: ${pct.toFixed(1)}%`}
+                        >
+                          {pct > 6 ? pos : ''}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                    {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                      const val = isAuction ? (summary.spendByPosition[pos] || 0) : (summary.picksByPosition[pos] || 0)
+                      if (val === 0) return null
+                      const pct = isAuction && summary.totalSpend > 0
+                        ? (val / summary.totalSpend * 100)
+                        : summary.totalPicks > 0
+                          ? (val / summary.totalPicks * 100)
+                          : 0
+                      return (
+                        <div key={pos} className="flex items-center gap-1">
+                          <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: POS_COLORS[pos] }} />
+                          <span className="text-xs font-mono text-text-secondary">
+                            {pos} {pct.toFixed(0)}%{isAuction ? ` ($${val})` : ` (${val})`}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {isAuction && (
+                    <p className="text-xs font-mono text-text-secondary mt-1">
+                      Total league spend: <span className="text-accent-gold font-bold">${summary.totalSpend}</span> across {summary.totalPicks} picks
+                    </p>
+                  )}
+                </div>
+
+                {/* b) Owner Spending Table (auction) */}
+                {isAuction && summary.ownerSpending.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Owner Spending</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-text-secondary text-xs font-mono uppercase tracking-wider">
+                            <th className="text-left pb-2">Owner</th>
+                            <th className="text-right pb-2">Spent</th>
+                            <th className="text-right pb-2">Avg</th>
+                            <th className="text-left pb-2 pl-3">Top Pick</th>
+                            <th className="text-center pb-2">Picks</th>
+                            <th className="text-center pb-2">Keepers</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {summary.ownerSpending.map((owner, idx) => {
+                            const isMax = idx === 0
+                            const isMin = idx === summary.ownerSpending.length - 1 && summary.ownerSpending.length > 1
+                            return (
+                              <tr
+                                key={owner.name}
+                                className={`border-t border-[var(--card-border)] ${isMax ? 'bg-accent-gold/5' : isMin ? 'bg-blue-500/5' : ''}`}
+                              >
+                                <td className="py-1.5 font-display font-semibold text-text-primary">
+                                  {owner.name}
+                                  {isMax && <span className="ml-1.5 text-[9px] font-mono text-accent-gold">MOST</span>}
+                                  {isMin && <span className="ml-1.5 text-[9px] font-mono text-blue-400">LEAST</span>}
+                                </td>
+                                <td className="py-1.5 text-right font-mono text-accent-gold font-bold">${owner.totalSpent}</td>
+                                <td className="py-1.5 text-right font-mono text-text-secondary">${owner.avgCost.toFixed(0)}</td>
+                                <td className="py-1.5 text-left pl-3 font-mono text-xs text-text-primary truncate max-w-[140px]">
+                                  {owner.mostExpensive ? `${owner.mostExpensive.playerName} ($${owner.mostExpensive.cost})` : '—'}
+                                </td>
+                                <td className="py-1.5 text-center font-mono text-text-secondary">{owner.pickCount}</td>
+                                <td className="py-1.5 text-center font-mono text-text-secondary">{owner.keepers || '—'}</td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* c) Value Leaders */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Most Expensive / Early Picks */}
+                  {(isAuction ? summary.mostExpensive : summary.earlyPicks).length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                        {isAuction ? 'Most Expensive Picks' : 'Early Round Picks'}
+                      </h4>
+                      <div className="space-y-1">
+                        {(isAuction ? summary.mostExpensive : summary.earlyPicks).slice(0, 5).map((pick, i) => (
+                          <div key={i} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--surface-alt)]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-text-secondary w-4">{i + 1}.</span>
+                              <span className="text-sm font-display font-semibold text-text-primary">{pick.playerName || '(Unknown)'}</span>
+                              {pick.positionGroup && (
+                                <span className="text-[10px] font-mono px-1 py-0.5 rounded" style={{ backgroundColor: `${POS_COLORS[pick.positionGroup]}20`, color: POS_COLORS[pick.positionGroup] }}>
+                                  {pick.positionGroup}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isAuction ? (
+                                <span className="text-xs font-mono text-accent-gold font-bold">${pick.cost}</span>
+                              ) : (
+                                <span className="text-xs font-mono text-text-secondary">Rd {pick.round}, #{pick.pick}</span>
+                              )}
+                              {pick.ownerName && <span className="text-xs font-mono text-text-secondary">{pick.ownerName}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Keeper Steals / Late Round Picks */}
+                  {(isAuction ? summary.keeperSteals : summary.lateRoundPicks).length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                        {isAuction ? 'Keeper Steals' : 'Late Round Picks'}
+                      </h4>
+                      <div className="space-y-1">
+                        {(isAuction ? summary.keeperSteals : summary.lateRoundPicks).slice(0, 5).map((pick, i) => (
+                          <div key={i} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--surface-alt)]">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-text-secondary w-4">{i + 1}.</span>
+                              <span className="text-sm font-display font-semibold text-text-primary">{pick.playerName || '(Unknown)'}</span>
+                              {pick.positionGroup && (
+                                <span className="text-[10px] font-mono px-1 py-0.5 rounded" style={{ backgroundColor: `${POS_COLORS[pick.positionGroup]}20`, color: POS_COLORS[pick.positionGroup] }}>
+                                  {pick.positionGroup}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isAuction ? (
+                                <span className="text-xs font-mono text-green-400 font-bold">
+                                  ${pick.keeperPrice || 0} <span className="text-text-secondary">→</span> ${pick.cost}
+                                  <span className="text-accent-gold ml-1">(+${pick.discount})</span>
+                                </span>
+                              ) : (
+                                <span className="text-xs font-mono text-text-secondary">Rd {pick.round}, #{pick.pick}</span>
+                              )}
+                              {pick.ownerName && <span className="text-xs font-mono text-text-secondary ml-1">{pick.ownerName}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* d) Multi-Year Trends */}
+                {trends && (
+                  <div>
+                    <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                      Position Allocation Trends ({trends.years.length} years)
+                    </h4>
+                    <div className="space-y-2">
+                      {trends.positionTrends.map(({ year, breakdown, isAuction: isYearAuction }) => (
+                        <div key={year} className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-accent-gold w-10 text-right">{year}</span>
+                          <div className="flex-1 h-5 rounded overflow-hidden flex">
+                            {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                              const pct = breakdown[pos] || 0
+                              if (pct < 0.5) return null
+                              return (
+                                <div
+                                  key={pos}
+                                  className="flex items-center justify-center text-[9px] font-mono font-bold text-white/80"
+                                  style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] || '#6B7280' }}
+                                  title={`${pos}: ${pct.toFixed(1)}%`}
+                                >
+                                  {pct > 8 ? pos : ''}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] font-mono text-text-secondary/60 mt-1">
+                      {trends.positionTrends[0]?.isAuction ? 'Based on % of auction budget by position' : 'Based on % of picks by position'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        )
+      })()}
     </div>
   )
 }
@@ -1254,7 +1492,12 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
   const [seasonSort, setSeasonSort] = useState({ key: 'year', dir: 'desc' })
   const [showFormerH2h, setShowFormerH2h] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [showH2HModal, setShowH2HModal] = useState(false)
+  const [h2hOwnerB, setH2hOwnerB] = useState('')
   const fileInputRef = useRef(null)
+
+  // Draft intelligence
+  const { getOwnerProfile: getDraftProfile, getH2HComparison, owners: draftOwners, hasDraftData, POS_COLORS, COMPARE_COLORS } = useDraftIntelligence(history)
 
   const owners = useMemo(() => {
     if (!history?.seasons) return []
@@ -1855,79 +2098,227 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           })()}
 
           {/* Section 5 — Weekly Matchup Log */}
-          {/* Section 6 — Draft History */}
-          {Object.keys(profileData.draftHistory).length > 0 && (
-            <Card>
-              <h3 className="font-display font-bold text-text-primary mb-3">Draft History</h3>
-              <div className="space-y-1">
-                {Object.entries(profileData.draftHistory)
-                  .sort(([a], [b]) => parseInt(b) - parseInt(a))
-                  .map(([year, { picks, type: draftType }]) => (
-                    <div key={year}>
-                      <button
-                        onClick={() => setExpandedDraftYear(expandedDraftYear === year ? null : year)}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-accent-gold">{year}</span>
-                          <span className="text-xs font-mono text-text-secondary">{picks.length} pick{picks.length !== 1 ? 's' : ''}</span>
-                          {draftType === 'auction' && (
-                            <span className="text-xs font-mono text-orange/80 bg-orange/10 px-1.5 py-0.5 rounded">Auction</span>
+          {/* Section 6 — Draft History (Enhanced) */}
+          {(() => {
+            const draftProfile = selectedOwner ? getDraftProfile(selectedOwner) : null
+            const hasDraftHistory = Object.keys(profileData.draftHistory).length > 0
+            if (!hasDraftHistory && !draftProfile) return null
+
+            return (
+              <Card>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-display font-bold text-text-primary">Draft History</h3>
+                  {hasDraftData && draftOwners.length > 1 && (
+                    <button
+                      onClick={() => { setH2hOwnerB(''); setShowH2HModal(true) }}
+                      className="px-3 py-1 text-xs font-mono font-bold bg-accent-gold/10 text-accent-gold rounded-lg hover:bg-accent-gold/20 transition-colors"
+                    >
+                      Compare Drafts
+                    </button>
+                  )}
+                </div>
+
+                {/* Career Draft Stats */}
+                {draftProfile && (
+                  <div className="space-y-4 mb-4">
+                    {/* Stat boxes */}
+                    <div className="grid grid-cols-5 gap-2">
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-2.5 text-center">
+                        <p className="text-lg font-mono font-bold text-accent-gold">
+                          {draftProfile.careerSpend > 0 ? `$${draftProfile.careerSpend}` : draftProfile.totalPicks}
+                        </p>
+                        <p className="text-[10px] font-mono text-text-secondary mt-0.5">
+                          {draftProfile.careerSpend > 0 ? 'Career $' : 'Total Picks'}
+                        </p>
+                      </div>
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-2.5 text-center">
+                        <p className="text-lg font-mono font-bold text-text-primary">
+                          {draftProfile.careerSpend > 0 ? `$${draftProfile.avgPickCost.toFixed(0)}` : draftProfile.totalPicks}
+                        </p>
+                        <p className="text-[10px] font-mono text-text-secondary mt-0.5">
+                          {draftProfile.careerSpend > 0 ? 'Avg Pick' : 'Total Picks'}
+                        </p>
+                      </div>
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-2.5 text-center">
+                        <p className="text-lg font-mono font-bold text-text-primary">{draftProfile.totalKeepers}</p>
+                        <p className="text-[10px] font-mono text-text-secondary mt-0.5">Keepers</p>
+                      </div>
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-2.5 text-center">
+                        <p className="text-lg font-mono font-bold text-text-primary">{draftProfile.mostDraftedPosition || '—'}</p>
+                        <p className="text-[10px] font-mono text-text-secondary mt-0.5">Fav Pos</p>
+                      </div>
+                      <div className="bg-[var(--bg-alt)] rounded-lg p-2.5 text-center">
+                        <p className="text-lg font-mono font-bold text-text-primary">{draftProfile.uniquePlayers}</p>
+                        <p className="text-[10px] font-mono text-text-secondary mt-0.5">Unique</p>
+                      </div>
+                    </div>
+
+                    {/* Position Allocation Bar */}
+                    <div>
+                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-1.5">Position Allocation</h4>
+                      <div className="h-6 rounded-lg overflow-hidden flex">
+                        {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                          const pct = draftProfile.positionBreakdown[pos] || 0
+                          if (pct < 0.5) return null
+                          return (
+                            <div
+                              key={pos}
+                              className="flex items-center justify-center text-[10px] font-mono font-bold text-white/90"
+                              style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] || '#6B7280' }}
+                              title={`${pos}: ${pct.toFixed(1)}% (${draftProfile.positionCounts[pos] || 0} picks)`}
+                            >
+                              {pct > 7 ? `${pos} ${pct.toFixed(0)}%` : pct > 4 ? pos : ''}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Signature Picks */}
+                    {(draftProfile.signaturePicks.biggestPick || draftProfile.signaturePicks.mostKeptPlayer) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {draftProfile.signaturePicks.biggestPick && (
+                          <div className="bg-[var(--bg-alt)] rounded-lg p-2.5">
+                            <p className="text-[10px] font-mono text-text-secondary uppercase">Most Expensive Pick</p>
+                            <p className="text-sm font-display font-bold text-text-primary mt-0.5">
+                              {draftProfile.signaturePicks.biggestPick.playerName}
+                            </p>
+                            <p className="text-xs font-mono text-accent-gold">
+                              ${draftProfile.signaturePicks.biggestPick.cost} ({draftProfile.signaturePicks.biggestPick.year})
+                            </p>
+                          </div>
+                        )}
+                        {draftProfile.signaturePicks.mostKeptPlayer && (
+                          <div className="bg-[var(--bg-alt)] rounded-lg p-2.5">
+                            <p className="text-[10px] font-mono text-text-secondary uppercase">Most Kept Player</p>
+                            <p className="text-sm font-display font-bold text-text-primary mt-0.5">
+                              {draftProfile.signaturePicks.mostKeptPlayer.name}
+                            </p>
+                            <p className="text-xs font-mono text-green-400">
+                              Kept {draftProfile.signaturePicks.mostKeptPlayer.count}x
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Spend vs Results (auction leagues) */}
+                    {draftProfile.spendVsResults.some(y => y.spent > 0) && (
+                      <div>
+                        <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-1.5">Spend vs Results</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-text-secondary font-mono uppercase tracking-wider">
+                                <th className="text-left pb-1.5">Year</th>
+                                <th className="text-right pb-1.5">Spent</th>
+                                <th className="text-center pb-1.5">Place</th>
+                                <th className="text-center pb-1.5">Record</th>
+                                <th className="text-left pb-1.5 pl-2">Playoff</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {draftProfile.spendVsResults.map(yr => {
+                                const playoff = PLAYOFF_LABELS[yr.playoffResult] || {}
+                                return (
+                                  <tr key={yr.year} className="border-t border-[var(--card-border)]">
+                                    <td className="py-1 font-mono font-bold text-accent-gold">{yr.year}</td>
+                                    <td className="py-1 text-right font-mono text-accent-gold">{yr.spent > 0 ? `$${yr.spent}` : '—'}</td>
+                                    <td className="py-1 text-center font-mono text-text-secondary">{yr.finalStanding || '—'}</td>
+                                    <td className="py-1 text-center font-mono text-text-primary">{yr.wins}-{yr.losses}{yr.ties ? `-${yr.ties}` : ''}</td>
+                                    <td className="py-1 pl-2">
+                                      {playoff.text && (
+                                        <span className={`text-[10px] font-mono px-1 py-0.5 rounded ${playoff.color}`}>{playoff.text}</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="border-t border-[var(--card-border)] pt-3">
+                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Year-by-Year Picks</h4>
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing year-by-year expandable draft list */}
+                {hasDraftHistory && (
+                  <div className="space-y-1">
+                    {Object.entries(profileData.draftHistory)
+                      .sort(([a], [b]) => parseInt(b) - parseInt(a))
+                      .map(([year, { picks, type: draftType }]) => (
+                        <div key={year}>
+                          <button
+                            onClick={() => setExpandedDraftYear(expandedDraftYear === year ? null : year)}
+                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-[var(--surface-alt)] transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono font-bold text-accent-gold">{year}</span>
+                              <span className="text-xs font-mono text-text-secondary">{picks.length} pick{picks.length !== 1 ? 's' : ''}</span>
+                              {draftType === 'auction' && (
+                                <span className="text-xs font-mono text-orange/80 bg-orange/10 px-1.5 py-0.5 rounded">Auction</span>
+                              )}
+                            </div>
+                            <svg
+                              className={`w-4 h-4 text-text-secondary transition-transform ${expandedDraftYear === year ? 'rotate-180' : ''}`}
+                              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          {expandedDraftYear === year && (
+                            <div className="ml-2 mb-3 border-l-2 border-[var(--card-border)] pl-3 space-y-0.5">
+                              {picks.map((pick, i) => {
+                                const auctionCost = pick.amount || pick.cost || 0
+                                return (
+                                  <div
+                                    key={i}
+                                    className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--surface-alt)] text-sm"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {draftType === 'auction' ? (
+                                        <span className="font-mono text-accent-gold font-bold w-10 text-right">
+                                          ${auctionCost}
+                                        </span>
+                                      ) : (
+                                        <span className="font-mono text-text-secondary w-14">
+                                          Rd {pick.round}, #{pick.pick}
+                                        </span>
+                                      )}
+                                      <span className={`font-display font-semibold ${pick.playerName ? 'text-text-primary' : 'text-text-secondary'}`}>
+                                        {pick.playerName || '(Unknown)'}
+                                      </span>
+                                      {pick.position && (
+                                        <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-1.5 py-0.5 rounded">
+                                          {pick.position}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {pick.isKeeper && (
+                                        <span className="text-xs font-mono text-accent-gold bg-accent-gold/10 px-1.5 py-0.5 rounded">K</span>
+                                      )}
+                                      {draftType !== 'auction' && auctionCost > 0 && (
+                                        <span className="text-xs font-mono text-accent-gold">${auctionCost}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           )}
                         </div>
-                        <svg
-                          className={`w-4 h-4 text-text-secondary transition-transform ${expandedDraftYear === year ? 'rotate-180' : ''}`}
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      {expandedDraftYear === year && (
-                        <div className="ml-2 mb-3 border-l-2 border-[var(--card-border)] pl-3 space-y-0.5">
-                          {picks.map((pick, i) => {
-                            const auctionCost = pick.amount || pick.cost || 0
-                            return (
-                              <div
-                                key={i}
-                                className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--surface-alt)] text-sm"
-                              >
-                                <div className="flex items-center gap-2">
-                                  {draftType === 'auction' ? (
-                                    <span className="font-mono text-accent-gold font-bold w-10 text-right">
-                                      ${auctionCost}
-                                    </span>
-                                  ) : (
-                                    <span className="font-mono text-text-secondary w-14">
-                                      Rd {pick.round}, #{pick.pick}
-                                    </span>
-                                  )}
-                                  <span className={`font-display font-semibold ${pick.playerName ? 'text-text-primary' : 'text-text-secondary'}`}>
-                                    {pick.playerName || '(Unknown)'}
-                                  </span>
-                                  {pick.position && (
-                                    <span className="text-xs font-mono text-text-secondary bg-[var(--bg-alt)] px-1.5 py-0.5 rounded">
-                                      {pick.position}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {pick.isKeeper && (
-                                    <span className="text-xs font-mono text-accent-gold bg-accent-gold/10 px-1.5 py-0.5 rounded">K</span>
-                                  )}
-                                  {draftType !== 'auction' && auctionCost > 0 && (
-                                    <span className="text-xs font-mono text-accent-gold">${auctionCost}</span>
-                                  )}
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            </Card>
-          )}
+                      ))}
+                  </div>
+                )}
+              </Card>
+            )
+          })()}
 
           {/* Section 7 — Weekly Matchup Log */}
           {(() => {
@@ -2015,6 +2406,239 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
           })()}
         </>
       )}
+
+      {/* ─── H2H Draft Comparison Modal ─────────────────────────────────── */}
+      {showH2HModal && (() => {
+        const comparison = h2hOwnerB ? getH2HComparison(selectedOwner, h2hOwnerB) : null
+
+        // Draft DNA Radar Chart (inline, follows SgRadarChart pattern)
+        const DraftDNARadar = ({ radarData }) => {
+          if (!radarData || radarData.length < 2) return null
+          const size = 240
+          const center = size / 2
+          const radius = size * 0.35
+          const AXES = [
+            { key: 'qb', label: 'QB' },
+            { key: 'rb', label: 'RB' },
+            { key: 'wr', label: 'WR' },
+            { key: 'te', label: 'TE' },
+            { key: 'keepers', label: 'Keepers' },
+          ]
+          const RINGS = [0.25, 0.5, 0.75, 1.0]
+          // Normalize: find max across both owners for each axis to scale 0-1
+          const maxVals = {}
+          for (const axis of AXES) {
+            maxVals[axis.key] = Math.max(...radarData.map(d => d[axis.key] || 0), 1)
+          }
+          const getPoint = (axisIndex, fraction) => {
+            const angle = (Math.PI * 2 * axisIndex) / AXES.length - Math.PI / 2
+            return {
+              x: center + radius * fraction * Math.cos(angle),
+              y: center + radius * fraction * Math.sin(angle),
+            }
+          }
+          const polygonPoints = (data) => AXES.map((axis, i) => {
+            const val = Math.min(1, (data[axis.key] || 0) / (maxVals[axis.key] || 1))
+            const pt = getPoint(i, val)
+            return `${pt.x},${pt.y}`
+          }).join(' ')
+
+          return (
+            <div className="flex flex-col items-center">
+              <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+                {RINGS.map(r => (
+                  <polygon
+                    key={r}
+                    points={AXES.map((_, i) => { const pt = getPoint(i, r); return `${pt.x},${pt.y}` }).join(' ')}
+                    fill="none" stroke="var(--card-border)" strokeWidth={r === 0.5 ? 1 : 0.5} opacity={r === 0.5 ? 0.6 : 0.3}
+                  />
+                ))}
+                {AXES.map((_, i) => {
+                  const pt = getPoint(i, 1)
+                  return <line key={i} x1={center} y1={center} x2={pt.x} y2={pt.y} stroke="var(--card-border)" strokeWidth={0.5} opacity={0.4} />
+                })}
+                {radarData.map((data, pi) => (
+                  <polygon
+                    key={pi}
+                    points={polygonPoints(data)}
+                    fill={COMPARE_COLORS[pi]} fillOpacity={0.15}
+                    stroke={COMPARE_COLORS[pi]} strokeWidth={2} strokeLinejoin="round"
+                  />
+                ))}
+                {radarData.map((data, pi) => AXES.map((axis, ai) => {
+                  const val = Math.min(1, (data[axis.key] || 0) / (maxVals[axis.key] || 1))
+                  const pt = getPoint(ai, val)
+                  return <circle key={`${pi}-${ai}`} cx={pt.x} cy={pt.y} r={3} fill={COMPARE_COLORS[pi]} stroke="var(--surface)" strokeWidth={1} />
+                }))}
+                {AXES.map((axis, i) => {
+                  const pt = getPoint(i, 1.2)
+                  return (
+                    <text key={i} x={pt.x} y={pt.y} textAnchor="middle" dominantBaseline="central"
+                      fontSize={10} fontWeight={600} fill="var(--text-1)" opacity={0.5}
+                    >{axis.label}</text>
+                  )
+                })}
+              </svg>
+              <div className="flex gap-4 mt-2">
+                {radarData.map((d, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COMPARE_COLORS[i] }} />
+                    <span className="text-xs font-mono text-text-secondary">{d.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowH2HModal(false)}>
+            <div
+              className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl w-full max-w-3xl max-h-[85vh] flex flex-col"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="p-5 border-b border-[var(--card-border)] flex items-center justify-between">
+                <h2 className="text-lg font-display font-bold text-text-primary">Draft Comparison</h2>
+                <button onClick={() => setShowH2HModal(false)} className="text-text-secondary hover:text-text-primary text-xl">&times;</button>
+              </div>
+
+              {/* Owner selectors */}
+              <div className="px-5 pt-4 pb-2 flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-[10px] font-mono text-text-secondary uppercase mb-1">Owner A</label>
+                  <div className="px-3 py-2 bg-[var(--bg-alt)] border border-accent-gold/30 rounded-lg text-sm font-display font-bold text-accent-gold">
+                    {selectedOwner}
+                  </div>
+                </div>
+                <span className="text-text-secondary font-mono text-sm mt-4">vs</span>
+                <div className="flex-1">
+                  <label className="block text-[10px] font-mono text-text-secondary uppercase mb-1">Owner B</label>
+                  <select
+                    value={h2hOwnerB}
+                    onChange={e => setH2hOwnerB(e.target.value)}
+                    className="w-full px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-sm text-text-primary focus:outline-none focus:border-accent-gold"
+                  >
+                    <option value="">Select...</option>
+                    {draftOwners.filter(o => o !== selectedOwner).map(o => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Comparison content */}
+              <div className="p-5 overflow-y-auto flex-1 space-y-5">
+                {!h2hOwnerB && (
+                  <p className="text-text-secondary text-sm text-center py-8">Select a second owner to compare draft tendencies.</p>
+                )}
+
+                {comparison && (
+                  <>
+                    {/* Side-by-side stats */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {[comparison.stats.a, comparison.stats.b].map((s, i) => (
+                        <div key={i} className="space-y-2">
+                          <h4 className="font-display font-bold text-sm" style={{ color: COMPARE_COLORS[i] }}>{s.name}</h4>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                              <p className="text-sm font-mono font-bold text-text-primary">{s.careerSpend > 0 ? `$${s.careerSpend}` : s.totalPicks}</p>
+                              <p className="text-[9px] font-mono text-text-secondary">{s.careerSpend > 0 ? 'Total Spent' : 'Total Picks'}</p>
+                            </div>
+                            <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                              <p className="text-sm font-mono font-bold text-text-primary">{s.careerSpend > 0 ? `$${s.avgPickCost.toFixed(0)}` : '—'}</p>
+                              <p className="text-[9px] font-mono text-text-secondary">Avg Cost</p>
+                            </div>
+                            <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                              <p className="text-sm font-mono font-bold text-text-primary">{s.totalKeepers}</p>
+                              <p className="text-[9px] font-mono text-text-secondary">Keepers</p>
+                            </div>
+                            <div className="bg-[var(--bg-alt)] rounded p-2 text-center">
+                              <p className="text-sm font-mono font-bold text-text-primary">{s.seasons}</p>
+                              <p className="text-[9px] font-mono text-text-secondary">Seasons</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Position breakdown bars */}
+                    <div>
+                      <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">Position Breakdown</h4>
+                      <div className="space-y-2">
+                        {[
+                          { label: comparison.stats.a.name, bars: comparison.positionBars.a, color: COMPARE_COLORS[0] },
+                          { label: comparison.stats.b.name, bars: comparison.positionBars.b, color: COMPARE_COLORS[1] },
+                        ].map(({ label, bars, color }) => (
+                          <div key={label}>
+                            <p className="text-[10px] font-mono mb-1" style={{ color }}>{label}</p>
+                            <div className="h-5 rounded overflow-hidden flex">
+                              {['QB', 'RB', 'WR', 'TE', 'K', 'DST', 'FLEX'].map(pos => {
+                                const pct = bars[pos] || 0
+                                if (pct < 0.5) return null
+                                return (
+                                  <div
+                                    key={pos}
+                                    className="flex items-center justify-center text-[9px] font-mono font-bold text-white/80"
+                                    style={{ width: `${pct}%`, backgroundColor: POS_COLORS[pos] }}
+                                    title={`${pos}: ${pct.toFixed(1)}%`}
+                                  >
+                                    {pct > 8 ? pos : ''}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Draft DNA Radar */}
+                    <div className="flex justify-center">
+                      <div>
+                        <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2 text-center">Draft DNA</h4>
+                        <DraftDNARadar radarData={comparison.radarData} />
+                      </div>
+                    </div>
+
+                    {/* Common Picks */}
+                    {comparison.commonPicks.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-mono text-text-secondary uppercase tracking-wider mb-2">
+                          Common Picks ({comparison.commonPicks.length})
+                        </h4>
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                          {comparison.commonPicks.slice(0, 20).map((cp, i) => (
+                            <div key={i} className="flex items-center justify-between py-1 px-2 rounded hover:bg-[var(--surface-alt)] text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="font-display font-semibold text-text-primary text-sm">{cp.player}</span>
+                                {cp.position && (
+                                  <span className="font-mono px-1 py-0.5 rounded" style={{ backgroundColor: `${POS_COLORS[cp.position]}20`, color: POS_COLORS[cp.position] }}>
+                                    {cp.position}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 font-mono">
+                                <span style={{ color: COMPARE_COLORS[0] }}>
+                                  {cp.ownerA.map(y => `${y.year}${y.cost ? ` $${y.cost}` : ''}`).join(', ')}
+                                </span>
+                                <span className="text-text-secondary">|</span>
+                                <span style={{ color: COMPARE_COLORS[1] }}>
+                                  {cp.ownerB.map(y => `${y.year}${y.cost ? ` $${y.cost}` : ''}`).join(', ')}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
