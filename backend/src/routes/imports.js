@@ -876,6 +876,24 @@ router.post('/resolve-positions', authenticate, async (req, res) => {
       }
     }
 
+    // Fallback: check yahoo_player_cache for retired/older players not in Player table
+    const missingNames = lookupNames.filter(n => !positions[n])
+    if (missingNames.length > 0) {
+      const cached = await prisma.yahooPlayerCache.findMany({
+        where: {
+          fullName: { in: missingNames, mode: 'insensitive' },
+          position: { not: null },
+        },
+        select: { fullName: true, position: true },
+      })
+      for (const c of cached) {
+        const matchedName = missingNames.find(n => n.toLowerCase() === c.fullName.toLowerCase())
+        if (matchedName && !positions[matchedName]) {
+          positions[matchedName] = c.position
+        }
+      }
+    }
+
     res.json({ positions })
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })

@@ -1714,6 +1714,16 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
   const [h2hOwnerB, setH2hOwnerB] = useState('')
   const fileInputRef = useRef(null)
 
+  // Lock body scroll when Draft Comparison modal is open
+  useEffect(() => {
+    if (showH2HModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [showH2HModal])
+
   // Bulk-resolve positions for all draft picks (for intelligence)
   const [allResolvedPositions, setAllResolvedPositions] = useState({})
   useEffect(() => {
@@ -2658,15 +2668,15 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
         // Draft DNA Radar Chart (inline, follows SgRadarChart pattern)
         const DraftDNARadar = ({ radarData }) => {
           if (!radarData || radarData.length < 2) return null
-          const size = 240
+          const size = 300
           const center = size / 2
-          const radius = size * 0.35
+          const radius = size * 0.36
           const AXES = [
             { key: 'qb', label: 'QB' },
             { key: 'rb', label: 'RB' },
             { key: 'wr', label: 'WR' },
             { key: 'te', label: 'TE' },
-            { key: 'keepers', label: 'Keepers' },
+            { key: 'k', label: 'K' },
           ]
           const RINGS = [0.25, 0.5, 0.75, 1.0]
           // Normalize: find max across both owners for each axis to scale 0-1
@@ -2705,8 +2715,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   <polygon
                     key={pi}
                     points={polygonPoints(data)}
-                    fill={COMPARE_COLORS[pi]} fillOpacity={0.15}
-                    stroke={COMPARE_COLORS[pi]} strokeWidth={2} strokeLinejoin="round"
+                    fill={COMPARE_COLORS[pi]} fillOpacity={0.2}
+                    stroke={COMPARE_COLORS[pi]} strokeWidth={2.5} strokeLinejoin="round"
                   />
                 ))}
                 {radarData.map((data, pi) => AXES.map((axis, ai) => {
@@ -2715,10 +2725,10 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   return <circle key={`${pi}-${ai}`} cx={pt.x} cy={pt.y} r={3} fill={COMPARE_COLORS[pi]} stroke="var(--surface)" strokeWidth={1} />
                 }))}
                 {AXES.map((axis, i) => {
-                  const pt = getPoint(i, 1.2)
+                  const pt = getPoint(i, 1.25)
                   return (
                     <text key={i} x={pt.x} y={pt.y} textAnchor="middle" dominantBaseline="central"
-                      fontSize={10} fontWeight={600} fill="var(--text-1)" opacity={0.5}
+                      fontSize={12} fontWeight={700} fill="var(--text-1)" opacity={0.7}
                     >{axis.label}</text>
                   )
                 })}
@@ -2864,11 +2874,23 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                               </div>
                               <div className="flex items-center gap-3 font-mono">
                                 <span style={{ color: COMPARE_COLORS[0] }}>
-                                  {cp.ownerA.map(y => `${y.year}${y.cost ? ` $${y.cost}` : ''}`).join(', ')}
+                                  {cp.ownerA.map((y, yi) => (
+                                    <span key={yi}>
+                                      {yi > 0 && ', '}
+                                      {y.year}
+                                      {y.cost ? ` $${y.cost}` : y.draftType === 'snake' ? <span className="text-text-muted text-[9px] ml-0.5">snake</span> : ' $—'}
+                                    </span>
+                                  ))}
                                 </span>
                                 <span className="text-text-secondary">|</span>
                                 <span style={{ color: COMPARE_COLORS[1] }}>
-                                  {cp.ownerB.map(y => `${y.year}${y.cost ? ` $${y.cost}` : ''}`).join(', ')}
+                                  {cp.ownerB.map((y, yi) => (
+                                    <span key={yi}>
+                                      {yi > 0 && ', '}
+                                      {y.year}
+                                      {y.cost ? ` $${y.cost}` : y.draftType === 'snake' ? <span className="text-text-muted text-[9px] ml-0.5">snake</span> : ' $—'}
+                                    </span>
+                                  ))}
                                 </span>
                               </div>
                             </div>

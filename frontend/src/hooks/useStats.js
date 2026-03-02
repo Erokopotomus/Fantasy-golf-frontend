@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import api from '../services/api'
 
-export const useStats = () => {
+export const useStats = (userId) => {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -11,7 +11,26 @@ export const useStats = () => {
       setLoading(true)
       setError(null)
 
-      // Derive stats from leagues data
+      // Try ManagerProfile aggregate first (includes imported league history)
+      if (userId) {
+        try {
+          const profile = await api.getManagerProfile(userId)
+          const agg = profile?.aggregate
+          if (agg) {
+            setStats({
+              activeLeagues: agg.totalLeagues || 0,
+              totalPoints: agg.totalPoints || undefined,
+              bestFinish: agg.bestFinish || null,
+              winRate: agg.winPct != null ? Math.round(agg.winPct * 100) : undefined,
+            })
+            return
+          }
+        } catch {
+          // Fall through to leagues-derived stats
+        }
+      }
+
+      // Fallback: derive stats from leagues data (on-platform only)
       const data = await api.getLeagues()
       const leagues = data.leagues || data || []
 
@@ -21,7 +40,6 @@ export const useStats = () => {
         return sum + teamPts
       }, 0)
 
-      // Find best finish (lowest rank across leagues)
       let bestFinish = null
       leagues.forEach(l => {
         if (l.userRank && (!bestFinish || l.userRank < bestFinish)) {
@@ -29,7 +47,6 @@ export const useStats = () => {
         }
       })
 
-      // Win rate from team records
       let totalWins = 0
       let totalGames = 0
       leagues.forEach(l => {
@@ -49,7 +66,6 @@ export const useStats = () => {
       })
     } catch (err) {
       setError(err.message)
-      // Fallback to zeros if API fails
       setStats({
         activeLeagues: 0,
         totalPoints: undefined,
@@ -59,7 +75,7 @@ export const useStats = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     fetchStats()

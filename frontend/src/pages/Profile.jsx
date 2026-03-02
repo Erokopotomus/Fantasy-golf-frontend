@@ -9,7 +9,7 @@ import ImageUpload from '../components/common/ImageUpload'
 
 const Profile = () => {
   const { user, updateUser } = useAuth()
-  const { stats, loading: statsLoading } = useStats()
+  const { stats, loading: statsLoading } = useStats(user?.id)
   const [isEditing, setIsEditing] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)

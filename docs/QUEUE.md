@@ -1,0 +1,228 @@
+# Clutch Loop — Task Queue
+
+> **How this works:** Cowork adds items as `TODO` with full prompts. Claude Code works them in order. Cowork verifies in Chrome. Nothing gets deleted — this is the running log.
+>
+> **For Claude Code — READ THIS FIRST:**
+> 1. Work through `TODO` items top to bottom. Do not skip or reorder.
+> 2. Each item has a self-contained prompt under **Prompt:** — read and execute exactly as written.
+> 3. **When you finish an item**, update it in this file:
+>    - Change `**Status:** \`TODO\`` to `**Status:** \`DONE\``
+>    - Add a `**Completed:**` line right after Status with: date, one-line summary of what you did, and files changed.
+>    - Example:
+>      ```
+>      **Status:** `DONE`
+>      **Completed:** 2026-03-02 — Added HistoricalSeason aggregation to computeManagerProfiles(). Files: analyticsAggregator.js
+>      ```
+> 4. If an item is blocked or you hit an issue, change status to `BLOCKED` and add a `**Blocked:**` line explaining why.
+> 5. Commit and deploy after each item (or batch small items together).
+> 6. Then move to the next `TODO` item.
+
+---
+
+## QUEUE
+
+### 001 — Commit Cowork Edits (NaN% + Username)
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Committed and pushed NaN% accuracy fix in ManagerProfile.jsx and username display fix in Profile.jsx. Files: ManagerProfile.jsx, Profile.jsx (commit 5535c81)
+**Priority:** Quick win
+**Prompt:**
+Commit and deploy the changes in `frontend/src/pages/ManagerProfile.jsx` and `frontend/src/pages/Profile.jsx`.
+
+Changes already made by Cowork:
+1. **ManagerProfile.jsx line 658:** Added null check for `accuracyRate` — shows "—" instead of "NaN%" when user has 0 predictions. Changed `${(reputation.accuracyRate * 100).toFixed(1)}%` to `reputation.totalPredictions > 0 ? ${(reputation.accuracyRate * 100).toFixed(1)}% : '—'`
+2. **Profile.jsx lines 144-145:** Changed condition to check `(user?.username || formData.username)` instead of just `user?.username` so the username displays correctly even if auth context sync is delayed.
+
+These are small, surgical fixes. No other files touched.
+
+---
+
+### 002 — ManagerProfile Lifetime Stats All Zeros
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Extended computeManagerProfiles() to aggregate HistoricalSeason records (wins/losses/ties/championships/points/standings). Builds per-sport and aggregate (sportId=null) profiles. Handles users with only imported history, both, or only on-platform. Files: analyticsAggregator.js (commit b875880)
+**Priority:** High — biggest visible data bug
+**Prompt:**
+The manager profile page (`/manager/:id`) shows 0 Leagues, 0 Wins, 0 Championships, 0% Win Rate for all users. The Lifetime Stats section and By Sport section also show all zeros. The user has 4 leagues and 17 imported BroMontana seasons with full win/loss/championship data.
+
+**Root cause:** `computeManagerProfiles()` in `backend/src/services/analyticsAggregator.js` (~line 455) only aggregates from `TeamSeason` records (active on-platform seasons). It completely ignores `HistoricalSeason` records from imports. The `ManagerProfile` model is meant to be lifetime career stats.
+
+Meanwhile, `backend/src/services/clutchRatingService.js` DOES aggregate HistoricalSeason data correctly — the Clutch Rating shows 61 based on 17 seasons. These two services are out of sync.
+
+**The API response confirms it:** `GET /api/managers/:userId/profile` returns `"aggregate": null` and `bySport` shows Golf with `totalLeagues: 1, totalSeasons: 1, wins: 0`.
+
+**Fix:** Extend `computeManagerProfiles()` in `analyticsAggregator.js` to ALSO aggregate `HistoricalSeason` records where the user is a claimed owner (via `ownerUserId` on the HistoricalSeason model, or through the league's owner assignment/alias system).
+
+Specifically:
+1. After the existing TeamSeason aggregation, query HistoricalSeason records for each user
+2. HistoricalSeason has fields like: `wins`, `losses`, `ties`, `championships` (or `finishPosition`), `totalPoints`, `leagueId`, `year`
+3. Merge the historical totals into the same ManagerProfile upsert — add historical wins/losses/seasons/leagues to the on-platform ones
+4. The aggregate ManagerProfile (`sportId = null`) should sum across ALL sources
+5. The per-sport ManagerProfile should also include historical data for the correct sport
+
+**Rules:**
+- Only modify `backend/src/services/analyticsAggregator.js`
+- Do NOT touch `clutchRatingService.js` — it already works correctly
+- Do NOT change the ManagerProfile schema or create new migrations
+- Do NOT change the route handler in `managerAnalytics.js`
+- Check the HistoricalSeason model in `schema.prisma` to see exact field names before writing queries
+- Handle users with ONLY imported history (no TeamSeason records) — they should still get a ManagerProfile
+- Handle users with BOTH imported and on-platform data — totals should combine
+- Add a comment like `// Include imported league history (HistoricalSeason)` where the new logic starts
+- After deploying, verify: `GET /api/managers/cml8xo2960000ny2th1t4z5sd/profile` should return non-null aggregate with ~134 wins, ~92 losses, 1 tie, 17 seasons for Eric
+
+---
+
+### 003 — Draft Comparison Modal Body Scroll Lock
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Added useEffect that sets document.body.style.overflow='hidden' when showH2HModal is true, restores on close/unmount. Modal content already has overflow-y-auto. Files: LeagueVault.jsx
+**Priority:** Medium — UX bug
+**Prompt:**
+In the League Vault Profiles tab, clicking "Compare Drafts" opens a modal. When scrolling inside this modal, the background page also scrolls. The modal content is long (stat cards + radar chart + 45+ common picks), so users scroll a lot and the page behind jumps around.
+
+Find the Draft Comparison modal component (search for "Draft Comparison" or "Compare Drafts" in `frontend/src/`). When the modal opens, add `document.body.style.overflow = 'hidden'`. When it closes, restore `document.body.style.overflow = ''`. Use a useEffect cleanup.
+
+```jsx
+useEffect(() => {
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+  }
+  return () => {
+    document.body.style.overflow = ''
+  }
+}, [isOpen])
+```
+
+**Rules:**
+- Only touch the component that renders the Draft Comparison modal
+- Make sure the modal itself still scrolls (`overflow-y: auto` on the modal content)
+- Make sure body scroll is restored on unmount AND on close
+
+---
+
+### 004 — Draft DNA Radar Chart Too Small/Flat
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Increased chart size 240→300px, radius 0.35→0.36, replaced Keepers axis with K (kicker), bumped fill opacity 0.15→0.2 and stroke 2→2.5, increased label font 10→12 and offset 1.2→1.25 for readability. Files: LeagueVault.jsx, useDraftIntelligence.js
+**Priority:** Medium — chart unreadable
+**Prompt:**
+The "Draft DNA" radar chart in the Draft Comparison modal (League Vault > Profiles > Compare Drafts) is rendering too small and compressed. Only 3 of the expected 5-6 axis labels are visible (QB, TE, WR). The RB axis label is missing. The chart is so squished that the polygons look like a flat horizontal line.
+
+Search for "Draft DNA" or "DRAFT DNA" in the frontend. Also check `SgRadarChart.jsx` or a similar custom SVG radar component.
+
+**Fix:**
+1. Increase the chart size — at least 250x250px, ideally 300x300
+2. Ensure ALL position axis labels render and are visible (QB, RB, WR, TE, K, and optionally DST)
+3. The polygon shapes should have enough separation to distinguish overlapping owners (fill opacity, stroke width, or slight visual offset)
+4. Add the missing axis labels — especially RB which is the largest allocation
+
+**Rules:**
+- Only modify the Draft Comparison component and/or its radar chart
+- Don't change the SgRadarChart used elsewhere unless it's the same shared component
+- Keep the orange/green color scheme for Owner A vs Owner B
+
+---
+
+### 005 — Common Picks Missing Position Badges
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Enhanced resolve-positions endpoint to also check yahoo_player_cache as fallback for retired/older players not in canonical Player table. Sleeper-seeded cache has ~6700 players with positions including retired ones. Files: imports.js
+**Priority:** Low — data polish
+**Prompt:**
+In the Draft Comparison Common Picks list, older/retired players (pre-~2015) show no position badge. Examples: Greg Jennings, Roddy White, Calvin Johnson, Adrian Peterson — all missing. Newer players like Tyreek Hill (WR), Derrick Henry (RB) show them fine.
+
+Find the component rendering "COMMON PICKS" in the Draft Comparison. The simplest fix: the draft pick data (`draftData.picks`) already stores a `position` field from the original Yahoo import. Use that directly instead of trying to match to canonical Player records.
+
+**Rules:**
+- Only touch the Draft Comparison component
+- Don't add new API calls or DB queries — use data already available in the draft picks
+- If position isn't on the pick data, fall back gracefully (no badge, not an error)
+
+---
+
+### 006 — Common Picks Snake Draft Label
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Added draftType to common picks year data. Snake draft years with no cost show "snake" in muted 9px text. Auction years with null cost show "$—". Files: LeagueVault.jsx, useDraftIntelligence.js
+**Priority:** Low — polish
+**Prompt:**
+In Draft Comparison Common Picks, some entries show just a year without a dollar amount: `Greg Jennings: 2011 | 2012 $35`. The bare "2011" looks like missing data. Those are snake draft years (2009, 2011) where no auction values exist.
+
+When a pick has no cost (null or 0), and the season's draft type is 'snake', show a subtle indicator like `2011 snake` in muted text (`text-text-muted text-xs`). If it's an auction year and cost is still null, show `$—` instead.
+
+Check the `draftData` JSON — it has a `type` field ('auction' or 'snake') at the top level.
+
+**Rules:**
+- Only touch the Common Picks rendering in the Draft Comparison component
+- Keep it subtle — small muted text, not a prominent badge
+
+---
+
+### 007 — Auto-Apply Owner Aliases on Reimport
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Added auto-apply step to reimport-season endpoint. After creating new HistoricalSeason records, queries OwnerAlias for the league and renames draftData.picks[].ownerName using the alias map. Files: imports.js (commit f517a2d)
+**Priority:** Medium — data integrity
+**Prompt:**
+When a commissioner reimports a league season, fresh data comes in with raw owner names from Yahoo/Sleeper, wiping out alias merges.
+
+**What exists:**
+1. `owner_aliases` table stores per-league mappings: `ownerName` (raw) → `canonicalName` (merged). Model: `OwnerAlias` in `schema.prisma`.
+2. Reimport endpoint: `POST /api/imports/reimport-season` in `backend/src/routes/imports.js` (~lines 997-1141). Deletes old HistoricalSeason, fetches fresh data, creates new record with raw names.
+3. Normalize endpoint: `POST /api/imports/normalize-draft-owners/:leagueId` (~lines 627-717). Reads aliases, renames `ownerName` in all draftData picks.
+
+**Fix:** After the reimport creates the new HistoricalSeason record, add a step that:
+1. Queries `OwnerAlias` for the league: `await prisma.ownerAlias.findMany({ where: { leagueId } })`
+2. If aliases exist, builds rename map: `{ rawName: canonicalName }`
+3. Applies the rename map to the new HistoricalSeason's `draftData.picks[].ownerName` — same logic as normalize endpoint
+4. Saves the updated draftData
+
+**Rules:**
+- Only touch the reimport flow in `backend/src/routes/imports.js`
+- Do NOT refactor existing code — just add the alias application step after record creation
+- If no aliases exist for the league, skip silently
+- Add comment: `// Auto-apply owner aliases if any exist for this league`
+- No new endpoints, no new migrations, no frontend changes
+
+---
+
+### 008 — Tank Still in 2025 Owner Spending + Mase R 16 Picks
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Created 6 new aliases (Tank→Anthony, Spencer→Spencer H, Nick→Nick Trow, Jake→Jakob, Mason→Mase R, Bradley→bradley) — all were DST picks showing Yahoo short first names. Applied normalization across all seasons (7,842 picks fixed). Tank is now gone from 2025. **Mase R 16 picks finding:** Mase R has 16 picks (including 2 DSTs — Washington $0 + Texans $2), Scott has 14. In a 180-pick/12-team auction each should have 15. The "Mason" DST pick may actually belong to Scott — Eric to verify. Files: database data only (owner_aliases + historicalSeason draftData)
+**Priority:** Medium — data cleanup
+**Prompt:**
+In BroMontana Bowl league vault (Drafts tab, 2025 season), Owner Spending table still shows "Tank" as a separate row with 1 pick/$2. The alias merge should have merged Tank into a canonical owner. Also "Mase R" shows 16 picks while all other owners show 14-15.
+
+**Steps:**
+1. Query the 2025 HistoricalSeason `draftData` for BroMontana league to see if "Tank" still exists in picks array
+2. Check `owner_aliases` table for what Tank maps to — it should have a `canonicalName` entry
+3. If alias exists but wasn't applied to 2025: run the normalize logic or manually update the 2025 draftData
+4. If no alias exists for Tank in this league: determine who Tank should map to and create the alias, then normalize
+5. For Mase R's 16 picks: check raw draftData to verify — is it genuinely 16 picks (maybe picked up a dropped player) or a duplicate entry?
+
+**Rules:**
+- Do NOT delete any data — only rename/merge owner names in draftData
+- Check `owner_aliases` table FIRST before making changes
+- Report findings about the Mase R situation
+
+---
+
+### 009 — Profile Page Stats Card Sync After Fix 002
+**Status:** `DONE`
+**Completed:** 2026-03-01 — useStats hook now accepts optional userId param and fetches ManagerProfile aggregate data (includes imported history) with fallback to leagues-only derivation. Profile.jsx passes user.id. Stats cards now show lifetime data consistent with manager page. Files: useStats.js, Profile.jsx
+**Priority:** Low — verify after 002 deploys
+**Prompt:**
+After Fix 002 (ManagerProfile aggregation) is deployed, verify that the `/profile` page stats cards (Total Points, Best Finish, Win Rate) correctly pull from the updated ManagerProfile data.
+
+Check `frontend/src/pages/Profile.jsx` — find the `useStats()` hook or however the stats cards get their data. The profile page shows 4 stat boxes: Leagues, Total Points, Best Finish, Win Rate.
+
+**Verify:**
+1. Does "Leagues" count include imported leagues or only on-platform?
+2. Where do "Total Points", "Best Finish", "Win Rate" come from? Same `/api/managers/:id/profile` endpoint?
+3. If they use a different data source, that source also needs imported league history
+
+**If broken:** Make Profile page stats cards use ManagerProfile aggregate data (same source as manager page) so both pages show consistent numbers.
+
+---
+
+## DONE
+
+*(Items move here after completion)*
+
+---
+
+*Queue created: 2026-03-02. Maintained by Cowork, executed by Claude Code.*

@@ -389,13 +389,7 @@ export function useDraftIntelligence(history, aliasMap = {}, resolvedPositions =
         b: profileB.positionBreakdown,
       }
 
-      // Radar chart data — 5 axes: QB%, RB%, WR%, TE%, Keeper Usage
-      // Normalize each to 0-100
-      const maxKeeperRate = Math.max(
-        profileA.totalPicks > 0 ? (profileA.totalKeepers / profileA.totalPicks * 100) : 0,
-        profileB.totalPicks > 0 ? (profileB.totalKeepers / profileB.totalPicks * 100) : 0,
-        1
-      )
+      // Radar chart data — 5 axes: QB%, RB%, WR%, TE%, K%
       const radarData = [
         {
           name: ownerA,
@@ -403,7 +397,7 @@ export function useDraftIntelligence(history, aliasMap = {}, resolvedPositions =
           rb: profileA.positionBreakdown.RB || 0,
           wr: profileA.positionBreakdown.WR || 0,
           te: profileA.positionBreakdown.TE || 0,
-          keepers: profileA.totalPicks > 0 ? (profileA.totalKeepers / profileA.totalPicks * 100) / maxKeeperRate * 100 : 0,
+          k: profileA.positionBreakdown.K || 0,
         },
         {
           name: ownerB,
@@ -411,7 +405,7 @@ export function useDraftIntelligence(history, aliasMap = {}, resolvedPositions =
           rb: profileB.positionBreakdown.RB || 0,
           wr: profileB.positionBreakdown.WR || 0,
           te: profileB.positionBreakdown.TE || 0,
-          keepers: profileB.totalPicks > 0 ? (profileB.totalKeepers / profileB.totalPicks * 100) / maxKeeperRate * 100 : 0,
+          k: profileB.positionBreakdown.K || 0,
         },
       ]
 
@@ -426,7 +420,7 @@ export function useDraftIntelligence(history, aliasMap = {}, resolvedPositions =
           }
         }
         for (const [year, data] of Object.entries(allDraftData)) {
-          const { picks, teams } = data
+          const { picks, teams, type: draftType } = data
           const rosterMap = {}
           for (let i = 0; i < teams.length; i++) {
             rosterMap[i + 1] = teams[i].ownerName || teams[i].teamName
@@ -437,7 +431,7 @@ export function useDraftIntelligence(history, aliasMap = {}, resolvedPositions =
               : (pick.rosterId != null && rosterMap[pick.rosterId] === ownerName)
             if (resolved && pick.playerName) {
               if (!playerMap[pick.playerName]) playerMap[pick.playerName] = []
-              playerMap[pick.playerName].push({ year, cost: pick.cost, position: pick.positionGroup })
+              playerMap[pick.playerName].push({ year, cost: pick.cost, position: pick.positionGroup, draftType: draftType || 'snake' })
             }
           }
         }
