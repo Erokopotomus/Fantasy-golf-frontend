@@ -1584,6 +1584,30 @@ After deploying, navigate to `/prove-it` → "Golf Slate" tab. You should see th
 
 ---
 
+### 059 — Commit: Multi-Email Invite UI on League Settings Members Tab
+**Status:** `DONE`
+**Priority:** URGENT — Eric is inviting 4 friends right now
+**Prompt:**
+Cowork already made the edits in `frontend/src/pages/LeagueSettings.jsx`. Just commit and deploy.
+
+**Changes already made (2 edits):**
+
+1. **New state vars (line ~40):** Added `inviteEmails` (array of strings, default `['']`) and `sendingInvites` (boolean) state variables.
+
+2. **Multi-email invite section (lines ~1195-1260):** Replaced the single email input + "Send Invite" button with a dynamic multi-row system:
+   - Each row has an email input field and an X button to remove it (X only shows when there's more than 1 row)
+   - A gold "+ Add another" link below the rows adds a new empty input
+   - The "Send Invite" button updates its label dynamically — shows "Send 4 Invites" when there are 4 emails filled in
+   - On click, sends all non-empty emails sequentially to `POST /leagues/:id/invite-email`
+   - Shows a summary toast: "4 invites sent" (or "3 invites sent (1 failed)")
+   - Resets to a single empty input on success
+   - Button shows "Sending..." and is disabled during the send loop
+
+**Files changed:**
+- `frontend/src/pages/LeagueSettings.jsx` (2 edits: state vars at top, email invite section)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

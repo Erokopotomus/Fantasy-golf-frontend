@@ -37,6 +37,8 @@ const LeagueSettings = () => {
   const [deleting, setDeleting] = useState(false)
 
   const [saving, setSaving] = useState(false)
+  const [inviteEmails, setInviteEmails] = useState([''])
+  const [sendingInvites, setSendingInvites] = useState(false)
 
   const [settings, setSettings] = useState({
     name: league?.name || '',
@@ -1194,32 +1196,81 @@ const LeagueSettings = () => {
             {/* Email Invite */}
             <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
               <p className="text-text-muted text-xs mb-2">INVITE BY EMAIL</p>
-              <form onSubmit={async (e) => {
-                e.preventDefault()
-                const input = e.target.elements.inviteEmail
-                const email = input.value.trim()
-                if (!email) return
-                try {
-                  await api.request(`/leagues/${leagueId}/invite-email`, {
-                    method: 'POST',
-                    body: JSON.stringify({ email }),
-                  })
-                  notify.success('Invite Sent', `Email sent to ${email}`)
-                  input.value = ''
-                } catch (err) {
-                  notify.error('Failed', err.message || 'Could not send invite email')
-                }
-              }} className="flex gap-2">
-                <input
-                  name="inviteEmail"
-                  type="email"
-                  placeholder="friend@email.com"
-                  className="flex-1 p-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
-                />
-                <Button type="submit" variant="secondary" className="shrink-0">
-                  Send Invite
-                </Button>
-              </form>
+              <div className="space-y-2">
+                {(inviteEmails || ['']).map((email, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        const updated = [...(inviteEmails || [''])]
+                        updated[idx] = e.target.value
+                        setInviteEmails(updated)
+                      }}
+                      placeholder="friend@email.com"
+                      className="flex-1 p-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                    />
+                    {(inviteEmails || ['']).length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...(inviteEmails || [''])]
+                          updated.splice(idx, 1)
+                          setInviteEmails(updated)
+                        }}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg text-text-muted hover:text-live-red hover:bg-live-red/10 transition-colors shrink-0 self-center"
+                        title="Remove"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setInviteEmails([...(inviteEmails || ['']), ''])}
+                    className="flex items-center gap-1.5 text-sm text-gold hover:text-gold/80 transition-colors py-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add another
+                  </button>
+                  <div className="flex-1" />
+                  <Button
+                    variant="secondary"
+                    className="shrink-0"
+                    disabled={sendingInvites}
+                    onClick={async () => {
+                      const emails = (inviteEmails || ['']).map(e => e.trim()).filter(e => e)
+                      if (emails.length === 0) return
+                      setSendingInvites(true)
+                      let sent = 0
+                      let failed = 0
+                      for (const email of emails) {
+                        try {
+                          await api.request(`/leagues/${leagueId}/invite-email`, {
+                            method: 'POST',
+                            body: JSON.stringify({ email }),
+                          })
+                          sent++
+                        } catch {
+                          failed++
+                        }
+                      }
+                      setSendingInvites(false)
+                      if (sent > 0) notify.success('Invites Sent', `${sent} invite${sent > 1 ? 's' : ''} sent${failed > 0 ? ` (${failed} failed)` : ''}`)
+                      if (sent === 0 && failed > 0) notify.error('Failed', 'Could not send invites')
+                      if (sent > 0) setInviteEmails([''])
+                    }}
+                  >
+                    {sendingInvites ? 'Sending...' : `Send ${(inviteEmails || ['']).filter(e => e.trim()).length > 1 ? `${(inviteEmails || ['']).filter(e => e.trim()).length} Invites` : 'Invite'}`}
+                  </Button>
+                </div>
+              </div>
             </div>
           </Card>
 
