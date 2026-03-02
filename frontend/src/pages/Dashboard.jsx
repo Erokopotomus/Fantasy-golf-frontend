@@ -12,6 +12,8 @@ import LeagueCard from '../components/dashboard/LeagueCard'
 import ActivityFeed from '../components/dashboard/ActivityFeed'
 import api from '../services/api'
 import { buildLabUrl } from '../utils/labBridge'
+import DashboardRatingWidget from '../components/dashboard/DashboardRatingWidget'
+import NeuralCluster from '../components/common/NeuralCluster'
 
 const LeagueCardSkeleton = () => (
   <Card className="animate-pulse">
@@ -110,6 +112,7 @@ const Dashboard = () => {
             </h1>
             {briefing ? (
               <div className="flex items-center gap-2">
+                <NeuralCluster size="sm" intensity="calm" />
                 <p className="text-sm text-text-secondary leading-relaxed">
                   {briefing.headline}
                   {briefing.cta && (
@@ -196,6 +199,9 @@ const Dashboard = () => {
               </div>
             )
           })()}
+
+          {/* ── Clutch Rating ── */}
+          <DashboardRatingWidget />
 
           {/* ── My Leagues ── */}
           <div>

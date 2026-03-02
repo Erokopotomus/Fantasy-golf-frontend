@@ -265,6 +265,21 @@ const Standings = () => {
           </div>
         </div>
       )}
+      {/* Vault CTA */}
+      <Link
+        to={`/leagues/${leagueId}/vault`}
+        className="flex items-center justify-center gap-2 mt-6 py-3 px-4 rounded-xl border border-[var(--crown)]/20 bg-[var(--crown)]/5 hover:bg-[var(--crown)]/10 transition-colors group"
+      >
+        <svg className="w-4 h-4 text-[var(--crown)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span className="text-sm font-editorial italic text-[var(--crown)] group-hover:text-[var(--crown-bright)]">
+          See full league history in the Vault
+        </span>
+        <svg className="w-3.5 h-3.5 text-[var(--crown)]/50 group-hover:text-[var(--crown)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </Link>
       <LeagueChat leagueId={leagueId} pageContext="standings" />
     </div>
   )

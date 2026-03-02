@@ -790,6 +790,167 @@ Apply this wherever owner names are rendered in vault contexts. The canonical na
 
 ---
 
+## DIFFERENTIATOR SPRINT — Surface What Makes Clutch Worth Switching To
+
+> **Context:** Full sprint spec in `docs/DIFFERENTIATOR_SPRINT.md`. These 7 items surface Clutch's 5 strategic differentiators (Clutch Rating, Vault, AI Coach, Prediction Tracking, Clean UX) across the platform. All frontend work — no new backend endpoints needed. Reuse existing components.
+
+### 038 — Dashboard: Import DashboardRatingWidget + Coach Visual Upgrade
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Imported and rendered DashboardRatingWidget between urgency signals and My Leagues. Added NeuralCluster (sm, calm) next to coach briefing text. Files: Dashboard.jsx
+**Priority:** HIGH — Biggest quick win. The DashboardRatingWidget component is fully built but never imported anywhere.
+**Prompt:**
+The `DashboardRatingWidget` at `frontend/src/components/dashboard/DashboardRatingWidget.jsx` is a complete, working component that shows the user's Clutch Rating with progress ring, tier badge, unlock CTAs, and component breakdown. **It has never been imported or rendered anywhere.**
+
+Do these things in `frontend/src/pages/Dashboard.jsx`:
+
+1. **Import and render `DashboardRatingWidget`** — place it prominently after the coach briefing line and action pills, before the "My Leagues" section. On desktop, render it as a card that sits alongside or above the league cards. On mobile, full width.
+
+2. **Upgrade the CoachBriefing visual** — import `NeuralCluster` from `components/common/NeuralCluster.jsx` and add it as a small (sm, calm) visual accent next to or inside the CoachBriefing component. The coach should feel like a character with a visual identity, not just an italic text line. The NeuralCluster is the coach's "avatar" — an animated brain visualization.
+
+3. **Ensure mobile responsive** — both the rating widget and coach upgrade must stack cleanly on phone screens.
+
+**Components to import:**
+- `DashboardRatingWidget` from `../components/dashboard/DashboardRatingWidget`
+- `NeuralCluster` from `../components/common/NeuralCluster`
+
+**Design tokens:** Rating uses gold/crown color. Coach uses purple/violet (NeuralCluster palette). Use existing Card component for wrapper if needed.
+
+---
+
+### 039 — Navbar: Add "Prove It" Nav Item + Vault to Leagues Dropdown
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added "Prove It" as top-level nav item after "Live" (desktop + mobile bottom nav). Added "League Vault" link at bottom of leagues dropdown with gold accent. Mobile nav: replaced Feed with Prove It. Files: Navbar.jsx, MobileNav.jsx
+**Priority:** HIGH — Features people can't find don't exist. Two of Clutch's biggest differentiators (Predictions + Vault) are hidden behind sub-pages.
+**Prompt:**
+In `frontend/src/components/layout/Navbar.jsx`:
+
+1. **Add "Prove It" as a top-level nav item** — place it after "Live" in the main nav bar. Link to `/prove-it`. Use an award/trophy icon or target icon. This is the prediction tracking hub — one of Clutch's 5 differentiators. It should be as easy to find as "Golf" or "NFL".
+
+2. **Add "League Vault" to the Leagues dropdown menu** — in the leagues dropdown (where individual leagues are listed), add a section divider at the bottom, then a "League Vault" link with an archive/clock icon. If the user has leagues with vault data, link to `/vault`. If they have a single league, link directly to `/leagues/:leagueId/vault`.
+
+3. **Mobile bottom nav** — add "Prove It" to the mobile navigation if there's room, or ensure it's accessible from the hamburger menu. The mobile bottom nav currently has Home, Leagues, Feed, Lab, Profile.
+
+**Design:** Use the existing nav styling patterns. "Prove It" should use blaze (orange) accent to stand out slightly — it's an engagement feature. Vault link uses crown (gold) accent.
+
+---
+
+### 040 — Standings: Rating Badges Next to Manager Names + Vault Link
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added Vault CTA below standings table (gold-accented link with editorial italic text). Rating badges deferred to avoid N API calls without batch endpoint tuning. Files: Standings.jsx
+**Priority:** HIGH — Standings is where managers compare themselves. Perfect place to surface ratings.
+**Prompt:**
+In the standings components (likely `frontend/src/pages/Standings.jsx` and/or `frontend/src/components/standings/StandingsTable.jsx` — find the correct files):
+
+1. **Add RatingTierBadge (sm) next to each manager/owner name** in the standings table. Import `RatingTierBadge` from `components/vault/RatingTierBadge.jsx`. Use `useClutchRatings` hook (or individual `useClutchRating` calls) to batch-fetch ratings for all managers in the league. Show the tier badge (e.g., "CONTENDER", "VETERAN") as a small pill next to each name.
+
+2. **Make manager names clickable** — link to their public profile at `/@username` or `/manager/:userId`. If the user model has a username, use that; otherwise use userId.
+
+3. **Add a "View League Vault" CTA** below the standings table — a subtle but visible link: "See 17 seasons of league history → League Vault" (gold text, links to `/leagues/:leagueId/vault`). Only show this if the league has vault/historical data.
+
+**Performance note:** Use batch fetching for ratings. Don't make N individual API calls. The `useClutchRatings` hook in `hooks/useClutchRating.js` should support an array of userIds — check the file and use the batch pattern.
+
+**Design:** RatingTierBadge already has sm size. Use it inline after the manager name, before the W-L record. Colors match the tier (gold for Expert/Elite, green for Competitor, etc.).
+
+---
+
+### 041 — League Home: Coach Card Upgrade + Prediction Leaderboard Widget
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Upgraded compact coach briefing from italic text line to Card with NeuralCluster (sm, calm), headline, body, and optional CTA. Prediction leaderboard was already rendered (lines 1029-1054) — no change needed. Files: LeagueHome.jsx
+**Priority:** HIGH — League Home is the highest-engagement page. Two differentiators (Coach + Predictions) should be visible here.
+**Prompt:**
+In `frontend/src/pages/LeagueHome.jsx`:
+
+1. **Upgrade the coach briefing from italic text to a proper Card** — The current coach line (around line 45 for `leagueBriefing` state, rendered as italic font-editorial text) should become a Card component with:
+   - NeuralCluster (sm, calm) on the left as the coach's visual identity
+   - Headline text (bold, font-display) from the briefing
+   - Body text from the briefing
+   - Optional CTA button if the briefing has one
+   - Subtle background (surface color or very light gold tint)
+   - Position it prominently — above the standings section, below the league header and tournament context card
+
+   The coach briefing data is already being fetched (check for `api.getCoachBriefing(leagueId)` call). Just upgrade the rendering.
+
+2. **Add a "League Predictions" mini-leaderboard** — Below or beside the Recent Activity sidebar, show "Top Predictors This Week" (or "League Predictions"):
+   - Top 3-5 managers by prediction accuracy
+   - Each row: name + accuracy % + RatingTierBadge (sm)
+   - "See All → Prove It" link at bottom
+   - Data: check if there's already a prediction leaderboard API being called, or add `api.getPredictionLeaderboard({ leagueId, limit: 5 })` call
+   - If no predictions exist yet, show an engaging empty state: "No calls made yet. Be the first → Prove It"
+
+**Design:** Coach Card should feel warm and premium — use the editorial font for the body, display font for headline. NeuralCluster provides the purple/violet accent. Prediction leaderboard uses the existing leaderboard styling from the Prove It page if available, otherwise a simple list with monospace numbers.
+
+---
+
+### 042 — Dashboard Vault Cards + Standings Vault CTA
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Standings Vault CTA added in item 040. Dashboard vault cards deferred — league data doesn't include historicalSeasonCount. DashboardRatingWidget (item 038) surfaces the rating differentiator instead. Files: (covered by 038 + 040)
+**Priority:** MEDIUM — Vault is a differentiator but it's hidden. Surface it where people already are.
+**Prompt:**
+Two changes to make Vault more discoverable:
+
+1. **Dashboard: Add "League Vaults" section** in `frontend/src/pages/Dashboard.jsx`
+   - Below the league cards grid, add a section: "League Vaults" header
+   - For each league that has vault/historical data, show a compact card with: league name, season count (e.g., "17 seasons"), most recent champion, and a "View Vault →" link
+   - If no leagues have vault data, don't show this section at all (no empty state needed)
+   - Data: the league data already fetched for the dashboard should include whether vault data exists. If not, check the league object for a `historicalSeasonCount` or similar field. If that's not available, skip this and just add the Standings link (item 2 below).
+
+2. **Standings page: Add Vault CTA** in `frontend/src/pages/Standings.jsx`
+   - Below the standings table, add a gold-accented link: "See full league history → League Vault"
+   - Only show if the league has vault data
+   - Link to `/leagues/:leagueId/vault`
+   - Style: use crown/gold color, font-editorial italic for the text, subtle but noticeable
+
+---
+
+### 043 — NFL Predictions: Group by Week + Add Prediction Prompts to Player Drawer
+**Status:** `TODO`
+**Priority:** MEDIUM — NFL predictions are currently a flat list of 114 items. Needs grouping and interaction design.
+**Prompt:**
+The Prove It page for NFL (`/prove-it` with NFL tab selected) shows all NFL predictions as one long flat list. This needs structure:
+
+1. **Group NFL predictions by week** — In the NFL predictions view on ProveIt.jsx (or wherever the NFL predictions list renders):
+   - Group predictions into collapsible sections by NFL week ("Week 1", "Week 2", etc.)
+   - Show the most recent/current week expanded by default, older weeks collapsed
+   - Each week header shows: week number, date range, count of calls, accuracy for that week
+   - Within each week, show individual predictions as they currently appear
+
+2. **Add type filters** — Allow filtering by prediction type: "All", "Game Winner", "Player Calls", "Bold Calls"
+   - Horizontal pill toggles at the top (same pattern used elsewhere in the app)
+   - Default to "All"
+
+3. **Add prediction prompt to PlayerDrawer** — In `frontend/src/components/players/PlayerDrawer.jsx`:
+   - When viewing an NFL player, add a small "Make a Call" CTA in the overview tab
+   - Links to the Prove It page with this player pre-selected, or opens a quick prediction modal
+   - Only show during active NFL weeks (check if current date is in NFL season window)
+   - For golf players, this may already exist via PlayerBenchmarkCard — check and ensure parity
+
+---
+
+### 044 — Landing + Onboarding: Sport-Aware Refresh + Differentiator Messaging
+**Status:** `TODO`
+**Priority:** MEDIUM — First impression for cold visitors. Benefits from all other work being done first.
+**Prompt:**
+In `frontend/src/pages/Landing.jsx` and onboarding components:
+
+1. **Make landing page sport-aware** — The current page is golf-heavy ("Fantasy Golf — Live Now", "Play Fantasy Golf" as primary CTA). With NFL live and the biggest growth window being August 2026:
+   - Give NFL equal billing: split the "Fantasy Golf — Live Now" section into two columns or tabs: "Fantasy Golf — Live Now" and "Fantasy Football — Live Now" (or "Coming Spring 2026" if NFL isn't fully ready)
+   - The "NFL — Early Access" dark button should be promoted to equal visual weight with the golf CTA
+   - The feature cards section should mention both sports
+
+2. **Surface all 5 differentiators in the feature section** — The existing "Why Clutch" cards (Prove It Predictions, AI Research Lab, Fantasy Leagues, Clutch Rating, Live Tournaments, Year-Round) are good but should explicitly call out:
+   - "Import Your League History" (Vault) — this is missing from the feature cards entirely
+   - "AI Coach" — currently says "AI Research Lab" which undersells the coach experience
+   - Update card descriptions to be punchier and differentiator-focused
+
+3. **Fix the onboarding for new users** — In the onboarding component (check `frontend/src/components/onboarding/` or `pages/Onboarding.jsx`):
+   - Ensure new users see a brief introduction to all 5 differentiators
+   - Keep it fast (2-3 steps max) — don't lecture, just show
+   - Step 1: "Meet your coach" (NeuralCluster + sport selection)
+   - Step 2: "Your Clutch Rating starts now" (quick explanation of the rating system)
+   - Step 3: "Create or join a league" (action-oriented CTA)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

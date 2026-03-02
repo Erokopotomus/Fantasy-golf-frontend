@@ -608,13 +608,28 @@ const LeagueHome = () => {
             </div>
           )}
 
-          {/* Coach Line (non-draft states) */}
+          {/* Coach Briefing Card (non-draft states) */}
           {leagueBriefing && !(hasDraft && !isOneAndDone && isDraftScheduledOrInProgress) && (
-            <div className="mb-4 flex items-center gap-2 px-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
-              <p className="text-sm text-text-secondary italic font-editorial">
-                {leagueBriefing.headline}
-              </p>
+            <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-500/5 border border-purple-500/15">
+              <NeuralCluster size="sm" intensity="calm" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-display font-semibold text-text-primary leading-snug">
+                  {leagueBriefing.headline}
+                </p>
+                {leagueBriefing.body && (
+                  <p className="text-xs text-text-secondary mt-0.5 font-editorial italic truncate">
+                    {leagueBriefing.body}
+                  </p>
+                )}
+              </div>
+              {leagueBriefing.cta && (
+                <Link
+                  to={leagueBriefing.cta.to}
+                  className="text-xs font-mono font-semibold text-purple-400 hover:text-purple-300 transition-colors shrink-0"
+                >
+                  {leagueBriefing.cta.label} &rarr;
+                </Link>
+              )}
             </div>
           )}
 

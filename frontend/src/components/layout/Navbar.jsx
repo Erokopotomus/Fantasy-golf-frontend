@@ -217,36 +217,48 @@ const LeagueDropdown = ({ groupedLeagues, hasLeagues, leaguesLoading, location, 
               </Link>
             </div>
           ) : (
-            <div className="max-h-64 overflow-y-auto">
-              {groupedLeagues.map(({ sport, leagues }) => {
-                const config = leagueSportConfig[sport] || { label: sport, dot: 'bg-white/40', text: 'text-white/40' }
-                return (
-                  <div key={sport}>
-                    <div className="px-3.5 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/30">
-                      {config.label}
+            <>
+              <div className="max-h-64 overflow-y-auto">
+                {groupedLeagues.map(({ sport, leagues }) => {
+                  const config = leagueSportConfig[sport] || { label: sport, dot: 'bg-white/40', text: 'text-white/40' }
+                  return (
+                    <div key={sport}>
+                      <div className="px-3.5 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-white/30">
+                        {config.label}
+                      </div>
+                      {leagues.map(league => {
+                        const isActive = location.pathname.startsWith(`/leagues/${league.id}`)
+                        return (
+                          <Link
+                            key={league.id}
+                            to={`/leagues/${league.id}`}
+                            onClick={() => setOpen(false)}
+                            className={`flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
+                              isActive
+                                ? `${config.text} bg-white/10`
+                                : 'text-white/60 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
+                            <span className="truncate">{league.name}</span>
+                          </Link>
+                        )
+                      })}
                     </div>
-                    {leagues.map(league => {
-                      const isActive = location.pathname.startsWith(`/leagues/${league.id}`)
-                      return (
-                        <Link
-                          key={league.id}
-                          to={`/leagues/${league.id}`}
-                          onClick={() => setOpen(false)}
-                          className={`flex items-center gap-2.5 px-3.5 py-2 text-sm transition-colors ${
-                            isActive
-                              ? `${config.text} bg-white/10`
-                              : 'text-white/60 hover:text-white hover:bg-white/10'
-                          }`}
-                        >
-                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
-                          <span className="truncate">{league.name}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+              <Link
+                to="/vault"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium transition-colors border-t border-white/5 text-gold/70 hover:text-gold hover:bg-gold/10"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                League Vault
+              </Link>
+            </>
           )}
         </div>
       )}
@@ -406,6 +418,20 @@ const Navbar = () => {
                     </span>
                   )}
                   Live
+                </Link>
+                <Link
+                  to="/prove-it"
+                  className={`
+                    px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
+                    ${location.pathname.startsWith('/prove-it')
+                      ? 'text-white bg-white/15'
+                      : 'text-white/60 hover:text-white hover:bg-white/10'}
+                  `}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Prove It
                 </Link>
                 <div className="ml-2">
                   <SearchButton />
