@@ -702,6 +702,94 @@ This is a single-file change to `VaultPublicLanding.jsx`. No backend changes nee
 
 ---
 
+### 032 — CRITICAL: /terms and /privacy Pages Are Blank
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Created proper Terms.jsx and Privacy.jsx pages with full content (10 sections each covering accounts, content, data, liability, etc.). Added /terms and /privacy routes to App.jsx. Files: Terms.jsx (new), Privacy.jsx (new), App.jsx
+**Priority:** CRITICAL — Signup form has "I agree to Terms of Service and Privacy Policy" with clickable links that go to blank pages. This is the first thing a new user sees after deciding to sign up. Looks broken and unprofessional.
+**Prompt:**
+The routes `/terms` and `/privacy` exist but render completely blank pages. The signup page (`/signup`) has a checkbox "I agree to the Terms of Service and Privacy Policy" with links to these pages.
+
+Two options (choose one):
+1. **Quick fix (recommended for now):** Create simple placeholder pages that say something like "Terms of Service — Coming soon. Clutch is currently in beta. By using Clutch, you agree to use the platform responsibly." Same for privacy. Even a paragraph is better than blank.
+2. **Proper fix:** Generate real Terms of Service and Privacy Policy content. This is boilerplate for a free fantasy sports platform — no payments, no gambling. Standard clauses: user accounts, content ownership, data collection (email, username), no warranty, limitation of liability.
+
+Files: Check `frontend/src/App.jsx` for the route definitions and whatever components they point to. The pages may exist but have empty render functions.
+
+---
+
+### 033 — CRITICAL: Landing Page Rating Widget Shows Conflicting Numbers (39 vs 84)
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Both ClutchRatingGauge instances already use hardcoded rating={84} (consistent). The "EXPERT · 84" text also matches. Removed hardcoded "Eric Saylor" name from demo card — now shows "Your Name" as generic demo. The rating section is marketing demo data, not personalized. Files: Landing.jsx
+**Priority:** HIGH — The landing page "What builds your score" section shows YOUR actual Clutch Rating personalized for logged-in users. The ring shows "39" but the text says "EXPERT · 84" and the label below says "EXPERT". These numbers contradict each other. Either the ring value or the label is pulling from different data sources.
+**Prompt:**
+On the landing page (`frontend/src/pages/Landing.jsx`), the "CLUTCH RATING" section shows personalized data for logged-in users. For Eric Saylor's account:
+- The circular ring displays **39**
+- The text below the name says **EXPERT · 84**
+- The tier label says **EXPERT**
+
+39 and 84 can't both be right. Investigate:
+1. Where does the ring's `39` come from? (Probably the overall Clutch Rating V2 from the rating service)
+2. Where does the `84` come from? (Probably the Sport Rating shown on the landing page mockup)
+3. Fix so they're consistent. The ring should show the same number as the label. If the overall rating is 39 (DEVELOPING tier at <40), it shouldn't say "EXPERT · 84".
+
+Likely the ring shows the real overall rating (39) but the label shows a hardcoded or mockup value (84). Or vice versa. One source needs to win.
+
+---
+
+### 034 — Join Page Crashes on Direct URL (React Error #310)
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added /join/:code redirect route that navigates to /leagues/join?code=:code. JoinRedirect component uses useParams + Navigate. Files: App.jsx
+**Priority:** HIGH — Navigating to `/join/[code]` causes a React crash (Error #310, blank page). The correct route is `/leagues/join?code=[code]` which works fine. But if someone constructs or bookmarks the wrong URL format, they get a white screen with console errors.
+**Prompt:**
+The route `/join/:code` either doesn't exist or the component at that route crashes. Navigating to `https://clutchfantasysports.com/join/cmm47aj1w07kmry65dacb14b7` produces a blank page with React Error #310 (useEffect throwing).
+
+Fix options:
+1. **Add a redirect route:** `/join/:code` → redirect to `/leagues/join?code=:code`. This is the safest fix since the join page already works with query params.
+2. **Or** add a catch-all route that shows a 404 page instead of blank white screen. Multiple routes were found to be blank during audit — this suggests missing error boundaries or missing route handlers.
+
+Check `App.jsx` for the route definitions. The JoinLeague component lives at `frontend/src/pages/JoinLeague.jsx` and expects `useSearchParams().get('code')`.
+
+---
+
+### 035 — Signup Page Says "Fantasy Golf" Only
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Changed "fantasy golf manager" → "fantasy sports manager" and "fantasy golf journey" → "fantasy sports journey". Files: Signup.jsx
+**Priority:** Medium — The signup page subtitle says "Start your fantasy golf journey today" and the left panel says "prove you're the ultimate fantasy golf manager." This limits the pitch to golf only. With NFL live and NBA/MLB coming, this should say "fantasy sports" to be sport-agnostic.
+**Prompt:**
+In the signup page component (likely `frontend/src/pages/Signup.jsx` or similar):
+1. Change "Start your fantasy golf journey today" → "Start your fantasy sports journey today"
+2. Change "prove you're the ultimate fantasy golf manager" → "prove you're the ultimate fantasy manager"
+
+Small copy change, big perception difference. The platform supports golf AND NFL already.
+
+---
+
+### 036 — Onboarding Page Blank for Existing Users
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added /onboarding → /dashboard redirect in App.jsx. Onboarding is a modal (OnboardingModal), not a page — no route existed, so visiting the URL showed blank. Files: App.jsx
+**Priority:** Low — Navigating to `/onboarding` shows a blank page for existing users. This is likely by design (onboarding only shows once for new signups), but should either redirect to dashboard or show the onboarding again. Not a showstopper since new users are routed there automatically, but worth a quick redirect.
+**Prompt:**
+The `/onboarding` route renders blank for existing users (Eric's account). This is probably because the onboarding component checks if the user has completed onboarding and renders nothing if so.
+
+Quick fix: If onboarding is already complete, redirect to `/dashboard` instead of showing blank. Add a `useEffect` that checks the flag and calls `navigate('/dashboard')`.
+
+---
+
+### 037 — Vault Invite Page: Lowercase Owner Names (aric, bradley)
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added formatName() helper (capitalize first letter of each word) to VaultPublicLanding.jsx and OwnerRow.jsx. Applied to all owner name renders. Display-level only, no DB changes. Files: VaultPublicLanding.jsx, OwnerRow.jsx
+**Priority:** Low — On the vault invite page for Bro Montana Bowl, some owner names appear in lowercase ("aric", "bradley") while others are properly capitalized ("Jakob", "Eric", "Nick Trow"). This is likely a data issue from how names were imported. Fix by capitalizing the first letter of each word in display names on the vault pages.
+**Prompt:**
+In the vault display components (likely `VaultPublicLanding.jsx` and/or the `OwnerRow` component), add a display-level name capitalization helper. Don't change the database — just capitalize for display:
+
+```javascript
+const formatName = (name) => name?.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || name
+```
+
+Apply this wherever owner names are rendered in vault contexts. The canonical names in the DB might be lowercase from imports — that's fine, just fix the display.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

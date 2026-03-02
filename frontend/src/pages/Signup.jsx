@@ -72,7 +72,7 @@ const Signup = () => {
           </h2>
           <p className="text-text-secondary leading-relaxed">
             Create or join leagues with friends, compete all season long, and
-            prove you're the ultimate fantasy golf manager.
+            prove you're the ultimate fantasy sports manager.
           </p>
         </div>
       </div>
@@ -88,7 +88,7 @@ const Signup = () => {
 
           <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2">Create your account</h1>
           <p className="text-text-secondary mb-8 leading-relaxed">
-            Start your fantasy golf journey today
+            Start your fantasy sports journey today
           </p>
 
           {error && (

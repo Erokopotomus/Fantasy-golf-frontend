@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
@@ -92,12 +92,19 @@ function WorkspaceRedirect() {
   const location = useLocation()
   return <Navigate to={location.pathname.replace(/^\/workspace/, '/lab') + location.search} replace />
 }
+
+function JoinRedirect() {
+  const { code } = useParams()
+  return <Navigate to={`/leagues/join?code=${code}`} replace />
+}
 // Format-specific pages
 import Matchups from './pages/Matchups'
 import PlayoffHistory from './pages/PlayoffHistory'
 import CategoryStandings from './pages/CategoryStandings'
 import SurvivorBoard from './pages/SurvivorBoard'
 import PickCenter from './pages/PickCenter'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 
 function AppShell({ children }) {
   const { theme } = useTheme()
@@ -129,6 +136,10 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/join/:code" element={<JoinRedirect />} />
+          <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
           <Route
             path="/dashboard"
             element={

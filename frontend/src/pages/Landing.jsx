@@ -354,7 +354,7 @@ const Landing = () => {
             </div>
             <div className="relative z-[1] text-center sm:text-left">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5" style={{ color: CR_B }}>Your Rating</p>
-              <p className="font-display text-[28px] font-extrabold mb-1">Eric Saylor</p>
+              <p className="font-display text-[28px] font-extrabold mb-1">Your Name</p>
               <p className="font-mono text-xs font-semibold uppercase tracking-[0.15em]" style={{ color: CR_B }}>Expert · 84</p>
             </div>
           </div>

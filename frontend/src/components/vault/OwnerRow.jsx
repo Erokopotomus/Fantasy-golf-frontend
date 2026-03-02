@@ -8,6 +8,8 @@ import Crown from './Crown'
 import RatingRing from './RatingRing'
 import RatingTrendIndicator from './RatingTrendIndicator'
 
+const formatName = (name) => name?.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || name
+
 export default function OwnerRow({
   owner,        // { name, color, isActive, totalWins, totalLosses, totalPF, winPct, titles, seasonCount, bestSeason, winPcts, currentSeason? }
   rank,         // 1-indexed
@@ -123,7 +125,7 @@ export default function OwnerRow({
                 color: owner.color,
               }}
             >
-              {owner.name[0]}
+              {formatName(owner.name)[0]}
             </div>
             {/* Live season pulse dot */}
             {currentSeason && (
@@ -141,7 +143,7 @@ export default function OwnerRow({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className={`text-sm font-display font-bold truncate ${isLeader ? 'text-accent-gold' : 'text-text-primary'}`}>
-                {owner.name}
+                {formatName(owner.name)}
               </span>
               {rating && <RatingTrendIndicator trend={rating.trend} />}
               {!owner.isActive && (
@@ -218,7 +220,7 @@ export default function OwnerRow({
                 className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-display font-bold"
                 style={{ background: `${owner.color}15`, border: `2px solid ${owner.color}60`, color: owner.color }}
               >
-                {owner.name[0]}
+                {formatName(owner.name)[0]}
               </div>
               {currentSeason && (
                 <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-[1.5px] border-[var(--surface)]"
@@ -235,7 +237,7 @@ export default function OwnerRow({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className={`text-sm font-display font-bold truncate ${isLeader ? 'text-accent-gold' : 'text-text-primary'}`}>
-                  {owner.name}
+                  {formatName(owner.name)}
                 </span>
                 {!owner.isActive && (
                   <span className="text-[8px] font-mono text-text-muted bg-[var(--bg-alt)] px-1 py-0.5 rounded flex-shrink-0">

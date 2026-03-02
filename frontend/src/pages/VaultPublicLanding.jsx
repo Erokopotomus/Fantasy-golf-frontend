@@ -17,6 +17,8 @@ import ClaimModal from '../components/vault/ClaimModal'
 import RatingRing from '../components/vault/RatingRing'
 import RatingTierBadge from '../components/vault/RatingTierBadge'
 
+const formatName = (name) => name?.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || name
+
 export default function VaultPublicLanding() {
   const { inviteCode } = useParams()
   const [searchParams] = useSearchParams()
@@ -255,14 +257,14 @@ export default function VaultPublicLanding() {
                   color: memberOwner.color,
                 }}
               >
-                {memberOwner.name[0]}
+                {formatName(memberOwner.name)[0]}
               </div>
 
               <div
                 className="text-xl sm:text-[22px] font-display font-bold mb-0.5"
                 style={{ color: memberOwner.color }}
               >
-                {memberOwner.name}
+                {formatName(memberOwner.name)}
               </div>
               <div className="text-xs font-mono text-text-muted mb-5">
                 #{memberRank} All-Time · {memberOwner.seasonCount} Season{memberOwner.seasonCount !== 1 ? 's' : ''}
