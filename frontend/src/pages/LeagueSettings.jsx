@@ -1127,7 +1127,7 @@ const LeagueSettings = () => {
             <div className="bg-[var(--bg-alt)] rounded-lg p-4 mb-4">
               <p className="text-text-muted text-xs mb-2">LEAGUE INVITE CODE</p>
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-mono tracking-[0.3em] text-gold font-bold">
+                <span className="text-base font-mono tracking-wide text-gold font-bold break-all">
                   {inviteCode || '------'}
                 </span>
                 <button
@@ -1188,8 +1188,12 @@ const LeagueSettings = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-sm font-semibold text-text-secondary">
-                        {member.user?.avatar || member.user?.name?.charAt(0)?.toUpperCase() || '?'}
+                      <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-sm font-semibold text-text-secondary overflow-hidden">
+                        {member.user?.avatar ? (
+                          <img src={member.user.avatar} alt={member.user.name || ''} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          member.user?.name?.charAt(0)?.toUpperCase() || '?'
+                        )}
                       </div>
                       <div>
                         <p className={`font-medium ${isOwner ? 'text-gold' : 'text-text-primary'}`}>
