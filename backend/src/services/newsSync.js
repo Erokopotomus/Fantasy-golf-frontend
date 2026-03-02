@@ -28,20 +28,24 @@ const HIGH_PRIORITY_REPORTERS = [
 
 /**
  * Categorize an ESPN article based on headline + categories
+ * @param {object} article ESPN article object
+ * @param {string} sport 'nfl' | 'golf' etc.
  */
-function categorizeArticle(article) {
+function categorizeArticle(article, sport) {
   const headline = (article.headline || '').toLowerCase()
   const desc = (article.description || '').toLowerCase()
   const text = headline + ' ' + desc
 
-  if (TRANSACTION_KEYWORDS.some(kw => text.includes(kw))) {
+  // Transaction keywords only apply to team sports (NFL, NBA, MLB) — not golf.
+  // Golf uses "cut", "deal" in non-transaction contexts (making the cut, etc.)
+  if (sport !== 'golf' && TRANSACTION_KEYWORDS.some(kw => text.includes(kw))) {
     return { type: 'transaction', category: 'transaction' }
   }
   if (INJURY_KEYWORDS.some(kw => text.includes(kw))) {
     return { type: 'injury', category: 'injury' }
   }
   // Analysis: opinion, rankings, breakdown, preview
-  if (/analysis|preview|ranking|breakdown|projection|prediction|power rank/i.test(text)) {
+  if (/analysis|preview|ranking|breakdown|projection|prediction|power rank|selections|picks to win|bold calls/i.test(text)) {
     return { type: 'analysis', category: 'analysis' }
   }
   return { type: 'news', category: 'news' }
@@ -198,7 +202,7 @@ async function syncNflNews(prisma) {
       const parsed = parseEspnArticle(article, 'nfl')
       if (!parsed.externalId || !parsed.headline) continue
 
-      const { type, category } = categorizeArticle(article)
+      const { type, category } = categorizeArticle(article, 'nfl')
       const priority = determinePriority(article, category)
       const teamAbbrs = matchTeams(article)
       const playerIds = await matchPlayers(article, prisma)
@@ -276,7 +280,7 @@ async function syncGolfNews(prisma) {
       const parsed = parseEspnArticle(article, 'golf')
       if (!parsed.externalId || !parsed.headline) continue
 
-      const { type, category } = categorizeArticle(article)
+      const { type, category } = categorizeArticle(article, 'golf')
       const priority = determinePriority(article, category)
 
       // Golf: no team matching, but try player matching

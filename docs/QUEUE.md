@@ -405,7 +405,7 @@ On the league home page (`/leagues/:id`), the subtitle shows "Full League · SNA
 ---
 
 ### 019 — News Feed: Wrong Category Tags on Articles
-**Status:** `TODO`
+**Status:** `DONE` — Root cause: `categorizeArticle()` applied NFL transaction keywords (esp. "cut") to golf articles. Fixed by making categorizer sport-aware — transaction keywords skipped for golf. Also expanded analysis regex. Fixed 7 existing mis-categorized golf articles in DB.
 **Priority:** Low — cosmetic/content
 **Prompt:**
 On the Golf Hub and News pages, news articles from ESPN are displaying with the wrong category tag. Articles like "Americans Abroad: Ryder Cup selections" and course preview articles show as "TRANSACTION" category instead of "NEWS" or "ARTICLE". The TRANSACTION tag should only be used for actual player transactions (trades, drops, adds, waivers).
@@ -427,7 +427,7 @@ On the Golf Hub and News pages, news articles from ESPN are displaying with the 
 ---
 
 ### 020 — Vault Drafts: Some Older Players Missing Position Badges
-**Status:** `TODO`
+**Status:** `DONE` — Root cause: yahoo_player_cache had 134 retired players with NULL position (Sleeper API didn't provide positions for very old players). Backfilled all 134 with correct positions. Also created 7 new entries for players not in cache + 25 DST team name entries (DEF). Result: 925/925 draft player names now resolve to positions.
 **Priority:** Low — cosmetic data gap from Yahoo imports
 **Prompt:**
 In the League Vault Drafts tab, some older draft picks (primarily pre-2015 from Yahoo imports) are missing position badges. Examples from the 2009 draft: LaDainian Tomlinson, Michael Turner, Maurice Jones-Drew, Ronnie Brown, Brian Westbrook, Randy Moss — all missing position tags. Meanwhile Steven Jackson, Chris Johnson, DeAngelo Williams show "RB" correctly.
@@ -447,6 +447,70 @@ This was partially addressed in item 005 (resolve-positions endpoint checking ya
 **Rules:**
 - Don't create new migrations or models
 - Prefer using existing data over adding new external API calls
+
+---
+
+### 021 — Vault: Playoff History Tab (Brackets, Records, Intelligence)
+**Status:** `TODO`
+**Priority:** Medium-High — major feature gap in the Vault's best content area
+**Prompt:**
+The League Vault has incredible regular season depth (17 seasons of records, H2H, draft intelligence, profiles) but playoff data is almost invisible. The only traces are "Made Playoffs: 10" on Profiles and finish position badges (Champion, Runner-Up). There's no way to see past brackets, consolation results, championship matchup history, or playoff-specific stats.
+
+This should be a new **Playoffs** tab in the Vault (or a prominent section within an existing tab).
+
+**DATA CONFIRMED AVAILABLE (Cowork verified 2026-03-02):**
+The Yahoo importer already captures full playoff data. Each entry in the `weeklyScores` JSON array has:
+```json
+{ "week": 15, "points": 111.0, "opponentPoints": 84.0, "matchupId": 2, "isPlayoffs": true, "isConsolation": false }
+```
+- `isPlayoffs: true` — marks playoff weeks (semi-finals, championship)
+- `isConsolation: true` — marks consolation bracket games
+- `opponentPoints` — opponent score for that week
+- `playoffResult` field on HistoricalSeason: 'champion', 'runner_up', 'eliminated', 'missed'
+- `finalStanding` — numeric finish position
+- The Vault frontend already reads `weeklyScores` (used in H2H tab, line 275-289 of LeagueVault.jsx) and `playoffResult` (used for playoff badges)
+
+**To reconstruct brackets:** Filter `weeklyScores` for `isPlayoffs: true` across all teams in a season, group by week, match opponents by scores (team A's `opponentPoints` = team B's `points` in same week). The bracket structure can be inferred from the number of playoff teams and weeks.
+
+**What to build (in priority order):**
+
+1. **Past Playoff Brackets** — For each season, show the playoff bracket (semi-finals → championship, consolation bracket). Visual bracket format like March Madness style, showing scores and winners. Users should be able to click through each year's bracket.
+
+2. **Championship History** — A clean timeline/table of every championship matchup: year, champion, runner-up, final score, margin of victory. This is the most emotionally resonant data in any league vault.
+
+3. **Consolation Bracket History** — Same treatment for the consolation bracket (the "toilet bowl" / last place finisher). Many leagues have punishments for last place — this data matters.
+
+4. **Playoff Records & Intelligence** — Aggregate stats across all playoff appearances:
+   - Most playoff appearances (career)
+   - Best playoff win rate
+   - Most championships
+   - Most runner-up finishes (the Buffalo Bills award)
+   - Biggest championship blowout
+   - Closest championship game
+   - Most consecutive playoff appearances
+   - Most consecutive championship appearances
+   - First-round exit rate
+   - Consolation bracket "champion" (most last-place finishes)
+   - Playoff scoring average vs regular season average (who elevates in playoffs?)
+   - Home/away playoff record (if seeding data exists)
+
+5. **Dynasty Tracker** — Back-to-back or repeat champions, longest championship drought per owner
+
+**Where to look first:**
+- `frontend/src/pages/LeagueVault.jsx` — main Vault component, already reads `weeklyScores` and `playoffResult`
+- `frontend/src/hooks/useDraftIntelligence.js` — pattern for how Vault hooks process HistoricalSeason data
+- `backend/src/routes/imports.js` line ~305 — where `weeklyScores` is included in the select for vault data
+- `backend/src/services/yahooImport.js` lines 584-586 — where `isPlayoffs`/`isConsolation` flags are set during import
+
+**Phase approach (suggested):**
+- **Phase A**: Championship History table + basic playoff records (items 2 & 4 above) — highest value, lowest effort
+- **Phase B**: Visual bracket rendering for each season (item 1) — high value, medium effort
+- **Phase C**: Consolation history + dynasty tracker (items 3 & 5) — nice-to-have polish
+
+**Rules:**
+- Add as a new Vault tab OR as a section within the existing Records tab — Eric to decide
+- Use existing imported data — ALL playoff data is already in the DB (confirmed). No new imports needed.
+- Keep the same visual style as existing Vault tabs (cream cards, warm tones, clean tables)
 
 ---
 
