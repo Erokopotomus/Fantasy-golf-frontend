@@ -52,7 +52,13 @@ router.get('/current', async (req, res, next) => {
         status: { in: ['IN_PROGRESS', 'UPCOMING'] }
       },
       include: { course: true },
-      orderBy: { startDate: 'asc' }
+      orderBy: [
+        { startDate: 'asc' },
+        { isMajor: 'desc' },
+        { isSignature: 'desc' },
+        { isPlayoff: 'desc' },
+        { purse: 'desc' },
+      ]
     })
 
     // For live tournaments, ensure currentRound accounts for date-based expected round
@@ -76,7 +82,13 @@ router.get('/upcoming-with-fields', optionalAuth, async (req, res, next) => {
   try {
     const tournaments = await prisma.tournament.findMany({
       where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
-      orderBy: { startDate: 'asc' },
+      orderBy: [
+        { startDate: 'asc' },
+        { isMajor: 'desc' },
+        { isSignature: 'desc' },
+        { isPlayoff: 'desc' },
+        { purse: 'desc' },
+      ],
       take: 5,
       include: {
         course: {

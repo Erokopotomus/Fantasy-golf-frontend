@@ -1027,6 +1027,97 @@ Item 033 marked this as DONE with note: "Both ClutchRatingGauge instances alread
 
 ---
 
+## SESSION 5 — Polish Pass (Tournament Priority + Live Page + Vault Link)
+
+> **Context:** Cowork audited Dashboard, Golf Hub, League Home, Standings, Live, Prove It, Lab, and Tournaments pages on 2026-03-02. Found 3 issues to fix.
+
+### 047 — Current Tournament API: Prioritize Flagship Events Over Alternates
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Updated orderBy on both `/api/tournaments/current` and `/api/tournaments/upcoming-with-fields` to: startDate asc, isMajor desc, isSignature desc, isPlayoff desc, purse desc. Arnold Palmer Invitational ($20M, isSignature) will now beat Puerto Rico Open (~$4M) for same-week events. Files: backend/src/routes/tournaments.js
+**Priority:** HIGH — Directly visible on Dashboard and League Home. Shows Puerto Rico Open instead of Arnold Palmer Invitational.
+**Prompt:**
+The `GET /api/tournaments/current` endpoint in `backend/src/routes/tournaments.js` (line 48-72) returns the first upcoming/in-progress tournament ordered by `startDate asc`. When two PGA Tour events share the same week (e.g., Arnold Palmer Invitational Mar 5-8 AND Puerto Rico Open Mar 5-8), it picks whichever comes first by DB insertion order — currently Puerto Rico Open.
+
+**The problem:** Puerto Rico Open is an alternate/secondary event. Arnold Palmer Invitational is the signature/flagship event. The Dashboard and League Home both show the wrong tournament.
+
+**Fix:** Update the `findFirst` query to prioritize flagship events when multiple tournaments share the same start date. The DataGolf sync already sets `isSignature`, `isMajor`, and `isPlayoff` flags (see `backend/src/services/datagolfSync.js` lines 314-316).
+
+Change the `orderBy` in `/api/tournaments/current` from:
+```js
+orderBy: { startDate: 'asc' }
+```
+to:
+```js
+orderBy: [
+  { startDate: 'asc' },
+  { isMajor: 'desc' },
+  { isSignature: 'desc' },
+  { isPlayoff: 'desc' },
+  { purse: 'desc' }
+]
+```
+
+This way, for the same week: Majors > Signature events > Playoff events > Higher purse > others. Arnold Palmer Invitational (`isSignature: true`, $20M purse) will always beat Puerto Rico Open (`isSignature: false`, ~$4M purse).
+
+**Also update these endpoints that likely have the same issue:**
+- `GET /api/tournaments/upcoming-with-fields` (line 74+) — check if it returns both events and which comes first
+- The Golf Hub hero tournament selection in `frontend/src/pages/GolfHub.jsx` — check `heroTournament` logic. The Golf Hub actually shows Arnold Palmer correctly as the hero, so the frontend may already have priority logic. But confirm and make consistent.
+
+**Test:** After fix, Dashboard and League Home tournament cards should show "Arnold Palmer Invitational" instead of "Puerto Rico Open" for the Mar 5-8 week.
+
+**Files to modify:**
+- `backend/src/routes/tournaments.js` — update `orderBy` on `/current` endpoint
+- Possibly `GolfHub.jsx` — verify hero tournament selection is consistent
+
+---
+
+### 048 — Live Page: Add Empty State When No Tournament Is In Progress
+**Status:** `DONE`
+**Completed:** 2026-03-02 — No standalone /live route exists — Nav "Live" links to /tournaments/:id (or /tournaments fallback). Added "No Live Tournament" empty state to Tournaments.jsx: golf flag icon, "next event starts in X days" countdown, "Preview Field →" button linking to next event's preview, "View Golf Hub →" secondary link. Shows when no live tournaments but upcoming exist. Files: Tournaments.jsx
+**Priority:** MEDIUM — The "Live" nav item is always visible. Clicking it shows a completely blank page when no tournament is active. Needs an informative empty state.
+**Prompt:**
+The `/live` route renders a blank page when no tournament is `IN_PROGRESS`. The page component exists but has no empty state handling.
+
+**Find the Live page component** — check `frontend/src/App.jsx` for the `/live` route to find which component renders. Then add an empty state that shows:
+
+1. **A golf flag icon or NeuralCluster (sm, calm)** — visual anchor
+2. **Headline:** "No Live Tournament"
+3. **Subtext:** "The next event starts in X days" (calculate from the next upcoming tournament's `startDate`)
+4. **Next tournament card** — show a compact preview of the upcoming event (name, course, dates, field size if available)
+5. **CTA button:** "Preview Field →" linking to `/tournaments/{id}/preview` for the upcoming event
+6. **Secondary CTA:** "View Golf Hub →" linking to `/golf`
+
+**Design tokens:** Use `var(--bg)` background, `var(--text-1)` for headline, `var(--text-2)` for subtext. Keep it centered and clean. Use the same warm cream/light feel as the Prove It "No Active Tournament" empty state.
+
+**Files to modify:**
+- The Live page component (find via App.jsx route for `/live`)
+- May need to call `useTournaments()` hook to get next upcoming event
+
+---
+
+### 049 — Standings Page: "View League Vault" Link Styling
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Upgraded Vault CTA: clock icon → archive/box icon, button-style with bg-crown/10 border-crown/30, "League Vault" as bold label + "See full league history" as italic subtitle, tighter rounded-lg padding. Files: Standings.jsx
+**Priority:** LOW — The "See full league history in the Vault" CTA at the bottom of standings works and looks fine. But the differentiator sprint spec (item 040) called for a gold accent CTA with archive icon. Currently it's a plain text link with a clock icon. This is a micro-polish item.
+**Prompt:**
+In the Standings page (find via `frontend/src/pages/Standings.jsx` or similar), the Vault link at the bottom currently shows as:
+- Clock icon (⏰) + "See full league history in the Vault >" in gold text
+
+The differentiator sprint spec wanted:
+- Archive icon (📦 or similar) + "League Vault" with a more prominent gold accent CTA button style
+
+**Upgrade to:**
+1. Replace clock icon with an archive/vault icon (use Lucide `Archive` or `BookOpen` icon)
+2. Make it a button-style CTA: `bg-crown/10 border border-crown/30 text-crown hover:bg-crown/20 rounded-lg px-4 py-2`
+3. Text: "See 17 seasons of history → League Vault" (where the number comes from the vault's season count if available, or just "See full league history → League Vault" as fallback)
+
+This is cosmetic polish — keep it as a low priority item.
+
+**Files to modify:**
+- Standings page component (find path via App.jsx route for `/standings` or league standings)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

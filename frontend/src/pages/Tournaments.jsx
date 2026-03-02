@@ -78,6 +78,37 @@ const Tournaments = () => {
         <p className="text-text-muted text-sm mt-1">Schedule, live scoring, and results</p>
       </div>
 
+      {/* No Live Tournament — informative empty state */}
+      {liveTournaments.length === 0 && upcomingTournaments.length > 0 && (() => {
+        const next = upcomingTournaments[0]
+        const daysUntil = next?.startDate ? Math.max(0, Math.ceil((new Date(next.startDate) - Date.now()) / 86400000)) : null
+        return (
+          <div className="text-center py-8 px-4 rounded-xl bg-[var(--surface)] border border-[var(--card-border)]">
+            <div className="text-4xl mb-3">&#9971;</div>
+            <h2 className="text-lg font-display font-bold text-text-primary mb-1">No Live Tournament</h2>
+            <p className="text-text-muted text-sm mb-4">
+              {daysUntil != null && daysUntil > 0
+                ? `The next event starts in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`
+                : 'The next event starts soon'}
+            </p>
+            <div className="inline-flex flex-col items-center gap-2">
+              <Link
+                to={`/tournaments/${next.id}/preview`}
+                className="px-4 py-2 rounded-lg bg-field-bright/15 text-field text-sm font-semibold hover:bg-field-bright/25 transition-colors"
+              >
+                Preview {next.shortName || next.name} Field &rarr;
+              </Link>
+              <Link
+                to="/golf"
+                className="text-xs text-text-muted hover:text-text-primary transition-colors"
+              >
+                View Golf Hub &rarr;
+              </Link>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Live Now */}
       {liveTournaments.length > 0 && (
         <section>
