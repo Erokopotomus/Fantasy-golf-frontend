@@ -451,7 +451,7 @@ This was partially addressed in item 005 (resolve-positions endpoint checking ya
 ---
 
 ### 021 — Vault: Playoff History Tab (Brackets, Records, Intelligence)
-**Status:** `TODO`
+**Status:** `DONE` — Built full Playoffs tab with 4 sections: (1) Championship History table with year/champion/runner-up/score/margin, (2) Interactive bracket viewer reconstructed from weeklyScores isPlayoffs data with consolation toggle + year selector, (3) Sortable Playoff Records table (titles, runner-ups, appearances, win%, elevation, streak), (4) Dynasty highlights (biggest blowout, closest game, back-to-back streaks, most last-place finishes, longest drought). New hook: usePlayoffIntelligence.js. New component: PlayoffHistoryTab.jsx.
 **Priority:** Medium-High — major feature gap in the Vault's best content area
 **Prompt:**
 The League Vault has incredible regular season depth (17 seasons of records, H2H, draft intelligence, profiles) but playoff data is almost invisible. The only traces are "Made Playoffs: 10" on Profiles and finish position badges (Champion, Runner-Up). There's no way to see past brackets, consolation results, championship matchup history, or playoff-specific stats.

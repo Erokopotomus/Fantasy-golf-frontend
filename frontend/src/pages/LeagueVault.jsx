@@ -10,6 +10,7 @@ import { useDraftIntelligence } from '../hooks/useDraftIntelligence'
 import api from '../services/api'
 import { resizeImage, uploadToCloudinary } from '../utils/uploadImage'
 import LeagueChat from '../components/ai/LeagueChat'
+import PlayoffHistoryTab from '../components/vault/PlayoffHistoryTab'
 
 // Error boundary to catch rendering crashes
 class VaultErrorBoundary extends Component {
@@ -4004,6 +4005,7 @@ const LeagueVault = () => {
     { id: 'h2h', label: 'H2H' },
     { id: 'profiles', label: 'Profiles' },
     { id: 'drafts', label: 'Drafts' },
+    { id: 'playoffs', label: 'Playoffs' },
     { id: 'custom', label: 'Custom' },
   ]
 
@@ -4519,6 +4521,9 @@ const LeagueVault = () => {
 
           {/* Drafts Tab */}
           {tab === 'drafts' && <DraftHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} isCommissioner={isCommissioner} leagueId={leagueId} onSaved={() => { refetch(); refetchHealth() }} aliasMap={aliasMap} />}
+
+          {/* Playoffs Tab */}
+          {tab === 'playoffs' && <PlayoffHistoryTab history={{ ...history, seasons: sanitizedSeasons || {} }} aliasMap={aliasMap} avatarMap={avatarMap} />}
 
           {/* Custom Data Tab */}
           {tab === 'custom' && <CustomDataTab leagueId={leagueId} />}
