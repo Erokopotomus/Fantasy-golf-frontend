@@ -5,6 +5,7 @@ import api from '../services/api'
 import FeedList from '../components/feed/FeedList'
 import { formatDate, formatDateRange, formatPurse } from '../utils/dateUtils'
 import { computePowerScore } from '../utils/clutchMetrics'
+import TournamentHeader from '../components/tournament/TournamentHeader'
 
 const daysUntil = (dateStr) => {
   if (!dateStr) return null
@@ -228,105 +229,18 @@ const GolfHub = () => {
           {tournamentsLoading ? (
             <div className="mb-8 h-36 bg-[var(--stone)] rounded-xl animate-pulse" />
           ) : heroTournament ? (
-            <div className="mb-8 rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden relative">
-              {/* Course background image */}
-              {heroIntel?.course?.imageUrl && (
-                <>
-                  <img src={heroIntel.course.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                </>
-              )}
-              {/* Tournament header */}
-              <Link
-                to={`/tournaments/${heroTournament.id}`}
-                className="block p-5 sm:p-6 relative hover:opacity-95 transition-opacity group"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      {isLive ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-rose bg-rose/10 px-2 py-0.5 rounded">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose" />
-                          </span>
-                          LIVE — Round {heroTournament.currentRound || '?'}
-                        </span>
-                      ) : days != null ? (
-                        <span className="text-xs font-mono text-field bg-field-bright/10 px-2 py-0.5 rounded">
-                          Starts in {days} day{days !== 1 ? 's' : ''}
-                        </span>
-                      ) : (
-                        <span className="text-xs font-mono text-text-muted bg-[var(--bg-alt)] px-2 py-0.5 rounded">UPCOMING</span>
-                      )}
-                      <EventBadge tournament={heroTournament} />
-                    </div>
-
-                    <h2 className={`text-xl sm:text-2xl font-display font-bold transition-colors ${heroIntel?.course?.imageUrl ? 'text-white group-hover:text-emerald-300' : 'text-text-primary group-hover:text-field'}`} style={heroIntel?.course?.imageUrl ? { textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>
-                      {heroTournament.name}
-                    </h2>
-
-                    {heroTournament.course && (
-                      <p className={`text-sm mt-1 ${heroIntel?.course?.imageUrl ? 'text-gold drop-shadow-sm' : 'text-gold'}`}>
-                        {heroTournament.course.nickname || heroTournament.course.name}
-                      </p>
-                    )}
-
-                    <div className={`flex items-center gap-4 mt-2 text-xs font-mono ${heroIntel?.course?.imageUrl ? 'text-white/60' : 'text-text-muted'}`}>
-                      <span>{formatDateRange(heroTournament.startDate, heroTournament.endDate)}</span>
-                      {heroTournament.purse && <span>{formatPurse(heroTournament.purse)}</span>}
-                      {heroTournament.fieldSize > 0 && <span>{heroTournament.fieldSize} players</span>}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 text-right hidden sm:block">
-                    <span className="text-xs text-field group-hover:text-emerald-300 transition-colors">
-                      {isLive ? 'View Leaderboard' : 'View Details'} →
-                    </span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Teaser row — weather snapshot + TV schedule */}
-              {heroIntel?.weather?.length > 0 && (() => {
-                const today = heroIntel.weather[0]
-                const WMO = { 0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌦',63:'🌧',65:'🌧',71:'🌨',73:'❄️',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈' }
-                const code = today.conditions?.toLowerCase().includes('rain') ? 63 : today.conditions?.toLowerCase().includes('cloud') || today.conditions?.toLowerCase().includes('overcast') ? 3 : today.conditions?.toLowerCase().includes('clear') || today.conditions?.toLowerCase().includes('sunny') ? 0 : 2
-                const icon = WMO[code] || '🌤'
-                const diff = (today.difficultyImpact || 0) >= 0.6 ? 'Brutal' : (today.difficultyImpact || 0) >= 0.4 ? 'Windy' : (today.difficultyImpact || 0) >= 0.2 ? 'Breezy' : 'Calm'
-                const diffColor = diff === 'Brutal' ? 'text-live-red' : diff === 'Windy' ? 'text-blaze' : diff === 'Breezy' ? 'text-crown' : 'text-field'
-                return (
-                  <div className={`relative px-5 sm:px-6 pb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs ${heroIntel?.course?.imageUrl ? 'text-white/50' : 'text-text-muted'}`}>
-                    <span className="flex items-center gap-1.5">
-                      <span>{icon}</span>
-                      <span className="font-mono font-bold text-text-primary">{today.temperature != null ? `${Math.round(today.temperature)}°` : '--'}</span>
-                      <span className="text-text-muted/50">·</span>
-                      <span className="font-mono">{today.windSpeed != null ? `${Math.round(today.windSpeed)} mph` : '--'}</span>
-                      <span className="text-text-muted/50">·</span>
-                      <span className={`font-mono font-bold ${diffColor}`}>{diff}</span>
-                    </span>
-                    {heroTournament.broadcast ? (
-                      <span className="flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-text-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        <span>{heroTournament.broadcast}</span>
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-text-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        <span>Golf Channel / ESPN+</span>
-                      </span>
-                    )}
-                  </div>
-                )
-              })()}
+            <div className="mb-8 space-y-3">
+              {/* Reuse TournamentHeader — has Field Strength, Forecast, and Course DNA panels */}
+              <TournamentHeader
+                tournament={{
+                  ...heroTournament,
+                  course: heroIntel?.course || heroTournament.course,
+                }}
+                leaderboard={heroIntel?.leaderboard || heroTournament.field || []}
+              />
 
               {/* Quick action links */}
-              <div className="relative px-5 sm:px-6 pb-4 flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {heroTournament.status === 'UPCOMING' && (
                   <Link
                     to={`/tournaments/${heroTournament.id}/preview`}
@@ -335,7 +249,7 @@ const GolfHub = () => {
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                     </svg>
-                    Preview
+                    Preview Field
                   </Link>
                 )}
                 <Link

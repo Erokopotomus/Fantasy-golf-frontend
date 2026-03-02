@@ -1368,6 +1368,67 @@ if (!t?.datagolfId) {
 
 ---
 
+### 053 — Golf Hub Hero: Add Field Strength + Forecast + Course DNA Panels
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Replaced custom hero card with reusable TournamentHeader component (Option A). Golf Hub now shows Field Strength, 4-Day Forecast, and Course DNA panels matching League Home. Removed ~130 lines of duplicated weather/hero markup. Files: GolfHub.jsx
+**Priority:** HIGH — The Golf Hub is the main golf landing page. Its hero card only shows a tiny one-line weather snippet ("88° · 17 mph · Calm") mixed with broadcast info. The League Home tournament card shows a full FORECAST panel (R1-R4 with temps/wind), FIELD STRENGTH breakdown (Top 25/50/100 with color bar), and WHAT WINS HERE course DNA (Driving/Approach/Short Game/Putting ratings). The Golf Hub should match or exceed this since it's the sport's home page.
+**Prompt:**
+The Golf Hub hero card in `frontend/src/pages/GolfHub.jsx` (lines ~230-360) renders the tournament info inline with a minimal weather teaser row. The data for a richer display is ALREADY fetched — `heroIntel.weather` has per-round forecasts and `heroIntel.course` has course data. The field data comes from `heroTournament.field` (array of player objects with `owgrRank`).
+
+The League Home uses `TournamentHeader` (`frontend/src/components/tournament/TournamentHeader.jsx`) which has all the rich panels: Field Strength, Forecast (R1-R4), and Course DNA ("What Wins Here").
+
+**Option A (preferred): Reuse TournamentHeader inside the Golf Hub hero**
+Replace the custom hero card with `<TournamentHeader tournament={heroTournament} leaderboard={heroTournament.field || []} />` wrapped in the existing hero image/overlay styling. This ensures both pages stay in sync as TournamentHeader evolves.
+
+Check if `TournamentHeader` needs any props the Golf Hub doesn't have. The League Home passes `tournament` (the full tournament object) and `leaderboard` (array of field/performance entries). The Golf Hub has `heroTournament` (from `getUpcomingTournamentsWithFields`) and `heroIntel` (weather/course). TournamentHeader fetches its own weather internally (check line ~40+), so passing the tournament should be enough.
+
+**Option B: Add the panels inline**
+If TournamentHeader doesn't fit the Golf Hub layout cleanly, add the three panels below the hero card as a flex row, similar to how League Home does it:
+
+```jsx
+{/* Below the hero image/overlay, add: */}
+<div className="grid grid-cols-3 gap-3 mt-3">
+  {/* Field Strength panel */}
+  <div className="bg-surface rounded-lg p-4 border border-border">
+    <h4 className="text-xs font-mono text-text-muted uppercase tracking-wide">Field Strength</h4>
+    <p className="text-2xl font-mono font-bold mt-1">{heroTournament.fieldSize} <span className="text-sm text-text-muted">players</span></p>
+    {/* Top 25/50/100 breakdown with color bar */}
+  </div>
+
+  {/* Forecast panel - R1-R4 */}
+  <div className="bg-surface rounded-lg p-4 border border-border">
+    <h4 className="text-xs font-mono text-text-muted uppercase tracking-wide">Forecast</h4>
+    {heroIntel?.weather?.slice(0,4).map((day, i) => (
+      <div key={i} className="flex items-center gap-2 text-xs mt-1">
+        <span className="font-mono w-6">R{i+1}</span>
+        <span>{conditionIcon}</span>
+        <span className="font-mono font-bold">{Math.round(day.temperature)}°</span>
+        <span className="font-mono text-text-muted">{Math.round(day.windSpeed)}mph</span>
+      </div>
+    ))}
+  </div>
+
+  {/* Course DNA panel */}
+  <div className="bg-surface rounded-lg p-4 border border-border">
+    <h4 className="text-xs font-mono text-text-muted uppercase tracking-wide">What Wins Here</h4>
+    {/* Driving/Approach/Short Game/Putting with labels from getDnaLabel() */}
+  </div>
+</div>
+```
+
+**The key data sources:**
+- Field strength: `heroTournament.field` array → count by `owgrRank` ranges (1-25, 1-50, 1-100)
+- Weather: `heroIntel.weather` array (already fetched, has `temperature`, `windSpeed`, `conditions`, `difficultyImpact` per day)
+- Course DNA: `heroIntel.course?.courseDna` or from `TournamentHeader`'s own API call. Check how TournamentHeader gets this data.
+
+**Remove the old tiny weather teaser row** (lines ~291-326) once the new panels are in place. Keep the broadcast info somewhere — either in the hero overlay or in the forecast panel.
+
+**Files to modify:**
+- `frontend/src/pages/GolfHub.jsx` — replace/augment hero card with rich panels
+- Possibly import `TournamentHeader` if using Option A
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
