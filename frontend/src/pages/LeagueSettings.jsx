@@ -233,7 +233,7 @@ const LeagueSettings = () => {
       case 'full-league':
         return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={seasonWeeks} />
       case 'head-to-head':
-        return <HeadToHeadSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} teams={league?.teams} />
+        return <HeadToHeadSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} teams={league?.teams} sport={league?.sport?.toLowerCase()} />
       case 'roto':
         return <RotoSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
       case 'survivor':

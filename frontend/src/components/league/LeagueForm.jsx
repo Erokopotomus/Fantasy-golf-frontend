@@ -183,7 +183,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
       case 'full-league':
         return <FullLeagueSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={formData.sport === 'golf' ? seasonWeeks : null} />
       case 'head-to-head':
-        return <HeadToHeadSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
+        return <HeadToHeadSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} sport={formData.sport} />
       case 'roto':
         return <RotoSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
       case 'survivor':

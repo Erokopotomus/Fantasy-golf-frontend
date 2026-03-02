@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import Card from '../../common/Card'
 
-const HeadToHeadSettings = ({ settings, onChange, teams }) => {
+const HeadToHeadSettings = ({ settings, onChange, teams, sport }) => {
+  // Sport-aware terminology: "tournament" for golf, "week" for NFL/other
+  const periodUnit = sport === 'golf' ? 'tournament' : 'week'
+  const periodUnitPlural = sport === 'golf' ? 'tournaments' : 'weeks'
   const [localSettings, setLocalSettings] = useState({
     playoffTeams: settings?.playoffTeams || 4,
     playoffFormat: settings?.playoffFormat || 'single-elimination',
@@ -65,7 +68,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
               ))}
             </select>
             <p className="text-xs text-text-muted mt-2">
-              Number of tournaments in the regular season before playoffs
+              Number of {periodUnitPlural} in the regular season before playoffs
             </p>
           </div>
         </div>
@@ -273,7 +276,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 />
                 <div>
                   <p className="text-text-primary font-medium">Two-Week Matchups</p>
-                  <p className="text-text-muted text-xs">Combined points across two tournaments</p>
+                  <p className="text-text-muted text-xs">Combined points across two {periodUnitPlural}</p>
                 </div>
               </label>
             </div>
@@ -295,7 +298,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 />
                 <div>
                   <p className="text-text-primary font-medium">One Week Per Round</p>
-                  <p className="text-text-muted text-xs">Each playoff round is a single tournament</p>
+                  <p className="text-text-muted text-xs">Each playoff round is a single {periodUnit}</p>
                 </div>
               </label>
               <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
@@ -309,7 +312,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 />
                 <div>
                   <p className="text-text-primary font-medium">Two-Week Championship Only</p>
-                  <p className="text-text-muted text-xs">Only the finals span two tournaments</p>
+                  <p className="text-text-muted text-xs">Only the finals span two {periodUnitPlural}</p>
                 </div>
               </label>
               <label className="flex items-center gap-3 p-3 bg-[var(--bg-alt)] rounded-lg cursor-pointer">
@@ -323,7 +326,7 @@ const HeadToHeadSettings = ({ settings, onChange, teams }) => {
                 />
                 <div>
                   <p className="text-text-primary font-medium">Two Weeks Per Round</p>
-                  <p className="text-text-muted text-xs">Every playoff round spans two tournaments</p>
+                  <p className="text-text-muted text-xs">Every playoff round spans two {periodUnitPlural}</p>
                 </div>
               </label>
             </div>
