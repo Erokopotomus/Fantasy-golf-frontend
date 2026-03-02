@@ -8,6 +8,8 @@ import BackYourCall from '../components/predictions/BackYourCall'
 import ShareButton from '../components/share/ShareButton'
 import PicksResultCard from '../components/share/cards/PicksResultCard'
 import StreakCard from '../components/share/cards/StreakCard'
+import PlayerDrawer from '../components/players/PlayerDrawer'
+import NeuralCluster from '../components/common/NeuralCluster'
 
 // ─── Tier helpers ───────────────────────────────────────────────────────────
 const TIER_CONFIG = {
@@ -46,6 +48,7 @@ function WeeklySlate({ onPredictionMade }) {
   const [currentTournament, setCurrentTournament] = useState(null)
   const [showBackingFor, setShowBackingFor] = useState(null)
   const [backingData, setBackingData] = useState({})
+  const [drawerPlayer, setDrawerPlayer] = useState(null)
 
   useEffect(() => {
     async function load() {
@@ -74,6 +77,13 @@ function WeeklySlate({ onPredictionMade }) {
             position: p.position,
             rank: p.player?.owgrRank || p.owgrRank || p.rank,
           }))
+        // Sort by rank (best first), then by SG total descending as fallback
+        targets.sort((a, b) => {
+          const aRank = a.rank || 9999
+          const bRank = b.rank || 9999
+          if (aRank !== bRank) return aRank - bRank
+          return (b.sgTotal || 0) - (a.sgTotal || 0)
+        })
         setSlate(targets)
 
         // Get user's existing predictions for this event
@@ -161,9 +171,96 @@ function WeeklySlate({ onPredictionMade }) {
 
   const madeCount = Object.keys(myPredictions).length
   const remaining = slate.length - madeCount
+  const topPicks = slate.filter(p => !myPredictions[p.id]).slice(0, 5)
 
   return (
     <div>
+      {/* Coach engagement banner */}
+      <div className="bg-gradient-to-r from-purple-500/10 via-[var(--crown)]/10 to-purple-500/10 border border-purple-500/20 rounded-xl p-4 mb-4">
+        <div className="flex items-start gap-3">
+          <NeuralCluster size="sm" intensity="active" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-text-primary">
+              {madeCount === 0
+                ? 'Make your first call — your AI coach is watching.'
+                : madeCount < 5
+                  ? `${madeCount} calls in. Keep going — your coach is learning your tendencies.`
+                  : `${madeCount} calls locked in. Your coach is building your profile.`
+              }
+            </p>
+            <p className="text-xs text-text-secondary mt-1 leading-relaxed">
+              The more calls you make, the better your AI coach understands your instincts. Over time, it&apos;ll spot patterns, challenge your blind spots, and sharpen your edge.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Top picks spotlight — show top 5 unpicked players */}
+      {topPicks.length > 0 && madeCount < slate.length && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Top Calls to Make</h4>
+            <span className="text-[10px] text-text-muted font-mono">{remaining} remaining</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {topPicks.map(player => {
+              const benchmarkValue = Math.round(player.sgTotal * 10) / 10
+              return (
+                <div
+                  key={player.id}
+                  className="flex-shrink-0 bg-[var(--surface)] border border-[var(--crown)]/20 rounded-xl p-3 w-36 hover:border-[var(--crown)]/40 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {player.headshotUrl ? (
+                      <img
+                        src={player.headshotUrl}
+                        alt=""
+                        className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-[var(--crown)]/50"
+                        onClick={() => setDrawerPlayer(player)}
+                      />
+                    ) : (
+                      <div
+                        className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs cursor-pointer hover:ring-2 hover:ring-[var(--crown)]/50"
+                        onClick={() => setDrawerPlayer(player)}
+                      >
+                        {player.name?.charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="text-xs font-medium text-text-primary truncate cursor-pointer hover:text-[var(--crown)] transition-colors"
+                        onClick={() => setDrawerPlayer(player)}
+                      >
+                        {player.name}
+                      </div>
+                      <div className="text-[10px] text-text-muted font-mono">
+                        {benchmarkValue > 0 ? '+' : ''}{benchmarkValue} SG
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => handleSubmit(player, 'over')}
+                      disabled={submitting === player.id}
+                      className="flex-1 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
+                    >
+                      OVER
+                    </button>
+                    <button
+                      onClick={() => handleSubmit(player, 'under')}
+                      disabled={submitting === player.id}
+                      className="flex-1 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
+                    >
+                      UNDER
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Tournament header */}
       <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
         <div className="flex items-center justify-between">
@@ -189,17 +286,20 @@ function WeeklySlate({ onPredictionMade }) {
           return (
             <div key={player.id} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
               <div className="p-3 flex items-center gap-3">
-                {/* Player info */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                {/* Player info — clickable to open drawer */}
+                <div
+                  className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group"
+                  onClick={() => setDrawerPlayer(player)}
+                >
                   {player.headshotUrl ? (
-                    <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover group-hover:ring-2 group-hover:ring-[var(--crown)]/50 transition-all" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm">
+                    <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm group-hover:ring-2 group-hover:ring-[var(--crown)]/50 transition-all">
                       {player.name?.charAt(0)}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="text-sm text-text-primary font-medium truncate">{player.name}</div>
+                    <div className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{player.name}</div>
                     {player.rank && (
                       <div className="text-xs text-text-primary/40 font-mono">Rank #{player.rank}</div>
                     )}
@@ -274,6 +374,13 @@ function WeeklySlate({ onPredictionMade }) {
           )
         })}
       </div>
+
+      {/* Player Drawer */}
+      <PlayerDrawer
+        playerId={drawerPlayer?.id}
+        isOpen={!!drawerPlayer}
+        onClose={() => setDrawerPlayer(null)}
+      />
     </div>
   )
 }
@@ -1326,8 +1433,8 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
 
 // ─── Main ProveIt Hub ───────────────────────────────────────────────────────
 const TABS = [
-  { id: 'nfl', label: 'NFL Predictions' },
   { id: 'slate', label: 'Golf Slate' },
+  { id: 'nfl', label: 'NFL Predictions' },
   { id: 'record', label: 'My Track Record' },
   { id: 'leaderboard', label: 'Leaderboards' },
   { id: 'compare', label: 'Compare' },
@@ -1338,7 +1445,7 @@ export default function ProveIt() {
   const [searchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const targetParam = searchParams.get('target')
-  const [activeTab, setActiveTab] = useState(tabParam || 'nfl')
+  const [activeTab, setActiveTab] = useState(tabParam || 'slate')
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {

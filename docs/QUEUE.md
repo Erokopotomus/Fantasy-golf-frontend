@@ -1827,6 +1827,39 @@ Check the current empty state in `Dashboard.jsx` — look for what renders when 
 
 ---
 
+### 065 — Commit: Prove It Page Overhaul (Default Golf, Engagement Banner, Player Drawer, Rank Sort)
+**Status:** `DONE`
+**Priority:** HIGH — Prove It page is key to engagement, especially during friend testing.
+**Prompt:**
+Cowork already made the edits in `frontend/src/pages/ProveIt.jsx`. Just commit and deploy.
+
+**Changes already made:**
+
+1. **Imports (lines 1-12):** Added `PlayerDrawer` and `NeuralCluster` imports.
+
+2. **Default tab changed (line ~1343):** Was `'nfl'`, now `'slate'` (Golf Slate shows first since golf is the active sport).
+
+3. **Tab order (TABS array, line ~1330):** Golf Slate moved to first position, NFL second.
+
+4. **Player sort (lines ~78-82):** Slate now sorted by rank ascending (best players first) instead of alphabetical. Falls back to SG total descending.
+
+5. **Engagement banner (above tournament header):** AI coach-themed banner with NeuralCluster animation. Dynamic copy based on how many calls the user has made:
+   - 0 calls: "Make your first call — your AI coach is watching."
+   - 1-4: "{n} calls in. Keep going — your coach is learning your tendencies."
+   - 5+: "{n} calls locked in. Your coach is building your profile."
+   - Subtext: "The more calls you make, the better your AI coach understands your instincts..."
+
+6. **Top Picks spotlight (below banner):** Horizontal scrolling row of the top 5 unpicked players as compact cards. Each card shows headshot, name, SG value, and OVER/UNDER buttons. Disappears when all top 5 are picked.
+
+7. **Player Drawer integration:** Every player row is now clickable — clicking the headshot/name opens the `PlayerDrawer` component to see full stats before making a call. Added `drawerPlayer` state and `<PlayerDrawer>` at bottom of component.
+
+8. **Hover effects:** Player rows have `cursor-pointer`, `group-hover:text-[var(--crown)]` on name, ring effect on headshot hover.
+
+**Files changed:**
+- `frontend/src/pages/ProveIt.jsx` (multiple edits: imports, default tab, tab order, sort, banner, top picks, drawer, hover effects)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
