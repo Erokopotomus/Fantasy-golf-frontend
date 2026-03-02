@@ -206,13 +206,14 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
       </div>
 
       {/* Name (clickable) + League status */}
-      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+      <div className="flex items-center gap-1.5 min-w-0 flex-1 sm:min-w-[130px]">
         <button
           onClick={(e) => {
             if (compareMode) { e.stopPropagation(); onToggleCompare?.(entry); return }
             onClickPlayer?.(entry.playerId)
           }}
           className="text-sm text-text-primary font-medium truncate hover:underline cursor-pointer text-left"
+          title={player.name || 'Unknown'}
         >
           {player.name || 'Unknown'}
         </button>
@@ -235,8 +236,10 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
         )}
       </div>
 
-      {/* Tag pills */}
-      <div className="hidden sm:flex items-center gap-1 shrink-0">
+      {/* Tag pills — show always if any tag is active, otherwise only on row hover */}
+      <div className={`hidden sm:flex items-center gap-1 shrink-0 ${
+        activeTags.length > 0 ? '' : 'opacity-0 group-hover:opacity-100'
+      } transition-opacity`}>
         {Object.entries(TAG_CONFIG).map(([key, cfg]) => {
           const isActive = activeTags.includes(key)
           return (

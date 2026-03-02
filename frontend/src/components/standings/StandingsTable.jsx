@@ -74,8 +74,12 @@ const StandingsTable = ({ standings, currentUserId }) => {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[var(--surface)] flex items-center justify-center text-lg">
-                        {team.avatar || '⛳'}
+                      <div className="w-10 h-10 rounded-full bg-[var(--surface)] flex items-center justify-center text-lg overflow-hidden">
+                        {team.avatar && (team.avatar.startsWith('http') || team.avatar.startsWith('data:')) ? (
+                          <img src={team.avatar} alt="" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          team.avatar || '⛳'
+                        )}
                       </div>
                       <div>
                         <p className={`font-medium ${isCurrentUser ? 'text-field' : 'text-text-primary'}`}>

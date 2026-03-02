@@ -38,7 +38,8 @@ export default function WeightedConsensusBar({ eventId, playerId, type = 'player
   return (
     <div className={`bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-lg p-3 ${className}`}>
       <div className="text-xs text-text-primary/40 font-mono uppercase tracking-wider mb-2">
-        Community Consensus ({data.total} calls)
+        <span className="sm:hidden">Consensus ({data.total})</span>
+        <span className="hidden sm:inline">Community Consensus ({data.total} calls)</span>
       </div>
 
       {/* Raw consensus bar */}

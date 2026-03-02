@@ -53,6 +53,16 @@ export default function NflTeamDetail() {
     load()
   }, [abbr])
 
+  // Lazy-load news on tab select (must be before early returns — Rules of Hooks)
+  useEffect(() => {
+    if (tab !== 'news' || teamNews.length > 0) return
+    setNewsLoading(true)
+    api.getTeamNews(abbr, { limit: 15 })
+      .then(data => setTeamNews(data.articles || []))
+      .catch(() => setTeamNews([]))
+      .finally(() => setNewsLoading(false))
+  }, [tab, abbr])
+
   if (loading) return <div className="max-w-6xl mx-auto px-4 pt-20 pb-8"><div className="text-center py-20"><div className="w-8 h-8 border-[3px] border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-3" /><p className="text-text-muted text-sm">Loading team...</p></div></div>
   if (!team) return <div className="max-w-6xl mx-auto px-4 pt-20 pb-8"><div className="text-center py-20 text-text-primary/30">Team not found</div></div>
 
@@ -75,16 +85,6 @@ export default function NflTeamDetail() {
     else acc.ties++
     return acc
   }, { wins: 0, losses: 0, ties: 0 })
-
-  // Lazy-load news on tab select
-  useEffect(() => {
-    if (tab !== 'news' || teamNews.length > 0) return
-    setNewsLoading(true)
-    api.getTeamNews(abbr, { limit: 15 })
-      .then(data => setTeamNews(data.articles || []))
-      .catch(() => setTeamNews([]))
-      .finally(() => setNewsLoading(false))
-  }, [tab, abbr])
 
   const tabs = ['roster', 'schedule', ...(stats ? ['stats'] : []), 'news']
 

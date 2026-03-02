@@ -760,7 +760,7 @@ export default function DraftBoardEditor() {
                     <SortHeader label="$" sortKey="auctionValue" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-12 text-center" tip="Auction draft value" />
                     <span className="w-8 shrink-0" />
                     <span className="flex-1 text-[9px] font-semibold uppercase tracking-wider text-text-primary/25">Player</span>
-                    <span className="w-[104px] text-center text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 shrink-0">Tags</span>
+                    <span className="w-[90px] text-center text-[9px] font-semibold uppercase tracking-wider text-text-primary/25 shrink-0">Tags</span>
                     <SortHeader label="CPI" sortKey="cpi" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-14 text-center" tip="Clutch Performance Index: proprietary composite of form, consistency, and clutch play (-3.0 to +3.0)" />
                     <SortHeader label="OWGR" sortKey="owgrRank" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-11 text-center" tip="Official World Golf Ranking position" />
                     <SortHeader label="SG Tot" sortKey="sgTotal" currentKey={sortKey} dir={sortDir} onSort={handleSort} className="w-11 text-center" tip="Strokes Gained: Total \u2014 overall strokes better/worse than field average per round" />

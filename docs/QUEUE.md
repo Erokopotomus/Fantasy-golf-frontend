@@ -528,7 +528,8 @@ Per prediction language rules: never use "picks", use "calls" or "insights" inst
 ---
 
 ### 024 — Board Editor: Player Name Truncation Fix
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Tag pills now hidden by default (opacity-0) with group-hover:opacity-100 when no tags active. Added sm:min-w-[130px] to player name container + title tooltip. Reduced Tags header width from w-[104px] to w-[90px]. Files: BoardEntryRow.jsx, DraftBoardEditor.jsx
 **Priority:** Medium — readability issue
 **Prompt:**
 In the Lab board editor (`/lab/:boardId`), the PLAYER column is too narrow. Every player name is truncated after ~6 characters: "Jon Rah...", "Tommy...", "Patri...", "Harri...", "Mave...", "Cam...", etc. Players are unidentifiable.
@@ -553,7 +554,8 @@ The cause: the TGT/SLP/AVD tag pill buttons in the TAGS column take up ~120px pe
 ---
 
 ### 025 — NFL Team Detail Page Crashes (Infinite Re-render Loop)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Fixed React Rules of Hooks violation: moved second useEffect (news lazy-load) before the conditional early returns. Early returns between two hooks caused Error #310. Files: NflTeamDetail.jsx
 **Priority:** HIGH — page completely crashes
 **Prompt:**
 The NFL team detail page (`/nfl/teams/:abbr`, e.g., `/nfl/teams/CHI`) causes React Error #310 (too many re-renders). The page renders completely blank — no nav bar, no content. Console shows 8+ errors all pointing to a `useEffect` in the team detail component causing an infinite loop.
@@ -575,7 +577,8 @@ The NFL team detail page (`/nfl/teams/:abbr`, e.g., `/nfl/teams/CHI`) causes Rea
 ---
 
 ### 026 — NFL Players Page: Default to 2024 Season (2025 Has No Data)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Changed default season to prefer 2024 over 2025 (seasons.includes(2024) ? '2024' : String(seasons[0])). Files: NflPlayers.jsx
 **Priority:** Medium — all stats show 0
 **Prompt:**
 The NFL Players page (`/nfl/players`) defaults to "2025 Season" which has no data synced yet (only 2024 is available). All players show 0 FPTS, 0 PASS YDS, 0 everything. The page also sorts alphabetically by name (Aaron Rodgers at #1) instead of by fantasy points.
@@ -594,7 +597,7 @@ Additionally, retired players like Alex Smith (shown as WAS) and AJ McCarron (sh
 ---
 
 ### 023 — Commit Cowork Landing Page Language Fixes
-**Status:** `TODO`
+**Status:** `DONE` — Committed and pushed as part of 203d7bd.
 **Priority:** Quick win
 **Prompt:**
 Commit and deploy the language fixes Cowork made to `frontend/src/pages/Landing.jsx`:
@@ -606,7 +609,8 @@ These are two small string changes. No logic changes.
 ---
 
 ### 027 — Standings Page: Base64 Avatar String Overflows Team Row
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Fixed avatar rendering with conditional: if avatar starts with 'http' or 'data:', render as <img>; otherwise render as text/emoji. Added overflow-hidden to container. Files: StandingsTable.jsx
 **Priority:** High — visible data corruption on league standings page
 **Prompt:**
 On the League Standings page (`/leagues/:id/standings`), the second team row (Poopstains / Mason Reed) renders a raw base64-encoded string across the entire row, overflowing horizontally and obscuring the team name. It looks like:
@@ -626,7 +630,8 @@ The first team (Dick Kickers) renders a normal "D" initial avatar. The issue is 
 ---
 
 ### 028 — Live Page: Blank When No Active Tournament (Missing Empty State)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Investigated: no standalone /live route exists. Live scoring is at /leagues/:leagueId/scoring which already has a full "No Tournament in Progress" empty state with back link and messaging (LeagueLiveScoring.jsx lines 371-392). No fix needed.
 **Priority:** Medium — affects user experience between tournaments
 **Prompt:**
 The `/live` page renders completely blank (just the nav bar) when no tournament is currently in progress. There's no empty state, no messaging, nothing. Users clicking "Live" in the nav between tournaments see a broken-looking empty page.
@@ -644,7 +649,8 @@ The `/live` page renders completely blank (just the nav bar) when no tournament 
 ---
 
 ### 029 — My Team Page: Blank Pre-Draft (Missing Empty State)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Investigated: TeamRoster.jsx already has comprehensive empty state at lines 327-457 with guard (!userTeam || roster.length === 0). Shows team identity card, skeleton roster slots (starters/bench/IR), and CTAs (Browse Free Agents, Back to League). No fix needed.
 **Priority:** Low — cosmetic, pre-draft only
 **Prompt:**
 The "My Team" page (`/leagues/:id/my-team`) renders completely blank when the league is in pre-draft state. No message, no content, just an empty page. The CLAUDE.md mentions "pre-draft team profile with roster skeleton" was built during the iPod Reframe, but it's not rendering.
@@ -661,7 +667,8 @@ The "My Team" page (`/leagues/:id/my-team`) renders completely blank when the le
 ---
 
 ### 030 — Prove It: "Community Consensus" Label Truncated in Compare Tab
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added responsive text: "Consensus (N)" on mobile, "Community Consensus (N calls)" on sm+. Uses hidden/sm:inline Tailwind classes. Files: WeightedConsensusBar.jsx
 **Priority:** Low — cosmetic
 **Prompt:**
 On the Prove It page (`/prove-it`), Compare tab, in the "vs Consensus" view, the label "Community Consensus" is truncated to "Community C..." next to the community avatar icon. The container is too narrow for the full text.

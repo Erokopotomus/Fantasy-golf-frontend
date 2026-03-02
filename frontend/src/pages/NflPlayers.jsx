@@ -34,13 +34,15 @@ export default function NflPlayers() {
   const [compareMode, setCompareMode] = useState(false)
   const [compareSelection, setCompareSelection] = useState([])
 
-  // Fetch available seasons on mount
+  // Fetch available seasons on mount — default to latest season with data (2024)
   useEffect(() => {
     api.getNflSeasons().then(data => {
       const seasons = data.seasons || []
       setAvailableSeasons(seasons)
       if (seasons.length > 0 && !season) {
-        setSeason(String(seasons[0]))
+        // Prefer 2024 (most recent with data) over 2025 (not yet synced)
+        const preferred = seasons.includes(2024) ? '2024' : String(seasons[0])
+        setSeason(preferred)
       }
     }).catch(() => {})
   }, [])
