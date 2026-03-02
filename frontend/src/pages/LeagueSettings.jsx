@@ -1294,7 +1294,7 @@ const LeagueSettings = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-sm font-semibold text-text-secondary overflow-hidden">
-                        {member.user?.avatar ? (
+                        {member.user?.avatar && member.user.avatar.startsWith('http') ? (
                           <img src={member.user.avatar} alt={member.user.name || ''} className="w-full h-full object-cover rounded-full" />
                         ) : (
                           member.user?.name?.charAt(0)?.toUpperCase() || '?'

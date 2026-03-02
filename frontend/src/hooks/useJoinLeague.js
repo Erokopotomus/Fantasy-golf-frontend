@@ -11,8 +11,7 @@ export const useJoinLeague = () => {
       setLoading(true)
       setError(null)
       setPreviewLeague(null)
-      // Try to get league info by code - backend may return league preview
-      const result = await api.joinLeagueByCode(code)
+      const result = await api.previewLeagueByCode(code)
       setPreviewLeague(result.league || result)
       return result
     } catch (err) {

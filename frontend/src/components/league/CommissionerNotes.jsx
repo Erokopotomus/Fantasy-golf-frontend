@@ -344,7 +344,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                 {/* Meta row — author + view count */}
                 <div className="flex items-center gap-2 mt-3 text-[11px] text-text-muted">
                   {/* Author avatar */}
-                  {post.author?.avatar ? (
+                  {post.author?.avatar && post.author.avatar.startsWith('http') ? (
                     <img src={post.author.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
                   ) : (
                     <div className="w-5 h-5 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-[9px] font-semibold text-text-secondary">
@@ -425,7 +425,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {(comments[post.id] || []).map(comment => (
                             <div key={comment.id} className="flex gap-2">
-                              {comment.user?.avatar ? (
+                              {comment.user?.avatar && comment.user.avatar.startsWith('http') ? (
                                 <img src={comment.user.avatar} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5" />
                               ) : (
                                 <div className="w-6 h-6 bg-[var(--bg-alt)] rounded-full flex items-center justify-center text-[10px] font-semibold text-text-secondary flex-shrink-0 mt-0.5">

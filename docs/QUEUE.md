@@ -1669,6 +1669,164 @@ If these fields don't exist on the Player model directly, check if they're on a 
 
 ---
 
+### 062 — Fix: New User Avatar Renders as Broken Image
+**Status:** `DONE`
+**Priority:** CRITICAL — Every new user sees a broken image icon in the navbar instead of their initial.
+**Prompt:**
+In `backend/src/routes/auth.js` line 63, the signup route sets `avatar: name.charAt(0).toUpperCase()` — a single letter like "J". This is NOT a valid image URL.
+
+In `frontend/src/components/layout/Navbar.jsx` line 511, the avatar display logic is:
+```jsx
+{user.avatar ? (
+  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover shadow-button" />
+) : (
+  <div className="w-8 h-8 bg-gradient-to-br from-gold to-orange rounded-full flex items-center justify-center text-slate font-semibold shadow-button">
+    {user.name?.charAt(0).toUpperCase() || 'U'}
+  </div>
+)}
+```
+
+Since `user.avatar` is "J" (truthy), it renders `<img src="J">` which is a broken image. The fallback initial-letter div never shows.
+
+**Fix (backend — preferred):** In `backend/src/routes/auth.js` line 63, change `avatar: name.charAt(0).toUpperCase()` to `avatar: null`. New users should NOT have an avatar set — the frontend already handles the fallback gracefully with a gold gradient circle showing their initial.
+
+**Also fix (frontend — defense in depth):** In `Navbar.jsx` line 511, add a URL check so single-character avatars or non-URL strings fall through to the initial-letter fallback:
+```jsx
+{user.avatar && user.avatar.startsWith('http') ? (
+  <img src={user.avatar} ... />
+) : (
+  <div className="w-8 h-8 bg-gradient-to-br from-gold to-orange rounded-full ...">
+    {user.name?.charAt(0).toUpperCase() || 'U'}
+  </div>
+)}
+```
+
+Search the entire frontend for other `user.avatar` or `member.user?.avatar` checks and apply the same `startsWith('http')` guard — there may be more places (League Settings members list, League Home teams table, etc.) that have the same issue.
+
+**Files to modify:**
+- `backend/src/routes/auth.js` — line 63: set avatar to null on signup
+- `frontend/src/components/layout/Navbar.jsx` — line 511: add URL validation
+- Search for and fix any other avatar rendering locations in frontend
+
+---
+
+### 063 — Fix: Join League by Code Joins Twice ("Already a member" Error)
+**Status:** `DONE`
+**Priority:** CRITICAL — Every invited user hits this bug when using paste-code flow.
+**Prompt:**
+The `useJoinLeague` hook (`frontend/src/hooks/useJoinLeague.js`) calls `api.joinLeagueByCode(code)` for BOTH `validateCode()` (line 15) AND `joinLeague()` (line 31). The backend endpoint `POST /api/leagues/join-by-code` (`backend/src/routes/leagues.js` line 661) **immediately joins the league** — there is no preview/validate mode.
+
+**What happens:**
+1. User pastes invite code → clicks "Find League" → `validateCode()` calls `POST /join-by-code` → user is SILENTLY JOINED
+2. Preview card appears showing league details + "Join League" button
+3. User clicks "Join League" → `joinLeague()` calls same endpoint → "Already a member of this league" error
+
+**Fix — add a preview endpoint on the backend:**
+
+Add a new route `GET /api/leagues/preview-by-code?code=XXXX` in `backend/src/routes/leagues.js`:
+```js
+// GET /api/leagues/preview-by-code?code=XXXX - Preview league by invite code (no join)
+router.get('/preview-by-code', authenticate, async (req, res, next) => {
+  try {
+    const code = req.query.code
+    if (!code) return res.status(400).json({ error: { message: 'Code required' } })
+
+    const league = await prisma.league.findUnique({
+      where: { inviteCode: code },
+      include: {
+        owner: { select: { name: true } },
+        _count: { select: { members: true } },
+        sport: { select: { name: true, slug: true } },
+      }
+    })
+
+    if (!league) return res.status(404).json({ error: { message: 'Invalid invite code' } })
+
+    // Check if already a member
+    const existingMember = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId: league.id } }
+    })
+
+    res.json({
+      league: {
+        id: league.id,
+        name: league.name,
+        commissioner: league.owner?.name,
+        type: league.draftType || 'snake',
+        memberCount: league._count.members,
+        maxMembers: league.maxTeams,
+        scoringType: league.scoringType,
+        rosterSize: league.rosterSize,
+        sport: league.sport?.name || 'Golf',
+        alreadyMember: !!existingMember,
+      }
+    })
+  } catch (error) { next(error) }
+})
+```
+
+**Then update the frontend hook** `useJoinLeague.js`:
+- `validateCode()` should call the NEW `GET /preview-by-code?code=XXX` endpoint (read-only, no side effects)
+- `joinLeague()` should continue calling `POST /join-by-code` (the actual join)
+
+**Also update `api.js`:** Add a new method:
+```js
+async previewLeagueByCode(code) {
+  return this.request(`/leagues/preview-by-code?code=${encodeURIComponent(code)}`)
+}
+```
+
+**Frontend handling for `alreadyMember`:** If the preview returns `alreadyMember: true`, show a message like "You're already in this league!" with a "Go to League" button linking to `/leagues/${league.id}` instead of the "Join League" button.
+
+**Files to modify:**
+- `backend/src/routes/leagues.js` — add `GET /preview-by-code` route
+- `frontend/src/services/api.js` — add `previewLeagueByCode()` method
+- `frontend/src/hooks/useJoinLeague.js` — change `validateCode` to use preview endpoint
+- `frontend/src/pages/JoinLeague.jsx` — handle `alreadyMember` state in preview card
+
+---
+
+### 064 — Improve: New User Post-Signup Experience (Invite-Aware Redirect + Better Onboarding)
+**Status:** `DONE`
+**Priority:** HIGH — First impression for every new user. Current experience dumps them on an empty dashboard.
+**Prompt:**
+Three improvements to the new user experience:
+
+**1. Invite-aware signup redirect:**
+When a user signs up via an invite link (e.g., `clutchfantasysports.com/leagues/join?code=XXXX`), they currently:
+- See the join page → redirect to `/signup` (if not logged in) → sign up → land on `/dashboard`
+- Then have to manually go BACK to `/leagues/join?code=XXXX` to actually join
+
+Fix: In `frontend/src/pages/Signup.jsx`, the `from` variable (line 22) already captures the intended destination: `const from = location.state?.from?.pathname || '/dashboard'`. The issue is that the join page may not pass the state properly when redirecting to signup.
+
+Check the auth redirect flow:
+- If `JoinLeague.jsx` requires auth and the user isn't logged in, React Router's `ProtectedRoute` should redirect to `/signup` with `{ state: { from: location } }` so that after signup, the user lands back at `/leagues/join?code=XXXX`
+- Look at the `ProtectedRoute` component and verify it passes `state: { from: location }` (including search params like `?code=XXXX`)
+- The redirect in `Signup.jsx` should use the full path including search params, not just pathname
+
+**2. Improve the onboarding modal:**
+The existing `OnboardingModal.jsx` is decent (2-step: sport picker + quick profile). However:
+- Make sure it fires reliably for brand new users (it checks `onboardingCompleted` in localStorage, which should be false for new signups)
+- Add a brief "What is Clutch?" sentence — "Clutch is a season-long fantasy sports platform. Create leagues, draft players, compete all season." Many new users won't know what this is.
+- The "Let's Go" button at the end should route intelligently: if user has a pending invite (from URL), route to the join page. If they have leagues, route to dashboard. If no leagues, route to `/leagues/create` or show Create/Join options.
+
+**3. Empty dashboard state:**
+When a new user (no leagues) sees the dashboard, the empty state should be welcoming and guide them:
+- Show a clear "Welcome to Clutch" header
+- Two prominent action cards: "Create a League" and "Join a League"
+- Brief explanation of what each means
+- If the user came from an invite, the dashboard should detect and surface "You have a pending invite — Join Now"
+
+Check the current empty state in `Dashboard.jsx` — look for what renders when `hasLeagues` is false.
+
+**Files to modify:**
+- `frontend/src/pages/Signup.jsx` — ensure invite URL state persists through signup
+- `frontend/src/components/onboarding/OnboardingModal.jsx` — add Clutch explanation, smart routing
+- `frontend/src/pages/Dashboard.jsx` — improve empty state for new users
+- Check `ProtectedRoute` or auth redirect component — ensure `from` state includes search params
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

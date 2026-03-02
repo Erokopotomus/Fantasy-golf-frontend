@@ -60,7 +60,7 @@ router.post('/signup', validateSignup, async (req, res, next) => {
         password: hashedPassword,
         name,
         username,
-        avatar: name.charAt(0).toUpperCase()
+        avatar: null
       },
       select: {
         id: true,

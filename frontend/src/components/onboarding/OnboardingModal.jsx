@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { useCoachProfile } from '../../hooks/useCoachProfile'
 import NeuralCluster from '../common/NeuralCluster'
@@ -43,6 +43,7 @@ const QUESTIONS = [
 
 const OnboardingModal = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { showOnboarding, completeOnboarding, skipOnboarding } = useOnboarding()
   const { setProfile } = useCoachProfile()
   const [step, setStep] = useState(0)
@@ -63,19 +64,28 @@ const OnboardingModal = () => {
     setAnswers(prev => ({ ...prev, [questionKey]: value }))
   }
 
+  const getPostOnboardingRoute = () => {
+    // Check if there's a pending invite in the URL
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('code') || location.pathname.includes('/leagues/join')) {
+      return `${location.pathname}${location.search}`
+    }
+    return '/dashboard'
+  }
+
   const handleComplete = () => {
     setProfile({
       preferredSports: selectedSports,
       ...answers,
     })
     completeOnboarding()
-    navigate('/')
+    navigate(getPostOnboardingRoute())
   }
 
   const handleSkipProfile = () => {
     setProfile({ preferredSports: selectedSports })
     completeOnboarding()
-    navigate('/')
+    navigate(getPostOnboardingRoute())
   }
 
   return (
@@ -112,10 +122,13 @@ const OnboardingModal = () => {
               </div>
 
               <h2 className="text-2xl font-bold font-display text-text-primary text-center mb-3">
-                Every great manager has an edge.
+                Welcome to Clutch
               </h2>
+              <p className="text-text-secondary text-center text-sm mb-4 leading-relaxed max-w-md mx-auto">
+                Season-long fantasy sports with AI coaching, league history, and verified prediction tracking. Create leagues, draft players, compete all season.
+              </p>
               <p className="text-lg font-display font-bold text-[var(--crown)] text-center mb-4">
-                Yours just got a brain.
+                Every great manager has an edge. Yours just got a brain.
               </p>
               <p className="text-text-secondary text-center text-sm mb-6 leading-relaxed max-w-md mx-auto">
                 Clutch Coach learns your draft tendencies, tracks your predictions,

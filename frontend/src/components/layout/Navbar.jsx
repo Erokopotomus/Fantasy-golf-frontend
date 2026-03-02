@@ -508,7 +508,7 @@ const Navbar = () => {
                     }}
                     className="hidden sm:flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
                   >
-                    {user.avatar ? (
+                    {user.avatar && user.avatar.startsWith('http') ? (
                       <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover shadow-button" />
                     ) : (
                       <div className="w-8 h-8 bg-gradient-to-br from-gold to-orange rounded-full flex items-center justify-center text-slate font-semibold shadow-button">

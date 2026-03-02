@@ -657,6 +657,44 @@ router.post('/:id/join', authenticate, async (req, res, next) => {
   }
 })
 
+// GET /api/leagues/preview-by-code?code=XXXX - Preview league by invite code (no join)
+router.get('/preview-by-code', authenticate, async (req, res, next) => {
+  try {
+    const code = req.query.code
+    if (!code) return res.status(400).json({ error: { message: 'Code required' } })
+
+    const league = await prisma.league.findUnique({
+      where: { inviteCode: code },
+      include: {
+        owner: { select: { name: true } },
+        _count: { select: { members: true } },
+        sport: { select: { name: true, slug: true } },
+      }
+    })
+
+    if (!league) return res.status(404).json({ error: { message: 'Invalid invite code' } })
+
+    const existingMember = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId: league.id } }
+    })
+
+    res.json({
+      league: {
+        id: league.id,
+        name: league.name,
+        commissioner: league.owner?.name,
+        type: league.draftType || 'snake',
+        memberCount: league._count.members,
+        maxMembers: league.maxTeams,
+        scoringType: league.scoringType,
+        rosterSize: league.rosterSize,
+        sport: league.sport?.name || 'Golf',
+        alreadyMember: !!existingMember,
+      }
+    })
+  } catch (error) { next(error) }
+})
+
 // POST /api/leagues/join-by-code - Join league by invite code
 router.post('/join-by-code', authenticate, async (req, res, next) => {
   try {

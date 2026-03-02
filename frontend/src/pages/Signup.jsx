@@ -19,7 +19,8 @@ const Signup = () => {
   const { signup } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = location.state?.from?.pathname || '/dashboard'
+  const fromLocation = location.state?.from
+  const from = fromLocation ? `${fromLocation.pathname}${fromLocation.search || ''}` : '/dashboard'
 
   const handleSubmit = async (e) => {
     e.preventDefault()

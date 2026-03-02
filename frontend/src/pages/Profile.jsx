@@ -130,7 +130,7 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className="w-20 h-20 rounded-full flex-shrink-0 overflow-hidden shadow-button">
-                  {user?.avatar ? (
+                  {user?.avatar && user.avatar.startsWith('http') ? (
                     <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-gold flex items-center justify-center text-text-primary text-3xl font-bold font-display">

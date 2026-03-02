@@ -126,6 +126,10 @@ class ApiService {
     })
   }
 
+  async previewLeagueByCode(code) {
+    return this.request(`/leagues/preview-by-code?code=${encodeURIComponent(code)}`)
+  }
+
   async joinLeagueByCode(inviteCode) {
     return this.request('/leagues/join-by-code', {
       method: 'POST',

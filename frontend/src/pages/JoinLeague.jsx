@@ -163,7 +163,19 @@ const JoinLeague = () => {
                 </div>
               </div>
 
-              {previewLeague.memberCount >= previewLeague.maxMembers ? (
+              {previewLeague.alreadyMember ? (
+                <div className="space-y-3">
+                  <div className="bg-field/10 border border-field/50 rounded-lg p-3 text-field text-sm text-center">
+                    You're already in this league!
+                  </div>
+                  <Button
+                    onClick={() => navigate(`/leagues/${previewLeague.id}`)}
+                    fullWidth
+                  >
+                    Go to League
+                  </Button>
+                </div>
+              ) : previewLeague.memberCount >= previewLeague.maxMembers ? (
                 <div className="bg-crown/10 border border-crown/50 rounded-lg p-3 text-crown text-sm text-center">
                   This league is full
                 </div>
