@@ -141,8 +141,8 @@ const Profile = () => {
               )}
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl font-bold font-display text-text-primary">{user?.name || 'User'}</h2>
-                {user?.username ? (
-                  <p className="text-gold text-sm font-medium">@{user.username}</p>
+                {(user?.username || formData.username) ? (
+                  <p className="text-gold text-sm font-medium">@{user?.username || formData.username}</p>
                 ) : !isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}

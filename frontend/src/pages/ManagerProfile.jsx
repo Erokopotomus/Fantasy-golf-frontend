@@ -655,7 +655,7 @@ const ManagerProfile = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <StatBox label="Accuracy" value={`${(reputation.accuracyRate * 100).toFixed(1)}%`} color="text-field" />
+              <StatBox label="Accuracy" value={reputation.totalPredictions > 0 ? `${(reputation.accuracyRate * 100).toFixed(1)}%` : '—'} color="text-field" />
               <StatBox label="Total Calls" value={formatNum(reputation.totalPredictions)} />
               <StatBox label="Correct" value={formatNum(reputation.correctPredictions)} color="text-accent-gold" />
               <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}` : '0'} color="text-blaze" />
