@@ -39,8 +39,13 @@ The platform that makes running a fantasy league with your friends feel effortle
 
 ### Active
 
-- [ ] Platform QA & visual testing — battle-test all pages, fix rough edges before building new features
+- [x] Platform QA & visual testing — V2 audit complete, all P0/P1/P2 fixed, 7 P3s remaining
+- [ ] Owner Alias Merge Tool — Yahoo imports create fragmented owner identities ("Tank" vs "Anthony", "AO" vs "aric"). Build commissioner-facing merge wizard (similar to Owner Assignment Wizard) where commissioners map nicknames → canonical owners. On merge: update all `draftData` JSON across HistoricalSeason records, persist alias mappings. Critical for AI/rating accuracy — fragmented identities break Draft Intelligence, Clutch Rating, and coach feedback loops.
+- [ ] Draft position auto-backfill — When import pipeline resolves a player name, also look up their position from the canonical Player table and write it into `draftData.picks[].position`. Fix the import services (Yahoo, Sleeper, ESPN) to do this automatically going forward. Write a one-time backfill script for existing historical seasons with missing positions.
+- [ ] Remove dead OAuth buttons — Login.jsx and Signup.jsx have disabled Google/GitHub OAuth buttons with "(soon)" labels. Remove GitHub entirely (wrong audience for fantasy sports). Remove Google until actually wired up. DONE in Cowork, needs commit+deploy.
+- [ ] Chat FAB mobile fix — `bottom-24` → `bottom-20`, auto-minimize after 4s. DONE in Cowork, needs commit+deploy.
 - [ ] Polish live golf experience — tournament weekend battle-test, fix live scoring/tournament view/fantasy scoring pipeline
+- [ ] Live golf scoring validation — end-to-end check: DataGolf/ESPN raw data → Performance/RoundScore → fantasyPoints → FantasyScore → WeeklyTeamResult → Matchups. Compare against real PGA Tour results.
 - [ ] Manager Profile (Phase 5A) — social identity page with Clutch Rating display, stats, sport breakdown
 - [ ] NFL player database, player cards, and drawers — continuing from other laptop work
 - [ ] NFL 2025 data sync — check nflverse for 2025 CSVs periodically (dynasty/keeper managers peak Feb-May)

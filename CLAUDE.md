@@ -39,6 +39,24 @@ Clutch Fantasy Sports is a season-long fantasy sports platform. Golf-first, mult
 
 ---
 
+## DEVELOPMENT WORKFLOW: THE CLUTCH LOOP
+
+Three agents work in parallel: **Cowork** (audit/fix/queue), **Claude Code** (build/deploy), **Eric** (decisions/routing/testing).
+
+**The loop:** Audit → Fix → Queue → Build → Verify → Next
+
+- **Cowork** audits pages in Chrome, fixes frontend issues on sight (edits files directly), writes detailed backend prompts for anything it can't test locally, adds items to `docs/QUEUE.md`, verifies deploys, maintains Obsidian vault + this file.
+- **Claude Code** reads `docs/QUEUE.md` and works through `TODO` items top to bottom. Marks items `DONE` with a summary when complete. See QUEUE.md header for exact instructions.
+- **Eric** routes work between agents, makes product decisions, tests in the real app.
+
+**Key rule: Fix on sight, not later.** When auditing, fix issues immediately. Don't document bugs to fix later — that creates debt. Cowork edits frontend directly, queues backend prompts with full file paths and line numbers while context is fresh.
+
+**Task queue:** `docs/QUEUE.md` — the single source of truth for what needs building. Cowork adds `TODO` items with self-contained prompts. Claude Code marks them `DONE`. Cowork marks `VERIFIED` after checking in Chrome.
+
+**Session end protocol:** Say "sync up" and Cowork will update Obsidian vault (session-log, current-status, backlog, decisions-log) and this file.
+
+---
+
 ## SPORT SUPPORT PRIORITY
 
 1. **Golf** — Launch sport. PGA Tour, LIV, DP World Tour, LPGA.
@@ -446,9 +464,9 @@ Every feature should answer: "Which persona is this for?" When in doubt, optimiz
 - **Seasonal Flywheel:** Feed auto-adjusts by sports calendar. Golf fills NFL gaps (Feb-May). No dead months.
 
 ### Current Build Priority
-Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill (2018-2026) done → DataGolf SG Backfill done → SG Intelligence done → Golf Hub + Season Race + Compare done → Live Scoring Pipeline done → Scoring Page Redesign done → Board Editor Overhaul done → iPod Reframe (6 phases) done → Profile Enhancement done → Nav + League UX done → **Next: Finish Phase 5 (manager profile, leaderboards, badges v2), Phase 4E remaining (OWGR sync validation), Golf/NFL Hub polish**
+Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill (2018-2026) done → DataGolf SG Backfill done → SG Intelligence done → Golf Hub + Season Race + Compare done → Live Scoring Pipeline done → Scoring Page Redesign done → Board Editor Overhaul done → iPod Reframe (6 phases) done → Profile Enhancement done → Nav + League UX done → Clutch Loop audit (19 fixes deployed) → **Next: Vault Playoff History Tab (021), finish platform audit (Dashboard, Lab, NFL, Prove It), Phase 5 remaining (manager profile, leaderboards, badges v2)**
 
-**Backlog:** NFL team pages need polish. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags).
+**Backlog:** NFL team pages need polish. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags). Vault Playoff History (brackets, championship history, consolation, playoff intelligence — data confirmed in DB).
 
 ---
 
@@ -495,7 +513,7 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 
 ---
 
-*Last updated: February 26, 2026*
+*Last updated: March 2, 2026*
 *Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & SG Intelligence complete. ESPN historical backfill (2018-2026) complete. DataGolf SG backfill complete. Golf Hub + Season Race + Compare page live. Live scoring pipeline + scoring page redesign live. Board editor overhauled + compare mode. iPod Reframe (6 phases) complete. Profile enhancement complete. Nav + League UX improvements live. 567 commits. 91+ database models. 165+ API endpoints. 70+ frontend pages. 34 cron jobs. 66 backend services. 51 migrations. 2 sports live.*
 
 **All migrations (1-48) deployed to Railway.**

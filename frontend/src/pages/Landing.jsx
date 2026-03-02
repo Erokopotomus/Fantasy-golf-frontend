@@ -372,7 +372,7 @@ const Landing = () => {
             <div className="space-y-4">
               {[
                 { label: 'Prediction Accuracy', pct: 82, c1: BZ, c2: BZ_H },
-                { label: 'Pick Record', pct: 76, c1: FD, c2: FD_B },
+                { label: 'Win Rate', pct: 76, c1: FD, c2: FD_B },
                 { label: 'Draft Intelligence', pct: 70, c1: CR, c2: CR_B },
                 { label: 'Consistency', pct: 88, c1: FD, c2: FD_B },
                 { label: 'Bold Calls Rewarded', pct: 65, c1: CR, c2: CR_B },
@@ -657,7 +657,7 @@ const Landing = () => {
                 <span className="block font-editorial italic" style={{ color: BZ, fontSize: '1.05em' }}>Year three, you have a database.</span>
               </h2>
               <p className="text-[var(--text-2)] leading-relaxed mb-6">
-                Every projection, every pick, every reasoning note — permanently logged. Clutch doesn't just track
+                Every projection, every call, every reasoning note — permanently logged. Clutch doesn't just track
                 what you predicted. It tracks whether you were right, where you were biased, and how you're improving.
                 This is the home for how you think about sports — and no one else is building it.
               </p>

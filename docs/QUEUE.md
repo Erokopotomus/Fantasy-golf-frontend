@@ -514,6 +514,169 @@ The Yahoo importer already captures full playoff data. Each entry in the `weekly
 
 ---
 
+### 022 — Landing Page: "Pick Record" and "every pick" Language Violations
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Cowork fixed directly. "Pick Record" → "Win Rate" (line 375), "every pick" → "every call" (line 660). Files: Landing.jsx
+**Priority:** Low — brand consistency
+**Prompt:**
+Two instances of forbidden "pick" language on the landing page (`frontend/src/pages/Landing.jsx`):
+1. Line 375: `Pick Record` in Score Breakdown bars → should be `Win Rate`
+2. Line 660: `every pick` in body copy → should be `every call`
+
+Per prediction language rules: never use "picks", use "calls" or "insights" instead.
+
+---
+
+### 024 — Board Editor: Player Name Truncation Fix
+**Status:** `TODO`
+**Priority:** Medium — readability issue
+**Prompt:**
+In the Lab board editor (`/lab/:boardId`), the PLAYER column is too narrow. Every player name is truncated after ~6 characters: "Jon Rah...", "Tommy...", "Patri...", "Harri...", "Mave...", "Cam...", etc. Players are unidentifiable.
+
+The cause: the TGT/SLP/AVD tag pill buttons in the TAGS column take up ~120px per row even when no tags are applied (all 197 players show UNTAGGED). Combined with CPI, OWGR, SG TOT, OTT, APP, PUTT data columns, there's no room for names.
+
+**Fix options (pick the best):**
+1. **Hide empty tag pills:** Only show TGT/SLP/AVD buttons on row hover, or only when at least one tag is applied. When all players are untagged, those pills are just visual noise.
+2. **Widen PLAYER column:** Give PLAYER at least `min-w-[140px]` or `w-[160px]`. Let SG sub-columns (OTT/APP/PUTT) compress — they're small numbers.
+3. **Truncate with tooltip:** At minimum, add a `title` attribute to the player name span so hovering shows the full name.
+4. **Responsive column toggle:** Add a toggle to show/hide SG detail columns (OTT/APP/PUTT) to free up horizontal space.
+
+**Where to look:**
+- Board editor component: search `frontend/src/` for the board entry row rendering
+- Look for the PLAYER column width and TAGS column width in the grid/table layout
+
+**Rules:**
+- Don't remove columns — just improve the space allocation
+- Player names should show at least first name + full last name (e.g., "Jon Rahm", "Tommy Fleetwood")
+- Test with long names like "Tommy Fleetwood", "Christiaan Bezuidenhout", "Byeong Hun An"
+
+---
+
+### 025 — NFL Team Detail Page Crashes (Infinite Re-render Loop)
+**Status:** `TODO`
+**Priority:** HIGH — page completely crashes
+**Prompt:**
+The NFL team detail page (`/nfl/teams/:abbr`, e.g., `/nfl/teams/CHI`) causes React Error #310 (too many re-renders). The page renders completely blank — no nav bar, no content. Console shows 8+ errors all pointing to a `useEffect` in the team detail component causing an infinite loop.
+
+**Error:** `Minified React error #310` — "Too many re-renders. React limits the number of renders to prevent an infinite loop."
+
+**Stack trace points to:** A `useEffect` hook in the NFL team detail page component (minified as `r9`).
+
+**Where to look:**
+- NFL team page component: search `frontend/src/` for the component rendering at `/nfl/teams/:abbr` — likely `NflTeamPage.jsx` or similar
+- Check for `useEffect` hooks that call setState without proper dependency arrays, or that create circular update patterns (setState → re-render → useEffect fires → setState again)
+- Common causes: missing dependency in useEffect, object/array dependency that creates new references each render, or setState inside useEffect that triggers the same useEffect
+
+**Rules:**
+- Fix the infinite loop — likely a dependency array issue
+- Test with multiple team abbreviations (CHI, GB, SF, etc.)
+- Don't restructure the component — just fix the loop
+
+---
+
+### 026 — NFL Players Page: Default to 2024 Season (2025 Has No Data)
+**Status:** `TODO`
+**Priority:** Medium — all stats show 0
+**Prompt:**
+The NFL Players page (`/nfl/players`) defaults to "2025 Season" which has no data synced yet (only 2024 is available). All players show 0 FPTS, 0 PASS YDS, 0 everything. The page also sorts alphabetically by name (Aaron Rodgers at #1) instead of by fantasy points.
+
+Additionally, retired players like Alex Smith (shown as WAS) and AJ McCarron (shown as CIN) appear in the active player list.
+
+**Fixes needed:**
+1. **Default season:** Change default season selector to 2024 (the most recent season with data). Or: detect which season has data and default to that.
+2. **Default sort:** Sort by FPTS descending by default, not alphabetically by name.
+3. **Filter retired players:** Don't show players who haven't played a game in 2+ seasons in the default view. Or add an "Active only" filter toggle.
+
+**Where to look:**
+- NFL Players page component: search `frontend/src/` for the NFL players component
+- Check the default `season` state value and the default sort column/direction
+
+---
+
+### 023 — Commit Cowork Landing Page Language Fixes
+**Status:** `TODO`
+**Priority:** Quick win
+**Prompt:**
+Commit and deploy the language fixes Cowork made to `frontend/src/pages/Landing.jsx`:
+1. Line 375: Changed `Pick Record` → `Win Rate` in the Score Breakdown section
+2. Line 660: Changed `every pick` → `every call` in the flywheel body copy
+
+These are two small string changes. No logic changes.
+
+---
+
+### 027 — Standings Page: Base64 Avatar String Overflows Team Row
+**Status:** `TODO`
+**Priority:** High — visible data corruption on league standings page
+**Prompt:**
+On the League Standings page (`/leagues/:id/standings`), the second team row (Poopstains / Mason Reed) renders a raw base64-encoded string across the entire row, overflowing horizontally and obscuring the team name. It looks like:
+
+`Y3NcqPcM1JJDV41220/12b9WLdT3WB7NFSSvWFTIMd0zOs6e...`
+
+The first team (Dick Kickers) renders a normal "D" initial avatar. The issue is likely that the second team's avatar field contains a raw base64 data URI or Cloudinary URL that's being rendered as text instead of as an `<img>` tag.
+
+**Where to look:**
+- The Standings page component: search `frontend/src/` for the standings component
+- Look at how team avatars are rendered in the standings table — there should be an `<img>` or avatar component, but the raw string is leaking through as text content
+- Check if the avatar value is a base64 string, data URI, or URL that needs to be wrapped in an image element
+- Also add `overflow-hidden` / `text-overflow: ellipsis` / `max-width` constraints as a safety net so long strings never overflow table rows
+
+**League to test:** Testicles league (2 members), the Poopstains team row
+
+---
+
+### 028 — Live Page: Blank When No Active Tournament (Missing Empty State)
+**Status:** `TODO`
+**Priority:** Medium — affects user experience between tournaments
+**Prompt:**
+The `/live` page renders completely blank (just the nav bar) when no tournament is currently in progress. There's no empty state, no messaging, nothing. Users clicking "Live" in the nav between tournaments see a broken-looking empty page.
+
+**What to add:**
+- An empty state message: "No Live Events Right Now" with a relevant icon (golf flag or calendar)
+- Show the next upcoming tournament: "Next Up: Puerto Rico Open — Starts March 5" with a link to the tournament preview page
+- Optionally show the most recent completed tournament: "Last Event: Cognizant Classic — Won by Nico Echavarria (-17)" with a link to the recap
+- This makes the Live page useful even between events
+
+**Where to look:**
+- The Live page component: search `frontend/src/pages/` for Live.jsx or similar
+- Add conditional rendering for when `activeTournament` is null/undefined
+
+---
+
+### 029 — My Team Page: Blank Pre-Draft (Missing Empty State)
+**Status:** `TODO`
+**Priority:** Low — cosmetic, pre-draft only
+**Prompt:**
+The "My Team" page (`/leagues/:id/my-team`) renders completely blank when the league is in pre-draft state. No message, no content, just an empty page. The CLAUDE.md mentions "pre-draft team profile with roster skeleton" was built during the iPod Reframe, but it's not rendering.
+
+**What to add (or fix):**
+- A pre-draft empty state: "Your roster will appear here after the draft" or "Draft day is [date] — prep your board in The Lab"
+- Link to the Lab or Draft Room
+- If the pre-draft team profile component exists, check why it's not rendering
+
+**Where to look:**
+- The MyTeam/Roster page component in `frontend/src/pages/`
+- Check if there's a pre-draft conditional that should be showing something
+
+---
+
+### 030 — Prove It: "Community Consensus" Label Truncated in Compare Tab
+**Status:** `TODO`
+**Priority:** Low — cosmetic
+**Prompt:**
+On the Prove It page (`/prove-it`), Compare tab, in the "vs Consensus" view, the label "Community Consensus" is truncated to "Community C..." next to the community avatar icon. The container is too narrow for the full text.
+
+**Fix options:**
+- Shorten the label to "Consensus" (cleaner anyway)
+- Or increase the max-width of the label area
+- Or add a tooltip showing the full name on hover
+
+**Where to look:**
+- Search `frontend/src/` for the Prove It Compare component
+- Look for the "Community Consensus" text rendering
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
