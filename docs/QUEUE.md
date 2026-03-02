@@ -1608,6 +1608,67 @@ Cowork already made the edits in `frontend/src/pages/LeagueSettings.jsx`. Just c
 
 ---
 
+### 060 — Commit: Draft Room Stats Display Fixes (SG Column + Player Modal)
+**Status:** `DONE`
+**Priority:** CRITICAL — Draft is tomorrow. SG Total shows "—" for all players and Player Detail Modal shows all dashes.
+**Prompt:**
+Cowork already made the edits. Just commit and deploy.
+
+**Changes already made (2 files):**
+
+1. **`frontend/src/components/draft/DraftDashboard.jsx`** — Draft Dashboard "Available" table SG Total column showed "—" for every player because it referenced `player.stats?.sgTotal` but draft player data is flat (`player.sgTotal`). Fixed 3 locations:
+   - **Sort (line 48):** Changed to `a.stats?.sgTotal || a.sgTotal || 0` (same for `b`)
+   - **Color class (line 222):** Changed to `(player.stats?.sgTotal || player.sgTotal || 0) > 1`
+   - **Display value (line 224):** Changed to `(player.stats?.sgTotal ?? player.sgTotal)?.toFixed(2) || '—'`
+
+2. **`frontend/src/pages/DraftRoom.jsx`** — Player Detail Modal showed all "—" stats because `detailPlayer` has flat fields but modal expects `player.stats.sgTotal`. Fixed by wrapping `detailPlayer` with a `stats` object when passing to `PlayerDetailModal` (lines ~412-429):
+   ```jsx
+   player={detailPlayer ? {
+     ...detailPlayer,
+     stats: detailPlayer.stats || {
+       sgTotal: detailPlayer.sgTotal,
+       sgOffTee: detailPlayer.sgOffTee,
+       sgApproach: detailPlayer.sgApproach,
+       sgAroundGreen: detailPlayer.sgAroundGreen,
+       sgPutting: detailPlayer.sgPutting,
+       drivingDistance: detailPlayer.drivingDistance,
+       drivingAccuracy: detailPlayer.drivingAccuracy,
+       gir: detailPlayer.gir,
+       scoringAvg: detailPlayer.scoringAvg,
+     },
+   } : null}
+   ```
+   Note: The backend `GET /api/drafts/:id/players` endpoint doesn't select `drivingDistance`, `drivingAccuracy`, `gir`, or `scoringAvg` — those will still show "—" in the modal. A separate backend change (item 061) would fix that.
+
+**Files changed:**
+- `frontend/src/components/draft/DraftDashboard.jsx` (3 edits: sort, color, display)
+- `frontend/src/pages/DraftRoom.jsx` (1 edit: PlayerDetailModal player prop)
+
+---
+
+### 061 — Backend: Include Full Player Stats in Draft Players Endpoint
+**Status:** `DONE`
+**Priority:** HIGH — Player Detail Modal in draft room shows "—" for Driving Distance, Driving Accuracy, GIR%, and Scoring Avg because the endpoint doesn't return these fields.
+**Prompt:**
+The `GET /api/drafts/:id/players` endpoint in `backend/src/routes/drafts.js` (around line 144) returns player data but doesn't include all stat fields needed by the `PlayerDetailModal` component.
+
+**Current behavior:** The endpoint returns SG fields (`sgTotal`, `sgOffTee`, `sgApproach`, `sgAroundGreen`, `sgPutting`) but NOT `drivingDistance`, `drivingAccuracy`, `gir` (greens in regulation), or `scoringAvg`.
+
+**Fix:** In the `select` or `include` clause for the players query, add these fields:
+- `drivingDistance`
+- `drivingAccuracy`
+- `gir`
+- `scoringAvg`
+
+Check the Player model in `backend/prisma/schema.prisma` first to confirm exact field names. These are likely Float? fields on the Player model that were populated during the ESPN/DataGolf backfill.
+
+If these fields don't exist on the Player model directly, check if they're on a related model (like a recent Performance record) and compute season averages.
+
+**Files to modify:**
+- `backend/src/routes/drafts.js` — add missing stat fields to the players query select clause
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

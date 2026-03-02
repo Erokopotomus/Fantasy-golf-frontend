@@ -410,7 +410,20 @@ const DraftRoomContent = () => {
 
       {/* Player Detail Modal */}
       <PlayerDetailModal
-        player={detailPlayer}
+        player={detailPlayer ? {
+          ...detailPlayer,
+          stats: detailPlayer.stats || {
+            sgTotal: detailPlayer.sgTotal,
+            sgOffTee: detailPlayer.sgOffTee,
+            sgApproach: detailPlayer.sgApproach,
+            sgAroundGreen: detailPlayer.sgAroundGreen,
+            sgPutting: detailPlayer.sgPutting,
+            drivingDistance: detailPlayer.drivingDistance,
+            drivingAccuracy: detailPlayer.drivingAccuracy,
+            gir: detailPlayer.gir,
+            scoringAvg: detailPlayer.scoringAvg,
+          },
+        } : null}
         isOpen={isModalOpen}
         onClose={closePlayerDetail}
       />

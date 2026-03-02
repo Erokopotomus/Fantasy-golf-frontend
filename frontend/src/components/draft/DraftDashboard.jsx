@@ -45,7 +45,7 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
           aVal = a.name; bVal = b.name
           return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
         case 'sgTotal':
-          aVal = a.stats?.sgTotal || 0; bVal = b.stats?.sgTotal || 0
+          aVal = a.stats?.sgTotal || a.sgTotal || 0; bVal = b.stats?.sgTotal || b.sgTotal || 0
           break
         default:
           aVal = a.rank || 999; bVal = b.rank || 999
@@ -219,9 +219,9 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                     </td>
                     <td className="py-1.5 text-right">
                       <span className={`text-xs font-medium ${
-                        (player.stats?.sgTotal || 0) > 1 ? 'text-gold' : 'text-text-primary'
+                        (player.stats?.sgTotal || player.sgTotal || 0) > 1 ? 'text-gold' : 'text-text-primary'
                       }`}>
-                        {player.stats?.sgTotal?.toFixed(2) || '—'}
+                        {(player.stats?.sgTotal ?? player.sgTotal)?.toFixed(2) || '—'}
                       </span>
                     </td>
                   </tr>

@@ -198,6 +198,10 @@ router.get('/:id/players', authenticate, async (req, res, next) => {
           sgApproach: true,
           sgAroundGreen: true,
           sgPutting: true,
+          drivingDistance: true,
+          drivingAccuracy: true,
+          gir: true,
+          scoringAvg: true,
           countryFlag: true,
           events: true,
         }
