@@ -62,15 +62,17 @@ function WeeklySlate({ onPredictionMade }) {
 
         // Get tournament leaderboard as prediction targets
         const lbRes = await api.getTournamentLeaderboard(tournament.id, { limit: 50 }).catch(() => ({ leaderboard: [] }))
+        const isUpcoming = tournament.status === 'UPCOMING'
         const targets = (lbRes.leaderboard || [])
-          .filter(p => p.sgTotal != null)
+          .filter(p => p.sgTotal != null || p.seasonSgTotal != null)
           .map(p => ({
-            id: p.id || p.playerId,
-            name: p.name || p.playerName,
-            sgTotal: p.sgTotal,
-            headshotUrl: p.headshotUrl,
+            id: p.player?.id || p.id || p.playerId,
+            name: p.player?.name || p.name || p.playerName,
+            sgTotal: p.sgTotal ?? p.seasonSgTotal,
+            isSeasonAvg: p.sgTotal == null && p.seasonSgTotal != null,
+            headshotUrl: p.player?.headshotUrl || p.headshotUrl,
             position: p.position,
-            rank: p.owgrRank || p.rank,
+            rank: p.player?.owgrRank || p.owgrRank || p.rank,
           }))
         setSlate(targets)
 
@@ -167,7 +169,9 @@ function WeeklySlate({ onPredictionMade }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-text-primary font-semibold">{currentTournament.name}</h3>
-            <p className="text-text-primary/40 text-sm mt-0.5">Player Benchmark Calls</p>
+            <p className="text-text-primary/40 text-sm mt-0.5">
+              {currentTournament.status === 'UPCOMING' ? 'Pre-Tournament Calls — Season SG Averages' : 'Player Benchmark Calls'}
+            </p>
           </div>
           <div className="text-right">
             <div className="text-2xl font-mono font-bold text-amber-400">{madeCount}</div>
@@ -204,7 +208,7 @@ function WeeklySlate({ onPredictionMade }) {
 
                 {/* Benchmark */}
                 <div className="text-center px-2">
-                  <div className="text-xs text-text-primary/40">SG</div>
+                  <div className="text-xs text-text-primary/40">{player.isSeasonAvg ? 'Avg SG' : 'SG'}</div>
                   <div className="text-sm font-mono font-bold text-text-primary">
                     {benchmarkValue > 0 ? '+' : ''}{benchmarkValue}
                   </div>

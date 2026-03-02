@@ -1522,7 +1522,8 @@ Backend has no even-number restriction — just stores the integer. Frontend-onl
 ---
 
 ### 057 — Golf Prove It Slate: Work for UPCOMING Tournaments (Season SG Benchmarks)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Backend leaderboard now includes player career SG stats (seasonSgTotal etc.) for UPCOMING tournaments. Frontend WeeklySlate falls back to season averages when live SG is null. Shows "Avg SG" label and "Pre-Tournament Calls" header. Files: tournaments.js, ProveIt.jsx
 **Priority:** CRITICAL — Golf is the launch sport, and the Golf Slate tab on Prove It shows "No Active Tournament" even though Arnold Palmer has a 72-player field. Friends will see a dead page.
 **Prompt:**
 The Golf Slate in Prove It (`frontend/src/pages/ProveIt.jsx`, `WeeklySlate` component, lines 41-158) only works during IN_PROGRESS tournaments because it relies on **live tournament SG data** as the benchmark value. For UPCOMING tournaments the leaderboard has 72 players but every `sgTotal` is `null` (no shots hit yet). The code filters `p.sgTotal != null` on line 66, so the slate is empty.

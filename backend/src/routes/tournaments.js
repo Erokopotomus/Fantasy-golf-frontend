@@ -286,6 +286,11 @@ router.get('/:id/leaderboard', async (req, res, next) => {
               headshotUrl: true,
               owgrRank: true,
               primaryTour: true,
+              sgTotal: true,
+              sgPutting: true,
+              sgApproach: true,
+              sgOffTee: true,
+              sgAroundGreen: true,
             }
           },
         },
@@ -408,6 +413,14 @@ router.get('/:id/leaderboard', async (req, res, next) => {
         sgApproach: perf.sgApproach,
         sgAroundGreen: perf.sgAroundGreen,
         sgPutting: perf.sgPutting,
+        // For UPCOMING tournaments, include player's career SG averages
+        ...(tournament?.status === 'UPCOMING' ? {
+          seasonSgTotal: perf.player?.sgTotal ?? null,
+          seasonSgPutting: perf.player?.sgPutting ?? null,
+          seasonSgApproach: perf.player?.sgApproach ?? null,
+          seasonSgOffTee: perf.player?.sgOffTee ?? null,
+          seasonSgAroundGreen: perf.player?.sgAroundGreen ?? null,
+        } : {}),
       }
 
       // Include Clutch metrics
