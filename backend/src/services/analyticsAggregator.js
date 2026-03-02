@@ -618,6 +618,151 @@ async function computeManagerProfiles(seasonId, prisma) {
     profiles++
   }
 
+  // Include imported league history (HistoricalSeason)
+  // Fetches all claimed historical records and merges them into ManagerProfile
+  const historicalSeasons = await prisma.historicalSeason.findMany({
+    where: { ownerUserId: { not: null } },
+    include: {
+      league: { select: { sportId: true } },
+    },
+  })
+
+  if (historicalSeasons.length > 0) {
+    // Group by (userId, sportId)
+    const histByUserSport = new Map() // "userId|sportId" → records[]
+    for (const hs of historicalSeasons) {
+      const uid = hs.ownerUserId
+      const sid = hs.league.sportId || null
+      const key = `${uid}|${sid || 'null'}`
+      if (!histByUserSport.has(key)) histByUserSport.set(key, [])
+      histByUserSport.get(key).push(hs)
+    }
+
+    for (const [key, records] of histByUserSport) {
+      const [userId, sportIdStr] = key.split('|')
+      const historicalSportId = sportIdStr === 'null' ? null : sportIdStr
+
+      const hWins = records.reduce((s, r) => s + r.wins, 0)
+      const hLosses = records.reduce((s, r) => s + r.losses, 0)
+      const hTies = records.reduce((s, r) => s + (r.ties || 0), 0)
+      const hPoints = round2(records.reduce((s, r) => s + (r.pointsFor || 0), 0))
+      const hChampionships = records.filter(r => r.playoffResult === 'champion').length
+      const hSeasonYears = new Set(records.map(r => r.seasonYear))
+      const hLeagueIds = new Set(records.map(r => r.leagueId))
+
+      const hRanked = records.filter(r => r.finalStanding != null)
+      const hAvgFinish = hRanked.length > 0
+        ? round2(hRanked.reduce((s, r) => s + r.finalStanding, 0) / hRanked.length)
+        : 0
+      const hBestFinish = hRanked.length > 0
+        ? Math.min(...hRanked.map(r => r.finalStanding))
+        : null
+
+      // Merge with existing ManagerProfile for this user+sport (from TeamSeason above)
+      const existing = historicalSportId
+        ? await prisma.managerProfile.findUnique({
+            where: { userId_sportId: { userId, sportId: historicalSportId } },
+          })
+        : null
+
+      const mergedWins = (existing?.wins || 0) + hWins
+      const mergedLosses = (existing?.losses || 0) + hLosses
+      const mergedTies = (existing?.ties || 0) + hTies
+      const mergedGames = mergedWins + mergedLosses + mergedTies
+      const mergedChamps = (existing?.championships || 0) + hChampionships
+      const mergedPoints = round2((existing?.totalPoints || 0) + hPoints)
+      const mergedLeagues = (existing?.totalLeagues || 0) + hLeagueIds.size
+      const mergedSeasons = (existing?.totalSeasons || 0) + hSeasonYears.size
+      const mergedAvgFinish = (existing?.avgFinish > 0 && hAvgFinish > 0)
+        ? round2((existing.avgFinish + hAvgFinish) / 2)
+        : existing?.avgFinish || hAvgFinish
+      const mergedBestFinish = existing?.bestFinish != null && hBestFinish != null
+        ? Math.min(existing.bestFinish, hBestFinish)
+        : existing?.bestFinish ?? hBestFinish
+
+      if (historicalSportId) {
+        await prisma.managerProfile.upsert({
+          where: { userId_sportId: { userId, sportId: historicalSportId } },
+          update: {
+            totalLeagues: mergedLeagues, totalSeasons: mergedSeasons,
+            championships: mergedChamps,
+            wins: mergedWins, losses: mergedLosses, ties: mergedTies,
+            winPct: mergedGames > 0 ? round2(mergedWins / mergedGames) : 0,
+            avgFinish: mergedAvgFinish, bestFinish: mergedBestFinish,
+            totalPoints: mergedPoints,
+          },
+          create: {
+            userId, sportId: historicalSportId,
+            totalLeagues: mergedLeagues, totalSeasons: mergedSeasons,
+            championships: mergedChamps,
+            wins: mergedWins, losses: mergedLosses, ties: mergedTies,
+            winPct: mergedGames > 0 ? round2(mergedWins / mergedGames) : 0,
+            avgFinish: mergedAvgFinish, bestFinish: mergedBestFinish,
+            totalPoints: mergedPoints,
+          },
+        })
+        profiles++
+      }
+    }
+
+    // Build aggregate ManagerProfile (sportId = null) for all users who have any data
+    const allUserIds = new Set()
+    for (const hs of historicalSeasons) allUserIds.add(hs.ownerUserId)
+    for (const uid of byUser.keys()) allUserIds.add(uid)
+
+    for (const userId of allUserIds) {
+      // Sum across all per-sport profiles for this user
+      const sportProfiles = await prisma.managerProfile.findMany({
+        where: { userId, sportId: { not: null } },
+      })
+      if (sportProfiles.length === 0) continue
+
+      const aggW = sportProfiles.reduce((s, p) => s + p.wins, 0)
+      const aggL = sportProfiles.reduce((s, p) => s + p.losses, 0)
+      const aggT = sportProfiles.reduce((s, p) => s + p.ties, 0)
+      const aggGames = aggW + aggL + aggT
+      const aggChamps = sportProfiles.reduce((s, p) => s + p.championships, 0)
+      const aggPts = round2(sportProfiles.reduce((s, p) => s + p.totalPoints, 0))
+      const aggLeagues = sportProfiles.reduce((s, p) => s + p.totalLeagues, 0)
+      const aggSeasons = sportProfiles.reduce((s, p) => s + p.totalSeasons, 0)
+      const withFinish = sportProfiles.filter(p => p.avgFinish > 0)
+      const aggAvgFinish = withFinish.length > 0
+        ? round2(withFinish.reduce((s, p) => s + p.avgFinish, 0) / withFinish.length)
+        : 0
+      const withBest = sportProfiles.filter(p => p.bestFinish != null)
+      const aggBestFinish = withBest.length > 0
+        ? Math.min(...withBest.map(p => p.bestFinish))
+        : null
+      const withDE = sportProfiles.filter(p => p.draftEfficiency != null)
+      const aggDE = withDE.length > 0
+        ? round2(withDE.reduce((s, p) => s + p.draftEfficiency, 0) / withDE.length)
+        : null
+      const withROI = sportProfiles.filter(p => p.auctionROI != null)
+      const aggROI = withROI.length > 0
+        ? round2(withROI.reduce((s, p) => s + p.auctionROI, 0) / withROI.length)
+        : null
+
+      // Prisma doesn't support null in compound unique upsert, so find + update/create
+      const existingAgg = await prisma.managerProfile.findFirst({
+        where: { userId, sportId: null },
+      })
+      const aggData = {
+        totalLeagues: aggLeagues, totalSeasons: aggSeasons,
+        championships: aggChamps,
+        wins: aggW, losses: aggL, ties: aggT,
+        winPct: aggGames > 0 ? round2(aggW / aggGames) : 0,
+        avgFinish: aggAvgFinish, bestFinish: aggBestFinish,
+        totalPoints: aggPts, draftEfficiency: aggDE, auctionROI: aggROI,
+      }
+      if (existingAgg) {
+        await prisma.managerProfile.update({ where: { id: existingAgg.id }, data: aggData })
+      } else {
+        await prisma.managerProfile.create({ data: { userId, sportId: null, ...aggData } })
+      }
+      profiles++
+    }
+  }
+
   return { profiles, summaries }
 }
 
