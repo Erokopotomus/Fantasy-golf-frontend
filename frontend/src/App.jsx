@@ -140,6 +140,9 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/join/:code" element={<JoinRedirect />} />
           <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/create-league" element={<Navigate to="/leagues/create" replace />} />
+          <Route path="/register" element={<Navigate to="/signup" replace />} />
+          <Route path="/golf/tournaments" element={<Navigate to="/tournaments" replace />} />
           <Route
             path="/dashboard"
             element={

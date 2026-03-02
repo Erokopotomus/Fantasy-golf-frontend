@@ -1429,6 +1429,81 @@ If TournamentHeader doesn't fit the Golf Hub layout cleanly, add the three panel
 
 ---
 
+### 054 — Commit: League Settings Members Avatar Bug + Invite Code Sizing
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Committed Cowork's avatar img fix + invite code text-base sizing. Files: LeagueSettings.jsx
+**Priority:** CRITICAL — friends are about to test
+**Prompt:**
+Cowork already made the edits in `frontend/src/pages/LeagueSettings.jsx`. Just commit and deploy.
+
+**Changes already made:**
+
+1. **Avatar rendering fix (line ~1191-1197):** Member avatars were rendering `member.user?.avatar` as raw text content inside a `<div>`, so when a user had a Cloudinary/base64 avatar URL, the entire URL string was dumped as visible text across the page. Fixed to check if avatar exists and render an `<img>` tag, falling back to initial letter.
+
+2. **Invite code sizing fix (line ~1130):** The invite code was displayed as `text-3xl tracking-[0.3em]` which made the 25-character CUID code comically large and stretched across the page. Changed to `text-base tracking-wide break-all` for a reasonable size.
+
+**Files changed:**
+- `frontend/src/pages/LeagueSettings.jsx` (2 edits)
+
+---
+
+### 055 — Pre-Draft League Size Editing + Email Invites
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added editable Max Teams dropdown (locked post-draft) to General settings. Backend PATCH accepts maxTeams with pre-draft validation. Added email invite endpoint (POST /leagues/:id/invite-email) using Resend + sendLeagueInviteEmail(). Email invite UI added to Members tab. Files: LeagueSettings.jsx, leagues.js, emailService.js
+**Priority:** HIGH — commissioner UX for friend testing
+**Prompt:**
+Two commissioner features needed for pre-draft leagues:
+
+**A) Editable league size before draft:**
+Currently when a commissioner creates a league (e.g., 12 teams), that number is locked. Before the draft happens, the commissioner should be able to change the league size (number of teams/members). This is important because commissioners often don't know the exact count until friends confirm.
+
+In `frontend/src/pages/LeagueSettings.jsx`, the General settings tab should:
+- Show a "Max Teams" or "League Size" dropdown/input that is EDITABLE when `league.status` is pre-draft (no draft has occurred yet)
+- Show it as read-only/disabled once a draft has been completed
+- The backend `PATCH /api/leagues/:id/settings` endpoint should accept `maxTeams` changes only when the league hasn't drafted yet
+
+Check the current General tab to see if `maxTeams` is already shown — if so, just make it editable. If not, add it.
+
+Backend: In `backend/src/routes/leagues.js` (or wherever settings PATCH is), add validation:
+- If league has an associated completed draft, reject `maxTeams` changes
+- Otherwise allow updating `maxTeams` on the League model
+
+**B) Email invite for members:**
+On the Members tab in League Settings (`LeagueSettings.jsx`), add an "Invite by Email" section below the invite code:
+- Text input for email address
+- "Send Invite" button
+- Backend: `POST /api/leagues/:id/invite-email` that:
+  1. Validates the email format
+  2. Sends an email (use a simple transactional email — check if there's already an email service configured, e.g., SendGrid, Resend, or Nodemailer)
+  3. The email contains the league name, commissioner name, and a direct join link: `https://clutchfantasysports.com/leagues/join?code={inviteCode}`
+  4. If no email service is configured yet, set up Resend (free tier, simple API). Add `RESEND_API_KEY` to Railway env vars.
+  5. Show success/error toast on frontend
+
+**Files to modify:**
+- `frontend/src/pages/LeagueSettings.jsx` — add email invite UI + make maxTeams editable pre-draft
+- `backend/src/routes/leagues.js` — add email invite endpoint + maxTeams validation
+- Possibly add email service (e.g., `backend/src/services/emailService.js`)
+
+---
+
+### 056 — Dead Routes Cleanup
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added redirects: /create-league → /leagues/create, /register → /signup, /golf/tournaments → /tournaments. Files: App.jsx
+**Priority:** MEDIUM — prevents confusion during friend testing
+**Prompt:**
+Several routes render blank pages because they don't exist or have wrong paths:
+
+1. `/create-league` — renders blank. The actual route is `/leagues/create`. Add a redirect from `/create-league` to `/leagues/create` in `App.jsx`.
+2. `/register` — renders blank. The actual signup route is `/signup`. Add a redirect from `/register` to `/signup`.
+3. `/golf/tournaments` — renders blank (not a real route). Tournaments page is at `/tournaments`. Add redirect.
+
+In `frontend/src/App.jsx`, add `<Route path="/create-league" element={<Navigate to="/leagues/create" replace />} />` and similar for the other dead routes. Import `Navigate` from react-router-dom if not already imported.
+
+**Files to modify:**
+- `frontend/src/App.jsx`
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

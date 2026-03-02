@@ -40,6 +40,7 @@ const LeagueSettings = () => {
 
   const [settings, setSettings] = useState({
     name: league?.name || '',
+    maxTeams: league?.maxTeams || 10,
     scoringType: league?.settings?.scoringType || 'standard',
     rosterSize: league?.settings?.rosterSize || 6,
     irSlots: league?.settings?.irSlots || 0,
@@ -149,6 +150,7 @@ const LeagueSettings = () => {
     try {
       await api.updateLeague(leagueId, {
         name: settings.name,
+        maxTeams: settings.maxTeams,
         settings: {
           scoringType: settings.scoringType,
           rosterSize: settings.rosterSize,
@@ -346,6 +348,27 @@ const LeagueSettings = () => {
                 onChange={(e) => setSettings({ ...settings, name: e.target.value })}
                 className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                League Size (Max Teams)
+              </label>
+              <select
+                value={settings.maxTeams || league?.maxTeams || 10}
+                onChange={(e) => setSettings({ ...settings, maxTeams: parseInt(e.target.value) })}
+                disabled={!canChangeFormat}
+                className={`w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none ${!canChangeFormat ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {[2, 4, 6, 8, 10, 12, 14, 16, 20].map(n => (
+                  <option key={n} value={n}>{n} teams</option>
+                ))}
+              </select>
+              {!canChangeFormat && (
+                <p className="text-xs text-text-muted mt-2">
+                  League size cannot be changed after a draft has been completed
+                </p>
+              )}
             </div>
 
             <div>
@@ -1167,6 +1190,37 @@ const LeagueSettings = () => {
             <p className="text-text-muted text-xs mt-3">
               Share this code with friends to invite them to your league. They can enter it at the Join League page.
             </p>
+
+            {/* Email Invite */}
+            <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
+              <p className="text-text-muted text-xs mb-2">INVITE BY EMAIL</p>
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                const input = e.target.elements.inviteEmail
+                const email = input.value.trim()
+                if (!email) return
+                try {
+                  await api.request(`/leagues/${leagueId}/invite-email`, {
+                    method: 'POST',
+                    body: JSON.stringify({ email }),
+                  })
+                  notify.success('Invite Sent', `Email sent to ${email}`)
+                  input.value = ''
+                } catch (err) {
+                  notify.error('Failed', err.message || 'Could not send invite email')
+                }
+              }} className="flex gap-2">
+                <input
+                  name="inviteEmail"
+                  type="email"
+                  placeholder="friend@email.com"
+                  className="flex-1 p-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                />
+                <Button type="submit" variant="secondary" className="shrink-0">
+                  Send Invite
+                </Button>
+              </form>
+            </div>
           </Card>
 
           {/* Members List */}

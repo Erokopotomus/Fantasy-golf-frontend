@@ -53,4 +53,31 @@ async function sendVaultInviteEmail({ to, ownerName, leagueName, personalUrl, fr
   }
 }
 
-module.exports = { sendVaultInviteEmail, isConfigured }
+/**
+ * Send a league invite email.
+ */
+async function sendLeagueInviteEmail({ to, commissionerName, leagueName, joinUrl }) {
+  if (!isConfigured || !resendClient) {
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  try {
+    await resendClient.emails.send({
+      from: 'Clutch Fantasy <onboarding@resend.dev>',
+      to,
+      subject: `You're invited to ${leagueName} on Clutch Fantasy`,
+      text:
+        `Hey,\n\n` +
+        `${commissionerName} invited you to join "${leagueName}" on Clutch Fantasy Sports.\n\n` +
+        `Join here: ${joinUrl}\n\n` +
+        `Clutch is a season-long fantasy platform with AI coaching, league history, and more.\n` +
+        `See you in the league!`,
+    })
+    return { success: true }
+  } catch (err) {
+    console.error('[email] League invite send failed:', err.message)
+    return { success: false, error: err.message }
+  }
+}
+
+module.exports = { sendVaultInviteEmail, sendLeagueInviteEmail, isConfigured }

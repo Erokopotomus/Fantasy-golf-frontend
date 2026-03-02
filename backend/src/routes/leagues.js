@@ -304,10 +304,11 @@ router.get('/:id', authenticate, async (req, res, next) => {
 // PATCH /api/leagues/:id - Update league settings (commissioner only)
 router.patch('/:id', authenticate, async (req, res, next) => {
   try {
-    const { name, format, settings, isPublic } = req.body
+    const { name, format, settings, isPublic, maxTeams } = req.body
 
     const league = await prisma.league.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: { drafts: { select: { status: true }, take: 1 } },
     })
 
     if (!league) {
@@ -323,6 +324,15 @@ router.patch('/:id', authenticate, async (req, res, next) => {
     const updateData = {}
     if (name !== undefined) updateData.name = name
     if (isPublic !== undefined) updateData.isPublic = isPublic
+
+    // maxTeams only editable pre-draft
+    if (maxTeams !== undefined) {
+      const hasDrafted = league.drafts?.some(d => d.status === 'COMPLETED')
+      if (hasDrafted) {
+        return res.status(400).json({ error: { message: 'Cannot change league size after draft is completed' } })
+      }
+      updateData.maxTeams = parseInt(maxTeams)
+    }
 
     // Handle format change
     if (format !== undefined) {
@@ -355,6 +365,46 @@ router.patch('/:id', authenticate, async (req, res, next) => {
     })
 
     res.json({ league: updatedLeague })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/leagues/:id/invite-email - Send league invite via email (commissioner only)
+router.post('/:id/invite-email', authenticate, async (req, res, next) => {
+  try {
+    const { email } = req.body
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: { message: 'Valid email address required' } })
+    }
+
+    const league = await prisma.league.findUnique({
+      where: { id: req.params.id },
+      include: { owner: { select: { name: true } } },
+    })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can send invites' } })
+    }
+
+    const emailService = require('../services/emailService')
+    if (!emailService.isConfigured) {
+      return res.status(503).json({ error: { message: 'Email service not configured' } })
+    }
+
+    const joinUrl = `https://clutchfantasysports.com/leagues/join?code=${league.inviteCode}`
+    const result = await emailService.sendLeagueInviteEmail({
+      to: email,
+      commissionerName: league.owner?.name || 'Your commissioner',
+      leagueName: league.name,
+      joinUrl,
+    })
+
+    if (result.success) {
+      res.json({ message: 'Invite sent' })
+    } else {
+      res.status(500).json({ error: { message: result.error || 'Failed to send email' } })
+    }
   } catch (error) {
     next(error)
   }
