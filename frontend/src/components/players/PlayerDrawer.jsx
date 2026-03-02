@@ -862,6 +862,17 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                               </div>
                             )
                           })()}
+
+                          {/* Make a Call CTA */}
+                          <Link
+                            to={`/prove-it?tab=nfl`}
+                            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                          >
+                            <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm font-semibold text-amber-400">Make a Call</span>
+                          </Link>
                         </>
                       ) : (
                         <div className="grid grid-cols-2 gap-2">

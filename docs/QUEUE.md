@@ -903,7 +903,8 @@ Two changes to make Vault more discoverable:
 ---
 
 ### 043 — NFL Predictions: Group by Week + Add Prediction Prompts to Player Drawer
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added type filter pills (All/Game Winner/Player Calls/Bold Calls) to TrackRecord when NFL filter active. NFL predictions now group by week in collapsible sections with accuracy per week. Added "Make a Call" CTA to PlayerDrawer for NFL players linking to /prove-it?tab=nfl. Extracted shared PredictionRow component. Files: ProveIt.jsx, PlayerDrawer.jsx
 **Priority:** MEDIUM — NFL predictions are currently a flat list of 114 items. Needs grouping and interaction design.
 **Prompt:**
 The Prove It page for NFL (`/prove-it` with NFL tab selected) shows all NFL predictions as one long flat list. This needs structure:
@@ -927,7 +928,8 @@ The Prove It page for NFL (`/prove-it` with NFL tab selected) shows all NFL pred
 ---
 
 ### 044 — Landing + Onboarding: Sport-Aware Refresh + Differentiator Messaging
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Made landing page sport-aware: hero CTAs now "Get Started — Free" + "Fantasy Football" (equal weight), added NFL to subtitle. Why Clutch cards updated: "AI Research Lab" → "AI Coach", added "League Vault" card, removed generic "Year-Round" card, made all descriptions punchier. "Fantasy Golf — Live Now" → "Two Sports. One Platform." with NFL mention. All CTAs sport-neutral. NFL pill updated "SPRING '26" → "FALL '26". Onboarding already had 2-step coach intro with sport selection — no changes needed. Files: Landing.jsx
 **Priority:** MEDIUM — First impression for cold visitors. Benefits from all other work being done first.
 **Prompt:**
 In `frontend/src/pages/Landing.jsx` and onboarding components:

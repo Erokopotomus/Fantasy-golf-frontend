@@ -119,18 +119,18 @@ const Landing = () => {
                 <strong className="text-[var(--text-1)] font-semibold">The platform where sports knowledge meets accountability.</strong>
               </p>
               <p className="font-mono text-xs text-[var(--text-3)] mb-8 mx-auto lg:mx-0">
-                Fantasy leagues · AI research · Prediction tracking
+                Fantasy leagues · AI coach · Prediction tracking · League vault
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <Link to="/signup">
                   <Button size="lg" fullWidth className="sm:w-auto">
-                    Play Fantasy Golf
+                    Get Started — Free
                   </Button>
                 </Link>
                 <Link to="/signup">
                   <Button variant="secondary" size="lg" fullWidth className="sm:w-auto">
-                    NFL — Early Access
+                    Fantasy Football
                   </Button>
                 </Link>
               </div>
@@ -213,7 +213,7 @@ const Landing = () => {
                   }}
                 >
                   <span>🏈</span> <span style={{ color: isLight ? '#fff' : BZ_H }}>NFL</span>
-                  <span className="font-mono text-[8px] font-bold uppercase tracking-wider" style={{ color: BZ_H }}>SPRING '26</span>
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-wider" style={{ color: BZ_H }}>FALL '26</span>
                 </div>
               </div>
             </div>
@@ -272,12 +272,12 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[
-              { icon: '🎯', title: 'Prove It Predictions', desc: 'Make your calls before kickoff. Your accuracy is tracked, rated, and public.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
-              { icon: '✦', title: 'AI Research Lab', desc: 'Matchup analysis, trend detection, and draft strategy powered by AI.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
-              { icon: '🏆', title: 'Fantasy Leagues', desc: 'Auction drafts, FAAB waivers, H2H. Golf live, NFL Spring 2026.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
-              { icon: '📊', title: 'Clutch Rating', desc: 'One score proving your sports IQ. Every call, every bold prediction feeds it.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
-              { icon: '⚡', title: 'Live Tournaments', desc: 'Real-time leaderboards as PGA events unfold. Shot by shot.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
-              { icon: '🧠', title: 'Year-Round', desc: 'Not a September app. Your brain stays sharp and your rating builds all year.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
+              { icon: '🎯', title: 'Prove It Predictions', desc: 'Make calls before kickoff. Your accuracy is tracked, rated, and public. No hiding.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
+              { icon: '🧠', title: 'AI Coach', desc: 'Your personal analyst. Surfaces trends, flags biases, and gets smarter the more you play.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
+              { icon: '🏆', title: 'Fantasy Leagues', desc: 'Auction or snake drafts, FAAB waivers, H2H matchups. Golf and NFL live.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
+              { icon: '📊', title: 'Clutch Rating', desc: 'One score for everything you know. Predictions, league results, draft IQ — all measured.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
+              { icon: '📚', title: 'League Vault', desc: 'Import your league history from ESPN, Yahoo, Sleeper, or Fantrax. Every season preserved.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
+              { icon: '⚡', title: 'Live Scoring', desc: 'Real-time fantasy scoring during PGA events and NFL game days. Shot by shot, play by play.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
             ].map((f, i) => (
               <div
                 key={i}
@@ -444,7 +444,7 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 lg:gap-10">
             {[
-              { num: '1', title: 'Play', desc: 'Run your season-long league on the most modern fantasy platform built. Snake or auction drafts, trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, or Fantrax.' },
+              { num: '1', title: 'Play', desc: 'Run your season-long league on the most modern fantasy platform built. Snake or auction drafts, trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, Fantrax, or MFL.' },
               { num: '2', title: 'Track', desc: "Log projections and weekly calls. Everything gets tracked — your reasoning, your accuracy, your draft decisions. Over time, Clutch becomes your sports brain." },
               { num: '3', title: 'Prove', desc: "Your Clutch Rating builds from everything you do — league results, prediction accuracy, bold calls, draft intelligence. Share your profile. This is your sports resume." },
             ].map(step => (
@@ -464,7 +464,7 @@ const Landing = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
             <Link to="/signup">
               <Button size="lg" fullWidth className="sm:w-auto">
-                Play Fantasy Golf Now
+                Start Playing — Free
               </Button>
             </Link>
           </div>
@@ -489,10 +489,10 @@ const Landing = () => {
               className="font-display font-extrabold text-[var(--text-1)] mb-4 leading-tight"
               style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em' }}
             >
-              Fantasy Golf — Live Now
+              Two Sports. One Platform.
             </h2>
             <p className="text-[var(--text-2)] max-w-2xl mx-auto leading-relaxed">
-              Clutch is live for the 2026 PGA Tour season with the most complete fantasy golf platform ever built.
+              Fantasy Golf is live for the 2026 PGA Tour season. Fantasy Football launches for the 2026 NFL season.
               Five league formats, live scoring, real analytics, active roster management.
             </p>
           </div>
@@ -630,7 +630,7 @@ const Landing = () => {
 
           <div className="text-center mt-8">
             <Link to="/signup">
-              <Button size="lg">Start a Golf League — Free</Button>
+              <Button size="lg">Start a League — Free</Button>
             </Link>
           </div>
         </div>
@@ -842,7 +842,7 @@ const Landing = () => {
             <span className="font-editorial italic" style={{ color: BZ, fontSize: '1.05em' }}>it?</span>
           </h2>
           <p className="text-base mb-7 max-w-[400px] mx-auto" style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Golf season is live. Get in before your friends do.
+            Golf is live. Football is coming. Get in before your friends do.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <Link to="/signup">
@@ -863,7 +863,7 @@ const Landing = () => {
               Learn More
             </button>
           </div>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>No credit card required. Free forever for golf.</p>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>No credit card required. Free to play.</p>
         </div>
       </section>
 
