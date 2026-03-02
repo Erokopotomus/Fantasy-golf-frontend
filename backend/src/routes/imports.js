@@ -1127,6 +1127,39 @@ router.post('/reimport-season', authenticate, async (req, res) => {
       }
     }
 
+    // Auto-apply owner aliases if any exist for this league
+    const aliases = await prisma.ownerAlias.findMany({ where: { leagueId } })
+    if (aliases.length > 0) {
+      const renameMap = {}
+      for (const a of aliases) {
+        if (a.ownerName !== a.canonicalName) renameMap[a.ownerName] = a.canonicalName
+      }
+      if (Object.keys(renameMap).length > 0) {
+        const freshSeasons = await prisma.historicalSeason.findMany({
+          where: { leagueId, seasonYear: parseInt(seasonYear), NOT: { draftData: null } },
+          select: { id: true, draftData: true },
+        })
+        for (const s of freshSeasons) {
+          const draft = s.draftData
+          if (!draft?.picks) continue
+          let changed = false
+          const updatedPicks = draft.picks.map(pick => {
+            if (pick.ownerName && renameMap[pick.ownerName]) {
+              changed = true
+              return { ...pick, ownerName: renameMap[pick.ownerName] }
+            }
+            return pick
+          })
+          if (changed) {
+            await prisma.historicalSeason.update({
+              where: { id: s.id },
+              data: { draftData: { ...draft, picks: updatedPicks } },
+            })
+          }
+        }
+      }
+    }
+
     res.json({
       success: true,
       seasonYear: parseInt(seasonYear),
