@@ -265,6 +265,12 @@ async function syncSchedule(prisma) {
     console.log(`[Sync] Found ${oppEventIds.size} opposite-field events`)
   }
 
+  // Hardcoded fallback for known alternate events (in case opp IDs don't cross-ref)
+  const KNOWN_ALTERNATE_NAMES = [
+    'Puerto Rico Open', 'Bermuda Championship', 'Barbasol Championship',
+    'Barracuda Championship', 'ISCO Championship', 'Corales Puntacana',
+  ]
+
   await stageRaw(prisma, 'datagolf', 'schedule', null, scheduleData)
   const events = scheduleData?.schedule || scheduleData || []
 
@@ -326,7 +332,7 @@ async function syncSchedule(prisma) {
       isMajor: evt.major === true || evt.major === 1,
       isSignature: evt.signature === true || evt.signature === 1,
       isPlayoff: evt.playoff === true || evt.playoff === 1,
-      isAlternate: oppEventIds.has(dgId),
+      isAlternate: oppEventIds.has(dgId) || KNOWN_ALTERNATE_NAMES.some(alt => (evt.event_name || evt.name || '').includes(alt)),
       startDate,
       endDate,
       status,

@@ -1232,6 +1232,99 @@ const isAlternateEvent = (name) => KNOWN_ALTERNATES.some(alt => name.includes(al
 
 ---
 
+### 051 — Backfill isAlternate + Add Known-Alternates Fallback
+**Status:** `DONE`
+**Completed:** 2026-03-02 — DataGolf `opp` tour not available (400 error), so KNOWN_ALTERNATE_NAMES fallback is the primary detection. Backfill script tagged 40 tournaments. /current now returns Arnold Palmer Invitational. Files: backfill-alternates.js (new), datagolfSync.js
+**Priority:** HIGH — Item 050 added the `isAlternate` field and sync logic, but the weekly cron hasn't run since the new code was deployed. Puerto Rico Open is still `isAlternate: false` in production. Dashboard still shows it instead of Arnold Palmer Invitational.
+**Prompt:**
+Two issues need fixing:
+
+**Issue 1: Existing data needs backfill**
+The `syncSchedule()` function now fetches the DataGolf `opp` schedule to tag alternates, but it hasn't run yet (weekly cron is Monday 5AM ET, and the code was deployed today after the cron already ran).
+
+**Create a one-time backfill script** at `backend/scripts/backfill-alternates.js`:
+```js
+// Backfill isAlternate for existing tournaments
+// Run once: node backend/scripts/backfill-alternates.js
+
+const { PrismaClient } = require('@prisma/client')
+const dg = require('../src/services/datagolfClient')
+
+async function main() {
+  const prisma = new PrismaClient()
+  try {
+    // Fetch opp schedule from DataGolf
+    const oppData = await dg.getSchedule('opp')
+    const oppEvents = oppData?.schedule || []
+    const oppEventIds = new Set(oppEvents.map(e => String(e.event_id || e.dg_id)))
+    console.log(`Found ${oppEventIds.size} opposite-field events from DataGolf`)
+
+    // Update tournaments that match opp event IDs
+    let updated = 0
+    for (const dgId of oppEventIds) {
+      const result = await prisma.tournament.updateMany({
+        where: { datagolfId: dgId },
+        data: { isAlternate: true },
+      })
+      if (result.count > 0) updated += result.count
+    }
+    console.log(`Marked ${updated} tournaments as alternate`)
+
+    // Also apply known-alternates fallback for any missed by DataGolf
+    const knownAlternates = [
+      'Puerto Rico Open', 'Bermuda Championship', 'Barbasol Championship',
+      'Barracuda Championship', 'ISCO Championship', 'Corales Puntacana',
+    ]
+    for (const name of knownAlternates) {
+      const result = await prisma.tournament.updateMany({
+        where: {
+          name: { contains: name, mode: 'insensitive' },
+          isAlternate: false,
+        },
+        data: { isAlternate: true },
+      })
+      if (result.count > 0) {
+        console.log(`  Fallback: marked ${result.count} "${name}" tournaments as alternate`)
+        updated += result.count
+      }
+    }
+    console.log(`Total: ${updated} tournaments marked as alternate`)
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+main().catch(console.error)
+```
+
+**Run this script on Railway** after deploying: `node backend/scripts/backfill-alternates.js`
+
+**Issue 2: Add known-alternates fallback to syncSchedule()**
+The DataGolf `opp` endpoint might not cross-reference event IDs with the `pga` schedule (i.e., Puerto Rico Open might have different event IDs in `pga` vs `opp` schedules, or might only appear in `pga`). Add a fallback.
+
+In `backend/src/services/datagolfSync.js`, after the `oppEventIds` check, add a hardcoded known-alternates list:
+
+```js
+const KNOWN_ALTERNATE_NAMES = [
+  'Puerto Rico Open', 'Bermuda Championship', 'Barbasol Championship',
+  'Barracuda Championship', 'ISCO Championship', 'Corales Puntacana',
+]
+
+// In the row-building loop, change:
+// isAlternate: oppEventIds.has(dgId),
+// to:
+isAlternate: oppEventIds.has(dgId) || KNOWN_ALTERNATE_NAMES.some(alt => (evt.event_name || evt.name || '').includes(alt)),
+```
+
+This ensures alternates are caught even if DataGolf's `opp` schedule doesn't have matching IDs.
+
+**Test:** After running the backfill script, hit `GET /api/tournaments/current` — it should return Arnold Palmer Invitational (not Puerto Rico Open). Dashboard and League Home should both show Arnold Palmer.
+
+**Files to create/modify:**
+- `backend/scripts/backfill-alternates.js` — new one-time backfill script
+- `backend/src/services/datagolfSync.js` — add `KNOWN_ALTERNATE_NAMES` fallback
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
