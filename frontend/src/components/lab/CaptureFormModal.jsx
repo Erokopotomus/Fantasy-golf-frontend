@@ -166,7 +166,7 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                   }`}
                 >
                   {p.name}
-                  <button onClick={() => removeTag(p.id)} className="hover:text-red-400 transition-colors">
+                  <button onClick={() => removeTag(p.id)} className="hover:text-live-red transition-colors">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -255,8 +255,8 @@ export default function CaptureFormModal({ onClose, onSuccess, initialPlayerTags
                   onClick={() => setSentiment(sentiment === s.value ? null : s.value)}
                   className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
                     sentiment === s.value
-                      ? s.color === 'emerald' ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                        : s.color === 'red' ? 'border-red-500/40 bg-red-500/10 text-red-400'
+                      ? s.color === 'emerald' ? 'border-field-bright/40 bg-field-bright/10 text-field'
+                        : s.color === 'red' ? 'border-live-red/40 bg-live-red/10 text-live-red'
                         : 'border-stone/60 bg-[var(--bg-alt)] text-text-primary/70'
                       : 'border-[var(--card-border)] text-text-primary/30 hover:text-text-primary/50'
                   }`}

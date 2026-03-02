@@ -94,7 +94,7 @@ const AddHistoryModal = ({ leagueId, mode, seasonYear, existingYears, onClose, o
                   className="mt-1 w-32 px-3 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm font-mono focus:outline-none focus:border-accent-gold"
                 />
                 {yearConflict && (
-                  <p className="text-xs text-red-400 mt-1">Season {yearNum} already exists — use the + button next to it instead</p>
+                  <p className="text-xs text-live-red mt-1">Season {yearNum} already exists — use the + button next to it instead</p>
                 )}
               </div>
             ) : (
@@ -154,7 +154,7 @@ const AddHistoryModal = ({ leagueId, mode, seasonYear, existingYears, onClose, o
                   <button
                     onClick={() => removeRow(idx)}
                     disabled={teams.length <= 1}
-                    className="w-6 text-red-400 hover:text-red-300 text-sm disabled:opacity-20 disabled:cursor-default"
+                    className="w-6 text-live-red hover:text-red-300 text-sm disabled:opacity-20 disabled:cursor-default"
                     title="Remove"
                   >
                     &times;
@@ -175,7 +175,7 @@ const AddHistoryModal = ({ leagueId, mode, seasonYear, existingYears, onClose, o
         {/* Error */}
         {error && (
           <div className="px-5 py-2">
-            <p className="text-sm text-red-400">{error}</p>
+            <p className="text-sm text-live-red">{error}</p>
           </div>
         )}
 

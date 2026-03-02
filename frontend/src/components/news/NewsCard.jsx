@@ -8,16 +8,16 @@ const NewsCard = ({ item, compact = false }) => {
       injury: {
         icon: '🏥',
         label: 'Injury',
-        bg: 'bg-red-500/20',
-        border: 'border-red-500/30',
-        text: 'text-red-400',
+        bg: 'bg-live-red/20',
+        border: 'border-live-red/30',
+        text: 'text-live-red',
       },
       withdrawal: {
         icon: '⛔',
         label: 'Withdrawal',
         bg: 'bg-orange-500/20',
         border: 'border-orange-500/30',
-        text: 'text-orange-400',
+        text: 'text-blaze',
       },
       trending: {
         icon: '📈',
@@ -50,9 +50,9 @@ const NewsCard = ({ item, compact = false }) => {
       'roster-alert': {
         icon: '⏰',
         label: 'Alert',
-        bg: 'bg-yellow-500/20',
-        border: 'border-yellow-500/30',
-        text: 'text-yellow-400',
+        bg: 'bg-crown/20',
+        border: 'border-crown/30',
+        text: 'text-crown',
       },
       transaction: {
         icon: '📋',
@@ -66,7 +66,7 @@ const NewsCard = ({ item, compact = false }) => {
         label: 'Breaking',
         bg: 'bg-red-600/20',
         border: 'border-red-600/30',
-        text: 'text-red-400',
+        text: 'text-live-red',
       },
       analysis: {
         icon: '📊',
@@ -88,14 +88,14 @@ const NewsCard = ({ item, compact = false }) => {
 
   const getImpactStyle = (impact) => {
     if (impact === 'positive') return 'text-gold'
-    if (impact === 'negative') return 'text-red-400'
+    if (impact === 'negative') return 'text-live-red'
     return 'text-text-muted'
   }
 
   const getPriorityIndicator = (priority) => {
-    if (priority === 'high' || priority === 1) return 'border-l-4 border-l-red-500'
-    if (priority === 'medium' || priority === 2) return 'border-l-4 border-l-yellow-500'
-    return 'border-l-4 border-l-dark-border'
+    if (priority === 'high' || priority === 1) return 'border-l-4 border-l-live-red'
+    if (priority === 'medium' || priority === 2) return 'border-l-4 border-l-crown'
+    return 'border-l-4 border-l-[var(--card-border)]'
   }
 
   const formatTimeAgo = (timestamp) => {
@@ -125,9 +125,9 @@ const NewsCard = ({ item, compact = false }) => {
     return (
       <div
         className={`
-          p-3 bg-dark-secondary rounded-lg border border-dark-border
+          p-3 bg-[var(--surface)] rounded-lg border border-[var(--card-border)]
           ${getPriorityIndicator(item.priority)}
-          hover:bg-dark-tertiary transition-colors cursor-pointer
+          hover:bg-[var(--card-bg)] transition-colors cursor-pointer
         `}
         onClick={handlePlayerClick}
       >
@@ -148,9 +148,9 @@ const NewsCard = ({ item, compact = false }) => {
   return (
     <div
       className={`
-        p-4 bg-dark-secondary rounded-lg border border-dark-border
+        p-4 bg-[var(--surface)] rounded-lg border border-[var(--card-border)]
         ${getPriorityIndicator(item.priority)}
-        hover:bg-dark-tertiary transition-colors
+        hover:bg-[var(--card-bg)] transition-colors
       `}
     >
       <div className={item.imageUrl ? 'flex gap-4' : ''}>
@@ -179,7 +179,7 @@ const NewsCard = ({ item, compact = false }) => {
                 <span>{config.label}</span>
               </span>
               {(item.priority === 'high' || item.priority === 1) && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-live-red/20 text-live-red">
                   Important
                 </span>
               )}

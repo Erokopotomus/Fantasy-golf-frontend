@@ -33,7 +33,7 @@ const ChatInput = ({ onSend, disabled = false, placeholder = 'Type a message...'
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-2 p-3 border-t border-dark-border bg-dark-secondary flex-shrink-0">
+    <form onSubmit={handleSubmit} className="flex items-end gap-2 p-3 border-t border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
       <div className="flex-1 relative">
         <textarea
           ref={textareaRef}
@@ -44,7 +44,7 @@ const ChatInput = ({ onSend, disabled = false, placeholder = 'Type a message...'
           disabled={disabled}
           rows={1}
           className="
-            w-full px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-xl
+            w-full px-3 py-2.5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl
             text-sm text-text-primary placeholder-text-muted resize-none
             focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold
             disabled:opacity-50 disabled:cursor-not-allowed

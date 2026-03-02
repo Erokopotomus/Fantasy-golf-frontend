@@ -62,7 +62,7 @@ const PickCenter = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="text-center py-12">
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-live-red mb-4">{error}</p>
           <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
             Back to League
           </Link>
@@ -157,9 +157,9 @@ const PickCenter = () => {
           <p className="text-2xl font-bold font-display text-text-primary">{userPicks.usedPlayers?.length || 0}</p>
         </Card>
 
-        <Card className={hasCurrentPick ? 'border border-gold/50' : 'border border-yellow-500/50'}>
+        <Card className={hasCurrentPick ? 'border border-gold/50' : 'border border-crown/50'}>
           <p className="text-xs text-text-muted mb-1">This Week</p>
-          <p className={`text-lg font-bold ${hasCurrentPick ? 'text-gold' : 'text-yellow-400'}`}>
+          <p className={`text-lg font-bold ${hasCurrentPick ? 'text-gold' : 'text-crown'}`}>
             {hasCurrentPick ? 'Pick Locked' : 'Pick Needed'}
           </p>
         </Card>
@@ -180,7 +180,7 @@ const PickCenter = () => {
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? 'bg-gold text-text-primary'
-                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -208,14 +208,14 @@ const PickCenter = () => {
                 <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Confirm Pick</h3>
 
                 <div className="text-center mb-6">
-                  <div className="w-20 h-20 rounded-full bg-dark-tertiary flex items-center justify-center mx-auto mb-4 text-4xl">
+                  <div className="w-20 h-20 rounded-full bg-[var(--card-bg)] flex items-center justify-center mx-auto mb-4 text-4xl">
                     {selectedPlayer.countryFlag || '🏌️'}
                   </div>
                   <h4 className="text-xl font-bold font-display text-text-primary">{selectedPlayer.name}</h4>
                   <p className="text-text-muted">World Rank #{selectedPlayer.rank}</p>
                 </div>
 
-                <div className="bg-dark-tertiary rounded-lg p-4 mb-6">
+                <div className="bg-[var(--card-bg)] rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-text-muted">Tier</span>
                     <span className="font-semibold text-text-primary">Tier {selectedPlayer.tier?.tier}</span>
@@ -227,8 +227,8 @@ const PickCenter = () => {
                 </div>
 
                 {confirmPick && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-yellow-400 text-center">
+                  <div className="bg-crown/10 border border-crown/30 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-crown text-center">
                       Once confirmed, you cannot use {selectedPlayer.name} again this season!
                     </p>
                   </div>
@@ -255,7 +255,7 @@ const PickCenter = () => {
             ) : (
               <Card>
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 rounded-full bg-dark-tertiary flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full bg-[var(--card-bg)] flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                     </svg>

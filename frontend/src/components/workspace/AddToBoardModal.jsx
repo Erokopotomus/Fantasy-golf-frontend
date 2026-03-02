@@ -3,7 +3,7 @@ import api from '../../services/api'
 
 const SPORT_BADGE = {
   nfl: 'bg-blue-500/20 text-blue-400',
-  golf: 'bg-emerald-500/20 text-emerald-400',
+  golf: 'bg-field-bright/20 text-field',
 }
 
 export default function AddToBoardModal({ playerId, playerName, sport, onClose }) {
@@ -130,7 +130,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
                       </div>
                     </div>
                     {isSuccess ? (
-                      <span className="text-emerald-400 text-xs font-semibold flex items-center gap-1">
+                      <span className="text-field text-xs font-semibold flex items-center gap-1">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
@@ -157,7 +157,7 @@ export default function AddToBoardModal({ playerId, playerName, sport, onClose }
         {/* Create new board */}
         <div className="px-5 py-4 border-t border-[var(--card-border)] shrink-0">
           {error && (
-            <p className="text-red-400 text-xs mb-2">{error}</p>
+            <p className="text-live-red text-xs mb-2">{error}</p>
           )}
           <div className="flex gap-2">
             <input

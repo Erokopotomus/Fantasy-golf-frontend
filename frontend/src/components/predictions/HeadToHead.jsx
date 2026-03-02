@@ -208,7 +208,7 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
             {totalWidth > 0 && (
               <div className="mt-6 h-3 rounded-full bg-[var(--surface)] overflow-hidden flex">
                 <div
-                  className="h-full bg-emerald-500 transition-all"
+                  className="h-full bg-field-bright transition-all"
                   style={{ width: `${(summary.myCorrect / totalWidth) * 100}%` }}
                 />
                 <div
@@ -221,7 +221,7 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
             {/* Accuracy bars */}
             <div className="grid grid-cols-2 gap-6 mt-6">
               <div>
-                <div className="text-2xl font-mono font-bold text-emerald-400">{myAccPct}%</div>
+                <div className="text-2xl font-mono font-bold text-field">{myAccPct}%</div>
                 <div className="text-xs text-text-primary/40">Your accuracy</div>
               </div>
               <div className="text-right">
@@ -259,7 +259,7 @@ export default function HeadToHead({ initialTarget = 'consensus' }) {
                       <div className="flex-1 h-2 rounded-full bg-[var(--surface)] overflow-hidden flex">
                         {(data.myCorrect + data.theirCorrect) > 0 && (
                           <>
-                            <div className="h-full bg-emerald-500" style={{ width: `${(data.myCorrect / (data.myCorrect + data.theirCorrect)) * 100}%` }} />
+                            <div className="h-full bg-field-bright" style={{ width: `${(data.myCorrect / (data.myCorrect + data.theirCorrect)) * 100}%` }} />
                             <div className="h-full bg-rose-500" style={{ width: `${(data.theirCorrect / (data.myCorrect + data.theirCorrect)) * 100}%` }} />
                           </>
                         )}

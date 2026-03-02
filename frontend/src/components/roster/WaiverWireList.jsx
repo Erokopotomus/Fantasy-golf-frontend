@@ -69,13 +69,13 @@ const WaiverWireList = ({
           {filteredPlayers.map((player) => (
             <div
               key={player.id}
-              className="flex items-center gap-4 p-3 bg-dark-tertiary rounded-lg hover:bg-dark-border transition-colors"
+              className="flex items-center gap-4 p-3 bg-[var(--card-bg)] rounded-lg hover:bg-[var(--card-border)] transition-colors"
             >
               <button
                 className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
                 onClick={() => onViewPlayer?.(player)}
               >
-                <div className="w-10 h-10 bg-dark-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-[var(--bg)] rounded-lg flex items-center justify-center flex-shrink-0">
                   <span className="text-xl">{player.countryFlag}</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -112,7 +112,7 @@ const WaiverWireList = ({
           <Card className="w-full max-w-md">
             <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Claim Player</h3>
 
-            <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
+            <div className="bg-[var(--card-bg)] rounded-lg p-4 mb-4">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{selectedPlayer?.countryFlag}</span>
                 <div>
@@ -133,7 +133,7 @@ const WaiverWireList = ({
                   <button
                     onClick={() => setDropPlayer(null)}
                     className={`w-full text-left p-3 rounded-lg transition-colors ${
-                      !dropPlayer ? 'bg-gold/20 border border-gold' : 'bg-dark-tertiary hover:bg-dark-border'
+                      !dropPlayer ? 'bg-gold/20 border border-gold' : 'bg-[var(--card-bg)] hover:bg-[var(--card-border)]'
                     }`}
                   >
                     <span className="text-text-muted">No drop (add to roster)</span>
@@ -144,8 +144,8 @@ const WaiverWireList = ({
                       onClick={() => setDropPlayer(player)}
                       className={`w-full text-left p-3 rounded-lg transition-colors ${
                         dropPlayer?.id === player.id
-                          ? 'bg-red-500/20 border border-red-500'
-                          : 'bg-dark-tertiary hover:bg-dark-border'
+                          ? 'bg-live-red/20 border border-live-red'
+                          : 'bg-[var(--card-bg)] hover:bg-[var(--card-border)]'
                       }`}
                     >
                       <div className="flex items-center gap-2">

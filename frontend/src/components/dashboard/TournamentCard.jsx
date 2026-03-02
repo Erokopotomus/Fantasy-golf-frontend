@@ -61,9 +61,9 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
 
   // Event type label: Major > Signature > Tour name
   const getEventType = () => {
-    if (tournament.isMajor) return { label: 'Major', color: 'text-yellow-400' }
+    if (tournament.isMajor) return { label: 'Major', color: 'text-crown' }
     if (tournament.isSignature) return { label: 'Signature', color: 'text-purple-400' }
-    if (tournament.isPlayoff) return { label: 'Playoff', color: 'text-orange-400' }
+    if (tournament.isPlayoff) return { label: 'Playoff', color: 'text-blaze' }
     const tour = tournament.tour
     if (tour) return { label: tour === 'PGA' ? 'PGA Tour' : tour, color: 'text-text-primary' }
     return null
@@ -79,16 +79,16 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
             {isLive ? 'Live Tournament' : isCompleted ? 'Recent Tournament' : 'Next Tournament'}
           </h3>
           {isLive && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-mono font-bold uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-live-red/20 text-live-red text-xs font-mono font-bold uppercase tracking-wider">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-red opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-live-red"></span>
               </span>
               Live
             </span>
           )}
           {isUpcoming && (
-            <span className="px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-400 text-xs font-mono font-bold uppercase tracking-wider">
+            <span className="px-2.5 py-1 rounded-full bg-crown/15 text-crown text-xs font-mono font-bold uppercase tracking-wider">
               Upcoming
             </span>
           )}
@@ -97,10 +97,10 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
         {/* Tournament name + venue */}
         <div className="flex items-center gap-3 mb-4">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-            isLive ? 'bg-red-500/20' : 'bg-gold/20'
+            isLive ? 'bg-live-red/20' : 'bg-gold/20'
           }`}>
             {isLive ? (
-              <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-live-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -127,8 +127,8 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
                   <div
                     key={r}
                     className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                      isCurrent ? 'bg-emerald-500 text-text-primary ring-2 ring-emerald-400/50 scale-110' :
-                      isPast ? 'bg-[var(--bg-alt)] text-emerald-400' :
+                      isCurrent ? 'bg-field-bright text-text-primary ring-2 ring-field/50 scale-110' :
+                      isPast ? 'bg-[var(--bg-alt)] text-field' :
                       'bg-[var(--bg-alt)] text-text-muted'
                     }`}
                   >
@@ -194,7 +194,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
           <div className="bg-[var(--bg-alt)] rounded-lg p-2">
             {isLive && cutLine != null ? (
               <>
-                <p className={`font-semibold text-sm ${cutLine > 0 ? 'text-red-400' : cutLine < 0 ? 'text-emerald-400' : 'text-text-primary'}`}>
+                <p className={`font-semibold text-sm ${cutLine > 0 ? 'text-live-red' : cutLine < 0 ? 'text-field' : 'text-text-primary'}`}>
                   {formatCutLine(cutLine)}
                 </p>
                 <p className="text-text-muted text-xs">Cut Line</p>
@@ -224,7 +224,7 @@ const TournamentCard = ({ tournament, onSetLineup, onViewDetails }) => {
         {/* CTA */}
         <div className={`w-full py-2.5 rounded-lg text-center text-sm font-semibold transition-colors ${
           isLive
-            ? 'bg-emerald-500/15 text-emerald-400 group-hover:bg-emerald-500/25'
+            ? 'bg-field-bright/15 text-field group-hover:bg-field-bright/25'
             : 'bg-[var(--bg-alt)] text-text-secondary'
         }`}>
           {isLive ? 'View Leaderboard' : 'View Details'}

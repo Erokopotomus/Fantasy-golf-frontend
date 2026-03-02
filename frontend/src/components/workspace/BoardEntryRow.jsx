@@ -3,18 +3,18 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 const POSITION_COLORS = {
-  QB: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
+  QB: 'bg-red-100 dark:bg-live-red/20 text-red-700 dark:text-live-red',
   RB: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',
-  WR: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400',
-  TE: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400',
+  WR: 'bg-green-100 dark:bg-field-bright/20 text-green-700 dark:text-field',
+  TE: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-blaze',
   K: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400',
-  DEF: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
+  DEF: 'bg-yellow-100 dark:bg-crown/20 text-yellow-700 dark:text-crown',
 }
 
 const TAG_CONFIG = {
-  target:  { label: 'TGT', active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold', inactive: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-400/70 hover:border-emerald-500/30' },
+  target:  { label: 'TGT', active: 'bg-field-bright/20 text-field border-field-bright/40 font-bold', inactive: 'bg-field-bright/5 border-field-bright/20 text-field-bright/50 hover:bg-field-bright/10 hover:text-field/70 hover:border-field-bright/30' },
   sleeper: { label: 'SLP', active: 'bg-gold/20 text-gold border-gold/40 font-bold', inactive: 'bg-gold/5 border-gold/20 text-gold/50 hover:bg-gold/10 hover:text-gold/70 hover:border-gold/30' },
-  avoid:   { label: 'AVD', active: 'bg-red-500/20 text-red-400 border-red-500/40 font-bold', inactive: 'bg-red-500/5 border-red-500/20 text-red-500/50 hover:bg-red-500/10 hover:text-red-400/70 hover:border-red-500/30' },
+  avoid:   { label: 'AVD', active: 'bg-live-red/20 text-live-red border-live-red/40 font-bold', inactive: 'bg-live-red/5 border-live-red/20 text-live-red/50 hover:bg-live-red/10 hover:text-live-red/70 hover:border-live-red/30' },
 }
 
 // Country to flag emoji helper
@@ -92,7 +92,7 @@ function AuctionInput({ value, onChange }) {
 
 function SgCell({ value, label }) {
   if (value == null) return <span className="text-[10px] font-mono text-text-primary/15 w-11 text-center">{'\u2014'}</span>
-  const color = value > 0.3 ? 'text-emerald-600 dark:text-emerald-400' : value > 0 ? 'text-emerald-600/60 dark:text-emerald-400/60' : value > -0.3 ? 'text-red-600/60 dark:text-red-400/60' : 'text-red-600 dark:text-red-400'
+  const color = value > 0.3 ? 'text-emerald-600 dark:text-field' : value > 0 ? 'text-emerald-600/60 dark:text-field/60' : value > -0.3 ? 'text-red-600/60 dark:text-live-red/60' : 'text-red-600 dark:text-live-red'
   return (
     <span className={`text-[10px] font-mono ${color} w-11 text-center`} title={`${label}: ${value > 0 ? '+' : ''}${value.toFixed(2)}`}>
       {value > 0 ? '+' : ''}{value.toFixed(1)}
@@ -173,7 +173,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
         const delta = entry.baselineRank - (index + 1)
         if (Math.abs(delta) < 2) return null
         return (
-          <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>
+          <span className={`text-[9px] font-mono font-bold shrink-0 ${delta > 0 ? 'text-field/70' : 'text-live-red/70'}`}>
             {delta > 0 ? `\u2191${delta}` : `\u2193${Math.abs(delta)}`}
           </span>
         )
@@ -223,8 +223,8 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
                 key={i}
                 className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider whitespace-nowrap ${
                   ls.status === 'yours'
-                    ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/20'
-                    : 'bg-red-500/10 text-red-400/60 border border-red-500/10'
+                    ? 'bg-field-bright/15 text-field-bright border border-field-bright/20'
+                    : 'bg-live-red/10 text-live-red/60 border border-live-red/10'
                 }`}
                 title={ls.leagueName}
               >
@@ -271,7 +271,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
       ) : (
         <div className="hidden sm:flex items-center gap-1 shrink-0">
           {player.cpi != null ? (
-            <span className={`w-14 text-center px-1 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+            <span className={`w-14 text-center px-1 py-0.5 rounded text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'bg-field-bright/10 text-field' : 'bg-live-red/10 text-live-red'}`}>
               {player.cpi > 0 ? '+' : ''}{player.cpi.toFixed(1)}
             </span>
           ) : (
@@ -312,7 +312,7 @@ export default function BoardEntryRow({ entry, index, sport, positionRank, leagu
       {/* Remove */}
       <button
         onClick={() => onRemove(entry.playerId)}
-        className="p-1 text-text-primary/20 hover:text-red-400 transition-colors opacity-40 hover:opacity-100 shrink-0"
+        className="p-1 text-text-primary/20 hover:text-live-red transition-colors opacity-40 hover:opacity-100 shrink-0"
         title="Remove"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

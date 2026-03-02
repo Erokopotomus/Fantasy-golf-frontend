@@ -184,7 +184,7 @@ export default function RatingComponentCard({ componentKey, componentData, owner
                 <div className="w-16 h-1 rounded-full bg-[var(--stone)] overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
-                      confidence >= 70 ? 'bg-green-400/60' : confidence >= 40 ? 'bg-yellow-400/60' : 'bg-[var(--stone)]'
+                      confidence >= 70 ? 'bg-field/60' : confidence >= 40 ? 'bg-crown/60' : 'bg-[var(--stone)]'
                     }`}
                     style={{ width: `${confidence}%` }}
                   />

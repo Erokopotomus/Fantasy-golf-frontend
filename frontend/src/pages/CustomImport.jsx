@@ -5,9 +5,9 @@ import Button from '../components/common/Button'
 import api from '../services/api'
 
 const CONFIDENCE_COLORS = {
-  high: 'bg-green-500/20 text-green-400',
-  medium: 'bg-yellow-500/20 text-yellow-400',
-  low: 'bg-red-500/20 text-red-400',
+  high: 'bg-field-bright/20 text-field',
+  medium: 'bg-crown/20 text-crown',
+  low: 'bg-live-red/20 text-live-red',
 }
 
 const DATA_CATEGORIES = [
@@ -166,7 +166,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
               <div>
                 <label className="text-xs text-text-secondary font-mono block mb-1">Data Category</label>
                 <select
-                  className="bg-dark-tertiary text-text-primary text-sm rounded px-3 py-1.5 border border-dark-tertiary focus:border-accent-gold outline-none"
+                  className="bg-[var(--card-bg)] text-text-primary text-sm rounded px-3 py-1.5 border border-[var(--card-border)] focus:border-accent-gold outline-none"
                   value={overrides[sheet.sheetName]?.dataCategory || sheet.mapping?.dataCategory || 'other'}
                   onChange={(e) => updateCategory(sheet.sheetName, e.target.value)}
                 >
@@ -180,7 +180,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                 <input
                   type="number"
                   placeholder="e.g. 2024"
-                  className="bg-dark-tertiary text-text-primary text-sm rounded px-3 py-1.5 border border-dark-tertiary focus:border-accent-gold outline-none w-24"
+                  className="bg-[var(--card-bg)] text-text-primary text-sm rounded px-3 py-1.5 border border-[var(--card-border)] focus:border-accent-gold outline-none w-24"
                   value={overrides[sheet.sheetName]?.seasonYear ?? sheet.mapping?.seasonYear ?? ''}
                   onChange={(e) => updateSeasonYear(sheet.sheetName, e.target.value)}
                 />
@@ -191,7 +191,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
             <div className="overflow-x-auto mb-4">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-dark-tertiary">
+                  <tr className="border-b border-[var(--card-border)]">
                     <th className="text-left text-text-secondary font-mono py-2 pr-4">Column</th>
                     <th className="text-left text-text-secondary font-mono py-2 pr-4">Detected Type</th>
                     <th className="text-left text-text-secondary font-mono py-2 pr-4">Confidence</th>
@@ -200,7 +200,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                 </thead>
                 <tbody>
                   {sheet.mapping?.columns?.map((col, j) => (
-                    <tr key={j} className="border-b border-dark-tertiary/50">
+                    <tr key={j} className="border-b border-[var(--card-border)]">
                       <td className="py-2 pr-4 text-text-primary font-mono">{col.header}</td>
                       <td className="py-2 pr-4 text-text-secondary">{col.mappedTo}</td>
                       <td className="py-2 pr-4">
@@ -210,7 +210,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                       </td>
                       <td className="py-2">
                         <select
-                          className="bg-dark-tertiary text-text-primary text-xs rounded px-2 py-1 border border-dark-tertiary focus:border-accent-gold outline-none"
+                          className="bg-[var(--card-bg)] text-text-primary text-xs rounded px-2 py-1 border border-[var(--card-border)] focus:border-accent-gold outline-none"
                           value={
                             overrides[sheet.sheetName]?.columns?.find(c => c.header === col.header)?.mappedTo
                             || col.mappedTo
@@ -235,7 +235,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs font-mono">
                     <thead>
-                      <tr className="border-b border-dark-tertiary">
+                      <tr className="border-b border-[var(--card-border)]">
                         {sheet.headers.map((h, k) => (
                           <th key={k} className="text-left text-text-secondary py-1 pr-3">{h}</th>
                         ))}
@@ -243,7 +243,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
                     </thead>
                     <tbody>
                       {sheet.sampleRows.map((row, k) => (
-                        <tr key={k} className="border-b border-dark-tertiary/30">
+                        <tr key={k} className="border-b border-[var(--card-border)]">
                           {row.map((cell, l) => (
                             <td key={l} className="py-1 pr-3 text-text-primary">{cell != null ? String(cell) : ''}</td>
                           ))}
@@ -257,7 +257,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
           </Card>
         ))}
 
-        {error && <p className="text-red-400 text-sm font-mono">{error}</p>}
+        {error && <p className="text-live-red text-sm font-mono">{error}</p>}
 
         <div className="flex justify-end gap-3">
           <Button variant="ghost" onClick={() => { setStep('upload'); setPreview(null) }}>
@@ -278,7 +278,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
       <Card>
         <h3 className="font-display font-bold text-text-primary mb-4">Upload Spreadsheet</h3>
         <div
-          className="border-2 border-dashed border-dark-tertiary rounded-lg p-8 text-center hover:border-accent-gold/50 transition-colors cursor-pointer"
+          className="border-2 border-dashed border-[var(--card-border)] rounded-lg p-8 text-center hover:border-accent-gold/50 transition-colors cursor-pointer"
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onClick={() => fileRef.current?.click()}
@@ -305,7 +305,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
           <input
             type="url"
             placeholder="Paste Google Sheets URL..."
-            className="flex-1 bg-dark-tertiary text-text-primary rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none font-mono text-sm"
+            className="flex-1 bg-[var(--card-bg)] text-text-primary rounded px-4 py-2 border border-[var(--card-border)] focus:border-accent-gold outline-none font-mono text-sm"
             value={sheetsUrl}
             onChange={(e) => setSheetsUrl(e.target.value)}
           />
@@ -318,7 +318,7 @@ const SpreadsheetImport = ({ leagueId, onComplete }) => {
         </p>
       </Card>
 
-      {error && <p className="text-red-400 text-sm font-mono">{error}</p>}
+      {error && <p className="text-live-red text-sm font-mono">{error}</p>}
     </div>
   )
 }
@@ -453,7 +453,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
           </Card>
         ))}
 
-        {error && <p className="text-red-400 text-sm font-mono">{error}</p>}
+        {error && <p className="text-live-red text-sm font-mono">{error}</p>}
 
         <div className="flex justify-end gap-3">
           <Button variant="ghost" onClick={() => { setStep('input'); setPreview(null) }}>
@@ -478,7 +478,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
         <input
           type="url"
           placeholder="https://yourleague.com"
-          className="flex-1 bg-dark-tertiary text-text-primary rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none font-mono text-sm"
+          className="flex-1 bg-[var(--card-bg)] text-text-primary rounded px-4 py-2 border border-[var(--card-border)] focus:border-accent-gold outline-none font-mono text-sm"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
@@ -489,7 +489,7 @@ const WebsiteImport = ({ leagueId, onComplete }) => {
       <p className="text-xs text-text-secondary mt-2 font-mono">
         We'll scan up to 20 pages within the same domain. Only publicly accessible content.
       </p>
-      {error && <p className="text-red-400 text-sm font-mono mt-2">{error}</p>}
+      {error && <p className="text-live-red text-sm font-mono mt-2">{error}</p>}
     </Card>
   )
 }
@@ -547,7 +547,7 @@ const CustomImport = () => {
           </p>
         ) : (
           <select
-            className="bg-dark-tertiary text-text-primary rounded px-4 py-2 border border-dark-tertiary focus:border-accent-gold outline-none w-full"
+            className="bg-[var(--card-bg)] text-text-primary rounded px-4 py-2 border border-[var(--card-border)] focus:border-accent-gold outline-none w-full"
             value={leagueId}
             onChange={(e) => setLeagueId(e.target.value)}
           >
@@ -559,10 +559,10 @@ const CustomImport = () => {
       </Card>
 
       {/* Tab Selector */}
-      <div className="flex gap-1 mb-6 bg-dark-secondary rounded-lg p-1">
+      <div className="flex gap-1 mb-6 bg-[var(--surface)] rounded-lg p-1">
         <button
           className={`flex-1 py-2 px-4 rounded-md text-sm font-display transition-colors ${
-            tab === 'spreadsheet' ? 'bg-dark-tertiary text-text-primary' : 'text-text-secondary hover:text-text-primary'
+            tab === 'spreadsheet' ? 'bg-[var(--card-bg)] text-text-primary' : 'text-text-secondary hover:text-text-primary'
           }`}
           onClick={() => setTab('spreadsheet')}
         >
@@ -570,7 +570,7 @@ const CustomImport = () => {
         </button>
         <button
           className={`flex-1 py-2 px-4 rounded-md text-sm font-display transition-colors ${
-            tab === 'website' ? 'bg-dark-tertiary text-text-primary' : 'text-text-secondary hover:text-text-primary'
+            tab === 'website' ? 'bg-[var(--card-bg)] text-text-primary' : 'text-text-secondary hover:text-text-primary'
           }`}
           onClick={() => setTab('website')}
         >

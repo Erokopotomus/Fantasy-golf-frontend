@@ -3,8 +3,8 @@ import { createContext, useContext, useState, useCallback } from 'react'
 const SportContext = createContext(null)
 
 const SPORTS = {
-  golf: { slug: 'golf', name: 'Golf', emoji: '\u26F3', color: 'text-green-400' },
-  nfl: { slug: 'nfl', name: 'NFL', emoji: '\uD83C\uDFC8', color: 'text-orange-400' },
+  golf: { slug: 'golf', name: 'Golf', emoji: '\u26F3', color: 'text-field' },
+  nfl: { slug: 'nfl', name: 'NFL', emoji: '\uD83C\uDFC8', color: 'text-blaze' },
 }
 
 export function SportProvider({ children }) {

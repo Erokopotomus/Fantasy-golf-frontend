@@ -35,9 +35,9 @@ const RotoStandings = ({ standings, currentUserId }) => {
             >
               {/* Rank */}
               <div className={`text-2xl font-bold w-8 text-center ${
-                index === 0 ? 'text-yellow-400' :
-                index === 1 ? 'text-gray-300' :
-                index === 2 ? 'text-amber-600' : 'text-text-muted'
+                index === 0 ? 'text-crown' :
+                index === 1 ? 'text-gray-400 dark:text-gray-300' :
+                index === 2 ? 'text-amber-700 dark:text-amber-500' : 'text-text-muted'
               }`}>
                 {index + 1}
               </div>

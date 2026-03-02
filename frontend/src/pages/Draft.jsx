@@ -16,7 +16,7 @@ const Draft = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading drafts...</p>
@@ -26,7 +26,7 @@ const Draft = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -39,7 +39,7 @@ const Draft = () => {
 
           {/* Draft History Link */}
           <Link to="/draft/history" className="block mb-4 group">
-            <Card className="border-dark-border hover:border-orange/40 transition-all">
+            <Card className="border-[var(--card-border)] hover:border-orange/40 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-orange/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -86,7 +86,7 @@ const Draft = () => {
 
           {leagues.length === 0 ? (
             <Card className="text-center py-12">
-              <div className="w-16 h-16 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[var(--card-bg)] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -129,16 +129,16 @@ const Draft = () => {
                             </span>
                           )}
                           {isDraftInProgress && (
-                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-crown/20 text-crown">
                               {draftStatus === 'PAUSED' ? 'Paused' : 'Live'}
                             </span>
                           )}
                           {isDraftComplete && (
-                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-dark-tertiary text-text-muted">
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-[var(--card-bg)] text-text-muted">
                               Draft Complete
                             </span>
                           )}
-                          <span className="px-2 py-0.5 rounded text-xs bg-dark-tertiary text-text-muted">
+                          <span className="px-2 py-0.5 rounded text-xs bg-[var(--card-bg)] text-text-muted">
                             {typeLabel} Draft
                           </span>
                         </div>
@@ -159,7 +159,7 @@ const Draft = () => {
                     </div>
 
                     {/* Draft Info */}
-                    <div className="mt-4 pt-4 border-t border-dark-border">
+                    <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                         <div>
                           <p className="text-text-muted text-xs">Type</p>
@@ -178,9 +178,9 @@ const Draft = () => {
                         <div>
                           <p className="text-text-muted text-xs">Status</p>
                           <p className={`font-medium ${
-                            isDraftInProgress ? 'text-yellow-400' :
+                            isDraftInProgress ? 'text-crown' :
                             isDraftReady && memberCount >= maxMembers ? 'text-gold' :
-                            isDraftReady ? 'text-yellow-400' :
+                            isDraftReady ? 'text-crown' :
                             'text-text-secondary'
                           }`}>
                             {isDraftInProgress ? (draftStatus === 'PAUSED' ? 'Paused' : 'In Progress') :
@@ -198,7 +198,7 @@ const Draft = () => {
           )}
 
           {/* Tips */}
-          <Card className="mt-8 bg-dark-primary border-orange/30">
+          <Card className="mt-8 bg-[var(--bg)] border-orange/30">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-orange/20 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -102,12 +102,12 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
   return (
     <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-[var(--card-border)] bg-gradient-to-r from-emerald-500/10 to-dark-secondary">
+      <div className="flex items-center justify-between p-3 border-b border-[var(--card-border)] bg-gradient-to-r from-field-bright/10 to-[var(--surface)]">
         <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-field" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
-          <h3 className="text-sm font-bold text-text-primary">Lineup Optimizer</h3>
+          <h3 className="text-sm font-bold font-display text-text-primary">Lineup Optimizer</h3>
         </div>
         <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xs">
           Close
@@ -116,7 +116,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-field-bright/30 border-t-field-bright rounded-full animate-spin" />
           <span className="text-text-muted text-sm ml-3">Analyzing roster...</span>
         </div>
       ) : (
@@ -130,7 +130,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                 onClick={() => setSortBy(opt.id)}
                 className={`px-2 py-1 rounded text-[11px] font-medium transition-colors ${
                   sortBy === opt.id
-                    ? 'bg-emerald-500/15 text-emerald-400'
+                    ? 'bg-field-bright/15 text-field'
                     : 'text-text-muted hover:text-text-primary'
                 }`}
               >
@@ -159,13 +159,13 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     key={p.id}
                     className={`grid grid-cols-[auto_1fr_60px_60px_60px_50px] gap-x-2 items-center p-2 rounded-lg transition-colors ${
                       isOptimal
-                        ? 'bg-emerald-500/10 border border-emerald-500/20'
+                        ? 'bg-field-bright/10 border border-field-bright/20'
                         : 'bg-[var(--surface)] border border-transparent'
                     }`}
                   >
                     {/* Rank indicator */}
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      idx < maxActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[var(--bg-alt)] text-text-muted'
+                      idx < maxActive ? 'bg-field-bright/20 text-field' : 'bg-[var(--bg-alt)] text-text-muted'
                     }`}>
                       {idx + 1}
                     </div>
@@ -176,9 +176,9 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                       <div className="min-w-0">
                         <p className="text-text-primary text-xs font-medium truncate">{p.name}</p>
                         <div className="flex items-center gap-1.5 text-[10px] text-text-muted">
-                          {isCurrent && <span className="text-emerald-400">Active</span>}
-                          {isOptimal && !isCurrent && <span className="text-yellow-400">Suggested</span>}
-                          {!isOptimal && isCurrent && <span className="text-orange-400">Bench?</span>}
+                          {isCurrent && <span className="text-field">Active</span>}
+                          {isOptimal && !isCurrent && <span className="text-crown">Suggested</span>}
+                          {!isOptimal && isCurrent && <span className="text-blaze">Bench?</span>}
                         </div>
                       </div>
                     </div>
@@ -186,7 +186,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     {/* Projected */}
                     <div className="text-center">
                       <span className={`text-xs font-bold ${
-                        (p.projection?.projected || 0) > 30 ? 'text-emerald-400' :
+                        (p.projection?.projected || 0) > 30 ? 'text-field' :
                         (p.projection?.projected || 0) > 20 ? 'text-text-primary' : 'text-text-muted'
                       }`}>
                         {p.projection?.projected?.toFixed(1) || '\u2014'}
@@ -196,8 +196,8 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     {/* SG Total */}
                     <div className="text-center">
                       <span className={`text-xs font-medium ${
-                        (p.sgTotal || 0) > 1 ? 'text-emerald-400' :
-                        (p.sgTotal || 0) > 0 ? 'text-text-primary' : 'text-red-400'
+                        (p.sgTotal || 0) > 1 ? 'text-field' :
+                        (p.sgTotal || 0) > 0 ? 'text-text-primary' : 'text-live-red'
                       }`}>
                         {p.sgTotal != null ? (p.sgTotal > 0 ? '+' : '') + p.sgTotal.toFixed(1) : '\u2014'}
                       </span>
@@ -206,8 +206,8 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     {/* Trend */}
                     <div className="text-center">
                       <span className={`text-xs font-medium ${
-                        (p.projection?.trend || 0) > 5 ? 'text-emerald-400' :
-                        (p.projection?.trend || 0) < -5 ? 'text-red-400' : 'text-text-muted'
+                        (p.projection?.trend || 0) > 5 ? 'text-field' :
+                        (p.projection?.trend || 0) < -5 ? 'text-live-red' : 'text-text-muted'
                       }`}>
                         {p.projection?.trend != null
                           ? `${p.projection.trend > 0 ? '+' : ''}${p.projection.trend.toFixed(0)}%`
@@ -218,8 +218,8 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                     {/* Consistency */}
                     <div className="text-center">
                       <span className={`text-xs font-medium ${
-                        (p.projection?.consistency || 0) > 70 ? 'text-emerald-400' :
-                        (p.projection?.consistency || 0) > 40 ? 'text-text-primary' : 'text-yellow-400'
+                        (p.projection?.consistency || 0) > 70 ? 'text-field' :
+                        (p.projection?.consistency || 0) > 40 ? 'text-text-primary' : 'text-crown'
                       }`}>
                         {p.projection?.consistency?.toFixed(0) || '\u2014'}
                       </span>
@@ -235,7 +235,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
             <div className="px-3 pb-3">
               <button
                 onClick={() => onApply([...optimalIds])}
-                className="w-full py-2.5 rounded-lg text-sm font-medium bg-emerald-500 text-text-primary hover:bg-emerald-600 transition-colors"
+                className="w-full py-2.5 rounded-lg text-sm font-medium bg-field-bright text-text-primary hover:bg-emerald-600 transition-colors"
               >
                 Apply Suggested Lineup
               </button>
@@ -247,7 +247,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
 
           {!hasChanges && (
             <div className="px-3 pb-3">
-              <div className="text-center py-2 text-xs text-emerald-400 bg-emerald-500/10 rounded-lg">
+              <div className="text-center py-2 text-xs text-field bg-field-bright/10 rounded-lg">
                 Your current lineup matches the optimal suggestion
               </div>
             </div>

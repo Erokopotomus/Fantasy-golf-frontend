@@ -94,7 +94,7 @@ export function selectPlayersToWatch(leaderboard) {
   topForm.forEach(p => selected.push({
     ...p,
     tag: 'Hot Form',
-    tagColor: 'bg-red-500/20 text-red-400 border-red-500/30',
+    tagColor: 'bg-live-red/20 text-live-red border-live-red/30',
     narrative: buildFormNarrative(p),
   }))
 
@@ -121,7 +121,7 @@ export function selectPlayersToWatch(leaderboard) {
   topRadar.forEach(p => selected.push({
     ...p,
     tag: 'Under the Radar',
-    tagColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    tagColor: 'bg-field-bright/20 text-field border-field-bright/30',
     narrative: buildRadarNarrative(p),
   }))
 

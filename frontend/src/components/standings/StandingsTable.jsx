@@ -4,7 +4,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
   const getTrendIcon = (trend) => {
     if (trend > 0) {
       return (
-        <span className="flex items-center text-emerald-400 text-xs">
+        <span className="flex items-center text-field text-xs">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
           </svg>
@@ -14,7 +14,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
     }
     if (trend < 0) {
       return (
-        <span className="flex items-center text-red-400 text-xs">
+        <span className="flex items-center text-live-red text-xs">
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
@@ -26,8 +26,8 @@ const StandingsTable = ({ standings, currentUserId }) => {
   }
 
   const getRankStyle = (rank) => {
-    if (rank === 1) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
-    if (rank === 2) return 'bg-gray-400/20 text-gray-300 border-gray-400/50'
+    if (rank === 1) return 'bg-crown/20 text-crown border-crown/50'
+    if (rank === 2) return 'bg-gray-400/20 text-gray-400 dark:text-gray-300 border-gray-400/50'
     if (rank === 3) return 'bg-amber-600/20 text-amber-500 border-amber-600/50'
     return 'bg-[var(--surface)] text-text-secondary border-[var(--card-border)]'
   }
@@ -61,7 +61,7 @@ const StandingsTable = ({ standings, currentUserId }) => {
                   key={team.id}
                   className={`
                     border-b border-[var(--card-border)] transition-colors
-                    ${isCurrentUser ? 'bg-emerald-400/10' : 'hover:bg-[var(--surface-alt)]'}
+                    ${isCurrentUser ? 'bg-field/10' : 'hover:bg-[var(--surface-alt)]'}
                   `}
                 >
                   <td className="p-3 text-center">
@@ -78,15 +78,15 @@ const StandingsTable = ({ standings, currentUserId }) => {
                         {team.avatar || '⛳'}
                       </div>
                       <div>
-                        <p className={`font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-text-primary'}`}>
+                        <p className={`font-medium ${isCurrentUser ? 'text-field' : 'text-text-primary'}`}>
                           {team.name}
                         </p>
                         <p className="text-xs text-text-muted">{team.ownerName}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-3 text-center font-mono font-medium text-emerald-400">{team.wins}</td>
-                  <td className="p-3 text-center font-mono font-medium text-red-400">{team.losses}</td>
+                  <td className="p-3 text-center font-mono font-medium text-field">{team.wins}</td>
+                  <td className="p-3 text-center font-mono font-medium text-live-red">{team.losses}</td>
                   <td className="p-3 text-center font-mono font-medium text-text-secondary">{team.ties}</td>
                   <td className="p-3 text-right font-mono font-bold text-text-primary">{(team.totalPoints || 0).toLocaleString()}</td>
                   <td className="p-3 text-right font-mono text-text-secondary hidden sm:table-cell">

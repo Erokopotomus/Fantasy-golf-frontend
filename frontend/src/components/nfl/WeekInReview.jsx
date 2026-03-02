@@ -3,12 +3,12 @@ import api from '../../services/api'
 import Card from '../common/Card'
 
 const posColors = {
-  QB: 'bg-red-500/20 text-red-400',
+  QB: 'bg-live-red/20 text-live-red',
   RB: 'bg-blue-500/20 text-blue-400',
-  WR: 'bg-emerald-500/20 text-emerald-400',
-  TE: 'bg-yellow-500/20 text-yellow-400',
+  WR: 'bg-field-bright/20 text-field',
+  TE: 'bg-crown/20 text-crown',
   K: 'bg-purple-500/20 text-purple-400',
-  DEF: 'bg-orange-500/20 text-orange-400',
+  DEF: 'bg-orange-500/20 text-blaze',
 }
 
 const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
@@ -29,7 +29,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
     return (
       <Card>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-field" />
         </div>
       </Card>
     )
@@ -62,10 +62,10 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
 
         {/* Matchup result */}
         {result && (
-          <div className={`rounded-lg p-4 mb-4 ${result.won ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/5 border border-red-500/10'}`}>
+          <div className={`rounded-lg p-4 mb-4 ${result.won ? 'bg-field-bright/10 border border-field-bright/20' : 'bg-live-red/5 border border-live-red/10'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <span className={`text-sm font-bold ${result.won ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`text-sm font-bold ${result.won ? 'text-field' : 'text-live-red'}`}>
                   {result.won ? 'WIN' : 'LOSS'}
                 </span>
               </div>
@@ -86,14 +86,14 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
           </div>
           <div>
             <p className="text-xs text-text-muted mb-1">Optimal</p>
-            <p className="text-xl font-bold font-mono text-emerald-400">{lineup.optimalPoints}</p>
+            <p className="text-xl font-bold font-mono text-field">{lineup.optimalPoints}</p>
           </div>
           <div>
             <p className="text-xs text-text-muted mb-1">Efficiency</p>
             <p className={`text-xl font-bold font-mono ${
-              lineup.efficiency >= 95 ? 'text-emerald-400' :
+              lineup.efficiency >= 95 ? 'text-field' :
               lineup.efficiency >= 85 ? 'text-text-primary' :
-              'text-yellow-400'
+              'text-crown'
             }`}>
               {lineup.efficiency}%
             </p>
@@ -103,7 +103,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
         {lineup.pointsLeftOnBench > 0 && (
           <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
             <p className="text-xs text-text-muted">
-              Points left on bench: <span className="text-yellow-400 font-mono font-bold">{lineup.pointsLeftOnBench}</span>
+              Points left on bench: <span className="text-crown font-mono font-bold">{lineup.pointsLeftOnBench}</span>
             </p>
           </div>
         )}
@@ -118,11 +118,11 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
               <div
                 key={i}
                 className={`flex items-center gap-2 py-2 px-3 rounded-lg ${
-                  d.type === 'good' ? 'bg-emerald-500/5' : 'bg-red-500/5'
+                  d.type === 'good' ? 'bg-field-bright/5' : 'bg-live-red/5'
                 }`}
               >
                 <span className={`text-sm font-bold flex-shrink-0 ${
-                  d.type === 'good' ? 'text-emerald-400' : 'text-red-400'
+                  d.type === 'good' ? 'text-field' : 'text-live-red'
                 }`}>
                   {d.type === 'good' ? '✓' : '✗'}
                 </span>
@@ -138,7 +138,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                 </div>
 
                 <span className={`text-xs font-bold font-mono flex-shrink-0 ${
-                  d.type === 'good' ? 'text-emerald-400' : 'text-red-400'
+                  d.type === 'good' ? 'text-field' : 'text-live-red'
                 }`}>
                   {d.type === 'good' ? '+' : '-'}{Math.abs(d.diff).toFixed(1)}
                 </span>
@@ -161,7 +161,7 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                 <div
                   key={p.playerId || i}
                   className={`flex items-center gap-2 py-1.5 px-2 rounded ${
-                    wasStarted ? 'bg-[var(--bg-alt)]' : 'bg-yellow-500/5'
+                    wasStarted ? 'bg-[var(--bg-alt)]' : 'bg-crown/5'
                   }`}
                 >
                   {p.nflPos && (
@@ -170,9 +170,9 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                     }`}>{p.nflPos}</span>
                   )}
                   <span className="text-xs text-text-muted w-8 flex-shrink-0">{p.optimalSlot}</span>
-                  <span className={`text-sm flex-1 truncate ${wasStarted ? 'text-text-primary' : 'text-yellow-400'}`}>
+                  <span className={`text-sm flex-1 truncate ${wasStarted ? 'text-text-primary' : 'text-crown'}`}>
                     {p.playerName}
-                    {!wasStarted && <span className="text-[10px] text-yellow-400/60 ml-1">(bench)</span>}
+                    {!wasStarted && <span className="text-[10px] text-crown/60 ml-1">(bench)</span>}
                   </span>
                   <span className="text-sm font-bold font-mono text-text-primary w-12 text-right">
                     {(p.points || 0).toFixed(1)}
@@ -194,12 +194,12 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
             <div>
               <p className="text-xs text-text-muted">Avg Lineup Efficiency</p>
               <p className={`text-xl font-bold font-mono ${
-                seasonTrends.avgEfficiency >= 90 ? 'text-emerald-400' : 'text-text-primary'
+                seasonTrends.avgEfficiency >= 90 ? 'text-field' : 'text-text-primary'
               }`}>{seasonTrends.avgEfficiency}%</p>
             </div>
             <div>
               <p className="text-xs text-text-muted">Total Points Left on Bench</p>
-              <p className="text-xl font-bold font-mono text-yellow-400">{seasonTrends.totalPointsLeft}</p>
+              <p className="text-xl font-bold font-mono text-crown">{seasonTrends.totalPointsLeft}</p>
             </div>
           </div>
 
@@ -211,10 +211,10 @@ const WeekInReview = ({ leagueId, weekNumber, onClose }) => {
                 <div className="flex-1 h-4 bg-[var(--bg-alt)] rounded overflow-hidden">
                   <div
                     className={`h-full rounded transition-all ${
-                      we.efficiency >= 95 ? 'bg-emerald-500' :
-                      we.efficiency >= 85 ? 'bg-emerald-500/60' :
-                      we.efficiency >= 75 ? 'bg-yellow-500/60' :
-                      'bg-red-500/60'
+                      we.efficiency >= 95 ? 'bg-field-bright' :
+                      we.efficiency >= 85 ? 'bg-field-bright/60' :
+                      we.efficiency >= 75 ? 'bg-crown/60' :
+                      'bg-live-red/60'
                     }`}
                     style={{ width: `${Math.min(100, we.efficiency)}%` }}
                   />

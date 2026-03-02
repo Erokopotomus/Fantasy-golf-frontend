@@ -23,12 +23,12 @@ export default function PlayerNoteEditor({ entry, onSave, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-sm bg-dark-secondary border border-[var(--card-border)] rounded-xl shadow-2xl"
+        className="relative w-full max-w-sm bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--card-border)]">
-          <div className="w-8 h-8 rounded-full bg-dark-primary overflow-hidden shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[var(--bg)] overflow-hidden shrink-0">
             {player.headshotUrl ? (
               <img src={player.headshotUrl} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -56,7 +56,7 @@ export default function PlayerNoteEditor({ entry, onSave, onClose }) {
             onChange={e => setNotes(e.target.value)}
             placeholder="Add scouting notes, sleeper take, injury concern..."
             rows={4}
-            className="w-full bg-dark-primary border border-[var(--card-border)] rounded-lg p-3 text-sm text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
+            className="w-full bg-[var(--bg)] border border-[var(--card-border)] rounded-lg p-3 text-sm text-text-primary placeholder-text-muted outline-none focus:border-gold/50 resize-none"
           />
         </div>
 

@@ -72,7 +72,7 @@ const TradeProposal = ({
                 className={`p-3 rounded-lg text-left transition-colors ${
                   selectedTeam?.id === member.id
                     ? 'bg-gold/20 border border-gold'
-                    : 'bg-dark-tertiary hover:bg-dark-border border border-transparent'
+                    : 'bg-[var(--card-bg)] hover:bg-[var(--card-border)] border border-transparent'
                 }`}
               >
                 <p className="text-text-primary font-medium">{member.name}</p>
@@ -96,8 +96,8 @@ const TradeProposal = ({
                     onClick={() => togglePlayerToSend(player)}
                     className={`w-full p-3 rounded-lg text-left transition-colors ${
                       playersToSend.find(p => p.id === player.id)
-                        ? 'bg-red-500/20 border border-red-500'
-                        : 'bg-dark-tertiary hover:bg-dark-border border border-transparent'
+                        ? 'bg-live-red/20 border border-live-red'
+                        : 'bg-[var(--card-bg)] hover:bg-[var(--card-border)] border border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -120,7 +120,7 @@ const TradeProposal = ({
                     className={`w-full p-3 rounded-lg text-left transition-colors ${
                       playersToReceive.find(p => p.id === player.id)
                         ? 'bg-gold/20 border border-gold'
-                        : 'bg-dark-tertiary hover:bg-dark-border border border-transparent'
+                        : 'bg-[var(--card-bg)] hover:bg-[var(--card-border)] border border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -136,11 +136,11 @@ const TradeProposal = ({
 
         {/* Trade Summary */}
         {canPropose && (
-          <div className="mt-6 p-4 bg-dark-tertiary rounded-lg">
+          <div className="mt-6 p-4 bg-[var(--card-bg)] rounded-lg">
             <h4 className="text-text-primary font-medium mb-2">Trade Summary</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-red-400 mb-1">You send:</p>
+                <p className="text-live-red mb-1">You send:</p>
                 {playersToSend.map(p => (
                   <p key={p.id} className="text-text-secondary">{p.name}</p>
                 ))}
@@ -163,7 +163,7 @@ const TradeProposal = ({
               value={reasoning}
               onChange={e => setReasoning(e.target.value.substring(0, 280))}
               placeholder="e.g. Buying low after a bad week"
-              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+              className="w-full px-3 py-2 text-xs bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
             />
           </div>
         )}

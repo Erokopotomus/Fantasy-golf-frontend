@@ -24,7 +24,7 @@ export default function OwnerRow({
     : owner.totalPF.toFixed(0)
 
   const winPctColor = owner.winPct >= 0.6 ? 'text-accent-green'
-    : owner.winPct < 0.5 ? 'text-red-400'
+    : owner.winPct < 0.5 ? 'text-live-red'
     : 'text-text-primary'
 
   const currentSeason = owner.currentSeason

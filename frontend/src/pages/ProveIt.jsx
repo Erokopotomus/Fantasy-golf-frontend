@@ -213,11 +213,11 @@ function WeeklySlate({ onPredictionMade }) {
                 {/* Buttons or status */}
                 {existing ? (
                   <div className="flex items-center gap-1.5 w-20 justify-end">
-                    <span className={`text-sm font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={`text-sm font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-field' : 'text-rose-400'}`}>
                       {existing.predictionData?.direction?.toUpperCase()}
                     </span>
                     {existing.outcome && existing.outcome !== 'PENDING' && (
-                      <span className={`text-sm ${existing.outcome === 'CORRECT' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <span className={`text-sm ${existing.outcome === 'CORRECT' ? 'text-field' : 'text-rose-400'}`}>
                         {existing.outcome === 'CORRECT' ? '✓' : '✗'}
                       </span>
                     )}
@@ -227,7 +227,7 @@ function WeeklySlate({ onPredictionMade }) {
                     <button
                       onClick={() => handleSubmit(player, 'over')}
                       disabled={submitting === player.id}
-                      className="px-3 py-1.5 text-xs rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
+                      className="px-3 py-1.5 text-xs rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-semibold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
                     >
                       O
                     </button>
@@ -358,7 +358,7 @@ function TrackRecord() {
               <div className="text-xs text-text-primary/40">NFL Record</div>
             </div>
             {nflRecord.streak > 0 && (
-              <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+              <span className="px-2 py-1 rounded bg-field-bright/20 text-field text-xs font-bold font-mono">
                 W{nflRecord.streak}
               </span>
             )}
@@ -485,7 +485,7 @@ function TrackRecord() {
             {filtered.map(p => (
               <div key={p.id} className="flex items-center gap-3 py-2 border-b border-[var(--card-border)] last:border-0">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  p.outcome === 'CORRECT' ? 'bg-emerald-500/20 text-emerald-400' :
+                  p.outcome === 'CORRECT' ? 'bg-field-bright/20 text-field' :
                   p.outcome === 'INCORRECT' ? 'bg-rose-500/20 text-rose-400' :
                   p.outcome === 'VOIDED' ? 'bg-[var(--bg-alt)] text-text-primary/30' :
                   'bg-amber-500/20 text-amber-400'
@@ -497,7 +497,7 @@ function TrackRecord() {
                     {p.sport === 'nfl' ? (
                       <>
                         {p.predictionData?.description || p.predictionData?.playerName || 'Unknown'}{' '}
-                        <span className={`font-mono font-bold ${p.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`font-mono font-bold ${p.predictionData?.direction === 'over' ? 'text-field' : 'text-rose-400'}`}>
                           {p.predictionData?.direction?.toUpperCase()}
                         </span>
                         {' '}
@@ -506,7 +506,7 @@ function TrackRecord() {
                     ) : (
                       <>
                         {p.predictionData?.playerName || 'Unknown'}{' '}
-                        <span className={`font-mono font-bold ${p.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <span className={`font-mono font-bold ${p.predictionData?.direction === 'over' ? 'text-field' : 'text-rose-400'}`}>
                           {p.predictionData?.direction?.toUpperCase()}
                         </span>
                         {' '}
@@ -730,7 +730,7 @@ function Leaderboards() {
                     <div className="flex items-center gap-1">
                       <span className={`text-sm font-mono font-bold ${
                         clutchRating >= 90 ? 'text-amber-400' :
-                        clutchRating >= 70 ? 'text-emerald-400' :
+                        clutchRating >= 70 ? 'text-field' :
                         clutchRating >= 50 ? 'text-amber-500' :
                         'text-gray-400'
                       }`}>
@@ -929,16 +929,16 @@ function Analysts() {
   )
 }
 
-// ─── NFL Props Tab ──────────────────────────────────────────────────────────
+// ─── NFL Predictions Tab ────────────────────────────────────────────────────
 
 const REASON_CHIPS = ['Matchup', 'Weather', 'Gut feel', 'Volume', 'Game script', 'Data model']
 const nflPosColors = {
-  QB: 'bg-red-500/20 text-red-400',
+  QB: 'bg-live-red/20 text-live-red',
   RB: 'bg-blue-500/20 text-blue-400',
-  WR: 'bg-emerald-500/20 text-emerald-400',
-  TE: 'bg-yellow-500/20 text-yellow-400',
+  WR: 'bg-field-bright/20 text-field',
+  TE: 'bg-crown/20 text-crown',
   K: 'bg-purple-500/20 text-purple-400',
-  DEF: 'bg-orange-500/20 text-orange-400',
+  DEF: 'bg-orange-500/20 text-blaze',
 }
 
 function NflWeeklyProps({ onPredictionMade }) {
@@ -1035,7 +1035,7 @@ function NflWeeklyProps({ onPredictionMade }) {
             </button>
             <div>
               <h3 className="text-text-primary font-semibold">NFL Week {week}</h3>
-              <p className="text-text-primary/40 text-xs">{totalProps} prop{totalProps !== 1 ? 's' : ''} available</p>
+              <p className="text-text-primary/40 text-xs">{totalProps} prediction{totalProps !== 1 ? 's' : ''} available</p>
             </div>
             <button onClick={() => setWeek(w => Math.min(18, w + 1))} disabled={week >= 18}
               className="p-1.5 rounded bg-[var(--bg-alt)] text-text-primary/60 hover:text-text-primary disabled:opacity-30">
@@ -1052,14 +1052,14 @@ function NflWeeklyProps({ onPredictionMade }) {
               </div>
               {record.record.accuracy && (
                 <div>
-                  <div className="text-lg font-mono font-bold text-emerald-400">
+                  <div className="text-lg font-mono font-bold text-field">
                     {(parseFloat(record.record.accuracy) * 100).toFixed(1)}%
                   </div>
                   <div className="text-xs text-text-primary/40">Accuracy</div>
                 </div>
               )}
               {record.streak > 0 && (
-                <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+                <span className="px-2 py-1 rounded bg-field-bright/20 text-field text-xs font-bold font-mono">
                   W{record.streak}
                 </span>
               )}
@@ -1086,10 +1086,10 @@ function NflWeeklyProps({ onPredictionMade }) {
         </div>
       )}
 
-      {/* Player Props */}
+      {/* Player Benchmarks */}
       {props.playerProps.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">Player Props</h3>
+          <h3 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">Player Benchmarks</h3>
           <div className="space-y-2">
             {props.playerProps.map(prop => (
               <NflPropCard key={prop.id} prop={prop} onPick={handlePick} onReasonChip={handleReasonChip}
@@ -1099,10 +1099,10 @@ function NflWeeklyProps({ onPredictionMade }) {
         </div>
       )}
 
-      {/* Game Props */}
+      {/* Game Predictions */}
       {props.gameProps.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">Game Props</h3>
+          <h3 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">Game Predictions</h3>
           <div className="space-y-2">
             {props.gameProps.map(prop => (
               <NflPropCard key={prop.id} prop={prop} onPick={handlePick} onReasonChip={handleReasonChip}
@@ -1115,8 +1115,8 @@ function NflWeeklyProps({ onPredictionMade }) {
       {totalProps === 0 && (
         <div className="text-center py-12">
           <div className="text-4xl mb-3">🏈</div>
-          <h3 className="text-lg font-semibold text-text-primary mb-2">No Props for Week {week}</h3>
-          <p className="text-text-primary/50 text-sm">Props are generated from player performance data. Try a different week.</p>
+          <h3 className="text-lg font-semibold text-text-primary mb-2">No Predictions for Week {week}</h3>
+          <p className="text-text-primary/50 text-sm">Predictions are generated from player performance data. Try a different week.</p>
         </div>
       )}
 
@@ -1126,7 +1126,7 @@ function NflWeeklyProps({ onPredictionMade }) {
           {weeks.map(w => (
             <button key={w} onClick={() => setWeek(w)}
               className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                w === week ? 'bg-emerald-500 text-text-primary' : 'bg-[var(--surface)] text-text-primary/40 hover:text-text-primary/60'
+                w === week ? 'bg-field-bright text-text-primary' : 'bg-[var(--surface)] text-text-primary/40 hover:text-text-primary/60'
               }`}>{w}</button>
           ))}
         </div>
@@ -1143,7 +1143,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
 
   return (
     <div className={`bg-[var(--surface)] shadow-card border rounded-xl p-3 ${
-      userPick?.outcome === 'CORRECT' ? 'border-emerald-500/30' :
+      userPick?.outcome === 'CORRECT' ? 'border-field-bright/30' :
       userPick?.outcome === 'INCORRECT' ? 'border-rose-500/30' :
       userDirection ? 'border-[var(--card-border)]' : 'border-[var(--card-border)]'
     }`}>
@@ -1158,7 +1158,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
           {prop.player?.nflTeamAbbr && <p className="text-[10px] text-text-primary/40">{prop.player.nflTeamAbbr}</p>}
         </div>
         <div className="text-center mx-2">
-          <p className="text-[10px] text-text-primary/40 uppercase">O/U</p>
+          <p className="text-[10px] text-text-primary/40 uppercase">Benchmark</p>
           <p className="text-sm font-bold font-mono text-text-primary">{prop.lineValue}</p>
         </div>
 
@@ -1167,8 +1167,8 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
             {prop.actualValue != null && <span className="text-xs font-mono text-text-primary/40">Actual: {prop.actualValue}</span>}
             {userDirection && (
               <span className={`text-sm font-bold ${
-                userPick?.outcome === 'CORRECT' ? 'text-emerald-400' :
-                userPick?.outcome === 'INCORRECT' ? 'text-rose-400' : 'text-yellow-400'
+                userPick?.outcome === 'CORRECT' ? 'text-field' :
+                userPick?.outcome === 'INCORRECT' ? 'text-rose-400' : 'text-crown'
               }`}>{userPick?.outcome === 'CORRECT' ? '✓' : userPick?.outcome === 'INCORRECT' ? '✗' : '—'}</span>
             )}
           </div>
@@ -1176,7 +1176,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
           <div className="flex items-center gap-1.5">
             {userDirection && (
               <span className={`px-2 py-1 rounded text-xs font-bold ${
-                userDirection === 'over' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                userDirection === 'over' ? 'bg-field-bright/20 text-field' : 'bg-rose-500/20 text-rose-400'
               }`}>{userDirection.toUpperCase()}</span>
             )}
             <span className="text-[10px] text-text-primary/30">Locked</span>
@@ -1185,7 +1185,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
           <div className="flex items-center gap-1.5">
             <button onClick={() => onPick(prop.id, 'over')} disabled={submitting}
               className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${
-                userDirection === 'over' ? 'bg-emerald-500 text-text-primary' : 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/30'
+                userDirection === 'over' ? 'bg-field-bright text-text-primary' : 'bg-field-bright/15 text-field hover:bg-field-bright/30'
               } disabled:opacity-50`}>Over</button>
             <button onClick={() => onPick(prop.id, 'under')} disabled={submitting}
               className={`px-3 py-1.5 rounded text-xs font-bold transition-colors ${
@@ -1203,7 +1203,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
               <button key={chip} onClick={() => onReasonChip(prop.id, chip)}
                 className={`px-2 py-0.5 rounded-full text-[10px] transition-colors ${
                   userPick?.predictionData?.reasonChip === chip
-                    ? 'bg-emerald-500/30 text-emerald-400' : 'bg-[var(--surface)] text-text-primary/30 hover:text-text-primary/60'
+                    ? 'bg-field-bright/30 text-field' : 'bg-[var(--surface)] text-text-primary/30 hover:text-text-primary/60'
                 }`}>{chip}</button>
             ))}
           </div>
@@ -1233,7 +1233,7 @@ function NflPropCard({ prop, onPick, onReasonChip, submitting, showReason }) {
 
 // ─── Main ProveIt Hub ───────────────────────────────────────────────────────
 const TABS = [
-  { id: 'nfl', label: 'NFL Props' },
+  { id: 'nfl', label: 'NFL Predictions' },
   { id: 'slate', label: 'Golf Slate' },
   { id: 'record', label: 'My Track Record' },
   { id: 'leaderboard', label: 'Leaderboards' },

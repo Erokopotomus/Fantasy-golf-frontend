@@ -23,9 +23,9 @@ const Checkbox = ({
           w-5 h-5 rounded border-2 transition-all duration-300
           ${checked
             ? 'bg-gold border-gold'
-            : 'bg-dark-tertiary border-dark-border group-hover:border-text-muted'
+            : 'bg-[var(--card-bg)] border-[var(--card-border)] group-hover:border-text-muted'
           }
-          peer-focus:ring-2 peer-focus:ring-gold peer-focus:ring-offset-2 peer-focus:ring-offset-dark-primary
+          peer-focus:ring-2 peer-focus:ring-gold peer-focus:ring-offset-2 peer-focus:ring-offset-[var(--bg)]
         `}>
           {checked && (
             <svg className="w-full h-full text-slate p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

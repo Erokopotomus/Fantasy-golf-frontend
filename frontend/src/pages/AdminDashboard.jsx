@@ -189,7 +189,7 @@ const AdminDashboard = () => {
 
   const statCards = [
     { label: 'Total Users', value: stats?.users || 0, color: 'text-gold', tab: 'users' },
-    { label: 'Total Leagues', value: stats?.leagues || 0, color: 'text-emerald-400', tab: 'leagues' },
+    { label: 'Total Leagues', value: stats?.leagues || 0, color: 'text-field', tab: 'leagues' },
     { label: 'Active Drafts', value: stats?.activeDrafts || 0, color: 'text-blue-400', tab: 'leagues' },
     { label: 'Live Tournaments', value: stats?.activeTournaments || 0, color: 'text-orange', tab: 'tournaments' },
   ]
@@ -200,11 +200,11 @@ const AdminDashboard = () => {
 
   const statusColor = (status) => {
     switch (status) {
-      case 'IN_PROGRESS': return 'bg-emerald-500/20 text-emerald-400'
+      case 'IN_PROGRESS': return 'bg-field-bright/20 text-field'
       case 'UPCOMING': return 'bg-blue-500/20 text-blue-400'
-      case 'COMPLETED': return 'bg-dark-tertiary text-text-muted'
-      case 'CANCELLED': return 'bg-red-500/20 text-red-400'
-      default: return 'bg-dark-tertiary text-text-muted'
+      case 'COMPLETED': return 'bg-[var(--card-bg)] text-text-muted'
+      case 'CANCELLED': return 'bg-live-red/20 text-live-red'
+      default: return 'bg-[var(--card-bg)] text-text-muted'
     }
   }
 
@@ -226,10 +226,10 @@ const AdminDashboard = () => {
       onClick={onToggle}
       disabled={disabled}
       className={`relative w-12 h-6 rounded-full transition-colors ${
-        enabled ? 'bg-emerald-500' : 'bg-gray-600'
+        enabled ? 'bg-field-bright' : 'bg-gray-600'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-dark-tertiary rounded-full transition-transform ${
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-[var(--card-bg)] rounded-full transition-transform ${
         enabled ? 'translate-x-6' : 'translate-x-0'
       }`} />
     </button>
@@ -265,7 +265,7 @@ const AdminDashboard = () => {
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === tab
                 ? 'bg-gold text-text-primary'
-                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab === 'ai' ? 'AI Engine' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -283,13 +283,13 @@ const AdminDashboard = () => {
               placeholder="Search users..."
               value={userSearch}
               onChange={e => { setUserSearch(e.target.value); setUserPage(1) }}
-              className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm w-64 focus:border-gold focus:outline-none"
+              className="px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm w-64 focus:border-gold focus:outline-none"
             />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-text-muted border-b border-dark-border">
+                <tr className="text-text-muted border-b border-[var(--card-border)]">
                   <th className="text-left py-2 px-3">Name</th>
                   <th className="text-left py-2 px-3">Username</th>
                   <th className="text-left py-2 px-3">Email</th>
@@ -301,13 +301,13 @@ const AdminDashboard = () => {
               </thead>
               <tbody>
                 {users.map(u => (
-                  <tr key={u.id} className="border-b border-dark-border/50 hover:bg-surface-hover">
+                  <tr key={u.id} className="border-b border-[var(--card-border)]/50 hover:bg-surface-hover">
                     <td className="py-2 px-3 text-text-primary">{u.name}</td>
                     <td className="py-2 px-3 text-text-muted font-mono text-xs">{u.username ? `@${u.username}` : '—'}</td>
                     <td className="py-2 px-3 text-text-secondary">{u.email}</td>
                     <td className="py-2 px-3">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        u.role === 'admin' ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary text-text-muted'
+                        u.role === 'admin' ? 'bg-gold/20 text-gold' : 'bg-[var(--card-bg)] text-text-muted'
                       }`}>
                         {u.role}
                       </span>
@@ -320,7 +320,7 @@ const AdminDashboard = () => {
                           onClick={() => handleRoleChange(u.id, u.role === 'admin' ? 'user' : 'admin')}
                           className={`text-xs px-2 py-1 rounded transition-colors ${
                             u.role === 'admin'
-                              ? 'text-red-400 hover:bg-red-500/10'
+                              ? 'text-live-red hover:bg-live-red/10'
                               : 'text-gold hover:bg-gold/10'
                           }`}
                         >
@@ -335,9 +335,9 @@ const AdminDashboard = () => {
           </div>
           {userPageCount > 1 && (
             <div className="flex items-center justify-center gap-2 mt-4">
-              <button onClick={() => setUserPage(p => Math.max(1, p - 1))} disabled={userPage === 1} className="px-3 py-1 bg-dark-tertiary rounded text-sm text-text-secondary disabled:opacity-50">Prev</button>
+              <button onClick={() => setUserPage(p => Math.max(1, p - 1))} disabled={userPage === 1} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Prev</button>
               <span className="text-text-muted text-sm">Page {userPage} of {userPageCount}</span>
-              <button onClick={() => setUserPage(p => Math.min(userPageCount, p + 1))} disabled={userPage === userPageCount} className="px-3 py-1 bg-dark-tertiary rounded text-sm text-text-secondary disabled:opacity-50">Next</button>
+              <button onClick={() => setUserPage(p => Math.min(userPageCount, p + 1))} disabled={userPage === userPageCount} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Next</button>
             </div>
           )}
         </Card>
@@ -353,13 +353,13 @@ const AdminDashboard = () => {
               placeholder="Search leagues..."
               value={leagueSearch}
               onChange={e => { setLeagueSearch(e.target.value); setLeaguePage(1) }}
-              className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm w-64 focus:border-gold focus:outline-none"
+              className="px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm w-64 focus:border-gold focus:outline-none"
             />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-text-muted border-b border-dark-border">
+                <tr className="text-text-muted border-b border-[var(--card-border)]">
                   <th className="text-left py-2 px-3">Name</th>
                   <th className="text-left py-2 px-3">Owner</th>
                   <th className="text-left py-2 px-3">Format</th>
@@ -370,15 +370,15 @@ const AdminDashboard = () => {
               </thead>
               <tbody>
                 {leagues.map(l => (
-                  <tr key={l.id} className="border-b border-dark-border/50 hover:bg-surface-hover">
+                  <tr key={l.id} className="border-b border-[var(--card-border)]/50 hover:bg-surface-hover">
                     <td className="py-2 px-3 text-text-primary">{l.name}</td>
                     <td className="py-2 px-3 text-text-secondary">{l.owner?.name || 'N/A'}</td>
                     <td className="py-2 px-3 text-text-secondary capitalize">{l.format?.replace(/_/g, ' ').toLowerCase()}</td>
                     <td className="py-2 px-3">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        l.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400' :
+                        l.status === 'ACTIVE' ? 'bg-field-bright/20 text-field' :
                         l.status === 'DRAFTING' ? 'bg-gold/20 text-gold' :
-                        'bg-dark-tertiary text-text-muted'
+                        'bg-[var(--card-bg)] text-text-muted'
                       }`}>
                         {l.status}
                       </span>
@@ -392,9 +392,9 @@ const AdminDashboard = () => {
           </div>
           {leaguePageCount > 1 && (
             <div className="flex items-center justify-center gap-2 mt-4">
-              <button onClick={() => setLeaguePage(p => Math.max(1, p - 1))} disabled={leaguePage === 1} className="px-3 py-1 bg-dark-tertiary rounded text-sm text-text-secondary disabled:opacity-50">Prev</button>
+              <button onClick={() => setLeaguePage(p => Math.max(1, p - 1))} disabled={leaguePage === 1} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Prev</button>
               <span className="text-text-muted text-sm">Page {leaguePage} of {leaguePageCount}</span>
-              <button onClick={() => setLeaguePage(p => Math.min(leaguePageCount, p + 1))} disabled={leaguePage === leaguePageCount} className="px-3 py-1 bg-dark-tertiary rounded text-sm text-text-secondary disabled:opacity-50">Next</button>
+              <button onClick={() => setLeaguePage(p => Math.min(leaguePageCount, p + 1))} disabled={leaguePage === leaguePageCount} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Next</button>
             </div>
           )}
         </Card>
@@ -409,7 +409,7 @@ const AdminDashboard = () => {
               <select
                 value={tournamentFilter}
                 onChange={e => { setTournamentFilter(e.target.value); setTournamentPage(1) }}
-                className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                className="px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
               >
                 <option value="">All Statuses</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -422,14 +422,14 @@ const AdminDashboard = () => {
                 placeholder="Search tournaments..."
                 value={tournamentSearch}
                 onChange={e => { setTournamentSearch(e.target.value); setTournamentPage(1) }}
-                className="px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm w-56 focus:border-gold focus:outline-none"
+                className="px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm w-56 focus:border-gold focus:outline-none"
               />
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-text-muted border-b border-dark-border">
+                <tr className="text-text-muted border-b border-[var(--card-border)]">
                   <th className="text-left py-2 px-3">Tournament</th>
                   <th className="text-left py-2 px-3">Course</th>
                   <th className="text-left py-2 px-3">Tour</th>
@@ -443,7 +443,7 @@ const AdminDashboard = () => {
                 {tournaments.map(t => (
                   <tr
                     key={t.id}
-                    className="border-b border-dark-border/50 hover:bg-surface-hover cursor-pointer"
+                    className="border-b border-[var(--card-border)]/50 hover:bg-surface-hover cursor-pointer"
                     onClick={() => navigate(`/tournaments/${t.id}`)}
                   >
                     <td className="py-2 px-3">
@@ -479,9 +479,9 @@ const AdminDashboard = () => {
           </div>
           {tournamentPageCount > 1 && (
             <div className="flex items-center justify-center gap-2 mt-4">
-              <button onClick={() => setTournamentPage(p => Math.max(1, p - 1))} disabled={tournamentPage === 1} className="px-3 py-1 bg-dark-tertiary rounded text-sm text-text-secondary disabled:opacity-50">Prev</button>
+              <button onClick={() => setTournamentPage(p => Math.max(1, p - 1))} disabled={tournamentPage === 1} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Prev</button>
               <span className="text-text-muted text-sm">Page {tournamentPage} of {tournamentPageCount}</span>
-              <button onClick={() => setTournamentPage(p => Math.min(tournamentPageCount, p + 1))} disabled={tournamentPage === tournamentPageCount} className="px-3 py-1 bg-dark-tertiary rounded text-sm text-text-secondary disabled:opacity-50">Next</button>
+              <button onClick={() => setTournamentPage(p => Math.min(tournamentPageCount, p + 1))} disabled={tournamentPage === tournamentPageCount} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Next</button>
             </div>
           )}
         </Card>
@@ -502,7 +502,7 @@ const AdminDashboard = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`text-sm font-semibold ${aiConfig?.enabled ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`text-sm font-semibold ${aiConfig?.enabled ? 'text-field' : 'text-live-red'}`}>
                   {aiConfig?.enabled ? 'ON' : 'OFF'}
                 </span>
                 <Toggle enabled={!!aiConfig?.enabled} onToggle={toggleKillSwitch} disabled={aiSaving} />
@@ -518,7 +518,7 @@ const AdminDashboard = () => {
             </p>
             <div className="space-y-1">
               {Object.entries(FEATURE_LABELS).map(([key, label]) => (
-                <div key={key} className="flex items-center justify-between py-3 border-t border-dark-border first:border-t-0">
+                <div key={key} className="flex items-center justify-between py-3 border-t border-[var(--card-border)] first:border-t-0">
                   <div>
                     <p className="text-text-primary font-medium">{label}</p>
                     <p className="text-text-muted text-xs">{key}</p>
@@ -544,7 +544,7 @@ const AdminDashboard = () => {
                 type="number"
                 value={budgetInput}
                 onChange={e => setBudgetInput(e.target.value)}
-                className="w-48 px-3 py-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                className="w-48 px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
                 min="0"
               />
               <span className="text-text-muted text-sm">tokens/day</span>
@@ -558,12 +558,12 @@ const AdminDashboard = () => {
             </div>
             {aiSpend && (
               <div className="mt-3">
-                <div className="w-full bg-dark-tertiary rounded-full h-2">
+                <div className="w-full bg-[var(--card-bg)] rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all ${
-                      aiSpend.dailyBudgetPercent >= 90 ? 'bg-red-500' :
-                      aiSpend.dailyBudgetPercent >= 70 ? 'bg-yellow-500' :
-                      'bg-emerald-500'
+                      aiSpend.dailyBudgetPercent >= 90 ? 'bg-live-red' :
+                      aiSpend.dailyBudgetPercent >= 70 ? 'bg-crown' :
+                      'bg-field-bright'
                     }`}
                     style={{ width: `${Math.min(100, aiSpend.dailyBudgetPercent)}%` }}
                   />
@@ -593,11 +593,11 @@ const AdminDashboard = () => {
                   <p className="text-xs text-text-muted mt-1">This Month</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold font-display text-emerald-400">{formatTokens(aiSpend.totalTokensAllTime)}</p>
+                  <p className="text-2xl font-bold font-display text-field">{formatTokens(aiSpend.totalTokensAllTime)}</p>
                   <p className="text-xs text-text-muted mt-1">All Time</p>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-dark-border text-center">
+              <div className="mt-4 pt-4 border-t border-[var(--card-border)] text-center">
                 <p className="text-text-muted text-sm">
                   Total API calls: <span className="text-text-primary font-semibold">{aiSpend.totalCallsAllTime?.toLocaleString() || 0}</span>
                 </p>

@@ -6,9 +6,9 @@ const DraftTimer = ({ onTimeout }) => {
   const { timerSeconds, formattedTime } = useDraftTimer(onTimeout)
 
   const getTimerColor = () => {
-    if (isPaused) return 'text-yellow-400'
-    if (timerSeconds <= 10) return 'text-red-500'
-    if (timerSeconds <= 30) return 'text-yellow-400'
+    if (isPaused) return 'text-crown'
+    if (timerSeconds <= 10) return 'text-live-red'
+    if (timerSeconds <= 30) return 'text-crown'
     return 'text-gold'
   }
 
@@ -18,7 +18,7 @@ const DraftTimer = ({ onTimeout }) => {
   }
 
   return (
-    <div className="bg-dark-tertiary rounded-lg p-3">
+    <div className="bg-[var(--card-bg)] rounded-lg p-3">
       <div className="text-center">
         <p className="text-text-muted text-sm mb-1">
           {isPaused ? 'PAUSED' : 'Time Remaining'}
@@ -27,11 +27,11 @@ const DraftTimer = ({ onTimeout }) => {
           {formattedTime}
         </p>
       </div>
-      <div className="mt-3 h-2 bg-dark-primary rounded-full overflow-hidden">
+      <div className="mt-3 h-2 bg-[var(--bg)] rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-1000 ${
-            timerSeconds <= 10 ? 'bg-red-500' :
-            timerSeconds <= 30 ? 'bg-yellow-400' : 'bg-gold'
+            timerSeconds <= 10 ? 'bg-live-red' :
+            timerSeconds <= 30 ? 'bg-crown' : 'bg-gold'
           }`}
           style={{ width: `${getProgressWidth()}%` }}
         />

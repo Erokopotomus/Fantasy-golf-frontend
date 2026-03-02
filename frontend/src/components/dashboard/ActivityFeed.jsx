@@ -69,11 +69,11 @@ const ActivityFeed = ({ activity, loading }) => {
     switch (type) {
       case 'trade': return 'bg-purple-500/20 text-purple-400'
       case 'pickup': return 'bg-gold/20 text-gold'
-      case 'drop': return 'bg-red-500/20 text-red-400'
-      case 'score': return 'bg-yellow-500/20 text-yellow-400'
+      case 'drop': return 'bg-live-red/20 text-live-red'
+      case 'score': return 'bg-crown/20 text-crown'
       case 'lineup': return 'bg-orange/20 text-orange'
       case 'join': return 'bg-gold/20 text-gold'
-      default: return 'bg-dark-tertiary text-text-secondary'
+      default: return 'bg-[var(--card-bg)] text-text-secondary'
     }
   }
 
@@ -82,10 +82,10 @@ const ActivityFeed = ({ activity, loading }) => {
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex gap-3 animate-pulse">
-            <div className="w-8 h-8 bg-dark-tertiary rounded-full flex-shrink-0" />
+            <div className="w-8 h-8 bg-[var(--card-bg)] rounded-full flex-shrink-0" />
             <div className="flex-1">
-              <div className="h-4 bg-dark-tertiary rounded w-3/4 mb-2" />
-              <div className="h-3 bg-dark-tertiary rounded w-1/2" />
+              <div className="h-4 bg-[var(--card-bg)] rounded w-3/4 mb-2" />
+              <div className="h-3 bg-[var(--card-bg)] rounded w-1/2" />
             </div>
           </div>
         ))}
@@ -106,8 +106,8 @@ const ActivityFeed = ({ activity, loading }) => {
       {activity.map((item) => (
         <div
           key={item.id}
-          className={`flex gap-3 p-2 rounded-lg transition-colors cursor-pointer hover:bg-dark-tertiary ${
-            expandedId === item.id ? 'bg-dark-tertiary' : ''
+          className={`flex gap-3 p-2 rounded-lg transition-colors cursor-pointer hover:bg-[var(--card-bg)] ${
+            expandedId === item.id ? 'bg-[var(--card-bg)]' : ''
           }`}
           onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
         >
@@ -129,14 +129,14 @@ const ActivityFeed = ({ activity, loading }) => {
               </span>
             </div>
             {expandedId === item.id && (
-              <div className="mt-2 pt-2 border-t border-dark-border">
+              <div className="mt-2 pt-2 border-t border-[var(--card-border)]">
                 <p className="text-text-muted text-xs">
                   League: <span className="text-text-secondary">{item.league}</span>
                 </p>
                 {item.players && item.players.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {item.players.map((player, idx) => (
-                      <span key={idx} className="text-xs bg-dark-primary px-2 py-0.5 rounded text-gold">
+                      <span key={idx} className="text-xs bg-[var(--bg)] px-2 py-0.5 rounded text-gold">
                         {player}
                       </span>
                     ))}

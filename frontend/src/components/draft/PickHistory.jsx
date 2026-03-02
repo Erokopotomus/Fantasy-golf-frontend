@@ -1,4 +1,5 @@
 import Card from '../common/Card'
+import EmptyState from '../common/EmptyState'
 
 const PickHistory = ({ picks, limit = 10 }) => {
   const recentPicks = [...picks].reverse().slice(0, limit)
@@ -8,9 +9,7 @@ const PickHistory = ({ picks, limit = 10 }) => {
       <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Recent Picks</h3>
 
       {recentPicks.length === 0 ? (
-        <div className="text-center py-6 text-text-muted">
-          <p>No picks yet</p>
-        </div>
+        <EmptyState icon="history" title="No picks yet" message="Picks will appear here as the draft progresses." />
       ) : (
         <div className="space-y-2">
           {recentPicks.map((pick, index) => (
@@ -18,10 +17,10 @@ const PickHistory = ({ picks, limit = 10 }) => {
               key={pick.id || index}
               className={`
                 flex items-center gap-3 p-3 rounded-lg
-                ${index === 0 ? 'bg-gold/10 border border-gold/30' : 'bg-dark-tertiary'}
+                ${index === 0 ? 'bg-gold/10 border border-gold/30' : 'bg-[var(--card-bg)]'}
               `}
             >
-              <div className="w-8 h-8 bg-dark-primary rounded-full flex items-center justify-center text-text-muted text-xs font-medium">
+              <div className="w-8 h-8 bg-[var(--bg)] rounded-full flex items-center justify-center text-text-muted text-xs font-medium">
                 {pick.pickNumber}
               </div>
               <div className="flex-1 min-w-0">

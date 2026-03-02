@@ -107,7 +107,7 @@ const WaiverWire = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-field-bright/30 border-t-field-bright rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading free agents...</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ const WaiverWire = () => {
             {isWaiverMode ? 'Waiver Wire' : 'Free Agents'}
           </h1>
           {isWaiverMode && waiverType === 'faab' && budget && (
-            <span className="px-3 py-1 bg-emerald-500/15 text-emerald-400 text-sm font-semibold rounded-full">
+            <span className="px-3 py-1 bg-field-bright/15 text-field text-sm font-semibold rounded-full">
               ${budget.remaining} / ${budget.total}
             </span>
           )}
@@ -213,7 +213,7 @@ const WaiverWire = () => {
                 placeholder="Search players..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-emerald-500/50"
+                className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-field-bright/50"
               />
             </div>
             <div className="flex gap-1">
@@ -223,7 +223,7 @@ const WaiverWire = () => {
                   onClick={() => setTour(t)}
                   className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                     tour === t
-                      ? 'bg-emerald-500/15 text-emerald-400'
+                      ? 'bg-field-bright/15 text-field'
                       : 'bg-[var(--surface)] text-text-muted hover:text-text-primary'
                   }`}
                 >
@@ -235,7 +235,7 @@ const WaiverWire = () => {
 
           {/* Roster fullness warning */}
           {isRosterFull && (
-            <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center gap-2 text-sm text-yellow-400">
+            <div className="mb-4 p-3 bg-crown/10 border border-crown/20 rounded-lg flex items-center gap-2 text-sm text-crown">
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
@@ -256,7 +256,7 @@ const WaiverWire = () => {
           )}
 
           {/* Player list */}
-          <div className={`rounded-xl border border-dark-border bg-dark-secondary overflow-hidden ${isDraftLocked ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`rounded-xl border border-[var(--card-border)] bg-[var(--surface)] overflow-hidden ${isDraftLocked ? 'opacity-50 pointer-events-none' : ''}`}>
             <div className={`grid ${isNfl ? 'grid-cols-[1fr_60px_60px_72px]' : 'grid-cols-[1fr_80px_80px_auto_72px]'} gap-2 px-4 py-2.5 bg-[var(--surface)] text-[11px] text-text-muted uppercase tracking-wider font-medium`}>
               <div>Player</div>
               {isNfl ? (
@@ -296,9 +296,9 @@ const WaiverWire = () => {
                           const tags = Array.isArray(player.boardData.tags) ? player.boardData.tags : Object.keys(player.boardData.tags || {})
                           return tags.slice(0, 2).map(tag => (
                             <span key={tag} className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${
-                              tag === 'target' || tag === 'must-have' ? 'bg-emerald-500/15 text-emerald-500' :
+                              tag === 'target' || tag === 'must-have' ? 'bg-field-bright/15 text-field-bright' :
                               tag === 'sleeper' ? 'bg-purple-500/15 text-purple-400' :
-                              tag === 'avoid' ? 'bg-red-500/15 text-red-400' :
+                              tag === 'avoid' ? 'bg-live-red/15 text-live-red' :
                               tag === 'value' ? 'bg-[var(--crown)]/15 text-[var(--crown)]' :
                               'bg-blue-500/15 text-blue-400'
                             }`}>{tag}</span>
@@ -339,7 +339,7 @@ const WaiverWire = () => {
                               key={t.id || i}
                               className={`w-2.5 h-2.5 rounded-full ${
                                 inField
-                                  ? 'bg-emerald-500'
+                                  ? 'bg-field-bright'
                                   : fieldAnnounced
                                   ? 'bg-[var(--stone)]'
                                   : 'border border-[var(--card-border)] bg-transparent'
@@ -406,11 +406,11 @@ const WaiverWire = () => {
                   </p>
                 </div>
                 {waiverType === 'faab' && (
-                  <span className="text-emerald-400 font-semibold text-sm">${claim.bidAmount}</span>
+                  <span className="text-field font-semibold text-sm">${claim.bidAmount}</span>
                 )}
                 <button
                   onClick={() => cancelClaim(claim.id)}
-                  className="p-1.5 text-text-muted hover:text-red-400 transition-colors"
+                  className="p-1.5 text-text-muted hover:text-live-red transition-colors"
                   title="Cancel claim"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,9 +438,9 @@ const WaiverWire = () => {
                 className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg p-3 flex items-center gap-3"
               >
                 <span className={`px-2 py-0.5 text-xs font-bold rounded ${
-                  claim.status === 'WON' ? 'bg-emerald-500/15 text-emerald-400' :
-                  claim.status === 'LOST' ? 'bg-red-500/15 text-red-400' :
-                  'bg-yellow-500/15 text-yellow-400'
+                  claim.status === 'WON' ? 'bg-field-bright/15 text-field' :
+                  claim.status === 'LOST' ? 'bg-live-red/15 text-live-red' :
+                  'bg-crown/15 text-crown'
                 }`}>
                   {claim.status}
                 </span>
@@ -469,10 +469,10 @@ const WaiverWire = () => {
                 : (isRosterFull ? 'Swap Player' : 'Add Player')}
             </h3>
 
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 mb-4">
+            <div className="bg-field-bright/10 border border-field-bright/20 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-3">
                 {claimTarget.headshotUrl ? (
-                  <img src={claimTarget.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-dark-tertiary" />
+                  <img src={claimTarget.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-[var(--card-bg)]" />
                 ) : (
                   <span className="text-2xl">{claimTarget.countryFlag}</span>
                 )}
@@ -505,7 +505,7 @@ const WaiverWire = () => {
                     max={budget?.remaining || 100}
                     value={bidAmount}
                     onChange={(e) => setBidAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full pl-8 pr-4 py-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-emerald-500/50"
+                    className="w-full pl-8 pr-4 py-2.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:outline-none focus:border-field-bright/50"
                   />
                 </div>
                 {/* Quick bid buttons */}
@@ -516,7 +516,7 @@ const WaiverWire = () => {
                       onClick={() => setBidAmount(amt)}
                       className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                         bidAmount === amt
-                          ? 'bg-emerald-500/20 text-emerald-400'
+                          ? 'bg-field-bright/20 text-field'
                           : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary'
                       }`}
                     >
@@ -540,7 +540,7 @@ const WaiverWire = () => {
                       onClick={() => setDropTarget(dropTarget?.id === p.id ? null : p)}
                       className={`w-full flex items-center gap-2 p-2.5 rounded-lg text-left text-sm transition-colors ${
                         dropTarget?.id === p.id
-                          ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                          ? 'bg-live-red/15 border border-live-red/30 text-live-red'
                           : 'bg-[var(--bg-alt)] hover:bg-[var(--surface-alt)] text-text-primary'
                       }`}
                     >

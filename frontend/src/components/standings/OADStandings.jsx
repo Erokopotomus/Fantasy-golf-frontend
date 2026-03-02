@@ -35,9 +35,9 @@ const OADStandings = ({ standings, currentUserId }) => {
             >
               {/* Rank */}
               <div className={`text-2xl font-bold w-8 text-center ${
-                index === 0 ? 'text-yellow-400' :
-                index === 1 ? 'text-gray-300' :
-                index === 2 ? 'text-amber-600' : 'text-text-muted'
+                index === 0 ? 'text-crown' :
+                index === 1 ? 'text-gray-400 dark:text-gray-300' :
+                index === 2 ? 'text-amber-700 dark:text-amber-500' : 'text-text-muted'
               }`}>
                 {index + 1}
               </div>
@@ -63,7 +63,7 @@ const OADStandings = ({ standings, currentUserId }) => {
               {/* Points Behind */}
               <div className="text-right mr-4">
                 {behind > 0 ? (
-                  <p className="text-sm text-red-400">-{behind}</p>
+                  <p className="text-sm text-live-red">-{behind}</p>
                 ) : (
                   <p className="text-sm text-gold">Leader</p>
                 )}

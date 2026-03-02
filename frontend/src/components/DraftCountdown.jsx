@@ -14,10 +14,10 @@ function getTimeRemaining(scheduledFor) {
 }
 
 function getUrgencyColor(totalMs) {
-  if (totalMs == null) return 'text-red-400'
+  if (totalMs == null) return 'text-live-red'
   const hours = totalMs / (1000 * 60 * 60)
-  if (hours < 2) return 'text-red-400'
-  if (hours < 24) return 'text-yellow-400'
+  if (hours < 2) return 'text-live-red'
+  if (hours < 24) return 'text-crown'
   return 'text-gold'
 }
 
@@ -41,11 +41,11 @@ const DraftCountdown = ({ scheduledFor, compact = false }) => {
   // Draft time has passed
   if (!remaining) {
     if (compact) {
-      return <span className="text-red-400 text-xs font-medium">Draft time passed</span>
+      return <span className="text-live-red text-xs font-medium">Draft time passed</span>
     }
     return (
       <div className="text-center">
-        <p className="text-red-400 font-semibold">Draft time has passed</p>
+        <p className="text-live-red font-semibold">Draft time has passed</p>
         <p className="text-text-muted text-sm">{formatDate(scheduledFor)} at {formatTimeET(scheduledFor)}</p>
       </div>
     )
@@ -91,20 +91,20 @@ const DraftCountdown = ({ scheduledFor, compact = false }) => {
       </p>
       <div className="flex gap-2">
         {remaining.days > 0 && (
-          <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+          <div className="bg-[var(--bg)] rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
             <p className={`text-lg font-bold ${color}`}>{remaining.days}</p>
             <p className="text-text-muted text-[10px]">days</p>
           </div>
         )}
-        <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+        <div className="bg-[var(--bg)] rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
           <p className={`text-lg font-bold ${color}`}>{remaining.hours}</p>
           <p className="text-text-muted text-[10px]">hrs</p>
         </div>
-        <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+        <div className="bg-[var(--bg)] rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
           <p className={`text-lg font-bold ${color}`}>{remaining.minutes}</p>
           <p className="text-text-muted text-[10px]">min</p>
         </div>
-        <div className="bg-dark-primary rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
+        <div className="bg-[var(--bg)] rounded-lg px-2.5 py-1.5 text-center min-w-[44px]">
           <p className={`text-lg font-bold ${color}`}>{remaining.seconds}</p>
           <p className="text-text-muted text-[10px]">sec</p>
         </div>

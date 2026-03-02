@@ -64,7 +64,7 @@ export default function VaultReveal() {
   if (error) {
     return (
       <div className="max-w-lg mx-auto px-4 py-16 text-center">
-        <div className="text-red-400 text-sm font-mono mb-4">Failed to load vault data</div>
+        <div className="text-live-red text-sm font-mono mb-4">Failed to load vault data</div>
         <p className="text-xs text-text-muted mb-6">{error}</p>
         <Link
           to={`/leagues/${leagueId}/vault`}

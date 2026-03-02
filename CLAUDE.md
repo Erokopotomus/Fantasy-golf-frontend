@@ -501,3 +501,34 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 **All migrations (1-48) deployed to Railway.**
 
 **Infrastructure fix (Feb 2026):** All backend route files now import from `src/lib/prisma.js` singleton instead of creating individual PrismaClient instances. Pool: 20 connections, 30s timeout.
+
+---
+
+## OBSIDIAN VAULT (Extended Documentation)
+
+> **Location:** `~/Documents/obsidian-dev-vault/01_Projects/ClutchFantasySports/`
+
+The Obsidian vault holds deeper reference documentation that extends this file. CLAUDE.md is the compact dev guide; the vault has full specs, architecture details, and session continuity docs.
+
+### Vault Structure
+
+| Folder | Contents |
+|--------|----------|
+| `architecture/` | `tech-stack.md`, `database-schema.md`, `api-catalog.md`, `data-pipeline.md`, `real-time.md` |
+| `specs/` | `project-overview.md`, `ai-engine.md`, `prediction-system.md`, `clutch-rating.md`, `scoring-systems.md`, `draft-system.md`, `league-vault.md` |
+| `context/` | `current-status.md`, `session-log.md`, `decisions-log.md` |
+| `research/` | `competitive-landscape.md`, `data-sources.md` |
+| `tasks/` | `backlog.md` |
+
+### Session End Protocol
+
+**At the end of each development session, update the Obsidian vault:**
+
+1. **`context/session-log.md`** — Add entry: what was built, decisions made, what's next
+2. **`context/current-status.md`** — Update phase status, migration count, any new cron jobs
+3. **`tasks/backlog.md`** — Check off completed items, add any new discovered work
+4. **`context/decisions-log.md`** — Log any new architectural decisions made during the session
+
+**When a feature spec changes significantly, also update the relevant `specs/` or `architecture/` file.**
+
+This keeps the vault in sync so the next session (even with a fresh context window) can quickly understand where things stand.

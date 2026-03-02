@@ -47,7 +47,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
       {queue.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-center py-8">
           <div>
-            <div className="w-12 h-12 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-[var(--card-bg)] rounded-full flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M4 6h16M4 12h16m-7 6h7" />
@@ -71,9 +71,9 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
               onDragOver={(e) => handleDragOver(e, index)}
               onDragEnd={handleDragEnd}
               className={`
-                flex items-center gap-3 p-2 bg-dark-tertiary rounded-lg cursor-move
+                flex items-center gap-3 p-2 bg-[var(--card-bg)] rounded-lg cursor-move
                 transition-all duration-200
-                ${draggedIndex === index ? 'opacity-50 scale-95' : 'hover:bg-dark-border'}
+                ${draggedIndex === index ? 'opacity-50 scale-95' : 'hover:bg-[var(--card-border)]'}
               `}
             >
               <div className="flex flex-col gap-1">
@@ -119,7 +119,7 @@ const DraftQueue = ({ queue, onRemove, onReorder, onSelect, isUserTurn }) => {
                 )}
                 <button
                   onClick={() => onRemove(player.id)}
-                  className="text-text-muted hover:text-red-500 transition-colors p-1"
+                  className="text-text-muted hover:text-live-red transition-colors p-1"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

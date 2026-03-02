@@ -86,9 +86,9 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-dark-secondary rounded-xl border border-dark-border w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="relative bg-[var(--surface)] rounded-xl border border-[var(--card-border)] w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-dark-border">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--card-border)]">
           <h2 className="text-xl font-bold font-display text-text-primary">Propose Trade</h2>
           <button
             onClick={onClose}
@@ -113,7 +113,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                 setSelectedTeam(e.target.value)
                 setTheirPlayersToReceive([])
               }}
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-emerald-400 focus:outline-none"
+              className="w-full p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-field focus:outline-none"
             >
               <option value="">Select a team...</option>
               {leagueMembers.map(member => (
@@ -132,7 +132,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a message to your trade proposal..."
-              className="w-full p-3 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-emerald-400 focus:outline-none"
+              className="w-full p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted focus:border-field focus:outline-none"
             />
           </div>
 
@@ -149,8 +149,8 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                     className={`
                       flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all
                       ${myPlayersToSend.includes(player.id)
-                        ? 'bg-red-500/20 border border-red-500/50'
-                        : 'bg-dark-tertiary hover:bg-dark-border'}
+                        ? 'bg-live-red/20 border border-live-red/50'
+                        : 'bg-[var(--card-bg)] hover:bg-[var(--card-border)]'}
                     `}
                   >
                     <div className="flex-1">
@@ -160,7 +160,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                       )}
                     </div>
                     {myPlayersToSend.includes(player.id) && (
-                      <span className="text-red-400 text-xs font-medium">Sending</span>
+                      <span className="text-live-red text-xs font-medium">Sending</span>
                     )}
                   </div>
                 ))}
@@ -184,8 +184,8 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                       className={`
                         flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all
                         ${theirPlayersToReceive.includes(player.id)
-                          ? 'bg-emerald-400/20 border border-emerald-400/50'
-                          : 'bg-dark-tertiary hover:bg-dark-border'}
+                          ? 'bg-field/20 border border-field/50'
+                          : 'bg-[var(--card-bg)] hover:bg-[var(--card-border)]'}
                       `}
                     >
                       <div className="flex-1">
@@ -195,7 +195,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                         )}
                       </div>
                       {theirPlayersToReceive.includes(player.id) && (
-                        <span className="text-emerald-400 text-xs font-medium">Receiving</span>
+                        <span className="text-field text-xs font-medium">Receiving</span>
                       )}
                     </div>
                   ))}
@@ -204,7 +204,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                   )}
                 </div>
               ) : (
-                <div className="bg-dark-tertiary rounded-lg p-8 text-center">
+                <div className="bg-[var(--card-bg)] rounded-lg p-8 text-center">
                   <p className="text-text-muted">Select a team to see their players</p>
                 </div>
               )}
@@ -216,8 +216,8 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-text-muted mb-3">Draft Dollars</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-dark-tertiary rounded-lg p-3">
-                  <p className="text-xs text-red-400 mb-2">You Send</p>
+                <div className="bg-[var(--card-bg)] rounded-lg p-3">
+                  <p className="text-xs text-live-red mb-2">You Send</p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <label className="text-xs text-text-muted w-20">Current $</label>
@@ -227,7 +227,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                         value={senderCurrentDollars || ''}
                         onChange={(e) => setSenderCurrentDollars(parseInt(e.target.value) || 0)}
                         placeholder="0"
-                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
+                        className="flex-1 p-2 bg-[var(--bg)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:border-field focus:outline-none"
                       />
                     </div>
                     {allowNextYear && (
@@ -239,14 +239,14 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                           value={senderNextDollars || ''}
                           onChange={(e) => setSenderNextDollars(parseInt(e.target.value) || 0)}
                           placeholder="0"
-                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
+                          className="flex-1 p-2 bg-[var(--bg)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:border-field focus:outline-none"
                         />
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="bg-dark-tertiary rounded-lg p-3">
-                  <p className="text-xs text-emerald-400 mb-2">You Receive</p>
+                <div className="bg-[var(--card-bg)] rounded-lg p-3">
+                  <p className="text-xs text-field mb-2">You Receive</p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <label className="text-xs text-text-muted w-20">Current $</label>
@@ -256,7 +256,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                         value={receiverCurrentDollars || ''}
                         onChange={(e) => setReceiverCurrentDollars(parseInt(e.target.value) || 0)}
                         placeholder="0"
-                        className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
+                        className="flex-1 p-2 bg-[var(--bg)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:border-field focus:outline-none"
                       />
                     </div>
                     {allowNextYear && (
@@ -268,7 +268,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                           value={receiverNextDollars || ''}
                           onChange={(e) => setReceiverNextDollars(parseInt(e.target.value) || 0)}
                           placeholder="0"
-                          className="flex-1 p-2 bg-dark-primary border border-dark-border rounded text-text-primary text-sm focus:border-emerald-400 focus:outline-none"
+                          className="flex-1 p-2 bg-[var(--bg)] border border-[var(--card-border)] rounded text-text-primary text-sm focus:border-field focus:outline-none"
                         />
                       </div>
                     )}
@@ -280,11 +280,11 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
 
           {/* Trade Summary */}
           {(myPlayersToSend.length > 0 || theirPlayersToReceive.length > 0) && (
-            <Card className="mt-6 bg-dark-primary">
+            <Card className="mt-6 bg-[var(--bg)]">
               <h4 className="text-sm font-semibold text-text-muted mb-3">Trade Summary</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-red-400 mb-1">You Send:</p>
+                  <p className="text-xs text-live-red mb-1">You Send:</p>
                   {myPlayersToSend.map(id => {
                     const player = myPlayers.find(p => p.id === id)
                     return player ? (
@@ -299,7 +299,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
                   )}
                 </div>
                 <div>
-                  <p className="text-xs text-emerald-400 mb-1">You Receive:</p>
+                  <p className="text-xs text-field mb-1">You Receive:</p>
                   {theirPlayersToReceive.map(id => {
                     const player = selectedMember?.roster?.find(p => p.id === id)
                     return player ? (
@@ -326,23 +326,23 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
               value={reasoning}
               onChange={e => setReasoning(e.target.value.substring(0, 280))}
               placeholder="e.g. Buying low after a bad week"
-              className="w-full px-3 py-2 text-xs bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+              className="w-full px-3 py-2 text-xs bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
             />
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex gap-3 p-4 border-t border-dark-border">
+        <div className="flex gap-3 p-4 border-t border-[var(--card-border)]">
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-dark-tertiary text-text-primary rounded-lg font-medium hover:bg-dark-border transition-colors"
+            className="flex-1 py-3 bg-[var(--card-bg)] text-text-primary rounded-lg font-medium hover:bg-[var(--card-border)] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || submitting}
-            className="flex-1 py-3 bg-emerald-500 text-text-primary rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 py-3 bg-field-bright text-text-primary rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Sending...' : 'Propose Trade'}
           </button>

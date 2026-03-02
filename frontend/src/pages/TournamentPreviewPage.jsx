@@ -11,7 +11,7 @@ import { formatDate, formatDateRange, formatPurse } from '../utils/dateUtils'
 const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
-  if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
+  if (val >= 0.27) return { text: 'High', color: 'text-field', bar: 'bg-field' }
   if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-slate-400' }
   return { text: 'Low', color: 'text-text-muted', bar: 'bg-slate-500' }
 }
@@ -136,7 +136,7 @@ const TournamentPreviewPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <p className="text-red-400 mb-4">{error || 'Tournament not found'}</p>
+          <p className="text-live-red mb-4">{error || 'Tournament not found'}</p>
           <Link to="/tournaments" className="text-gold hover:underline text-sm">
             Back to Tournaments
           </Link>
@@ -242,7 +242,7 @@ const TournamentPreviewPage = () => {
                 <StatPill
                   label="Avg Winning Score"
                   value={course.courseStats.avgWinningScore > 0 ? `+${course.courseStats.avgWinningScore.toFixed(1)}` : course.courseStats.avgWinningScore.toFixed(1)}
-                  color={course.courseStats.avgWinningScore <= -2 ? 'text-gold' : course.courseStats.avgWinningScore <= 0 ? 'text-green-400' : 'text-red-400'}
+                  color={course.courseStats.avgWinningScore <= -2 ? 'text-gold' : course.courseStats.avgWinningScore <= 0 ? 'text-field' : 'text-live-red'}
                 />
               )}
               {course.courseStats?.avgCutLine != null && (
@@ -303,7 +303,7 @@ const TournamentPreviewPage = () => {
                         <div>
                           <p className="text-[9px] text-text-muted uppercase">Fit</p>
                           <p className={`text-xs font-mono font-bold ${
-                            player.clutchMetrics.courseFitScore >= 80 ? 'text-gold' : player.clutchMetrics.courseFitScore >= 60 ? 'text-yellow-400' : 'text-text-secondary'
+                            player.clutchMetrics.courseFitScore >= 80 ? 'text-gold' : player.clutchMetrics.courseFitScore >= 60 ? 'text-crown' : 'text-text-secondary'
                           }`}>
                             {Math.round(player.clutchMetrics.courseFitScore)}
                           </p>
@@ -313,7 +313,7 @@ const TournamentPreviewPage = () => {
                         <div>
                           <p className="text-[9px] text-text-muted uppercase">Form</p>
                           <p className={`text-xs font-mono font-bold ${
-                            player.clutchMetrics.formScore >= 80 ? 'text-emerald-400' : player.clutchMetrics.formScore >= 60 ? 'text-green-400' : 'text-text-secondary'
+                            player.clutchMetrics.formScore >= 80 ? 'text-field' : player.clutchMetrics.formScore >= 60 ? 'text-field' : 'text-text-secondary'
                           }`}>
                             {Math.round(player.clutchMetrics.formScore)}
                           </p>
@@ -381,7 +381,7 @@ const TournamentPreviewPage = () => {
                       <div>
                         <p className="text-[9px] text-text-muted uppercase">Fit</p>
                         <p className={`text-xs font-mono font-bold ${
-                          p.courseFitScore >= 80 ? 'text-gold' : p.courseFitScore >= 60 ? 'text-yellow-400' : 'text-text-secondary'
+                          p.courseFitScore >= 80 ? 'text-gold' : p.courseFitScore >= 60 ? 'text-crown' : 'text-text-secondary'
                         }`}>
                           {Math.round(p.courseFitScore)}
                         </p>
@@ -390,7 +390,7 @@ const TournamentPreviewPage = () => {
                         <div>
                           <p className="text-[9px] text-text-muted uppercase">Form</p>
                           <p className={`text-xs font-mono font-bold ${
-                            p.formScore >= 80 ? 'text-emerald-400' : p.formScore >= 60 ? 'text-green-400' : 'text-text-secondary'
+                            p.formScore >= 80 ? 'text-field' : p.formScore >= 60 ? 'text-field' : 'text-text-secondary'
                           }`}>
                             {Math.round(p.formScore)}
                           </p>
@@ -400,7 +400,7 @@ const TournamentPreviewPage = () => {
                         <div>
                           <p className="text-[9px] text-text-muted uppercase">CPI</p>
                           <p className={`text-xs font-mono font-bold ${
-                            p.cpi > 1 ? 'text-emerald-400' : p.cpi > 0 ? 'text-green-400' : 'text-text-secondary'
+                            p.cpi > 1 ? 'text-field' : p.cpi > 0 ? 'text-field' : 'text-text-secondary'
                           }`}>
                             {p.cpi > 0 ? `+${p.cpi.toFixed(1)}` : p.cpi.toFixed(1)}
                           </p>
@@ -447,12 +447,12 @@ const TournamentPreviewPage = () => {
             <SectionHeader>Weather Outlook</SectionHeader>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {weather.slice(0, 4).map((day, i) => {
-                const windColor = (day.windSpeed || 0) >= 20 ? 'text-red-400' : (day.windSpeed || 0) >= 15 ? 'text-orange-400' : 'text-text-secondary'
+                const windColor = (day.windSpeed || 0) >= 20 ? 'text-live-red' : (day.windSpeed || 0) >= 15 ? 'text-blaze' : 'text-text-secondary'
                 const diffBadge = day.difficultyImpact != null ? (
-                  day.difficultyImpact >= 0.6 ? { label: 'Brutal', cls: 'text-red-400 bg-red-500/15 border-red-500/25' } :
-                  day.difficultyImpact >= 0.4 ? { label: 'Windy', cls: 'text-orange-400 bg-orange-500/15 border-orange-500/25' } :
-                  day.difficultyImpact >= 0.2 ? { label: 'Breezy', cls: 'text-yellow-400 bg-yellow-500/15 border-yellow-500/25' } :
-                  { label: 'Calm', cls: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/25' }
+                  day.difficultyImpact >= 0.6 ? { label: 'Brutal', cls: 'text-live-red bg-live-red/15 border-live-red/25' } :
+                  day.difficultyImpact >= 0.4 ? { label: 'Windy', cls: 'text-blaze bg-orange-500/15 border-orange-500/25' } :
+                  day.difficultyImpact >= 0.2 ? { label: 'Breezy', cls: 'text-crown bg-crown/15 border-crown/25' } :
+                  { label: 'Calm', cls: 'text-field bg-field-bright/15 border-field-bright/25' }
                 ) : null
 
                 return (
@@ -488,7 +488,7 @@ const TournamentPreviewPage = () => {
             <div className="flex flex-wrap gap-3 mb-5">
               <StatPill label="Total Field" value={fieldStats.total} />
               <StatPill label="Top 25" value={fieldStats.top25} color="text-gold" />
-              <StatPill label="Top 50" value={fieldStats.top50} color="text-emerald-400" />
+              <StatPill label="Top 50" value={fieldStats.top50} color="text-field" />
               <StatPill label="Top 100" value={fieldStats.top100} color="text-blue-400" />
             </div>
 
@@ -540,7 +540,7 @@ const TournamentPreviewPage = () => {
                   </thead>
                   <tbody>
                     {course.playerHistory.slice(0, 10).map((ph) => {
-                      const avgColor = ph.avgToPar != null ? (ph.avgToPar <= -2 ? 'text-gold' : ph.avgToPar <= 0 ? 'text-green-400' : ph.avgToPar <= 1 ? 'text-yellow-400' : 'text-red-400') : 'text-text-muted'
+                      const avgColor = ph.avgToPar != null ? (ph.avgToPar <= -2 ? 'text-gold' : ph.avgToPar <= 0 ? 'text-field' : ph.avgToPar <= 1 ? 'text-crown' : 'text-live-red') : 'text-text-muted'
                       return (
                         <tr key={ph.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)]">
                           <td className="p-3">
@@ -554,14 +554,14 @@ const TournamentPreviewPage = () => {
                             {ph.avgToPar != null ? (ph.avgToPar > 0 ? `+${ph.avgToPar.toFixed(1)}` : ph.avgToPar.toFixed(1)) : '-'}
                           </td>
                           <td className={`p-3 text-center font-mono text-xs hidden sm:table-cell ${
-                            ph.sgTotal > 0 ? 'text-emerald-400' : ph.sgTotal != null ? 'text-red-400' : 'text-text-muted'
+                            ph.sgTotal > 0 ? 'text-field' : ph.sgTotal != null ? 'text-live-red' : 'text-text-muted'
                           }`}>
                             {ph.sgTotal != null ? (ph.sgTotal > 0 ? `+${ph.sgTotal.toFixed(1)}` : ph.sgTotal.toFixed(1)) : '-'}
                           </td>
                           <td className="p-3 text-center text-gold font-mono">{ph.bestFinish || '-'}</td>
                           <td className="p-3 text-right">
                             {ph.wins > 0 ? (
-                              <span className="text-yellow-400 font-mono font-bold">{ph.wins}</span>
+                              <span className="text-crown font-mono font-bold">{ph.wins}</span>
                             ) : (
                               <span className="text-text-muted">-</span>
                             )}
@@ -587,7 +587,7 @@ const TournamentPreviewPage = () => {
         <section className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 pb-4">
           <Link
             to={`/tournaments/${tournamentId}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-text-primary text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-field-bright hover:bg-emerald-600 text-text-primary text-sm font-semibold transition-colors"
           >
             View Full Leaderboard
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

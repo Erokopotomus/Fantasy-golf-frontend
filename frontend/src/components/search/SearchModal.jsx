@@ -92,9 +92,9 @@ const SearchModal = ({ isOpen, onClose }) => {
   const getTypeBadgeColor = (type) => {
     const colors = {
       player: 'bg-blue-500/20 text-blue-400',
-      league: 'bg-yellow-500/20 text-yellow-400',
-      tournament: 'bg-green-500/20 text-green-400',
-      news: 'bg-red-500/20 text-red-400',
+      league: 'bg-crown/20 text-crown',
+      tournament: 'bg-field-bright/20 text-field',
+      news: 'bg-live-red/20 text-live-red',
     }
     return colors[type] || 'bg-gray-500/20 text-gray-400'
   }
@@ -111,9 +111,9 @@ const SearchModal = ({ isOpen, onClose }) => {
 
       {/* Modal */}
       <div className="relative min-h-screen flex items-start justify-center pt-[15vh] px-4">
-        <div className="w-full max-w-xl bg-dark-secondary rounded-xl shadow-2xl border border-dark-border overflow-hidden">
+        <div className="w-full max-w-xl bg-[var(--surface)] rounded-xl shadow-2xl border border-[var(--card-border)] overflow-hidden">
           {/* Search Input */}
-          <div className="flex items-center gap-3 p-4 border-b border-dark-border">
+          <div className="flex items-center gap-3 p-4 border-b border-[var(--card-border)]">
             <svg className="w-5 h-5 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -135,7 +135,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                 </svg>
               </button>
             )}
-            <kbd className="hidden sm:inline-flex px-2 py-1 text-xs text-text-muted bg-dark-tertiary rounded border border-dark-border">
+            <kbd className="hidden sm:inline-flex px-2 py-1 text-xs text-text-muted bg-[var(--card-bg)] rounded border border-[var(--card-border)]">
               ESC
             </kbd>
           </div>
@@ -149,8 +149,11 @@ const SearchModal = ({ isOpen, onClose }) => {
               </div>
             ) : query.length >= 2 && !hasResults ? (
               <div className="p-8 text-center">
-                <p className="text-text-muted">No results found for "{query}"</p>
-                <p className="text-text-muted text-sm mt-1">Try a different search term</p>
+                <div className="w-12 h-12 rounded-full bg-[var(--bg-alt)] flex items-center justify-center mx-auto mb-3 text-text-muted">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+                <p className="text-text-primary font-medium mb-1">No results for "{query}"</p>
+                <p className="text-text-muted text-sm">Try a different search term</p>
               </div>
             ) : query.length >= 2 && hasResults ? (
               <div className="py-2">
@@ -258,21 +261,21 @@ const SearchModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-3 border-t border-dark-border flex items-center justify-between text-xs text-text-muted">
+          <div className="px-4 py-3 border-t border-[var(--card-border)] flex items-center justify-between text-xs text-text-muted">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-dark-tertiary rounded border border-dark-border">↑</kbd>
-                <kbd className="px-1.5 py-0.5 bg-dark-tertiary rounded border border-dark-border">↓</kbd>
+                <kbd className="px-1.5 py-0.5 bg-[var(--card-bg)] rounded border border-[var(--card-border)]">↑</kbd>
+                <kbd className="px-1.5 py-0.5 bg-[var(--card-bg)] rounded border border-[var(--card-border)]">↓</kbd>
                 <span className="ml-1">Navigate</span>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-dark-tertiary rounded border border-dark-border">↵</kbd>
+                <kbd className="px-1.5 py-0.5 bg-[var(--card-bg)] rounded border border-[var(--card-border)]">↵</kbd>
                 <span className="ml-1">Select</span>
               </span>
             </div>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-dark-tertiary rounded border border-dark-border">⌘</kbd>
-              <kbd className="px-1.5 py-0.5 bg-dark-tertiary rounded border border-dark-border">K</kbd>
+              <kbd className="px-1.5 py-0.5 bg-[var(--card-bg)] rounded border border-[var(--card-border)]">⌘</kbd>
+              <kbd className="px-1.5 py-0.5 bg-[var(--card-bg)] rounded border border-[var(--card-border)]">K</kbd>
               <span className="ml-1">to toggle</span>
             </span>
           </div>
@@ -288,7 +291,7 @@ const SearchResultItem = ({ item, isSelected, onClick, getTypeBadgeColor, showTy
       onClick={onClick}
       className={`
         w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
-        ${isSelected ? 'bg-gold/20' : 'hover:bg-dark-tertiary'}
+        ${isSelected ? 'bg-gold/20' : 'hover:bg-[var(--card-bg)]'}
       `}
     >
       <span className="text-xl flex-shrink-0">{item.icon}</span>

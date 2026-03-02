@@ -18,7 +18,7 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
         <h3 className="text-base font-bold text-text-primary">My Team</h3>
         <div className="text-right">
           <span className="text-[10px] text-text-muted uppercase tracking-wide">Fantasy Pts</span>
-          <p className="text-xl font-bold font-display text-emerald-400 leading-tight">{totalPoints}</p>
+          <p className="text-xl font-bold font-display text-field leading-tight">{totalPoints}</p>
         </div>
       </div>
 
@@ -31,7 +31,7 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
             className={`
               flex items-center justify-between px-4 py-3 cursor-pointer transition-all
               ${selectedPlayerId === player.id
-                ? 'bg-emerald-500/10 border-l-2 border-l-emerald-400'
+                ? 'bg-field-bright/10 border-l-2 border-l-field'
                 : 'hover:bg-[var(--surface-alt)] border-l-2 border-l-transparent'}
             `}
           >
@@ -53,10 +53,10 @@ const MyPlayersPanel = ({ players, onSelectPlayer, selectedPlayerId }) => {
               </div>
             </div>
             <div className="text-right">
-              <p className={`font-bold text-sm ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
+              <p className={`font-bold text-sm ${parseInt(player.score) < 0 ? 'text-field' : parseInt(player.score) > 0 ? 'text-live-red' : 'text-text-primary'}`}>
                 {formatScore(player.score)}
               </p>
-              <p className="text-[11px] text-emerald-400 font-medium">
+              <p className="text-[11px] text-field font-medium">
                 {player.fantasyPoints || 0} pts
               </p>
             </div>

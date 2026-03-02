@@ -5,10 +5,10 @@ import api from '../services/api'
 const ACTION_CONFIG = {
   board_created:  { icon: '\u2795', label: 'Created board', color: 'text-gold' },
   player_moved:   { icon: '\u21C5', label: 'Moved', color: 'text-blue-400' },
-  player_tagged:  { icon: '\uD83C\uDFF7\uFE0F', label: 'Tagged', color: 'text-emerald-400' },
+  player_tagged:  { icon: '\uD83C\uDFF7\uFE0F', label: 'Tagged', color: 'text-field' },
   note_added:     { icon: '\uD83D\uDCDD', label: 'Note added', color: 'text-gold' },
-  player_added:   { icon: '\u2B06', label: 'Added', color: 'text-emerald-400' },
-  player_removed: { icon: '\u2B07', label: 'Removed', color: 'text-red-400' },
+  player_added:   { icon: '\u2B06', label: 'Added', color: 'text-field' },
+  player_removed: { icon: '\u2B07', label: 'Removed', color: 'text-live-red' },
   manual_entry:   { icon: '\uD83D\uDCD3', label: 'Journal Entry', color: 'text-purple-400' },
 }
 
@@ -206,7 +206,7 @@ export default function DecisionJournal() {
                           {a.action === 'player_moved' && (
                             <>
                               Moved <span className="text-text-primary font-medium">{details.playerName}</span>{' '}
-                              <span className={details.delta > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                              <span className={details.delta > 0 ? 'text-field' : 'text-live-red'}>
                                 {details.delta > 0 ? `\u2191${details.delta}` : `\u2193${Math.abs(details.delta)}`} spots
                               </span>
                               {' '}(#{details.from} {'\u2192'} #{details.to})
@@ -217,7 +217,7 @@ export default function DecisionJournal() {
                               Tagged <span className="text-text-primary font-medium">{details.playerName}</span>{' '}
                               {(details.tags || []).map(t => (
                                 <span key={t} className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ml-1
-                                  ${t === 'target' ? 'bg-emerald-500/20 text-emerald-400' : t === 'sleeper' ? 'bg-gold/20 text-gold' : 'bg-red-500/20 text-red-400'}`}>
+                                  ${t === 'target' ? 'bg-field-bright/20 text-field' : t === 'sleeper' ? 'bg-gold/20 text-gold' : 'bg-live-red/20 text-live-red'}`}>
                                   {TAG_LABELS[t] || t}
                                 </span>
                               ))}

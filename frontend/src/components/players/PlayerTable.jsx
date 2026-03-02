@@ -13,7 +13,7 @@ const ScheduleDots = ({ playerId, tournaments = [] }) => {
             key={t.id || i}
             className={`w-2.5 h-2.5 rounded-full ${
               inField
-                ? 'bg-emerald-500'
+                ? 'bg-field-bright'
                 : fieldAnnounced
                 ? 'bg-[var(--stone)]'
                 : 'border border-[var(--card-border)] bg-transparent'
@@ -73,17 +73,17 @@ const PlayerTable = ({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[800px]">
+      <table className="w-full min-w-[600px] sm:min-w-[800px]">
         <thead className="bg-[var(--surface)] sticky top-0">
           <tr className="border-b border-[var(--card-border)] text-xs">
-            {compareMode && <th className="p-3 w-12"></th>}
-            <SortHeader field="rank" className="w-16">Rank</SortHeader>
+            {compareMode && <th className="p-3 w-12 hidden sm:table-cell"></th>}
+            <SortHeader field="rank" className="w-12 sm:w-16">Rank</SortHeader>
             <SortHeader field="name" align="left">Player</SortHeader>
             <SortHeader field="sgTotal" className="text-center" tip="Total Strokes Gained per round vs. the PGA Tour field average. The single best measure of overall player skill.">SG Total</SortHeader>
-            <SortHeader field="sgOffTee" className="text-center" tip="Strokes Gained Off the Tee — measures driving performance (distance + accuracy) vs. the field.">SG OTT</SortHeader>
-            <SortHeader field="sgApproach" className="text-center" tip="Strokes Gained on Approach — measures iron play and shots into the green from the fairway.">SG APP</SortHeader>
-            <SortHeader field="sgPutting" className="text-center" tip="Strokes Gained Putting — measures putting performance on the greens vs. the field.">SG Putt</SortHeader>
-            <th className="p-3 text-text-muted text-center">Schedule</th>
+            <SortHeader field="sgOffTee" className="text-center hidden sm:table-cell" tip="Strokes Gained Off the Tee — measures driving performance (distance + accuracy) vs. the field.">SG OTT</SortHeader>
+            <SortHeader field="sgApproach" className="text-center hidden sm:table-cell" tip="Strokes Gained on Approach — measures iron play and shots into the green from the fairway.">SG APP</SortHeader>
+            <SortHeader field="sgPutting" className="text-center hidden sm:table-cell" tip="Strokes Gained Putting — measures putting performance on the greens vs. the field.">SG Putt</SortHeader>
+            <th className="p-3 text-text-muted text-center hidden lg:table-cell">Schedule</th>
             <th className="p-3 w-20"></th>
           </tr>
         </thead>
@@ -101,7 +101,7 @@ const PlayerTable = ({
                 `}
               >
                 {compareMode && (
-                  <td className="p-3">
+                  <td className="p-3 hidden sm:table-cell">
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -129,7 +129,7 @@ const PlayerTable = ({
                         {player.primaryTour && (
                           <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
                             player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
-                            player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
+                            player.primaryTour === 'LIV' ? 'bg-live-red/20 text-live-red' :
                             'bg-purple-500/20 text-purple-400'
                           }`}>
                             {player.primaryTour}
@@ -148,21 +148,21 @@ const PlayerTable = ({
                 <td className="p-3 text-center">
                   <span className={`font-medium ${
                     player.stats?.sgTotal > 1 ? 'text-gold' :
-                    player.stats?.sgTotal > 0 ? 'text-text-primary' : 'text-red-400'
+                    player.stats?.sgTotal > 0 ? 'text-text-primary' : 'text-live-red'
                   }`}>
                     {player.stats?.sgTotal?.toFixed(2) || '—'}
                   </span>
                 </td>
-                <td className="p-3 text-center text-text-secondary">
+                <td className="p-3 text-center text-text-secondary hidden sm:table-cell">
                   {player.stats?.sgOffTee?.toFixed(2) || '—'}
                 </td>
-                <td className="p-3 text-center text-text-secondary">
+                <td className="p-3 text-center text-text-secondary hidden sm:table-cell">
                   {player.stats?.sgApproach?.toFixed(2) || '—'}
                 </td>
-                <td className="p-3 text-center text-text-secondary">
+                <td className="p-3 text-center text-text-secondary hidden sm:table-cell">
                   {player.stats?.sgPutting?.toFixed(2) || '—'}
                 </td>
-                <td className="p-3 text-center">
+                <td className="p-3 text-center hidden lg:table-cell">
                   <ScheduleDots playerId={player.id} tournaments={upcomingTournaments} />
                 </td>
                 <td className="p-3">

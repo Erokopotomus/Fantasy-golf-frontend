@@ -52,7 +52,7 @@ const Matchups = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-field mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading matchups...</p>
           </div>
         </div>
@@ -64,8 +64,8 @@ const Matchups = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="text-center py-12">
-          <p className="text-red-400 mb-4">{error}</p>
-          <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
+          <p className="text-live-red mb-4">{error}</p>
+          <Link to={`/leagues/${leagueId}`} className="text-field hover:underline">
             Back to League
           </Link>
         </div>
@@ -85,7 +85,7 @@ const Matchups = () => {
           <p className="text-text-secondary mb-6">
             Matchups are only available for Head-to-Head format leagues.
           </p>
-          <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-field hover:underline">
             Back to League
           </Link>
         </Card>
@@ -137,7 +137,7 @@ const Matchups = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-emerald-500 text-text-primary'
+                ? 'bg-field-bright text-text-primary'
                 : 'bg-[var(--surface)] text-text-secondary hover:text-text-primary'
             }`}
           >
@@ -160,7 +160,7 @@ const Matchups = () => {
                   <div className="flex items-center gap-3">
                     <Link
                       to={`/leagues/${leagueId}/gameday`}
-                      className="text-sm text-emerald-400 hover:text-emerald-300 font-medium"
+                      className="text-sm text-field hover:text-emerald-300 font-medium"
                     >
                       Gameday Portal →
                     </Link>
@@ -234,10 +234,10 @@ const Matchups = () => {
                 onClick={() => setSelectedWeek(week.week)}
                 className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
                   selectedWeek === week.week || (!selectedWeek && week.week === primaryWeek?.week)
-                    ? 'bg-emerald-500 text-text-primary'
+                    ? 'bg-field-bright text-text-primary'
                     : week.matchups?.every(m => m.completed)
-                    ? 'bg-dark-tertiary text-text-secondary'
-                    : 'bg-dark-tertiary text-text-primary border border-yellow-500/50'
+                    ? 'bg-[var(--card-bg)] text-text-secondary'
+                    : 'bg-[var(--card-bg)] text-text-primary border border-crown/50'
                 }`}
               >
                 Week {week.week}

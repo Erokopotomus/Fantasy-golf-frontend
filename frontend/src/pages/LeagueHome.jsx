@@ -374,12 +374,14 @@ const LeagueHome = () => {
                 </span>
                 <span className="text-text-muted">•</span>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                  league.status === 'active' ? 'bg-gold/20 text-gold' :
-                  league.status === 'draft-pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                  ['active', 'ACTIVE'].includes(league.status) ? 'bg-gold/20 text-gold' :
+                  ['draft-pending', 'DRAFT_PENDING'].includes(league.status) ? 'bg-crown/20 text-crown' :
+                  ['DRAFTING'].includes(league.status) ? 'bg-blue-500/20 text-blue-400' :
+                  ['COMPLETED'].includes(league.status) ? 'bg-field-bright/20 text-field' :
+                  ['ARCHIVED'].includes(league.status) ? 'bg-[var(--bg-alt)] text-text-muted/50' :
                   'bg-[var(--bg-alt)] text-text-muted'
                 }`}>
-                  {league.status === 'active' ? 'Active' :
-                   league.status === 'draft-pending' ? 'Draft Pending' : league.status}
+                  {{ active: 'Active', ACTIVE: 'Active', 'draft-pending': 'Pre-Draft', DRAFT_PENDING: 'Pre-Draft', DRAFTING: 'Drafting', COMPLETED: 'Complete', ARCHIVED: 'Archived' }[league.status] || league.status}
                 </span>
               </div>
             </div>
@@ -488,7 +490,7 @@ const LeagueHome = () => {
                   </div>
 
                   {/* Right: Draft Countdown */}
-                  <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-[var(--surface)] p-3">
+                  <div className="rounded-xl border border-crown/30 bg-gradient-to-br from-crown/10 to-[var(--surface)] p-3">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-sm font-semibold font-display text-text-primary">
                         {draftStatus === 'SCHEDULED' ? 'Draft Scheduled' :
@@ -520,7 +522,7 @@ const LeagueHome = () => {
                               <button
                                 onClick={handleCancelDraft}
                                 disabled={cancellingDraft}
-                                className="text-[10px] text-red-400 hover:text-red-300 underline"
+                                className="text-[10px] text-live-red hover:text-red-300 underline"
                               >
                                 {cancellingDraft ? 'Cancelling...' : 'Cancel Draft'}
                               </button>
@@ -545,7 +547,7 @@ const LeagueHome = () => {
                             <button
                               onClick={handleCancelDraft}
                               disabled={cancellingDraft}
-                              className="text-[10px] text-red-400 hover:text-red-300 underline"
+                              className="text-[10px] text-live-red hover:text-red-300 underline"
                             >
                               {cancellingDraft ? 'Cancelling...' : 'Cancel Draft'}
                             </button>
@@ -639,18 +641,18 @@ const LeagueHome = () => {
           {/* NFL Matchup Hero Card */}
           {isNflLeague && isHeadToHead && nflMatchupData && (
             <div className="mb-6">
-              <Card className={`border-${nflMatchupData.isLive ? 'emerald-500' : 'gold'}/30 bg-gradient-to-r ${
+              <Card className={`border-${nflMatchupData.isLive ? 'field-bright' : 'gold'}/30 bg-gradient-to-r ${
                 nflMatchupData.isLive
-                  ? 'from-emerald-500/10 to-[var(--surface)]'
+                  ? 'from-field-bright/10 to-[var(--surface)]'
                   : nflMatchupData.isComplete
-                    ? 'from-dark-tertiary to-[var(--surface)]'
+                    ? 'from-[var(--card-bg)] to-[var(--surface)]'
                     : 'from-gold/10 to-[var(--surface)]'
               }`}>
                 {/* Week label + status */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     {nflMatchupData.isLive && (
-                      <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                      <span className="w-2 h-2 bg-field rounded-full animate-pulse" />
                     )}
                     <h3 className="text-sm font-display font-bold text-text-primary uppercase tracking-wide">
                       {nflMatchupData.isLive ? 'Live — ' : nflMatchupData.isComplete ? '' : 'Up Next — '}
@@ -659,7 +661,7 @@ const LeagueHome = () => {
                   </div>
                   {nflMatchupData.isComplete && (
                     <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      nflMatchupData.userWon ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                      nflMatchupData.userWon ? 'bg-field-bright/20 text-field' : 'bg-live-red/20 text-live-red'
                     }`}>
                       {nflMatchupData.userWon ? 'WIN' : 'LOSS'}
                     </span>
@@ -670,7 +672,7 @@ const LeagueHome = () => {
                 <div className="flex items-center justify-between gap-4">
                   {/* Your team */}
                   <div className="flex-1 text-center">
-                    <p className="text-xs text-emerald-400 font-medium mb-1">You</p>
+                    <p className="text-xs text-field font-medium mb-1">You</p>
                     <p className="text-sm text-text-primary font-medium truncate">
                       {nflMatchupData.userTeam?.teamName || nflMatchupData.userTeam?.name || 'Your Team'}
                     </p>
@@ -685,7 +687,7 @@ const LeagueHome = () => {
                   <div className="flex items-center gap-3 px-4">
                     <span className={`text-3xl font-bold font-display ${
                       nflMatchupData.isComplete
-                        ? nflMatchupData.userWon ? 'text-emerald-400' : 'text-red-400'
+                        ? nflMatchupData.userWon ? 'text-field' : 'text-live-red'
                         : 'text-text-primary'
                     }`}>
                       {nflMatchupData.userScore?.toFixed(1) || '0.0'}
@@ -693,7 +695,7 @@ const LeagueHome = () => {
                     <span className="text-text-muted text-lg">—</span>
                     <span className={`text-3xl font-bold font-display ${
                       nflMatchupData.isComplete
-                        ? !nflMatchupData.userWon ? 'text-emerald-400' : 'text-red-400'
+                        ? !nflMatchupData.userWon ? 'text-field' : 'text-live-red'
                         : 'text-text-primary'
                     }`}>
                       {nflMatchupData.opponentScore?.toFixed(1) || '0.0'}
@@ -747,11 +749,11 @@ const LeagueHome = () => {
           {/* Generate Playoffs Banner (commissioner, H2H, draft complete) */}
           {isCommissioner && isHeadToHead && isDraftComplete && (
             <div className="mb-6">
-              <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-[var(--surface)]">
+              <Card className="border-crown/30 bg-gradient-to-r from-crown/10 to-[var(--surface)]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-crown/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-crown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
                     </div>
@@ -817,12 +819,12 @@ const LeagueHome = () => {
                             onClick={() => team.id && navigate(isMe ? `/leagues/${leagueId}/roster` : `/manager/${team.userId}`)}
                             className={`
                               border-b border-[var(--card-border)] transition-colors cursor-pointer
-                              ${isMe ? 'bg-emerald-500/8' : 'hover:bg-[var(--surface-alt)]'}
+                              ${isMe ? 'bg-field-bright/8' : 'hover:bg-[var(--surface-alt)]'}
                             `}
                           >
                             <td className={`py-3 font-bold ${
-                              rank === 1 ? 'text-yellow-400' :
-                              rank === 2 ? 'text-gray-300' :
+                              rank === 1 ? 'text-crown' :
+                              rank === 2 ? 'text-gray-400 dark:text-gray-300' :
                               rank === 3 ? 'text-amber-500' : 'text-text-muted'
                             }`}>
                               {rank}
@@ -838,9 +840,9 @@ const LeagueHome = () => {
                                     (team.name || ownerName || '?').charAt(0).toUpperCase()
                                   )}
                                 </div>
-                                <span className={`font-medium truncate ${isMe ? 'text-emerald-400' : 'text-text-primary'}`}>
+                                <span className={`font-medium truncate ${isMe ? 'text-field' : 'text-text-primary'}`}>
                                   {team.name || 'Team ' + rank}
-                                  {isMe && <span className="text-xs text-emerald-400/60 ml-1">(You)</span>}
+                                  {isMe && <span className="text-xs text-field/60 ml-1">(You)</span>}
                                 </span>
                               </div>
                             </td>
@@ -859,8 +861,8 @@ const LeagueHome = () => {
                               return (
                                 <td className="py-3 text-center">
                                   {isTournamentLive && livePoints != null ? (
-                                    <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-emerald-500">
-                                      {isLiveScoring && <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />}
+                                    <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold text-field-bright">
+                                      {isLiveScoring && <span className="w-1.5 h-1.5 bg-field rounded-full animate-pulse" />}
                                       {livePoints.toFixed(1)}
                                     </span>
                                   ) : (
@@ -900,11 +902,11 @@ const LeagueHome = () => {
                           return (
                             <tr
                               key={ht.id || i}
-                              className={`border-b border-[var(--card-border)] ${isChamp ? 'bg-yellow-500/5' : ''}`}
+                              className={`border-b border-[var(--card-border)] ${isChamp ? 'bg-crown/5' : ''}`}
                             >
                               <td className={`py-3 font-bold ${
-                                rank === 1 ? 'text-yellow-400' :
-                                rank === 2 ? 'text-gray-300' :
+                                rank === 1 ? 'text-crown' :
+                                rank === 2 ? 'text-gray-400 dark:text-gray-300' :
                                 rank === 3 ? 'text-amber-500' : 'text-text-muted'
                               }`}>
                                 {rank}
@@ -930,8 +932,8 @@ const LeagueHome = () => {
                                 {ht.pointsFor ? Number(ht.pointsFor).toFixed(1) : '–'}
                               </td>
                               <td className="py-3 text-right">
-                                {ht.playoffResult === 'champion' && <span className="text-yellow-400 text-xs font-semibold">Champion</span>}
-                                {ht.playoffResult === 'runner_up' && <span className="text-gray-300 text-xs">Runner-Up</span>}
+                                {ht.playoffResult === 'champion' && <span className="text-crown text-xs font-semibold">Champion</span>}
+                                {ht.playoffResult === 'runner_up' && <span className="text-gray-400 dark:text-gray-300 text-xs">Runner-Up</span>}
                                 {ht.playoffResult === 'eliminated' && <span className="text-text-muted text-xs">Playoffs</span>}
                                 {ht.playoffResult === 'missed' && <span className="text-text-muted/50 text-xs">Missed</span>}
                                 {!ht.playoffResult && <span className="text-text-muted/30 text-xs">–</span>}
@@ -1042,7 +1044,7 @@ const LeagueHome = () => {
                         >
                           {entry.name || entry.userName || 'Unknown'}
                         </Link>
-                        <span className="text-xs font-mono text-green-400">
+                        <span className="text-xs font-mono text-field">
                           {(entry.accuracyRate * 100).toFixed(0)}%
                         </span>
                       </div>

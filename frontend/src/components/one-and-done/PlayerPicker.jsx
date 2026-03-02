@@ -14,10 +14,10 @@ const PlayerPicker = ({
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true)
 
   const tierColors = [
-    { bg: 'bg-yellow-400/10', border: 'border-yellow-400', text: 'text-yellow-400' },
+    { bg: 'bg-crown/10', border: 'border-crown', text: 'text-crown' },
     { bg: 'bg-purple-400/10', border: 'border-purple-400', text: 'text-purple-400' },
     { bg: 'bg-blue-400/10', border: 'border-blue-400', text: 'text-blue-400' },
-    { bg: 'bg-green-400/10', border: 'border-green-400', text: 'text-green-400' },
+    { bg: 'bg-field/10', border: 'border-field', text: 'text-field' },
   ]
 
   // Get tier for a player
@@ -67,14 +67,14 @@ const PlayerPicker = ({
             placeholder="Search players..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary placeholder-text-muted focus:border-gold focus:outline-none"
+            className="w-full p-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted focus:border-gold focus:outline-none"
           />
         </div>
 
         <select
           value={tierFilter}
           onChange={(e) => setTierFilter(e.target.value)}
-          className="p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary focus:border-gold focus:outline-none"
+          className="p-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
         >
           <option value="all">All Tiers</option>
           {tiers.map(tier => (
@@ -84,7 +84,7 @@ const PlayerPicker = ({
           ))}
         </select>
 
-        <label className="flex items-center gap-2 p-2 bg-dark-tertiary rounded-lg cursor-pointer">
+        <label className="flex items-center gap-2 p-2 bg-[var(--card-bg)] rounded-lg cursor-pointer">
           <input
             type="checkbox"
             checked={showOnlyAvailable}
@@ -98,8 +98,12 @@ const PlayerPicker = ({
       {/* Player List */}
       <div className="max-h-96 overflow-y-auto space-y-2">
         {filteredPlayers.length === 0 ? (
-          <div className="text-center py-8 text-text-muted">
-            No players found matching your criteria
+          <div className="text-center py-8">
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-alt)] flex items-center justify-center mx-auto mb-3 text-text-muted">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
+            <p className="text-text-primary font-medium mb-1">No players found</p>
+            <p className="text-text-muted text-sm">Try adjusting your search or filters</p>
           </div>
         ) : (
           filteredPlayers.map(player => {
@@ -115,10 +119,10 @@ const PlayerPicker = ({
                 disabled={isUsed || loading}
                 className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left ${
                   isUsed
-                    ? 'bg-dark-tertiary opacity-40 cursor-not-allowed'
+                    ? 'bg-[var(--card-bg)] opacity-40 cursor-not-allowed'
                     : isSelected
                     ? `${colors.bg} border-2 ${colors.border}`
-                    : 'bg-dark-tertiary hover:bg-dark-primary border-2 border-transparent'
+                    : 'bg-[var(--card-bg)] hover:bg-[var(--bg)] border-2 border-transparent'
                 }`}
               >
                 {/* Rank */}
@@ -146,7 +150,7 @@ const PlayerPicker = ({
 
                 {/* Status */}
                 {isUsed ? (
-                  <span className="text-xs text-red-400 font-medium px-2 py-0.5 bg-red-400/10 rounded">
+                  <span className="text-xs text-live-red font-medium px-2 py-0.5 bg-live-red/10 rounded">
                     USED
                   </span>
                 ) : isSelected ? (
@@ -164,7 +168,7 @@ const PlayerPicker = ({
 
       {/* Selected Player Summary */}
       {selectedPlayer && (
-        <div className="mt-4 pt-4 border-t border-dark-border">
+        <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-muted">Selected:</p>

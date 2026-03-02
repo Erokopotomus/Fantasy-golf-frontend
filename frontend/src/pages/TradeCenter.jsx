@@ -28,7 +28,7 @@ const TradeCenter = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-field-bright mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading trades...</p>
           </div>
         </div>
@@ -41,10 +41,10 @@ const TradeCenter = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-red-400 mb-4">{error}</p>
+            <p className="text-live-red mb-4">{error}</p>
             <Link
               to={`/leagues/${leagueId}`}
-              className="text-emerald-500 hover:underline"
+              className="text-field-bright hover:underline"
             >
               Back to League
             </Link>
@@ -79,8 +79,8 @@ const TradeCenter = () => {
           disabled={isDeadlinePassed}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             isDeadlinePassed
-              ? 'bg-dark-tertiary text-text-muted cursor-not-allowed'
-              : 'bg-emerald-500 text-text-primary hover:bg-emerald-500/90'
+              ? 'bg-[var(--card-bg)] text-text-muted cursor-not-allowed'
+              : 'bg-field-bright text-text-primary hover:bg-field-bright/90'
           }`}
         >
           Propose Trade
@@ -89,26 +89,26 @@ const TradeCenter = () => {
 
       {/* Trade Deadline Banner */}
       {isDeadlinePassed && (
-        <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-4 p-4 bg-live-red/10 border border-live-red/30 rounded-lg flex items-center gap-3">
+          <svg className="w-5 h-5 text-live-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <div>
-            <p className="text-red-400 font-semibold text-sm">Trade Deadline Passed</p>
-            <p className="text-red-400/70 text-xs">
+            <p className="text-live-red font-semibold text-sm">Trade Deadline Passed</p>
+            <p className="text-live-red/70 text-xs">
               The trade deadline was {tradeDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}. No more trades can be proposed or accepted.
             </p>
           </div>
         </div>
       )}
       {isDeadlineApproaching && (
-        <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-3">
-          <svg className="w-5 h-5 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-4 p-4 bg-crown/10 border border-crown/30 rounded-lg flex items-center gap-3">
+          <svg className="w-5 h-5 text-crown flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <p className="text-yellow-400 font-semibold text-sm">Trade Deadline Approaching</p>
-            <p className="text-yellow-400/70 text-xs">
+            <p className="text-crown font-semibold text-sm">Trade Deadline Approaching</p>
+            <p className="text-crown/70 text-xs">
               Deadline: {tradeDeadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
             </p>
           </div>
@@ -122,7 +122,7 @@ const TradeCenter = () => {
           <p className="text-xs text-text-muted">Incoming</p>
         </Card>
         <Card className="text-center">
-          <p className="text-2xl font-bold font-display text-yellow-400">{outgoingTrades.length}</p>
+          <p className="text-2xl font-bold font-display text-crown">{outgoingTrades.length}</p>
           <p className="text-xs text-text-muted">Pending</p>
         </Card>
         <Card className="text-center">
@@ -137,8 +137,8 @@ const TradeCenter = () => {
           onClick={() => setActiveTab('pending')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'pending'
-              ? 'bg-emerald-500 text-text-primary'
-              : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+              ? 'bg-field-bright text-text-primary'
+              : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
           }`}
         >
           Pending ({pendingTrades.length})
@@ -147,8 +147,8 @@ const TradeCenter = () => {
           onClick={() => setActiveTab('history')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeTab === 'history'
-              ? 'bg-emerald-500 text-text-primary'
-              : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+              ? 'bg-field-bright text-text-primary'
+              : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
           }`}
         >
           History ({tradeHistory.length})
@@ -160,7 +160,7 @@ const TradeCenter = () => {
         <div className="space-y-4">
           {pendingTrades.length === 0 ? (
             <Card className="text-center py-12">
-              <div className="w-16 h-16 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[var(--card-bg)] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
@@ -169,7 +169,7 @@ const TradeCenter = () => {
               <p className="text-text-secondary mb-4">Start trading with other teams to improve your roster</p>
               <button
                 onClick={() => setShowPropose(true)}
-                className="px-4 py-2 bg-emerald-500 text-text-primary rounded-lg font-medium hover:bg-emerald-500/90 transition-colors"
+                className="px-4 py-2 bg-field-bright text-text-primary rounded-lg font-medium hover:bg-field-bright/90 transition-colors"
               >
                 Propose a Trade
               </button>
@@ -226,8 +226,8 @@ const TradeCenter = () => {
                   </div>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     trade.status === 'completed'
-                      ? 'bg-emerald-500/20 text-emerald-500'
-                      : 'bg-red-500/20 text-red-400'
+                      ? 'bg-field-bright/20 text-field-bright'
+                      : 'bg-live-red/20 text-live-red'
                   }`}>
                     {trade.status}
                   </span>

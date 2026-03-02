@@ -29,8 +29,8 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
     onChange?.(updated)
   }
 
-  const tierColors = ['text-yellow-400', 'text-purple-400', 'text-blue-400', 'text-green-400']
-  const tierBgColors = ['bg-yellow-400/10 border-yellow-400/30', 'bg-purple-400/10 border-purple-400/30', 'bg-blue-400/10 border-blue-400/30', 'bg-green-400/10 border-green-400/30']
+  const tierColors = ['text-crown', 'text-purple-400', 'text-blue-400', 'text-field']
+  const tierBgColors = ['bg-crown/10 border-crown/30', 'bg-purple-400/10 border-purple-400/30', 'bg-blue-400/10 border-blue-400/30', 'bg-field/10 border-field/30']
 
   return (
     <div className="space-y-6">

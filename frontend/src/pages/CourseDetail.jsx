@@ -19,7 +19,7 @@ const CourseDetail = () => {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Card>
-          <p className="text-red-400">{error || 'Course not found'}</p>
+          <p className="text-live-red">{error || 'Course not found'}</p>
           <Link to="/" className="text-gold hover:underline mt-2 inline-block">Back to Dashboard</Link>
         </Card>
       </div>
@@ -42,18 +42,18 @@ const CourseDetail = () => {
     switch (status) {
       case 'IN_PROGRESS':
         return (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-mono font-bold uppercase">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-live-red/20 text-live-red text-xs font-mono font-bold uppercase">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-red opacity-75" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-live-red" />
             </span>
             Live
           </span>
         )
       case 'COMPLETED':
-        return <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-mono font-bold uppercase">Final</span>
+        return <span className="px-2 py-0.5 rounded-full bg-field-bright/15 text-field text-xs font-mono font-bold uppercase">Final</span>
       default:
-        return <span className="px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 text-xs font-mono font-bold uppercase">Upcoming</span>
+        return <span className="px-2 py-0.5 rounded-full bg-crown/15 text-crown text-xs font-mono font-bold uppercase">Upcoming</span>
     }
   }
 
@@ -61,7 +61,7 @@ const CourseDetail = () => {
   const getDnaLabel = (val) => {
     if (val == null) return null
     if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
-    if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
+    if (val >= 0.27) return { text: 'High', color: 'text-field', bar: 'bg-field' }
     if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-sky-500/60' }
     return { text: 'Low', color: 'text-text-muted', bar: 'bg-sky-500/30' }
   }
@@ -92,9 +92,9 @@ const CourseDetail = () => {
   const getScoreColor = (avgToPar) => {
     if (avgToPar == null) return 'text-text-muted'
     if (avgToPar <= -2) return 'text-gold'
-    if (avgToPar <= -0.5) return 'text-green-400'
-    if (avgToPar <= 0.5) return 'text-yellow-400'
-    return 'text-red-400'
+    if (avgToPar <= -0.5) return 'text-field'
+    if (avgToPar <= 0.5) return 'text-crown'
+    return 'text-live-red'
   }
 
   return (
@@ -184,7 +184,7 @@ const CourseDetail = () => {
                   <td className="px-2 py-2 text-text-muted font-medium">Par</td>
                   {course.holes.filter(h => h.number <= 9).map(h => (
                     <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
-                      h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-text-primary'
+                      h.par === 3 ? 'text-field' : h.par === 5 ? 'text-gold' : 'text-text-primary'
                     }`}>{h.par}</td>
                   ))}
                   <td className="px-2 py-2 text-center font-mono font-bold text-text-primary">
@@ -223,7 +223,7 @@ const CourseDetail = () => {
                     <td className="px-2 py-2 text-text-muted font-medium">Par</td>
                     {course.holes.filter(h => h.number > 9).map(h => (
                       <td key={h.number} className={`px-2 py-2 text-center font-mono font-bold ${
-                        h.par === 3 ? 'text-emerald-400' : h.par === 5 ? 'text-gold' : 'text-text-primary'
+                        h.par === 3 ? 'text-field' : h.par === 5 ? 'text-gold' : 'text-text-primary'
                       }`}>{h.par}</td>
                     ))}
                     <td className="px-2 py-2 text-center font-mono font-bold text-text-primary">
@@ -376,7 +376,7 @@ const CourseDetail = () => {
                   <div>
                     <p className="text-[9px] text-text-muted uppercase">Fit</p>
                     <p className={`text-xs font-mono font-bold ${
-                      p.courseFitScore >= 80 ? 'text-gold' : p.courseFitScore >= 60 ? 'text-yellow-400' : 'text-text-secondary'
+                      p.courseFitScore >= 80 ? 'text-gold' : p.courseFitScore >= 60 ? 'text-crown' : 'text-text-secondary'
                     }`}>
                       {Math.round(p.courseFitScore)}
                     </p>
@@ -384,7 +384,7 @@ const CourseDetail = () => {
                   <div>
                     <p className="text-[9px] text-text-muted uppercase">CPI</p>
                     <p className={`text-xs font-mono font-bold ${
-                      p.cpi > 1 ? 'text-emerald-400' : p.cpi > 0 ? 'text-green-400' : 'text-text-secondary'
+                      p.cpi > 1 ? 'text-field' : p.cpi > 0 ? 'text-field' : 'text-text-secondary'
                     }`}>
                       {p.cpi != null ? (p.cpi > 0 ? `+${p.cpi.toFixed(1)}` : p.cpi.toFixed(1)) : '-'}
                     </p>
@@ -392,7 +392,7 @@ const CourseDetail = () => {
                   <div>
                     <p className="text-[9px] text-text-muted uppercase">Form</p>
                     <p className={`text-xs font-mono font-bold ${
-                      p.formScore >= 80 ? 'text-emerald-400' : p.formScore >= 60 ? 'text-green-400' : 'text-text-secondary'
+                      p.formScore >= 80 ? 'text-field' : p.formScore >= 60 ? 'text-field' : 'text-text-secondary'
                     }`}>
                       {p.formScore != null ? Math.round(p.formScore) : '-'}
                     </p>
@@ -502,7 +502,7 @@ const CourseDetail = () => {
                             {ph.avgToPar != null ? (ph.avgToPar > 0 ? `+${ph.avgToPar.toFixed(1)}` : ph.avgToPar.toFixed(1)) : '-'}
                           </td>
                           <td className={`p-3 text-center font-mono text-xs hidden sm:table-cell ${
-                            ph.sgTotal > 0 ? 'text-emerald-400' : ph.sgTotal != null ? 'text-red-400' : 'text-text-muted'
+                            ph.sgTotal > 0 ? 'text-field' : ph.sgTotal != null ? 'text-live-red' : 'text-text-muted'
                           }`}>
                             {ph.sgTotal != null ? (ph.sgTotal > 0 ? `+${ph.sgTotal.toFixed(1)}` : ph.sgTotal.toFixed(1)) : '-'}
                           </td>
@@ -512,7 +512,7 @@ const CourseDetail = () => {
                           <td className="p-3 text-center text-gold font-mono">{ph.bestFinish || '-'}</td>
                           <td className="p-3 text-right">
                             {ph.wins > 0 ? (
-                              <span className="text-yellow-400 font-mono font-bold">{ph.wins}</span>
+                              <span className="text-crown font-mono font-bold">{ph.wins}</span>
                             ) : (
                               <span className="text-text-muted">-</span>
                             )}

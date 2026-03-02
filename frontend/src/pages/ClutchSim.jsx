@@ -4,9 +4,9 @@ import api from '../services/api'
 import Card from '../components/common/Card'
 
 const CONFIDENCE_COLORS = {
-  HIGH: 'text-emerald-400',
-  MEDIUM: 'text-yellow-400',
-  LOW: 'text-orange-400',
+  HIGH: 'text-field',
+  MEDIUM: 'text-crown',
+  LOW: 'text-blaze',
 }
 
 const ClutchSim = () => {
@@ -200,8 +200,8 @@ const ClutchSim = () => {
       )}
 
       {error && (
-        <Card className="mb-6 border-red-500/20">
-          <p className="text-red-400 text-sm">{error}</p>
+        <Card className="mb-6 border-live-red/20">
+          <p className="text-live-red text-sm">{error}</p>
         </Card>
       )}
 

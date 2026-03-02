@@ -41,7 +41,7 @@ const Standings = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-field mx-auto mb-4"></div>
             <p className="text-text-secondary">Loading standings...</p>
           </div>
         </div>
@@ -54,10 +54,10 @@ const Standings = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-red-400 mb-4">{error}</p>
+            <p className="text-live-red mb-4">{error}</p>
             <button
               onClick={refetch}
-              className="px-4 py-2 bg-emerald-500 text-text-primary rounded-lg hover:bg-emerald-600 transition-colors"
+              className="px-4 py-2 bg-field-bright text-text-primary rounded-lg hover:bg-emerald-600 transition-colors"
             >
               Try Again
             </button>
@@ -150,7 +150,7 @@ const Standings = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Your Points</p>
-          <p className="text-2xl font-bold font-display text-emerald-400">
+          <p className="text-2xl font-bold font-display text-field">
             {userPoints > 0 ? userPoints.toFixed(1) : 0}
           </p>
           <p className="text-xs text-text-secondary">total fantasy points</p>
@@ -158,7 +158,7 @@ const Standings = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Points Behind</p>
-          <p className={`text-2xl font-bold ${pointsBehind > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+          <p className={`text-2xl font-bold ${pointsBehind > 0 ? 'text-live-red' : 'text-field'}`}>
             {pointsBehind > 0 ? `-${pointsBehind.toFixed(1)}` : userRank === 1 ? 'Leader' : '-'}
           </p>
           <p className="text-xs text-text-secondary">from 1st place</p>
@@ -190,7 +190,7 @@ const Standings = () => {
           <div className="text-center">
             <Link
               to={`/leagues/${leagueId}/categories`}
-              className="text-emerald-400 hover:underline"
+              className="text-field hover:underline"
             >
               View Full Category Breakdown
             </Link>
@@ -208,7 +208,7 @@ const Standings = () => {
           <div className="text-center">
             <Link
               to={`/leagues/${leagueId}/survivor`}
-              className="text-emerald-400 hover:underline"
+              className="text-field hover:underline"
             >
               View Survivor Board
             </Link>
@@ -222,7 +222,7 @@ const Standings = () => {
           <div className="text-center">
             <Link
               to={`/leagues/${leagueId}/picks`}
-              className="text-emerald-400 hover:underline"
+              className="text-field hover:underline"
             >
               Go to Pick Center
             </Link>

@@ -241,14 +241,14 @@ export default function NflLeaderboards() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6 + columns.length} className="text-center py-12 text-text-primary/20">Loading...</td></tr>
+                <tr><td colSpan={6 + columns.length} className="text-center py-12"><div className="w-8 h-8 border-[3px] border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-2" /><p className="text-text-muted text-sm">Loading...</p></td></tr>
               ) : data?.players?.length === 0 ? (
-                <tr><td colSpan={6 + columns.length} className="text-center py-12 text-text-primary/20">No data for these filters</td></tr>
+                <tr><td colSpan={6 + columns.length} className="text-center py-12"><div className="w-12 h-12 rounded-full bg-[var(--bg-alt)] flex items-center justify-center mx-auto mb-3 text-text-muted"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg></div><p className="text-text-primary font-medium font-display mb-1">No data for these filters</p><p className="text-text-muted text-sm">Try changing your category or position filter</p></td></tr>
               ) : data?.players?.map(p => (
                 <tr key={p.id} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)] transition-colors">
                   <td className="px-3 py-2.5 text-center">
                     <span className={`font-mono text-sm font-bold ${
-                      p.rank === 1 ? 'text-yellow-400' : p.rank === 2 ? 'text-gray-300' : p.rank === 3 ? 'text-amber-600' : 'text-text-primary/30'
+                      p.rank === 1 ? 'text-crown' : p.rank === 2 ? 'text-gray-400 dark:text-gray-300' : p.rank === 3 ? 'text-amber-700 dark:text-amber-500' : 'text-text-primary/30'
                     }`}>{p.rank}</span>
                   </td>
                   <td className="px-3 py-2.5">

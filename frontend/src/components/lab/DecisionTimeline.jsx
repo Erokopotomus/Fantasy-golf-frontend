@@ -71,16 +71,16 @@ export default function DecisionTimeline({ sport = 'golf', limit = 15 }) {
 
 const EVENT_BADGE_MAP = {
   BOARD_ADD: { label: 'Added to Board', color: 'bg-blue-500/15 text-blue-400' },
-  BOARD_REMOVE: { label: 'Removed from Board', color: 'bg-red-500/15 text-red-400' },
-  BOARD_TAG: { label: 'Tagged', color: 'bg-emerald-500/15 text-emerald-400' },
+  BOARD_REMOVE: { label: 'Removed from Board', color: 'bg-live-red/15 text-live-red' },
+  BOARD_TAG: { label: 'Tagged', color: 'bg-field-bright/15 text-field' },
   WATCH_ADD: { label: 'Watching', color: 'bg-purple-500/15 text-purple-400' },
   WATCH_REMOVE: { label: 'Unwatched', color: 'bg-text-primary/10 text-text-primary/40' },
   DRAFT_PICK: { label: 'Drafted', color: 'bg-[var(--crown)]/15 text-[var(--crown)]' },
-  WAIVER_ADD: { label: 'Claimed', color: 'bg-emerald-500/15 text-emerald-400' },
-  WAIVER_DROP: { label: 'Dropped', color: 'bg-red-500/15 text-red-400' },
-  TRADE_ACQUIRE: { label: 'Traded For', color: 'bg-emerald-500/15 text-emerald-400' },
-  TRADE_AWAY: { label: 'Traded Away', color: 'bg-red-500/15 text-red-400' },
-  LINEUP_START: { label: 'Started', color: 'bg-emerald-500/15 text-emerald-400' },
+  WAIVER_ADD: { label: 'Claimed', color: 'bg-field-bright/15 text-field' },
+  WAIVER_DROP: { label: 'Dropped', color: 'bg-live-red/15 text-live-red' },
+  TRADE_ACQUIRE: { label: 'Traded For', color: 'bg-field-bright/15 text-field' },
+  TRADE_AWAY: { label: 'Traded Away', color: 'bg-live-red/15 text-live-red' },
+  LINEUP_START: { label: 'Started', color: 'bg-field-bright/15 text-field' },
   LINEUP_BENCH: { label: 'Benched', color: 'bg-text-primary/10 text-text-primary/40' },
   CAPTURE: { label: 'Captured', color: 'bg-purple-500/15 text-purple-400' },
 }
@@ -95,8 +95,8 @@ function EventBadge({ type }) {
 }
 
 function sentimentDotColor(sentiment) {
-  if (sentiment === 'positive') return 'bg-emerald-400'
-  if (sentiment === 'negative') return 'bg-red-400'
+  if (sentiment === 'positive') return 'bg-field'
+  if (sentiment === 'negative') return 'bg-live-red'
   return 'bg-[var(--stone)]'
 }
 

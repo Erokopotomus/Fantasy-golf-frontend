@@ -91,8 +91,8 @@ const CoachingReport = () => {
         {content.dataConfidence && (
           <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--bg-alt)] rounded-lg">
             <div className={`w-2 h-2 rounded-full ${
-              content.dataConfidence === 'HIGH' ? 'bg-emerald-400' :
-              content.dataConfidence === 'MEDIUM' ? 'bg-yellow-400' : 'bg-orange-400'
+              content.dataConfidence === 'HIGH' ? 'bg-field' :
+              content.dataConfidence === 'MEDIUM' ? 'bg-crown' : 'bg-blaze'
             }`} />
             <span className="text-xs text-text-primary/40">
               {content.dataConfidence === 'HIGH' ? 'High confidence — multiple seasons of data' :
@@ -145,7 +145,7 @@ const CoachingReport = () => {
             )}
             {content.shareableCard.bestCall && (
               <div>
-                <p className="text-sm font-bold text-emerald-400">{content.shareableCard.bestCall}</p>
+                <p className="text-sm font-bold text-field">{content.shareableCard.bestCall}</p>
                 <p className="text-[10px] text-text-primary/30">Best Call</p>
               </div>
             )}

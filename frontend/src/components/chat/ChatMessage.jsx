@@ -27,7 +27,7 @@ const ChatMessage = ({ message }) => {
   if (message.type === 'system') {
     return (
       <div className="flex justify-center my-4">
-        <div className="px-4 py-2 bg-dark-tertiary rounded-full text-text-muted text-sm">
+        <div className="px-4 py-2 bg-[var(--card-bg)] rounded-full text-text-muted text-sm">
           {message.content}
         </div>
       </div>
@@ -76,9 +76,9 @@ const ChatMessage = ({ message }) => {
         case 'waiver':
           return 'bg-orange/20 border-orange/30 text-orange'
         case 'lineup':
-          return 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400'
+          return 'bg-crown/20 border-crown/30 text-crown'
         default:
-          return 'bg-dark-tertiary border-dark-border text-text-secondary'
+          return 'bg-[var(--card-bg)] border-[var(--card-border)] text-text-secondary'
       }
     }
 
@@ -99,7 +99,7 @@ const ChatMessage = ({ message }) => {
       {/* Avatar */}
       <div className={`
         w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold
-        ${isOwnMessage ? 'bg-gold text-text-primary' : 'bg-dark-tertiary text-text-secondary'}
+        ${isOwnMessage ? 'bg-gold text-text-primary' : 'bg-[var(--card-bg)] text-text-secondary'}
       `}>
         {message.userAvatar || message.userName?.charAt(0).toUpperCase() || '?'}
       </div>
@@ -116,7 +116,7 @@ const ChatMessage = ({ message }) => {
           px-4 py-2 rounded-2xl
           ${isOwnMessage
             ? 'bg-gold text-text-primary rounded-br-md'
-            : 'bg-dark-tertiary text-text-primary rounded-bl-md'
+            : 'bg-[var(--card-bg)] text-text-primary rounded-bl-md'
           }
         `}>
           <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>

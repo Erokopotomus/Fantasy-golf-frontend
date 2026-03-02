@@ -277,9 +277,9 @@ export default function NflPlayers() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7 + statCols.length} className="text-center py-12 text-text-primary/30">Loading...</td></tr>
+                <tr><td colSpan={7 + statCols.length} className="text-center py-12"><div className="w-8 h-8 border-[3px] border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-2" /><p className="text-text-muted text-sm">Loading players...</p></td></tr>
               ) : players.length === 0 ? (
-                <tr><td colSpan={7 + statCols.length} className="text-center py-12 text-text-primary/30">No players found</td></tr>
+                <tr><td colSpan={7 + statCols.length} className="text-center py-12"><div className="w-12 h-12 rounded-full bg-[var(--bg-alt)] flex items-center justify-center mx-auto mb-3 text-text-muted"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div><p className="text-text-primary font-medium font-display mb-1">No players found</p><p className="text-text-muted text-sm">Try adjusting your filters or search</p></td></tr>
               ) : (
                 players.map((p, i) => {
                   const selected = isSelected(p.id)
@@ -308,12 +308,12 @@ export default function NflPlayers() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`font-mono text-sm font-bold ${
-                          p.nflPosition === 'QB' ? 'text-red-400' :
+                          p.nflPosition === 'QB' ? 'text-live-red' :
                           p.nflPosition === 'RB' ? 'text-blue-400' :
-                          p.nflPosition === 'WR' ? 'text-green-400' :
-                          p.nflPosition === 'TE' ? 'text-orange-400' :
+                          p.nflPosition === 'WR' ? 'text-field' :
+                          p.nflPosition === 'TE' ? 'text-blaze' :
                           p.nflPosition === 'K' ? 'text-purple-400' :
-                          p.nflPosition === 'DST' ? 'text-yellow-400' :
+                          p.nflPosition === 'DST' ? 'text-crown' :
                           'text-text-primary/50'
                         }`}>
                           {p.nflPosition}

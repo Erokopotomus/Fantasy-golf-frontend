@@ -74,7 +74,7 @@ const BidPanel = ({
             {selectedPlayer.headshotUrl ? (
               <img src={selectedPlayer.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-dark-tertiary flex items-center justify-center text-text-muted text-sm">
+              <div className="w-10 h-10 rounded-full bg-[var(--card-bg)] flex items-center justify-center text-text-muted text-sm">
                 {selectedPlayer.name?.charAt(0)}
               </div>
             )}
@@ -91,16 +91,16 @@ const BidPanel = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setNominateBid(Math.max(1, nominateBid - 1))}
-              className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors"
+              className="w-10 h-10 bg-[var(--card-bg)] rounded-lg text-text-primary hover:bg-[var(--card-border)] transition-colors"
             >
               -
             </button>
-            <div className="flex-1 bg-dark-tertiary rounded-lg py-2 text-center">
+            <div className="flex-1 bg-[var(--card-bg)] rounded-lg py-2 text-center">
               <span className="text-2xl font-bold font-display text-gold">${nominateBid}</span>
             </div>
             <button
               onClick={() => setNominateBid(Math.min(maxBid, nominateBid + 1))}
-              className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors"
+              className="w-10 h-10 bg-[var(--card-bg)] rounded-lg text-text-primary hover:bg-[var(--card-border)] transition-colors"
             >
               +
             </button>
@@ -112,7 +112,7 @@ const BidPanel = ({
             <button
               key={inc}
               onClick={() => setNominateBid(Math.min(maxBid, nominateBid + inc))}
-              className="flex-1 py-1.5 bg-dark-tertiary rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-border transition-colors text-sm"
+              className="flex-1 py-1.5 bg-[var(--card-bg)] rounded-lg text-text-secondary hover:text-text-primary hover:bg-[var(--card-border)] transition-colors text-sm"
             >
               +${inc}
             </button>
@@ -137,7 +137,7 @@ const BidPanel = ({
             <p className="text-gold mt-2 font-medium">Your turn to nominate! Select a player.</p>
           )}
         </div>
-        <div className="mt-4 pt-4 border-t border-dark-border">
+        <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
           <div className="flex items-center justify-between">
             <span className="text-text-muted text-sm">Your Budget</span>
             <span className="text-gold font-bold text-lg">${userBudget}</span>
@@ -161,7 +161,7 @@ const BidPanel = ({
             <div className="text-center">
               <p className="text-text-muted text-[10px] uppercase tracking-wider">Time</p>
               <p className={`text-lg font-mono font-bold ${
-                bidTimer <= 5 ? 'text-red-500 animate-pulse' : bidTimer <= 10 ? 'text-yellow-400' : 'text-gold'
+                bidTimer <= 5 ? 'text-live-red animate-pulse' : bidTimer <= 10 ? 'text-crown' : 'text-gold'
               }`}>
                 {bidTimer}s
               </p>
@@ -175,12 +175,12 @@ const BidPanel = ({
       </div>
 
       {/* Current Bid Info */}
-      <div className="bg-dark-tertiary rounded-lg p-4 mb-4">
+      <div className="bg-[var(--card-bg)] rounded-lg p-4 mb-4">
         <div className="flex items-center gap-3 mb-3">
           {player?.headshotUrl ? (
             <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-dark-primary flex items-center justify-center text-text-muted">
+            <div className="w-10 h-10 rounded-full bg-[var(--bg)] flex items-center justify-center text-text-muted">
               {(currentBid.playerName || player?.name)?.charAt(0)}
             </div>
           )}
@@ -194,7 +194,7 @@ const BidPanel = ({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-text-muted text-xs">Current Bid</p>
-            <p className="text-2xl font-bold font-display text-yellow-400">${currentBid.amount}</p>
+            <p className="text-2xl font-bold font-display text-crown">${currentBid.amount}</p>
           </div>
           <div className="text-right">
             <p className="text-text-muted text-xs">High Bidder</p>
@@ -212,17 +212,17 @@ const BidPanel = ({
           <button
             onClick={() => setBidAmount(Math.max(minBid, bidAmount - 1))}
             disabled={bidAmount <= minBid}
-            className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors disabled:opacity-50"
+            className="w-10 h-10 bg-[var(--card-bg)] rounded-lg text-text-primary hover:bg-[var(--card-border)] transition-colors disabled:opacity-50"
           >
             -
           </button>
-          <div className="flex-1 bg-dark-tertiary rounded-lg py-2 text-center">
+          <div className="flex-1 bg-[var(--card-bg)] rounded-lg py-2 text-center">
             <span className="text-2xl font-bold font-display text-text-primary">${bidAmount}</span>
           </div>
           <button
             onClick={() => setBidAmount(Math.min(maxBid, bidAmount + 1))}
             disabled={bidAmount >= maxBid}
-            className="w-10 h-10 bg-dark-tertiary rounded-lg text-text-primary hover:bg-dark-border transition-colors disabled:opacity-50"
+            className="w-10 h-10 bg-[var(--card-bg)] rounded-lg text-text-primary hover:bg-[var(--card-border)] transition-colors disabled:opacity-50"
           >
             +
           </button>
@@ -234,7 +234,7 @@ const BidPanel = ({
               key={inc}
               onClick={() => incrementBid(inc)}
               disabled={bidAmount + inc > maxBid}
-              className="flex-1 py-2 bg-dark-tertiary rounded-lg text-text-secondary hover:text-text-primary hover:bg-dark-border transition-colors disabled:opacity-50 text-sm"
+              className="flex-1 py-2 bg-[var(--card-bg)] rounded-lg text-text-secondary hover:text-text-primary hover:bg-[var(--card-border)] transition-colors disabled:opacity-50 text-sm"
             >
               +${inc}
             </button>
@@ -244,7 +244,7 @@ const BidPanel = ({
 
       {/* Action Buttons */}
       {hasPassed ? (
-        <div className="text-center py-3 bg-dark-tertiary rounded-lg">
+        <div className="text-center py-3 bg-[var(--card-bg)] rounded-lg">
           <p className="text-text-muted text-sm font-medium">Passed — waiting for auction to resolve</p>
         </div>
       ) : (
@@ -274,7 +274,7 @@ const BidPanel = ({
       )}
 
       {bidAmount > maxBid && !hasPassed && (
-        <p className="text-red-500 text-sm text-center mt-2">
+        <p className="text-live-red text-sm text-center mt-2">
           Insufficient budget
         </p>
       )}

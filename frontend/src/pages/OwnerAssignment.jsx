@@ -399,7 +399,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                     </button>
                     <button
                       onClick={() => { if (confirm(`Remove ${name}?`)) removeOwner(name) }}
-                      className="text-xs text-text-muted hover:text-red-400 transition-colors"
+                      className="text-xs text-text-muted hover:text-live-red transition-colors"
                       title="Remove"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -428,7 +428,7 @@ const Step1IdentifyOwners = ({ wizard }) => {
                             {e.playoffResult === 'runner_up' && <span className="text-[9px]">&#129352;</span>}
                             <button
                               onClick={() => unassignTeam(e.rawName)}
-                              className="text-text-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                              className="text-text-muted hover:text-live-red transition-colors opacity-0 group-hover:opacity-100"
                               title={`Unassign "${e.rawName}" from ${name}`}
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -859,7 +859,7 @@ const Step2AssignTeams = ({ wizard }) => {
                     {/* Missing years warning */}
                     {missingYears.length > 0 && (
                       <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/30 rounded-lg px-2.5 py-2 mb-3">
-                        <svg className="w-3.5 h-3.5 text-orange-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 text-blaze flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p className="text-[10px] text-orange-300 font-mono">
@@ -882,7 +882,7 @@ const Step2AssignTeams = ({ wizard }) => {
                             {entry.playoffResult === 'RUNNER_UP' && <span className="text-[9px]">🥈</span>}
                             <button
                               onClick={() => unassignTeam(entry.rawName)}
-                              className="text-text-muted hover:text-red-400 transition-colors"
+                              className="text-text-muted hover:text-live-red transition-colors"
                               title="Unassign"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1030,11 +1030,11 @@ const Step3VaultReveal = ({ wizard, onSaveSuccess }) => {
 
           {/* Error */}
           {saveError && (
-            <div className="mb-4 inline-flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2">
-              <svg className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-4 inline-flex items-start gap-2 bg-live-red/10 border border-live-red/30 rounded-lg px-4 py-2">
+              <svg className="w-4 h-4 text-live-red flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm text-red-400">{saveError}</p>
+              <p className="text-sm text-live-red">{saveError}</p>
             </div>
           )}
 
@@ -1153,7 +1153,7 @@ const OwnerAssignment = () => {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className="text-center py-20">
-          <p className="text-red-400 text-sm mb-4">{error}</p>
+          <p className="text-live-red text-sm mb-4">{error}</p>
           <Link to={`/leagues/${leagueId}/vault`} className="text-accent-gold text-sm hover:text-accent-gold/80">
             &larr; Back to League Vault
           </Link>

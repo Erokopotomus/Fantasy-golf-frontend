@@ -25,7 +25,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
             <span className="text-text-muted">{alive.length} Alive</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-red-400"></div>
+            <div className="w-2 h-2 rounded-full bg-live-red"></div>
             <span className="text-text-muted">{eliminated.length} Eliminated</span>
           </div>
         </div>
@@ -39,7 +39,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
         </div>
         <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-gold to-red-400 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-gold to-live-red transition-all duration-500"
             style={{ width: `${((standings.length - alive.length) / standings.length) * 100}%` }}
           />
         </div>
@@ -69,9 +69,9 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                 >
                   <td className="py-3 pl-2">
                     <span className={`font-semibold ${
-                      index === 0 ? 'text-yellow-400' :
-                      index === 1 ? 'text-gray-300' :
-                      index === 2 ? 'text-amber-600' : 'text-text-muted'
+                      index === 0 ? 'text-crown' :
+                      index === 1 ? 'text-gray-400 dark:text-gray-300' :
+                      index === 2 ? 'text-amber-700 dark:text-amber-500' : 'text-text-muted'
                     }`}>
                       {index + 1}
                     </span>
@@ -92,7 +92,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                   <td className="py-3 text-center">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       team.status === 'buyback'
-                        ? 'bg-yellow-500/20 text-yellow-400'
+                        ? 'bg-crown/20 text-crown'
                         : 'bg-gold/20 text-gold'
                     }`}>
                       {team.status === 'buyback' ? 'Buyback' : 'Alive'}
@@ -110,9 +110,9 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
               <tr>
                 <td colSpan={4} className="py-2">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-px bg-red-400/30"></div>
-                    <span className="text-xs text-red-400">Eliminated</span>
-                    <div className="flex-1 h-px bg-red-400/30"></div>
+                    <div className="flex-1 h-px bg-live-red/30"></div>
+                    <span className="text-xs text-live-red">Eliminated</span>
+                    <div className="flex-1 h-px bg-live-red/30"></div>
                   </div>
                 </td>
               </tr>
@@ -125,7 +125,7 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                 <tr
                   key={team.userId}
                   className={`border-b border-[var(--card-border)]/50 opacity-60 ${
-                    isUser ? 'bg-red-400/10' : ''
+                    isUser ? 'bg-live-red/10' : ''
                   }`}
                 >
                   <td className="py-3 pl-2">
@@ -134,17 +134,17 @@ const SurvivorStandings = ({ standings, survivorData, currentUserId }) => {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-red-400/20 text-red-400' : 'bg-[var(--bg-alt)] text-text-muted'
+                        isUser ? 'bg-live-red/20 text-live-red' : 'bg-[var(--bg-alt)] text-text-muted'
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-red-400' : 'text-text-secondary'}`}>
+                      <span className={`font-medium ${isUser ? 'text-live-red' : 'text-text-secondary'}`}>
                         {team.name}
                       </span>
                     </div>
                   </td>
                   <td className="py-3 text-center">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-400/20 text-red-400">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-live-red/20 text-live-red">
                       Week {team.eliminatedWeek}
                     </span>
                   </td>

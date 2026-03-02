@@ -21,7 +21,7 @@ export default function VaultLoadingScreen({ seasonCount = 0 }) {
   return (
     <>
       <style>{LOADING_KEYFRAMES}</style>
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-dark-primary">
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[var(--bg)]">
         {/* Pulsing dots */}
         <div className="flex gap-1.5 mb-6">
           {[0, 1, 2].map(i => (
@@ -48,7 +48,7 @@ export default function VaultLoadingScreen({ seasonCount = 0 }) {
         </div>
 
         {/* Progress bar */}
-        <div className="w-48 h-0.5 bg-dark-tertiary rounded-full overflow-hidden">
+        <div className="w-48 h-0.5 bg-[var(--card-bg)] rounded-full overflow-hidden">
           <div
             className="h-full rounded-full"
             style={{

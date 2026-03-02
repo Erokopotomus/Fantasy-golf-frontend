@@ -85,7 +85,7 @@ const TeamSettings = () => {
 
   if (loading || leagueLoading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading team settings...</p>
@@ -96,7 +96,7 @@ const TeamSettings = () => {
 
   if (!team) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen bg-[var(--bg)]">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
@@ -113,7 +113,7 @@ const TeamSettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
@@ -132,9 +132,9 @@ const TeamSettings = () => {
           </div>
 
           {/* Team Preview */}
-          <Card className="mb-6 bg-gradient-to-br from-gold/10 to-dark-secondary border-gold/30">
+          <Card className="mb-6 bg-gradient-to-br from-gold/10 to-[var(--surface)] border-gold/30">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-dark-primary rounded-xl flex items-center justify-center text-4xl overflow-hidden">
+              <div className="w-20 h-20 bg-[var(--bg)] rounded-xl flex items-center justify-center text-4xl overflow-hidden">
                 {useCustomAvatar && customAvatarUrl ? (
                   <>
                     <img
@@ -180,7 +180,7 @@ const TeamSettings = () => {
                 className={`flex-1 p-3 rounded-lg border transition-colors ${
                   !useCustomAvatar
                     ? 'bg-gold/20 border-gold text-text-primary'
-                    : 'bg-dark-tertiary border-dark-border text-text-secondary hover:border-dark-border/80'
+                    : 'bg-[var(--card-bg)] border-[var(--card-border)] text-text-secondary hover:border-[var(--card-border)]'
                 }`}
               >
                 Preset Icons
@@ -190,7 +190,7 @@ const TeamSettings = () => {
                 className={`flex-1 p-3 rounded-lg border transition-colors ${
                   useCustomAvatar
                     ? 'bg-gold/20 border-gold text-text-primary'
-                    : 'bg-dark-tertiary border-dark-border text-text-secondary hover:border-dark-border/80'
+                    : 'bg-[var(--card-bg)] border-[var(--card-border)] text-text-secondary hover:border-[var(--card-border)]'
                 }`}
               >
                 Custom Image
@@ -207,7 +207,7 @@ const TeamSettings = () => {
                     className={`w-full aspect-square rounded-lg text-2xl flex items-center justify-center transition-all ${
                       selectedAvatar === avatar
                         ? 'bg-gold/20 border-2 border-gold scale-110'
-                        : 'bg-dark-tertiary border border-dark-border hover:border-gold/50'
+                        : 'bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-gold/50'
                     }`}
                   >
                     {avatar}

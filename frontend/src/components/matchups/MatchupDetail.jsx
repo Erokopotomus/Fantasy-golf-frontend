@@ -3,12 +3,12 @@ import api from '../../services/api'
 import Card from '../common/Card'
 
 const posColors = {
-  QB: 'bg-red-500/20 text-red-400',
+  QB: 'bg-live-red/20 text-live-red',
   RB: 'bg-blue-500/20 text-blue-400',
-  WR: 'bg-emerald-500/20 text-emerald-400',
-  TE: 'bg-yellow-500/20 text-yellow-400',
+  WR: 'bg-field-bright/20 text-field',
+  TE: 'bg-crown/20 text-crown',
   K: 'bg-purple-500/20 text-purple-400',
-  DEF: 'bg-orange-500/20 text-orange-400',
+  DEF: 'bg-orange-500/20 text-blaze',
 }
 
 const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam, awayTeam, matchup, onClose }) => {
@@ -46,7 +46,7 @@ const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam,
     return (
       <Card className="mt-2">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-400" />
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-field" />
         </div>
       </Card>
     )
@@ -78,7 +78,7 @@ const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam,
                 )}
                 <span className="flex-1 text-sm text-text-primary truncate">{p.playerName}</span>
                 <span className={`text-xs font-bold font-mono w-10 text-right ${
-                  p.points > 15 ? 'text-emerald-400' :
+                  p.points > 15 ? 'text-field' :
                   p.points > 5 ? 'text-text-primary' : 'text-text-muted'
                 }`}>
                   {(p.points || 0).toFixed(1)}
@@ -109,13 +109,13 @@ const MatchupDetail = ({ leagueId, weekNumber, homeUserId, awayUserId, homeTeam,
           players={homePlayers}
           teamName={homeTeam?.teamName || homeTeam?.name || 'Home'}
           totalPoints={homeScores?.totalPoints || matchup?.homeScore}
-          color="text-emerald-400"
+          color="text-field"
         />
         <PlayerList
           players={awayPlayers}
           teamName={awayTeam?.teamName || awayTeam?.name || 'Away'}
           totalPoints={awayScores?.totalPoints || matchup?.awayScore}
-          color="text-red-400/80"
+          color="text-live-red/80"
         />
       </div>
     </Card>

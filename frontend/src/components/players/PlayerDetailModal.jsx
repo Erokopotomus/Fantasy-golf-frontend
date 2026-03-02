@@ -18,8 +18,8 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
     if (value === undefined || value === null) return 'text-text-muted'
     if (value > 0.5) return 'text-gold'
     if (value > 0) return 'text-text-primary'
-    if (value > -0.5) return 'text-yellow-400'
-    return 'text-red-400'
+    if (value > -0.5) return 'text-crown'
+    return 'text-live-red'
   }
 
   const tabs = [
@@ -113,25 +113,25 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
               {/* Quick Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
-                  <p className={`text-2xl font-bold ${getStatColor(player.stats?.sgTotal)}`}>
+                  <p className={`text-2xl font-bold font-mono ${getStatColor(player.stats?.sgTotal)}`}>
                     {formatStat(player.stats?.sgTotal, '+')}
                   </p>
                   <p className="text-text-muted text-sm mt-1" title="Overall strokes gained per round vs. the field">SG: Total</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold font-display text-text-primary">
+                  <p className="text-2xl font-bold font-mono text-text-primary">
                     {player.stats?.drivingDistance?.toFixed(0) || '—'}
                   </p>
                   <p className="text-text-muted text-sm mt-1" title="Average driving distance in yards">Driving (yds)</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold font-display text-text-primary">
+                  <p className="text-2xl font-bold font-mono text-text-primary">
                     {player.stats?.gir?.toFixed(1) || '—'}%
                   </p>
                   <p className="text-text-muted text-sm mt-1" title="Greens in Regulation — percentage of greens hit in the regulation number of strokes">GIR %</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold font-display text-text-primary">
+                  <p className="text-2xl font-bold font-mono text-text-primary">
                     {player.stats?.scoringAvg?.toFixed(1) || '—'}
                   </p>
                   <p className="text-text-muted text-sm mt-1" title="Average strokes per round">Scoring Avg</p>
@@ -146,8 +146,8 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     <div
                       key={idx}
                       className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                        result === '1st' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                        result === '2nd' || result === '3rd' ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
+                        result === '1st' ? 'bg-crown/20 text-crown border border-crown/30' :
+                        result === '2nd' || result === '3rd' ? 'bg-gray-400/20 text-gray-400 dark:text-gray-300 border border-gray-400/30' :
                         result.startsWith('T') && parseInt(result.slice(1)) <= 10 ? 'bg-gold/20 text-gold border border-gold/30' :
                         'bg-[var(--stone)] text-text-secondary border border-[var(--card-border)]'
                       }`}
@@ -166,8 +166,8 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-text-muted text-sm">Position</p>
-                        <p className={`text-2xl font-bold ${
-                          player.tournamentStatus.position === '1st' ? 'text-yellow-400' :
+                        <p className={`text-2xl font-bold font-mono ${
+                          player.tournamentStatus.position === '1st' ? 'text-crown' :
                           player.tournamentStatus.position.startsWith('T') && parseInt(player.tournamentStatus.position.slice(1)) <= 10 ? 'text-gold' :
                           'text-text-primary'
                         }`}>
@@ -176,16 +176,16 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                       </div>
                       <div className="text-center">
                         <p className="text-text-muted text-sm">Score</p>
-                        <p className={`text-2xl font-bold ${
+                        <p className={`text-2xl font-bold font-mono ${
                           player.tournamentStatus.score < 0 ? 'text-gold' :
-                          player.tournamentStatus.score > 0 ? 'text-red-400' : 'text-text-primary'
+                          player.tournamentStatus.score > 0 ? 'text-live-red' : 'text-text-primary'
                         }`}>
                           {player.tournamentStatus.score > 0 ? '+' : ''}{player.tournamentStatus.score}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-text-muted text-sm">Thru</p>
-                        <p className="text-2xl font-bold font-display text-text-primary">{player.tournamentStatus.thru}</p>
+                        <p className="text-2xl font-bold font-mono text-text-primary">{player.tournamentStatus.thru}</p>
                       </div>
                     </div>
                   </Card>
@@ -260,7 +260,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                         <p className="text-text-primary font-medium">{stat.label}</p>
                         <p className="text-text-muted text-xs">{stat.desc}</p>
                       </div>
-                      <p className={`text-2xl font-bold ${getStatColor(stat.value)}`}>
+                      <p className={`text-2xl font-bold font-mono ${getStatColor(stat.value)}`}>
                         {formatStat(stat.value, '+')}
                       </p>
                     </div>
@@ -268,7 +268,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-500 ${
-                          stat.value > 0 ? 'bg-gold' : 'bg-red-400'
+                          stat.value > 0 ? 'bg-gold' : 'bg-live-red'
                         }`}
                         style={{
                           width: `${Math.min(Math.abs((stat.value || 0) * 20) + 50, 100)}%`,
@@ -287,7 +287,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     <p className="text-text-primary font-medium">SG: Tee-to-Green</p>
                     <p className="text-text-muted text-xs">Combined non-putting performance</p>
                   </div>
-                  <p className={`text-2xl font-bold ${getStatColor(
+                  <p className={`text-2xl font-bold font-mono ${getStatColor(
                     (player.stats?.sgOffTee || 0) + (player.stats?.sgApproach || 0) + (player.stats?.sgAroundGreen || 0)
                   )}`}>
                     {formatStat(
@@ -320,7 +320,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                         <div>
                           <p className="text-text-muted">Best Finish</p>
                           <p className={`font-medium ${
-                            course.bestFinish === '1st' ? 'text-yellow-400' : 'text-gold'
+                            course.bestFinish === '1st' ? 'text-crown' : 'text-gold'
                           }`}>
                             {course.bestFinish}
                           </p>
@@ -350,7 +350,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                       <span className="text-text-secondary">{tournament.name}</span>
                       <div className="flex items-center gap-4">
                         <span className={`font-medium ${
-                          tournament.finish === '1st' ? 'text-yellow-400' :
+                          tournament.finish === '1st' ? 'text-crown' :
                           tournament.finish.startsWith('T') && parseInt(tournament.finish.slice(1)) <= 10 ? 'text-gold' :
                           'text-text-primary'
                         }`}>
@@ -386,14 +386,14 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                     key={idx}
                     className={`p-4 rounded-lg border ${
                       insight.type === 'positive' ? 'bg-gold/10 border-gold/30' :
-                      insight.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                      insight.type === 'warning' ? 'bg-crown/10 border-crown/30' :
                       'bg-[var(--bg-alt)] border-[var(--card-border)]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                         insight.type === 'positive' ? 'bg-gold/20' :
-                        insight.type === 'warning' ? 'bg-yellow-500/20' :
+                        insight.type === 'warning' ? 'bg-crown/20' :
                         'bg-[var(--stone)]'
                       }`}>
                         {insight.type === 'positive' && (
@@ -402,7 +402,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                           </svg>
                         )}
                         {insight.type === 'warning' && (
-                          <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-crown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                           </svg>
                         )}
@@ -414,7 +414,7 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
                       </div>
                       <p className={`text-sm ${
                         insight.type === 'positive' ? 'text-gold' :
-                        insight.type === 'warning' ? 'text-yellow-400' :
+                        insight.type === 'warning' ? 'text-crown' :
                         'text-text-secondary'
                       }`}>
                         {insight.text}

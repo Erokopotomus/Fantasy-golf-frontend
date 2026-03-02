@@ -15,12 +15,12 @@ const Input = ({
 }) => {
   const getInputStyles = () => {
     if (error) {
-      return 'border-red-500 focus:ring-red-500 focus:border-red-500'
+      return 'border-live-red focus:ring-live-red focus:border-live-red'
     }
     if (success) {
       return 'border-accent-green focus:ring-accent-green focus:border-accent-green'
     }
-    return 'border-dark-border hover:border-text-muted focus:border-gold'
+    return 'border-[var(--card-border)] hover:border-text-muted focus:border-gold'
   }
 
   return (
@@ -28,7 +28,7 @@ const Input = ({
       {label && (
         <label className="block text-sm font-medium text-text-secondary mb-2">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-live-red ml-1">*</span>}
         </label>
       )}
       <div className="relative">
@@ -45,7 +45,7 @@ const Input = ({
           disabled={disabled}
           required={required}
           className={`
-            w-full bg-dark-tertiary border rounded-lg px-4 py-3 text-text-primary placeholder-text-muted
+            w-full bg-[var(--card-bg)] border rounded-lg px-4 py-3 text-text-primary placeholder-text-muted
             transition-all duration-300
             focus:outline-none focus:ring-2 focus:shadow-glow-gold
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -66,7 +66,7 @@ const Input = ({
         <p className="mt-2 text-sm text-text-muted">{helperText}</p>
       )}
       {error && (
-        <p className="mt-2 text-sm text-red-500">{error}</p>
+        <p className="mt-2 text-sm text-live-red">{error}</p>
       )}
     </div>
   )

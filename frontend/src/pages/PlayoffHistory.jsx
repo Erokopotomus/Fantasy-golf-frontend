@@ -8,10 +8,10 @@ import { useAuth } from '../context/AuthContext'
 
 const PLAYOFF_LABELS = {
   champion: { text: 'Champion', color: 'text-accent-gold bg-accent-gold/20' },
-  runner_up: { text: 'Runner-Up', color: 'text-gray-300 bg-gray-500/20' },
+  runner_up: { text: 'Runner-Up', color: 'text-gray-400 dark:text-gray-300 bg-gray-500/20' },
   third_place: { text: '3rd Place', color: 'text-blue-400 bg-blue-500/20' },
   semifinal: { text: 'Semis', color: 'text-blue-400 bg-blue-500/20' },
-  playoffs: { text: 'Playoffs', color: 'text-green-400 bg-green-500/20' },
+  playoffs: { text: 'Playoffs', color: 'text-field bg-field-bright/20' },
   eliminated: { text: '', color: '' },
   missed: { text: '', color: '' },
 }
@@ -131,7 +131,7 @@ const PlayoffHistory = () => {
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="text-center py-12">
-              <p className="text-red-400 mb-4">{historyError}</p>
+              <p className="text-live-red mb-4">{historyError}</p>
               <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
                 Back to League
               </Link>
@@ -321,7 +321,7 @@ const PlayoffHistory = () => {
                             return (
                               <tr key={team.id || i} className="border-b border-[var(--card-border)] hover:bg-[var(--surface-alt)] transition-colors">
                                 <td className={`py-3 font-bold ${
-                                  i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-500' : 'text-text-muted'
+                                  i === 0 ? 'text-crown' : i === 1 ? 'text-gray-400 dark:text-gray-300' : i === 2 ? 'text-amber-500' : 'text-text-muted'
                                 }`}>
                                   {team.finalStanding || i + 1}
                                 </td>

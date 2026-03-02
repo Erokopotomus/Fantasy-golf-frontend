@@ -237,19 +237,19 @@ function PlayerHeader({ player, totals, loading, season, seasons, onSeasonChange
   if (loading && !player) {
     return (
       <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-5">
-        <div className="text-center text-text-primary/30 py-6">Loading...</div>
+        <div className="flex items-center justify-center gap-2 py-6"><div className="w-5 h-5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /><span className="text-text-muted text-sm">Loading player...</span></div>
       </div>
     )
   }
   if (!player) return null
 
   const posColor = {
-    QB: 'text-red-400 bg-red-400/10 border-red-400/20',
+    QB: 'text-live-red bg-live-red/10 border-live-red/20',
     RB: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-    WR: 'text-green-400 bg-green-400/10 border-green-400/20',
-    TE: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
+    WR: 'text-field bg-field/10 border-field/20',
+    TE: 'text-blaze bg-blaze/10 border-blaze/20',
     K: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
-    DST: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+    DST: 'text-crown bg-crown/10 border-crown/20',
   }[player.nflPosition] || 'text-text-primary/50 bg-[var(--bg-alt)] border-[var(--card-border)]'
 
   return (
@@ -356,7 +356,7 @@ function GameLogPanel({ player, gameLog, loading, season, scoringView }) {
         <h3 className="text-sm font-display font-bold text-text-primary">
           {season ? `${season} Game Log` : 'Game Log'}
         </h3>
-        {loading && <span className="text-text-primary/30 text-xs font-mono">Loading...</span>}
+        {loading && <span className="inline-flex items-center gap-1.5"><span className="w-3 h-3 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /><span className="text-text-muted text-xs font-mono">Loading...</span></span>}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
@@ -407,7 +407,7 @@ function GameLogPanel({ player, gameLog, loading, season, scoringView }) {
                     <>
                       <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/70">{g.stats.passYards ?? '-'}</td>
                       <td className="text-right px-1.5 py-1.5 font-mono text-gold font-bold">{g.stats.passTds ?? '-'}</td>
-                      <td className="text-right px-1.5 py-1.5 font-mono text-red-400">{g.stats.interceptions ?? '-'}</td>
+                      <td className="text-right px-1.5 py-1.5 font-mono text-live-red">{g.stats.interceptions ?? '-'}</td>
                       <td className="text-right px-1.5 py-1.5 font-mono text-text-primary/50">{g.stats.rushYards ?? '-'}</td>
                     </>
                   ) : isK ? (

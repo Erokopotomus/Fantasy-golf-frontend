@@ -68,7 +68,7 @@ export default function PredictionWidget() {
           <p className="text-text-primary/50 text-sm mb-3">Make your first performance call</p>
           <Link
             to="/prove-it"
-            className="inline-block px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-text-primary text-sm font-semibold hover:from-amber-400 hover:to-orange-400 transition-all"
+            className="inline-block px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-text-primary text-sm font-semibold hover:from-amber-400 hover:to-blaze transition-all"
           >
             Get Started
           </Link>

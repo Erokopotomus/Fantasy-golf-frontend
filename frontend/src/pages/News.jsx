@@ -96,7 +96,7 @@ const News = () => {
 
           {/* High Priority Alerts */}
           {highPriority.length > 0 && (
-            <Card className="bg-gradient-to-r from-red-600/10 to-orange-600/10 border-red-500/30">
+            <Card className="bg-gradient-to-r from-red-600/10 to-orange-600/10 border-live-red/30">
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-xl">🚨</span>
                 <h2 className="text-lg font-semibold font-display text-text-primary">Breaking</h2>
@@ -177,7 +177,7 @@ const News = () => {
                 <div className="space-y-3">
                   {[
                     { icon: '📋', label: 'Transactions', key: 'transaction', color: 'text-purple-400' },
-                    { icon: '🏥', label: 'Injuries', key: 'injury', color: 'text-red-400' },
+                    { icon: '🏥', label: 'Injuries', key: 'injury', color: 'text-live-red' },
                     { icon: '📊', label: 'Analysis', key: 'analysis', color: 'text-indigo-400' },
                     { icon: '📰', label: 'General', key: 'news', color: 'text-blue-400' },
                   ].map(cat => (

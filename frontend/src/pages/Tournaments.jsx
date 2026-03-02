@@ -8,9 +8,9 @@ const TourBadge = ({ tour }) => {
   const colors = {
     pga: 'bg-blue-500/15 text-blue-400 border-blue-500/25',
     'dp world': 'bg-purple-500/15 text-purple-400 border-purple-500/25',
-    liv: 'bg-red-500/15 text-red-400 border-red-500/25',
+    liv: 'bg-live-red/15 text-live-red border-live-red/25',
     lpga: 'bg-pink-500/15 text-pink-400 border-pink-500/25',
-    korn: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+    korn: 'bg-field-bright/15 text-field border-field-bright/25',
   }
   const key = tour.toLowerCase()
   const color = Object.entries(colors).find(([k]) => key.includes(k))?.[1] || 'bg-[var(--stone)] text-text-secondary border-[var(--card-border)]'
@@ -64,7 +64,7 @@ const Tournaments = () => {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
         <Card>
-          <p className="text-red-400 text-center">Failed to load tournaments: {error}</p>
+          <p className="text-live-red text-center">Failed to load tournaments: {error}</p>
         </Card>
       </div>
     )

@@ -25,7 +25,7 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
-            isUser ? 'bg-gold/20 text-gold' : 'bg-dark-tertiary text-text-secondary'
+            isUser ? 'bg-gold/20 text-gold' : 'bg-[var(--card-bg)] text-text-secondary'
           }`}>
             {team.avatar}
           </div>
@@ -51,10 +51,10 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
           const value = catData?.value
           const pct = rank / totalTeams
 
-          let bgColor = 'bg-dark-tertiary'
+          let bgColor = 'bg-[var(--card-bg)]'
           if (pct <= 0.33) bgColor = 'bg-gold/10 border-gold/30'
-          else if (pct <= 0.66) bgColor = 'bg-yellow-500/10 border-yellow-500/30'
-          else bgColor = 'bg-red-400/10 border-red-400/30'
+          else if (pct <= 0.66) bgColor = 'bg-crown/10 border-crown/30'
+          else bgColor = 'bg-live-red/10 border-live-red/30'
 
           return (
             <div key={cat} className={`p-3 rounded-lg border ${bgColor}`}>
@@ -68,7 +68,7 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
               </p>
               <p className={`text-xs font-medium ${
                 pct <= 0.33 ? 'text-gold' :
-                pct <= 0.66 ? 'text-yellow-400' : 'text-red-400'
+                pct <= 0.66 ? 'text-crown' : 'text-live-red'
               }`}>
                 Rank: {rank}/{totalTeams}
               </p>
@@ -97,7 +97,7 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
         </div>
 
         <div>
-          <h4 className="text-sm font-medium text-red-400 mb-2 flex items-center gap-2">
+          <h4 className="text-sm font-medium text-live-red mb-2 flex items-center gap-2">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
             </svg>
@@ -105,9 +105,9 @@ const RotoOverview = ({ team, categories, categoryLabels, totalTeams, currentUse
           </h4>
           <div className="space-y-2">
             {weaknesses.map(cat => (
-              <div key={cat.id} className="flex items-center justify-between p-2 bg-red-400/10 rounded">
+              <div key={cat.id} className="flex items-center justify-between p-2 bg-live-red/10 rounded">
                 <span className="text-sm text-text-primary">{cat.label}</span>
-                <span className="text-sm font-semibold text-red-400">#{cat.rank}</span>
+                <span className="text-sm font-semibold text-live-red">#{cat.rank}</span>
               </div>
             ))}
           </div>

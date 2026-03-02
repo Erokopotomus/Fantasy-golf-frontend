@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 
 const SEGMENT_COLORS = [
-  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+  { bg: 'bg-field-bright/10', border: 'border-field-bright/30', text: 'text-field', dot: 'bg-field' },
   { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400', dot: 'bg-blue-400' },
   { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', dot: 'bg-amber-400' },
   { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', dot: 'bg-purple-400' },
@@ -228,7 +228,7 @@ const SeasonRangePicker = ({ weeks, startWeekId, endWeekId, segments = 4, onChan
 
       {/* Validation messages */}
       {!isValid && (
-        <p className="text-xs text-red-400">End tournament must come after start tournament.</p>
+        <p className="text-xs text-live-red">End tournament must come after start tournament.</p>
       )}
       {isValid && !hasMinWeeks && filteredWeeks.length > 0 && (
         <p className="text-xs text-amber-400">

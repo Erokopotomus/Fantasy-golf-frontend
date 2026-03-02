@@ -81,7 +81,7 @@ const Players = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark-primary">
+      <div className="min-h-screen bg-[var(--bg)]">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
@@ -95,7 +95,7 @@ const Players = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -168,7 +168,7 @@ const Players = () => {
                     {selectedPlayers.map((p) => (
                       <span
                         key={p.id}
-                        className="px-2 py-1 bg-dark-tertiary rounded text-sm text-text-primary"
+                        className="px-2 py-1 bg-[var(--card-bg)] rounded text-sm text-text-primary"
                       >
                         {p.name.split(' ').pop()}
                       </span>
@@ -221,7 +221,7 @@ const Players = () => {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                      <div className="flex items-center justify-between p-4 border-t border-dark-border">
+                      <div className="flex items-center justify-between p-4 border-t border-[var(--card-border)]">
                         <p className="text-text-muted text-sm">
                           Page {currentPage} of {totalPages}
                         </p>

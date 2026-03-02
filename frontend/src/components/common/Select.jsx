@@ -13,9 +13,9 @@ const Select = ({
 }) => {
   const getSelectStyles = () => {
     if (error) {
-      return 'border-red-500 focus:ring-red-500 focus:border-red-500'
+      return 'border-live-red focus:ring-live-red focus:border-live-red'
     }
-    return 'border-dark-border hover:border-text-muted focus:border-gold'
+    return 'border-[var(--card-border)] hover:border-text-muted focus:border-gold'
   }
 
   return (
@@ -23,7 +23,7 @@ const Select = ({
       {label && (
         <label className="block text-sm font-medium text-text-secondary mb-2">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-live-red ml-1">*</span>}
         </label>
       )}
       <div className="relative">
@@ -33,7 +33,7 @@ const Select = ({
           disabled={disabled}
           required={required}
           className={`
-            w-full bg-dark-tertiary border rounded-lg px-4 py-3 text-text-primary
+            w-full bg-[var(--card-bg)] border rounded-lg px-4 py-3 text-text-primary
             appearance-none cursor-pointer
             transition-all duration-300
             focus:outline-none focus:ring-2 focus:shadow-glow-gold
@@ -51,7 +51,7 @@ const Select = ({
             <option
               key={option.value}
               value={option.value}
-              className="bg-dark-tertiary text-text-primary"
+              className="bg-[var(--card-bg)] text-text-primary"
             >
               {option.label}
             </option>
@@ -77,7 +77,7 @@ const Select = ({
         <p className="mt-2 text-sm text-text-muted">{helperText}</p>
       )}
       {error && (
-        <p className="mt-2 text-sm text-red-500">{error}</p>
+        <p className="mt-2 text-sm text-live-red">{error}</p>
       )}
     </div>
   )

@@ -20,15 +20,15 @@ const formatToPar = (toPar) => {
 
 const toParColor = (toPar) => {
   if (toPar == null) return 'text-text-muted'
-  if (toPar < 0) return 'text-emerald-400'
-  if (toPar > 0) return 'text-red-400'
+  if (toPar < 0) return 'text-field'
+  if (toPar > 0) return 'text-live-red'
   return 'text-text-primary'
 }
 
 const positionColor = (pos, status) => {
-  if (status === 'CUT' || status === 'WD' || status === 'DQ') return 'text-red-400'
+  if (status === 'CUT' || status === 'WD' || status === 'DQ') return 'text-live-red'
   if (pos == null) return 'text-text-muted'
-  if (pos <= 10) return 'text-emerald-400'
+  if (pos <= 10) return 'text-field'
   if (pos <= 25) return 'text-text-primary'
   return 'text-text-secondary'
 }
@@ -69,7 +69,7 @@ const StarterRow = ({ player }) => (
     </div>
     {/* Fantasy points */}
     <div className="text-right flex-shrink-0">
-      <p className="text-sm font-bold text-emerald-400">{player.fantasyPoints?.toFixed(1) || '0.0'}</p>
+      <p className="text-sm font-bold text-field">{player.fantasyPoints?.toFixed(1) || '0.0'}</p>
     </div>
   </div>
 )
@@ -102,8 +102,8 @@ const UserTeamWidget = ({ userTeam }) => {
       {/* Header: rank + points */}
       <div className="flex items-center gap-3">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold font-display ${
-          userTeam.rank === 1 ? 'bg-yellow-500/15 text-yellow-400' :
-          userTeam.rank === 2 ? 'bg-gray-300/10 text-gray-300' :
+          userTeam.rank === 1 ? 'bg-crown/15 text-crown' :
+          userTeam.rank === 2 ? 'bg-gray-300/10 text-gray-400 dark:text-gray-300' :
           userTeam.rank === 3 ? 'bg-amber-600/10 text-amber-500' :
           'bg-[var(--bg-alt)] text-text-secondary'
         }`}>
@@ -114,20 +114,20 @@ const UserTeamWidget = ({ userTeam }) => {
           <p className="text-xs text-text-muted">{userTeam.starters.length} starters, {userTeam.bench.length} bench</p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold font-display text-emerald-400">{userTeam.totalPoints.toFixed(1)}</p>
+          <p className="text-2xl font-bold font-display text-field">{userTeam.totalPoints.toFixed(1)}</p>
           <p className="text-[10px] text-text-muted">fantasy pts</p>
         </div>
       </div>
 
       {/* Optimal alert */}
       {userTeam.optimalPoints > userTeam.totalPoints && (
-        <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-          <svg className="w-4 h-4 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-crown/10 border border-crown/20">
+          <svg className="w-4 h-4 text-crown flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
-          <p className="text-xs text-yellow-400">
+          <p className="text-xs text-crown">
             Optimal lineup: <span className="font-bold">{userTeam.optimalPoints.toFixed(1)}</span> pts
-            <span className="text-yellow-400/70"> (+{(userTeam.optimalPoints - userTeam.totalPoints).toFixed(1)} on bench)</span>
+            <span className="text-crown/70"> (+{(userTeam.optimalPoints - userTeam.totalPoints).toFixed(1)} on bench)</span>
           </p>
         </div>
       )}
@@ -192,14 +192,14 @@ const LeagueMiniStandings = ({ teams, userTeam }) => {
               onClick={() => setExpandedTeamId(isExpanded ? null : team.teamId)}
               className={`flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${
                 isUser
-                  ? 'bg-emerald-500/10 border border-emerald-500/20'
+                  ? 'bg-field-bright/10 border border-field-bright/20'
                   : 'hover:bg-[var(--surface-alt)]'
               }`}
             >
               {/* Rank */}
               <span className={`text-sm font-bold w-6 text-center ${
-                team.rank === 1 ? 'text-yellow-400' :
-                team.rank === 2 ? 'text-gray-300' :
+                team.rank === 1 ? 'text-crown' :
+                team.rank === 2 ? 'text-gray-400 dark:text-gray-300' :
                 team.rank === 3 ? 'text-amber-500' :
                 'text-text-muted'
               }`}>
@@ -207,9 +207,9 @@ const LeagueMiniStandings = ({ teams, userTeam }) => {
               </span>
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium truncate ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
+                <p className={`text-sm font-medium truncate ${isUser ? 'text-field' : 'text-text-primary'}`}>
                   {team.teamName}
-                  {isUser && <span className="text-emerald-400/60 ml-1 text-xs">You</span>}
+                  {isUser && <span className="text-field/60 ml-1 text-xs">You</span>}
                 </p>
               </div>
               {/* Points */}
@@ -237,7 +237,7 @@ const LeagueMiniStandings = ({ teams, userTeam }) => {
                     <span className={`${positionColor(p.position, p.status)} text-[10px]`}>
                       {formatPosition(p.position, p.status)}
                     </span>
-                    <span className="font-bold text-emerald-400 w-10 text-right">{p.fantasyPoints?.toFixed(1) || '0.0'}</span>
+                    <span className="font-bold text-field w-10 text-right">{p.fantasyPoints?.toFixed(1) || '0.0'}</span>
                   </div>
                 ))}
                 {team.bench.length > 0 && (
@@ -412,7 +412,7 @@ const GolfLiveScoring = ({ leagueId }) => {
   const leaderboardContent = lbLoading ? (
     <div className="flex items-center justify-center py-16">
       <div className="text-center">
-        <div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-3" />
+        <div className="w-8 h-8 border-3 border-field-bright/30 border-t-field-bright rounded-full animate-spin mx-auto mb-3" />
         <p className="text-sm text-text-muted">Loading leaderboard...</p>
       </div>
     </div>
@@ -474,7 +474,7 @@ const GolfLiveScoring = ({ leagueId }) => {
           <div className="lg:hidden flex border-b border-[var(--card-border)] mb-4">
             <button
               className={`flex-1 py-2.5 text-sm font-medium text-center transition-colors ${
-                mobileTab === 'leaderboard' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-text-muted'
+                mobileTab === 'leaderboard' ? 'text-field border-b-2 border-field' : 'text-text-muted'
               }`}
               onClick={() => setMobileTab('leaderboard')}
             >
@@ -482,7 +482,7 @@ const GolfLiveScoring = ({ leagueId }) => {
             </button>
             <button
               className={`flex-1 py-2.5 text-sm font-medium text-center transition-colors ${
-                mobileTab === 'fantasy' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-text-muted'
+                mobileTab === 'fantasy' ? 'text-field border-b-2 border-field' : 'text-text-muted'
               }`}
               onClick={() => setMobileTab('fantasy')}
             >

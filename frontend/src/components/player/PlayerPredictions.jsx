@@ -18,7 +18,7 @@ const ProbRow = ({ label, preRound, live, color = 'bg-gold' }) => {
               <span className="text-text-muted text-xs line-through">{prePct.toFixed(1)}%</span>
               <span className="text-text-primary font-semibold">{livePct.toFixed(1)}%</span>
               {diff != null && diff !== 0 && (
-                <span className={`text-xs font-medium ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`text-xs font-medium ${diff > 0 ? 'text-field' : 'text-live-red'}`}>
                   {diff > 0 ? '+' : ''}{diff.toFixed(1)}
                 </span>
               )}
@@ -29,7 +29,7 @@ const ProbRow = ({ label, preRound, live, color = 'bg-gold' }) => {
         </div>
       </div>
       {/* Stacked bars: pre-round (dimmed) and live (solid) */}
-      <div className="relative h-2 bg-dark-primary rounded-full overflow-hidden">
+      <div className="relative h-2 bg-[var(--bg)] rounded-full overflow-hidden">
         {prePct != null && livePct != null && (
           <div
             className={`absolute h-full rounded-full ${color} opacity-25`}
@@ -68,7 +68,7 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
     <Card>
       <div className="flex items-center justify-between mb-1">
         <h4 className="text-sm font-semibold text-text-muted">Tournament Predictions</h4>
-        <span className="text-xs text-text-secondary bg-dark-primary px-2 py-1 rounded">
+        <span className="text-xs text-text-secondary bg-[var(--bg)] px-2 py-1 rounded">
           {tournamentName}
         </span>
       </div>
@@ -100,7 +100,7 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
           label="Win"
           preRound={predictions?.winProbability}
           live={liveScore?.winProbability}
-          color="bg-yellow-500"
+          color="bg-crown"
         />
         <ProbRow
           label="Top 5"
@@ -129,11 +129,11 @@ const PlayerPredictions = ({ predictions, liveScore }) => {
       </div>
 
       {predictions?.courseFitScore != null && (
-        <div className="mt-4 pt-3 border-t border-dark-border">
+        <div className="mt-4 pt-3 border-t border-[var(--card-border)]">
           <div className="flex justify-between items-center">
             <span className="text-text-secondary text-sm">Course Fit</span>
             <div className="flex items-center gap-2">
-              <div className="w-20 h-2 bg-dark-primary rounded-full overflow-hidden">
+              <div className="w-20 h-2 bg-[var(--bg)] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full bg-gold transition-all duration-500"
                   style={{ width: `${Math.min(predictions.courseFitScore * 100, 100)}%` }}

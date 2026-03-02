@@ -89,7 +89,7 @@ const TournamentRecap = () => {
     return (
       <div className="min-h-screen pt-12 px-4 text-center">
         <p className="text-text-muted">Tournament not found.</p>
-        <Link to="/golf" className="text-emerald-400 text-sm mt-2 inline-block">Back to Golf Hub</Link>
+        <Link to="/golf" className="text-field text-sm mt-2 inline-block">Back to Golf Hub</Link>
       </div>
     )
   }
@@ -133,7 +133,7 @@ const TournamentRecap = () => {
                           {winner.player?.name}
                         </Link>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className={`font-mono text-sm font-bold ${(winner.totalToPar ?? 0) < 0 ? 'text-emerald-400' : 'text-text-secondary'}`}>
+                          <span className={`font-mono text-sm font-bold ${(winner.totalToPar ?? 0) < 0 ? 'text-field' : 'text-text-secondary'}`}>
                             {formatToPar(winner.totalToPar)}
                           </span>
                           {winner.totalScore && (
@@ -203,7 +203,7 @@ const TournamentRecap = () => {
                 </div>
                 {/* Actual Top 10 */}
                 <div className="p-4">
-                  <p className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider font-bold mb-3">Actual Results</p>
+                  <p className="text-[10px] font-mono text-field uppercase tracking-wider font-bold mb-3">Actual Results</p>
                   <div className="space-y-1.5">
                     {actualTop10.map((entry, i) => {
                       const inClutch = clutchTop10.some(c => c.player?.id === entry.player?.id)
@@ -238,10 +238,10 @@ const TournamentRecap = () => {
               <h2 className="text-sm font-bold text-text-primary mb-3">Metric Report Card</h2>
               <div className="grid gap-3 sm:grid-cols-3">
                 {metricCards.map(card => (
-                  <div key={card.key} className={`rounded-xl border bg-[var(--surface)] shadow-card p-4 ${card.beat ? 'border-emerald-500/20' : 'border-red-400/20'}`}>
+                  <div key={card.key} className={`rounded-xl border bg-[var(--surface)] shadow-card p-4 ${card.beat ? 'border-field-bright/20' : 'border-live-red/20'}`}>
                     <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-2">{card.label}</p>
                     <div className="flex items-end gap-2">
-                      <span className={`text-2xl font-display font-bold ${card.beat ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <span className={`text-2xl font-display font-bold ${card.beat ? 'text-field' : 'text-live-red'}`}>
                         {card.avgFinish}<span className="text-xs text-text-muted font-normal">th</span>
                       </span>
                     </div>
@@ -250,7 +250,7 @@ const TournamentRecap = () => {
                     </p>
                     <div className="mt-2 h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${card.beat ? 'bg-emerald-400' : 'bg-red-400'}`}
+                        className={`h-full rounded-full ${card.beat ? 'bg-field' : 'bg-live-red'}`}
                         style={{ width: `${Math.max(10, Math.min(100, (1 - card.avgFinish / card.fieldAvg) * 100 + 50))}%` }}
                       />
                     </div>
@@ -265,9 +265,9 @@ const TournamentRecap = () => {
             <div className="mb-8 grid gap-4 sm:grid-cols-2">
               {/* Best calls — predicted low rank, finished high position */}
               {bestCalls.length > 0 && (
-                <div className="rounded-xl border border-emerald-500/20 bg-[var(--surface)] shadow-card overflow-hidden">
-                  <div className="px-4 py-2.5 border-b border-[var(--card-border)] bg-gradient-to-r from-emerald-500/5 to-transparent">
-                    <h3 className="text-sm font-bold text-emerald-400">Best Calls</h3>
+                <div className="rounded-xl border border-field-bright/20 bg-[var(--surface)] shadow-card overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-[var(--card-border)] bg-gradient-to-r from-field-bright/5 to-transparent">
+                    <h3 className="text-sm font-bold text-field">Best Calls</h3>
                     <p className="text-[10px] text-text-muted">Underrated by our rankings, outperformed on course</p>
                   </div>
                   <div className="p-4 space-y-3">
@@ -286,7 +286,7 @@ const TournamentRecap = () => {
                             Ranked #{entry._powerRank} → Finished {entry.positionTied ? 'T' : ''}{entry.position}
                           </p>
                         </div>
-                        <span className="text-xs font-mono font-bold text-emerald-400 shrink-0">
+                        <span className="text-xs font-mono font-bold text-field shrink-0">
                           +{Math.abs(entry._delta)}
                         </span>
                       </div>
@@ -296,9 +296,9 @@ const TournamentRecap = () => {
               )}
               {/* Worst calls — predicted high rank, finished low */}
               {worstCalls.length > 0 && (
-                <div className="rounded-xl border border-red-400/20 bg-[var(--surface)] shadow-card overflow-hidden">
-                  <div className="px-4 py-2.5 border-b border-[var(--card-border)] bg-gradient-to-r from-red-500/5 to-transparent">
-                    <h3 className="text-sm font-bold text-red-400">Missed Calls</h3>
+                <div className="rounded-xl border border-live-red/20 bg-[var(--surface)] shadow-card overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-[var(--card-border)] bg-gradient-to-r from-live-red/5 to-transparent">
+                    <h3 className="text-sm font-bold text-live-red">Missed Calls</h3>
                     <p className="text-[10px] text-text-muted">Overrated by our rankings, underperformed on course</p>
                   </div>
                   <div className="p-4 space-y-3">
@@ -317,7 +317,7 @@ const TournamentRecap = () => {
                             Ranked #{entry._powerRank} → Finished {entry.positionTied ? 'T' : ''}{entry.position}
                           </p>
                         </div>
-                        <span className="text-xs font-mono font-bold text-red-400 shrink-0">
+                        <span className="text-xs font-mono font-bold text-live-red shrink-0">
                           -{Math.abs(entry._delta)}
                         </span>
                       </div>
@@ -333,7 +333,7 @@ const TournamentRecap = () => {
             <Link to="/golf" className="text-sm text-text-muted hover:text-text-primary transition-colors">
               ← Back to Golf Hub
             </Link>
-            <Link to={`/tournaments/${tournamentId}`} className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
+            <Link to={`/tournaments/${tournamentId}`} className="text-sm font-semibold text-field hover:text-emerald-300 transition-colors">
               View Full Leaderboard →
             </Link>
           </div>

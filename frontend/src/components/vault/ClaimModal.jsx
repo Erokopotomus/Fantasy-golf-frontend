@@ -77,7 +77,7 @@ export default function ClaimModal({
         {/* Panel */}
         <div
           onClick={e => e.stopPropagation()}
-          className="relative w-full max-w-md max-h-[80vh] overflow-y-auto rounded-2xl border border-dark-border"
+          className="relative w-full max-w-md max-h-[80vh] overflow-y-auto rounded-2xl border border-[var(--card-border)]"
           style={{
             background: '#0E100F',
             animation: success ? 'claimSuccess 0.4s ease' : 'claimSlideUp 0.3s ease',
@@ -170,7 +170,7 @@ export default function ClaimModal({
                                 {owner.name}
                               </span>
                               {!owner.isActive && (
-                                <span className="text-[8px] font-mono text-text-muted bg-dark-tertiary px-1 py-0.5 rounded flex-shrink-0">
+                                <span className="text-[8px] font-mono text-text-muted bg-[var(--card-bg)] px-1 py-0.5 rounded flex-shrink-0">
                                   FORMER
                                 </span>
                               )}
@@ -201,7 +201,7 @@ export default function ClaimModal({
                 )}
 
                 {error && (
-                  <p className="text-[10px] font-mono text-red-400 mb-3 text-center">{error}</p>
+                  <p className="text-[10px] font-mono text-live-red mb-3 text-center">{error}</p>
                 )}
 
                 <button

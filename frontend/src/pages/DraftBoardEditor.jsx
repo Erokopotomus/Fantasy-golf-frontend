@@ -46,8 +46,8 @@ const REASON_CHIPS = [
 ]
 
 const CHIP_STYLES = {
-  positive: { active: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40', inactive: 'border-emerald-200 dark:border-emerald-500/20 text-emerald-600/40 dark:text-emerald-500/40 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-600 dark:hover:text-emerald-400' },
-  negative: { active: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40', inactive: 'border-red-200 dark:border-red-500/20 text-red-600/40 dark:text-red-500/40 hover:border-red-300 dark:hover:border-red-500/40 hover:text-red-600 dark:hover:text-red-400' },
+  positive: { active: 'bg-emerald-100 dark:bg-field-bright/20 text-emerald-700 dark:text-field border-emerald-300 dark:border-field-bright/40', inactive: 'border-emerald-200 dark:border-field-bright/20 text-emerald-600/40 dark:text-field-bright/40 hover:border-emerald-300 dark:hover:border-field-bright/40 hover:text-emerald-600 dark:hover:text-field' },
+  negative: { active: 'bg-red-100 dark:bg-live-red/20 text-red-700 dark:text-live-red border-red-300 dark:border-live-red/40', inactive: 'border-red-200 dark:border-live-red/20 text-red-600/40 dark:text-live-red/40 hover:border-red-300 dark:hover:border-live-red/40 hover:text-red-600 dark:hover:text-live-red' },
   source:   { active: 'bg-[var(--bg-alt)] text-[var(--text-1)]/80 border-[var(--stone)]/60', inactive: 'border-[var(--stone)]/40 text-[var(--text-1)]/30 hover:border-[var(--stone)]/60 hover:text-[var(--text-1)]/50' },
 }
 
@@ -65,17 +65,17 @@ function TagFilterBar({ entries, activeFilter, onFilterChange }) {
 
   const filters = [
     { key: 'all', label: 'All', count: entries.length, style: 'text-[var(--text-1)]/60 border-[var(--stone)]/40 hover:border-[var(--stone)]/60' },
-    { key: 'target', label: 'Targets', count: counts.target, style: 'text-emerald-600/70 dark:text-emerald-400/70 border-emerald-200 dark:border-emerald-500/20 hover:border-emerald-300 dark:hover:border-emerald-500/40' },
-    { key: 'sleeper', label: 'Sleepers', count: counts.sleeper, style: 'text-amber-600/70 dark:text-gold/70 border-amber-200 dark:border-gold/20 hover:border-amber-300 dark:hover:border-gold/40' },
-    { key: 'avoid', label: 'Avoids', count: counts.avoid, style: 'text-red-600/70 dark:text-red-400/70 border-red-200 dark:border-red-500/20 hover:border-red-300 dark:hover:border-red-500/40' },
+    { key: 'target', label: 'Targets', count: counts.target, style: 'text-emerald-600/70 dark:text-field/70 border-emerald-200 dark:border-field-bright/20 hover:border-emerald-300 dark:hover:border-field-bright/40' },
+    { key: 'sleeper', label: 'Sleepers', count: counts.sleeper, style: 'text-amber-700 dark:text-amber-500/70 dark:text-gold/70 border-amber-200 dark:border-gold/20 hover:border-amber-300 dark:hover:border-gold/40' },
+    { key: 'avoid', label: 'Avoids', count: counts.avoid, style: 'text-red-600/70 dark:text-live-red/70 border-red-200 dark:border-live-red/20 hover:border-red-300 dark:hover:border-live-red/40' },
     { key: 'untagged', label: 'Untagged', count: counts.untagged, style: 'text-[var(--text-1)]/40 border-[var(--stone)]/40 hover:border-[var(--stone)]/60' },
   ]
 
   const activeStyles = {
     all: 'bg-[var(--stone)]/30 dark:bg-[var(--stone)] text-[var(--text-1)] border-[var(--stone)]/60 dark:border-white/25',
-    target: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40',
+    target: 'bg-emerald-100 dark:bg-field-bright/15 text-emerald-700 dark:text-field border-emerald-300 dark:border-field-bright/40',
     sleeper: 'bg-amber-100 dark:bg-gold/15 text-amber-700 dark:text-gold border-amber-300 dark:border-gold/40',
-    avoid: 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40',
+    avoid: 'bg-red-100 dark:bg-live-red/15 text-red-700 dark:text-live-red border-red-300 dark:border-live-red/40',
     untagged: 'bg-[var(--stone)]/30 dark:bg-[var(--stone)] text-[var(--text-1)]/60 border-[var(--stone)]/60 dark:border-stone/50',
   }
 
@@ -146,7 +146,7 @@ function ReasonChipRow({ movedEntry, existingChips, onUpdateChips, onDismiss }) 
       <div className="flex items-center justify-between mb-2">
         <p className="text-[11px] text-text-primary/50">
           Moved <span className="text-text-primary font-medium">{movedEntry.playerName}</span>{' '}
-          <span className={delta > 0 ? 'text-emerald-400' : 'text-red-400'}>{direction} spots</span>.{' '}
+          <span className={delta > 0 ? 'text-field' : 'text-live-red'}>{direction} spots</span>.{' '}
           Why? <span className="text-text-primary/25">(optional)</span>
         </p>
         <button
@@ -499,7 +499,7 @@ export default function DraftBoardEditor() {
     return (
       <div className="h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 text-sm mb-2">{error}</p>
+          <p className="text-live-red text-sm mb-2">{error}</p>
           <a href="/lab" className="text-gold text-sm hover:underline">Back to The Lab</a>
         </div>
       </div>

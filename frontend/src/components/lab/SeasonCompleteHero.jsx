@@ -54,14 +54,14 @@ export default function SeasonCompleteHero({ phaseMeta, seasonReview, onCreateBo
       {(review.bestCall || review.worstCall) && (
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
           {review.bestCall && (
-            <div className="flex-1 p-2.5 bg-emerald-500/[0.08] border border-emerald-500/15 rounded-lg">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/60 mb-0.5">Best Call</p>
+            <div className="flex-1 p-2.5 bg-field-bright/[0.08] border border-field-bright/15 rounded-lg">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-field/60 mb-0.5">Best Call</p>
               <p className="text-xs text-text-primary/60">{review.bestCall}</p>
             </div>
           )}
           {review.worstCall && (
-            <div className="flex-1 p-2.5 bg-red-500/[0.08] border border-red-500/15 rounded-lg">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-red-400/60 mb-0.5">Worst Call</p>
+            <div className="flex-1 p-2.5 bg-live-red/[0.08] border border-live-red/15 rounded-lg">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-live-red/60 mb-0.5">Worst Call</p>
               <p className="text-xs text-text-primary/60">{review.worstCall}</p>
             </div>
           )}

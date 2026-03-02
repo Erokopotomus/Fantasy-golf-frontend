@@ -296,7 +296,7 @@ export default function ShareModal({
                           </span>
                         )}
                         {hadError && (
-                          <span className="text-[10px] font-mono text-red-400 flex-shrink-0">Failed</span>
+                          <span className="text-[10px] font-mono text-live-red flex-shrink-0">Failed</span>
                         )}
                       </div>
                     </div>
@@ -332,10 +332,10 @@ export default function ShareModal({
                 )}
               </button>
               {emailError && (
-                <p className="text-[10px] font-mono text-red-400 mt-1.5 text-center">{emailError}</p>
+                <p className="text-[10px] font-mono text-live-red mt-1.5 text-center">{emailError}</p>
               )}
               {emailResult?.failed > 0 && (
-                <p className="text-[10px] font-mono text-red-400/70 mt-1 text-center">
+                <p className="text-[10px] font-mono text-live-red/70 mt-1 text-center">
                   {emailResult.failed} failed to send
                 </p>
               )}
@@ -362,7 +362,7 @@ export default function ShareModal({
                   : 'Notify League Members'}
             </button>
             {notifyError && (
-              <p className="text-[10px] font-mono text-red-400 mt-1.5 text-center">{notifyError}</p>
+              <p className="text-[10px] font-mono text-live-red mt-1.5 text-center">{notifyError}</p>
             )}
             <p className="text-[10px] font-mono text-text-muted/40 mt-2 text-center leading-relaxed">
               {notified

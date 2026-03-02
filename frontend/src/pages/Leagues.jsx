@@ -9,7 +9,7 @@ const Leagues = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-primary flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading leagues...</p>
@@ -19,7 +19,7 @@ const Leagues = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -44,15 +44,15 @@ const Leagues = () => {
           </div>
 
           {error && (
-            <Card className="mb-6 border-red-500 bg-red-500/10">
-              <p className="text-red-500">{error}</p>
+            <Card className="mb-6 border-live-red bg-live-red/10">
+              <p className="text-live-red">{error}</p>
             </Card>
           )}
 
           {/* Leagues List */}
           {leagues.length === 0 ? (
             <Card className="text-center py-12">
-              <div className="w-16 h-16 bg-dark-tertiary rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[var(--card-bg)] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -93,11 +93,11 @@ const Leagues = () => {
                             <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                               league.status === 'active'
                                 ? 'bg-gold/20 text-gold'
-                                : 'bg-yellow-500/20 text-yellow-400'
+                                : 'bg-crown/20 text-crown'
                             }`}>
                               {league.status === 'active' ? 'Active' : 'Draft Pending'}
                             </span>
-                            <span className="px-2 py-0.5 rounded text-xs bg-dark-tertiary text-text-muted capitalize">
+                            <span className="px-2 py-0.5 rounded text-xs bg-[var(--card-bg)] text-text-muted capitalize">
                               {league.type}
                             </span>
                           </>
@@ -152,15 +152,15 @@ const Leagues = () => {
 
                   {/* Standings Preview */}
                   {league.standings && league.standings.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-dark-border">
+                    <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
                       <p className="text-text-muted text-xs mb-2">Top 3 Standings</p>
                       <div className="flex gap-4">
                         {league.standings.slice(0, 3).map((standing, idx) => (
                           <div key={standing.userId} className="flex items-center gap-2">
                             <span className={`text-sm font-medium ${
-                              idx === 0 ? 'text-yellow-400' :
+                              idx === 0 ? 'text-crown' :
                               idx === 1 ? 'text-gray-400' :
-                              'text-amber-600'
+                              'text-amber-700 dark:text-amber-500'
                             }`}>
                               #{standing.rank}
                             </span>

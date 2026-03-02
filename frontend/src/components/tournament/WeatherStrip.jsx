@@ -19,20 +19,20 @@ const WMO_ICONS = {
 }
 
 function getDifficultyLabel(impact) {
-  if (impact >= 0.6) return { label: 'Brutal', color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/25' }
-  if (impact >= 0.4) return { label: 'Windy', color: 'text-orange-400', bg: 'bg-orange-500/15', border: 'border-orange-500/25' }
-  if (impact >= 0.2) return { label: 'Breezy', color: 'text-yellow-400', bg: 'bg-yellow-500/15', border: 'border-yellow-500/25' }
-  return { label: 'Calm', color: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/25' }
+  if (impact >= 0.6) return { label: 'Brutal', color: 'text-live-red', bg: 'bg-live-red/15', border: 'border-live-red/25' }
+  if (impact >= 0.4) return { label: 'Windy', color: 'text-blaze', bg: 'bg-orange-500/15', border: 'border-orange-500/25' }
+  if (impact >= 0.2) return { label: 'Breezy', color: 'text-crown', bg: 'bg-crown/15', border: 'border-crown/25' }
+  return { label: 'Calm', color: 'text-field', bg: 'bg-field-bright/15', border: 'border-field-bright/25' }
 }
 
 function getWindColor(speed) {
-  if (speed >= 25) return 'text-red-400'
-  if (speed >= 15) return 'text-orange-400'
+  if (speed >= 25) return 'text-live-red'
+  if (speed >= 15) return 'text-blaze'
   return 'text-text-secondary'
 }
 
 function getWindBg(speed) {
-  if (speed >= 25) return 'bg-red-500/20'
+  if (speed >= 25) return 'bg-live-red/20'
   if (speed >= 15) return 'bg-orange-500/20'
   return 'bg-[var(--stone)]'
 }
@@ -97,11 +97,11 @@ function HourlyDetail({ hourlyData, roundLabel }) {
         <span className="text-xs font-mono text-text-muted uppercase tracking-wider">{roundLabel} — Hour by Hour</span>
         {showBestWorst && (
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-xs font-mono text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> Best Window
+            <span className="flex items-center gap-1.5 text-xs font-mono text-field">
+              <span className="w-2 h-2 rounded-full bg-field inline-block" /> Best Window
             </span>
-            <span className="flex items-center gap-1.5 text-xs font-mono text-red-400">
-              <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> Toughest
+            <span className="flex items-center gap-1.5 text-xs font-mono text-live-red">
+              <span className="w-2 h-2 rounded-full bg-live-red inline-block" /> Toughest
             </span>
           </div>
         )}
@@ -117,7 +117,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
                 return (
-                  <th key={h.hour} className={`px-1 py-1 text-center min-w-[56px] ${isBest ? 'text-emerald-400' : isWorst ? 'text-red-400' : ''}`}>
+                  <th key={h.hour} className={`px-1 py-1 text-center min-w-[56px] ${isBest ? 'text-field' : isWorst ? 'text-live-red' : ''}`}>
                     {formatHour(h.hour)}
                   </th>
                 )
@@ -132,7 +132,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
                 return (
-                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-field-bright/8' : isWorst ? 'bg-live-red/8' : ''}`}>
                     <span className="text-base">{WMO_ICONS[h.weatherCode] ?? '🌤'}</span>
                   </td>
                 )
@@ -146,7 +146,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
                 return (
-                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-field-bright/8' : isWorst ? 'bg-live-red/8' : ''}`}>
                     <span className="text-sm font-mono font-bold text-text-primary">{h.temp}°</span>
                   </td>
                 )
@@ -160,7 +160,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
                 return (
-                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-field-bright/8' : isWorst ? 'bg-live-red/8' : ''}`}>
                     <span className={`text-sm font-mono font-bold ${getWindColor(h.windSpeed)}`}>
                       {h.windSpeed}
                     </span>
@@ -178,7 +178,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isWorst = showBestWorst && i === worstIdx
                 const hasGust = h.windGust && h.windGust > h.windSpeed + 2
                 return (
-                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-field-bright/8' : isWorst ? 'bg-live-red/8' : ''}`}>
                     {hasGust ? (
                       <>
                         <span className={`text-sm font-mono font-bold ${getWindColor(h.windGust)}`}>
@@ -201,7 +201,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isBest = showBestWorst && i === bestIdx
                 const isWorst = showBestWorst && i === worstIdx
                 return (
-                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-field-bright/8' : isWorst ? 'bg-live-red/8' : ''}`}>
                     <span className="text-xs font-mono text-text-muted">{h.windDir || '—'}</span>
                   </td>
                 )
@@ -216,7 +216,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isWorst = showBestWorst && i === worstIdx
                 const chance = h.precipChance ?? 0
                 return (
-                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                  <td key={h.hour} className={`px-1 py-1.5 text-center ${isBest ? 'bg-field-bright/8' : isWorst ? 'bg-live-red/8' : ''}`}>
                     <span className={`text-sm font-mono font-bold ${getPrecipColor(chance)}`}>
                       {chance}%
                     </span>
@@ -233,7 +233,7 @@ function HourlyDetail({ hourlyData, roundLabel }) {
                 const isWorst = showBestWorst && i === worstIdx
                 const precipHeight = maxPrecip > 0 ? Math.max((h.precip / maxPrecip) * 20, h.precip > 0 ? 3 : 0) : 0
                 return (
-                  <td key={h.hour} className={`px-1 py-2 ${isBest ? 'bg-emerald-500/8' : isWorst ? 'bg-red-500/8' : ''}`}>
+                  <td key={h.hour} className={`px-1 py-2 ${isBest ? 'bg-field-bright/8' : isWorst ? 'bg-live-red/8' : ''}`}>
                     <div className="flex flex-col items-center gap-0.5">
                       <div className="w-5 h-5 flex items-end justify-center">
                         {precipHeight > 0 && (

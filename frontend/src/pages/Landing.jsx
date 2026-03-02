@@ -115,7 +115,7 @@ const Landing = () => {
               </h1>
 
               <p className="text-lg text-[var(--text-2)] max-w-[460px] mb-2.5 leading-[1.7] mx-auto lg:mx-0">
-                Lock in your predictions. Track your accuracy.{' '}
+                Track your predictions. Prove your accuracy.{' '}
                 <strong className="text-[var(--text-1)] font-semibold">The platform where sports knowledge meets accountability.</strong>
               </p>
               <p className="font-mono text-xs text-[var(--text-3)] mb-8 mx-auto lg:mx-0">
@@ -161,13 +161,13 @@ const Landing = () => {
                 <div className="relative z-[1]">
                   <ClutchRatingGauge rating={84} size="lg" animated />
                 </div>
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] mt-1.5 mb-5" style={{ color: CR_B }}>Expert</p>
+                {/* Tier label rendered by ClutchRatingGauge showTier */}
 
                 {/* Stat grid */}
                 <div className="grid grid-cols-2 gap-2 relative z-[1]">
                   {[
                     { label: 'Accuracy', value: '82' },
-                    { label: 'Picks', value: '76' },
+                    { label: 'Calls', value: '76' },
                     { label: 'Consistency', value: '88' },
                     { label: 'Bold Calls', value: '65' },
                   ].map((s, i) => (
@@ -272,10 +272,10 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[
-              { icon: '🎯', title: 'Prove It Predictions', desc: 'Lock in calls before kickoff. Your accuracy is tracked, rated, and public.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
+              { icon: '🎯', title: 'Prove It Predictions', desc: 'Make your calls before kickoff. Your accuracy is tracked, rated, and public.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
               { icon: '✦', title: 'AI Research Lab', desc: 'Matchup analysis, trend detection, and draft strategy powered by AI.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
               { icon: '🏆', title: 'Fantasy Leagues', desc: 'Auction drafts, FAAB waivers, H2H. Golf live, NFL Spring 2026.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
-              { icon: '📊', title: 'Clutch Rating', desc: 'One score proving your sports IQ. Every pick, every bold call feeds it.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
+              { icon: '📊', title: 'Clutch Rating', desc: 'One score proving your sports IQ. Every call, every bold prediction feeds it.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
               { icon: '⚡', title: 'Live Tournaments', desc: 'Real-time leaderboards as PGA events unfold. Shot by shot.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
               { icon: '🧠', title: 'Year-Round', desc: 'Not a September app. Your brain stays sharp and your rating builds all year.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
             ].map((f, i) => (
@@ -445,7 +445,7 @@ const Landing = () => {
           <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 lg:gap-10">
             {[
               { num: '1', title: 'Play', desc: 'Run your season-long league on the most modern fantasy platform built. Snake or auction drafts, trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, or Fantrax.' },
-              { num: '2', title: 'Track', desc: "Lock in projections and weekly picks. Everything gets logged — your reasoning, your accuracy, your draft decisions. Over time, Clutch becomes your sports brain." },
+              { num: '2', title: 'Track', desc: "Log projections and weekly calls. Everything gets tracked — your reasoning, your accuracy, your draft decisions. Over time, Clutch becomes your sports brain." },
               { num: '3', title: 'Prove', desc: "Your Clutch Rating builds from everything you do — league results, prediction accuracy, bold calls, draft intelligence. Share your profile. This is your sports resume." },
             ].map(step => (
               <div key={step.num} className="text-center group">
@@ -728,7 +728,7 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-3 gap-6">
             {[
-              { num: '1', title: 'Your Sports Journal', desc: 'Projections with reasoning notes. Draft cheat sheets built from your research. Weekly picks with timestamps. Nothing lost, nothing forgotten.' },
+              { num: '1', title: 'Your Sports Journal', desc: 'Projections with reasoning notes. Draft cheat sheets built from your research. Weekly calls with timestamps. Nothing lost, nothing forgotten.' },
               { num: '2', title: 'Your Self-Scouting Report', desc: "AI surfaces patterns you can't see yourself: positional biases, accuracy trends, draft tendencies. Evaluate your own thinking over time." },
               { num: '3', title: 'Your Public Resume', desc: 'A shareable profile with your verified Clutch Rating, accuracy stats, badges, and bold calls that hit. Link it from your Twitter, your podcast.' },
             ].map(card => (

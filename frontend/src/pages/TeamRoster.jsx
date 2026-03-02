@@ -317,7 +317,7 @@ const TeamRoster = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-field-bright/30 border-t-field-bright rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Loading roster...</p>
         </div>
       </div>
@@ -380,7 +380,7 @@ const TeamRoster = () => {
         {/* Roster Skeleton — Starters */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Starters</h2>
+            <h2 className="text-sm font-bold text-field uppercase tracking-wider">Starters</h2>
             <span className="text-xs text-text-muted">(0 / {emptyMaxActive})</span>
           </div>
           <div className="space-y-2">
@@ -425,7 +425,7 @@ const TeamRoster = () => {
         {emptyIrSlots > 0 && (
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-bold text-red-400 uppercase tracking-wider">Injured Reserve</h2>
+              <h2 className="text-sm font-bold text-live-red uppercase tracking-wider">Injured Reserve</h2>
               <span className="text-xs text-text-muted">(0 / {emptyIrSlots})</span>
             </div>
             <div className="space-y-2">
@@ -434,8 +434,8 @@ const TeamRoster = () => {
                   key={`ir-${i}`}
                   className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[var(--card-border)] bg-[var(--surface)]"
                 >
-                  <div className="w-10 h-10 rounded-full border-2 border-dashed border-red-500/30 flex items-center justify-center flex-shrink-0">
-                    <span className="text-red-400/30 text-sm font-bold">IR</span>
+                  <div className="w-10 h-10 rounded-full border-2 border-dashed border-live-red/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-live-red/30 text-sm font-bold">IR</span>
                   </div>
                   <span className="text-text-muted/40 text-sm">Empty IR slot</span>
                 </div>
@@ -463,7 +463,7 @@ const TeamRoster = () => {
         <Card className="text-center py-12">
           <h2 className="text-xl font-bold font-display text-text-primary mb-2">Error Loading Roster</h2>
           <p className="text-text-secondary mb-6">{rosterError}</p>
-          <Link to={`/leagues/${leagueId}`} className="text-emerald-400 hover:underline">
+          <Link to={`/leagues/${leagueId}`} className="text-field hover:underline">
             Return to League
           </Link>
         </Card>
@@ -520,32 +520,32 @@ const TeamRoster = () => {
 
       {/* Lineup Lock Banner */}
       {isLineupsLocked && (
-        <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
-          <svg className="w-6 h-6 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-4 p-4 bg-live-red/10 border border-live-red/30 rounded-lg flex items-center gap-3">
+          <svg className="w-6 h-6 text-live-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <div>
-            <p className="text-red-400 font-semibold text-sm">Lineups Locked</p>
-            <p className="text-red-400/70 text-xs">
+            <p className="text-live-red font-semibold text-sm">Lineups Locked</p>
+            <p className="text-live-red/70 text-xs">
               {scheduleData?.[0]?.name || lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} has started. Lineup changes are locked until this {isNflLeague ? 'week' : 'event'} ends.
             </p>
           </div>
         </div>
       )}
       {!isLineupsLocked && countdown && lockInfo?.lockTime && (
-        <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-3">
-          <svg className="w-6 h-6 text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-4 p-4 bg-crown/10 border border-crown/30 rounded-lg flex items-center gap-3">
+          <svg className="w-6 h-6 text-crown flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div className="flex-1">
-            <p className="text-yellow-400 font-semibold text-sm">
+            <p className="text-crown font-semibold text-sm">
               Lineups lock in {countdown}
             </p>
-            <p className="text-yellow-400/70 text-xs">
+            <p className="text-crown/70 text-xs">
               {scheduleData?.[0]?.name || lockInfo.tournament?.name || lockInfo.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {formatDateTimeET(lockInfo.lockTime)}
             </p>
           </div>
-          <span className="font-mono text-yellow-400 text-lg font-bold">{countdown}</span>
+          <span className="font-mono text-crown text-lg font-bold">{countdown}</span>
         </div>
       )}
 
@@ -563,13 +563,13 @@ const TeamRoster = () => {
         <div className="mb-4 p-3 rounded-lg bg-[var(--surface)] border border-[var(--card-border)]">
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-text-muted">Active lineup — drag or tap players to move</span>
-            <span className={`font-medium ${activeSet.size === maxActive ? 'text-emerald-400' : 'text-text-primary'}`}>
+            <span className={`font-medium ${activeSet.size === maxActive ? 'text-field' : 'text-text-primary'}`}>
               {activeSet.size} / {maxActive}
             </span>
           </div>
           <div className="h-2 bg-[var(--stone)] rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 transition-all duration-300"
+              className="h-full bg-field-bright transition-all duration-300"
               style={{ width: `${(activeSet.size / maxActive) * 100}%` }}
             />
           </div>
@@ -600,7 +600,7 @@ const TeamRoster = () => {
       {/* Keeper Counter */}
       {keepersEnabled && (
         <div className="mb-4 flex items-center gap-2 px-1">
-          <span className="text-xs font-medium text-yellow-400 bg-yellow-500/10 px-2 py-1 rounded">
+          <span className="text-xs font-medium text-crown bg-crown/10 px-2 py-1 rounded">
             Keepers: {currentKeeperCount}/{maxKeepers}
           </span>
           {currentKeeperCount >= maxKeepers && (
@@ -614,11 +614,11 @@ const TeamRoster = () => {
         <div className="mb-4 p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-emerald-400">⛳ This Week:</span>
+              <span className="text-xs font-medium text-field">⛳ This Week:</span>
               <span className="text-xs text-text-primary font-semibold">{scheduleSummary.tournament.shortName || scheduleSummary.tournament.name}</span>
             </div>
             {scheduleSummary.announced ? (
-              <span className="text-xs font-mono text-emerald-400">
+              <span className="text-xs font-mono text-field">
                 {scheduleSummary.confirmed}/{scheduleSummary.total} players confirmed
               </span>
             ) : (
@@ -633,7 +633,7 @@ const TeamRoster = () => {
         className={`mb-6 rounded-lg transition-all duration-200 ${
           isEditing && draggedPlayerId
             ? dragOverZone === 'active'
-              ? 'ring-2 ring-emerald-400 bg-emerald-500/5 p-3'
+              ? 'ring-2 ring-field bg-field-bright/5 p-3'
               : 'ring-1 ring-dashed ring-[var(--card-border)] p-3'
             : ''
         }`}
@@ -642,7 +642,7 @@ const TeamRoster = () => {
         onDrop={isEditing ? (e) => handleDropToZone(e, 'active') : undefined}
       >
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Active Lineup</h2>
+          <h2 className="text-sm font-bold text-field uppercase tracking-wider">Active Lineup</h2>
           <span className="text-xs text-text-muted">({roster.filter(p => activeSet.has(p.id)).length} / {maxActive})</span>
         </div>
         <div className="space-y-2">
@@ -672,7 +672,7 @@ const TeamRoster = () => {
             <div
               key={`empty-${i}`}
               className={`flex items-center gap-3 p-3 rounded-lg border border-dashed transition-colors ${
-                dragOverZone === 'active' ? 'border-emerald-400/60 bg-emerald-500/5' : 'border-[var(--card-border)] bg-[var(--surface)]'
+                dragOverZone === 'active' ? 'border-field/60 bg-field-bright/5' : 'border-[var(--card-border)] bg-[var(--surface)]'
               }`}
             >
               <div className="w-10 h-10 rounded-full border-2 border-dashed border-[var(--card-border)] flex items-center justify-center flex-shrink-0">
@@ -748,7 +748,7 @@ const TeamRoster = () => {
           className={`mt-6 rounded-lg transition-all duration-200 ${
             isEditing && draggedPlayerId
               ? dragOverZone === 'ir'
-                ? 'ring-2 ring-red-400 bg-red-500/5 p-3'
+                ? 'ring-2 ring-live-red bg-live-red/5 p-3'
                 : 'ring-1 ring-dashed ring-[var(--card-border)] p-3'
               : ''
           }`}
@@ -757,7 +757,7 @@ const TeamRoster = () => {
           onDrop={isEditing ? (e) => handleDropToZone(e, 'ir') : undefined}
         >
           <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-bold text-red-400 uppercase tracking-wider">Injured Reserve</h2>
+            <h2 className="text-sm font-bold text-live-red uppercase tracking-wider">Injured Reserve</h2>
             <span className="text-xs text-text-muted">({roster.filter(p => irSet.has(p.id)).length} / {irSlots})</span>
           </div>
           <div className="space-y-2">
@@ -787,11 +787,11 @@ const TeamRoster = () => {
               <div
                 key={`ir-empty-${i}`}
                 className={`flex items-center gap-3 p-3 rounded-lg border border-dashed transition-colors ${
-                  dragOverZone === 'ir' ? 'border-red-400/60 bg-red-500/5' : 'border-[var(--card-border)] bg-[var(--surface)]'
+                  dragOverZone === 'ir' ? 'border-live-red/60 bg-live-red/5' : 'border-[var(--card-border)] bg-[var(--surface)]'
                 }`}
               >
-                <div className="w-10 h-10 rounded-full border-2 border-dashed border-red-500/30 flex items-center justify-center flex-shrink-0">
-                  <span className="text-red-400/30 text-sm font-bold">IR</span>
+                <div className="w-10 h-10 rounded-full border-2 border-dashed border-live-red/30 flex items-center justify-center flex-shrink-0">
+                  <span className="text-live-red/30 text-sm font-bold">IR</span>
                 </div>
                 <span className="text-text-muted/40 text-sm">
                   {isEditing
@@ -829,9 +829,9 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
         ${isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:bg-[var(--surface-alt)]'}
         ${isDragging ? 'opacity-40 scale-95' : ''}
         ${isActive
-          ? 'bg-[var(--surface)] border border-emerald-500/30'
+          ? 'bg-[var(--surface)] border border-field-bright/30'
           : isIR
-          ? 'bg-[var(--surface)] border border-red-500/30'
+          ? 'bg-[var(--surface)] border border-live-red/30'
           : 'bg-[var(--surface)] border border-[var(--card-border)]'
         }
       `}
@@ -863,13 +863,13 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
         <div className="flex items-center gap-2">
           <span className="text-text-primary font-semibold text-sm truncate">{player.name}</span>
           {isActive && !isEditing && (
-            <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 rounded">ACTIVE</span>
+            <span className="text-[10px] font-medium text-field bg-field-bright/10 px-1.5 rounded">ACTIVE</span>
           )}
           {isIR && !isEditing && (
-            <span className="text-[10px] font-medium text-red-400 bg-red-500/10 px-1.5 rounded">IR</span>
+            <span className="text-[10px] font-medium text-live-red bg-live-red/10 px-1.5 rounded">IR</span>
           )}
           {player.isKeeper && (
-            <span className="text-[10px] font-medium text-yellow-400 bg-yellow-500/10 px-1.5 rounded">
+            <span className="text-[10px] font-medium text-crown bg-crown/10 px-1.5 rounded">
               K{player.keeperCost != null ? ` $${player.keeperCost}` : ''}{player.keeperYearsKept > 1 ? ` Yr ${player.keeperYearsKept}` : ''}
             </span>
           )}
@@ -882,7 +882,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
                   <div
                     key={t.id || i}
                     className={`w-2 h-2 rounded-full ${
-                      inField ? 'bg-emerald-500' : fieldAnnounced ? 'bg-[var(--stone)]' : 'border border-[var(--card-border)] bg-transparent'
+                      inField ? 'bg-field-bright' : fieldAnnounced ? 'bg-[var(--stone)]' : 'border border-[var(--card-border)] bg-transparent'
                     }`}
                     title={`${t.shortName || t.name}: ${inField ? 'In Field' : fieldAnnounced ? 'Not in Field' : 'TBD'}`}
                   />
@@ -925,7 +925,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           onClick={(e) => { e.stopPropagation(); onToggleIR() }}
           disabled={!canIR}
           className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
-            canIR ? 'text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'text-text-muted/30 bg-[var(--stone)] cursor-not-allowed'
+            canIR ? 'text-live-red bg-live-red/10 hover:bg-live-red/20' : 'text-text-muted/30 bg-[var(--stone)] cursor-not-allowed'
           }`}
         >
           IR
@@ -935,7 +935,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       {/* Active/Bench/IR badge in edit mode */}
       {isEditing && (
         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
-          isActive ? 'text-emerald-400 bg-emerald-500/10' : isIR ? 'text-red-400 bg-red-500/10' : 'text-text-muted bg-[var(--stone)]'
+          isActive ? 'text-field bg-field-bright/10' : isIR ? 'text-live-red bg-live-red/10' : 'text-text-muted bg-[var(--stone)]'
         }`}>
           {isActive ? 'ACTIVE' : isIR ? 'IR' : 'BENCH'}
         </span>
@@ -955,10 +955,10 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           disabled={!player.isKeeper && currentKeeperCount >= maxKeepers}
           className={`text-xs transition-colors px-2 py-1 ${
             player.isKeeper
-              ? 'text-yellow-400 hover:text-yellow-300'
+              ? 'text-crown hover:text-yellow-300'
               : currentKeeperCount >= maxKeepers
                 ? 'text-text-muted/30 cursor-not-allowed'
-                : 'text-yellow-400/60 hover:text-yellow-400'
+                : 'text-crown/60 hover:text-crown'
           }`}
         >
           {player.isKeeper ? 'Unkeep' : 'Keep'}
@@ -969,7 +969,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       {!isEditing && !isLocked && (
         <button
           onClick={(e) => { e.stopPropagation(); onDrop() }}
-          className="text-xs text-red-400/60 hover:text-red-400 transition-colors px-2 py-1"
+          className="text-xs text-live-red/60 hover:text-live-red transition-colors px-2 py-1"
         >
           Drop
         </button>

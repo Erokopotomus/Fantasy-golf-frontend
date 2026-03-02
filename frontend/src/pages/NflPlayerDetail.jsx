@@ -86,10 +86,10 @@ export default function NflPlayerDetail() {
   }
 
   const posColor = {
-    QB: 'text-red-400 bg-red-400/10 border-red-400/20',
+    QB: 'text-live-red bg-live-red/10 border-live-red/20',
     RB: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-    WR: 'text-green-400 bg-green-400/10 border-green-400/20',
-    TE: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
+    WR: 'text-field bg-field/10 border-field/20',
+    TE: 'text-blaze bg-blaze/10 border-blaze/20',
     K: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
     DEF: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
   }[player.nflPosition] || 'text-text-primary/50 bg-[var(--bg-alt)] border-[var(--card-border)]'
@@ -351,7 +351,7 @@ export default function NflPlayerDetail() {
                           </td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{ss.totals.passYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold font-bold">{ss.totals.passTds}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-red-400">{ss.totals.interceptions}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-live-red">{ss.totals.interceptions}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{ss.totals.rushYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{ss.totals.rushTds}</td>
                         </>
@@ -411,7 +411,7 @@ export default function NflPlayerDetail() {
                           </td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary font-bold">{careerTotals.passYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold font-bold">{careerTotals.passTds}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-red-400">{careerTotals.interceptions}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-live-red">{careerTotals.interceptions}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{careerTotals.rushYards?.toLocaleString()}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{careerTotals.rushTds}</td>
                         </>
@@ -495,15 +495,15 @@ export default function NflPlayerDetail() {
                           <td className="px-4 py-2.5 font-mono text-sm font-bold text-text-primary">{ss.season}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{adv.epaTotal ?? '-'}</td>
                           <td className={`text-right px-3 py-2.5 font-mono text-sm font-bold ${
-                            adv.epaPerGame != null && adv.epaPerGame > 0 ? 'text-green-400' :
-                            adv.epaPerGame != null && adv.epaPerGame < 0 ? 'text-red-400' : 'text-text-primary/60'
+                            adv.epaPerGame != null && adv.epaPerGame > 0 ? 'text-field' :
+                            adv.epaPerGame != null && adv.epaPerGame < 0 ? 'text-live-red' : 'text-text-primary/60'
                           }`}>
                             {adv.epaPerGame != null ? (adv.epaPerGame > 0 ? '+' : '') + adv.epaPerGame : '-'}
                           </td>
                           {isQb && (
                             <td className={`text-right px-3 py-2.5 font-mono text-sm ${
-                              adv.cpoe != null && adv.cpoe > 0 ? 'text-green-400' :
-                              adv.cpoe != null && adv.cpoe < 0 ? 'text-red-400' : 'text-text-primary/60'
+                              adv.cpoe != null && adv.cpoe > 0 ? 'text-field' :
+                              adv.cpoe != null && adv.cpoe < 0 ? 'text-live-red' : 'text-text-primary/60'
                             }`}>
                               {adv.cpoe != null ? (adv.cpoe > 0 ? '+' : '') + adv.cpoe + '%' : '-'}
                             </td>
@@ -617,7 +617,7 @@ export default function NflPlayerDetail() {
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.passAttempts ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/80">{g.stats.passYards ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold font-bold">{g.stats.passTds ?? '-'}</td>
-                          <td className="text-right px-3 py-2.5 font-mono text-sm text-red-400">{g.stats.interceptions ?? '-'}</td>
+                          <td className="text-right px-3 py-2.5 font-mono text-sm text-live-red">{g.stats.interceptions ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-text-primary/60">{g.stats.rushYards ?? '-'}</td>
                           <td className="text-right px-3 py-2.5 font-mono text-sm text-gold">{g.stats.rushTds ?? '-'}</td>
                         </>
@@ -760,7 +760,7 @@ export default function NflPlayerDetail() {
           </div>
           <div className="p-4">
             {capturesLoading ? (
-              <div className="text-xs text-text-primary/20 text-center py-4">Loading...</div>
+              <div className="flex items-center justify-center gap-2 py-4"><div className="w-4 h-4 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /><span className="text-xs text-text-muted">Loading...</span></div>
             ) : playerCaptures.length === 0 ? (
               <p className="text-xs text-text-primary/30 text-center py-4">
                 No notes yet.{' '}
@@ -774,16 +774,16 @@ export default function NflPlayerDetail() {
                     <div key={c.id} className="px-3 py-2 bg-[var(--bg-alt)] rounded-lg border border-[var(--card-border)]">
                       <p className="text-xs text-text-primary/70 line-clamp-3">{c.content}</p>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; Called it</span>}
-                        {verdict === 'INCORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed</span>}
-                        {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending</span>}
+                        {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-field-bright/15 text-field">&#10003; Called it</span>}
+                        {verdict === 'INCORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-live-red/15 text-live-red">&#10007; Missed</span>}
+                        {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-blaze">&#8599; Trending</span>}
                         {(verdict === 'TRENDING_INCORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending</span>}
                         {c.sourceType && (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[var(--bg-alt)] text-text-primary/30">{c.sourceType}</span>
                         )}
                         {c.sentiment && (
                           <span className={`text-[10px] font-medium ${
-                            c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-text-primary/30'
+                            c.sentiment === 'bullish' ? 'text-field' : c.sentiment === 'bearish' ? 'text-live-red' : 'text-text-primary/30'
                           }`}>
                             {c.sentiment === 'bullish' ? '↑' : c.sentiment === 'bearish' ? '↓' : '–'} {c.sentiment}
                           </span>
@@ -907,7 +907,7 @@ export default function NflPlayerDetail() {
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-text-primary/70">{label}</span>
                         {ev.sentiment && (
-                          <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-emerald-400' : ev.sentiment === 'negative' ? 'text-red-400' : 'text-text-primary/30'}`}>{ev.sentiment}</span>
+                          <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-field' : ev.sentiment === 'negative' ? 'text-live-red' : 'text-text-primary/30'}`}>{ev.sentiment}</span>
                         )}
                       </div>
                       {detail && <p className="text-[10px] text-text-primary/30 truncate">{detail}</p>}
@@ -945,7 +945,7 @@ export default function NflPlayerDetail() {
 function QuickStat({ label, value, accent, negative }) {
   return (
     <div className="text-center">
-      <div className={`text-lg font-mono font-bold ${accent ? 'text-gold' : negative ? 'text-red-400' : 'text-text-primary'}`}>
+      <div className={`text-lg font-mono font-bold ${accent ? 'text-gold' : negative ? 'text-live-red' : 'text-text-primary'}`}>
         {value ?? '-'}
       </div>
       <div className="text-text-primary/30 text-xs font-mono uppercase">{label}</div>

@@ -98,9 +98,9 @@ function relativeTime(dateStr) {
 function boardStatusCTA(board, cheatSheetId) {
   if (board.isPublished) return { label: 'Published', color: 'text-text-primary/30', dot: 'bg-[var(--stone)]' }
   if (board.playerCount === 0) return { label: 'Start Ranking →', color: 'text-gold', dot: null }
-  if (cheatSheetId) return { label: 'View Cheat Sheet', color: 'text-emerald-400', dot: 'bg-emerald-400', link: `/lab/cheatsheet/${cheatSheetId}` }
+  if (cheatSheetId) return { label: 'View Cheat Sheet', color: 'text-field', dot: 'bg-field', link: `/lab/cheatsheet/${cheatSheetId}` }
   if (board.sport === 'nfl' && board.positionCoverage && board.positionCoverage.covered >= board.positionCoverage.total) {
-    return { label: 'Generate Cheat Sheet →', color: 'text-gold', dot: 'bg-emerald-400', generateSheet: true }
+    return { label: 'Generate Cheat Sheet →', color: 'text-gold', dot: 'bg-field', generateSheet: true }
   }
   return { label: 'Continue', color: 'text-gold/70', dot: 'bg-gold/50' }
 }
@@ -285,8 +285,8 @@ export default function DraftBoards() {
               to="/leagues"
               className="p-4 bg-[var(--surface)] border border-[var(--card-border)] rounded-xl hover:border-gold/30 transition-colors text-center"
             >
-              <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-field-bright/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-field" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
@@ -345,7 +345,7 @@ export default function DraftBoards() {
                   {board.name}
                 </h3>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ml-2 ${
-                  board.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
+                  board.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-field-bright/20 text-field'
                 }`}>
                   {board.sport}
                 </span>
@@ -385,7 +385,7 @@ export default function DraftBoards() {
                       <span
                         key={pos}
                         className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                          count > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-[var(--bg-alt)] text-text-primary/20'
+                          count > 0 ? 'bg-field-bright/15 text-field' : 'bg-[var(--bg-alt)] text-text-primary/20'
                         }`}
                       >
                         {pos} {count}
@@ -444,7 +444,7 @@ export default function DraftBoards() {
               )}
               <span className="text-xs text-text-primary/70">{e.player?.name || 'Unknown'}</span>
               <span className={`px-1 py-0.5 rounded text-[9px] font-bold uppercase ${
-                e.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-emerald-500/20 text-emerald-400'
+                e.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-field-bright/20 text-field'
               }`}>
                 {e.sport}
               </span>
@@ -489,8 +489,8 @@ export default function DraftBoards() {
                 )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                {c.sentiment === 'bullish' && <span className="text-emerald-400 text-[10px]">↑</span>}
-                {c.sentiment === 'bearish' && <span className="text-red-400 text-[10px]">↓</span>}
+                {c.sentiment === 'bullish' && <span className="text-field text-[10px]">↑</span>}
+                {c.sentiment === 'bearish' && <span className="text-live-red text-[10px]">↓</span>}
                 <span className="text-text-primary/20">{relativeTime(c.createdAt)}</span>
               </div>
             </div>
@@ -560,7 +560,7 @@ export default function DraftBoards() {
 
       {/* Error */}
       {error && (
-        <div className="text-center py-8 text-red-400 text-sm">{error}</div>
+        <div className="text-center py-8 text-live-red text-sm">{error}</div>
       )}
 
       {!loading && !error && (

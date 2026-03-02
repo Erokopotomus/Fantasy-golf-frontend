@@ -7,14 +7,14 @@ import WeekInReview from './WeekInReview'
 
 // Position color badges
 const posColors = {
-  QB: 'bg-red-500/20 text-red-400',
+  QB: 'bg-live-red/20 text-live-red',
   RB: 'bg-blue-500/20 text-blue-400',
-  WR: 'bg-emerald-500/20 text-emerald-400',
-  TE: 'bg-yellow-500/20 text-yellow-400',
+  WR: 'bg-field-bright/20 text-field',
+  TE: 'bg-crown/20 text-crown',
   K: 'bg-purple-500/20 text-purple-400',
-  DEF: 'bg-orange-500/20 text-orange-400',
-  DL: 'bg-orange-500/20 text-orange-400',
-  LB: 'bg-orange-500/20 text-orange-400',
+  DEF: 'bg-orange-500/20 text-blaze',
+  DL: 'bg-orange-500/20 text-blaze',
+  LB: 'bg-orange-500/20 text-blaze',
   DB: 'bg-cyan-500/20 text-cyan-400',
 }
 
@@ -69,7 +69,7 @@ const NflPlayerRow = ({ ps, isBench, benchOutscoredStarter }) => {
 
         {/* Points */}
         <span className={`text-sm font-bold font-mono w-12 text-right flex-shrink-0 ${
-          ps.points > 20 ? 'text-emerald-400' :
+          ps.points > 20 ? 'text-field' :
           ps.points > 10 ? 'text-text-primary' :
           ps.points > 0 ? 'text-text-secondary' : 'text-text-muted'
         }`}>
@@ -173,8 +173,8 @@ const NflWeeklyScoring = ({ leagueId }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <span className={`text-2xl font-bold ${
-              team.weekRank === 1 ? 'text-yellow-400' :
-              team.weekRank <= 3 ? 'text-emerald-400' : 'text-text-primary'
+              team.weekRank === 1 ? 'text-crown' :
+              team.weekRank <= 3 ? 'text-field' : 'text-text-primary'
             }`}>
               #{team.weekRank}
             </span>
@@ -186,7 +186,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold font-display text-emerald-400">
+            <p className="text-2xl font-bold font-display text-field">
               {team.totalPoints?.toFixed(1)}
             </p>
             <p className="text-xs text-text-muted">fantasy pts</p>
@@ -260,7 +260,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                 onClick={() => setWeekNumber(w)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   weekNumber === w
-                    ? 'bg-emerald-500 text-text-primary'
+                    ? 'bg-field-bright text-text-primary'
                     : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary'
                 }`}
               >
@@ -322,7 +322,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                           key={team.teamId}
                           className={`rounded-lg transition-colors ${
                             isUser
-                              ? 'bg-emerald-500/10 border border-emerald-500/30'
+                              ? 'bg-field-bright/10 border border-field-bright/30'
                               : 'bg-[var(--bg-alt)] hover:bg-[var(--surface-alt)]'
                           }`}
                         >
@@ -331,16 +331,16 @@ const NflWeeklyScoring = ({ leagueId }) => {
                             className="flex items-center gap-3 p-3 cursor-pointer"
                           >
                             <span className={`text-lg font-bold w-7 text-center ${
-                              team.weekRank === 1 ? 'text-yellow-400' :
-                              team.weekRank === 2 ? 'text-gray-300' :
+                              team.weekRank === 1 ? 'text-crown' :
+                              team.weekRank === 2 ? 'text-gray-400 dark:text-gray-300' :
                               team.weekRank === 3 ? 'text-amber-500' : 'text-text-muted'
                             }`}>
                               {team.weekRank}
                             </span>
                             <div className="flex-1 min-w-0">
-                              <p className={`font-medium truncate ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
+                              <p className={`font-medium truncate ${isUser ? 'text-field' : 'text-text-primary'}`}>
                                 {team.teamName}
-                                {isUser && <span className="text-xs ml-1 text-emerald-400/60">(You)</span>}
+                                {isUser && <span className="text-xs ml-1 text-field/60">(You)</span>}
                               </p>
                             </div>
                             <div className="text-right">
@@ -378,7 +378,7 @@ const NflWeeklyScoring = ({ leagueId }) => {
                                           </span>
                                         )}
                                         <span className="flex-1 text-text-primary truncate">{ps.playerName}</span>
-                                        <span className="font-bold text-emerald-400 w-12 text-right">{(ps.points || 0).toFixed(1)}</span>
+                                        <span className="font-bold text-field w-12 text-right">{(ps.points || 0).toFixed(1)}</span>
                                       </div>
                                       {statLine && (
                                         <p className="text-[9px] text-text-muted mt-0.5 ml-9 truncate">{statLine}</p>
@@ -409,21 +409,21 @@ const NflWeeklyScoring = ({ leagueId }) => {
                           >
                             <div className="flex items-center gap-3">
                               <div className="flex-1 text-right">
-                                <p className={`font-medium text-sm truncate ${homeWon ? 'text-emerald-400' : 'text-text-primary'}`}>
+                                <p className={`font-medium text-sm truncate ${homeWon ? 'text-field' : 'text-text-primary'}`}>
                                   {m.homeTeam?.name}
                                 </p>
                               </div>
                               <div className="flex items-center gap-2 px-3">
-                                <span className={`text-lg font-bold font-mono ${homeWon ? 'text-emerald-400' : 'text-text-primary'}`}>
+                                <span className={`text-lg font-bold font-mono ${homeWon ? 'text-field' : 'text-text-primary'}`}>
                                   {m.homeScore?.toFixed(1) || '0.0'}
                                 </span>
                                 <span className="text-text-muted text-xs">vs</span>
-                                <span className={`text-lg font-bold font-mono ${awayWon ? 'text-emerald-400' : 'text-text-primary'}`}>
+                                <span className={`text-lg font-bold font-mono ${awayWon ? 'text-field' : 'text-text-primary'}`}>
                                   {m.awayScore?.toFixed(1) || '0.0'}
                                 </span>
                               </div>
                               <div className="flex-1">
-                                <p className={`font-medium text-sm truncate ${awayWon ? 'text-emerald-400' : 'text-text-primary'}`}>
+                                <p className={`font-medium text-sm truncate ${awayWon ? 'text-field' : 'text-text-primary'}`}>
                                   {m.awayTeam?.name}
                                 </p>
                               </div>

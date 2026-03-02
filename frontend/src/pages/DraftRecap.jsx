@@ -4,19 +4,19 @@ import Button from '../components/common/Button'
 import { useDraftRecap } from '../hooks/useDraftHistory'
 
 const gradeColors = {
-  'A+': 'text-green-400', A: 'text-green-400', 'A-': 'text-green-400',
+  'A+': 'text-field', A: 'text-field', 'A-': 'text-field',
   'B+': 'text-blue-400', B: 'text-blue-400', 'B-': 'text-blue-400',
-  'C+': 'text-yellow-400', C: 'text-yellow-400', 'C-': 'text-yellow-400',
-  'D+': 'text-orange-400', D: 'text-orange-400', 'D-': 'text-orange-400',
-  F: 'text-red-400',
+  'C+': 'text-crown', C: 'text-crown', 'C-': 'text-crown',
+  'D+': 'text-blaze', D: 'text-blaze', 'D-': 'text-blaze',
+  F: 'text-live-red',
 }
 
 const gradeBgColors = {
-  'A+': 'bg-green-500/20', A: 'bg-green-500/20', 'A-': 'bg-green-500/20',
+  'A+': 'bg-field-bright/20', A: 'bg-field-bright/20', 'A-': 'bg-field-bright/20',
   'B+': 'bg-blue-500/20', B: 'bg-blue-500/20', 'B-': 'bg-blue-500/20',
-  'C+': 'bg-yellow-500/20', C: 'bg-yellow-500/20', 'C-': 'bg-yellow-500/20',
+  'C+': 'bg-crown/20', C: 'bg-crown/20', 'C-': 'bg-crown/20',
   'D+': 'bg-orange-500/20', D: 'bg-orange-500/20', 'D-': 'bg-orange-500/20',
-  F: 'bg-red-500/20',
+  F: 'bg-live-red/20',
 }
 
 const DraftRecap = () => {
@@ -35,7 +35,7 @@ const DraftRecap = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="text-center p-8">
-          <p className="text-red-400 mb-4">{error || 'Draft not found'}</p>
+          <p className="text-live-red mb-4">{error || 'Draft not found'}</p>
           <Link to="/draft/history"><Button>Back to History</Button></Link>
         </Card>
       </div>
@@ -89,18 +89,18 @@ const DraftRecap = () => {
                     {userGrade.bestPick && (
                       <div>
                         <span className="text-text-muted">Best pick: </span>
-                        <span className="text-green-400">{userGrade.bestPick.playerName} ({userGrade.bestPick.grade})</span>
+                        <span className="text-field">{userGrade.bestPick.playerName} ({userGrade.bestPick.grade})</span>
                       </div>
                     )}
                     {userGrade.worstPick && (
                       <div>
                         <span className="text-text-muted">Worst pick: </span>
-                        <span className="text-red-400">{userGrade.worstPick.playerName} ({userGrade.worstPick.grade})</span>
+                        <span className="text-live-red">{userGrade.worstPick.playerName} ({userGrade.worstPick.grade})</span>
                       </div>
                     )}
                     <div>
                       <span className="text-text-muted">Total value: </span>
-                      <span className={userGrade.totalValue >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      <span className={userGrade.totalValue >= 0 ? 'text-field' : 'text-live-red'}>
                         {userGrade.totalValue >= 0 ? '+' : ''}{userGrade.totalValue}
                       </span>
                     </div>
@@ -123,7 +123,7 @@ const DraftRecap = () => {
                       {pick.headshotUrl ? (
                         <img src={pick.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-dark-tertiary flex items-center justify-center text-xs text-text-muted">
+                        <div className="w-8 h-8 rounded-full bg-[var(--card-bg)] flex items-center justify-center text-xs text-text-muted">
                           {pick.countryFlag || '?'}
                         </div>
                       )}
@@ -132,7 +132,7 @@ const DraftRecap = () => {
                         <p className="text-text-muted text-xs">
                           Pick #{pick.pickNumber} · Rank #{pick.playerRank || '—'}
                           {pg.adpDiff != null && (
-                            <span className={`ml-2 ${pg.adpDiff > 0 ? 'text-green-400' : pg.adpDiff < 0 ? 'text-red-400' : 'text-text-muted'}`}>
+                            <span className={`ml-2 ${pg.adpDiff > 0 ? 'text-field' : pg.adpDiff < 0 ? 'text-live-red' : 'text-text-muted'}`}>
                               {pg.adpDiff > 0 ? 'Steal' : pg.adpDiff < -5 ? 'Reach' : ''}
                             </span>
                           )}
@@ -141,7 +141,7 @@ const DraftRecap = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       {pg.adpDiff != null && (
-                        <span className={`text-xs ${pg.adpDiff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <span className={`text-xs ${pg.adpDiff >= 0 ? 'text-field' : 'text-live-red'}`}>
                           {pg.adpDiff >= 0 ? '+' : ''}{pg.adpDiff}
                         </span>
                       )}
@@ -223,7 +223,7 @@ const DraftRecap = () => {
                       <p className="text-text-muted text-xs">Score: {grade.overallScore}</p>
                     </div>
                     <div className="text-right text-sm">
-                      <p className={grade.totalValue >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      <p className={grade.totalValue >= 0 ? 'text-field' : 'text-live-red'}>
                         {grade.totalValue >= 0 ? '+' : ''}{grade.totalValue}
                       </p>
                       <p className="text-text-muted text-xs">value</p>
@@ -239,7 +239,7 @@ const DraftRecap = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {userGrade.sleepers?.length > 0 && (
                 <Card>
-                  <h3 className="text-sm font-semibold text-green-400 mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-field mb-3 flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                     </svg>
@@ -249,7 +249,7 @@ const DraftRecap = () => {
                     {userGrade.sleepers.map(s => (
                       <div key={s.pickNumber} className="flex items-center justify-between text-sm">
                         <span className="text-text-primary">{s.playerName}</span>
-                        <span className="text-green-400">R{s.round} · +{s.adpDiff}</span>
+                        <span className="text-field">R{s.round} · +{s.adpDiff}</span>
                       </div>
                     ))}
                   </div>
@@ -257,7 +257,7 @@ const DraftRecap = () => {
               )}
               {userGrade.reaches?.length > 0 && (
                 <Card>
-                  <h3 className="text-sm font-semibold text-red-400 mb-3 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-live-red mb-3 flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -267,7 +267,7 @@ const DraftRecap = () => {
                     {userGrade.reaches.map(r => (
                       <div key={r.pickNumber} className="flex items-center justify-between text-sm">
                         <span className="text-text-primary">{r.playerName}</span>
-                        <span className="text-red-400">R{r.round} · {r.adpDiff}</span>
+                        <span className="text-live-red">R{r.round} · {r.adpDiff}</span>
                       </div>
                     ))}
                   </div>

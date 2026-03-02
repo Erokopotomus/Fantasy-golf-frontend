@@ -27,7 +27,7 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
 
   const sportBadge = board?.sport === 'nfl'
     ? <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-100 dark:bg-orange/20 text-orange-700 dark:text-orange">NFL</span>
-    : <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">Golf</span>
+    : <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-field-bright/20 text-emerald-700 dark:text-field">Golf</span>
 
   const saveStatus = isSaving
     ? <span className="text-xs text-amber-400 animate-pulse">Saving...</span>
@@ -93,14 +93,14 @@ export default function BoardHeader({ board, entryCount, isSaving, lastSaved, on
 
         {showDeleteConfirm ? (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-red-400">Delete?</span>
-            <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-300 font-medium">Yes</button>
+            <span className="text-xs text-live-red">Delete?</span>
+            <button onClick={handleDelete} className="text-xs text-live-red hover:text-red-300 font-medium">Yes</button>
             <button onClick={() => setShowDeleteConfirm(false)} className="text-xs text-text-primary/40 hover:text-text-primary/60">No</button>
           </div>
         ) : (
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="p-1.5 text-text-primary/30 hover:text-red-400 transition-colors rounded hover:bg-[var(--surface-alt)]"
+            className="p-1.5 text-text-primary/30 hover:text-live-red transition-colors rounded hover:bg-[var(--surface-alt)]"
             title="Delete board"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

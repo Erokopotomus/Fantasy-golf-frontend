@@ -12,11 +12,11 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
 
   const getPositionColor = (pos) => {
     const num = getPositionValue(pos)
-    if (num === 1) return 'bg-yellow-400'
+    if (num === 1) return 'bg-crown'
     if (num <= 3) return 'bg-gold'
-    if (num <= 10) return 'bg-green-500'
+    if (num <= 10) return 'bg-field-bright'
     if (num <= 25) return 'bg-blue-400'
-    return 'bg-dark-border'
+    return 'bg-[var(--card-border)]'
   }
 
   const hasFormData = (recentForm || []).filter(p => p !== 'CUT' && p !== 'WD' && p !== 'DQ').length >= 2
@@ -50,7 +50,7 @@ const PlayerFormChart = ({ recentForm, tournamentHistory }) => {
 
       {/* Recent Tournaments */}
       {tournamentHistory && tournamentHistory.length > 0 && (
-        <div className="border-t border-dark-border pt-4">
+        <div className="border-t border-[var(--card-border)] pt-4">
           <h5 className="text-xs font-semibold text-text-muted mb-2">Last 5 Tournaments</h5>
           <div className="space-y-2">
             {tournamentHistory.slice(0, 5).map((t, index) => (

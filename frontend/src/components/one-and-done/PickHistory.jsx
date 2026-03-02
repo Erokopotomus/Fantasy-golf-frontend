@@ -1,20 +1,19 @@
 import Card from '../common/Card'
+import EmptyState from '../common/EmptyState'
 
 const PickHistory = ({ picks = [], tiers = [] }) => {
   const tierColors = [
-    { bg: 'bg-yellow-400/10', text: 'text-yellow-400' },
+    { bg: 'bg-crown/10', text: 'text-crown' },
     { bg: 'bg-purple-400/10', text: 'text-purple-400' },
     { bg: 'bg-blue-400/10', text: 'text-blue-400' },
-    { bg: 'bg-green-400/10', text: 'text-green-400' },
+    { bg: 'bg-field/10', text: 'text-field' },
   ]
 
   if (picks.length === 0) {
     return (
       <Card>
         <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Pick History</h3>
-        <div className="text-center py-8 text-text-muted">
-          No picks made yet
-        </div>
+        <EmptyState icon="trophy" title="No picks made yet" message="Your one-and-done selections will appear here." />
       </Card>
     )
   }
@@ -43,7 +42,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
           return (
             <div
               key={index}
-              className="flex items-center gap-4 p-4 bg-dark-tertiary rounded-lg"
+              className="flex items-center gap-4 p-4 bg-[var(--card-bg)] rounded-lg"
             >
               {/* Tournament Number */}
               <div className="text-2xl font-bold font-display text-text-muted w-8 text-center">
@@ -76,7 +75,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
       </div>
 
       {/* Summary */}
-      <div className="mt-4 pt-4 border-t border-dark-border">
+      <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold font-display text-text-primary">{picks.length}</p>
@@ -89,7 +88,7 @@ const PickHistory = ({ picks = [], tiers = [] }) => {
             <p className="text-xs text-text-muted">Avg Points</p>
           </div>
           <div>
-            <p className="text-2xl font-bold font-display text-yellow-400">
+            <p className="text-2xl font-bold font-display text-crown">
               {picks.filter(p => p.tier === 1).length}
             </p>
             <p className="text-xs text-text-muted">Tier 1 Used</p>

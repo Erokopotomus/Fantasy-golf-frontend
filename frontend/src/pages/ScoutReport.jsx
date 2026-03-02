@@ -100,9 +100,9 @@ const ScoutReport = () => {
                 <span className="text-text-primary/30">#{a.boardRank}</span>
                 {a.tags?.map(t => (
                   <span key={t} className={`text-[10px] px-1 rounded ${
-                    t === 'Target' ? 'bg-emerald-500/20 text-emerald-400' :
+                    t === 'Target' ? 'bg-field-bright/20 text-field' :
                     t === 'Sleeper' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-red-500/20 text-red-400'
+                    'bg-live-red/20 text-live-red'
                   }`}>{t}</span>
                 ))}
               </span>

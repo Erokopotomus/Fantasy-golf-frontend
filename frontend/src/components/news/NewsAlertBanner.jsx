@@ -32,7 +32,7 @@ const NewsAlertBanner = () => {
   }
 
   return (
-    <div className="relative bg-gradient-to-r from-red-600/20 to-orange-600/20 border border-red-500/30 rounded-lg p-3">
+    <div className="relative bg-gradient-to-r from-red-600/20 to-orange-600/20 border border-live-red/30 rounded-lg p-3">
       {/* Close button */}
       <button
         onClick={() => setIsVisible(false)}

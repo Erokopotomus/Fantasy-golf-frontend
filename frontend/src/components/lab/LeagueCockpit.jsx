@@ -79,7 +79,7 @@ export default function LeagueCockpit({ leagues = [], boards = [], currentTourna
               className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-text-primary/50 bg-[var(--surface)] border border-[var(--card-border)] rounded-md hover:text-gold hover:border-gold/30 transition-colors"
             >
               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                b.sport === 'nfl' ? 'bg-orange' : 'bg-emerald-400'
+                b.sport === 'nfl' ? 'bg-orange' : 'bg-field'
               }`} />
               {b.name}
             </Link>
@@ -116,7 +116,7 @@ export default function LeagueCockpit({ leagues = [], boards = [], currentTourna
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 ${
-                    sport === 'nfl' ? 'bg-orange-100 dark:bg-orange/20 text-orange-700 dark:text-orange' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                    sport === 'nfl' ? 'bg-orange-100 dark:bg-orange/20 text-orange-700 dark:text-orange' : 'bg-emerald-100 dark:bg-field-bright/20 text-emerald-700 dark:text-field'
                   }`}>
                     {sport}
                   </span>
@@ -198,7 +198,7 @@ export default function LeagueCockpit({ leagues = [], boards = [], currentTourna
                     className="inline-flex items-center gap-1.5 text-[11px] font-medium text-text-primary/50 hover:text-gold transition-colors min-w-0"
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      b.sport === 'nfl' ? 'bg-orange' : 'bg-emerald-400'
+                      b.sport === 'nfl' ? 'bg-orange' : 'bg-field'
                     }`} />
                     <span className="truncate">{b.name}</span>
                   </Link>

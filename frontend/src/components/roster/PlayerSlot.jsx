@@ -12,8 +12,8 @@ const PlayerSlot = ({
 }) => {
   if (!player) {
     return (
-      <div className="flex items-center gap-4 p-4 bg-dark-tertiary rounded-lg border-2 border-dashed border-dark-border">
-        <div className="w-12 h-12 bg-dark-primary rounded-lg flex items-center justify-center">
+      <div className="flex items-center gap-4 p-4 bg-[var(--card-bg)] rounded-lg border-2 border-dashed border-[var(--card-border)]">
+        <div className="w-12 h-12 bg-[var(--bg)] rounded-lg flex items-center justify-center">
           <svg className="w-6 h-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -31,15 +31,15 @@ const PlayerSlot = ({
     <div className={`
       flex items-center gap-4 p-4 rounded-lg transition-all
       ${slotType === 'active'
-        ? 'bg-dark-secondary border border-gold/30'
-        : 'bg-dark-tertiary border border-dark-border'
+        ? 'bg-[var(--surface)] border border-gold/30'
+        : 'bg-[var(--card-bg)] border border-[var(--card-border)]'
       }
     `}>
       <button
         className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
         onClick={() => onView?.(player)}
       >
-        <div className="w-12 h-12 bg-dark-primary rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="w-12 h-12 bg-[var(--bg)] rounded-lg flex items-center justify-center flex-shrink-0">
           <span className="text-2xl">{player.countryFlag}</span>
         </div>
         <div className="flex-1 min-w-0">
@@ -58,7 +58,7 @@ const PlayerSlot = ({
       {player.tournamentStatus && (
         <div className="text-right hidden sm:block">
           <p className={`font-bold ${
-            player.tournamentStatus.position === '1st' ? 'text-yellow-400' :
+            player.tournamentStatus.position === '1st' ? 'text-crown' :
             player.tournamentStatus.score < 0 ? 'text-gold' : 'text-text-primary'
           }`}>
             {player.tournamentStatus.position}
@@ -85,7 +85,7 @@ const PlayerSlot = ({
             size="sm"
             variant="ghost"
             onClick={() => onDrop(player)}
-            className="text-red-400 hover:text-red-300"
+            className="text-live-red hover:text-red-300"
           >
             Drop
           </Button>

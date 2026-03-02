@@ -137,7 +137,7 @@ const ScoringSettings = ({ settings, onChange }) => {
           </div>
           <div className="bg-[var(--surface)] rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">SG</p>
-            <p className="text-xl font-bold font-display text-yellow-400">{preview.strokesGained}</p>
+            <p className="text-xl font-bold font-display text-crown">{preview.strokesGained}</p>
           </div>
           <div className="bg-gold/10 border border-gold/30 rounded-lg p-3 text-center">
             <p className="text-text-muted text-xs mb-1">Total</p>

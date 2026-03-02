@@ -38,22 +38,22 @@ const PlayerProjection = ({ projection }) => {
   const projectedPct = range > 0 ? ((projected - floor) / range) * 100 : 50
 
   const trendUp = trend > 0
-  const trendColor = trendUp ? 'text-gold' : trend < 0 ? 'text-red-400' : 'text-text-secondary'
+  const trendColor = trendUp ? 'text-gold' : trend < 0 ? 'text-live-red' : 'text-text-secondary'
   const trendArrow = trendUp ? '\u2191' : trend < 0 ? '\u2193' : '\u2192'
 
   // Consistency color
   const getConsistencyColor = (val) => {
     if (val >= 75) return 'text-gold'
-    if (val >= 50) return 'text-yellow-400'
-    if (val >= 25) return 'text-orange-400'
-    return 'text-red-400'
+    if (val >= 50) return 'text-crown'
+    if (val >= 25) return 'text-blaze'
+    return 'text-live-red'
   }
 
   const getConsistencyBarColor = (val) => {
     if (val >= 75) return 'bg-gold'
-    if (val >= 50) return 'bg-yellow-500'
+    if (val >= 50) return 'bg-crown'
     if (val >= 25) return 'bg-orange-500'
-    return 'bg-red-500'
+    return 'bg-live-red'
   }
 
   return (
@@ -72,12 +72,12 @@ const PlayerProjection = ({ projection }) => {
           <span>Floor: {floor.toFixed(1)}</span>
           <span>Ceiling: {ceiling.toFixed(1)}</span>
         </div>
-        <div className="relative h-3 bg-dark-primary rounded-full overflow-hidden">
+        <div className="relative h-3 bg-[var(--bg)] rounded-full overflow-hidden">
           {/* Full range background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/30 via-yellow-500/30 to-green-500/30 rounded-full" />
+          <div className="absolute inset-0 bg-gradient-to-r from-live-red/30 via-crown/30 to-field-bright/30 rounded-full" />
           {/* Projected marker */}
           <div
-            className="absolute top-0 h-full w-1.5 bg-dark-tertiary rounded-full shadow-lg"
+            className="absolute top-0 h-full w-1.5 bg-[var(--card-bg)] rounded-full shadow-lg"
             style={{ left: `${Math.min(Math.max(projectedPct, 2), 98)}%`, transform: 'translateX(-50%)' }}
           />
         </div>
@@ -86,7 +86,7 @@ const PlayerProjection = ({ projection }) => {
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3">
         {/* Trend */}
-        <div className="bg-dark-primary rounded-lg p-3 text-center">
+        <div className="bg-[var(--bg)] rounded-lg p-3 text-center">
           <p className={`text-lg font-bold ${trendColor}`}>
             {trendArrow} {Math.abs(trend).toFixed(1)}%
           </p>
@@ -94,7 +94,7 @@ const PlayerProjection = ({ projection }) => {
         </div>
 
         {/* Consistency */}
-        <div className="bg-dark-primary rounded-lg p-3 text-center">
+        <div className="bg-[var(--bg)] rounded-lg p-3 text-center">
           <p className={`text-lg font-bold ${getConsistencyColor(consistency)}`}>
             {consistency.toFixed(0)}
           </p>
@@ -102,7 +102,7 @@ const PlayerProjection = ({ projection }) => {
         </div>
 
         {/* Recent Avg */}
-        <div className="bg-dark-primary rounded-lg p-3 text-center">
+        <div className="bg-[var(--bg)] rounded-lg p-3 text-center">
           <p className="text-lg font-bold font-display text-text-primary">{recentAvg.toFixed(1)}</p>
           <p className="text-xs text-text-muted">Recent Avg</p>
         </div>
@@ -114,7 +114,7 @@ const PlayerProjection = ({ projection }) => {
           <span>Consistency</span>
           <span className={getConsistencyColor(consistency)}>{consistency.toFixed(0)}/100</span>
         </div>
-        <div className="h-2 bg-dark-primary rounded-full overflow-hidden">
+        <div className="h-2 bg-[var(--bg)] rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full ${getConsistencyBarColor(consistency)} transition-all duration-500`}
             style={{ width: `${consistency}%` }}

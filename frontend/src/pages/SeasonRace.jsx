@@ -26,7 +26,7 @@ const TourBadge = ({ tour }) => {
   if (!tour) return null
   const colors = {
     PGA: 'bg-blue-500/15 text-blue-400 border-blue-400/20',
-    LIV: 'bg-red-500/15 text-red-400 border-red-400/20',
+    LIV: 'bg-live-red/15 text-live-red border-live-red/20',
     DP: 'bg-sky-500/15 text-sky-400 border-sky-400/20',
   }
   const key = tour.toUpperCase().startsWith('LIV') ? 'LIV' : tour.toUpperCase().startsWith('DP') ? 'DP' : 'PGA'
@@ -74,11 +74,11 @@ const SortHeader = ({ field, sortBy, sortDir, onSort, children, tip, align = 'ce
 // ── SG color helper ─────────────────────────────────────────────────────────
 const sgColor = (val) => {
   if (val == null) return 'text-text-muted'
-  if (val >= 1.5) return 'text-emerald-400 font-bold'
-  if (val >= 0.5) return 'text-emerald-400'
+  if (val >= 1.5) return 'text-field font-bold'
+  if (val >= 0.5) return 'text-field'
   if (val >= 0) return 'text-text-primary'
-  if (val >= -0.5) return 'text-orange-400'
-  return 'text-red-400'
+  if (val >= -0.5) return 'text-blaze'
+  return 'text-live-red'
 }
 
 const sgFmt = (val) => val != null ? (val >= 0 ? '+' : '') + val.toFixed(2) : '—'
@@ -97,9 +97,9 @@ const FormChips = ({ form = [] }) => {
           <span
             key={i}
             className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-              isCut ? 'bg-red-500/10 text-red-400' :
+              isCut ? 'bg-live-red/10 text-live-red' :
               isWin ? 'bg-gold/20 text-gold font-bold' :
-              isTop5 ? 'bg-emerald-500/15 text-emerald-400' :
+              isTop5 ? 'bg-field-bright/15 text-field' :
               isTop10 ? 'bg-sky-500/10 text-sky-400' :
               'bg-[var(--stone)] text-text-muted'
             }`}
@@ -125,7 +125,7 @@ const PlayerCell = ({ player, onClick }) => (
       )}
       <div className="min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold text-text-primary group-hover:text-emerald-400 transition-colors truncate">
+          <span className="text-sm font-semibold text-text-primary group-hover:text-field transition-colors truncate">
             {player.name}
           </span>
           <span className="text-xs">{player.countryFlag || flag(player.country)}</span>
@@ -361,7 +361,7 @@ const SeasonRace = () => {
                   onClick={() => { setTourFilter(tf.key); setPage(1) }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     tourFilter === tf.key
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-field-bright/15 text-field border border-field-bright/30'
                       : 'bg-[var(--surface)] text-text-muted border border-[var(--card-border)] hover:text-text-primary'
                   }`}
                 >
@@ -398,7 +398,7 @@ const SeasonRace = () => {
                           {p.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                       )}
-                      <p className="text-xs font-semibold text-text-primary group-hover:text-emerald-400 transition-colors truncate">
+                      <p className="text-xs font-semibold text-text-primary group-hover:text-field transition-colors truncate">
                         {p.name?.split(' ').pop()}
                       </p>
                       <p className="text-[10px] font-mono text-text-muted mt-0.5">
@@ -589,7 +589,7 @@ const SeasonRace = () => {
                                 <td className={`p-2.5 text-center text-sm font-mono ${p.wins ? 'text-gold font-bold' : 'text-text-muted'}`}>
                                   {p.wins || 0}
                                 </td>
-                                <td className={`p-2.5 text-center text-sm font-mono ${p.top5s ? 'text-emerald-400' : 'text-text-muted'}`}>
+                                <td className={`p-2.5 text-center text-sm font-mono ${p.top5s ? 'text-field' : 'text-text-muted'}`}>
                                   {p.top5s || 0}
                                 </td>
                                 <td className={`p-2.5 text-center text-sm font-mono ${p.top10s ? 'text-sky-400' : 'text-text-muted'}`}>

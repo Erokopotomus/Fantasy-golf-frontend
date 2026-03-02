@@ -2,8 +2,8 @@ const ScoreChangeAnimation = ({ type, show }) => {
   if (!show) return null
 
   const config = {
-    eagle: { icon: '🦅', color: 'text-yellow-400', bg: 'bg-yellow-400/20', label: 'Eagle!' },
-    birdie: { icon: '🐦', color: 'text-red-400', bg: 'bg-red-400/20', label: 'Birdie' },
+    eagle: { icon: '🦅', color: 'text-crown', bg: 'bg-crown/20', label: 'Eagle!' },
+    birdie: { icon: '🐦', color: 'text-live-red', bg: 'bg-live-red/20', label: 'Birdie' },
     bogey: { icon: '➕', color: 'text-blue-400', bg: 'bg-blue-400/20', label: 'Bogey' },
     double: { icon: '➕➕', color: 'text-purple-400', bg: 'bg-purple-400/20', label: 'Double' },
   }

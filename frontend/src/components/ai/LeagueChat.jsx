@@ -30,6 +30,7 @@ function getSuggestions(pageContext) {
 
 export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -114,19 +115,28 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
   return (
     <>
       {/* Floating Button — bottom-left to avoid FloatingCaptureButton on bottom-right */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-20 left-4 md:bottom-6 md:left-6 z-40 w-12 h-12 rounded-full bg-purple-600 text-text-primary shadow-lg shadow-purple-600/20 hover:bg-purple-500 hover:scale-105 transition-all flex items-center justify-center group"
-          title="Ask about your league"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-          <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-[var(--surface)] border border-[var(--card-border)] text-[10px] font-medium text-text-primary/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            League Intel
-          </span>
-        </button>
+      {!isOpen && !isDismissed && (
+        <div className="fixed bottom-24 left-4 md:bottom-6 md:left-6 z-40 flex items-center gap-1">
+          <button
+            onClick={() => setIsOpen(true)}
+            className="w-12 h-12 rounded-full bg-purple-600 text-text-primary shadow-lg shadow-purple-600/20 hover:bg-purple-500 hover:scale-105 transition-all flex items-center justify-center group"
+            title="Ask about your league"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-[var(--surface)] border border-[var(--card-border)] text-[10px] font-medium text-text-primary/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              League Intel
+            </span>
+          </button>
+          <button
+            onClick={() => setIsDismissed(true)}
+            className="w-5 h-5 rounded-full bg-[var(--surface)] border border-[var(--card-border)] text-text-muted hover:text-text-primary flex items-center justify-center text-xs md:hidden"
+            title="Dismiss"
+          >
+            ×
+          </button>
+        </div>
       )}
 
       {/* Backdrop */}
@@ -247,7 +257,7 @@ export default function LeagueChat({ leagueId, leagueName, pageContext = 'home' 
             )}
 
             {error && (
-              <p className="text-[10px] text-red-400 text-center">{error}</p>
+              <p className="text-[10px] text-live-red text-center">{error}</p>
             )}
 
             <div ref={messagesEndRef} />

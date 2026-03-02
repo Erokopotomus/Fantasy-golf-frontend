@@ -18,7 +18,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                   team.id === userTeamId
                     ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
                     : currentPick?.teamId === team.id
-                      ? 'bg-yellow-500/20 text-yellow-400'
+                      ? 'bg-crown/20 text-crown'
                       : 'bg-[var(--bg-alt)] text-text-muted'
                 }`}
               >
@@ -74,7 +74,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                           ? 'bg-gold/25 ring-2 ring-inset ring-gold'
                           : pick
                             ? pick.playerRank <= 10
-                              ? isUserTeamCell ? 'bg-yellow-500/20' : 'bg-yellow-500/12'
+                              ? isUserTeamCell ? 'bg-crown/20' : 'bg-crown/12'
                               : pick.playerRank <= 25
                                 ? isUserTeamCell ? 'bg-gold/18' : 'bg-gold/10'
                                 : isUserTeamCell ? 'bg-gold/10' : round % 2 === 1 ? 'bg-[var(--surface)]' : 'bg-[var(--bg-alt)]'
@@ -85,7 +85,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                         <div className="text-center w-full truncate px-0.5">
                           <div className="flex items-center justify-center gap-0.5">
                             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                              pick.playerRank <= 10 ? 'bg-yellow-400' :
+                              pick.playerRank <= 10 ? 'bg-crown' :
                               pick.playerRank <= 25 ? 'bg-gold' :
                               pick.playerRank <= 40 ? 'bg-blue-400' :
                               'bg-[var(--card-border)]'

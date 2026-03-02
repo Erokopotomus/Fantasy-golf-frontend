@@ -1,10 +1,10 @@
 // Small pill badge showing the tier label with tier-specific color
 
 const TIER_STYLES = {
-  ELITE:      { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30' },
-  VETERAN:    { bg: 'bg-gray-300/20', text: 'text-gray-300', border: 'border-gray-400/30' },
-  COMPETITOR: { bg: 'bg-orange-400/20', text: 'text-orange-300', border: 'border-orange-400/30' },
-  CONTENDER:  { bg: 'bg-green-400/20', text: 'text-green-400', border: 'border-green-400/30' },
+  ELITE:      { bg: 'bg-crown/20', text: 'text-crown', border: 'border-crown/30' },
+  VETERAN:    { bg: 'bg-gray-300/20', text: 'text-gray-400 dark:text-gray-300', border: 'border-gray-400/30' },
+  COMPETITOR: { bg: 'bg-blaze/20', text: 'text-orange-300', border: 'border-blaze/30' },
+  CONTENDER:  { bg: 'bg-field/20', text: 'text-field', border: 'border-field/30' },
   DEVELOPING: { bg: 'bg-[var(--bg-alt)]', text: 'text-text-primary/60', border: 'border-[var(--card-border)]' },
   ROOKIE:     { bg: 'bg-[var(--bg-alt)]', text: 'text-text-primary/40', border: 'border-[var(--card-border)]' },
   UNRANKED:   { bg: 'bg-[var(--bg-alt)]', text: 'text-text-primary/30', border: 'border-[var(--card-border)]' },

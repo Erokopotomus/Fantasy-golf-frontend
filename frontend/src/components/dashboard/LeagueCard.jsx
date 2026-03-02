@@ -17,8 +17,8 @@ const draftTypeMap = {
 }
 
 const sportColors = {
-  GOLF: { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/20', accent: 'border-l-green-500' },
-  NFL: { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/20', accent: 'border-l-orange-500' },
+  GOLF: { bg: 'bg-field-bright/15', text: 'text-field', border: 'border-field-bright/20', accent: 'border-l-field-bright' },
+  NFL: { bg: 'bg-orange-500/15', text: 'text-blaze', border: 'border-orange-500/20', accent: 'border-l-orange-500' },
 }
 
 const sportEmojis = {
@@ -71,7 +71,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           </h3>
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className={`text-[10px] font-mono px-1.5 py-px rounded-full ${
-              isSnakeType ? 'bg-[var(--crown)]/15 text-[var(--crown)]' : 'bg-orange-500/15 text-orange-400'
+              isSnakeType ? 'bg-[var(--crown)]/15 text-[var(--crown)]' : 'bg-orange-500/15 text-blaze'
             }`}>
               {draftLabel}
             </span>
@@ -88,9 +88,9 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
         {userRank ? (
           <div className="text-right flex-shrink-0">
             <p className={`text-lg font-mono font-bold leading-tight ${
-              userRank === 1 ? 'text-yellow-400' :
-              userRank === 2 ? 'text-gray-300' :
-              userRank === 3 ? 'text-amber-600' : 'text-text-secondary'
+              userRank === 1 ? 'text-crown' :
+              userRank === 2 ? 'text-gray-400 dark:text-gray-300' :
+              userRank === 3 ? 'text-amber-700 dark:text-amber-500' : 'text-text-secondary'
             }`}>
               {userRank === 1 ? '1st' : userRank === 2 ? '2nd' : userRank === 3 ? '3rd' : `${userRank}th`}
             </p>
@@ -98,7 +98,7 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
           </div>
         ) : (
           <span className={`px-2 py-1 rounded-md text-[10px] font-semibold flex-shrink-0 ${
-            isPreDraft ? 'bg-yellow-500/15 text-yellow-400' : 'bg-[var(--crown)]/15 text-[var(--crown)]'
+            isPreDraft ? 'bg-crown/15 text-crown' : 'bg-[var(--crown)]/15 text-[var(--crown)]'
           }`}>
             {isPreDraft ? 'Pre-Draft' : 'Active'}
           </span>
@@ -154,9 +154,9 @@ const LeagueCard = ({ league, onView, onManageLineup }) => {
               >
                 <div className="flex items-center gap-1.5">
                   <span className={`w-4 text-center font-semibold ${
-                    idx === 0 ? 'text-yellow-400' :
-                    idx === 1 ? 'text-gray-300' :
-                    idx === 2 ? 'text-amber-600' : 'text-text-muted'
+                    idx === 0 ? 'text-crown' :
+                    idx === 1 ? 'text-gray-400 dark:text-gray-300' :
+                    idx === 2 ? 'text-amber-700 dark:text-amber-500' : 'text-text-muted'
                   }`}>
                     {idx + 1}
                   </span>

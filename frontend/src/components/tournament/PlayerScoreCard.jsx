@@ -20,9 +20,9 @@ const ScoreCell = ({ score, par }) => {
   if (diff <= -2) {
     return (
       <span className="inline-flex items-center justify-center w-7 h-7 relative">
-        <span className="absolute inset-0 rounded-full border-2 border-yellow-400" />
-        <span className="absolute inset-[3px] rounded-full border-2 border-yellow-400" />
-        <span className="text-yellow-400 font-bold text-[11px]">{numText}</span>
+        <span className="absolute inset-0 rounded-full border-2 border-crown" />
+        <span className="absolute inset-[3px] rounded-full border-2 border-crown" />
+        <span className="text-crown font-bold text-[11px]">{numText}</span>
       </span>
     )
   }
@@ -31,8 +31,8 @@ const ScoreCell = ({ score, par }) => {
   if (diff === -1) {
     return (
       <span className="inline-flex items-center justify-center w-7 h-7 relative">
-        <span className="absolute inset-0 rounded-full border-2 border-emerald-400" />
-        <span className="text-emerald-400 font-semibold text-[11px]">{numText}</span>
+        <span className="absolute inset-0 rounded-full border-2 border-field" />
+        <span className="text-field font-semibold text-[11px]">{numText}</span>
       </span>
     )
   }
@@ -50,8 +50,8 @@ const ScoreCell = ({ score, par }) => {
   if (diff === 1) {
     return (
       <span className="inline-flex items-center justify-center w-7 h-7 relative">
-        <span className="absolute inset-0 rounded-sm border-2 border-red-400" />
-        <span className="text-red-400 font-semibold text-[11px]">{numText}</span>
+        <span className="absolute inset-0 rounded-sm border-2 border-live-red" />
+        <span className="text-live-red font-semibold text-[11px]">{numText}</span>
       </span>
     )
   }
@@ -59,9 +59,9 @@ const ScoreCell = ({ score, par }) => {
   // Double bogey or worse — double square
   return (
     <span className="inline-flex items-center justify-center w-7 h-7 relative">
-      <span className="absolute inset-0 rounded-sm border-2 border-red-500" />
-      <span className="absolute inset-[3px] rounded-sm border-2 border-red-500" />
-      <span className="text-red-500 font-bold text-[11px]">{numText}</span>
+      <span className="absolute inset-0 rounded-sm border-2 border-live-red" />
+      <span className="absolute inset-[3px] rounded-sm border-2 border-live-red" />
+      <span className="text-live-red font-bold text-[11px]">{numText}</span>
     </span>
   )
 }
@@ -124,12 +124,12 @@ const PlayerScoreCard = ({ player, onClose }) => {
               Pos: <span className="text-text-primary font-semibold">{player.position}</span>
             </span>
             <span>
-              Total: <span className={`font-semibold ${parseInt(player.score) < 0 ? 'text-emerald-400' : parseInt(player.score) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
+              Total: <span className={`font-semibold ${parseInt(player.score) < 0 ? 'text-field' : parseInt(player.score) > 0 ? 'text-live-red' : 'text-text-primary'}`}>
                 {formatScore(player.score)}
               </span>
             </span>
             <span>
-              Today: <span className={`font-semibold ${parseInt(player.today) < 0 ? 'text-emerald-400' : parseInt(player.today) > 0 ? 'text-red-400' : 'text-text-primary'}`}>
+              Today: <span className={`font-semibold ${parseInt(player.today) < 0 ? 'text-field' : parseInt(player.today) > 0 ? 'text-live-red' : 'text-text-primary'}`}>
                 {formatScore(player.today)}
               </span>
             </span>
@@ -142,20 +142,20 @@ const PlayerScoreCard = ({ player, onClose }) => {
         <div className="mb-4 p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-text-muted uppercase tracking-wide">Fantasy Points</span>
-            <span className="text-lg font-bold font-display text-emerald-400">{player.fantasyPoints || 0}</span>
+            <span className="text-lg font-bold font-display text-field">{player.fantasyPoints || 0}</span>
           </div>
           {breakdown && (
             <div className="grid grid-cols-2 gap-1.5 text-xs">
               {breakdown.position != null && (
                 <div className="flex justify-between px-2 py-1 rounded bg-[var(--surface)]">
                   <span className="text-text-muted">Position</span>
-                  <span className="text-emerald-400 font-medium">+{breakdown.position}</span>
+                  <span className="text-field font-medium">+{breakdown.position}</span>
                 </div>
               )}
               {breakdown.holeScoring != null && (
                 <div className="flex justify-between px-2 py-1 rounded bg-[var(--surface)]">
                   <span className="text-text-muted">Hole Scoring</span>
-                  <span className={`font-medium ${breakdown.holeScoring >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`font-medium ${breakdown.holeScoring >= 0 ? 'text-field' : 'text-live-red'}`}>
                     {breakdown.holeScoring >= 0 ? '+' : ''}{breakdown.holeScoring}
                   </span>
                 </div>
@@ -163,7 +163,7 @@ const PlayerScoreCard = ({ player, onClose }) => {
               {breakdown.bonuses != null && breakdown.bonuses > 0 && (
                 <div className="flex justify-between px-2 py-1 rounded bg-[var(--surface)]">
                   <span className="text-text-muted">Bonuses</span>
-                  <span className="text-yellow-400 font-medium">+{breakdown.bonuses}</span>
+                  <span className="text-crown font-medium">+{breakdown.bonuses}</span>
                 </div>
               )}
               {breakdown.strokesGained != null && breakdown.strokesGained > 0 && (
@@ -176,9 +176,9 @@ const PlayerScoreCard = ({ player, onClose }) => {
           )}
           {/* Stat line */}
           <div className="flex gap-3 mt-2 text-[11px] text-text-muted">
-            {player.eagles > 0 && <span><span className="text-yellow-400">{player.eagles}</span> Eagles</span>}
-            {player.birdies > 0 && <span><span className="text-emerald-400">{player.birdies}</span> Birdies</span>}
-            {player.bogeys > 0 && <span><span className="text-red-400">{player.bogeys}</span> Bogeys</span>}
+            {player.eagles > 0 && <span><span className="text-crown">{player.eagles}</span> Eagles</span>}
+            {player.birdies > 0 && <span><span className="text-field">{player.birdies}</span> Birdies</span>}
+            {player.bogeys > 0 && <span><span className="text-live-red">{player.bogeys}</span> Bogeys</span>}
           </div>
         </div>
       )}
@@ -263,14 +263,14 @@ const PlayerScoreCard = ({ player, onClose }) => {
       <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-[var(--card-border)] text-[10px]">
         <div className="flex items-center gap-1.5">
           <span className="inline-flex items-center justify-center w-5 h-5 relative">
-            <span className="absolute inset-0 rounded-full border-[1.5px] border-yellow-400" />
-            <span className="absolute inset-[2px] rounded-full border-[1.5px] border-yellow-400" />
+            <span className="absolute inset-0 rounded-full border-[1.5px] border-crown" />
+            <span className="absolute inset-[2px] rounded-full border-[1.5px] border-crown" />
           </span>
           <span className="text-text-secondary">Eagle</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-flex items-center justify-center w-5 h-5 relative">
-            <span className="absolute inset-0 rounded-full border-[1.5px] border-emerald-400" />
+            <span className="absolute inset-0 rounded-full border-[1.5px] border-field" />
           </span>
           <span className="text-text-secondary">Birdie</span>
         </div>
@@ -280,14 +280,14 @@ const PlayerScoreCard = ({ player, onClose }) => {
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-flex items-center justify-center w-5 h-5 relative">
-            <span className="absolute inset-0 rounded-sm border-[1.5px] border-red-400" />
+            <span className="absolute inset-0 rounded-sm border-[1.5px] border-live-red" />
           </span>
           <span className="text-text-secondary">Bogey</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-flex items-center justify-center w-5 h-5 relative">
-            <span className="absolute inset-0 rounded-sm border-[1.5px] border-red-500" />
-            <span className="absolute inset-[2px] rounded-sm border-[1.5px] border-red-500" />
+            <span className="absolute inset-0 rounded-sm border-[1.5px] border-live-red" />
+            <span className="absolute inset-[2px] rounded-sm border-[1.5px] border-live-red" />
           </span>
           <span className="text-text-secondary">Double+</span>
         </div>

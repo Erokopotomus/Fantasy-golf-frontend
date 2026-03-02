@@ -225,7 +225,7 @@ class ApiService {
     return this.request(`/nfl/leagues/${leagueId}/weekly-scores/${weekNumber}`)
   }
 
-  // Prove It — NFL Props & Picks
+  // Prove It — NFL Predictions & Calls
   async getNflProps(season, week) {
     return this.request(`/nfl/props/${season}/${week}`)
   }

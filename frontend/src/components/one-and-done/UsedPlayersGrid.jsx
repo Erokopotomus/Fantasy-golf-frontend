@@ -39,7 +39,7 @@ const UsedPlayersGrid = ({ usedPlayers = [], picks = [], allPlayers = [] }) => {
           return (
             <div
               key={playerId}
-              className="bg-dark-tertiary rounded-lg p-3 opacity-60"
+              className="bg-[var(--card-bg)] rounded-lg p-3 opacity-60"
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">{player?.countryFlag || '🏌️'}</span>
@@ -47,21 +47,21 @@ const UsedPlayersGrid = ({ usedPlayers = [], picks = [], allPlayers = [] }) => {
                   <p className="text-sm font-medium text-text-primary truncate">
                     {player?.name || 'Unknown'}
                   </p>
-                  <p className="text-xs text-text-muted">#{player?.rank || '?'}</p>
+                  <p className="text-xs text-text-muted font-mono">#{player?.rank || '?'}</p>
                 </div>
               </div>
 
               {pick && (
-                <div className="pt-2 border-t border-dark-border">
+                <div className="pt-2 border-t border-[var(--card-border)]">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-text-muted">{pick.position}</span>
-                    <span className="text-gold font-medium">+{pick.points}</span>
+                    <span className="text-gold font-medium font-mono">+{pick.points}</span>
                   </div>
                 </div>
               )}
 
               <div className="mt-2 flex items-center justify-center">
-                <span className="text-xs text-red-400 font-medium px-2 py-0.5 bg-red-400/10 rounded">
+                <span className="text-xs text-live-red font-medium px-2 py-0.5 bg-live-red/10 rounded">
                   USED
                 </span>
               </div>

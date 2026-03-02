@@ -26,7 +26,7 @@ const CreateLeague = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
@@ -73,8 +73,8 @@ const CreateLeague = () => {
 
           {/* Error Display */}
           {error && (
-            <Card className="mb-6 border-red-500 bg-red-500/10">
-              <div className="flex items-center gap-3 text-red-500">
+            <Card className="mb-6 border-live-red bg-live-red/10">
+              <div className="flex items-center gap-3 text-live-red">
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

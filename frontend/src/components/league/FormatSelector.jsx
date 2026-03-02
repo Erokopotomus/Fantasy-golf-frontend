@@ -64,7 +64,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
               className={`relative p-4 rounded-lg border-2 text-left transition-all ${
                 selectedFormat === format.id
                   ? 'border-gold bg-gold/10'
-                  : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                  : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-text-muted'
               }`}
             >
               {selectedFormat === format.id && (
@@ -84,7 +84,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
               {format.features && (
                 <div className="mt-2 flex flex-wrap gap-1">
                   {format.features.slice(0, 2).map((feature, i) => (
-                    <span key={i} className="text-xs px-2 py-0.5 bg-dark-primary rounded-full text-text-muted">
+                    <span key={i} className="text-xs px-2 py-0.5 bg-[var(--bg)] rounded-full text-text-muted">
                       {feature}
                     </span>
                   ))}
@@ -110,7 +110,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
                 className={`p-4 rounded-lg border-2 text-left transition-all ${
                   selectedDraftType === draftType.id
                     ? 'border-gold bg-gold/10'
-                    : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                    : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-text-muted'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -134,7 +134,7 @@ const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onS
 
       {/* One-and-Done notice */}
       {selectedFormat === 'one-and-done' && (
-        <div className="bg-dark-tertiary rounded-lg p-4 border border-dark-border">
+        <div className="bg-[var(--card-bg)] rounded-lg p-4 border border-[var(--card-border)]">
           <div className="flex items-start gap-3">
             <div className="text-gold mt-0.5">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

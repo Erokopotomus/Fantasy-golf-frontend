@@ -6,7 +6,7 @@ import NewsCard from '../components/news/NewsCard'
 const StatBar = ({ label, value, rank, suffix = '', of = 32, invert = false }) => {
   // invert: lower rank is better (e.g., points allowed)
   const pct = rank ? ((of - rank + 1) / of) * 100 : 0
-  const color = rank <= 5 ? 'bg-emerald-500' : rank <= 16 ? 'bg-gold' : rank <= 26 ? 'bg-amber-500' : 'bg-red-500'
+  const color = rank <= 5 ? 'bg-field-bright' : rank <= 16 ? 'bg-gold' : rank <= 26 ? 'bg-amber-500' : 'bg-live-red'
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
@@ -53,7 +53,7 @@ export default function NflTeamDetail() {
     load()
   }, [abbr])
 
-  if (loading) return <div className="max-w-6xl mx-auto px-4 pt-20 pb-8"><div className="text-center py-20 text-text-primary/30">Loading...</div></div>
+  if (loading) return <div className="max-w-6xl mx-auto px-4 pt-20 pb-8"><div className="text-center py-20"><div className="w-8 h-8 border-[3px] border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-3" /><p className="text-text-muted text-sm">Loading team...</p></div></div>
   if (!team) return <div className="max-w-6xl mx-auto px-4 pt-20 pb-8"><div className="text-center py-20 text-text-primary/30">Team not found</div></div>
 
   // Group roster by position
@@ -197,7 +197,7 @@ export default function NflTeamDetail() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       {isFinal ? (
-                        <span className={`font-mono text-sm font-bold ${won ? 'text-green-400' : lost ? 'text-red-400' : 'text-text-primary/40'}`}>
+                        <span className={`font-mono text-sm font-bold ${won ? 'text-field' : lost ? 'text-live-red' : 'text-text-primary/40'}`}>
                           {won ? 'W' : lost ? 'L' : 'T'} {teamScore}-{oppScore}
                         </span>
                       ) : (

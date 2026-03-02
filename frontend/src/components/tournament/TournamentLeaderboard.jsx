@@ -14,29 +14,29 @@ const ScoreCell = ({ score, par }) => {
   const diff = score - par
   if (diff <= -2) return (
     <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-full border-2 border-yellow-400" />
-      <span className="absolute inset-[3px] rounded-full border-2 border-yellow-400" />
-      <span className="text-yellow-400 font-bold text-[11px] relative z-10">{score}</span>
+      <span className="absolute inset-0 rounded-full border-2 border-crown" />
+      <span className="absolute inset-[3px] rounded-full border-2 border-crown" />
+      <span className="text-crown font-bold text-[11px] relative z-10">{score}</span>
     </span>
   )
   if (diff === -1) return (
     <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-full border-2 border-emerald-400" />
-      <span className="text-emerald-400 font-semibold text-[11px] relative z-10">{score}</span>
+      <span className="absolute inset-0 rounded-full border-2 border-field" />
+      <span className="text-field font-semibold text-[11px] relative z-10">{score}</span>
     </span>
   )
   if (diff === 0) return <span className="inline-flex items-center justify-center w-7 h-7 text-text-primary text-[11px] font-mono">{score}</span>
   if (diff === 1) return (
     <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-sm border-2 border-red-400" />
-      <span className="text-red-400 font-semibold text-[11px] relative z-10">{score}</span>
+      <span className="absolute inset-0 rounded-sm border-2 border-live-red" />
+      <span className="text-live-red font-semibold text-[11px] relative z-10">{score}</span>
     </span>
   )
   return (
     <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-sm border-2 border-red-500" />
-      <span className="absolute inset-[3px] rounded-sm border-2 border-red-500" />
-      <span className="text-red-500 font-bold text-[11px] relative z-10">{score}</span>
+      <span className="absolute inset-0 rounded-sm border-2 border-live-red" />
+      <span className="absolute inset-[3px] rounded-sm border-2 border-live-red" />
+      <span className="text-live-red font-bold text-[11px] relative z-10">{score}</span>
     </span>
   )
 }
@@ -152,15 +152,15 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
   const getScoreColor = (score) => {
     if (score == null || score === '') return 'text-text-secondary'
     const num = parseInt(score)
-    if (num < 0) return 'text-emerald-400'
-    if (num > 0) return 'text-red-400'
+    if (num < 0) return 'text-field'
+    if (num > 0) return 'text-live-red'
     return 'text-text-primary'
   }
 
   const getMedalStyle = (pos) => {
     const p = typeof pos === 'string' ? parseInt(pos) : pos
-    if (p === 1) return { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30', icon: '&#127942;' }
-    if (p === 2) return { bg: 'bg-gray-300/10', text: 'text-gray-300', border: 'border-gray-400/30', icon: '&#129352;' }
+    if (p === 1) return { bg: 'bg-crown/15', text: 'text-crown', border: 'border-crown/30', icon: '&#127942;' }
+    if (p === 2) return { bg: 'bg-gray-300/10', text: 'text-gray-400 dark:text-gray-300', border: 'border-gray-400/30', icon: '&#129352;' }
     if (p === 3) return { bg: 'bg-amber-600/10', text: 'text-amber-500', border: 'border-amber-600/30', icon: '&#129353;' }
     return null
   }
@@ -192,9 +192,9 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     const isExpanded = expandedPlayer === player.id
 
     const changeGlow = hasRecentChange
-      ? recentChange.type === 'eagle' ? 'ring-1 ring-yellow-400/40'
-        : recentChange.type === 'birdie' ? 'ring-1 ring-emerald-400/30'
-        : recentChange.type === 'bogey' || recentChange.type === 'double' ? 'ring-1 ring-red-400/30'
+      ? recentChange.type === 'eagle' ? 'ring-1 ring-crown/40'
+        : recentChange.type === 'birdie' ? 'ring-1 ring-field/30'
+        : recentChange.type === 'bogey' || recentChange.type === 'double' ? 'ring-1 ring-live-red/30'
         : ''
       : ''
 
@@ -224,9 +224,9 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             group grid items-center gap-2 px-3 py-2.5 cursor-pointer transition-all duration-200
             ${showRounds ? 'grid-cols-[40px_1fr_52px_52px_52px_52px_52px_56px_64px]' : 'grid-cols-[40px_1fr_56px_48px_56px_64px]'}
             ${isExpanded
-              ? 'bg-emerald-500/10 border-l-2 border-l-emerald-500'
+              ? 'bg-field-bright/10 border-l-2 border-l-field-bright'
               : medal ? `${medal.bg} border-l-2 ${medal.border}` : 'border-l-2 border-transparent'}
-            ${!isExpanded && isMyPlayer ? 'bg-emerald-500/8 border-l-emerald-400' : ''}
+            ${!isExpanded && isMyPlayer ? 'bg-field-bright/8 border-l-field' : ''}
             ${isCut ? 'opacity-50' : ''}
             ${hasRecentChange ? `bg-[var(--surface-alt)] ${changeGlow}` : ''}
             ${!isCut && !isExpanded ? 'hover:bg-[var(--surface-alt)]' : ''}
@@ -236,12 +236,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           {/* Position */}
           <div className={`text-center font-bold text-sm ${medal ? medal.text : 'text-text-secondary'}`}>
             {isCut ? (
-              <span className="text-red-400/70 text-xs font-medium">CUT</span>
+              <span className="text-live-red/70 text-xs font-medium">CUT</span>
             ) : (
               <div className="flex items-center justify-center gap-0.5">
                 <span>{player.position}</span>
                 {player.positionChange != null && player.positionChange !== 0 && (
-                  <span className={`text-[10px] ${player.positionChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`text-[10px] ${player.positionChange > 0 ? 'text-field' : 'text-live-red'}`}>
                     {player.positionChange > 0 ? '\u25B2' : '\u25BC'}
                   </span>
                 )}
@@ -267,16 +267,16 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className={`font-semibold text-sm truncate ${isMyPlayer ? 'text-emerald-400' : 'text-text-primary'}`}>
+                <span className={`font-semibold text-sm truncate ${isMyPlayer ? 'text-field' : 'text-text-primary'}`}>
                   {player.name}
                 </span>
                 {hasRecentChange && (
                   <span className={`
                     text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse
-                    ${recentChange.type === 'eagle' ? 'bg-yellow-500/20 text-yellow-400' : ''}
-                    ${recentChange.type === 'birdie' ? 'bg-emerald-500/20 text-emerald-400' : ''}
-                    ${recentChange.type === 'bogey' ? 'bg-red-500/20 text-red-400' : ''}
-                    ${recentChange.type === 'double' ? 'bg-red-500/20 text-red-400' : ''}
+                    ${recentChange.type === 'eagle' ? 'bg-crown/20 text-crown' : ''}
+                    ${recentChange.type === 'birdie' ? 'bg-field-bright/20 text-field' : ''}
+                    ${recentChange.type === 'bogey' ? 'bg-live-red/20 text-live-red' : ''}
+                    ${recentChange.type === 'double' ? 'bg-live-red/20 text-live-red' : ''}
                   `}>
                     {recentChange.type === 'eagle' ? 'EAGLE' : recentChange.type === 'birdie' ? 'BIRDIE' : recentChange.type === 'bogey' ? 'BOGEY' : 'DBL'}
                   </span>
@@ -285,13 +285,13 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               {/* Stat badges */}
               <div className="flex items-center gap-1.5 mt-0.5">
                 {isMyPlayer && (
-                  <span className="text-[10px] font-medium text-emerald-400/80 bg-emerald-500/10 px-1.5 rounded">MY TEAM</span>
+                  <span className="text-[10px] font-medium text-field/80 bg-field-bright/10 px-1.5 rounded">MY TEAM</span>
                 )}
                 {player.eagles > 0 && (
-                  <span className="text-[10px] text-yellow-400/80">{player.eagles}E</span>
+                  <span className="text-[10px] text-crown/80">{player.eagles}E</span>
                 )}
                 {player.birdies > 0 && (
-                  <span className="text-[10px] text-emerald-400/60">{player.birdies}B</span>
+                  <span className="text-[10px] text-field/60">{player.birdies}B</span>
                 )}
               </div>
             </div>
@@ -359,7 +359,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                     className={`
                       px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
                       ${isActive
-                        ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30'
+                        ? 'bg-field-bright/20 text-field ring-1 ring-field-bright/30'
                         : isReachable
                           ? 'bg-[var(--surface)] text-text-secondary hover:text-text-primary hover:bg-[var(--surface-alt)]'
                           : 'bg-[var(--bg-alt)] text-text-muted/40 cursor-not-allowed'}
@@ -367,7 +367,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                   >
                     R{r}
                     {hasScore && <span className="ml-1 opacity-70">({roundScore})</span>}
-                    {isCurrent && !hasScore && <span className="ml-1 text-yellow-400/70">*</span>}
+                    {isCurrent && !hasScore && <span className="ml-1 text-crown/70">*</span>}
                   </button>
                 )
               })}
@@ -387,7 +387,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               <div className="px-4 pb-3">
                 {loadingScorecard && !holeScores[player.id] && (
                   <div className="flex items-center gap-2 py-2 text-xs text-text-muted">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-500" />
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-field-bright" />
                     Loading scorecard...
                   </div>
                 )}
@@ -424,12 +424,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-text-primary">Round {expandedRound}</span>
                           {isInProgress && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 font-medium">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-crown/15 text-crown font-medium">
                               {player.thru > 0 ? `Thru ${player.thru}` : 'Not started'}
                             </span>
                           )}
                           {roundScore && !isCurrent && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400/80 font-medium">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-field-bright/10 text-field/80 font-medium">
                               Complete
                             </span>
                           )}
@@ -439,7 +439,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                             <span className={`text-sm font-bold ${getScoreColor(player.today)}`}>{formatScore(player.today)}</span>
                           )}
                           {roundScore && (
-                            <span className={`text-sm font-bold ${roundScore < front9Par + back9Par ? 'text-emerald-400' : roundScore > front9Par + back9Par ? 'text-red-400' : 'text-text-primary'}`}>
+                            <span className={`text-sm font-bold ${roundScore < front9Par + back9Par ? 'text-field' : roundScore > front9Par + back9Par ? 'text-live-red' : 'text-text-primary'}`}>
                               {roundScore} ({roundScore - (front9Par + back9Par) > 0 ? '+' : ''}{roundScore - (front9Par + back9Par)})
                             </span>
                           )}
@@ -469,8 +469,8 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                               <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{front9Par}</td>
                               <td className="p-1.5 bg-[var(--bg-alt)]"></td>
                             </tr>
-                            <tr className="border-t-2 border-emerald-500/30">
-                              <td className="p-1.5 text-left bg-[var(--surface)] text-emerald-400 text-[10px] font-bold">Score</td>
+                            <tr className="border-t-2 border-field-bright/30">
+                              <td className="p-1.5 text-left bg-[var(--surface)] text-field text-[10px] font-bold">Score</td>
                               {front9.map((h, i) => (
                                 <td key={i} className="p-0.5 text-center bg-[var(--surface)]">
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
@@ -506,8 +506,8 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                               <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{back9Par}</td>
                               <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{front9Par + back9Par}</td>
                             </tr>
-                            <tr className="border-t-2 border-emerald-500/30">
-                              <td className="p-1.5 text-left bg-[var(--surface)] text-emerald-400 text-[10px] font-bold">Score</td>
+                            <tr className="border-t-2 border-field-bright/30">
+                              <td className="p-1.5 text-left bg-[var(--surface)] text-field text-[10px] font-bold">Score</td>
                               {back9.map((h, i) => (
                                 <td key={i} className="p-0.5 text-center bg-[var(--surface)]">
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i + 9]} />
@@ -527,11 +527,11 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                       {/* Legend */}
                       {hasScores && (
                         <div className="flex items-center gap-3 mt-2 text-[9px] text-text-muted">
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-yellow-400" /> Eagle</div>
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-emerald-400" /> Birdie</div>
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-crown" /> Eagle</div>
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-field" /> Birdie</div>
                           <div className="flex items-center gap-1"><span className="text-text-secondary text-[10px]">—</span> Par</div>
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-red-400" /> Bogey</div>
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-red-500" /> Dbl+</div>
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-live-red" /> Bogey</div>
+                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-live-red" /> Dbl+</div>
                         </div>
                       )}
                     </>
@@ -544,12 +544,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             {player.probabilities && (
               <div className="px-4 pb-3 flex flex-wrap gap-2">
                 {player.probabilities.win != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-400 font-medium">
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-crown/10 text-crown font-medium">
                     Win {(player.probabilities.win * 100).toFixed(1)}%
                   </span>
                 )}
                 {player.probabilities.top5 != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-field-bright/10 text-field font-medium">
                     Top 5 {(player.probabilities.top5 * 100).toFixed(1)}%
                   </span>
                 )}
@@ -578,7 +578,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
         <div className="flex items-center gap-3">
           <h3 className="text-base font-bold text-text-primary tracking-tight">Leaderboard</h3>
           {cut != null && (
-            <span className="text-xs text-red-400/80 bg-red-500/10 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-xs text-live-red/80 bg-live-red/10 px-2 py-0.5 rounded-full font-medium">
               Cut {formatScore(cut)}
             </span>
           )}
@@ -594,7 +594,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="w-32 sm:w-40 pl-7 pr-2 py-1 text-xs rounded-full bg-[var(--bg-alt)] border border-[var(--card-border)] text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-32 sm:w-40 pl-7 pr-2 py-1 text-xs rounded-full bg-[var(--bg-alt)] border border-[var(--card-border)] text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-field-bright/50 focus:border-field-bright/50"
             />
             {search && (
               <button
@@ -610,7 +610,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           <button
             onClick={() => setShowRounds(!showRounds)}
             className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
-              showRounds ? 'bg-emerald-500/15 text-emerald-400' : 'bg-[var(--stone)] text-text-muted hover:text-text-primary'
+              showRounds ? 'bg-field-bright/15 text-field' : 'bg-[var(--stone)] text-text-muted hover:text-text-primary'
             }`}
           >
             Rounds
@@ -646,10 +646,10 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
         {/* Cut line */}
         {cutPlayers.length > 0 && (
-          <div className="flex items-center gap-3 px-4 py-2 bg-red-500/5 border-y border-red-500/20">
-            <div className="flex-1 h-px bg-red-500/30" />
-            <span className="text-xs font-bold text-red-400/80 uppercase tracking-widest">Projected Cut</span>
-            <div className="flex-1 h-px bg-red-500/30" />
+          <div className="flex items-center gap-3 px-4 py-2 bg-live-red/5 border-y border-live-red/20">
+            <div className="flex-1 h-px bg-live-red/30" />
+            <span className="text-xs font-bold text-live-red/80 uppercase tracking-widest">Projected Cut</span>
+            <div className="flex-1 h-px bg-live-red/30" />
           </div>
         )}
 

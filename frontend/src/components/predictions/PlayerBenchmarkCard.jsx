@@ -114,12 +114,12 @@ export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus,
       {totalVotes > 0 && (
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
-            <span className="text-emerald-400 font-mono">{Math.round(overPct)}% Over</span>
+            <span className="text-field font-mono">{Math.round(overPct)}% Over</span>
             <span className="text-rose-400 font-mono">{Math.round(underPct)}% Under</span>
           </div>
           <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden flex">
             <div
-              className="bg-emerald-500/70 transition-all duration-500"
+              className="bg-field-bright/70 transition-all duration-500"
               style={{ width: `${overPct}%` }}
             />
             <div
@@ -133,16 +133,16 @@ export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus,
       {/* Buttons or result */}
       {showSuccess ? (
         <div className="text-center py-2">
-          <span className="text-emerald-400 text-sm font-medium">Call submitted!</span>
+          <span className="text-field text-sm font-medium">Call submitted!</span>
         </div>
       ) : existingPrediction ? (
         <div className="text-center py-2">
           <span className="text-text-primary/60 text-sm">Your call: </span>
-          <span className={`font-mono font-bold text-sm ${userDirection === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <span className={`font-mono font-bold text-sm ${userDirection === 'over' ? 'text-field' : 'text-rose-400'}`}>
             {userDirection?.toUpperCase()}
           </span>
           {existingPrediction.outcome && existingPrediction.outcome !== 'PENDING' && (
-            <span className={`ml-2 text-xs font-mono ${existingPrediction.outcome === 'CORRECT' ? 'text-emerald-400' : existingPrediction.outcome === 'INCORRECT' ? 'text-rose-400' : 'text-text-primary/40'}`}>
+            <span className={`ml-2 text-xs font-mono ${existingPrediction.outcome === 'CORRECT' ? 'text-field' : existingPrediction.outcome === 'INCORRECT' ? 'text-rose-400' : 'text-text-primary/40'}`}>
               {existingPrediction.outcome === 'CORRECT' ? '✓' : existingPrediction.outcome === 'INCORRECT' ? '✗' : '—'}
             </span>
           )}
@@ -156,7 +156,7 @@ export default function PlayerBenchmarkCard({ player, eventId, tournamentStatus,
           <button
             onClick={() => handleSubmit('over')}
             disabled={submitting}
-            className="py-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm font-semibold hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
+            className="py-2.5 rounded-lg bg-field-bright/20 border border-field-bright/30 text-field text-sm font-semibold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
           >
             {submitting ? '...' : 'Over'}
           </button>

@@ -25,10 +25,10 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
       <Card>
         <div className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-dark-tertiary rounded w-1/3"></div>
+            <div className="h-6 bg-[var(--card-bg)] rounded w-1/3"></div>
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-24 bg-dark-tertiary rounded"></div>
+                <div key={i} className="h-24 bg-[var(--card-bg)] rounded"></div>
               ))}
             </div>
           </div>
@@ -41,7 +41,7 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
     return (
       <Card>
         <div className="p-6 text-center">
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-live-red mb-4">{error}</p>
           <button
             onClick={refetch}
             className="text-gold hover:underline"
@@ -56,7 +56,7 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
   return (
     <Card padding="none">
       {/* Header */}
-      <div className="p-4 border-b border-dark-border">
+      <div className="p-4 border-b border-[var(--card-border)]">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold font-display text-text-primary">{title}</h3>
           <button
@@ -82,7 +82,7 @@ const NewsFeed = ({ limit, showFilters = true, compact = false, title = 'Player 
                   whitespace-nowrap transition-colors
                   ${activeFilter === filter.id
                     ? 'bg-gold text-text-primary'
-                    : 'bg-dark-tertiary text-text-muted hover:bg-dark-border hover:text-text-primary'
+                    : 'bg-[var(--card-bg)] text-text-muted hover:bg-[var(--card-border)] hover:text-text-primary'
                   }
                 `}
               >

@@ -6,7 +6,7 @@ import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
 
 const TIER_COLORS = {
   rookie: 'bg-[var(--bg-alt)] text-text-primary/60',
-  contender: 'bg-green-500/20 text-green-400',
+  contender: 'bg-field-bright/20 text-field',
   sharp: 'bg-blue-500/20 text-blue-400',
   expert: 'bg-accent-gold/20 text-accent-gold',
   elite: 'bg-purple-500/20 text-purple-400',
@@ -55,9 +55,9 @@ const SOCIAL_LABELS = {
 }
 
 const OUTCOME_BADGE = {
-  CORRECT: { label: 'Correct', class: 'bg-green-500/20 text-green-400' },
-  INCORRECT: { label: 'Incorrect', class: 'bg-red-500/20 text-red-400' },
-  PUSH: { label: 'Push', class: 'bg-yellow-500/20 text-yellow-400' },
+  CORRECT: { label: 'Correct', class: 'bg-field-bright/20 text-field' },
+  INCORRECT: { label: 'Incorrect', class: 'bg-live-red/20 text-live-red' },
+  PUSH: { label: 'Push', class: 'bg-crown/20 text-crown' },
   VOIDED: { label: 'Voided', class: 'bg-[var(--bg-alt)] text-text-primary/40' },
 }
 
@@ -166,8 +166,8 @@ export default function PublicProfile() {
         {/* Quick Stats */}
         {primaryRep && (
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-            <StatBox label="Accuracy" value={formatPct(primaryRep.accuracyRate)} color="text-green-400" />
-            <StatBox label="Streak" value={primaryRep.streakCurrent || 0} color="text-orange-400" />
+            <StatBox label="Accuracy" value={formatPct(primaryRep.accuracyRate)} color="text-field" />
+            <StatBox label="Streak" value={primaryRep.streakCurrent || 0} color="text-blaze" />
             <StatBox label="Total Calls" value={primaryRep.totalPredictions || 0} />
             <StatBox
               label="Tier"

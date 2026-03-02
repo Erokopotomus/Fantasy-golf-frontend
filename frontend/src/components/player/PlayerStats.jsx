@@ -16,9 +16,9 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear, performances }) => {
   const getSGColor = (value) => {
     if (typeof value !== 'number') return 'text-text-muted'
     if (value > 0.5) return 'text-gold'
-    if (value > 0) return 'text-green-400'
-    if (value > -0.5) return 'text-yellow-400'
-    return 'text-red-400'
+    if (value > 0) return 'text-field'
+    if (value > -0.5) return 'text-crown'
+    return 'text-live-red'
   }
 
   const sgStats = stats ? [
@@ -92,14 +92,14 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear, performances }) => {
   const getCPIColor = (v) => {
     if (v == null) return 'text-text-muted'
     if (v > 1.5) return 'text-gold'
-    if (v > 0.5) return 'text-green-400'
-    if (v > -0.5) return 'text-yellow-400'
-    return 'text-red-400'
+    if (v > 0.5) return 'text-field'
+    if (v > -0.5) return 'text-crown'
+    return 'text-live-red'
   }
   const getFormColor = (v) => {
     if (v == null) return 'text-text-muted'
     if (v >= 80) return 'text-orange'
-    if (v >= 60) return 'text-yellow-400'
+    if (v >= 60) return 'text-crown'
     if (v >= 40) return 'text-blue-400'
     return 'text-blue-300'
   }
@@ -114,7 +114,7 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear, performances }) => {
     if (v == null) return 'text-text-muted'
     if (v > 0.5) return 'text-gold'
     if (v > -0.5) return 'text-text-secondary'
-    return 'text-red-400'
+    return 'text-live-red'
   }
   const getPressureLabel = (v) => {
     if (v == null) return '\u2014'
@@ -125,9 +125,9 @@ const PlayerStats = ({ player, clutchMetrics, selectedYear, performances }) => {
   const getFitColor = (v) => {
     if (v == null) return 'text-text-muted'
     if (v >= 85) return 'text-gold'
-    if (v >= 70) return 'text-green-400'
-    if (v >= 50) return 'text-yellow-400'
-    return 'text-red-400'
+    if (v >= 70) return 'text-field'
+    if (v >= 50) return 'text-crown'
+    return 'text-live-red'
   }
   const getFitLabel = (v) => {
     if (v == null) return null

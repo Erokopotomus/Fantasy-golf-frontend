@@ -204,7 +204,7 @@ const DraftDollars = () => {
               </div>
             )}
 
-            {formError && <p className="text-red-400 text-xs">{formError}</p>}
+            {formError && <p className="text-live-red text-xs">{formError}</p>}
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? 'Recording...' : 'Submit Transaction'}
             </Button>
@@ -238,8 +238,8 @@ const DraftDollars = () => {
                 const atMaxNext = maxBudget != null && account.nextYearBalance >= maxBudget
 
                 const getColor = (nearMin, nearMax, atMin, atMax) => {
-                  if (atMin || atMax) return 'text-red-400'
-                  if (nearMin || nearMax) return 'text-yellow-400'
+                  if (atMin || atMax) return 'text-live-red'
+                  if (nearMin || nearMax) return 'text-crown'
                   return 'text-text-primary'
                 }
 
@@ -310,7 +310,7 @@ const DraftDollars = () => {
                     <span className="font-mono font-bold text-gold">${tx.amount}</span>
                     <span className={`text-[10px] font-medium px-1.5 rounded ${
                       tx.yearType === 'current'
-                        ? 'bg-emerald-500/10 text-emerald-400'
+                        ? 'bg-field-bright/10 text-field'
                         : 'bg-purple-500/10 text-purple-400'
                     }`}>
                       {tx.yearType === 'current' ? 'Current' : 'Next Year'}

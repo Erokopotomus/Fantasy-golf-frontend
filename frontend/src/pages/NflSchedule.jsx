@@ -104,7 +104,7 @@ function GameCard({ game }) {
       {/* Status badge */}
       <div className="flex items-center justify-between mb-3">
         <span className={`text-xs font-mono font-bold uppercase ${
-          isFinal ? 'text-text-primary/30' : game.status === 'IN_PROGRESS' ? 'text-green-400' : 'text-text-primary/40'
+          isFinal ? 'text-text-primary/30' : game.status === 'IN_PROGRESS' ? 'text-field' : 'text-text-primary/40'
         }`}>
           {isFinal ? 'Final' : game.status === 'IN_PROGRESS' ? 'Live' : kickoff ? kickoff.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD'}
         </span>
@@ -159,7 +159,7 @@ function GameCard({ game }) {
           )}
           {game.totalLine != null && (
             <span className="text-text-primary/20 text-xs font-mono">
-              O/U: {game.totalLine}
+              Total: {game.totalLine}
             </span>
           )}
         </div>

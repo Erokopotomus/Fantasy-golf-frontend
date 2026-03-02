@@ -209,7 +209,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                   ? 'bg-gold text-text-primary'
                   : s < step
                   ? 'bg-gold/20 text-gold cursor-pointer hover:bg-gold/30'
-                  : 'bg-dark-tertiary text-text-muted'
+                  : 'bg-[var(--card-bg)] text-text-muted'
               }`}
             >
               {s < step ? (
@@ -221,7 +221,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
               )}
             </button>
             {s < 3 && (
-              <div className={`w-12 h-1 mx-1 ${s < step ? 'bg-gold/50' : 'bg-dark-tertiary'}`} />
+              <div className={`w-12 h-1 mx-1 ${s < step ? 'bg-gold/50' : 'bg-[var(--card-bg)]'}`} />
             )}
           </div>
         ))}
@@ -238,7 +238,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
           {/* Sport Selection */}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-3">
-              Sport <span className="text-red-500">*</span>
+              Sport <span className="text-live-red">*</span>
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -248,7 +248,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                   p-4 rounded-lg border-2 transition-all duration-300 text-left flex items-center gap-3
                   ${formData.sport === 'golf'
                     ? 'border-gold bg-gold/10'
-                    : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                    : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-text-muted'
                   }
                 `}
               >
@@ -265,7 +265,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                   p-4 rounded-lg border-2 transition-all duration-300 text-left flex items-center gap-3
                   ${formData.sport === 'nfl'
                     ? 'border-gold bg-gold/10'
-                    : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                    : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-text-muted'
                   }
                 `}
               >
@@ -301,7 +301,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
             {isNfl ? (
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Roster Size</label>
-                <div className="px-3 py-2.5 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-sm">
+                <div className="px-3 py-2.5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm">
                   17 players <span className="text-text-muted">(QB, 2 RB, 3 WR, TE, FLEX, K, DEF, 6 BN, IR)</span>
                 </div>
               </div>
@@ -335,7 +335,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                   type="checkbox"
                   checked={formData.allowWeeklyOverrides}
                   onChange={(e) => setFormData((prev) => ({ ...prev, allowWeeklyOverrides: e.target.checked }))}
-                  className="mt-1 rounded border-dark-border text-gold focus:ring-gold"
+                  className="mt-1 rounded border-[var(--card-border)] text-gold focus:ring-gold"
                 />
                 <div>
                   <span className="text-sm text-text-primary">Allow weekly roster adjustments</span>
@@ -348,7 +348,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
           {/* Scoring Type */}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-3">
-              Scoring System <span className="text-red-500">*</span>
+              Scoring System <span className="text-live-red">*</span>
             </label>
             {isNfl ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -361,7 +361,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                       p-4 rounded-lg border-2 transition-all duration-300 text-left
                       ${formData.scoringType === opt.key
                         ? 'border-gold bg-gold/10'
-                        : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                        : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-text-muted'
                       }
                     `}
                   >
@@ -387,7 +387,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                     p-4 rounded-lg border-2 transition-all duration-300 text-left
                     ${formData.scoringType === 'standard'
                       ? 'border-gold bg-gold/10'
-                      : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                      : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-text-muted'
                     }
                   `}
                 >
@@ -412,7 +412,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
                     p-4 rounded-lg border-2 transition-all duration-300 text-left
                     ${formData.scoringType === 'strokes-gained'
                       ? 'border-gold bg-gold/10'
-                      : 'border-dark-border bg-dark-tertiary hover:border-text-muted'
+                      : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-text-muted'
                     }
                   `}
                 >
@@ -478,7 +478,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
       {/* Step 3: Format-Specific Settings */}
       {step === 3 && (
         <div className="space-y-6">
-          <div className="flex items-center gap-3 p-4 bg-dark-tertiary rounded-lg border border-dark-border mb-6">
+          <div className="flex items-center gap-3 p-4 bg-[var(--card-bg)] rounded-lg border border-[var(--card-border)] mb-6">
             <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -493,7 +493,7 @@ const LeagueForm = ({ onSubmit, loading }) => {
           {renderFormatSettings()}
 
           {/* League Summary */}
-          <Card className="bg-dark-primary">
+          <Card className="bg-[var(--bg)]">
             <h3 className="text-text-primary font-medium mb-3">League Summary</h3>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>

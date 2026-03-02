@@ -25,8 +25,8 @@ class VaultErrorBoundary extends Component {
       return (
         <div className="min-h-screen pt-8 px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6">
-              <h2 className="text-red-400 font-bold text-lg mb-2">League Vault Error</h2>
+            <div className="bg-live-red/10 border border-live-red/30 rounded-lg p-6">
+              <h2 className="text-live-red font-bold text-lg mb-2">League Vault Error</h2>
               <p className="text-red-300 text-sm font-mono whitespace-pre-wrap break-all">
                 {this.state.error?.message || 'Unknown error'}
               </p>
@@ -64,10 +64,10 @@ function downloadCSV(filename, rows) {
 
 const PLAYOFF_LABELS = {
   champion: { text: 'Champion', color: 'text-accent-gold bg-accent-gold/20' },
-  runner_up: { text: 'Runner-Up', color: 'text-gray-300 bg-gray-500/20' },
+  runner_up: { text: 'Runner-Up', color: 'text-gray-400 dark:text-gray-300 bg-gray-500/20' },
   third_place: { text: '3rd Place', color: 'text-blue-400 bg-blue-500/20' },
   semifinal: { text: 'Semis', color: 'text-blue-400 bg-blue-500/20' },
-  playoffs: { text: 'Playoffs', color: 'text-green-400 bg-green-500/20' },
+  playoffs: { text: 'Playoffs', color: 'text-field bg-field-bright/20' },
   eliminated: { text: '', color: '' },
   missed: { text: '', color: '' },
 }
@@ -231,8 +231,8 @@ const SeasonCard = ({ year, teams, isCommissioner, onDeleteEntries, onEditSeason
                           <p className="text-xs text-text-secondary">{team.teamName}</p>
                         )}
                       </td>
-                      <td className="py-2 text-center font-mono text-green-400">{team.wins}</td>
-                      <td className="py-2 text-center font-mono text-red-400">{team.losses}</td>
+                      <td className="py-2 text-center font-mono text-field">{team.wins}</td>
+                      <td className="py-2 text-center font-mono text-live-red">{team.losses}</td>
                       <td className="py-2 text-center font-mono text-text-secondary">{team.ties || 0}</td>
                       <td className="py-2 text-right font-mono text-text-primary">{team.pointsFor?.toFixed(1)}</td>
                       <td className="py-2 text-right font-mono text-text-secondary">{team.pointsAgainst?.toFixed(1)}</td>
@@ -364,7 +364,7 @@ const HeadToHeadTab = ({ history }) => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-xs text-text-secondary font-mono mb-1">{ownerA}</p>
-                <p className={`text-3xl font-mono font-bold ${h2hData.winsA > h2hData.winsB ? 'text-green-400' : 'text-text-primary'}`}>
+                <p className={`text-3xl font-mono font-bold ${h2hData.winsA > h2hData.winsB ? 'text-field' : 'text-text-primary'}`}>
                   {h2hData.winsA}
                 </p>
                 <p className="text-xs text-text-secondary font-mono mt-1">{h2hData.totalPtsA.toFixed(1)} pts</p>
@@ -376,7 +376,7 @@ const HeadToHeadTab = ({ history }) => {
               </div>
               <div>
                 <p className="text-xs text-text-secondary font-mono mb-1">{ownerB}</p>
-                <p className={`text-3xl font-mono font-bold ${h2hData.winsB > h2hData.winsA ? 'text-green-400' : 'text-text-primary'}`}>
+                <p className={`text-3xl font-mono font-bold ${h2hData.winsB > h2hData.winsA ? 'text-field' : 'text-text-primary'}`}>
                   {h2hData.winsB}
                 </p>
                 <p className="text-xs text-text-secondary font-mono mt-1">{h2hData.totalPtsB.toFixed(1)} pts</p>
@@ -396,15 +396,15 @@ const HeadToHeadTab = ({ history }) => {
                   >
                     <span className="font-mono text-text-secondary w-20">{m.year} W{m.week}</span>
                     <div className="flex-1 flex items-center justify-center gap-4">
-                      <span className={`font-mono ${m.winner === ownerA ? 'text-green-400 font-bold' : 'text-text-primary'}`}>
+                      <span className={`font-mono ${m.winner === ownerA ? 'text-field font-bold' : 'text-text-primary'}`}>
                         {m.ptsA.toFixed(1)}
                       </span>
                       <span className="text-text-secondary text-xs">—</span>
-                      <span className={`font-mono ${m.winner === ownerB ? 'text-green-400 font-bold' : 'text-text-primary'}`}>
+                      <span className={`font-mono ${m.winner === ownerB ? 'text-field font-bold' : 'text-text-primary'}`}>
                         {m.ptsB.toFixed(1)}
                       </span>
                     </div>
-                    <span className={`text-xs font-mono w-20 text-right ${m.winner ? 'text-green-400' : 'text-text-secondary'}`}>
+                    <span className={`text-xs font-mono w-20 text-right ${m.winner ? 'text-field' : 'text-text-secondary'}`}>
                       {m.winner || 'TIE'}
                     </span>
                   </div>
@@ -997,10 +997,10 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
             </div>
           </div>
           {error && (
-            <p className="text-red-400 text-xs font-mono mt-2">{error}</p>
+            <p className="text-live-red text-xs font-mono mt-2">{error}</p>
           )}
           {parseError && (
-            <p className="text-red-400 text-xs font-mono mt-2">Screenshot parse failed: {parseError}</p>
+            <p className="text-live-red text-xs font-mono mt-2">Screenshot parse failed: {parseError}</p>
           )}
           {parseSummary && !parseError && (
             <p className="text-xs font-mono mt-2">
@@ -1192,7 +1192,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
                             </div>
                             <div className="flex items-center gap-2">
                               {isAuction ? (
-                                <span className="text-xs font-mono text-green-400 font-bold">
+                                <span className="text-xs font-mono text-field font-bold">
                                   ${pick.keeperPrice || 0} <span className="text-text-secondary">→</span> ${pick.cost}
                                   <span className="text-accent-gold ml-1">(+${pick.discount})</span>
                                 </span>
@@ -1284,7 +1284,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
               const bgClass = pick._unmatched
                 ? 'bg-amber-500/10 border border-amber-500/30'
                 : pick._isNew && changed
-                  ? 'bg-green-500/5 border border-green-500/20'
+                  ? 'bg-field-bright/5 border border-field-bright/20'
                   : changed
                     ? 'bg-accent-gold/5 border border-accent-gold/10'
                     : 'border border-transparent'
@@ -1383,7 +1383,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
                             min="0"
                             value={pick.keeperPrice}
                             onChange={(e) => updatePick(idx, 'keeperPrice', e.target.value)}
-                            className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded pl-5 pr-2 py-1 text-sm font-mono text-green-400 w-full"
+                            className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded pl-5 pr-2 py-1 text-sm font-mono text-field w-full"
                           />
                         </>
                       ) : (
@@ -1393,7 +1393,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
                   )}
                   <button
                     onClick={() => removePick(idx)}
-                    className="text-red-400 hover:text-red-300 text-sm font-mono transition-colors"
+                    className="text-live-red hover:text-red-300 text-sm font-mono transition-colors"
                     title="Remove pick"
                   >
                     &times;
@@ -1466,7 +1466,7 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
                           <span className="ml-2 text-xs font-mono text-text-secondary">{pick.position || resolvedPositions[pick.playerName]}</span>
                         )}
                         {pick.isKeeper && (
-                          <span className="ml-2 text-xs font-mono text-green-400">
+                          <span className="ml-2 text-xs font-mono text-field">
                             K{pick.keeperPrice ? ` $${pick.keeperPrice}` : ''}
                           </span>
                         )}
@@ -1712,8 +1712,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
       { label: 'Lowest Season Avg', value: lowestAvg ? lowestAvg.avg.toFixed(1) : '—', context: lowestAvg ? `${lowestAvg.teamName} · ${lowestAvg.year}` : '' },
       { label: 'Highest Weekly Score', value: highestWeek ? highestWeek.pts.toFixed(1) : '—', context: highestWeek ? `${highestWeek.year} Week ${highestWeek.week}` : '' },
       { label: 'Lowest Weekly Score', value: lowestWeek ? lowestWeek.pts.toFixed(1) : '—', context: lowestWeek ? `${lowestWeek.year} Week ${lowestWeek.week}` : '' },
-      { label: 'Biggest Win', value: biggestWin ? `+${biggestWin.margin.toFixed(1)}` : '—', context: biggestWin ? `vs ${biggestWin.opponent} · ${biggestWin.year} W${biggestWin.week} (${biggestWin.pf.toFixed(1)}-${biggestWin.pa.toFixed(1)})` : '', color: 'text-green-400' },
-      { label: 'Biggest Loss', value: biggestLoss ? biggestLoss.margin.toFixed(1) : '—', context: biggestLoss ? `vs ${biggestLoss.opponent} · ${biggestLoss.year} W${biggestLoss.week} (${biggestLoss.pf.toFixed(1)}-${biggestLoss.pa.toFixed(1)})` : '', color: 'text-red-400' },
+      { label: 'Biggest Win', value: biggestWin ? `+${biggestWin.margin.toFixed(1)}` : '—', context: biggestWin ? `vs ${biggestWin.opponent} · ${biggestWin.year} W${biggestWin.week} (${biggestWin.pf.toFixed(1)}-${biggestWin.pa.toFixed(1)})` : '', color: 'text-field' },
+      { label: 'Biggest Loss', value: biggestLoss ? biggestLoss.margin.toFixed(1) : '—', context: biggestLoss ? `vs ${biggestLoss.opponent} · ${biggestLoss.year} W${biggestLoss.week} (${biggestLoss.pf.toFixed(1)}-${biggestLoss.pa.toFixed(1)})` : '', color: 'text-live-red' },
     ]
 
     // d) H2H records vs all opponents
@@ -1849,8 +1849,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
   }, [selectedOwner, history])
 
   const RESULT_BADGE = {
-    W: 'bg-green-500/20 text-green-400',
-    L: 'bg-red-500/20 text-red-400',
+    W: 'bg-field-bright/20 text-field',
+    L: 'bg-live-red/20 text-live-red',
     T: 'bg-gray-500/20 text-gray-400',
   }
 
@@ -2048,8 +2048,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                             <span className={`ml-1.5 text-xs font-mono px-1 py-0.5 rounded ${playoff.color}`}>{playoff.text}</span>
                           )}
                         </td>
-                        <td className="py-2 text-center font-mono text-green-400">{s.wins}</td>
-                        <td className="py-2 text-center font-mono text-red-400">{s.losses}</td>
+                        <td className="py-2 text-center font-mono text-field">{s.wins}</td>
+                        <td className="py-2 text-center font-mono text-live-red">{s.losses}</td>
                         <td className="py-2 text-center font-mono text-text-secondary">{s.ties || '—'}</td>
                         <td className="py-2 text-right font-mono text-text-primary">{s.pf.toFixed(1)}</td>
                         <td className="py-2 text-right font-mono text-text-secondary">{s.pa.toFixed(1)}</td>
@@ -2061,8 +2061,8 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                   {/* Totals row */}
                   <tr className="border-t-2 border-accent-gold/30">
                     <td className="py-2 font-mono font-bold text-accent-gold" colSpan={3}>Career Totals</td>
-                    <td className="py-2 text-center font-mono font-bold text-green-400">{profileData.summary.totalW}</td>
-                    <td className="py-2 text-center font-mono font-bold text-red-400">{profileData.summary.totalL}</td>
+                    <td className="py-2 text-center font-mono font-bold text-field">{profileData.summary.totalW}</td>
+                    <td className="py-2 text-center font-mono font-bold text-live-red">{profileData.summary.totalL}</td>
                     <td className="py-2 text-center font-mono font-bold text-text-secondary">{profileData.summary.totalT || '—'}</td>
                     <td className="py-2 text-right font-mono font-bold text-text-primary">{profileData.summary.totalPF.toFixed(1)}</td>
                     <td className="py-2 text-right font-mono font-bold text-text-secondary">{profileData.summary.totalPA.toFixed(1)}</td>
@@ -2138,12 +2138,12 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                             <span className="ml-1.5 text-[9px] font-mono text-text-muted bg-[var(--surface)] px-1.5 py-0.5 rounded">FORMER</span>
                           )}
                         </td>
-                        <td className="py-2 text-center font-mono text-green-400">{r.w}</td>
-                        <td className="py-2 text-center font-mono text-red-400">{r.l}</td>
+                        <td className="py-2 text-center font-mono text-field">{r.w}</td>
+                        <td className="py-2 text-center font-mono text-live-red">{r.l}</td>
                         <td className="py-2 text-center font-mono text-text-secondary">{r.t || '—'}</td>
                         <td className="py-2 text-right font-mono text-text-primary">{r.pf.toFixed(1)}</td>
                         <td className="py-2 text-right font-mono text-text-secondary">{r.pa.toFixed(1)}</td>
-                        <td className={`py-2 text-right pr-2 font-mono font-bold ${r.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <td className={`py-2 text-right pr-2 font-mono font-bold ${r.margin >= 0 ? 'text-field' : 'text-live-red'}`}>
                           {r.margin >= 0 ? '+' : ''}{r.margin.toFixed(1)}
                         </td>
                       </tr>
@@ -2254,7 +2254,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                             <p className="text-sm font-display font-bold text-text-primary mt-0.5">
                               {draftProfile.signaturePicks.mostKeptPlayer.name}
                             </p>
-                            <p className="text-xs font-mono text-green-400">
+                            <p className="text-xs font-mono text-field">
                               Kept {draftProfile.signaturePicks.mostKeptPlayer.count}x
                             </p>
                           </div>
@@ -2439,7 +2439,7 @@ const OwnerProfileTab = ({ history, avatarMap = {}, isCommissioner, leagueId, on
                                         <span className="text-text-primary">{w.pf.toFixed(1)}</span>
                                         <span className="text-text-secondary">-</span>
                                         <span className="text-text-secondary">{w.pa.toFixed(1)}</span>
-                                        <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        <span className={`w-14 text-right font-bold ${w.margin >= 0 ? 'text-field' : 'text-live-red'}`}>
                                           {w.margin >= 0 ? '+' : ''}{w.margin.toFixed(1)}
                                         </span>
                                       </div>
@@ -2708,12 +2708,12 @@ const CATEGORY_LABELS = {
   standings: { label: 'Standings', color: 'bg-blue-500/20 text-blue-400' },
   records: { label: 'Records', color: 'bg-accent-gold/20 text-accent-gold' },
   awards: { label: 'Awards', color: 'bg-purple-500/20 text-purple-400' },
-  trophies: { label: 'Trophies', color: 'bg-yellow-500/20 text-yellow-400' },
-  draft_history: { label: 'Draft History', color: 'bg-green-500/20 text-green-400' },
+  trophies: { label: 'Trophies', color: 'bg-crown/20 text-crown' },
+  draft_history: { label: 'Draft History', color: 'bg-field-bright/20 text-field' },
   transactions: { label: 'Transactions', color: 'bg-cyan-500/20 text-cyan-400' },
   custom_stats: { label: 'Custom Stats', color: 'bg-pink-500/20 text-pink-400' },
-  punishments: { label: 'Punishments', color: 'bg-red-500/20 text-red-400' },
-  nicknames: { label: 'Nicknames', color: 'bg-orange-500/20 text-orange-400' },
+  punishments: { label: 'Punishments', color: 'bg-live-red/20 text-live-red' },
+  nicknames: { label: 'Nicknames', color: 'bg-orange-500/20 text-blaze' },
   other: { label: 'Other', color: 'bg-gray-500/20 text-gray-400' },
 }
 
@@ -2836,7 +2836,7 @@ const CustomDataTab = ({ leagueId }) => {
                       </span>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(item.id) }}
-                        className="text-text-secondary hover:text-red-400 text-xs"
+                        className="text-text-secondary hover:text-live-red text-xs"
                         title="Delete"
                       >
                         &#10005;
@@ -3026,7 +3026,7 @@ const AddSeasonModal = ({ leagueId, onClose, onAdded }) => {
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-live-red text-sm">{error}</p>
           )}
         </div>
 
@@ -3338,13 +3338,13 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                         return next
                       })
                     }}
-                    className={`text-xs font-mono px-2 py-0.5 rounded ${inactiveOwners.has(activeOwner) ? 'text-text-secondary bg-[var(--surface)]' : 'text-green-400 bg-green-500/10'}`}
+                    className={`text-xs font-mono px-2 py-0.5 rounded ${inactiveOwners.has(activeOwner) ? 'text-text-secondary bg-[var(--surface)]' : 'text-field bg-field-bright/10'}`}
                   >
                     {inactiveOwners.has(activeOwner) ? 'Inactive' : 'Active'}
                   </button>
                   <button
                     onClick={() => { if (confirm(`Remove ${activeOwner} and unassign all their names?`)) removeOwner(activeOwner) }}
-                    className="text-xs text-text-secondary hover:text-red-400"
+                    className="text-xs text-text-secondary hover:text-live-red"
                   >
                     Remove
                   </button>
@@ -3356,7 +3356,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
                   <span key={name} className="inline-flex items-center gap-1 bg-accent-gold/15 border border-accent-gold/30 px-2.5 py-1 rounded-lg text-xs font-mono text-accent-gold">
                     {name}
                     {nameToYears[name] && <span className="text-accent-gold/50 text-[9px]">{formatYearRanges(nameToYears[name])}</span>}
-                    <button onClick={() => unassignFromOwner(activeOwner, name)} className="text-accent-gold/50 hover:text-red-400 ml-0.5">&times;</button>
+                    <button onClick={() => unassignFromOwner(activeOwner, name)} className="text-accent-gold/50 hover:text-live-red ml-0.5">&times;</button>
                   </span>
                 ))}
               </div>
@@ -3427,7 +3427,7 @@ const ManageOwnersModal = ({ leagueId, allRawNames, nameToYears = {}, existingAl
           </div>
         </div>
 
-        {error && <p className="px-5 py-2 text-red-400 text-sm">{error}</p>}
+        {error && <p className="px-5 py-2 text-live-red text-sm">{error}</p>}
 
         <div className="p-5 border-t border-[var(--card-border)] bg-[var(--surface)] flex items-center justify-between">
           <span className="text-xs text-text-secondary font-mono">
@@ -3784,7 +3784,7 @@ const LeagueVault = () => {
       <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center py-16">
-            <p className="text-red-400 mb-4">{String(error)}</p>
+            <p className="text-live-red mb-4">{String(error)}</p>
             <Link to="/dashboard" className="text-accent-gold hover:text-accent-gold/80">Back to Dashboard</Link>
           </div>
         </main>
@@ -3933,26 +3933,26 @@ const LeagueVault = () => {
           {!healthLoading && health && health.seasonCount > 0 && health.overallStatus !== 'green' && (
             <div className={`mb-4 rounded-xl border p-4 ${
               health.overallStatus === 'green'
-                ? 'bg-green-500/5 border-green-500/20'
+                ? 'bg-field-bright/5 border-field-bright/20'
                 : health.overallStatus === 'yellow'
                   ? 'bg-accent-gold/5 border-accent-gold/20'
-                  : 'bg-red-500/5 border-red-500/20'
+                  : 'bg-live-red/5 border-live-red/20'
             }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {health.overallStatus === 'green' ? (
-                    <svg className="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-field flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   ) : (
-                    <svg className={`w-5 h-5 flex-shrink-0 ${health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-5 h-5 flex-shrink-0 ${health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-live-red'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                   )}
                   <div>
                     <p className={`text-sm font-display font-bold ${
-                      health.overallStatus === 'green' ? 'text-green-400' :
-                      health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'
+                      health.overallStatus === 'green' ? 'text-field' :
+                      health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-live-red'
                     }`}>
                       {(() => {
                         if (health.overallStatus === 'green') return `${health.seasonCount} seasons — all data looks healthy`
@@ -3969,7 +3969,7 @@ const LeagueVault = () => {
                         <div className="w-24 h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              health.overallStatus === 'yellow' ? 'bg-accent-gold' : 'bg-red-500'
+                              health.overallStatus === 'yellow' ? 'bg-accent-gold' : 'bg-live-red'
                             }`}
                             style={{ width: `${health.overallScore}%` }}
                           />
@@ -3993,7 +3993,7 @@ const LeagueVault = () => {
               {healthExpanded && health.overallStatus !== 'green' && (
                 <div className="mt-4 pt-3 border-t border-[var(--card-border)] space-y-2">
                   {health.missingYears?.length > 0 && (
-                    <div className="bg-red-500/10 rounded-lg p-3">
+                    <div className="bg-live-red/10 rounded-lg p-3">
                       <p className="text-sm text-text-primary font-medium mb-1">Missing: {health.missingYears.join(', ')}</p>
                       <p className="text-xs text-text-secondary">
                         Add these years manually or re-import with a different league ID.
@@ -4063,7 +4063,7 @@ const LeagueVault = () => {
                     .filter(i => i.type !== 'MISSING_SEASON' && i.type !== 'ORPHAN_OWNER' && i.type !== 'MISSING_WEEKLY_SCORES' && i.severity !== 'info')
                     .map((issue, idx) => (
                       <div key={idx} className={`rounded-lg p-3 ${
-                        issue.severity === 'high' ? 'bg-red-500/10' :
+                        issue.severity === 'high' ? 'bg-live-red/10' :
                         issue.severity === 'medium' ? 'bg-accent-gold/10' :
                         'bg-[var(--surface)]'
                       }`}>
@@ -4093,7 +4093,7 @@ const LeagueVault = () => {
                                 refetchHealth()
                               }
                             }}
-                            className="text-xs font-mono text-red-400 hover:text-red-300 mt-1"
+                            className="text-xs font-mono text-live-red hover:text-red-300 mt-1"
                           >
                             {issue.repairLabel} &rarr;
                           </button>
@@ -4226,7 +4226,7 @@ const LeagueVault = () => {
                   {inactiveOwnerSet.size > 0 && (
                     <button
                       onClick={() => setShowActiveOnly(prev => !prev)}
-                      className={`text-xs font-mono px-2.5 py-1 rounded-lg transition-colors ${showActiveOnly ? 'bg-green-500/15 text-green-400' : 'bg-[var(--bg-alt)] text-text-secondary'}`}
+                      className={`text-xs font-mono px-2.5 py-1 rounded-lg transition-colors ${showActiveOnly ? 'bg-field-bright/15 text-field' : 'bg-[var(--bg-alt)] text-text-secondary'}`}
                     >
                       {showActiveOnly ? 'Active Only' : 'All Managers'}
                     </button>
@@ -4286,8 +4286,8 @@ const LeagueVault = () => {
                                 <span className="font-display font-semibold text-text-primary">{owner.name}</span>
                               </div>
                             </td>
-                            <td className="py-2 text-center font-mono text-green-400">{owner.wins}</td>
-                            <td className="py-2 text-center font-mono text-red-400">{owner.losses}</td>
+                            <td className="py-2 text-center font-mono text-field">{owner.wins}</td>
+                            <td className="py-2 text-center font-mono text-live-red">{owner.losses}</td>
                             <td className="py-2 text-center font-mono text-text-muted">{owner.ties || 0}</td>
                             <td className="py-2 text-center font-mono text-text-primary">{(owner.winPct * 100).toFixed(1)}%</td>
                             <td className="py-2 text-right font-mono text-text-secondary">{owner.totalPF.toFixed(1)}</td>

@@ -36,8 +36,8 @@ function relativeTime(dateStr) {
 }
 
 function sentimentBadge(s) {
-  if (s === 'bullish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/15 text-emerald-400">Bullish</span>
-  if (s === 'bearish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/15 text-red-400">Bearish</span>
+  if (s === 'bullish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-field-bright/15 text-field">Bullish</span>
+  if (s === 'bearish') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-live-red/15 text-live-red">Bearish</span>
   if (s === 'neutral') return <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-[var(--bg-alt)] text-text-primary/40">Neutral</span>
   return null
 }
@@ -54,9 +54,9 @@ function outcomeBadge(capture) {
   if (players.length === 0) return null
   // Show verdict of the first player (most captures are single-player)
   const verdict = players[0].verdict
-  if (verdict === 'CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; You called it</span>
-  if (verdict === 'INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed this one</span>
-  if (verdict === 'TRENDING_CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending right</span>
+  if (verdict === 'CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-field-bright/15 text-field">&#10003; You called it</span>
+  if (verdict === 'INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-live-red/15 text-live-red">&#10007; Missed this one</span>
+  if (verdict === 'TRENDING_CORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-blaze">&#8599; Trending right</span>
   if (verdict === 'TRENDING_INCORRECT') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending wrong</span>
   if (verdict === 'NOTED') return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[var(--bg-alt)] text-text-primary/30">&#8212; Noted</span>
   return null
@@ -231,7 +231,7 @@ export default function LabCaptures() {
                 </div>
                 <button
                   onClick={() => handleDelete(c.id)}
-                  className="text-text-primary/15 hover:text-red-400 transition-colors"
+                  className="text-text-primary/15 hover:text-live-red transition-colors"
                   title="Delete capture"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

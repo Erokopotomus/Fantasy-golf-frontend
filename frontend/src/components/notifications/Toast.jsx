@@ -78,15 +78,15 @@ const Toast = ({ notification, onDismiss }) => {
         }
       case 'error':
         return {
-          bg: 'bg-red-500/10 border-red-500/50',
-          icon: 'bg-red-500/20 text-red-500',
-          title: 'text-red-500',
+          bg: 'bg-live-red/10 border-live-red/50',
+          icon: 'bg-live-red/20 text-live-red',
+          title: 'text-live-red',
         }
       case 'warning':
         return {
-          bg: 'bg-yellow-500/10 border-yellow-500/50',
-          icon: 'bg-yellow-500/20 text-yellow-500',
-          title: 'text-yellow-500',
+          bg: 'bg-crown/10 border-crown/50',
+          icon: 'bg-crown/20 text-crown',
+          title: 'text-crown',
         }
       case 'trade':
         return {
@@ -104,7 +104,7 @@ const Toast = ({ notification, onDismiss }) => {
         return {
           bg: 'bg-orange-500/10 border-orange-500/50',
           icon: 'bg-orange-500/20 text-orange-500',
-          title: 'text-orange-400',
+          title: 'text-blaze',
         }
       case 'news':
         return {
@@ -114,8 +114,8 @@ const Toast = ({ notification, onDismiss }) => {
         }
       default:
         return {
-          bg: 'bg-dark-tertiary border-dark-border',
-          icon: 'bg-dark-border text-text-muted',
+          bg: 'bg-[var(--card-bg)] border-[var(--card-border)]',
+          icon: 'bg-[var(--card-border)] text-text-muted',
           title: 'text-text-primary',
         }
     }

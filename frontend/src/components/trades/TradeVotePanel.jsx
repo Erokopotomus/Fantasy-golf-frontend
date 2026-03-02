@@ -73,17 +73,17 @@ const TradeVotePanel = ({ tradeId, currentUserId, initiatorId, receiverId }) => 
           <span>{votes.totalVotes} of {votes.eligibleVoters} voted</span>
           <span>{vetoPercent}% veto ({votes.threshold}% needed)</span>
         </div>
-        <div className="w-full bg-dark-tertiary rounded-full h-2">
+        <div className="w-full bg-[var(--card-bg)] rounded-full h-2">
           <div
             className={`h-2 rounded-full transition-all ${
-              vetoPercent >= votes.threshold ? 'bg-red-500' : 'bg-gold'
+              vetoPercent >= votes.threshold ? 'bg-live-red' : 'bg-gold'
             }`}
             style={{ width: `${Math.min(100, (vetoPercent / votes.threshold) * 100)}%` }}
           />
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span className="text-red-400">{votes.vetoCount} veto</span>
-          <span className="text-emerald-400">{votes.approveCount} approve</span>
+          <span className="text-live-red">{votes.vetoCount} veto</span>
+          <span className="text-field">{votes.approveCount} approve</span>
         </div>
       </div>
 
@@ -93,7 +93,7 @@ const TradeVotePanel = ({ tradeId, currentUserId, initiatorId, receiverId }) => 
           <Button
             onClick={() => handleVote('approve')}
             loading={voting}
-            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-sm"
+            className="flex-1 bg-field-bright hover:bg-emerald-600 text-sm"
           >
             Approve
           </Button>
@@ -101,7 +101,7 @@ const TradeVotePanel = ({ tradeId, currentUserId, initiatorId, receiverId }) => 
             onClick={() => handleVote('veto')}
             loading={voting}
             variant="outline"
-            className="flex-1 text-red-400 border-red-500/50 hover:bg-red-500/10 text-sm"
+            className="flex-1 text-live-red border-live-red/50 hover:bg-live-red/10 text-sm"
           >
             Veto
           </Button>
@@ -110,7 +110,7 @@ const TradeVotePanel = ({ tradeId, currentUserId, initiatorId, receiverId }) => 
 
       {hasVoted && (
         <p className="text-xs text-text-muted text-center">
-          You voted to <span className={votes.userVote === 'veto' ? 'text-red-400' : 'text-emerald-400'}>{votes.userVote}</span>
+          You voted to <span className={votes.userVote === 'veto' ? 'text-live-red' : 'text-field'}>{votes.userVote}</span>
         </p>
       )}
 

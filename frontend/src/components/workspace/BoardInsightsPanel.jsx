@@ -9,10 +9,10 @@ function avg(arr) {
 
 function sgColor(val) {
   if (val == null) return 'text-text-primary/20'
-  if (val > 0.3) return 'text-emerald-400'
-  if (val > 0) return 'text-emerald-400/60'
-  if (val > -0.3) return 'text-red-400/60'
-  return 'text-red-400'
+  if (val > 0.3) return 'text-field'
+  if (val > 0) return 'text-field/60'
+  if (val > -0.3) return 'text-live-red/60'
+  return 'text-live-red'
 }
 
 function StatBar({ label, value, max, color }) {
@@ -53,7 +53,7 @@ function CompareBar({ label, players, statKey, higherIsBetter = true }) {
             </span>
             <div className="flex-1 h-1.5 bg-[var(--bg-alt)] rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full ${isBest ? 'bg-gold' : isPositive ? 'bg-emerald-500/40' : 'bg-red-500/40'}`}
+                className={`h-full rounded-full ${isBest ? 'bg-gold' : isPositive ? 'bg-field-bright/40' : 'bg-live-red/40'}`}
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -180,9 +180,9 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
           <p className="text-[9px] text-text-primary/15 mb-1.5">How many players you've marked as targets, sleepers, or avoids.</p>
           <div className="flex gap-1.5">
             {[
-              { key: 'target', label: 'TGT', count: stats.tags.target, color: 'bg-emerald-500', text: 'text-emerald-400' },
+              { key: 'target', label: 'TGT', count: stats.tags.target, color: 'bg-field-bright', text: 'text-field' },
               { key: 'sleeper', label: 'SLP', count: stats.tags.sleeper, color: 'bg-gold', text: 'text-gold' },
-              { key: 'avoid', label: 'AVD', count: stats.tags.avoid, color: 'bg-red-500', text: 'text-red-400' },
+              { key: 'avoid', label: 'AVD', count: stats.tags.avoid, color: 'bg-live-red', text: 'text-live-red' },
               { key: 'untagged', label: 'None', count: stats.tags.untagged, color: 'bg-[var(--stone)]', text: 'text-text-primary/30' },
             ].map(t => (
               <div key={t.key} className="flex-1 text-center">
@@ -208,17 +208,17 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
               <StatBar label="OTT" value={stats.sgAvg.sgOffTee} max={maxSg} color="bg-sky-500" />
               <StatBar label="APP" value={stats.sgAvg.sgApproach} max={maxSg} color="bg-violet-500" />
               <StatBar label="ATG" value={stats.sgAvg.sgAroundGreen} max={maxSg} color="bg-amber-500" />
-              <StatBar label="Putt" value={stats.sgAvg.sgPutting} max={maxSg} color="bg-emerald-500" />
+              <StatBar label="Putt" value={stats.sgAvg.sgPutting} max={maxSg} color="bg-field-bright" />
             </div>
             {stats.sgStrength && stats.sgWeakness && stats.sgStrength.key !== stats.sgWeakness.key && (
               <div className="flex gap-3 mt-2">
-                <div className="flex-1 px-2 py-1.5 rounded bg-emerald-500/5 border border-emerald-500/10">
-                  <p className="text-[8px] text-emerald-500/50 uppercase">Strongest</p>
-                  <p className="text-[11px] text-emerald-400 font-semibold">{stats.sgStrength.label}</p>
+                <div className="flex-1 px-2 py-1.5 rounded bg-field-bright/5 border border-field-bright/10">
+                  <p className="text-[8px] text-field-bright/50 uppercase">Strongest</p>
+                  <p className="text-[11px] text-field font-semibold">{stats.sgStrength.label}</p>
                 </div>
-                <div className="flex-1 px-2 py-1.5 rounded bg-red-500/5 border border-red-500/10">
-                  <p className="text-[8px] text-red-500/50 uppercase">Weakest</p>
-                  <p className="text-[11px] text-red-400 font-semibold">{stats.sgWeakness.label}</p>
+                <div className="flex-1 px-2 py-1.5 rounded bg-live-red/5 border border-live-red/10">
+                  <p className="text-[8px] text-live-red/50 uppercase">Weakest</p>
+                  <p className="text-[11px] text-live-red font-semibold">{stats.sgWeakness.label}</p>
                 </div>
               </div>
             )}
@@ -255,14 +255,14 @@ export default function BoardInsightsPanel({ entries, sport, onClickPlayer }) {
             <div className="space-y-0.5">
               {stats.risers.slice(0, 3).map((r, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[10px]">
-                  <span className="text-emerald-400 font-mono font-bold w-8">{'\u2191'}{r.delta}</span>
+                  <span className="text-field font-mono font-bold w-8">{'\u2191'}{r.delta}</span>
                   <span className="text-text-primary/60 truncate">{r.name}</span>
                   <span className="text-text-primary/20 ml-auto shrink-0">#{r.rank}</span>
                 </div>
               ))}
               {stats.fallers.slice(0, 3).map((f, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-[10px]">
-                  <span className="text-red-400 font-mono font-bold w-8">{'\u2193'}{Math.abs(f.delta)}</span>
+                  <span className="text-live-red font-mono font-bold w-8">{'\u2193'}{Math.abs(f.delta)}</span>
                   <span className="text-text-primary/60 truncate">{f.name}</span>
                   <span className="text-text-primary/20 ml-auto shrink-0">#{f.rank}</span>
                 </div>

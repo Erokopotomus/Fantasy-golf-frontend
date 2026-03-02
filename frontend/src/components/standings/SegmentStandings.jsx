@@ -3,7 +3,7 @@ import Card from '../common/Card'
 import api from '../../services/api'
 
 const SEGMENT_COLORS = [
-  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', badge: 'bg-emerald-500/20 text-emerald-400' },
+  { bg: 'bg-field-bright/10', border: 'border-field-bright/30', text: 'text-field', badge: 'bg-field-bright/20 text-field' },
   { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400', badge: 'bg-blue-500/20 text-blue-400' },
   { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', badge: 'bg-amber-500/20 text-amber-400' },
   { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', badge: 'bg-purple-500/20 text-purple-400' },
@@ -105,13 +105,13 @@ const SegmentStandings = ({ leagueId }) => {
               className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                 isActive
                   ? (color ? color.badge : 'bg-gold/20 text-gold')
-                  : 'text-text-muted hover:text-text-primary hover:bg-dark-tertiary'
+                  : 'text-text-muted hover:text-text-primary hover:bg-[var(--card-bg)]'
               }`}
             >
               {tab.label}
               {/* Active segment indicator */}
               {i > 0 && data.segments[i - 1]?.isActive && (
-                <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-field animate-pulse"></span>
               )}
             </button>
           )
@@ -123,7 +123,7 @@ const SegmentStandings = ({ leagueId }) => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-text-muted text-xs uppercase tracking-wider border-b border-dark-border">
+              <tr className="text-text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
                 <th className="text-left pb-2 pr-2">#</th>
                 <th className="text-left pb-2">Team</th>
                 <th className="text-right pb-2">Points</th>
@@ -133,7 +133,7 @@ const SegmentStandings = ({ leagueId }) => {
             </thead>
             <tbody>
               {overallStandings.map((s) => (
-                <tr key={s.teamId} className="border-b border-dark-border/50">
+                <tr key={s.teamId} className="border-b border-[var(--card-border)]/50">
                   <td className="py-2 pr-2 font-mono text-text-muted">{s.rank}</td>
                   <td className="py-2">
                     <span className="text-text-primary font-medium">{s.teamName}</span>
@@ -168,8 +168,8 @@ const SegmentStandings = ({ leagueId }) => {
               <span>Weeks {activeSeg.startWeekNumber}–{activeSeg.endWeekNumber}</span>
               <span>{activeSeg.completedWeeks}/{activeSeg.weekCount} completed</span>
               {activeSeg.isActive && (
-                <span className="text-green-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                <span className="text-field flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-field animate-pulse"></span>
                   In Progress
                 </span>
               )}
@@ -180,7 +180,7 @@ const SegmentStandings = ({ leagueId }) => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-text-muted text-xs uppercase tracking-wider border-b border-dark-border">
+                  <tr className="text-text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
                     <th className="text-left pb-2 pr-2">#</th>
                     <th className="text-left pb-2">Team</th>
                     <th className="text-right pb-2">Points</th>
@@ -193,7 +193,7 @@ const SegmentStandings = ({ leagueId }) => {
                     return (
                       <tr
                         key={s.teamId}
-                        className={`border-b border-dark-border/50 ${isWinner ? color.bg : ''}`}
+                        className={`border-b border-[var(--card-border)]/50 ${isWinner ? color.bg : ''}`}
                       >
                         <td className="py-2 pr-2 font-mono text-text-muted">{s.rank}</td>
                         <td className="py-2">

@@ -155,8 +155,8 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full bg-yellow-500/20 border border-yellow-500 flex items-center justify-center mb-1">
-              <span className="text-yellow-500 font-bold">1</span>
+            <div className="w-10 h-10 rounded-full bg-crown/20 border border-crown flex items-center justify-center mb-1">
+              <span className="text-crown font-bold">1</span>
             </div>
             <span className="text-text-muted">Winner</span>
           </div>

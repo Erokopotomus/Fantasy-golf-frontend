@@ -7,26 +7,26 @@ import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 
 const gradeColors = {
-  'A+': 'text-green-400', A: 'text-green-400', 'A-': 'text-green-400',
+  'A+': 'text-field', A: 'text-field', 'A-': 'text-field',
   'B+': 'text-blue-400', B: 'text-blue-400', 'B-': 'text-blue-400',
-  'C+': 'text-yellow-400', C: 'text-yellow-400', 'C-': 'text-yellow-400',
-  'D+': 'text-orange-400', D: 'text-orange-400', 'D-': 'text-orange-400',
-  F: 'text-red-400',
+  'C+': 'text-crown', C: 'text-crown', 'C-': 'text-crown',
+  'D+': 'text-blaze', D: 'text-blaze', 'D-': 'text-blaze',
+  F: 'text-live-red',
 }
 
 const gradeBgColors = {
-  'A+': 'bg-green-500/20', A: 'bg-green-500/20', 'A-': 'bg-green-500/20',
+  'A+': 'bg-field-bright/20', A: 'bg-field-bright/20', 'A-': 'bg-field-bright/20',
   'B+': 'bg-blue-500/20', B: 'bg-blue-500/20', 'B-': 'bg-blue-500/20',
-  'C+': 'bg-yellow-500/20', C: 'bg-yellow-500/20', 'C-': 'bg-yellow-500/20',
+  'C+': 'bg-crown/20', C: 'bg-crown/20', 'C-': 'bg-crown/20',
   'D+': 'bg-orange-500/20', D: 'bg-orange-500/20', 'D-': 'bg-orange-500/20',
-  F: 'bg-red-500/20',
+  F: 'bg-live-red/20',
 }
 
 const NFL_POS_COLORS = {
-  QB: 'bg-red-500/20 text-red-400',
-  RB: 'bg-emerald-500/20 text-emerald-400',
+  QB: 'bg-live-red/20 text-live-red',
+  RB: 'bg-field-bright/20 text-field',
   WR: 'bg-blue-500/20 text-blue-400',
-  TE: 'bg-orange-500/20 text-orange-400',
+  TE: 'bg-orange-500/20 text-blaze',
   K: 'bg-purple-500/20 text-purple-400',
   DEF: 'bg-teal-500/20 text-teal-400',
 }
@@ -60,7 +60,7 @@ const MockDraftRecap = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="text-center p-8">
-          <p className="text-red-400 mb-4">{error || 'Mock draft not found'}</p>
+          <p className="text-live-red mb-4">{error || 'Mock draft not found'}</p>
           <Link to="/draft/history"><Button>Back to History</Button></Link>
         </Card>
       </div>
@@ -130,7 +130,7 @@ const MockDraftRecap = () => {
               <h1 className="text-2xl font-bold font-display text-text-primary">Mock Draft Recap</h1>
               <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
                 <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
-                  sport === 'nfl' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'
+                  sport === 'nfl' ? 'bg-blue-500/20 text-blue-400' : 'bg-field-bright/20 text-field'
                 }`}>{sport}</span>
                 <span className="px-2 py-0.5 bg-[var(--bg-alt)] rounded text-xs capitalize">{result.draftType}</span>
                 <span>{result.teamCount} teams</span>
@@ -158,13 +158,13 @@ const MockDraftRecap = () => {
                   {result.bestPick && (
                     <div>
                       <span className="text-text-muted">Best: </span>
-                      <span className="text-green-400">{result.bestPick.playerName} ({result.bestPick.grade})</span>
+                      <span className="text-field">{result.bestPick.playerName} ({result.bestPick.grade})</span>
                     </div>
                   )}
                   {result.worstPick && (
                     <div>
                       <span className="text-text-muted">Worst: </span>
-                      <span className="text-red-400">{result.worstPick.playerName} ({result.worstPick.grade})</span>
+                      <span className="text-live-red">{result.worstPick.playerName} ({result.worstPick.grade})</span>
                     </div>
                   )}
                 </div>
@@ -195,20 +195,20 @@ const MockDraftRecap = () => {
                           Pick #{pick.pickNumber} · Rank #{pick.playerRank || '—'}
                           {pick.pickTag && (
                             <span className={`ml-1.5 text-[9px] font-bold px-1 py-0.5 rounded ${
-                              pick.pickTag === 'STEAL' ? 'bg-emerald-500/20 text-emerald-400' :
+                              pick.pickTag === 'STEAL' ? 'bg-field-bright/20 text-field' :
                               pick.pickTag === 'PLAN' ? 'bg-blue-500/20 text-blue-400' :
                               pick.pickTag === 'VALUE' ? 'bg-gold/20 text-gold' :
-                              pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
+                              pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-blaze' :
                               pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                               pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
                               'bg-[var(--stone)] text-text-primary/40'
                             }`}>{pick.pickTag}</span>
                           )}
                           {!pick.pickTag && pg.adpDiff != null && pg.adpDiff > 3 && (
-                            <span className="ml-2 text-green-400">Steal!</span>
+                            <span className="ml-2 text-field">Steal!</span>
                           )}
                           {!pick.pickTag && pg.adpDiff != null && pg.adpDiff < -5 && (
-                            <span className="ml-2 text-red-400">Reach</span>
+                            <span className="ml-2 text-live-red">Reach</span>
                           )}
                           {pick.boardRankAtPick && (
                             <span className="ml-1.5 text-[9px] text-text-primary/20 font-mono">B#{pick.boardRankAtPick}</span>
@@ -218,7 +218,7 @@ const MockDraftRecap = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       {pg.adpDiff != null && (
-                        <span className={`text-xs ${pg.adpDiff >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <span className={`text-xs ${pg.adpDiff >= 0 ? 'text-field' : 'text-live-red'}`}>
                           {pg.adpDiff >= 0 ? '+' : ''}{pg.adpDiff}
                         </span>
                       )}
@@ -296,12 +296,12 @@ const MockDraftRecap = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {pickGrades.filter(pg => pg.round >= 3 && pg.score >= 80).length > 0 && (
                 <Card>
-                  <h3 className="text-sm font-semibold text-green-400 mb-3">Sleeper Picks</h3>
+                  <h3 className="text-sm font-semibold text-field mb-3">Sleeper Picks</h3>
                   <div className="space-y-2">
                     {pickGrades.filter(pg => pg.round >= 3 && pg.score >= 80).map(s => (
                       <div key={s.pickNumber} className="flex items-center justify-between text-sm">
                         <span className="text-text-primary">{s.playerName}</span>
-                        <span className="text-green-400">R{s.round} · +{s.adpDiff}</span>
+                        <span className="text-field">R{s.round} · +{s.adpDiff}</span>
                       </div>
                     ))}
                   </div>
@@ -309,12 +309,12 @@ const MockDraftRecap = () => {
               )}
               {pickGrades.filter(pg => pg.score < 60).length > 0 && (
                 <Card>
-                  <h3 className="text-sm font-semibold text-red-400 mb-3">Reaches</h3>
+                  <h3 className="text-sm font-semibold text-live-red mb-3">Reaches</h3>
                   <div className="space-y-2">
                     {pickGrades.filter(pg => pg.score < 60).map(r => (
                       <div key={r.pickNumber} className="flex items-center justify-between text-sm">
                         <span className="text-text-primary">{r.playerName}</span>
-                        <span className="text-red-400">R{r.round} · {r.adpDiff}</span>
+                        <span className="text-live-red">R{r.round} · {r.adpDiff}</span>
                       </div>
                     ))}
                   </div>
@@ -336,11 +336,11 @@ const MockDraftRecap = () => {
               {/* Summary stats */}
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
-                  <div className="text-lg font-mono font-bold text-emerald-400">{boardComparison.picksMatchingBoard}</div>
+                  <div className="text-lg font-mono font-bold text-field">{boardComparison.picksMatchingBoard}</div>
                   <div className="text-[10px] text-text-primary/40">On Plan</div>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
-                  <div className="text-lg font-mono font-bold text-orange-400">{boardComparison.picksDeviatingFromBoard}</div>
+                  <div className="text-lg font-mono font-bold text-blaze">{boardComparison.picksDeviatingFromBoard}</div>
                   <div className="text-[10px] text-text-primary/40">Deviated</div>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-3 text-center">
@@ -357,8 +357,8 @@ const MockDraftRecap = () => {
                   const devAbs = pick.deviation != null ? Math.abs(pick.deviation) : null
                   const deviationColor = !pick.wasOnBoard ? 'text-rose-400' :
                     devAbs === null ? 'text-text-primary/30' :
-                    devAbs <= 3 ? 'text-emerald-400' :
-                    devAbs <= 8 ? 'text-yellow-400' : 'text-rose-400'
+                    devAbs <= 3 ? 'text-field' :
+                    devAbs <= 8 ? 'text-crown' : 'text-rose-400'
 
                   return (
                     <div key={i} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--bg-alt)]/50">
@@ -366,10 +366,10 @@ const MockDraftRecap = () => {
                       <span className="text-xs text-text-primary truncate flex-1">{pick.playerName}</span>
                       {pick.pickTag && (
                         <span className={`text-[8px] font-bold px-1 py-0.5 rounded shrink-0 ${
-                          pick.pickTag === 'STEAL' ? 'bg-emerald-500/20 text-emerald-400' :
+                          pick.pickTag === 'STEAL' ? 'bg-field-bright/20 text-field' :
                           pick.pickTag === 'PLAN' ? 'bg-blue-500/20 text-blue-400' :
                           pick.pickTag === 'VALUE' ? 'bg-gold/20 text-gold' :
-                          pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-orange-400' :
+                          pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-blaze' :
                           pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                           pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
                           'bg-[var(--stone)] text-text-primary/40'
@@ -418,7 +418,7 @@ const MockDraftRecap = () => {
                 {importSuccess ? (
                   <Link
                     to={`/lab/${importSuccess}`}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/15 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm font-semibold hover:bg-emerald-500/25 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-field-bright/15 border border-field-bright/30 rounded-lg text-field text-sm font-semibold hover:bg-field-bright/25 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -437,7 +437,7 @@ const MockDraftRecap = () => {
                     {importing ? 'Importing...' : 'Import to Board'}
                   </button>
                 )}
-                {importError && <p className="text-red-400 text-xs mt-1 text-center">{importError}</p>}
+                {importError && <p className="text-live-red text-xs mt-1 text-center">{importError}</p>}
               </div>
             )}
           </div>

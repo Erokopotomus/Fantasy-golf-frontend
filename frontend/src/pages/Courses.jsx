@@ -6,7 +6,7 @@ import Card from '../components/common/Card'
 const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
-  if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
+  if (val >= 0.27) return { text: 'High', color: 'text-field', bar: 'bg-field' }
   if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-slate-400' }
   return { text: 'Low', color: 'text-text-muted', bar: 'bg-slate-500' }
 }
@@ -15,7 +15,7 @@ const getDateBadge = (startDate) => {
   const start = new Date(startDate)
   const now = new Date()
   const daysUntil = Math.ceil((start - now) / (1000 * 60 * 60 * 24))
-  if (daysUntil <= 7) return { text: 'This Week', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' }
+  if (daysUntil <= 7) return { text: 'This Week', className: 'bg-field-bright/15 text-field border-field-bright/30' }
   const month = start.toLocaleDateString('en-US', { month: 'short' })
   const day = start.getDate()
   return { text: `${month} ${day}`, className: 'bg-[var(--stone)] text-text-muted border-[var(--card-border)]' }
@@ -103,7 +103,7 @@ const Courses = () => {
       {/* Error */}
       {error && (
         <Card>
-          <p className="text-red-400 text-center text-sm">Failed to load courses: {error}</p>
+          <p className="text-live-red text-center text-sm">Failed to load courses: {error}</p>
         </Card>
       )}
 

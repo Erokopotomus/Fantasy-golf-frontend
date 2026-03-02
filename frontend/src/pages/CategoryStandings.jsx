@@ -36,7 +36,7 @@ const CategoryStandings = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="text-center py-12">
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-live-red mb-4">{error}</p>
           <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
             Back to League
           </Link>
@@ -131,7 +131,7 @@ const CategoryStandings = () => {
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? 'bg-gold text-text-primary'
-                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -151,7 +151,7 @@ const CategoryStandings = () => {
                 className={`px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                   (!selectedTeam && team.userId === user?.id) || selectedTeam === team.userId
                     ? 'bg-gold text-text-primary'
-                    : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                    : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {team.name}

@@ -12,19 +12,19 @@ function scoringLabel(fmt) {
 function GapBadge({ gap }) {
   if (gap === null || gap === undefined) return <span className="text-text-primary/15">—</span>
   const isValue = gap > 0
-  const color = isValue ? 'text-emerald-400' : gap < 0 ? 'text-red-400' : 'text-text-primary/30'
+  const color = isValue ? 'text-field' : gap < 0 ? 'text-live-red' : 'text-text-primary/30'
   return <span className={`font-mono text-xs ${color}`}>{isValue ? '+' : ''}{gap}</span>
 }
 
 function PosBadge({ pos }) {
   if (!pos) return null
   const colors = {
-    QB: 'bg-red-500/20 text-red-400',
+    QB: 'bg-live-red/20 text-live-red',
     RB: 'bg-blue-500/20 text-blue-400',
-    WR: 'bg-emerald-500/20 text-emerald-400',
+    WR: 'bg-field-bright/20 text-field',
     TE: 'bg-orange/20 text-orange',
     K: 'bg-purple-500/20 text-purple-400',
-    DEF: 'bg-yellow-500/20 text-yellow-400',
+    DEF: 'bg-crown/20 text-crown',
   }
   return <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colors[pos] || 'bg-[var(--bg-alt)] text-text-primary/40'}`}>{pos}</span>
 }
@@ -119,7 +119,7 @@ export default function LabCheatSheet() {
   if (error || !sheet) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="text-center py-16 text-red-400 text-sm">{error || 'Sheet not found'}</div>
+        <div className="text-center py-16 text-live-red text-sm">{error || 'Sheet not found'}</div>
       </div>
     )
   }
@@ -148,7 +148,7 @@ export default function LabCheatSheet() {
             <div className="flex items-center gap-2 ml-8 print:ml-0">
               <span className="text-xs text-text-primary/30 print:text-gray-500">Generated from: {board.name}</span>
               <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                board.sport === 'nfl' ? 'bg-orange/20 text-orange print:bg-orange-100 print:text-orange-700' : 'bg-emerald-500/20 text-emerald-400'
+                board.sport === 'nfl' ? 'bg-orange/20 text-orange print:bg-orange-100 print:text-orange-700' : 'bg-field-bright/20 text-field'
               }`}>
                 {board.sport}
               </span>
@@ -206,7 +206,7 @@ export default function LabCheatSheet() {
                 </button>
               )}
               {sheet.publishedAt && (
-                <span className="px-3 py-1.5 text-sm text-emerald-400 border border-emerald-500/20 rounded-lg">Published</span>
+                <span className="px-3 py-1.5 text-sm text-field border border-field-bright/20 rounded-lg">Published</span>
               )}
             </>
           )}
@@ -218,8 +218,8 @@ export default function LabCheatSheet() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 print:mb-4">
           {/* Value targets */}
           {valuePicks.length > 0 && (
-            <div className="p-4 bg-[var(--surface)] border border-emerald-500/10 rounded-xl print:border-emerald-200">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400/60 mb-3 print:text-emerald-700">Your Value Targets</h3>
+            <div className="p-4 bg-[var(--surface)] border border-field-bright/10 rounded-xl print:border-emerald-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-field/60 mb-3 print:text-emerald-700">Your Value Targets</h3>
               <div className="space-y-1.5">
                 {valuePicks.map(p => (
                   <div key={p.playerId} className="flex items-center justify-between text-sm">
@@ -240,8 +240,8 @@ export default function LabCheatSheet() {
 
           {/* Fades */}
           {fades.length > 0 && (
-            <div className="p-4 bg-[var(--surface)] border border-red-500/10 rounded-xl print:border-red-200">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-red-400/60 mb-3 print:text-red-700">Your Biggest Fades</h3>
+            <div className="p-4 bg-[var(--surface)] border border-live-red/10 rounded-xl print:border-red-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-live-red/60 mb-3 print:text-red-700">Your Biggest Fades</h3>
               <div className="space-y-1.5">
                 {fades.map(p => (
                   <div key={p.playerId} className="flex items-center justify-between text-sm">
@@ -413,13 +413,13 @@ export default function LabCheatSheet() {
           nav, header, .print\\:hidden, [class*="AuroraBackground"] { display: none !important; }
 
           /* Restore key colored elements */
-          .bg-emerald-500\\/20, .bg-emerald-500\\/10, .bg-emerald-100 { background: #d1fae5 !important; }
-          .bg-red-500\\/20, .bg-red-500\\/10, .bg-red-100 { background: #fee2e2 !important; }
+          .bg-field-bright\\/20, .bg-field-bright\\/10, .bg-emerald-100 { background: #d1fae5 !important; }
+          .bg-live-red\\/20, .bg-live-red\\/10, .bg-red-100 { background: #fee2e2 !important; }
           .bg-gold\\/20, .bg-amber-100, .bg-orange\\/20 { background: #fef3c7 !important; }
           .bg-blue-500\\/20, .bg-blue-100 { background: #dbeafe !important; }
           .bg-purple-500\\/20, .bg-purple-100 { background: #ede9fe !important; }
-          .text-emerald-400, .text-emerald-700, .text-emerald-600 { color: #047857 !important; }
-          .text-red-400, .text-red-700, .text-red-600 { color: #b91c1c !important; }
+          .text-field, .text-emerald-700, .text-emerald-600 { color: #047857 !important; }
+          .text-live-red, .text-red-700, .text-red-600 { color: #b91c1c !important; }
           .text-gold, .text-amber-700 { color: #b45309 !important; }
 
           /* Tier break lines */

@@ -11,10 +11,10 @@ import api from '../../services/api'
 
 const CATEGORIES = [
   { value: 'general', label: 'General', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'rule_change', label: 'Rule Change', color: 'bg-red-500/20 text-red-400' },
+  { value: 'rule_change', label: 'Rule Change', color: 'bg-live-red/20 text-live-red' },
   { value: 'trade_analysis', label: 'Trade Analysis', color: 'bg-purple-500/20 text-purple-400' },
-  { value: 'draft_recap', label: 'Draft Recap', color: 'bg-emerald-500/20 text-emerald-400' },
-  { value: 'reminder', label: 'Reminder', color: 'bg-yellow-500/20 text-yellow-400' },
+  { value: 'draft_recap', label: 'Draft Recap', color: 'bg-field-bright/20 text-field' },
+  { value: 'reminder', label: 'Reminder', color: 'bg-crown/20 text-crown' },
   { value: 'weekly_update', label: 'Weekly Update', color: 'bg-gold/20 text-gold' },
 ]
 
@@ -361,7 +361,7 @@ const PostEditor = ({ isOpen, onClose, onSave, editingPost, leagueId, leagueName
                       <div className="flex gap-1.5">
                         <button onClick={handleAddLink} className="flex-1 px-2 py-1 bg-gold/20 text-gold text-xs rounded hover:bg-gold/30">Add</button>
                         {editor.isActive('link') && (
-                          <button onClick={() => { editor.chain().focus().unsetLink().run(); setShowLinkPopover(false) }} className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded hover:bg-red-500/30">Remove</button>
+                          <button onClick={() => { editor.chain().focus().unsetLink().run(); setShowLinkPopover(false) }} className="px-2 py-1 bg-live-red/20 text-live-red text-xs rounded hover:bg-live-red/30">Remove</button>
                         )}
                         <button onClick={() => setShowLinkPopover(false)} className="px-2 py-1 text-text-muted text-xs hover:text-text-primary">Cancel</button>
                       </div>

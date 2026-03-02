@@ -120,7 +120,7 @@ const PlayerPool = ({
   return (
     <Card className="h-full flex flex-col" padding="none">
       <div className="flex items-center justify-between px-3 pt-3 pb-2">
-        <h3 className="text-sm font-semibold text-text-primary">Available Players</h3>
+        <h3 className="text-sm font-semibold font-display text-text-primary">Available Players</h3>
         <span className="text-text-muted text-xs">
           {filteredPlayers.length} available
         </span>
@@ -212,30 +212,30 @@ const PlayerPool = ({
                   {player.primaryTour && (
                     <span className={`text-[9px] px-1 py-0.5 rounded font-medium shrink-0 ${
                       player.primaryTour === 'PGA' ? 'bg-blue-500/20 text-blue-400' :
-                      player.primaryTour === 'LIV' ? 'bg-red-500/20 text-red-400' :
+                      player.primaryTour === 'LIV' ? 'bg-live-red/20 text-live-red' :
                       'bg-purple-500/20 text-purple-400'
                     }`}>{player.primaryTour}</span>
                   )}
                   {boardEntry?.tags?.[0] && (
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                      boardEntry.tags[0] === 'target' ? 'bg-emerald-400' :
-                      boardEntry.tags[0] === 'sleeper' ? 'bg-gold' : 'bg-red-400'
+                      boardEntry.tags[0] === 'target' ? 'bg-field' :
+                      boardEntry.tags[0] === 'sleeper' ? 'bg-gold' : 'bg-live-red'
                     }`} />
                   )}
                 </div>
               </div>
               <span className={`text-xs text-right font-medium tabular-nums ${
                 (player.clutchMetrics?.cpi ?? 0) > 1.5 ? 'text-gold' :
-                (player.clutchMetrics?.cpi ?? 0) > 0.5 ? 'text-green-400' :
-                (player.clutchMetrics?.cpi ?? 0) > -0.5 ? 'text-yellow-400' :
-                player.clutchMetrics?.cpi != null ? 'text-red-400' : 'text-text-muted'
+                (player.clutchMetrics?.cpi ?? 0) > 0.5 ? 'text-field' :
+                (player.clutchMetrics?.cpi ?? 0) > -0.5 ? 'text-crown' :
+                player.clutchMetrics?.cpi != null ? 'text-live-red' : 'text-text-muted'
               }`}>
                 {player.clutchMetrics?.cpi != null
                   ? `${player.clutchMetrics.cpi > 0 ? '+' : ''}${player.clutchMetrics.cpi.toFixed(1)}`
                   : '\u2014'}
               </span>
               <span className={`text-xs text-right font-medium tabular-nums ${
-                sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-text-primary' : 'text-red-400'
+                sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-text-primary' : 'text-live-red'
               }`}>
                 {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '\u2014'}
               </span>
@@ -256,10 +256,10 @@ const PlayerPool = ({
                   const pos = parseInt(String(f).replace('T', ''))
                   return (
                     <span key={i} className={`w-2 h-2 rounded-full ${
-                      f === '1' ? 'bg-yellow-400' :
-                      f === 'CUT' ? 'bg-red-400' :
+                      f === '1' ? 'bg-crown' :
+                      f === 'CUT' ? 'bg-live-red' :
                       pos <= 5 ? 'bg-gold' :
-                      pos <= 15 ? 'bg-emerald-400/60' :
+                      pos <= 15 ? 'bg-field/60' :
                       'bg-[var(--card-border)]'
                     }`} title={String(f)} />
                   )

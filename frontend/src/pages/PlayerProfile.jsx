@@ -117,7 +117,7 @@ const PlayerProfile = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-red-400 mb-4">{error || 'Player not found'}</p>
+            <p className="text-live-red mb-4">{error || 'Player not found'}</p>
             <Link
               to="/players"
               className="px-4 py-2 bg-gold text-text-primary rounded-lg hover:bg-gold/90 transition-colors"
@@ -198,7 +198,7 @@ const PlayerProfile = () => {
             <div className="flex items-center gap-3">
               {sgTrend.summary?.momentum != null && (
                 <span className={`text-xs font-mono font-semibold ${
-                  sgTrend.summary.momentum > 0.1 ? 'text-emerald-400' : sgTrend.summary.momentum < -0.1 ? 'text-red-400' : 'text-text-muted'
+                  sgTrend.summary.momentum > 0.1 ? 'text-field' : sgTrend.summary.momentum < -0.1 ? 'text-live-red' : 'text-text-muted'
                 }`}>
                   {sgTrend.summary.momentum > 0 ? '+' : ''}{sgTrend.summary.momentum.toFixed(2)} momentum
                 </span>
@@ -221,7 +221,7 @@ const PlayerProfile = () => {
                 <div className="text-center">
                   <p className="text-xs text-text-muted">Avg SG Total</p>
                   <p className={`text-sm font-mono font-bold ${
-                    sgTrend.summary.avgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.avgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                    sgTrend.summary.avgSgTotal > 0 ? 'text-field' : sgTrend.summary.avgSgTotal != null ? 'text-live-red' : 'text-text-muted'
                   }`}>
                     {sgTrend.summary.avgSgTotal != null ? (sgTrend.summary.avgSgTotal > 0 ? '+' : '') + sgTrend.summary.avgSgTotal.toFixed(2) : '\u2014'}
                   </p>
@@ -229,7 +229,7 @@ const PlayerProfile = () => {
                 <div className="text-center">
                   <p className="text-xs text-text-muted">Recent (6)</p>
                   <p className={`text-sm font-mono font-bold ${
-                    sgTrend.summary.recentAvgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.recentAvgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                    sgTrend.summary.recentAvgSgTotal > 0 ? 'text-field' : sgTrend.summary.recentAvgSgTotal != null ? 'text-live-red' : 'text-text-muted'
                   }`}>
                     {sgTrend.summary.recentAvgSgTotal != null ? (sgTrend.summary.recentAvgSgTotal > 0 ? '+' : '') + sgTrend.summary.recentAvgSgTotal.toFixed(2) : '\u2014'}
                   </p>
@@ -263,7 +263,7 @@ const PlayerProfile = () => {
                 <div className="flex items-center gap-3">
                   {sgTrend.summary?.momentum != null && (
                     <span className={`text-xs font-mono font-semibold ${
-                      sgTrend.summary.momentum > 0.1 ? 'text-emerald-400' : sgTrend.summary.momentum < -0.1 ? 'text-red-400' : 'text-text-muted'
+                      sgTrend.summary.momentum > 0.1 ? 'text-field' : sgTrend.summary.momentum < -0.1 ? 'text-live-red' : 'text-text-muted'
                     }`}>
                       {sgTrend.summary.momentum > 0 ? '+' : ''}{sgTrend.summary.momentum.toFixed(2)} momentum
                     </span>
@@ -286,7 +286,7 @@ const PlayerProfile = () => {
                     <div className="text-center">
                       <p className="text-xs text-text-muted">Avg SG Total</p>
                       <p className={`text-sm font-mono font-bold ${
-                        sgTrend.summary.avgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.avgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                        sgTrend.summary.avgSgTotal > 0 ? 'text-field' : sgTrend.summary.avgSgTotal != null ? 'text-live-red' : 'text-text-muted'
                       }`}>
                         {sgTrend.summary.avgSgTotal != null ? (sgTrend.summary.avgSgTotal > 0 ? '+' : '') + sgTrend.summary.avgSgTotal.toFixed(2) : '\u2014'}
                       </p>
@@ -294,7 +294,7 @@ const PlayerProfile = () => {
                     <div className="text-center">
                       <p className="text-xs text-text-muted">Recent (6)</p>
                       <p className={`text-sm font-mono font-bold ${
-                        sgTrend.summary.recentAvgSgTotal > 0 ? 'text-emerald-400' : sgTrend.summary.recentAvgSgTotal != null ? 'text-red-400' : 'text-text-muted'
+                        sgTrend.summary.recentAvgSgTotal > 0 ? 'text-field' : sgTrend.summary.recentAvgSgTotal != null ? 'text-live-red' : 'text-text-muted'
                       }`}>
                         {sgTrend.summary.recentAvgSgTotal != null ? (sgTrend.summary.recentAvgSgTotal > 0 ? '+' : '') + sgTrend.summary.recentAvgSgTotal.toFixed(2) : '\u2014'}
                       </p>
@@ -336,7 +336,7 @@ const PlayerProfile = () => {
               </div>
               <div className="p-4">
                 {capturesLoading ? (
-                  <div className="text-xs text-text-primary/20 text-center py-4">Loading...</div>
+                  <div className="flex items-center justify-center gap-2 py-4"><div className="w-4 h-4 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /><span className="text-xs text-text-muted">Loading...</span></div>
                 ) : playerCaptures.length === 0 ? (
                   <p className="text-xs text-text-primary/30 text-center py-4">
                     No notes yet.{' '}
@@ -350,16 +350,16 @@ const PlayerProfile = () => {
                         <div key={c.id} className="px-3 py-2 bg-[var(--bg-alt)] rounded-lg border border-[var(--card-border)]">
                           <p className="text-xs text-text-primary/70 line-clamp-3">{c.content}</p>
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                            {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400">&#10003; Called it</span>}
-                            {verdict === 'INCORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">&#10007; Missed</span>}
-                            {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400">&#8599; Trending</span>}
+                            {verdict === 'CORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-field-bright/15 text-field">&#10003; Called it</span>}
+                            {verdict === 'INCORRECT' && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-live-red/15 text-live-red">&#10007; Missed</span>}
+                            {(verdict === 'TRENDING_CORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-blaze">&#8599; Trending</span>}
                             {(verdict === 'TRENDING_INCORRECT') && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-300">&#8600; Trending</span>}
                             {c.sourceType && (
                               <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-[var(--bg-alt)] text-text-primary/30">{c.sourceType}</span>
                             )}
                             {c.sentiment && (
                               <span className={`text-[10px] font-medium ${
-                                c.sentiment === 'bullish' ? 'text-emerald-400' : c.sentiment === 'bearish' ? 'text-red-400' : 'text-text-primary/30'
+                                c.sentiment === 'bullish' ? 'text-field' : c.sentiment === 'bearish' ? 'text-live-red' : 'text-text-primary/30'
                               }`}>
                                 {c.sentiment === 'bullish' ? '↑' : c.sentiment === 'bearish' ? '↓' : '–'} {c.sentiment}
                               </span>
@@ -483,7 +483,7 @@ const PlayerProfile = () => {
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-text-primary/70">{label}</span>
                             {ev.sentiment && (
-                              <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-emerald-400' : ev.sentiment === 'negative' ? 'text-red-400' : 'text-text-primary/30'}`}>{ev.sentiment}</span>
+                              <span className={`text-[9px] ${ev.sentiment === 'positive' ? 'text-field' : ev.sentiment === 'negative' ? 'text-live-red' : 'text-text-primary/30'}`}>{ev.sentiment}</span>
                             )}
                           </div>
                           {detail && <p className="text-[10px] text-text-primary/30 truncate">{detail}</p>}
@@ -529,7 +529,7 @@ const PlayerProfile = () => {
                         {t.status === 'IN_PROGRESS' ? (
                           <span className="text-[10px] font-mono font-semibold text-rose bg-rose/10 px-2 py-0.5 rounded">LIVE</span>
                         ) : t.inField ? (
-                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">CONFIRMED</span>
+                          <span className="text-[10px] font-mono font-semibold text-field bg-field-bright/10 px-2 py-0.5 rounded">CONFIRMED</span>
                         ) : t.fieldAnnounced ? (
                           <span className="text-[10px] font-mono text-text-muted/60 bg-[var(--bg-alt)] px-2 py-0.5 rounded">NOT IN FIELD</span>
                         ) : (

@@ -35,7 +35,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary flex">
+    <div className="min-h-screen bg-[var(--bg)] flex">
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-md w-full">
@@ -51,7 +51,7 @@ const Login = () => {
           </p>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6 animate-fade-in">
+            <div className="bg-live-red/10 border border-live-red/50 text-live-red px-4 py-3 rounded-lg mb-6 animate-fade-in">
               {error}
             </div>
           )}
@@ -104,10 +104,10 @@ const Login = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-dark-border" />
+                <div className="w-full border-t border-[var(--card-border)]" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-dark-primary text-text-muted">Or continue with</span>
+                <span className="px-2 bg-[var(--bg)] text-text-muted">Or continue with</span>
               </div>
             </div>
 
@@ -115,7 +115,7 @@ const Login = () => {
               <button
                 type="button"
                 disabled
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-dark-secondary border border-dark-border rounded-lg opacity-50 cursor-not-allowed"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg opacity-50 cursor-not-allowed"
                 title="Coming soon"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -129,7 +129,7 @@ const Login = () => {
               <button
                 type="button"
                 disabled
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-dark-secondary border border-dark-border rounded-lg opacity-50 cursor-not-allowed"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg opacity-50 cursor-not-allowed"
                 title="Coming soon"
               >
                 <svg className="w-5 h-5 text-text-muted" fill="currentColor" viewBox="0 0 24 24">
@@ -150,7 +150,7 @@ const Login = () => {
       </div>
 
       {/* Right side - Image/Graphic */}
-      <div className="hidden lg:flex flex-1 bg-dark-secondary items-center justify-center p-12">
+      <div className="hidden lg:flex flex-1 bg-[var(--surface)] items-center justify-center p-12">
         <div className="max-w-lg text-center">
           <div className="w-64 h-64 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-8 shadow-glow-gold">
             <svg className="w-32 h-32 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">

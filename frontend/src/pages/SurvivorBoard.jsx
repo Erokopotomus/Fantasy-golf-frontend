@@ -39,7 +39,7 @@ const SurvivorBoardPage = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="text-center py-12">
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-live-red mb-4">{error}</p>
           <Link to={`/leagues/${leagueId}`} className="text-gold hover:underline">
             Back to League
           </Link>
@@ -110,11 +110,11 @@ const SurvivorBoardPage = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className={userTeam?.status === 'alive' ? 'border border-gold/50' : userTeam?.status === 'eliminated' ? 'border border-red-400/50' : ''}>
+        <Card className={userTeam?.status === 'alive' ? 'border border-gold/50' : userTeam?.status === 'eliminated' ? 'border border-live-red/50' : ''}>
           <p className="text-xs text-text-muted mb-1">Your Status</p>
           <p className={`text-2xl font-bold ${
             userTeam?.status === 'alive' ? 'text-gold' :
-            userTeam?.status === 'buyback' ? 'text-yellow-400' : 'text-red-400'
+            userTeam?.status === 'buyback' ? 'text-crown' : 'text-live-red'
           }`}>
             {userTeam?.status === 'alive' ? 'Alive' :
              userTeam?.status === 'buyback' ? 'Buyback' : 'Eliminated'}
@@ -123,29 +123,29 @@ const SurvivorBoardPage = () => {
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Current Week</p>
-          <p className="text-2xl font-bold font-display text-text-primary">{survivorData?.currentWeek || 1}</p>
+          <p className="text-2xl font-bold font-mono text-text-primary">{survivorData?.currentWeek || 1}</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Teams Remaining</p>
-          <p className="text-2xl font-bold font-display text-gold">{teamsAlive}</p>
+          <p className="text-2xl font-bold font-mono text-gold">{teamsAlive}</p>
           <p className="text-xs text-text-secondary">of {standings.length}</p>
         </Card>
 
         <Card>
           <p className="text-xs text-text-muted mb-1">Eliminated</p>
-          <p className="text-2xl font-bold font-display text-red-400">{teamsEliminated}</p>
+          <p className="text-2xl font-bold font-mono text-live-red">{teamsEliminated}</p>
           <p className="text-xs text-text-secondary">teams out</p>
         </Card>
       </div>
 
       {/* User Status Alert */}
       {isEliminated && (
-        <Card className="mb-6 border border-red-400/50 bg-red-400/10">
+        <Card className="mb-6 border border-live-red/50 bg-live-red/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-400/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 rounded-full bg-live-red/20 flex items-center justify-center">
+                <svg className="w-5 h-5 text-live-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
@@ -159,7 +159,7 @@ const SurvivorBoardPage = () => {
             {userCanBuyBack && (
               <button
                 onClick={() => setShowBuyBackModal(true)}
-                className="px-4 py-2 bg-yellow-500 text-slate font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
+                className="px-4 py-2 bg-crown text-slate font-semibold rounded-lg hover:bg-crown transition-colors"
               >
                 Use Buy-Back
               </button>
@@ -177,7 +177,7 @@ const SurvivorBoardPage = () => {
             className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
                 ? 'bg-gold text-text-primary'
-                : 'bg-dark-tertiary text-text-secondary hover:text-text-primary'
+                : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}
@@ -210,20 +210,20 @@ const SurvivorBoardPage = () => {
           <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Elimination Timeline</h3>
           {survivorData?.eliminations?.length > 0 ? (
             <div className="relative">
-              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-dark-border"></div>
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-[var(--card-border)]"></div>
               <div className="space-y-6">
                 {survivorData.eliminations
                   .sort((a, b) => b.week - a.week)
                   .map((elimination, index) => (
                     <div key={index} className="relative pl-10">
-                      <div className="absolute left-2 w-4 h-4 rounded-full bg-red-400 border-4 border-dark-secondary"></div>
-                      <div className="bg-dark-tertiary rounded-lg p-4">
+                      <div className="absolute left-2 w-4 h-4 rounded-full bg-live-red border-4 border-[var(--card-border)]"></div>
+                      <div className="bg-[var(--card-bg)] rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-text-primary">Week {elimination.week}</span>
-                          <span className="text-xs text-text-muted">{elimination.points} pts</span>
+                          <span className="text-xs text-text-muted font-mono">{elimination.points} pts</span>
                         </div>
                         <p className="text-text-secondary">
-                          <span className="text-red-400 font-medium">{elimination.name}</span> was eliminated
+                          <span className="text-live-red font-medium">{elimination.name}</span> was eliminated
                         </p>
                       </div>
                     </div>

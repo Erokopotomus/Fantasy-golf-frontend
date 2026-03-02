@@ -35,7 +35,7 @@ const TradeReview = ({
             className={`p-4 rounded-lg border ${
               trade.isIncoming
                 ? 'bg-gold/5 border-gold/30'
-                : 'bg-dark-tertiary border-dark-border'
+                : 'bg-[var(--card-bg)] border-[var(--card-border)]'
             }`}
           >
             <div className="flex items-center justify-between mb-3">
@@ -55,7 +55,7 @@ const TradeReview = ({
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <p className={`text-sm mb-2 ${
-                  trade.isIncoming ? 'text-gold' : 'text-red-400'
+                  trade.isIncoming ? 'text-gold' : 'text-live-red'
                 }`}>
                   {trade.isIncoming ? 'You receive' : 'You send'}
                 </p>
@@ -70,7 +70,7 @@ const TradeReview = ({
               </div>
               <div>
                 <p className={`text-sm mb-2 ${
-                  trade.isIncoming ? 'text-red-400' : 'text-gold'
+                  trade.isIncoming ? 'text-live-red' : 'text-gold'
                 }`}>
                   {trade.isIncoming ? 'You send' : 'You receive'}
                 </p>

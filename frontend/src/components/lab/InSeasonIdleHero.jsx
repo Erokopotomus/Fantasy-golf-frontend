@@ -39,7 +39,7 @@ export default function InSeasonIdleHero({ weeklyIntel, phaseMeta, phaseContext 
               Your Roster SG {courseProfile.topSkillLabel}
             </span>
             <span className={`text-xs font-mono font-bold ${
-              rosterFit.avgSg > 0.3 ? 'text-emerald-400' : rosterFit.avgSg > 0 ? 'text-yellow-400' : 'text-red-400'
+              rosterFit.avgSg > 0.3 ? 'text-field' : rosterFit.avgSg > 0 ? 'text-crown' : 'text-live-red'
             }`}>
               {rosterFit.avgSg > 0 ? '+' : ''}{rosterFit.avgSg}
             </span>
@@ -68,7 +68,7 @@ export default function InSeasonIdleHero({ weeklyIntel, phaseMeta, phaseContext 
                   <span className="text-text-primary/60 truncate">{p.name}</span>
                   {p.countryFlag && <span className="text-[10px]">{p.countryFlag}</span>}
                 </div>
-                <span className="text-emerald-400 font-mono text-[11px] font-bold shrink-0 ml-2">
+                <span className="text-field font-mono text-[11px] font-bold shrink-0 ml-2">
                   +{p.skillSg}
                 </span>
               </div>

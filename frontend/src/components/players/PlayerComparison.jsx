@@ -77,7 +77,7 @@ const PlayerComparison = ({
           >
             <button
               onClick={() => onRemovePlayer(player.id)}
-              className="absolute top-2 right-2 text-text-muted hover:text-red-400 transition-colors"
+              className="absolute top-2 right-2 text-text-muted hover:text-live-red transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -101,7 +101,7 @@ const PlayerComparison = ({
                 <span className="text-[10px] font-mono text-text-primary/50">OWGR #{player.owgrRank}</span>
               )}
               {player.cpi != null && (
-                <span className={`text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                <span className={`text-[10px] font-mono font-bold ${player.cpi >= 0 ? 'text-field-bright' : 'text-live-red'}`}>
                   CPI {player.cpi > 0 ? '+' : ''}{player.cpi.toFixed(1)}
                 </span>
               )}

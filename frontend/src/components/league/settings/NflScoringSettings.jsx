@@ -65,11 +65,11 @@ const PRESETS = [
 
 const CATEGORY_META = {
   passing:       { label: 'Passing', color: 'text-blue-400' },
-  rushing:       { label: 'Rushing', color: 'text-green-400' },
+  rushing:       { label: 'Rushing', color: 'text-field' },
   receiving:     { label: 'Receiving', color: 'text-purple-400' },
-  fumbles:       { label: 'Fumbles', color: 'text-red-400' },
-  kicking:       { label: 'Kicking', color: 'text-yellow-400' },
-  defense:       { label: 'Defense / Special Teams', color: 'text-orange-400' },
+  fumbles:       { label: 'Fumbles', color: 'text-live-red' },
+  kicking:       { label: 'Kicking', color: 'text-crown' },
+  defense:       { label: 'Defense / Special Teams', color: 'text-blaze' },
   special_teams: { label: 'Special Teams Player', color: 'text-teal-400' },
   bonuses:       { label: 'Bonuses', color: 'text-pink-400' },
   idp:           { label: 'IDP (Individual Defensive Players)', color: 'text-gray-400' },
@@ -264,11 +264,11 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
     return (
       <Card>
         <div className="text-center py-8">
-          <p className="text-red-400 mb-2">Failed to load scoring settings</p>
+          <p className="text-live-red mb-2">Failed to load scoring settings</p>
           <p className="text-text-muted text-sm">{error}</p>
           <button
             onClick={loadSchema}
-            className="mt-4 px-4 py-2 bg-dark-tertiary text-text-primary rounded-lg hover:bg-dark-border transition-colors"
+            className="mt-4 px-4 py-2 bg-[var(--card-bg)] text-text-primary rounded-lg hover:bg-[var(--card-border)] transition-colors"
           >
             Retry
           </button>
@@ -300,7 +300,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
                 className={`p-4 rounded-lg border-2 text-left transition-all ${
                   active
                     ? `${c.border} ${c.bg} ring-1 ${c.ring}`
-                    : 'border-dark-border bg-dark-tertiary hover:border-dark-border/80'
+                    : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[var(--card-border)]'
                 }`}
               >
                 <p className={`font-semibold ${active ? c.text : 'text-text-primary'}`}>{p.name}</p>
@@ -333,7 +333,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   previewPos === pos
                     ? 'bg-gold text-text-primary'
-                    : 'bg-dark-tertiary text-text-muted hover:text-text-primary hover:bg-dark-border'
+                    : 'bg-[var(--card-bg)] text-text-muted hover:text-text-primary hover:bg-[var(--card-border)]'
                 }`}
               >
                 {pos}
@@ -346,7 +346,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
         </p>
         <div className="flex gap-3">
           {Object.entries(preview.cats).map(([cat, pts]) => (
-            <div key={cat} className="bg-dark-primary rounded-lg p-3 text-center flex-1">
+            <div key={cat} className="bg-[var(--bg)] rounded-lg p-3 text-center flex-1">
               <p className="text-text-muted text-xs mb-1">{cat}</p>
               <p className="text-lg font-bold font-display text-text-secondary">{pts}</p>
             </div>
@@ -379,7 +379,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
                   {meta.label}
                 </h3>
                 {isIdp && (
-                  <span className="text-xs px-2 py-0.5 bg-dark-tertiary text-text-muted rounded-full">
+                  <span className="text-xs px-2 py-0.5 bg-[var(--card-bg)] text-text-muted rounded-full">
                     Coming Soon
                   </span>
                 )}
@@ -408,7 +408,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
                         value={rules[stat.key] ?? stat.default ?? 0}
                         onChange={(e) => handleRuleChange(stat.key, e.target.value)}
                         disabled={!isCustom || isIdp}
-                        className={`w-full p-2 bg-dark-tertiary border border-dark-border rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
+                        className={`w-full p-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-center text-sm focus:border-gold focus:outline-none ${
                           (!isCustom || isIdp) ? 'opacity-60 cursor-not-allowed' : ''
                         }`}
                       />
@@ -435,7 +435,7 @@ const NflScoringSettings = ({ leagueId, onSaved }) => {
           >
             {saving ? 'Saving...' : 'Save Scoring Settings'}
           </button>
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-live-red text-sm">{error}</p>}
         </div>
       )}
     </div>

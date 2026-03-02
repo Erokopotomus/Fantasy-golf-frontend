@@ -154,14 +154,14 @@ const PlayoffBracket = ({ bracket, teams, currentUserId }) => {
             <h4 className="text-sm font-medium text-text-secondary mb-4 text-center">
               Champion
             </h4>
-            <div className="bg-gradient-to-br from-yellow-500/20 to-[var(--surface)] rounded-lg p-4 w-48 text-center border border-yellow-500/30">
-              <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-2">
-                <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <div className="bg-gradient-to-br from-crown/20 to-[var(--surface)] rounded-lg p-4 w-48 text-center border border-crown/30">
+              <div className="w-12 h-12 rounded-full bg-crown/20 flex items-center justify-center mx-auto mb-2">
+                <svg className="w-6 h-6 text-crown" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z" clipRule="evenodd" />
                   <path d="M9 11H3v5a2 2 0 002 2h4v-7zM11 18h4a2 2 0 002-2v-5h-6v7z" />
                 </svg>
               </div>
-              <p className="text-yellow-500 font-semibold">
+              <p className="text-crown font-semibold">
                 {/* Find champion from last round */}
                 {processedBracket.rounds[processedBracket.rounds.length - 1]?.matchups[0]?.winner
                   ? teamLookup[processedBracket.rounds[processedBracket.rounds.length - 1].matchups[0].winner]?.name || 'Champion'

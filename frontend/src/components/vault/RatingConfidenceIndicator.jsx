@@ -8,9 +8,9 @@ export default function RatingConfidenceIndicator({ confidence = 0, dataSourceSu
     : 'Building your rating'
 
   const barColor = confidence >= 80
-    ? 'bg-green-400/60'
+    ? 'bg-field/60'
     : confidence >= 40
-    ? 'bg-yellow-400/60'
+    ? 'bg-crown/60'
     : 'bg-[var(--stone)]'
 
   return (

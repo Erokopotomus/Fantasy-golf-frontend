@@ -6,7 +6,7 @@ import FeedCard from '../components/feed/FeedCard'
 const SPORTS = [
   { key: 'all', label: 'All' },
   { key: 'nfl', label: 'NFL', color: 'orange' },
-  { key: 'golf', label: 'Golf', color: 'emerald-400' },
+  { key: 'golf', label: 'Golf', color: 'field' },
 ]
 
 const QUICK_NAV = {

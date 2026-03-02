@@ -65,7 +65,7 @@ const JoinLeague = () => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-primary">
+    <div className="min-h-screen bg-[var(--bg)]">
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           {/* Header */}
@@ -89,8 +89,8 @@ const JoinLeague = () => {
 
           {/* Error Display */}
           {error && (
-            <Card className="mb-6 border-red-500 bg-red-500/10">
-              <div className="flex items-center gap-3 text-red-500">
+            <Card className="mb-6 border-live-red bg-live-red/10">
+              <div className="flex items-center gap-3 text-live-red">
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -141,30 +141,30 @@ const JoinLeague = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                <div className="bg-dark-primary rounded-lg p-3">
+                <div className="bg-[var(--bg)] rounded-lg p-3">
                   <span className="text-text-muted block">Type</span>
                   <span className="text-text-primary capitalize">{previewLeague.type} Draft</span>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-3">
+                <div className="bg-[var(--bg)] rounded-lg p-3">
                   <span className="text-text-muted block">Members</span>
                   <span className="text-text-primary">
                     {previewLeague.memberCount} / {previewLeague.maxMembers}
                   </span>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-3">
+                <div className="bg-[var(--bg)] rounded-lg p-3">
                   <span className="text-text-muted block">Scoring</span>
                   <span className="text-text-primary capitalize">
                     {previewLeague.scoringType === 'strokes-gained' ? 'Strokes Gained' : 'Standard'}
                   </span>
                 </div>
-                <div className="bg-dark-primary rounded-lg p-3">
+                <div className="bg-[var(--bg)] rounded-lg p-3">
                   <span className="text-text-muted block">Roster Size</span>
                   <span className="text-text-primary">{previewLeague.rosterSize} players</span>
                 </div>
               </div>
 
               {previewLeague.memberCount >= previewLeague.maxMembers ? (
-                <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-3 text-yellow-500 text-sm text-center">
+                <div className="bg-crown/10 border border-crown/50 rounded-lg p-3 text-crown text-sm text-center">
                   This league is full
                 </div>
               ) : (

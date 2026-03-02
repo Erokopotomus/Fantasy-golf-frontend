@@ -208,7 +208,7 @@ export default function OwnerDetailModal({ owner, rank, onClose, rating = null }
                   {completedSeasons.map(s => {
                     const [w, l] = s.record.split('-').map(Number)
                     const recordColor = w > l ? 'text-accent-green'
-                      : w < l ? 'text-red-400'
+                      : w < l ? 'text-live-red'
                       : 'text-text-secondary'
                     return (
                       <div

@@ -13,7 +13,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
   if (loading) {
     return (
       <div className="mb-6">
-        <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]">
+        <Card className="border-field-bright/30 bg-gradient-to-r from-field-bright/10 to-[var(--surface)]">
           <div className="animate-pulse">
             <div className="flex items-center justify-between mb-4">
               <div className="h-5 bg-[var(--bg-alt)] rounded w-64" />
@@ -39,10 +39,10 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
   }
 
   const isFinal = tournament.status === 'COMPLETED'
-  const borderClass = isFinal ? 'border-[var(--card-border)]' : 'border-emerald-500/30'
+  const borderClass = isFinal ? 'border-[var(--card-border)]' : 'border-field-bright/30'
   const gradientClass = isFinal
     ? 'bg-gradient-to-r from-[var(--bg-alt)] to-[var(--surface)]'
-    : 'bg-gradient-to-r from-emerald-500/10 to-[var(--surface)]'
+    : 'bg-gradient-to-r from-field-bright/10 to-[var(--surface)]'
 
   // Decide how many teams to show in the leaderboard
   const leaderboardTeams = teams.length <= 8
@@ -69,7 +69,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
 
   const toParColor = (toPar) => {
     if (toPar === null || toPar === undefined || toPar === 0) return 'text-text-primary'
-    return toPar < 0 ? 'text-emerald-400' : 'text-red-400'
+    return toPar < 0 ? 'text-field' : 'text-live-red'
   }
 
   const formatPosition = (pos) => {
@@ -91,7 +91,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-[var(--card-border)]/50">
           <div className="flex items-center gap-2 min-w-0">
             {isLive && (
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse flex-shrink-0" />
+              <span className="w-2 h-2 bg-field rounded-full animate-pulse flex-shrink-0" />
             )}
             <h3 className="text-sm font-display font-bold text-text-primary truncate">
               {tournament.name}
@@ -100,7 +100,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
               )}
             </h3>
             {isLive && (
-              <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded flex-shrink-0">
+              <span className="px-1.5 py-0.5 bg-field-bright/20 text-field text-[10px] font-bold uppercase tracking-wider rounded flex-shrink-0">
                 Live
               </span>
             )}
@@ -205,8 +205,8 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <span className={`text-xs font-mono font-bold w-5 ${
-                            team.rank === 1 ? 'text-yellow-400' :
-                            team.rank === 2 ? 'text-gray-300' :
+                            team.rank === 1 ? 'text-crown' :
+                            team.rank === 2 ? 'text-gray-400 dark:text-gray-300' :
                             team.rank === 3 ? 'text-amber-500' : 'text-text-muted'
                           }`}>
                             {team.rank}.

@@ -601,12 +601,12 @@ const ImportLeague = () => {
                 <div>
                   {/* Yahoo OAuth Error */}
                   {yahooError && (
-                    <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
-                      <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-start gap-3 bg-live-red/10 border border-live-red/30 rounded-lg p-3 mb-4">
+                      <svg className="w-5 h-5 text-live-red flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                       </svg>
                       <div>
-                        <p className="text-sm text-red-400">{yahooError}</p>
+                        <p className="text-sm text-live-red">{yahooError}</p>
                         <button onClick={() => { setYahooError(null); setShowManualToken(true) }} className="text-xs text-text-muted hover:text-text-secondary mt-1">
                           Try pasting a token manually instead
                         </button>
@@ -639,7 +639,7 @@ const ImportLeague = () => {
                         </div>
                         <button
                           onClick={yahooOAuth.disconnect}
-                          className="text-xs text-text-muted hover:text-red-400 transition-colors"
+                          className="text-xs text-text-muted hover:text-live-red transition-colors"
                         >
                           Disconnect
                         </button>
@@ -868,7 +868,7 @@ const ImportLeague = () => {
 
               {activeHook.error && (
                 <div className="mb-4">
-                  <p className="text-sm text-red-400">{activeHook.error}</p>
+                  <p className="text-sm text-live-red">{activeHook.error}</p>
                   {platform?.id === 'yahoo' && (activeHook.error.includes('No Yahoo league data') || activeHook.error.includes('OAuth') || activeHook.error.includes('re-authorize') || activeHook.error.includes('token')) && (
                     <p className="text-xs text-text-secondary mt-2">
                       <strong className="text-text-primary">Try this:</strong> Disconnect Yahoo above and reconnect — your token may have expired. If importing an older season, make sure you're using that season's league ID (Yahoo assigns a new ID each year).
@@ -928,7 +928,7 @@ const ImportLeague = () => {
                           )}
                           <span className="text-xs font-mono text-text-secondary">{s.totalRosters || s.teamCount} teams</span>
                           <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
-                            s.status === 'complete' ? 'bg-green-500/20 text-green-400' : 'bg-accent-gold/20 text-accent-gold'
+                            s.status === 'complete' ? 'bg-field-bright/20 text-field' : 'bg-accent-gold/20 text-accent-gold'
                           }`}>
                             {s.status}
                           </span>
@@ -961,14 +961,14 @@ const ImportLeague = () => {
                     </p>
                   )}
                   {targetLeagueId && (
-                    <p className="text-xs text-green-400 mt-2">
+                    <p className="text-xs text-field mt-2">
                       Seasons will be added to the existing league vault.
                     </p>
                   )}
                 </div>
 
                 {activeHook.error && (
-                  <p className="text-sm text-red-400 mb-4">{activeHook.error}</p>
+                  <p className="text-sm text-live-red mb-4">{activeHook.error}</p>
                 )}
 
                 <div className="flex gap-3">
@@ -1293,8 +1293,8 @@ const ImportLeague = () => {
           {step === 5 && activeHook.result && (
             <div className="space-y-4">
               <Card className="text-center py-8">
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 bg-field-bright/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-field" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -1322,29 +1322,29 @@ const ImportLeague = () => {
                       <div className="flex-1 h-3 bg-[var(--stone)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
-                            health.overallStatus === 'green' ? 'bg-green-500' :
-                            health.overallStatus === 'yellow' ? 'bg-accent-gold' : 'bg-red-500'
+                            health.overallStatus === 'green' ? 'bg-field-bright' :
+                            health.overallStatus === 'yellow' ? 'bg-accent-gold' : 'bg-live-red'
                           }`}
                           style={{ width: `${health.overallScore}%` }}
                         />
                       </div>
                       <span className={`text-sm font-mono font-bold ${
-                        health.overallStatus === 'green' ? 'text-green-400' :
-                        health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'
+                        health.overallStatus === 'green' ? 'text-field' :
+                        health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-live-red'
                       }`}>
                         {health.overallScore}%
                       </span>
                     </div>
 
                     {health.overallStatus === 'green' ? (
-                      <p className="text-sm text-green-400 flex items-center justify-center gap-1.5">
+                      <p className="text-sm text-field flex items-center justify-center gap-1.5">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         All seasons look healthy
                       </p>
                     ) : (
-                      <p className={`text-sm ${health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-red-400'}`}>
+                      <p className={`text-sm ${health.overallStatus === 'yellow' ? 'text-accent-gold' : 'text-live-red'}`}>
                         {health.overallStatus === 'yellow' ? 'Needs Review' : 'Issues Detected'}
                       </p>
                     )}
@@ -1396,7 +1396,7 @@ const ImportLeague = () => {
 
                   {/* Group missing seasons together */}
                   {health.missingYears?.length > 0 && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-3">
+                    <div className="bg-live-red/10 border border-live-red/20 rounded-lg p-3 mb-3">
                       <p className="text-sm text-text-primary font-medium mb-1">
                         Missing: {health.missingYears.join(', ')}
                       </p>
@@ -1417,7 +1417,7 @@ const ImportLeague = () => {
                     .filter(i => i.type !== 'MISSING_SEASON' && i.severity !== 'info')
                     .map((issue, idx) => (
                       <div key={idx} className={`rounded-lg p-3 mb-2 ${
-                        issue.severity === 'high' ? 'bg-red-500/10 border border-red-500/20' :
+                        issue.severity === 'high' ? 'bg-live-red/10 border border-live-red/20' :
                         issue.severity === 'medium' ? 'bg-accent-gold/10 border border-accent-gold/20' :
                         'bg-[var(--bg-alt)] border border-[var(--card-border)]'
                       }`}>

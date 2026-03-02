@@ -126,7 +126,7 @@ const ImageUpload = ({
 
       {/* Error message */}
       {error && (
-        <p className="text-red-400 text-sm mt-2">{error}</p>
+        <p className="text-live-red text-sm mt-2">{error}</p>
       )}
 
       {/* Remove button */}

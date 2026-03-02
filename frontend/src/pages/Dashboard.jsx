@@ -153,11 +153,11 @@ const Dashboard = () => {
                     to={`/tournaments/${currentTournament.id}${hasLeagues ? `?league=${leagues[0].id}` : ''}`}
                     className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border transition-colors group ${
                       isLive
-                        ? 'bg-emerald-500/[0.06] border-emerald-500/30 hover:border-emerald-500/50'
+                        ? 'bg-field-bright/[0.06] border-field-bright/30 hover:border-field-bright/50'
                         : 'bg-[var(--surface)] border-[var(--card-border)] hover:border-[var(--card-border-strong)]'
                     }`}
                   >
-                    {isLive && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
+                    {isLive && <span className="w-2 h-2 rounded-full bg-field-bright animate-pulse shrink-0" />}
                     <span className="text-sm font-medium text-text-primary group-hover:text-[var(--field)] transition-colors">
                       {currentTournament.name}
                     </span>
@@ -275,14 +275,14 @@ const Dashboard = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto">
                       <Link
                         to="/golf"
-                        className="flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl hover:border-emerald-500/40 transition-colors group"
+                        className="flex items-center gap-3 px-4 py-3 bg-field-bright/10 border border-field-bright/20 rounded-xl hover:border-field-bright/40 transition-colors group"
                       >
-                        <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-field-bright/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                           <span className="text-lg">&#x26f3;</span>
                         </div>
                         <div className="text-left">
                           <p className="text-text-primary font-semibold text-sm">Golf Hub</p>
-                          <p className="text-emerald-400/70 text-xs">PGA Tour, stats & previews</p>
+                          <p className="text-field/70 text-xs">PGA Tour, stats & previews</p>
                         </div>
                       </Link>
                       <Link

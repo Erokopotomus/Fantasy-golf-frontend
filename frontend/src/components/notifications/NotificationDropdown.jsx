@@ -38,16 +38,16 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
         )
       case 'LEAGUE':
         return (
-          <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-field-bright/20 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-field" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
         )
       case 'SCORING':
         return (
-          <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-8 h-8 bg-crown/20 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-crown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
@@ -81,7 +81,7 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
         {unreadCount > 0 && (
           <button
             onClick={onMarkAllRead}
-            className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-xs text-field hover:text-emerald-300 transition-colors"
           >
             Mark all read
           </button>
@@ -115,7 +115,7 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
                     {notif.title}
                   </p>
                   {!notif.read && (
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0 mt-1.5" />
+                    <div className="w-2 h-2 bg-field rounded-full flex-shrink-0 mt-1.5" />
                   )}
                 </div>
                 <p className="text-text-muted text-xs mt-0.5 line-clamp-2">{notif.message}</p>
@@ -126,7 +126,7 @@ const NotificationDropdown = ({ notifications, unreadCount, onMarkRead, onMarkAl
                   e.stopPropagation()
                   onDelete(notif.id)
                 }}
-                className="p-1 text-text-muted hover:text-red-400 rounded transition-colors flex-shrink-0"
+                className="p-1 text-text-muted hover:text-live-red rounded transition-colors flex-shrink-0"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

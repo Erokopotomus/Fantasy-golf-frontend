@@ -7,12 +7,12 @@ import api from '../services/api'
 import Card from '../components/common/Card'
 
 const posColors = {
-  QB: 'bg-red-500/20 text-red-400',
+  QB: 'bg-live-red/20 text-live-red',
   RB: 'bg-blue-500/20 text-blue-400',
-  WR: 'bg-emerald-500/20 text-emerald-400',
-  TE: 'bg-yellow-500/20 text-yellow-400',
+  WR: 'bg-field-bright/20 text-field',
+  TE: 'bg-crown/20 text-crown',
   K: 'bg-purple-500/20 text-purple-400',
-  DEF: 'bg-orange-500/20 text-orange-400',
+  DEF: 'bg-orange-500/20 text-blaze',
 }
 
 const formatStatLine = (sl) => {
@@ -77,7 +77,7 @@ const GamedayPortal = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-field mx-auto mb-4" />
             <p className="text-text-secondary">Loading Gameday Portal...</p>
           </div>
         </div>
@@ -118,8 +118,8 @@ const GamedayPortal = () => {
   const isLive = !!activeWeek && activeWeek.week === currentWeekNum
   const isComplete = currentWeekSchedule?.matchups?.every(m => m.completed)
   const statusLabel = isLive ? 'LIVE' : isComplete ? 'FINAL' : 'UPCOMING'
-  const statusColor = isLive ? 'text-emerald-400' : isComplete ? 'text-text-muted' : 'text-yellow-400'
-  const statusDot = isLive ? 'bg-emerald-400 animate-pulse' : isComplete ? 'bg-text-muted' : 'bg-yellow-400'
+  const statusColor = isLive ? 'text-field' : isComplete ? 'text-text-muted' : 'text-crown'
+  const statusDot = isLive ? 'bg-field animate-pulse' : isComplete ? 'bg-text-muted' : 'bg-crown'
 
   // Sort players: starters first (by points desc), then bench
   const sortPlayers = (playerScores) => {
@@ -185,18 +185,18 @@ const GamedayPortal = () => {
           {userMatchup ? (
             <div className="relative flex items-stretch rounded-xl overflow-hidden">
               {/* Your side */}
-              <div className="flex-1 bg-emerald-500/10 border border-emerald-500/20 rounded-l-xl px-4 py-3">
+              <div className="flex-1 bg-field-bright/10 border border-field-bright/20 rounded-l-xl px-4 py-3">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 mr-2">
-                    <p className="text-[10px] uppercase tracking-wider text-emerald-400/60 font-bold mb-0.5">You</p>
-                    <p className="text-sm font-semibold text-emerald-400 truncate">
+                    <p className="text-[10px] uppercase tracking-wider text-field/60 font-bold mb-0.5">You</p>
+                    <p className="text-sm font-semibold text-field truncate">
                       {userTeamInfo?.teamName || userTeamInfo?.name || 'Your Team'}
                     </p>
-                    <p className="text-[10px] text-emerald-400/40">
+                    <p className="text-[10px] text-field/40">
                       {userTeamInfo?.wins || 0}-{userTeamInfo?.losses || 0}
                     </p>
                   </div>
-                  <span className="text-3xl font-bold font-mono text-emerald-400 flex-shrink-0">
+                  <span className="text-3xl font-bold font-mono text-field flex-shrink-0">
                     {(userScore || 0).toFixed(1)}
                   </span>
                 </div>
@@ -210,13 +210,13 @@ const GamedayPortal = () => {
               </div>
 
               {/* Opponent side */}
-              <div className="flex-1 bg-red-500/5 border border-red-500/10 rounded-r-xl px-4 py-3">
+              <div className="flex-1 bg-live-red/5 border border-live-red/10 rounded-r-xl px-4 py-3">
                 <div className="flex items-center justify-between">
                   <span className="text-3xl font-bold font-mono text-text-secondary flex-shrink-0">
                     {(opponentScore || 0).toFixed(1)}
                   </span>
                   <div className="min-w-0 ml-2 text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-red-400/40 font-bold mb-0.5">Opp</p>
+                    <p className="text-[10px] uppercase tracking-wider text-live-red/40 font-bold mb-0.5">Opp</p>
                     <p className="text-sm font-medium text-text-secondary truncate">
                       {opponentTeamInfo?.teamName || opponentTeamInfo?.name || 'Opponent'}
                     </p>
@@ -237,7 +237,7 @@ const GamedayPortal = () => {
             {/* YOUR PLAYERS */}
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold font-display text-emerald-400 uppercase tracking-wider">Your Players</h3>
+                <h3 className="text-sm font-bold font-display text-field uppercase tracking-wider">Your Players</h3>
                 <span className="text-lg font-bold font-mono text-text-primary">
                   {(userTeamScores?.totalPoints || userScore || 0).toFixed(1)}
                 </span>
@@ -263,7 +263,7 @@ const GamedayPortal = () => {
                           <p className="text-sm font-medium text-text-primary truncate">{p.playerName}</p>
                         </div>
                         <span className={`text-sm font-bold font-mono w-12 text-right ${
-                          p.points > 15 ? 'text-emerald-400' :
+                          p.points > 15 ? 'text-field' :
                           p.points > 5 ? 'text-text-primary' : 'text-text-muted'
                         }`}>
                           {(p.points || 0).toFixed(1)}
@@ -283,7 +283,7 @@ const GamedayPortal = () => {
             {/* OPPONENT PLAYERS */}
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold font-display text-red-400/80 uppercase tracking-wider">Their Players</h3>
+                <h3 className="text-sm font-bold font-display text-live-red/80 uppercase tracking-wider">Their Players</h3>
                 <span className="text-lg font-bold font-mono text-text-primary">
                   {(opponentTeamScores?.totalPoints || opponentScore || 0).toFixed(1)}
                 </span>
@@ -309,7 +309,7 @@ const GamedayPortal = () => {
                           <p className="text-sm font-medium text-text-primary truncate">{p.playerName}</p>
                         </div>
                         <span className={`text-sm font-bold font-mono w-12 text-right ${
-                          p.points > 15 ? 'text-red-400' :
+                          p.points > 15 ? 'text-live-red' :
                           p.points > 5 ? 'text-text-primary' : 'text-text-muted'
                         }`}>
                           {(p.points || 0).toFixed(1)}
@@ -346,26 +346,26 @@ const GamedayPortal = () => {
                   <div
                     key={i}
                     className={`p-2.5 rounded-lg text-sm ${
-                      isUserMatchup ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-[var(--bg-alt)]'
+                      isUserMatchup ? 'bg-field-bright/10 border border-field-bright/20' : 'bg-[var(--bg-alt)]'
                     }`}
                   >
                     {/* Home team row */}
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs truncate flex-1 mr-2 ${homeWon ? 'text-emerald-400 font-semibold' : 'text-text-primary'}`}>
-                        {homeWon && <span className="text-emerald-400 mr-1">W</span>}
+                      <span className={`text-xs truncate flex-1 mr-2 ${homeWon ? 'text-field font-semibold' : 'text-text-primary'}`}>
+                        {homeWon && <span className="text-field mr-1">W</span>}
                         {homeTeam?.teamName || homeTeam?.name || 'Home'}
                       </span>
-                      <span className={`font-mono text-xs font-bold ${homeWon ? 'text-emerald-400' : 'text-text-primary'}`}>
+                      <span className={`font-mono text-xs font-bold ${homeWon ? 'text-field' : 'text-text-primary'}`}>
                         {(m.homeScore || 0).toFixed(1)}
                       </span>
                     </div>
                     {/* Away team row */}
                     <div className="flex items-center justify-between mt-0.5">
-                      <span className={`text-xs truncate flex-1 mr-2 ${awayWon ? 'text-emerald-400 font-semibold' : 'text-text-secondary'}`}>
-                        {awayWon && <span className="text-emerald-400 mr-1">W</span>}
+                      <span className={`text-xs truncate flex-1 mr-2 ${awayWon ? 'text-field font-semibold' : 'text-text-secondary'}`}>
+                        {awayWon && <span className="text-field mr-1">W</span>}
                         {awayTeam?.teamName || awayTeam?.name || 'Away'}
                       </span>
-                      <span className={`font-mono text-xs font-bold ${awayWon ? 'text-emerald-400' : 'text-text-secondary'}`}>
+                      <span className={`font-mono text-xs font-bold ${awayWon ? 'text-field' : 'text-text-secondary'}`}>
                         {(m.awayScore || 0).toFixed(1)}
                       </span>
                     </div>
@@ -390,14 +390,14 @@ const GamedayPortal = () => {
                   className="flex items-center gap-2 py-1.5 px-2 rounded text-sm"
                 >
                   <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                    entry.side === 'you' ? 'bg-emerald-400' : 'bg-red-400'
+                    entry.side === 'you' ? 'bg-field' : 'bg-live-red'
                   }`} />
                   <span className="text-text-primary flex-1 truncate">
                     {entry.playerName}
                     {entry.isBench && <span className="text-text-muted text-xs ml-1">(bench)</span>}
                   </span>
                   <span className={`font-mono font-bold text-xs ${
-                    entry.side === 'you' ? 'text-emerald-400' : 'text-red-400'
+                    entry.side === 'you' ? 'text-field' : 'text-live-red'
                   }`}>
                     +{entry.points.toFixed(1)}
                   </span>
@@ -429,7 +429,7 @@ const GamedayPortal = () => {
                     to={`/leagues/${leagueId}/scoring`}
                     className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                       isActive
-                        ? 'bg-emerald-500 text-text-primary'
+                        ? 'bg-field-bright text-text-primary'
                         : isScored
                         ? 'bg-[var(--bg-alt)] text-text-secondary hover:text-text-primary'
                         : 'bg-[var(--bg-alt)] text-text-muted'

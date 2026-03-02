@@ -38,7 +38,7 @@ const RotoSettings = ({ settings, onChange }) => {
 
         <div className="flex items-center justify-between mb-4 p-3 bg-[var(--bg-alt)] rounded-lg">
           <span className="text-sm text-text-secondary">Selected Categories</span>
-          <span className={`font-semibold ${localSettings.categories.length >= 4 && localSettings.categories.length <= 10 ? 'text-gold' : 'text-red-400'}`}>
+          <span className={`font-semibold ${localSettings.categories.length >= 4 && localSettings.categories.length <= 10 ? 'text-gold' : 'text-live-red'}`}>
             {localSettings.categories.length} / 10
           </span>
         </div>

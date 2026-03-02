@@ -126,11 +126,11 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
                 {/* Buttons or status */}
                 {existing ? (
                   <div className="flex items-center gap-1 w-20 justify-end">
-                    <span className={`text-xs font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={`text-xs font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-field' : 'text-rose-400'}`}>
                       {existing.predictionData?.direction?.toUpperCase()}
                     </span>
                     {existing.outcome && existing.outcome !== 'PENDING' && (
-                      <span className={`text-xs ${existing.outcome === 'CORRECT' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <span className={`text-xs ${existing.outcome === 'CORRECT' ? 'text-field' : 'text-rose-400'}`}>
                         {existing.outcome === 'CORRECT' ? '✓' : '✗'}
                       </span>
                     )}
@@ -144,7 +144,7 @@ export default function EventPredictionSlate({ eventId, leaderboard = [], tourna
                     <button
                       onClick={() => handleSubmit(player.id, player.name, 'over', benchmarkValue)}
                       disabled={submitting === player.id}
-                      className="px-2 py-1 text-xs rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50"
+                      className="px-2 py-1 text-xs rounded bg-field-bright/20 border border-field-bright/30 text-field hover:bg-field-bright/30 transition-colors disabled:opacity-50"
                     >
                       O
                     </button>

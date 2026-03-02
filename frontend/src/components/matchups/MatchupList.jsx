@@ -34,7 +34,7 @@ const MatchupList = ({ week, teams, leagueId, currentUserId }) => {
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
           week.matchups.every(m => m.completed)
             ? 'bg-gold/20 text-gold'
-            : 'bg-yellow-500/20 text-yellow-400'
+            : 'bg-crown/20 text-crown'
         }`}>
           {week.matchups.every(m => m.completed)
             ? 'Complete'

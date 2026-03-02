@@ -2,7 +2,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
   if (!player) return null
 
   const getRankBadge = (rank) => {
-    if (rank === 1) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+    if (rank === 1) return 'bg-crown/20 text-crown border-crown/50'
     if (rank <= 5) return 'bg-gold/20 text-gold border-gold/50'
     if (rank <= 10) return 'bg-blue-500/20 text-blue-400 border-blue-500/50'
     if (rank <= 25) return 'bg-purple-500/20 text-purple-400 border-purple-500/50'
@@ -13,9 +13,9 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
     if (!tour) return null
     const t = tour.toUpperCase()
     if (t === 'PGA') return { label: 'PGA TOUR', cls: 'bg-blue-500/20 text-blue-400 border-blue-500/50' }
-    if (t === 'LIV') return { label: 'LIV Golf', cls: 'bg-red-500/20 text-red-400 border-red-500/50' }
+    if (t === 'LIV') return { label: 'LIV Golf', cls: 'bg-live-red/20 text-live-red border-live-red/50' }
     if (t === 'DP' || t === 'DP WORLD' || t === 'EURO') return { label: 'DP World', cls: 'bg-purple-500/20 text-purple-400 border-purple-500/50' }
-    if (t === 'KFT' || t === 'KORN FERRY') return { label: 'Korn Ferry', cls: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' }
+    if (t === 'KFT' || t === 'KORN FERRY') return { label: 'Korn Ferry', cls: 'bg-crown/20 text-crown border-crown/50' }
     return null
   }
 
@@ -25,16 +25,16 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
   const getCPIColor = (cpi) => {
     if (cpi == null) return 'text-text-muted'
     if (cpi > 1.5) return 'text-gold'
-    if (cpi > 0.5) return 'text-green-400'
-    if (cpi > -0.5) return 'text-yellow-400'
-    return 'text-red-400'
+    if (cpi > 0.5) return 'text-field'
+    if (cpi > -0.5) return 'text-crown'
+    return 'text-live-red'
   }
 
   // Form Score color
   const getFormColor = (score) => {
     if (score == null) return 'text-text-muted'
     if (score >= 80) return 'text-orange'
-    if (score >= 60) return 'text-yellow-400'
+    if (score >= 60) return 'text-crown'
     if (score >= 40) return 'text-blue-400'
     return 'text-blue-300'
   }
@@ -43,20 +43,20 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
   const getPressureColor = (score) => {
     if (score == null) return 'text-text-muted'
     if (score > 0.5) return 'text-gold'
-    if (score > -0.5) return 'text-gray-300'
-    return 'text-red-400'
+    if (score > -0.5) return 'text-gray-400 dark:text-gray-300'
+    return 'text-live-red'
   }
 
   // Recent form badge color
   const getFormBadgeStyle = (result) => {
     if (!result) return 'bg-[var(--stone)] text-text-muted'
-    if (result === 'CUT') return 'bg-red-500/20 text-red-400'
+    if (result === 'CUT') return 'bg-live-red/20 text-live-red'
     if (result === 'WD') return 'bg-gray-500/20 text-gray-400'
     const num = parseInt(result.replace('T', ''), 10)
     if (isNaN(num)) return 'bg-[var(--stone)] text-text-secondary'
     if (num === 1) return 'bg-gold/20 text-gold'
-    if (num <= 10) return 'bg-green-500/20 text-green-400'
-    if (num <= 25) return 'bg-yellow-500/20 text-yellow-400'
+    if (num <= 10) return 'bg-field-bright/20 text-field'
+    if (num <= 25) return 'bg-crown/20 text-crown'
     return 'bg-[var(--stone)] text-text-secondary'
   }
 
@@ -126,17 +126,17 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
     {
       label: 'Wins',
       value: player.wins > 0 ? player.wins : player.events > 0 ? '0' : null,
-      color: player.wins > 0 ? 'text-yellow-400' : 'text-text-primary',
+      color: player.wins > 0 ? 'text-crown' : 'text-text-primary',
     },
     {
       label: 'Top 10s',
       value: player.top10s > 0 ? player.top10s : player.events > 0 ? '0' : null,
-      color: player.top10s > 0 ? 'text-green-400' : 'text-text-primary',
+      color: player.top10s > 0 ? 'text-field' : 'text-text-primary',
     },
     {
       label: 'FedEx Pts',
       value: player.fedexPoints > 0 ? player.fedexPoints.toLocaleString() : null,
-      color: player.fedexPoints > 0 ? 'text-green-400' : 'text-text-muted',
+      color: player.fedexPoints > 0 ? 'text-field' : 'text-text-muted',
     },
   ]
 
@@ -181,7 +181,7 @@ const PlayerHeader = ({ player, clutchMetrics, onAddToRoster, onProposeTrade, is
               </span>
             )}
             {player.fedexRank && (
-              <span className="px-2 py-0.5 rounded border font-mono font-medium text-xs bg-green-500/20 text-green-400 border-green-500/50">
+              <span className="px-2 py-0.5 rounded border font-mono font-medium text-xs bg-field-bright/20 text-field border-field-bright/50">
                 #{player.fedexRank} FedEx
               </span>
             )}

@@ -6,10 +6,10 @@ import PostEditor from './PostEditor'
 
 const CATEGORIES = [
   { value: 'general', label: 'General', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'rule_change', label: 'Rule Change', color: 'bg-red-500/20 text-red-400' },
+  { value: 'rule_change', label: 'Rule Change', color: 'bg-live-red/20 text-live-red' },
   { value: 'trade_analysis', label: 'Trade Analysis', color: 'bg-purple-500/20 text-purple-400' },
-  { value: 'draft_recap', label: 'Draft Recap', color: 'bg-emerald-500/20 text-emerald-400' },
-  { value: 'reminder', label: 'Reminder', color: 'bg-yellow-500/20 text-yellow-400' },
+  { value: 'draft_recap', label: 'Draft Recap', color: 'bg-field-bright/20 text-field' },
+  { value: 'reminder', label: 'Reminder', color: 'bg-crown/20 text-crown' },
   { value: 'weekly_update', label: 'Weekly Update', color: 'bg-gold/20 text-gold' },
 ]
 
@@ -270,7 +270,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     {post.isPinned && (
-                      <span className="text-yellow-400 text-xs" title="Pinned">
+                      <span className="text-crown text-xs" title="Pinned">
                         <svg className="w-3.5 h-3.5 inline" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.789l1.599.8L9 4.323V3a1 1 0 011-1z" />
                         </svg>
@@ -285,7 +285,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                   </div>
                   {isCommissioner && (
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <button onClick={() => handlePin(post)} className="p-1 text-text-muted hover:text-yellow-400 transition-colors" title={post.isPinned ? 'Unpin' : 'Pin'}>
+                      <button onClick={() => handlePin(post)} className="p-1 text-text-muted hover:text-crown transition-colors" title={post.isPinned ? 'Unpin' : 'Pin'}>
                         <svg className="w-3.5 h-3.5" fill={post.isPinned ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                         </svg>
@@ -295,7 +295,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
-                      <button onClick={() => handleDelete(post.id)} className="p-1 text-text-muted hover:text-red-400 transition-colors" title="Delete">
+                      <button onClick={() => handleDelete(post.id)} className="p-1 text-text-muted hover:text-live-red transition-colors" title="Delete">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -439,7 +439,7 @@ const CommissionerNotes = ({ leagueId, isCommissioner, leagueName }) => {
                                   {(comment.user?.id === post.authorId || isCommissioner) && (
                                     <button
                                       onClick={() => handleDeleteComment(post.id, comment.id)}
-                                      className="text-text-muted hover:text-red-400 transition-colors ml-auto"
+                                      className="text-text-muted hover:text-live-red transition-colors ml-auto"
                                     >
                                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

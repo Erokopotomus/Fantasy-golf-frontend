@@ -8,7 +8,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
     <div
       className={`bg-[var(--surface)] rounded-lg overflow-hidden cursor-pointer transition-colors hover:bg-[var(--surface-alt)] ${
         isUserMatch ? 'ring-2 ring-gold/50' : ''
-      } ${isExpanded ? 'ring-2 ring-emerald-500/50' : ''}`}
+      } ${isExpanded ? 'ring-2 ring-field-bright/50' : ''}`}
       onClick={onClick}
     >
       {/* Matchup Header */}
@@ -97,7 +97,7 @@ const MatchupCard = ({ matchup, homeTeam, awayTeam, leagueId, currentUserId, det
         {/* Tie indicator */}
         {isTie && (
           <div className="text-center py-1">
-            <span className="text-xs text-yellow-400 font-medium px-2 py-0.5 bg-yellow-400/10 rounded">
+            <span className="text-xs text-crown font-medium px-2 py-0.5 bg-crown/10 rounded">
               TIE
             </span>
           </div>

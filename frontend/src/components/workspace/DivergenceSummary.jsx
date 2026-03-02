@@ -20,11 +20,11 @@ export default function DivergenceSummary({ entries }) {
 
   return (
     <div className="mx-3 my-2 p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)]">
-      <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-primary/50 mb-2">Your Biggest Bets</h3>
+      <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-primary/50 mb-2">Your Biggest Calls</h3>
       <div className="space-y-1.5">
         {risers.map(d => (
           <div key={d.playerId} className="flex items-center gap-2 text-xs">
-            <span className="text-emerald-400 font-mono font-bold w-10 text-right">{'\u2191'}{d.delta}</span>
+            <span className="text-field font-mono font-bold w-10 text-right">{'\u2191'}{d.delta}</span>
             <span className="text-text-primary font-medium truncate">{d.name}</span>
             {d.position && <span className="text-text-primary/30 text-[10px]">{d.position}</span>}
             <span className="text-text-primary/25 text-[10px] ml-auto">You: #{d.rank} vs #{d.baseline}</span>
@@ -32,7 +32,7 @@ export default function DivergenceSummary({ entries }) {
         ))}
         {fallers.map(d => (
           <div key={d.playerId} className="flex items-center gap-2 text-xs">
-            <span className="text-red-400 font-mono font-bold w-10 text-right">{'\u2193'}{Math.abs(d.delta)}</span>
+            <span className="text-live-red font-mono font-bold w-10 text-right">{'\u2193'}{Math.abs(d.delta)}</span>
             <span className="text-text-primary font-medium truncate">{d.name}</span>
             {d.position && <span className="text-text-primary/30 text-[10px]">{d.position}</span>}
             <span className="text-text-primary/25 text-[10px] ml-auto">You: #{d.rank} vs #{d.baseline}</span>

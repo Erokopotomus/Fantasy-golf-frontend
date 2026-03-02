@@ -16,9 +16,9 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
 
       <div className="space-y-4">
         {results.map((week) => (
-          <div key={week.tournamentId} className="bg-dark-tertiary rounded-lg overflow-hidden">
+          <div key={week.tournamentId} className="bg-[var(--card-bg)] rounded-lg overflow-hidden">
             {/* Tournament Header */}
-            <div className="p-3 bg-dark-secondary border-b border-dark-border">
+            <div className="p-3 bg-[var(--surface)] border-b border-[var(--card-border)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-text-primary">{week.tournamentName}</p>
@@ -26,10 +26,10 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                   week.status === 'completed'
-                    ? 'bg-green-500/20 text-green-400'
+                    ? 'bg-field-bright/20 text-field'
                     : week.status === 'live'
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'bg-yellow-500/20 text-yellow-400'
+                      ? 'bg-live-red/20 text-live-red'
+                      : 'bg-crown/20 text-crown'
                 }`}>
                   {week.status === 'completed' ? 'Final' : week.status?.toUpperCase()}
                 </span>
@@ -40,7 +40,7 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-text-muted border-b border-dark-border/50">
+                  <tr className="text-xs text-text-muted border-b border-[var(--card-border)]/50">
                     <th className="p-2 text-center w-12">#</th>
                     <th className="p-2 text-left">Team</th>
                     <th className="p-2 text-right">Points</th>
@@ -54,20 +54,20 @@ const WeeklyBreakdown = ({ results, currentUserId }) => {
                       <tr
                         key={result.teamId}
                         className={`
-                          border-b border-dark-border/30
-                          ${isCurrentUser ? 'bg-emerald-400/10' : ''}
+                          border-b border-[var(--card-border)]/30
+                          ${isCurrentUser ? 'bg-field/10' : ''}
                         `}
                       >
                         <td className="p-2 text-center">
-                          {idx === 0 && <span className="text-yellow-400">🥇</span>}
-                          {idx === 1 && <span className="text-gray-300">🥈</span>}
-                          {idx === 2 && <span className="text-amber-600">🥉</span>}
+                          {idx === 0 && <span className="text-crown">🥇</span>}
+                          {idx === 1 && <span className="text-gray-400 dark:text-gray-300">🥈</span>}
+                          {idx === 2 && <span className="text-amber-700 dark:text-amber-500">🥉</span>}
                           {idx > 2 && <span className="text-text-muted">{idx + 1}</span>}
                         </td>
-                        <td className={`p-2 font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-text-primary'}`}>
+                        <td className={`p-2 font-medium ${isCurrentUser ? 'text-field' : 'text-text-primary'}`}>
                           {result.teamName}
                         </td>
-                        <td className="p-2 text-right font-bold text-emerald-400">
+                        <td className="p-2 text-right font-bold text-field">
                           {result.points}
                         </td>
                       </tr>

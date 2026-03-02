@@ -24,7 +24,7 @@ const DraftHeader = ({
   const isInProgress = draft?.status?.toUpperCase() === 'IN_PROGRESS'
 
   return (
-    <div className="bg-dark-secondary border-b border-dark-border">
+    <div className="bg-[var(--surface)] border-b border-[var(--card-border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           {/* Left - League Info */}
@@ -35,9 +35,9 @@ const DraftHeader = ({
               </h1>
               <span className={`px-2 py-1 rounded text-xs font-mono font-medium uppercase ${
                 isInProgress ? 'bg-gold/20 text-gold' :
-                isPaused ? 'bg-yellow-500/20 text-yellow-400' :
+                isPaused ? 'bg-crown/20 text-crown' :
                 isScheduled ? 'bg-blue-500/20 text-blue-400' :
-                'bg-dark-tertiary text-text-muted'
+                'bg-[var(--card-bg)] text-text-muted'
               }`}>
                 {isPaused ? 'Paused' : isInProgress ? 'Live' : isScheduled ? 'Scheduled' : draft?.status || 'Waiting'}
               </span>
@@ -53,7 +53,7 @@ const DraftHeader = ({
           <div className="flex-1">
             <div className={`rounded-lg p-3 text-center ${
               isScheduled ? 'bg-blue-500/10 border border-blue-500/30' :
-              isUserTurn ? 'bg-gold/20 border border-gold' : 'bg-dark-tertiary'
+              isUserTurn ? 'bg-gold/20 border border-gold' : 'bg-[var(--card-bg)]'
             }`}>
               {isScheduled ? (
                 <>
@@ -104,7 +104,7 @@ const DraftHeader = ({
                     {picksCount > 0 && onUndoPick && (
                       <button
                         onClick={onUndoPick}
-                        className="px-3 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs font-medium text-live-red bg-live-red/10 hover:bg-live-red/20 border border-live-red/30 rounded-lg transition-colors"
                       >
                         Undo Last Pick
                       </button>

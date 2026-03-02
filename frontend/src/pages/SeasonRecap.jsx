@@ -79,7 +79,7 @@ const SeasonRecap = () => {
       <div className="min-h-screen">
         <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center py-16">
-            <p className="text-red-400 mb-4">{error}</p>
+            <p className="text-live-red mb-4">{error}</p>
             <Link to={`/leagues/${leagueId}`} className="text-accent-gold hover:text-accent-gold/80">
               Back to League
             </Link>
@@ -152,13 +152,13 @@ const SeasonRecap = () => {
                             {s.name}
                           </Link>
                         </td>
-                        <td className="py-2.5 text-center font-mono text-green-400">{s.wins}</td>
-                        <td className="py-2.5 text-center font-mono text-red-400">{s.losses}</td>
+                        <td className="py-2.5 text-center font-mono text-field">{s.wins}</td>
+                        <td className="py-2.5 text-center font-mono text-live-red">{s.losses}</td>
                         <td className="py-2.5 text-right font-mono text-text-primary">{s.totalPoints?.toFixed(1)}</td>
                         <td className="py-2.5 text-right pr-2">
                           {s.isChampion && <span className="text-accent-gold">🏆</span>}
                           {s.madePlayoffs && !s.isChampion && (
-                            <span className="text-xs font-mono text-green-400 bg-green-500/20 px-1.5 py-0.5 rounded">Playoffs</span>
+                            <span className="text-xs font-mono text-field bg-field-bright/20 px-1.5 py-0.5 rounded">Playoffs</span>
                           )}
                         </td>
                       </tr>

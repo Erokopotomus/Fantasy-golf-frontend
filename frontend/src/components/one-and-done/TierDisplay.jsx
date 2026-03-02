@@ -1,9 +1,9 @@
 const TierDisplay = ({ tiers, currentPlayerRank = null }) => {
   const tierColors = [
-    { bg: 'bg-yellow-400/10', border: 'border-yellow-400/30', text: 'text-yellow-400' },
+    { bg: 'bg-crown/10', border: 'border-crown/30', text: 'text-crown' },
     { bg: 'bg-purple-400/10', border: 'border-purple-400/30', text: 'text-purple-400' },
     { bg: 'bg-blue-400/10', border: 'border-blue-400/30', text: 'text-blue-400' },
-    { bg: 'bg-green-400/10', border: 'border-green-400/30', text: 'text-green-400' },
+    { bg: 'bg-field/10', border: 'border-field/30', text: 'text-field' },
   ]
 
   // Find current player's tier
@@ -33,7 +33,7 @@ const TierDisplay = ({ tiers, currentPlayerRank = null }) => {
           <div
             key={tier.tier}
             className={`p-4 rounded-lg border transition-all ${colors.bg} ${colors.border} ${
-              isActive ? 'ring-2 ring-white scale-105' : ''
+              isActive ? 'ring-2 ring-gold scale-105' : ''
             }`}
           >
             <div className="flex items-center justify-between mb-2">

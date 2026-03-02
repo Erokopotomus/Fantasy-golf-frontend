@@ -44,13 +44,13 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                 <tr
                   key={team.userId}
                   className={`border-b border-[var(--card-border)]/50 ${
-                    isUser ? 'bg-emerald-400/10' : 'hover:bg-[var(--surface-alt)]'
+                    isUser ? 'bg-field/10' : 'hover:bg-[var(--surface-alt)]'
                   }`}
                 >
                   <td className="py-3 pl-2">
                     <span className={`font-semibold ${
-                      rank === 1 ? 'text-yellow-400' :
-                      rank <= 4 ? 'text-emerald-400' : 'text-text-muted'
+                      rank === 1 ? 'text-crown' :
+                      rank <= 4 ? 'text-field' : 'text-text-muted'
                     }`}>
                       {rank}
                     </span>
@@ -58,11 +58,11 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                   <td className="py-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-[var(--bg-alt)] text-text-secondary'
+                        isUser ? 'bg-field/20 text-field' : 'bg-[var(--bg-alt)] text-text-secondary'
                       }`}>
                         {team.avatar}
                       </div>
-                      <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
+                      <span className={`font-medium ${isUser ? 'text-field' : 'text-text-primary'}`}>
                         {team.name}
                         {isUser && <span className="text-xs ml-1">(You)</span>}
                       </span>
@@ -82,7 +82,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                   <td className="py-3 text-right font-mono text-text-primary">{(team.pointsFor || 0).toFixed(1)}</td>
                   <td className="py-3 text-right font-mono text-text-secondary">{(team.pointsAgainst || 0).toFixed(1)}</td>
                   <td className={`py-3 text-right pr-2 font-mono font-semibold ${
-                    diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-text-muted'
+                    diff > 0 ? 'text-field' : diff < 0 ? 'text-live-red' : 'text-text-muted'
                   }`}>
                     {diff > 0 ? '+' : ''}{diff.toFixed(1)}
                   </td>
@@ -104,23 +104,23 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
             <div
               key={team.userId}
               className={`p-3 rounded-lg ${
-                isUser ? 'bg-emerald-400/10 border border-emerald-400/30' : 'bg-[var(--surface)]'
+                isUser ? 'bg-field/10 border border-field/30' : 'bg-[var(--surface)]'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <span className={`text-lg font-bold w-6 ${
-                    rank === 1 ? 'text-yellow-400' :
-                    rank <= 4 ? 'text-emerald-400' : 'text-text-muted'
+                    rank === 1 ? 'text-crown' :
+                    rank <= 4 ? 'text-field' : 'text-text-muted'
                   }`}>
                     {rank}
                   </span>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                    isUser ? 'bg-emerald-400/20 text-emerald-400' : 'bg-[var(--bg-alt)] text-text-secondary'
+                    isUser ? 'bg-field/20 text-field' : 'bg-[var(--bg-alt)] text-text-secondary'
                   }`}>
                     {team.avatar}
                   </div>
-                  <span className={`font-medium ${isUser ? 'text-emerald-400' : 'text-text-primary'}`}>
+                  <span className={`font-medium ${isUser ? 'text-field' : 'text-text-primary'}`}>
                     {team.name}
                   </span>
                 </div>
@@ -136,7 +136,7 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
                 {hasDivisions && team.divWins != null && (
                   <span>Div: {team.divWins}-{team.divLosses}</span>
                 )}
-                <span className={diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : ''}>
+                <span className={diff > 0 ? 'text-field' : diff < 0 ? 'text-live-red' : ''}>
                   {diff > 0 ? '+' : ''}{diff.toFixed(1)}
                 </span>
               </div>
@@ -176,11 +176,11 @@ const H2HStandings = ({ standings, currentUserId, divisionStandings }) => {
       {/* Legend */}
       <div className="mt-4 pt-4 border-t border-[var(--card-border)] flex flex-wrap gap-4 text-xs text-text-muted">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+          <div className="w-3 h-3 rounded-full bg-crown"></div>
           <span>1st Place</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+          <div className="w-3 h-3 rounded-full bg-field"></div>
           <span>Playoff Position (Top 4)</span>
         </div>
         <div className="flex items-center gap-2">

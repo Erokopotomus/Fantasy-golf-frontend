@@ -44,13 +44,13 @@ export default function WeightedConsensusBar({ eventId, playerId, type = 'player
       {/* Raw consensus bar */}
       <div className="mb-2">
         <div className="flex justify-between text-xs mb-1">
-          <span className="text-emerald-400 font-mono">OVER {rawOver}%</span>
+          <span className="text-field font-mono">OVER {rawOver}%</span>
           <span className="text-text-primary/30 text-[10px]">Raw</span>
           <span className="text-rose-400 font-mono">UNDER {rawUnder}%</span>
         </div>
         <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden flex">
           <div
-            className="h-full bg-emerald-500/60 transition-all"
+            className="h-full bg-field-bright/60 transition-all"
             style={{ width: `${rawOver}%` }}
           />
           <div
@@ -63,13 +63,13 @@ export default function WeightedConsensusBar({ eventId, playerId, type = 'player
       {/* Weighted consensus bar */}
       <div className="mb-2">
         <div className="flex justify-between text-xs mb-1">
-          <span className="text-emerald-400 font-mono">OVER {weightedOver}%</span>
+          <span className="text-field font-mono">OVER {weightedOver}%</span>
           <span className="text-amber-400 text-[10px]">Weighted</span>
           <span className="text-rose-400 font-mono">UNDER {weightedUnder}%</span>
         </div>
         <div className="h-2 rounded-full bg-[var(--stone)] overflow-hidden flex">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all"
+            className="h-full bg-gradient-to-r from-field-bright to-field transition-all"
             style={{ width: `${weightedOver}%` }}
           />
           <div

@@ -24,7 +24,7 @@ const TIER_COLORS = {
 const TIER_BG = {
   BRONZE: 'bg-amber-900/20',
   SILVER: 'bg-gray-400/20',
-  GOLD: 'bg-yellow-500/20',
+  GOLD: 'bg-crown/20',
   PLATINUM: 'bg-purple-300/20',
 }
 
@@ -281,7 +281,7 @@ const ManagerProfile = () => {
             Back to Profile
           </Link>
           <Card>
-            <p className="text-red-400 text-center">{error}</p>
+            <p className="text-live-red text-center">{error}</p>
           </Card>
         </div>
       </div>
@@ -438,7 +438,7 @@ const ManagerProfile = () => {
                   />
                 )}
                 {shareToast && (
-                  <span className="text-xs text-green-400 font-mono animate-pulse">Link copied!</span>
+                  <span className="text-xs text-field font-mono animate-pulse">Link copied!</span>
                 )}
               </div>
               {!editing && user?.username && (
@@ -507,7 +507,7 @@ const ManagerProfile = () => {
           {editing && (
             <div className="border-t border-[var(--card-border)] pt-4 space-y-3">
               {saveError && (
-                <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                <div className="text-sm text-live-red bg-live-red/10 border border-live-red/20 rounded-lg px-3 py-2">
                   {saveError}
                 </div>
               )}
@@ -585,7 +585,7 @@ const ManagerProfile = () => {
           {/* Quick stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
             <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
-            <StatBox label="Wins" value={formatNum(p.wins)} color="text-yellow-400" />
+            <StatBox label="Wins" value={formatNum(p.wins)} color="text-crown" />
             <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
             <StatBox label="Win %" value={formatPct(p.winPct)} />
           </div>
@@ -647,7 +647,7 @@ const ManagerProfile = () => {
                 reputation.tier === 'elite' ? 'bg-purple-500/20 text-purple-400' :
                 reputation.tier === 'expert' ? 'bg-accent-gold/20 text-accent-gold' :
                 reputation.tier === 'sharp' ? 'bg-blue-500/20 text-blue-400' :
-                reputation.tier === 'contender' ? 'bg-green-500/20 text-green-400' :
+                reputation.tier === 'contender' ? 'bg-field-bright/20 text-field' :
                 'bg-[var(--bg-alt)] text-text-secondary'
               }`}>
                 {reputation.tier}
@@ -655,10 +655,10 @@ const ManagerProfile = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <StatBox label="Accuracy" value={`${(reputation.accuracyRate * 100).toFixed(1)}%`} color="text-green-400" />
+              <StatBox label="Accuracy" value={`${(reputation.accuracyRate * 100).toFixed(1)}%`} color="text-field" />
               <StatBox label="Total Calls" value={formatNum(reputation.totalPredictions)} />
               <StatBox label="Correct" value={formatNum(reputation.correctPredictions)} color="text-accent-gold" />
-              <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}` : '0'} color="text-orange-400" />
+              <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}` : '0'} color="text-blaze" />
             </div>
 
             {/* Tier progress */}
@@ -744,8 +744,8 @@ const ManagerProfile = () => {
                   <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
                   <StatBox label="Seasons" value={formatNum(p.totalSeasons)} />
                   <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
-                  <StatBox label="Wins" value={formatNum(p.wins)} color="text-yellow-400" />
-                  <StatBox label="Losses" value={formatNum(p.losses)} color="text-red-400" />
+                  <StatBox label="Wins" value={formatNum(p.wins)} color="text-crown" />
+                  <StatBox label="Losses" value={formatNum(p.losses)} color="text-live-red" />
                   <StatBox label="Win %" value={formatPct(p.winPct)} />
                   <StatBox label="Avg Finish" value={formatDecimal(p.avgFinish)} />
                   <StatBox label="Best Finish" value={p.bestFinish != null ? `#${p.bestFinish}` : '-'} color="text-gold" />

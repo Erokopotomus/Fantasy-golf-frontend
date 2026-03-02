@@ -30,7 +30,7 @@ const PickAnnouncement = ({ pick, isUserPick }) => {
     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
       <div
         className={`
-          bg-dark-secondary border-2 rounded-2xl p-6 shadow-2xl
+          bg-[var(--surface)] border-2 rounded-2xl p-6 shadow-2xl
           transform transition-all duration-500
           ${isExiting ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
           ${isUserPick ? 'border-gold' : 'border-orange'}
@@ -51,7 +51,7 @@ const PickAnnouncement = ({ pick, isUserPick }) => {
             <span>Round {pick.round}</span>
             <span>•</span>
             <span>{pick.teamName}</span>
-            {pick.isAutoPick && <span className="text-yellow-400 text-xs font-mono">(timer expired)</span>}
+            {pick.isAutoPick && <span className="text-crown text-xs font-mono">(timer expired)</span>}
           </div>
         </div>
       </div>

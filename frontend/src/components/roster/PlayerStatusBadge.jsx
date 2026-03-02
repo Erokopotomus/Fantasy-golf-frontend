@@ -6,19 +6,19 @@ const PlayerStatusBadge = ({ status }) => {
     },
     benched: {
       label: 'Benched',
-      className: 'bg-dark-tertiary text-text-muted',
+      className: 'bg-[var(--card-bg)] text-text-muted',
     },
     injured: {
       label: 'Injured',
-      className: 'bg-red-500/20 text-red-400',
+      className: 'bg-live-red/20 text-live-red',
     },
     questionable: {
       label: 'GTD',
-      className: 'bg-yellow-500/20 text-yellow-400',
+      className: 'bg-crown/20 text-crown',
     },
     out: {
       label: 'OUT',
-      className: 'bg-red-500/20 text-red-400',
+      className: 'bg-live-red/20 text-live-red',
     },
   }
 

@@ -98,8 +98,8 @@ const NflTeams = () => {
         {/* AFC */}
         <div>
           <div className="flex items-center gap-2 mb-4 pb-2 border-b border-[var(--card-border)]">
-            <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
-              <span className="text-red-400 text-xs font-mono font-extrabold">AFC</span>
+            <div className="w-8 h-8 rounded-lg bg-live-red/15 flex items-center justify-center">
+              <span className="text-live-red text-xs font-mono font-extrabold">AFC</span>
             </div>
             <h2 className="text-lg font-display font-bold text-text-primary">American Football Conference</h2>
           </div>

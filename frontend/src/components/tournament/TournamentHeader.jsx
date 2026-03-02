@@ -6,7 +6,7 @@ import api from '../../services/api'
 const getDnaLabel = (val) => {
   if (val == null) return null
   if (val >= 0.32) return { text: 'Premium', color: 'text-gold', bar: 'bg-gold' }
-  if (val >= 0.27) return { text: 'High', color: 'text-emerald-400', bar: 'bg-emerald-400' }
+  if (val >= 0.27) return { text: 'High', color: 'text-field', bar: 'bg-field' }
   if (val >= 0.22) return { text: 'Average', color: 'text-text-secondary', bar: 'bg-slate-400' }
   return { text: 'Low', color: 'text-text-muted', bar: 'bg-slate-500' }
 }
@@ -102,21 +102,21 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
             {/* Top row: Status + Tour */}
             <div className="flex items-center gap-3 mb-3">
               {isLive && (
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-mono font-bold uppercase tracking-wider">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-live-red/20 text-live-red text-xs font-mono font-bold uppercase tracking-wider">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-red opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-live-red"></span>
                   </span>
                   Live
                 </span>
               )}
               {isCompleted && (
-                <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-mono font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full bg-field-bright/15 text-field text-xs font-mono font-bold uppercase tracking-wider">
                   Final
                 </span>
               )}
               {isUpcoming && (
-                <span className="px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-400 text-xs font-mono font-bold uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full bg-crown/15 text-crown text-xs font-mono font-bold uppercase tracking-wider">
                   Upcoming
                 </span>
               )}
@@ -210,10 +210,10 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                     {isCompleted ? 'Winner' : 'Leader'}
                   </span>
                   <p className={`${txtPrimary} font-medium flex items-center gap-1.5 justify-end`}>
-                    {isCompleted && <span className="text-yellow-400">&#127942;</span>}
+                    {isCompleted && <span className="text-crown">&#127942;</span>}
                     <span className="text-lg">{leader.countryFlag}</span>
                     {leader.name}
-                    <span className={`ml-1 font-bold ${leader.score < 0 ? 'text-emerald-400' : leader.score > 0 ? 'text-red-400' : txtPrimary}`}>
+                    <span className={`ml-1 font-bold ${leader.score < 0 ? 'text-field' : leader.score > 0 ? 'text-live-red' : txtPrimary}`}>
                       {leader.score > 0 ? `+${leader.score}` : leader.score === 0 ? 'E' : leader.score}
                     </span>
                   </p>
@@ -231,8 +231,8 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                         key={r}
                         className={`
                           w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
-                          ${isCurrent ? 'bg-emerald-500 text-text-primary ring-2 ring-emerald-400/50' : ''}
-                          ${isPast ? 'bg-[var(--stone)] text-emerald-400' : ''}
+                          ${isCurrent ? 'bg-field-bright text-text-primary ring-2 ring-field/50' : ''}
+                          ${isPast ? 'bg-[var(--stone)] text-field' : ''}
                           ${!isCurrent && !isPast ? 'bg-[var(--stone)] text-text-muted' : ''}
                         `}
                       >
@@ -266,7 +266,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                     {/* Segmented bar */}
                     <div className="flex h-2 rounded-full overflow-hidden mb-2">
                       {pct25 > 0 && <div className="bg-gold" style={{ width: `${pct25}%` }} />}
-                      {pct50 > 0 && <div className="bg-emerald-400" style={{ width: `${pct50}%` }} />}
+                      {pct50 > 0 && <div className="bg-field" style={{ width: `${pct50}%` }} />}
                       {pct100 > 0 && <div className={img ? 'bg-white/30' : 'bg-slate-400'} style={{ width: `${pct100}%` }} />}
                       {pctRest > 0 && <div className={img ? 'bg-white/10' : 'bg-[var(--stone)]'} style={{ width: `${pctRest}%` }} />}
                     </div>
@@ -281,10 +281,10 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-sm bg-emerald-400 flex-shrink-0" />
+                          <span className="w-2 h-2 rounded-sm bg-field flex-shrink-0" />
                           <span className={`text-[10px] ${txtSecondary}`}>Top 50</span>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-emerald-400">{top50}</span>
+                        <span className="text-[10px] font-mono font-bold text-field">{top50}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
@@ -358,7 +358,7 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                   </div>
 
                   {courseSummary && (
-                    <p className="text-[10px] text-emerald-400/80 font-medium mt-3 pt-3 border-t border-[var(--card-border)]">
+                    <p className="text-[10px] text-field/80 font-medium mt-3 pt-3 border-t border-[var(--card-border)]">
                       {courseSummary}
                     </p>
                   )}

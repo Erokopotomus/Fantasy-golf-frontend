@@ -94,7 +94,7 @@ function DraftPrepHero({ phaseMeta, data, boards }) {
           <span>Bold Takes: <span className="text-text-primary/60 font-medium">{data.boldTakeCount}</span></span>
         )}
         {data.positionGaps > 0 && (
-          <span>Position Gaps: <span className="text-red-400 font-medium">{data.positionGaps}</span></span>
+          <span>Position Gaps: <span className="text-live-red font-medium">{data.positionGaps}</span></span>
         )}
         {data.divergenceCount > 0 && (
           <span>Divergence: <span className="text-text-primary/60 font-medium">{data.divergenceCount} picks off consensus</span></span>

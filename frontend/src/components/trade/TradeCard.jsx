@@ -33,7 +33,7 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
               Incoming
             </span>
           ) : (
-            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded font-medium">
+            <span className="px-2 py-1 bg-crown/20 text-crown text-xs rounded font-medium">
               Sent
             </span>
           )}
@@ -46,7 +46,7 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
 
       {/* Trade Message */}
       {trade.message && (
-        <div className="mb-4 p-2 bg-dark-tertiary rounded-lg">
+        <div className="mb-4 p-2 bg-[var(--card-bg)] rounded-lg">
           <p className="text-text-secondary text-sm italic">"{trade.message}"</p>
         </div>
       )}
@@ -54,8 +54,8 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
       {/* Trade Content */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         {/* You Receive */}
-        <div className="bg-dark-tertiary rounded-lg p-3">
-          <p className="text-xs text-emerald-400 mb-2">You Receive</p>
+        <div className="bg-[var(--card-bg)] rounded-lg p-3">
+          <p className="text-xs text-field mb-2">You Receive</p>
           <div className="space-y-2">
             {youReceive.map(player => (
               <div key={player.id} className="flex items-center gap-2">
@@ -78,8 +78,8 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
         </div>
 
         {/* You Send */}
-        <div className="bg-dark-tertiary rounded-lg p-3">
-          <p className="text-xs text-red-400 mb-2">You Send</p>
+        <div className="bg-[var(--card-bg)] rounded-lg p-3">
+          <p className="text-xs text-live-red mb-2">You Send</p>
           <div className="space-y-2">
             {youSend.map(player => (
               <div key={player.id} className="flex items-center gap-2">
@@ -108,13 +108,13 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
           <>
             <button
               onClick={() => onAccept(trade.id)}
-              className="flex-1 py-2 bg-emerald-500 text-text-primary rounded-lg font-medium hover:bg-emerald-600 transition-colors"
+              className="flex-1 py-2 bg-field-bright text-text-primary rounded-lg font-medium hover:bg-emerald-600 transition-colors"
             >
               Accept
             </button>
             <button
               onClick={() => onReject(trade.id)}
-              className="flex-1 py-2 bg-red-500/20 text-red-400 rounded-lg font-medium hover:bg-red-500/30 transition-colors"
+              className="flex-1 py-2 bg-live-red/20 text-live-red rounded-lg font-medium hover:bg-live-red/30 transition-colors"
             >
               Reject
             </button>
@@ -122,7 +122,7 @@ const TradeCard = ({ trade, onAccept, onReject, onCancel, isIncoming }) => {
         ) : (
           <button
             onClick={() => onCancel(trade.id)}
-            className="flex-1 py-2 bg-dark-tertiary text-text-secondary rounded-lg font-medium hover:bg-dark-border transition-colors"
+            className="flex-1 py-2 bg-[var(--card-bg)] text-text-secondary rounded-lg font-medium hover:bg-[var(--card-border)] transition-colors"
           >
             Cancel Trade
           </button>

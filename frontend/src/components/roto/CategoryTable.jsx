@@ -23,10 +23,10 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
   const getRankColor = (rank, total) => {
     const pct = rank / total
     if (pct <= 0.2) return 'text-gold'
-    if (pct <= 0.4) return 'text-green-400'
-    if (pct <= 0.6) return 'text-yellow-400'
-    if (pct <= 0.8) return 'text-orange-400'
-    return 'text-red-400'
+    if (pct <= 0.4) return 'text-field'
+    if (pct <= 0.6) return 'text-crown'
+    if (pct <= 0.8) return 'text-blaze'
+    return 'text-live-red'
   }
 
   return (
@@ -65,7 +65,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
                 >
                   <td className="py-3 pl-2 sticky left-0 bg-[var(--surface)] z-10">
                     <span className={`font-semibold ${
-                      index === 0 ? 'text-yellow-400' : 'text-text-muted'
+                      index === 0 ? 'text-crown' : 'text-text-muted'
                     }`}>
                       {index + 1}
                     </span>
@@ -126,7 +126,7 @@ const CategoryTable = ({ standings, categories, categoryLabels, currentUserId })
             <span className="text-text-muted">= 1st place in category</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-red-400 font-medium">+1</span>
+            <span className="text-live-red font-medium">+1</span>
             <span className="text-text-muted">= Last place in category</span>
           </div>
           <div className="flex items-center gap-2">

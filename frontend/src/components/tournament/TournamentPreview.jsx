@@ -116,7 +116,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
           {/* Filters */}
           <div className="px-4 py-3 border-b border-[var(--card-border)]">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold text-text-primary">
+              <h3 className="text-sm font-bold font-display text-text-primary">
                 Field Analysis
               </h3>
               <span className="text-xs font-mono text-text-muted">
@@ -226,11 +226,11 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       </td>
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${
-                          cm.cpi > 1.5 ? 'text-emerald-400' :
-                          cm.cpi > 1.0 ? 'text-green-400' :
+                          cm.cpi > 1.5 ? 'text-field' :
+                          cm.cpi > 1.0 ? 'text-field' :
                           cm.cpi > 0.5 ? 'text-green-300/80' :
                           cm.cpi > 0 ? 'text-text-secondary' :
-                          cm.cpi != null ? 'text-red-400' : 'text-text-muted'
+                          cm.cpi != null ? 'text-live-red' : 'text-text-muted'
                         }`}>
                           {cm.cpi != null ? (cm.cpi > 0 ? `+${cm.cpi.toFixed(1)}` : cm.cpi.toFixed(1)) : '—'}
                         </span>
@@ -238,7 +238,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                           <div className="mt-0.5 mx-auto w-12 h-1 bg-[var(--stone)] rounded-full overflow-hidden relative">
                             <div
                               className={`absolute h-full rounded-full ${
-                                cm.cpi > 1.5 ? 'bg-emerald-400' : cm.cpi > 1.0 ? 'bg-green-400' : cm.cpi > 0.5 ? 'bg-green-300/60' : cm.cpi > 0 ? 'bg-green-300/30' : 'bg-red-400'
+                                cm.cpi > 1.5 ? 'bg-field' : cm.cpi > 1.0 ? 'bg-field' : cm.cpi > 0.5 ? 'bg-green-300/60' : cm.cpi > 0 ? 'bg-green-300/30' : 'bg-live-red'
                               }`}
                               style={{
                                 left: cm.cpi >= 0 ? '50%' : `${Math.max(50 - Math.abs(cm.cpi) / 3 * 50, 5)}%`,
@@ -251,8 +251,8 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       </td>
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${
-                          cm.formScore >= 90 ? 'text-emerald-400' :
-                          cm.formScore >= 80 ? 'text-green-400' :
+                          cm.formScore >= 90 ? 'text-field' :
+                          cm.formScore >= 80 ? 'text-field' :
                           cm.formScore >= 70 ? 'text-green-300/80' :
                           cm.formScore >= 60 ? 'text-text-secondary' :
                           cm.formScore != null ? 'text-text-muted' : 'text-text-muted'
@@ -263,7 +263,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                       <td className="px-2 py-2.5 text-center">
                         <span className={`font-mono text-xs font-bold ${
                           cm.courseFitScore >= 85 ? 'text-gold' :
-                          cm.courseFitScore >= 78 ? 'text-yellow-400' :
+                          cm.courseFitScore >= 78 ? 'text-crown' :
                           cm.courseFitScore >= 70 ? 'text-yellow-300/70' :
                           cm.courseFitScore >= 60 ? 'text-text-secondary' :
                           cm.courseFitScore != null ? 'text-text-muted' : 'text-text-muted'
@@ -275,7 +275,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                         {ch ? (
                           <div className="flex flex-col items-center">
                             <span className={`font-mono text-xs font-bold ${
-                              ch.avgToPar != null ? (ch.avgToPar <= -1 ? 'text-gold' : ch.avgToPar <= 0 ? 'text-green-400' : 'text-red-400') : 'text-text-muted'
+                              ch.avgToPar != null ? (ch.avgToPar <= -1 ? 'text-gold' : ch.avgToPar <= 0 ? 'text-field' : 'text-live-red') : 'text-text-muted'
                             }`}>
                               {formatScore(ch.avgToPar)}
                             </span>
@@ -313,8 +313,8 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
         {/* Field snapshot when no clutch data */}
         {!hasClutchData && leaderboard.length > 0 && (
           <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
-            <div className="px-4 py-3 border-b border-[var(--card-border)] bg-gradient-to-r from-emerald-500/5 to-transparent">
-              <h3 className="text-sm font-bold text-text-primary">Field Snapshot</h3>
+            <div className="px-4 py-3 border-b border-[var(--card-border)] bg-gradient-to-r from-field-bright/5 to-transparent">
+              <h3 className="text-sm font-bold font-display text-text-primary">Field Snapshot</h3>
             </div>
             <div className="p-4 space-y-4">
               {/* Top OWGR */}
@@ -353,7 +353,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
                   return ranked > 0 ? (
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-text-muted">Top 50 OWGR</span>
-                      <span className="text-xs font-mono text-emerald-400">{ranked}</span>
+                      <span className="text-xs font-mono text-field">{ranked}</span>
                     </div>
                   ) : null
                 })()}

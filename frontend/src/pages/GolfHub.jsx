@@ -196,7 +196,7 @@ const GolfHub = () => {
           {/* Page Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-field-bright/20 flex items-center justify-center">
                 <span className="text-lg">⛳</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-text-primary tracking-tight">
@@ -214,9 +214,9 @@ const GolfHub = () => {
               <Link
                 key={link.label}
                 to={link.href}
-                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-[var(--surface-alt)] hover:border-emerald-500/30 transition-all group shadow-card"
+                className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl p-3 sm:p-4 flex flex-col items-center gap-1.5 hover:bg-[var(--surface-alt)] hover:border-field-bright/30 transition-all group shadow-card"
               >
-                <div className="text-text-primary/40 group-hover:text-emerald-400 transition-colors">
+                <div className="text-text-primary/40 group-hover:text-field transition-colors">
                   {link.icon}
                 </div>
                 <span className="text-text-primary text-[10px] sm:text-xs font-semibold">{link.label}</span>
@@ -254,7 +254,7 @@ const GolfHub = () => {
                           LIVE — Round {heroTournament.currentRound || '?'}
                         </span>
                       ) : days != null ? (
-                        <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                        <span className="text-xs font-mono text-field bg-field-bright/10 px-2 py-0.5 rounded">
                           Starts in {days} day{days !== 1 ? 's' : ''}
                         </span>
                       ) : (
@@ -263,7 +263,7 @@ const GolfHub = () => {
                       <EventBadge tournament={heroTournament} />
                     </div>
 
-                    <h2 className={`text-xl sm:text-2xl font-display font-bold transition-colors ${heroIntel?.course?.imageUrl ? 'text-white group-hover:text-emerald-300' : 'text-text-primary group-hover:text-emerald-400'}`} style={heroIntel?.course?.imageUrl ? { textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>
+                    <h2 className={`text-xl sm:text-2xl font-display font-bold transition-colors ${heroIntel?.course?.imageUrl ? 'text-white group-hover:text-emerald-300' : 'text-text-primary group-hover:text-field'}`} style={heroIntel?.course?.imageUrl ? { textShadow: '0 1px 4px rgba(0,0,0,0.6)' } : undefined}>
                       {heroTournament.name}
                     </h2>
 
@@ -281,7 +281,7 @@ const GolfHub = () => {
                   </div>
 
                   <div className="shrink-0 text-right hidden sm:block">
-                    <span className="text-xs text-emerald-400 group-hover:text-emerald-300 transition-colors">
+                    <span className="text-xs text-field group-hover:text-emerald-300 transition-colors">
                       {isLive ? 'View Leaderboard' : 'View Details'} →
                     </span>
                   </div>
@@ -295,7 +295,7 @@ const GolfHub = () => {
                 const code = today.conditions?.toLowerCase().includes('rain') ? 63 : today.conditions?.toLowerCase().includes('cloud') || today.conditions?.toLowerCase().includes('overcast') ? 3 : today.conditions?.toLowerCase().includes('clear') || today.conditions?.toLowerCase().includes('sunny') ? 0 : 2
                 const icon = WMO[code] || '🌤'
                 const diff = (today.difficultyImpact || 0) >= 0.6 ? 'Brutal' : (today.difficultyImpact || 0) >= 0.4 ? 'Windy' : (today.difficultyImpact || 0) >= 0.2 ? 'Breezy' : 'Calm'
-                const diffColor = diff === 'Brutal' ? 'text-red-400' : diff === 'Windy' ? 'text-orange-400' : diff === 'Breezy' ? 'text-yellow-400' : 'text-emerald-400'
+                const diffColor = diff === 'Brutal' ? 'text-live-red' : diff === 'Windy' ? 'text-blaze' : diff === 'Breezy' ? 'text-crown' : 'text-field'
                 return (
                   <div className={`relative px-5 sm:px-6 pb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs ${heroIntel?.course?.imageUrl ? 'text-white/50' : 'text-text-muted'}`}>
                     <span className="flex items-center gap-1.5">
@@ -349,7 +349,7 @@ const GolfHub = () => {
                 </Link>
                 <Link
                   to={`/tournaments/${heroTournament.id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/15 hover:border-emerald-500/30 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-field bg-field-bright/10 border border-field-bright/20 rounded-lg hover:bg-field-bright/15 hover:border-field-bright/30 transition-colors"
                 >
                   Full Field
                 </Link>
@@ -368,7 +368,7 @@ const GolfHub = () => {
                   <div className="bg-[var(--surface)] border border-[var(--card-border)] rounded-xl shadow-card overflow-hidden">
                     <div className="px-4 py-2.5 border-b border-[var(--card-border)] bg-gradient-to-r from-orange-500/5 to-transparent">
                       <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
-                        <span className="text-orange-400">Hottest Form</span>
+                        <span className="text-blaze">Hottest Form</span>
                       </h3>
                     </div>
                     <div className="p-3 space-y-1">
@@ -391,13 +391,13 @@ const GolfHub = () => {
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <span className={`font-mono text-xs font-bold ${
-                              entry.clutchMetrics.formScore >= 80 ? 'text-orange-400' : 'text-text-secondary'
+                              entry.clutchMetrics.formScore >= 80 ? 'text-blaze' : 'text-text-secondary'
                             }`}>
                               {Math.round(entry.clutchMetrics.formScore)}
                             </span>
                             {entry.clutchMetrics.formScore >= 80 && (
                               <span className="text-[10px]" title="On fire">
-                                <svg className="w-3.5 h-3.5 text-orange-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" /></svg>
+                                <svg className="w-3.5 h-3.5 text-blaze" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" /></svg>
                               </span>
                             )}
                           </div>
@@ -418,7 +418,7 @@ const GolfHub = () => {
                       {trendingPlayers.bestFit.map((entry, i) => {
                         const fit = entry.clutchMetrics.courseFitScore
                         const fitLabel = fit >= 85 ? 'Elite Fit' : fit >= 75 ? 'Strong Fit' : 'Neutral'
-                        const fitColor = fit >= 85 ? 'text-gold' : fit >= 75 ? 'text-yellow-400' : 'text-text-muted'
+                        const fitColor = fit >= 85 ? 'text-gold' : fit >= 75 ? 'text-crown' : 'text-text-muted'
                         return (
                           <Link
                             key={entry.player?.id || i}
@@ -467,7 +467,7 @@ const GolfHub = () => {
                     <Link
                       key={t.id}
                       to={`/tournaments/${t.id}`}
-                      className={`rounded-xl overflow-hidden relative border border-[var(--card-border)] hover:border-emerald-500/20 transition-all group shadow-card ${hasImage ? '' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
+                      className={`rounded-xl overflow-hidden relative border border-[var(--card-border)] hover:border-field-bright/20 transition-all group shadow-card ${hasImage ? '' : 'bg-[var(--surface)] hover:bg-[var(--surface-alt)]'}`}
                     >
                       {hasImage && (
                         <>
@@ -480,7 +480,7 @@ const GolfHub = () => {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className={`text-sm font-display font-semibold transition-colors ${hasImage ? 'text-white group-hover:text-emerald-300' : 'text-text-primary group-hover:text-emerald-400'}`}>
+                              <h3 className={`text-sm font-display font-semibold transition-colors ${hasImage ? 'text-white group-hover:text-emerald-300' : 'text-text-primary group-hover:text-field'}`}>
                                 {t.shortName || t.name}
                               </h3>
                               <EventBadge tournament={t} />
@@ -494,7 +494,7 @@ const GolfHub = () => {
                             {t.purse && <span className={`text-xs font-mono ${hasImage ? 'text-white/60' : 'text-text-muted'}`}>{formatPurse(t.purse)}</span>}
                             <div className="mt-1">
                               {fieldAnnounced ? (
-                                <span className="text-[10px] font-mono text-emerald-400/80">{t.fieldSize || t.field?.length} in field</span>
+                                <span className="text-[10px] font-mono text-field/80">{t.fieldSize || t.field?.length} in field</span>
                               ) : (
                                 <span className={`text-[10px] font-mono ${hasImage ? 'text-white/40' : 'text-text-muted/50'}`}>Field TBD</span>
                               )}
@@ -504,8 +504,8 @@ const GolfHub = () => {
                         {/* Roster indicator */}
                         {rosterInField.length > 0 && (
                           <div className="mt-2 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                            <span className="text-[10px] text-emerald-400/80">
+                            <span className="w-2 h-2 rounded-full bg-field-bright inline-block" />
+                            <span className="text-[10px] text-field/80">
                               {rosterInField.length} roster player{rosterInField.length !== 1 ? 's' : ''} confirmed
                             </span>
                           </div>
@@ -535,7 +535,7 @@ const GolfHub = () => {
                     {/* Summary */}
                     <div className="flex items-center gap-3 mb-4">
                       <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+                        <span className="w-3 h-3 rounded-full bg-field-bright inline-block" />
                         <span className="text-sm font-semibold text-text-primary">
                           {rosterCheck.playing.length} of {rosterCheck.total} confirmed
                         </span>
@@ -551,12 +551,12 @@ const GolfHub = () => {
                     <div className="grid grid-cols-2 gap-4">
                       {/* Playing */}
                       <div>
-                        <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Playing</p>
+                        <p className="text-xs font-semibold text-field uppercase tracking-wider mb-2">Playing</p>
                         {rosterCheck.playing.length > 0 ? (
                           <div className="space-y-1.5">
                             {rosterCheck.playing.map(p => (
-                              <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-2 text-sm text-text-primary hover:text-emerald-400 transition-colors">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                              <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-2 text-sm text-text-primary hover:text-field transition-colors">
+                                <span className="w-1.5 h-1.5 rounded-full bg-field-bright shrink-0" />
                                 {p.name}
                               </Link>
                             ))}
@@ -579,7 +579,7 @@ const GolfHub = () => {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-emerald-400/60">Full roster confirmed!</p>
+                          <p className="text-xs text-field/60">Full roster confirmed!</p>
                         )}
                       </div>
                     </div>
@@ -587,7 +587,7 @@ const GolfHub = () => {
                     {/* Links */}
                     {leagues.length > 0 && (
                       <div className="mt-4 pt-3 border-t border-[var(--card-border)] flex items-center gap-4 text-xs">
-                        <Link to={`/leagues/${leagues[0].id}/roster`} className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                        <Link to={`/leagues/${leagues[0].id}/roster`} className="text-field hover:text-emerald-300 transition-colors">
                           Full Roster →
                         </Link>
                         <Link to={`/leagues/${leagues[0].id}/waivers`} className="text-text-muted hover:text-text-primary transition-colors">
@@ -644,12 +644,12 @@ const GolfHub = () => {
                         {entry.player?.name}
                       </Link>
                       <span className={`font-mono text-xs font-bold shrink-0 ${
-                        (entry.totalToPar ?? 0) < 0 ? 'text-emerald-400' : (entry.totalToPar ?? 0) === 0 ? 'text-text-secondary' : 'text-red-400'
+                        (entry.totalToPar ?? 0) < 0 ? 'text-field' : (entry.totalToPar ?? 0) === 0 ? 'text-text-secondary' : 'text-live-red'
                       }`}>
                         {entry.totalToPar != null ? (entry.totalToPar > 0 ? `+${entry.totalToPar}` : entry.totalToPar === 0 ? 'E' : entry.totalToPar) : '—'}
                       </span>
                       {entry.sgTotal != null && (
-                        <span className={`font-mono text-[10px] shrink-0 ${entry.sgTotal > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        <span className={`font-mono text-[10px] shrink-0 ${entry.sgTotal > 0 ? 'text-field' : 'text-live-red'}`}>
                           SG {entry.sgTotal > 0 ? '+' : ''}{entry.sgTotal.toFixed(1)}
                         </span>
                       )}
