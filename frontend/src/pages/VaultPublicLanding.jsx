@@ -59,10 +59,31 @@ export default function VaultPublicLanding() {
   }, [inviteCode])
 
   // Compute vault stats from raw data
-  const { ownerStats, leagueStats } = useMemo(() => {
+  const { ownerStats: allOwnerStats, leagueStats } = useMemo(() => {
     if (!leagueData?.seasons) return { ownerStats: [], leagueStats: {} }
     return computeVaultStats(leagueData.seasons, leagueData.aliases)
   }, [leagueData])
+
+  // Filter to only active/current members for the public invite page.
+  // Non-active members (e.g., someone who played 1 season a decade ago) shouldn't
+  // appear in the standings on the invite link — only current members matter here.
+  const ownerStats = useMemo(() => {
+    // First try: use isActive flag (set by commissioner in owner assignment wizard)
+    const hasExplicitInactive = allOwnerStats.some(o => !o.isActive)
+    if (hasExplicitInactive) {
+      return allOwnerStats.filter(o => o.isActive)
+    }
+    // Fallback: if no one was explicitly marked inactive (all default to true),
+    // filter to owners who were in the most recent season — these are current members.
+    if (allOwnerStats.length > 0) {
+      const maxYear = Math.max(...allOwnerStats.flatMap(o => o.teams.map(t => t.seasonYear)).filter(Boolean))
+      if (maxYear) {
+        const recentOwners = allOwnerStats.filter(o => o.teams.some(t => t.seasonYear === maxYear))
+        if (recentOwners.length > 0) return recentOwners
+      }
+    }
+    return allOwnerStats
+  }, [allOwnerStats])
 
   // Ratings map from league data (if computed)
   const ratings = useMemo(() => leagueData?.ratings || {}, [leagueData])

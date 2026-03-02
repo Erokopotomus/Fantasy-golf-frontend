@@ -684,6 +684,24 @@ On the Prove It page (`/prove-it`), Compare tab, in the "vs Consensus" view, the
 
 ---
 
+### 031 — Commit Cowork Fix: Vault Public Invite Page — Filter to Active Members Only
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Committed Cowork's fix: public invite page now filters standings to active/current members only. Files: VaultPublicLanding.jsx
+**Priority:** High — Eric's invite links are showing wrong data to his friends right now
+**Prompt:**
+Commit and deploy the changes Cowork made to `frontend/src/pages/VaultPublicLanding.jsx`.
+
+**Change:** The public vault invite page (`/vault/invite/:inviteCode`) was showing ALL historical members in the All-Time Standings, including people who only played 1 season a decade ago. A guy with 1 season showed the best record from the entire league's history, which is misleading.
+
+**Fix applied:** Added a filtering step between `computeVaultStats` (which returns all owners) and the rendered `ownerStats`:
+1. If any owner is explicitly marked `isActive: false` (set by commissioner in owner assignment wizard) → show only active members
+2. If all owners default to active → filter to owners who were in the most recent season (these are current members)
+3. Fallback → show everyone
+
+This is a single-file change to `VaultPublicLanding.jsx`. No backend changes needed — the `isActive` flag and season data already exist.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
