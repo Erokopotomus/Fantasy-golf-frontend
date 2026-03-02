@@ -159,7 +159,7 @@ const Landing = () => {
 
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: CR_B }}>Your Clutch Rating</p>
                 <div className="relative z-[1]">
-                  <ClutchRatingGauge rating={84} size="lg" animated />
+                  <ClutchRatingGauge rating={84} tier="expert" size="lg" animated darkBg />
                 </div>
                 {/* Tier label rendered by ClutchRatingGauge showTier */}
 
@@ -350,7 +350,7 @@ const Landing = () => {
             <div className="absolute top-[-25%] right-[-8%] w-[280px] h-[280px] rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${CR}18, transparent 55%)` }} />
             <DecorativeRing size={160} top="-20%" left="-5%" color={CR} opacity={0.08} speed={40} />
             <div className="relative z-[1]">
-              <ClutchRatingGauge rating={84} size="lg" animated />
+              <ClutchRatingGauge rating={84} tier="expert" size="lg" animated darkBg />
             </div>
             <div className="relative z-[1] text-center sm:text-left">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5" style={{ color: CR_B }}>Your Rating</p>

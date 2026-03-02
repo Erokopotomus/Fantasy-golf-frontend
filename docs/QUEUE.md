@@ -953,6 +953,80 @@ In `frontend/src/pages/Landing.jsx` and onboarding components:
 
 ---
 
+## SESSION 5 — Post-Audit Fixes
+
+> **Context:** Cowork audited all 7 differentiator sprint items (038-044) in Chrome on 2026-03-02. All deployed and rendering. Two issues found that need fixing before showing to friends.
+
+### 045 — Dashboard Rating Widget: Compact Mode (Too Much Vertical Space)
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added `compact` prop to DashboardRatingWidget. Compact mode renders single-row card (~72px): small ring + score + tier badge + trend on left, "View →" link on right. Hides all 7 component bars, confidence indicator, and unlock actions. Locked state shows dashed ring + progress dots. Dashboard now passes `compact` prop. Full widget still available on /my-rating. Files: DashboardRatingWidget.jsx, Dashboard.jsx
+**Priority:** HIGH — The DashboardRatingWidget takes ~400px of vertical space showing all 7 component bars + unlock CTAs + the full ring. This pushes "My Leagues" below the fold. On first load, users see rating data before their own leagues. The widget needs a compact mode for the Dashboard.
+**Prompt:**
+In `frontend/src/pages/Dashboard.jsx` (line 204 renders `<DashboardRatingWidget />`), the widget currently shows the FULL breakdown: large ring, score, tier badge, confidence bar, AND all 7 component bars (Win Rate, Draft IQ, Roster Mgmt, Prediction Accuracy, Trade Acumen, Championship Pedigree, Consistency) with unlock CTAs for locked components.
+
+This is way too much for the Dashboard. The full breakdown belongs on the Manager Profile page.
+
+**Create a compact version:**
+1. **Option A (preferred): Add a `compact` prop to DashboardRatingWidget** — When `compact={true}`:
+   - Show a single-row card: small ring (48-56px) on the left, score + tier badge in the middle, "View breakdown →" link on the right
+   - Hide the 7 component bars entirely
+   - Hide the confidence/calibrating bar
+   - Max height: ~80px
+   - Card style: subtle surface background, no heavy borders
+
+2. **Option B: Replace with a simpler component** — Create a `DashboardRatingCompact` that only renders the ring + score + tier + link. Less code to maintain.
+
+**In Dashboard.jsx**, change `<DashboardRatingWidget />` to `<DashboardRatingWidget compact />` (or swap to the compact component).
+
+**The full widget should remain available** for:
+- The Manager Profile page (`/manager/:id`)
+- The "View full rating breakdown" link destination
+- Anywhere else the full breakdown is appropriate
+
+**Design tokens:** Ring uses crown/gold color. Tier badge uses existing RatingTierBadge (sm). Keep the ⚡ Clutch Rating header but smaller. Font: score in font-mono, tier in font-body.
+
+**Test:** After fix, "My Leagues" should be visible without scrolling on a 1080p screen.
+
+**Files to modify:**
+- `frontend/src/components/dashboard/DashboardRatingWidget.jsx` — add compact mode
+- `frontend/src/pages/Dashboard.jsx` — pass `compact` prop
+
+---
+
+### 046 — Landing Page: Fix Rating Demo Card Contradiction (39 vs 84)
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Root cause: Both ClutchRatingGauge instances used `animated` which starts ring at 0 and counts up. The tier label derived from the animated value showed "Developing" until reaching 50+. Fix: passed `tier="expert"` and `darkBg` to both instances so tier label always shows "Expert" regardless of animation progress, and ring text uses light color on dark background. Files: Landing.jsx
+**Priority:** HIGH — The landing page "What builds your score" section shows a demo rating card with contradictory numbers. The circular ring displays **39** but the card title says **EXPERT · 84** and below it says **DEVELOPING**. A cold visitor sees three conflicting signals. This is the first impression for new users deciding whether to sign up.
+**Prompt:**
+In `frontend/src/pages/Landing.jsx`, find the "What builds your score" / "CLUTCH RATING" section (scroll down past the feature cards). There's a dark demo card showing a rating ring.
+
+**The problem (confirmed by Cowork in Chrome):**
+- Ring shows: **39**
+- Text next to name: **EXPERT · 84**
+- Below ring: **DEVELOPING**
+
+Item 033 marked this as DONE with note: "Both ClutchRatingGauge instances already use hardcoded rating={84}". But the ring is clearly rendering 39 in Chrome, not 84. Either:
+1. The ring component is ignoring the hardcoded prop and pulling real user data
+2. There's a second ring rendering with different data
+3. The component has a bug where the visual arc doesn't match the number
+
+**Investigation steps:**
+1. Search Landing.jsx for ALL instances of `ClutchRatingGauge` or rating ring components
+2. Check if any of them use `user.clutchRating` or fetch from the API instead of using hardcoded demo data
+3. The demo card should show CONSISTENT values: ring=84, text="EXPERT · 84", tier="EXPERT"
+4. This section should NOT be personalized for logged-in users — it's a marketing demo showing what a great profile looks like
+
+**Fix:** Make ALL rating displays in this section use the same hardcoded demo values:
+- Rating: 84
+- Tier: EXPERT
+- All component scores: hardcoded demo values (not real user data)
+
+**Files to check:**
+- `frontend/src/pages/Landing.jsx` — find the rating section
+- Whatever ring/gauge component it uses — check if it fetches real data
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

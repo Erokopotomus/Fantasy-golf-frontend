@@ -201,7 +201,7 @@ const Dashboard = () => {
           })()}
 
           {/* ── Clutch Rating ── */}
-          <DashboardRatingWidget />
+          <DashboardRatingWidget compact />
 
           {/* ── My Leagues ── */}
           <div>

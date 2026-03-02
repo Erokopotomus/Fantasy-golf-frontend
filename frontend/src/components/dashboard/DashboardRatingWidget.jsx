@@ -19,11 +19,14 @@ const COMPONENT_UNLOCK_ACTIONS = [
   { key: 'consistency', label: 'Consistency', action: 'Play 2+ seasons', link: null },
 ]
 
-export default function DashboardRatingWidget() {
+export default function DashboardRatingWidget({ compact = false }) {
   const { user } = useAuth()
   const { rating, loading } = useClutchRating(user?.id)
 
   if (loading) {
+    if (compact) {
+      return <div className="h-[72px] bg-[var(--stone)] rounded-xl animate-pulse" />
+    }
     return (
       <div className="p-5">
         <div className="h-6 w-32 bg-[var(--stone)] rounded animate-pulse mb-3" />
@@ -46,6 +49,61 @@ export default function DashboardRatingWidget() {
   const isActive = rating?.overall != null
   const isActivating = !isActive && activeCount >= 3
   const isLocked = !isActive && !isActivating
+
+  // ─── Compact mode: single-row card ───
+  if (compact) {
+    return (
+      <Link
+        to="/my-rating"
+        className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--surface)] border border-[var(--card-border)] hover:border-[var(--crown)]/30 transition-colors group"
+      >
+        {isActive ? (
+          <>
+            <RatingRing
+              rating={rating.overall}
+              confidence={rating.confidence}
+              tier={rating.tier}
+              size="sm"
+              animate={false}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">&#9889;</span>
+                <span className="text-sm font-display font-bold text-text-primary">Clutch Rating</span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-lg font-mono font-bold text-text-primary">{rating.overall}</span>
+                {rating.tier && <RatingTierBadge tier={rating.tier} size="sm" />}
+                <RatingTrendIndicator trend={rating.trend} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="w-12 h-12 rounded-full border-2 border-dashed border-[var(--stone)] flex items-center justify-center shrink-0">
+              <span className="text-lg text-text-primary/20">&#9889;</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-display font-bold text-text-primary">Clutch Rating</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs font-mono text-text-muted">
+                  {activeCount > 0 ? `${activeCount}/${totalComponents} components` : 'Start building yours'}
+                </span>
+                <div className="flex gap-0.5">
+                  {Array.from({ length: totalComponents }).map((_, i) => (
+                    <div key={i} className={`w-2 h-1 rounded-full ${i < activeCount ? 'bg-[var(--crown)]' : 'bg-[var(--stone)]'}`} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+        <span className="text-xs font-mono text-[var(--crown)] opacity-60 group-hover:opacity-100 transition-opacity shrink-0">
+          View &rarr;
+        </span>
+      </Link>
+    )
+  }
 
   return (
     <div className="overflow-hidden">
