@@ -252,7 +252,19 @@ async function syncPlayers(prisma) {
 async function syncSchedule(prisma) {
   console.log('[Sync] Starting schedule sync...')
 
-  const scheduleData = await dg.getSchedule('pga')
+  // Fetch BOTH main PGA and opposite-field schedules
+  const [scheduleData, oppScheduleData] = await Promise.all([
+    dg.getSchedule('pga'),
+    dg.getSchedule('opp').catch(() => ({ schedule: [] })),
+  ])
+
+  // Build a Set of opposite-field event IDs
+  const oppEvents = oppScheduleData?.schedule || []
+  const oppEventIds = new Set(oppEvents.map(e => String(e.event_id || e.dg_id)))
+  if (oppEventIds.size > 0) {
+    console.log(`[Sync] Found ${oppEventIds.size} opposite-field events`)
+  }
+
   await stageRaw(prisma, 'datagolf', 'schedule', null, scheduleData)
   const events = scheduleData?.schedule || scheduleData || []
 
@@ -266,7 +278,7 @@ async function syncSchedule(prisma) {
   const { randomBytes } = require('crypto')
   const genId = () => 'c' + randomBytes(12).toString('hex').slice(0, 24)
 
-  const cols = ['id', 'datagolfId', 'name', 'shortName', 'location', 'tour', 'purse', 'isMajor', 'isSignature', 'isPlayoff', 'startDate', 'endDate', 'status']
+  const cols = ['id', 'datagolfId', 'name', 'shortName', 'location', 'tour', 'purse', 'isMajor', 'isSignature', 'isPlayoff', 'isAlternate', 'startDate', 'endDate', 'status']
   const rows = []
 
   for (const evt of events) {
@@ -314,6 +326,7 @@ async function syncSchedule(prisma) {
       isMajor: evt.major === true || evt.major === 1,
       isSignature: evt.signature === true || evt.signature === 1,
       isPlayoff: evt.playoff === true || evt.playoff === 1,
+      isAlternate: oppEventIds.has(dgId),
       startDate,
       endDate,
       status,

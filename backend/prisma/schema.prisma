@@ -504,6 +504,7 @@ model Tournament {
   isMajor     Boolean          @default(false)
   isPlayoff   Boolean          @default(false) // FedEx playoff event
   isSignature Boolean          @default(false) // Signature event (elevated)
+  isAlternate Boolean          @default(false) // Opposite-field / alternate event
 
   // Live state
   status         TournamentStatus @default(UPCOMING)

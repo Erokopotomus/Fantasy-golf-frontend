@@ -47,19 +47,23 @@ router.get('/', optionalAuth, async (req, res, next) => {
 // GET /api/tournaments/current - Get current/upcoming tournament
 router.get('/current', async (req, res, next) => {
   try {
-    const tournament = await prisma.tournament.findFirst({
+    // Prefer non-alternate (main) events
+    let tournament = await prisma.tournament.findFirst({
       where: {
-        status: { in: ['IN_PROGRESS', 'UPCOMING'] }
+        status: { in: ['IN_PROGRESS', 'UPCOMING'] },
+        isAlternate: false,
       },
       include: { course: true },
-      orderBy: [
-        { startDate: 'asc' },
-        { isMajor: 'desc' },
-        { isSignature: 'desc' },
-        { isPlayoff: 'desc' },
-        { purse: 'desc' },
-      ]
+      orderBy: [{ startDate: 'asc' }],
     })
+    // Fallback to any tournament if no non-alternate found
+    if (!tournament) {
+      tournament = await prisma.tournament.findFirst({
+        where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
+        include: { course: true },
+        orderBy: [{ startDate: 'asc' }],
+      })
+    }
 
     // For live tournaments, ensure currentRound accounts for date-based expected round
     // (API data may lag between rounds, e.g. early morning before tee times)
@@ -84,10 +88,7 @@ router.get('/upcoming-with-fields', optionalAuth, async (req, res, next) => {
       where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
       orderBy: [
         { startDate: 'asc' },
-        { isMajor: 'desc' },
-        { isSignature: 'desc' },
-        { isPlayoff: 'desc' },
-        { purse: 'desc' },
+        { isAlternate: 'asc' },  // main events before alternates
       ],
       take: 5,
       include: {

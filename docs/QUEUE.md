@@ -1118,6 +1118,120 @@ This is cosmetic polish — keep it as a low priority item.
 
 ---
 
+### 050 — Fix Tournament Priority: Sync Opposite-Field Flag from DataGolf
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added `isAlternate` boolean to Tournament model, syncSchedule() now fetches `opp` schedule from DataGolf to identify alternate events, `/current` endpoint prefers non-alternate events with fallback, `/upcoming-with-fields` sorts alternates last. Files: schema.prisma, datagolfSync.js, tournaments.js
+**Priority:** HIGH — Item 047's `orderBy` fix didn't work because `isSignature`, `isMajor`, and `purse` are ALL null/false for every tournament in the DB. DataGolf doesn't provide these flags in its `pga` schedule. Puerto Rico Open still shows as the current tournament instead of Arnold Palmer Invitational.
+**Prompt:**
+The `orderBy` approach from item 047 is correct but ineffective because the database has no distinguishing data between main and alternate events. We need a different strategy.
+
+**Root cause:** DataGolf's `/get-schedule?tour=pga` returns ALL PGA Tour events including opposite-field/alternate events (like Puerto Rico Open). The flags `signature`, `major`, `playoff` are either not returned by DataGolf or are always false/null.
+
+**Solution: Two-step approach**
+
+**Step 1: Add `isAlternate` boolean to Tournament model and sync from DataGolf `opp` schedule**
+
+DataGolf provides separate tour schedules: `pga` (main events) and `opp` (opposite-field events). Currently we only sync `pga`. Instead of syncing `opp` as tournaments, we should use the `opp` schedule to IDENTIFY which events are alternates.
+
+In `backend/src/services/datagolfSync.js`, modify `syncSchedule()`:
+
+```js
+async function syncSchedule(prisma) {
+  console.log('[Sync] Starting schedule sync...')
+
+  // Fetch BOTH main PGA and opposite-field schedules
+  const [scheduleData, oppScheduleData] = await Promise.all([
+    dg.getSchedule('pga'),
+    dg.getSchedule('opp').catch(() => ({ schedule: [] })),  // Don't fail if opp not available
+  ])
+
+  // Build a Set of opposite-field event IDs
+  const oppEvents = (oppScheduleData?.schedule || [])
+  const oppEventIds = new Set(oppEvents.map(e => String(e.event_id || e.dg_id)))
+
+  await stageRaw(prisma, 'datagolf', 'schedule', null, scheduleData)
+  const events = scheduleData?.schedule || scheduleData || []
+
+  // ... existing code ...
+
+  // In the row building loop, add:
+  // isAlternate: oppEventIds.has(dgId),
+```
+
+**Step 2: Add Prisma migration for `isAlternate` field**
+
+Add to Tournament model in `schema.prisma`:
+```prisma
+isAlternate  Boolean  @default(false)
+```
+
+Run: `npx prisma migrate dev --name add_is_alternate_tournament`
+
+**Step 3: Update the `/current` endpoint to exclude alternates**
+
+In `backend/src/routes/tournaments.js`, the `/current` endpoint should prefer non-alternate events:
+
+```js
+// First try to find a non-alternate tournament
+let tournament = await prisma.tournament.findFirst({
+  where: {
+    status: { in: ['IN_PROGRESS', 'UPCOMING'] },
+    isAlternate: false,
+  },
+  include: { course: true },
+  orderBy: [{ startDate: 'asc' }]
+})
+// Fallback to any tournament if no non-alternate found
+if (!tournament) {
+  tournament = await prisma.tournament.findFirst({
+    where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
+    include: { course: true },
+    orderBy: [{ startDate: 'asc' }]
+  })
+}
+```
+
+**Step 4: Update upcoming-with-fields to sort alternates last**
+
+Keep alternate events in the upcoming schedule (users can still see them) but sort them after main events for the same week:
+```js
+orderBy: [
+  { startDate: 'asc' },
+  { isAlternate: 'asc' },  // false (main) before true (alternate)
+]
+```
+
+**Step 5: Backfill existing tournaments**
+
+After migration, run a one-time script or SQL to mark existing alternate events:
+```sql
+-- Known alternate events for 2026 season
+UPDATE tournaments SET "isAlternate" = true WHERE name ILIKE '%Puerto Rico%';
+UPDATE tournaments SET "isAlternate" = true WHERE name ILIKE '%Bermuda%';
+-- The sync will handle this going forward via the opp schedule comparison
+```
+
+Or better: run the schedule sync once after deploy and it will auto-tag alternates via the `oppEventIds` Set.
+
+**Fallback if DataGolf `opp` endpoint doesn't work:** Maintain a hardcoded list of known alternate event names in a constant:
+```js
+const KNOWN_ALTERNATES = [
+  'Puerto Rico Open', 'Bermuda Championship', 'Barbasol Championship',
+  'Barracuda Championship', 'ISCO Championship',
+]
+const isAlternateEvent = (name) => KNOWN_ALTERNATES.some(alt => name.includes(alt))
+```
+
+**Test:** After deploy + sync, `/api/tournaments/current` should return Arnold Palmer Invitational, not Puerto Rico Open.
+
+**Files to modify:**
+- `backend/prisma/schema.prisma` — add `isAlternate` field
+- `backend/src/services/datagolfSync.js` — sync opp schedule, tag alternates
+- `backend/src/routes/tournaments.js` — exclude alternates in `/current`, sort last in `/upcoming-with-fields`
+- New migration file
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
