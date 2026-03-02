@@ -1325,6 +1325,49 @@ This ensures alternates are caught even if DataGolf's `opp` schedule doesn't hav
 
 ---
 
+### 052 — Field Sync Crons: Add isAlternate Filter + Trigger Arnold Palmer Sync
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Updated getActiveTournamentDgId() helper + 3 inline field sync queries (startup, Tue 8PM, Wed 8AM) to prefer isAlternate: false with fallback. Deploy will trigger startup field sync for Arnold Palmer. Files: index.js
+**Priority:** HIGH — Arnold Palmer Invitational starts in 3 days and has `fieldSize: 0` / `fieldCount: 0`. Its field was never synced because all field sync crons grab the first upcoming tournament by `startDate asc` without filtering alternates. Puerto Rico Open (alternate, same week) got synced instead.
+**Prompt:**
+Four field sync locations in `backend/src/index.js` use `findFirst` to pick which tournament to sync, but none of them filter by `isAlternate`. They all grab Puerto Rico Open instead of Arnold Palmer Invitational.
+
+**Fix all 4 field sync queries to prefer non-alternate events:**
+
+1. **Startup field sync (line ~274):**
+```js
+const t = await cronPrisma.tournament.findFirst({
+  where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null }, isAlternate: false },
+  orderBy: { startDate: 'asc' },
+  select: { datagolfId: true, status: true, name: true },
+})
+// Fallback if no non-alternate found
+if (!t?.datagolfId) {
+  t = await cronPrisma.tournament.findFirst({
+    where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+    orderBy: { startDate: 'asc' },
+    select: { datagolfId: true, status: true, name: true },
+  })
+}
+```
+
+2. **Daily field sync Thu-Sun 7AM ET (line ~310):** Same pattern — add `isAlternate: false` to the `getActiveTournamentDgId()` helper. Check what that function does and add the filter there so all callers benefit.
+
+3. **Tuesday 8PM early field sync (line ~322):** Add `isAlternate: false` to the `where` clause.
+
+4. **Wednesday 8AM catch-up field sync (line ~336):** Add `isAlternate: false` to the `where` clause.
+
+**Also check `getActiveTournamentDgId()` helper** — it's used by multiple crons. Adding the filter there is the cleanest fix since it propagates to all callers.
+
+**After fixing the code, the deploy will trigger the startup field sync, which should now grab Arnold Palmer's field from DataGolf.**
+
+**Test:** After deploy, check `GET /api/tournaments/upcoming-with-fields` — Arnold Palmer should have `fieldSize > 0` and `fieldCount > 0`.
+
+**Files to modify:**
+- `backend/src/index.js` — all 4 field sync queries + `getActiveTournamentDgId()` helper
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

@@ -254,13 +254,20 @@ httpServer.listen(PORT, () => {
     const cronPrisma = require('./lib/prisma')
     const sync = require('./services/datagolfSync')
 
-    /** Find the active or next upcoming tournament datagolfId */
+    /** Find the active or next upcoming tournament datagolfId (prefer non-alternate) */
     async function getActiveTournamentDgId() {
-      const t = await cronPrisma.tournament.findFirst({
-        where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+      let t = await cronPrisma.tournament.findFirst({
+        where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null }, isAlternate: false },
         orderBy: { startDate: 'asc' },
         select: { datagolfId: true, status: true, startDate: true },
       })
+      if (!t) {
+        t = await cronPrisma.tournament.findFirst({
+          where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+          orderBy: { startDate: 'asc' },
+          select: { datagolfId: true, status: true, startDate: true },
+        })
+      }
       return t
     }
 
@@ -271,11 +278,18 @@ httpServer.listen(PORT, () => {
     // ─── Startup: sync field for next upcoming tournament so schedule dots have data ───
     ;(async () => {
       try {
-        const t = await cronPrisma.tournament.findFirst({
-          where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+        let t = await cronPrisma.tournament.findFirst({
+          where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null }, isAlternate: false },
           orderBy: { startDate: 'asc' },
           select: { datagolfId: true, status: true, name: true },
         })
+        if (!t) {
+          t = await cronPrisma.tournament.findFirst({
+            where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+            orderBy: { startDate: 'asc' },
+            select: { datagolfId: true, status: true, name: true },
+          })
+        }
         if (t?.datagolfId) {
           cronLog('startup-field', `Syncing field for ${t.name} (${t.datagolfId})`)
           const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
@@ -319,11 +333,18 @@ httpServer.listen(PORT, () => {
 
     // Tuesday 8:00 PM ET — Early field sync (PGA fields usually published Tue evening)
     cron.schedule('0 20 * * 2', async () => {
-      const t = await cronPrisma.tournament.findFirst({
-        where: { status: 'UPCOMING', datagolfId: { not: null } },
+      let t = await cronPrisma.tournament.findFirst({
+        where: { status: 'UPCOMING', datagolfId: { not: null }, isAlternate: false },
         orderBy: { startDate: 'asc' },
         select: { datagolfId: true },
       })
+      if (!t) {
+        t = await cronPrisma.tournament.findFirst({
+          where: { status: 'UPCOMING', datagolfId: { not: null } },
+          orderBy: { startDate: 'asc' },
+          select: { datagolfId: true },
+        })
+      }
       if (!t?.datagolfId) return cronLog('earlyField', 'No upcoming tournament')
       cronLog('earlyField', `Tue 8PM — Syncing field for ${t.datagolfId}`)
       try {
@@ -334,11 +355,18 @@ httpServer.listen(PORT, () => {
 
     // Wednesday 8:00 AM ET — Catch late field updates
     cron.schedule('0 8 * * 3', async () => {
-      const t = await cronPrisma.tournament.findFirst({
-        where: { status: 'UPCOMING', datagolfId: { not: null } },
+      let t = await cronPrisma.tournament.findFirst({
+        where: { status: 'UPCOMING', datagolfId: { not: null }, isAlternate: false },
         orderBy: { startDate: 'asc' },
         select: { datagolfId: true },
       })
+      if (!t) {
+        t = await cronPrisma.tournament.findFirst({
+          where: { status: 'UPCOMING', datagolfId: { not: null } },
+          orderBy: { startDate: 'asc' },
+          select: { datagolfId: true },
+        })
+      }
       if (!t?.datagolfId) return cronLog('earlyField', 'No upcoming tournament')
       cronLog('earlyField', `Wed 8AM — Syncing field for ${t.datagolfId}`)
       try {
