@@ -1504,6 +1504,85 @@ In `frontend/src/App.jsx`, add `<Route path="/create-league" element={<Navigate 
 
 ---
 
+### 058 — Commit: League Settings Allow Odd Team Sizes
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Committed Cowork's edit: dropdown now generates 2-20 (all numbers) instead of even-only. Files: LeagueSettings.jsx
+**Priority:** URGENT — Eric is testing with 5 friends right now
+**Prompt:**
+Cowork already made the edit in `frontend/src/pages/LeagueSettings.jsx`. Just commit and deploy.
+
+**Change already made:**
+The League Settings "League Size (Max Teams)" dropdown (line ~363) only offered even numbers `[2, 4, 6, 8, 10, 12, 14, 16, 20]`. Changed to `Array.from({ length: 19 }, (_, i) => i + 2)` which generates 2-20 (every number, odd and even). The Create League form (`LeagueForm.jsx`) already allows all numbers 2-16 — this was only a settings page bug.
+
+Backend has no even-number restriction — just stores the integer. Frontend-only fix.
+
+**Files changed:**
+- `frontend/src/pages/LeagueSettings.jsx` (1 edit, line ~363)
+
+---
+
+### 057 — Golf Prove It Slate: Work for UPCOMING Tournaments (Season SG Benchmarks)
+**Status:** `TODO`
+**Priority:** CRITICAL — Golf is the launch sport, and the Golf Slate tab on Prove It shows "No Active Tournament" even though Arnold Palmer has a 72-player field. Friends will see a dead page.
+**Prompt:**
+The Golf Slate in Prove It (`frontend/src/pages/ProveIt.jsx`, `WeeklySlate` component, lines 41-158) only works during IN_PROGRESS tournaments because it relies on **live tournament SG data** as the benchmark value. For UPCOMING tournaments the leaderboard has 72 players but every `sgTotal` is `null` (no shots hit yet). The code filters `p.sgTotal != null` on line 66, so the slate is empty.
+
+**The fix: use each player's season/career SG average as the benchmark for UPCOMING tournaments.**
+
+This data already exists — every player has historical SG stats from the 2018-2026 backfill. The prediction becomes: "Will Scottie Scheffler beat his season average SG Total of 2.90 this week?" — which is actually a more interesting prediction than mid-tournament benchmarks.
+
+**Backend changes:**
+
+1. In `backend/src/routes/tournaments.js`, the `GET /:id/leaderboard` endpoint (line 258+):
+   - When `tournament.status === 'UPCOMING'`, include each player's **season SG stats** in the response
+   - The player data is already included via `include: { player: true }` — check if the Player model has `sgTotal`, `sgApproach`, `sgOffTee`, `sgPutting` fields (it should from the career stats aggregation)
+   - If the Player model doesn't have season SG averages directly, compute them from the most recent season's Performance records:
+     ```js
+     // For each player in the field, get their 2025-2026 season average SG
+     const recentPerfs = await prisma.performance.findMany({
+       where: { playerId: player.id, sgTotal: { not: null } },
+       orderBy: { tournament: { startDate: 'desc' } },
+       take: 10, // last 10 tournaments
+       select: { sgTotal: true }
+     })
+     const avgSgTotal = recentPerfs.length > 0
+       ? recentPerfs.reduce((sum, p) => sum + p.sgTotal, 0) / recentPerfs.length
+       : null
+     ```
+   - Add `seasonSgTotal` (or similar) to each leaderboard entry for UPCOMING tournaments
+   - This could also be a separate endpoint like `GET /api/tournaments/:id/field-with-stats` if you prefer to keep leaderboard clean
+
+2. **Alternative simpler approach:** Check if the Player model already has `sgTotal` as a career/season stat field. If yes, just map it onto the leaderboard entry when `tournament.status === 'UPCOMING'`. Check `backend/prisma/schema.prisma` for the Player model fields.
+
+**Frontend changes:**
+
+3. In `frontend/src/pages/ProveIt.jsx`, `WeeklySlate` component (lines 50-93):
+   - After fetching the leaderboard, check if tournament is UPCOMING
+   - If UPCOMING, use `seasonSgTotal` (or `player.sgTotal`) as the benchmark instead of the live `sgTotal`
+   - Change line 66 filter: instead of `p.sgTotal != null`, check for `p.sgTotal != null || p.seasonSgTotal != null`
+   - In the `targets` mapping (lines 67-74), set `sgTotal: p.sgTotal ?? p.seasonSgTotal`
+   - **Add a visual indicator** that this is a season-average benchmark, not a live score. Something like a small label "Season Avg" next to the SG value
+
+4. In the slate display section (lines 158+), when tournament is UPCOMING:
+   - Change the section header from tournament round info to something like "Arnold Palmer Invitational — Pre-Tournament Calls"
+   - The over/under buttons should say "Beat Avg" / "Miss Avg" or just keep "Over" / "Under" (simpler)
+   - Add a brief explainer at top: "Will they beat their season average this week? Make your call."
+
+5. In `handleSubmit` (line 95-124):
+   - The prediction submission already works — it uses `benchmarkValue: Math.round(player.sgTotal * 10) / 10` and stores it in `predictionData`. No changes needed here as long as `sgTotal` is populated from step 3.
+
+**Resolution (already works):**
+The Sunday night auto-resolve cron compares predictions against actual tournament SG — that flow is unchanged. A prediction of "Scheffler over 2.9 SG Total" resolves correctly when the tournament completes.
+
+**Testing:**
+After deploying, navigate to `/prove-it` → "Golf Slate" tab. You should see the Arnold Palmer field with season SG averages and over/under buttons. Submit a prediction and verify it appears in "My Track Record."
+
+**Files to modify:**
+- `backend/src/routes/tournaments.js` — add season SG stats to leaderboard for UPCOMING tournaments
+- `frontend/src/pages/ProveIt.jsx` — `WeeklySlate` component: use season stats, add explainer text
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

@@ -360,7 +360,7 @@ const LeagueSettings = () => {
                 disabled={!canChangeFormat}
                 className={`w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none ${!canChangeFormat ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {[2, 4, 6, 8, 10, 12, 14, 16, 20].map(n => (
+                {Array.from({ length: 19 }, (_, i) => i + 2).map(n => (
                   <option key={n} value={n}>{n} teams</option>
                 ))}
               </select>
