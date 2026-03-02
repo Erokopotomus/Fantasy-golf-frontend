@@ -156,7 +156,7 @@ const ScoringSettings = ({ settings, onChange }) => {
             </span>
           )}
         </div>
-        <p className="text-text-muted text-xs mb-4">Points awarded based on final tournament placement</p>
+        <p className="text-text-muted text-xs mb-4">Points awarded based on final placement</p>
         <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
           {Object.entries(POSITION_LABELS).map(([key, label]) => (
             <div key={key}>

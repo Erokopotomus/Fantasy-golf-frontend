@@ -231,15 +231,15 @@ const LeagueSettings = () => {
   const renderFormatSettings = () => {
     switch (format?.id) {
       case 'full-league':
-        return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={seasonWeeks} />
+        return <FullLeagueSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={seasonWeeks} sport={league?.sport?.toLowerCase()} />
       case 'head-to-head':
         return <HeadToHeadSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} teams={league?.teams} sport={league?.sport?.toLowerCase()} />
       case 'roto':
         return <RotoSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
       case 'survivor':
-        return <SurvivorSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} leagueSettings={settings} />
+        return <SurvivorSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} leagueSettings={settings} sport={league?.sport?.toLowerCase()} />
       case 'one-and-done':
-        return <OneAndDoneSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} />
+        return <OneAndDoneSettings settings={settings.formatSettings} onChange={handleFormatSettingsChange} sport={league?.sport?.toLowerCase()} />
       default:
         return null
     }

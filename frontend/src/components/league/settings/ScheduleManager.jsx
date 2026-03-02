@@ -346,7 +346,7 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
         <Card>
           <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Roster Adjustments</h3>
           <p className="text-text-secondary text-sm mb-4">
-            Reduce the number of active starters for weeks with smaller tournament fields.
+            Reduce the number of active starters for weeks with smaller fields.
             Default: <span className="text-text-primary font-medium">{defaultStarterCount} starters</span>
           </p>
 

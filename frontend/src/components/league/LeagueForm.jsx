@@ -181,15 +181,15 @@ const LeagueForm = ({ onSubmit, loading }) => {
   const renderFormatSettings = () => {
     switch (formData.format) {
       case 'full-league':
-        return <FullLeagueSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={formData.sport === 'golf' ? seasonWeeks : null} />
+        return <FullLeagueSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} seasonWeeks={formData.sport === 'golf' ? seasonWeeks : null} sport={formData.sport} />
       case 'head-to-head':
         return <HeadToHeadSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} sport={formData.sport} />
       case 'roto':
         return <RotoSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
       case 'survivor':
-        return <SurvivorSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
+        return <SurvivorSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} sport={formData.sport} />
       case 'one-and-done':
-        return <OneAndDoneSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
+        return <OneAndDoneSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} sport={formData.sport} />
       default:
         return null
     }
@@ -529,10 +529,10 @@ const LeagueForm = ({ onSubmit, loading }) => {
                   <span className="text-text-primary ml-2">{formData.rosterSize} players</span>
                 </div>
               )}
-              {!isNfl && formData.format !== 'one-and-done' && (
+              {formData.format !== 'one-and-done' && (
                 <div>
                   <span className="text-text-muted">Starters:</span>
-                  <span className="text-text-primary ml-2">{formData.startersPerWeek} of {formData.rosterSize}</span>
+                  <span className="text-text-primary ml-2">{isNfl ? '10' : formData.startersPerWeek} of {formData.rosterSize}</span>
                 </div>
               )}
               <div>

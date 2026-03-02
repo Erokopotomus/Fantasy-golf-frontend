@@ -219,6 +219,78 @@ Check `frontend/src/pages/Profile.jsx` — find the `useStats()` hook or however
 
 ---
 
+### 010 — Commit Cowork Sport-Aware Terminology Fix
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Committed Cowork's HeadToHeadSettings sport-aware terminology fix (tournament→week for NFL). Files: HeadToHeadSettings.jsx, LeagueForm.jsx, LeagueSettings.jsx (commit 49419b7)
+**Priority:** Quick win
+**Prompt:**
+Commit and deploy the changes Cowork made to fix golf-specific "tournament" terminology leaking into NFL league creation.
+
+Changes already made by Cowork:
+1. **`frontend/src/components/league/settings/HeadToHeadSettings.jsx`:** Added `sport` prop, created `periodUnit`/`periodUnitPlural` variables (`tournament`/`tournaments` for golf, `week`/`weeks` for NFL). Replaced 5 hardcoded "tournament(s)" strings in helper text with sport-aware interpolation.
+2. **`frontend/src/components/league/LeagueForm.jsx` line 186:** Added `sport={formData.sport}` to HeadToHeadSettings render.
+3. **`frontend/src/pages/LeagueSettings.jsx` line 236:** Added `sport={league?.sport?.toLowerCase()}` to HeadToHeadSettings render.
+
+These are small, surgical fixes. No other files touched. Golf still says "tournaments", NFL now correctly says "weeks".
+
+---
+
+### 011 — Sport-Aware Terminology in Remaining Settings Components
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Applied sport-aware terminology to FullLeagueSettings (2 strings), SurvivorSettings (1), OneAndDoneSettings (3), ScoringSettings (1), ScheduleManager (1). Added sport prop pass-through from LeagueForm.jsx and LeagueSettings.jsx. Files: FullLeagueSettings.jsx, SurvivorSettings.jsx, OneAndDoneSettings.jsx, ScoringSettings.jsx, ScheduleManager.jsx, LeagueForm.jsx, LeagueSettings.jsx
+**Priority:** Low — cosmetic, golf-only formats less urgent
+**Prompt:**
+The HeadToHeadSettings terminology fix (item 010) only covers the H2H format. The same pattern needs to be applied to 5 other settings components that have hardcoded golf terminology. These components are currently only used by golf-specific formats (Survivor, One & Done, Full League) but should be future-proofed.
+
+**Files and strings to fix:**
+
+1. **`frontend/src/components/league/settings/FullLeagueSettings.jsx`** — 2 instances:
+   - Line ~32: `"Choose which tournaments count for your league. Leave blank for the full PGA season."` → Sport-aware: use "weeks" for NFL, "tournaments" for golf. Remove "PGA" reference or make it sport-specific.
+   - Line ~87: `"Each player on your roster earns points based on their tournament finish"` → `"...based on their weekly/tournament performance"`
+
+2. **`frontend/src/components/league/settings/SurvivorSettings.jsx`** — 1 instance:
+   - Line ~133: `"After each tournament, the lowest-scoring team is eliminated"` → `"After each {periodUnit}..."`
+
+3. **`frontend/src/components/league/settings/OneAndDoneSettings.jsx`** — 2 instances:
+   - Line ~130: `"Pick any golfer for each tournament"` → `"Pick any player for each {periodUnit}"`
+   - Lines ~140, ~144: `"wins tournament"` → `"wins {periodUnit}"` or just `"wins"`
+
+4. **`frontend/src/components/league/settings/ScoringSettings.jsx`** — 1 instance:
+   - Line ~159: `"Points awarded based on final tournament placement"` → `"...based on final placement"`
+
+5. **`frontend/src/components/league/settings/ScheduleManager.jsx`** — 1 instance:
+   - Line ~349: `"...for weeks with smaller tournament fields."` → `"...for weeks with smaller fields."`
+
+**Approach:** For each component, add a `sport` prop (passed from LeagueForm/LeagueSettings), create `periodUnit`/`periodUnitPlural` locals, and replace strings. Same pattern as HeadToHeadSettings fix.
+
+**Rules:**
+- Pass `sport` from the parent components (LeagueForm.jsx and LeagueSettings.jsx) to each settings component
+- Default sport to 'golf' if not provided (backward compatible)
+- Don't over-engineer — simple string interpolation, no i18n framework
+
+---
+
+### 012 — NFL League Summary Missing Starters Line
+**Status:** `DONE`
+**Completed:** 2026-03-01 — Removed `!isNfl` gate from Starters line in League Summary. NFL now shows "Starters: 10 of 17". Files: LeagueForm.jsx
+**Priority:** Low — polish
+**Prompt:**
+In the league creation flow Step 3, the League Summary card at the bottom shows different info for Golf vs NFL:
+
+- **Golf summary** shows: League Name, Format, Draft Type, Sport, Scoring, Roster Size, **Starters: 6 of 8**, League Size
+- **NFL summary** shows: League Name, Format, Draft Type, Sport, Scoring, Roster Size, League Size — **no Starters line**
+
+The NFL summary should also show a starters count. For NFL the roster has specific starter slots (QB, 2 RB, 3 WR, TE, FLEX, K, DEF = 10 starters out of 17 total). Display this as `Starters: 10 of 17` or `Starters: 10` (consistent with however Golf displays it).
+
+Find the League Summary component in `frontend/src/components/league/LeagueForm.jsx` (search for "League Summary"). The issue is likely that the starters count is only computed for golf (where it comes from a dropdown) and not for NFL (where it's derived from the fixed roster structure).
+
+**Rules:**
+- Only touch the League Summary rendering section
+- For NFL, compute starters by counting non-bench/non-IR roster slots
+- If the roster structure isn't available at summary time, hardcode the NFL default starters count (10)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

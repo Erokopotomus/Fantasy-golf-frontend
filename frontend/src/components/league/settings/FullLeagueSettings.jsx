@@ -2,7 +2,8 @@ import { useState } from 'react'
 import Card from '../../common/Card'
 import SeasonRangePicker from './SeasonRangePicker'
 
-const FullLeagueSettings = ({ settings, onChange, seasonWeeks }) => {
+const FullLeagueSettings = ({ settings, onChange, seasonWeeks, sport }) => {
+  const periodUnitPlural = sport === 'golf' ? 'tournaments' : 'weeks'
   const [localSettings, setLocalSettings] = useState({
     segments: settings?.segments || 4,
     segmentBonus: settings?.segmentBonus ?? 25,
@@ -29,7 +30,7 @@ const FullLeagueSettings = ({ settings, onChange, seasonWeeks }) => {
         <Card>
           <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Season Range</h3>
           <p className="text-xs text-text-muted mb-4">
-            Choose which tournaments count for your league. Leave blank for the full PGA season.
+            {`Choose which ${periodUnitPlural} count for your league. Leave blank for the full season.`}
           </p>
           <SeasonRangePicker
             weeks={seasonWeeks}
@@ -84,7 +85,7 @@ const FullLeagueSettings = ({ settings, onChange, seasonWeeks }) => {
       <div className="bg-[var(--bg-alt)] rounded-lg p-4 border border-[var(--card-border)]">
         <h4 className="text-sm font-medium text-text-primary mb-2">How Full League Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
-          <li>- Each player on your roster earns points based on their tournament finish</li>
+          <li>- {`Each player on your roster earns points based on their ${sport === 'golf' ? 'tournament finish' : 'weekly performance'}`}</li>
           <li>- Points are accumulated throughout the season</li>
           <li>- Segment winners earn bonus points if segments are enabled</li>
           <li>- Final standings determined by total points at season end</li>

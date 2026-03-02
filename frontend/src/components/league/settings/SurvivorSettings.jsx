@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Card from '../../common/Card'
 
-const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
+const SurvivorSettings = ({ settings, onChange, leagueSettings, sport }) => {
+  const periodUnit = sport === 'golf' ? 'tournament' : 'week'
   const [localSettings, setLocalSettings] = useState({
     eliminationsPerWeek: settings?.eliminationsPerWeek || 1,
     buyBacks: settings?.buyBacks || { allowed: true, max: 1, faabCost: 0 },
@@ -130,7 +131,7 @@ const SurvivorSettings = ({ settings, onChange, leagueSettings }) => {
       <div className="bg-[var(--bg-alt)] rounded-lg p-4 border border-[var(--card-border)]">
         <h4 className="text-sm font-medium text-text-primary mb-2">How Survivor Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
-          <li>- After each tournament, the lowest-scoring team is eliminated</li>
+          <li>- {`After each ${periodUnit}, the lowest-scoring team is eliminated`}</li>
           <li>- Eliminations continue weekly until one team remains</li>
           <li>- The last team standing wins the league</li>
           {localSettings.buyBacks.allowed && (

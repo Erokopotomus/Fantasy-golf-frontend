@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Card from '../../common/Card'
 
-const OneAndDoneSettings = ({ settings, onChange }) => {
+const OneAndDoneSettings = ({ settings, onChange, sport }) => {
+  const periodUnit = sport === 'golf' ? 'tournament' : 'week'
   const [localSettings, setLocalSettings] = useState({
     tiers: settings?.tiers || [
       { tier: 1, maxRank: 10, multiplier: 1.0 },
@@ -127,7 +128,7 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
       <div className="bg-[var(--bg-alt)] rounded-lg p-4 border border-[var(--card-border)]">
         <h4 className="text-sm font-medium text-text-primary mb-2">How One & Done Works</h4>
         <ul className="text-xs text-text-muted space-y-1">
-          <li>- Pick any golfer for each tournament - no draft required</li>
+          <li>- {`Pick any player for each ${periodUnit} - no draft required`}</li>
           <li>- Once you pick a player, you cannot use them again all season</li>
           <li>- Strategic player management is key to success</li>
           <li>- Tier multipliers reward picking lower-ranked players</li>
@@ -137,11 +138,11 @@ const OneAndDoneSettings = ({ settings, onChange }) => {
           <h5 className="text-xs font-medium text-text-primary mb-2">Example Points Calculation</h5>
           <div className="bg-[var(--surface)] rounded p-3 text-xs">
             <div className="flex justify-between mb-1">
-              <span className="text-text-muted">Scottie Scheffler (Tier 1) wins tournament</span>
+              <span className="text-text-muted">Scottie Scheffler (Tier 1) wins</span>
               <span className="text-text-primary">100 pts x 1.0x = <span className="text-gold">100 pts</span></span>
             </div>
             <div className="flex justify-between">
-              <span className="text-text-muted">Sahith Theegala (Tier 2) wins tournament</span>
+              <span className="text-text-muted">Sahith Theegala (Tier 2) wins</span>
               <span className="text-text-primary">100 pts x 1.25x = <span className="text-gold">125 pts</span></span>
             </div>
           </div>
