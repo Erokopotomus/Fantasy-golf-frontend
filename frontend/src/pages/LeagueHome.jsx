@@ -369,7 +369,7 @@ const LeagueHome = () => {
                 <span className="text-text-secondary">
                   {hasNoActiveTeams && isImportedLeague
                     ? `${league.maxTeams || historicalTeams?.teams?.length || '–'} teams`
-                    : `${league.members?.length || league._count?.members || league.memberCount || 0} members`
+                    : (() => { const c = league.members?.length || league._count?.members || league.memberCount || 0; return `${c} member${c !== 1 ? 's' : ''}` })()
                   }
                 </span>
                 <span className="text-text-muted">•</span>

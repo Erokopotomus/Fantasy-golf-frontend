@@ -238,7 +238,7 @@ const DraftRoomContent = () => {
       ) : (
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top: Draft Board (full width) */}
-          <div className="h-[45%] flex flex-col min-h-0 border-b-2 border-gold/30 p-2">
+          <div className="h-[55%] flex flex-col min-h-0 border-b-2 border-gold/30 p-2">
             {draft?.type === 'auction' ? (
               <BidPanel
                 currentBid={currentBid}

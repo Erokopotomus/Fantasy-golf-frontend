@@ -258,6 +258,20 @@ router.get('/', authenticate, async (req, res) => {
         clutchLeague: { select: { id: true, name: true } },
       },
     })
+
+    // Auto-fail imports stuck in IMPORTING for > 30 minutes
+    const STUCK_THRESHOLD_MS = 30 * 60 * 1000
+    const now = Date.now()
+    for (const imp of imports) {
+      if (imp.status === 'IMPORTING' && now - new Date(imp.createdAt).getTime() > STUCK_THRESHOLD_MS) {
+        imp.status = 'FAILED'
+        prisma.leagueImport.update({
+          where: { id: imp.id },
+          data: { status: 'FAILED', errorLog: [{ message: 'Import timed out' }] },
+        }).catch(() => {})
+      }
+    }
+
     res.json({ imports })
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })

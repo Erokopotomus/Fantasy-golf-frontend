@@ -1,5 +1,16 @@
+import { useEffect, useRef } from 'react'
+
 const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewPlayer, players }) => {
   const rounds = Array.from({ length: rosterSize }, (_, i) => i + 1)
+  const currentRoundRef = useRef(null)
+  const scrollContainerRef = useRef(null)
+
+  // Auto-scroll to current round when it changes
+  useEffect(() => {
+    if (currentRoundRef.current && scrollContainerRef.current) {
+      currentRoundRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [currentPick?.round])
 
   return (
     <div className="flex flex-col h-full bg-[var(--surface)] rounded-lg border border-[var(--card-border)] overflow-hidden">
@@ -34,7 +45,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
       </div>
 
       {/* Round Rows */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
         <div className="min-w-[500px]">
           {rounds.map(round => {
             const isCurrentRound = currentPick?.round === round
@@ -43,6 +54,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
             return (
               <div
                 key={round}
+                ref={isCurrentRound ? currentRoundRef : null}
                 className={`grid gap-px ${isCurrentRound ? 'bg-[var(--card-border)]' : ''}`}
                 style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
               >

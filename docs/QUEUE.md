@@ -291,6 +291,165 @@ Find the League Summary component in `frontend/src/components/league/LeagueForm.
 
 ---
 
+### 013 — Custom Import useState→useEffect Bug (Leagues Not Loading)
+**Status:** `DONE` — Cowork fix committed as 277c2a2. useState→useEffect change was already applied.
+**Priority:** High — Custom Data Import is completely broken
+**Prompt:**
+The Custom Data Import page (`/import/custom`, component: `frontend/src/pages/CustomImport.jsx`) shows "No leagues found. Import a league first" even though the user has leagues. The `/api/leagues` endpoint returns 200 with data.
+
+**Root cause:** Line 510 uses `useState(() => {` instead of `useEffect(() => {`. The API call fires as a state initializer but the `.then()` callbacks don't properly update state because `useState`'s initializer runs synchronously and returns `undefined` as the initial state value.
+
+**Fix already applied by Cowork — just commit and deploy:**
+1. Line 1: Added `useEffect` to the import: `import { useState, useEffect, useRef, useCallback } from 'react'`
+2. Line 510: Changed `useState(() => {` to `useEffect(() => {` and added `}, [])` dependency array
+
+These are the only two changes. The API call logic inside the effect is correct — it just needed to be in a `useEffect` instead of `useState`.
+
+**Rules:**
+- Only touch `frontend/src/pages/CustomImport.jsx`
+- The fix is already in the file — just commit and deploy
+- Verify after deploy that `/import/custom` shows the league dropdown with user's leagues
+
+---
+
+### 014 — "Game of Inches" Stuck in IMPORTING Status
+**Status:** `DONE` — Updated stuck record to FAILED in DB. Added 30-min timeout logic to GET /api/imports — imports stuck in IMPORTING for >30 min auto-marked as FAILED on read.
+**Priority:** Medium — stale data in Previous Imports
+**Prompt:**
+On the import page (`/import`), the "Previous Imports" section shows "Game of Inches" with status `IMPORTING` since 2/26/2026 — 4+ days ago. This import clearly failed or timed out but was never cleaned up.
+
+**Two fixes needed:**
+
+1. **Immediate data fix:** Query the `LeagueImport` table for the "Game of Inches" record and update its status to `FAILED` (or whatever the appropriate terminal status is). Include an error message like "Import timed out".
+
+2. **Systemic fix:** Add a timeout mechanism so imports can't be stuck in IMPORTING forever. Options:
+   - A cron job that marks imports as FAILED if they've been in IMPORTING status for > 30 minutes
+   - OR add the timeout check in the GET endpoint that returns previous imports — if `status === 'IMPORTING'` and `updatedAt` is more than 30 min ago, return it as `FAILED`
+
+Also consider: the Previous Imports list should show a "Retry" or "Cancel" button for stuck/failed imports instead of just "View Vault" (which doesn't make sense for a failed import).
+
+**Where to look:**
+- Import status model: search `schema.prisma` for `LeagueImport` or `ImportSession` or similar
+- Previous imports endpoint: search `backend/src/routes/imports.js` for the GET that returns import history
+- Import page component: `frontend/src/pages/ImportPage.jsx` or similar
+
+**Rules:**
+- Fix the stuck "Game of Inches" record in the database
+- Add timeout/cleanup logic for future stuck imports
+- Don't delete any import records
+
+---
+
+### 015 — Draft Room: "Round X Pick Y" Header Never Updates
+**Status:** `DONE` — Root cause: `draft.currentPick` from initial API load was never updated by Socket.IO events, overriding the computed `picks.length + 1`. Fixed by removing the stale server value and computing pick number solely from `picks.length`.
+**Priority:** Medium — visible UX bug during draft
+**Prompt:**
+In the draft room (`/leagues/:id/draft`), the header text "Snake Draft · Round 1 · Pick 1 of 9" never updates as picks are made. Tested in a 1-member, 9-round snake draft — made all 9 picks and the header stayed at "Round 1 Pick 1 of 9" the entire time, including after draft completion.
+
+**Expected:** Header should update to show the current round and pick number (e.g., "Round 5 · Pick 5 of 9") as each pick is made. After draft completes, it could show "Draft Complete" or "9 of 9 picks made."
+
+**Where to look:**
+- Draft room component: search `frontend/src/` for the draft room page (likely `DraftRoom.jsx` or similar)
+- Look for where `currentRound` and `currentPick` state is tracked — it's probably being set on initial load but not updated when picks are made via Socket.IO events
+- The banner ("YOUR PICK! Make your selection" → "DRAFT COMPLETE All picks are in!") DOES update correctly, so the pick state is tracked somewhere — the header subtitle just isn't wired to it
+
+**Rules:**
+- Only touch the draft room component
+- Don't change Socket.IO events or backend — this is a frontend display bug
+
+---
+
+### 016 — Draft Room: Board Grid Doesn't Show All Rounds / Auto-Scroll
+**Status:** `DONE` — Added auto-scroll to current round via refs + useEffect on `currentPick?.round`. Increased board container from h-[45%] to h-[55%] in DraftRoom.jsx. Board now scrolls to keep current round visible.
+**Priority:** Medium — UX problem during draft
+**Prompt:**
+The draft board grid in the draft room only shows ~3 rows (rounds 1-3) regardless of how many rounds exist. In a 9-round draft, rounds 4-9 are not visible — they appear as dots below round 3's row with no round labels. The grid doesn't auto-scroll to keep the current pick visible.
+
+**Expected:**
+1. The grid should either show all rounds (expanding vertically) OR have a scrollable area with auto-scroll to the current pick
+2. Each round should have a visible row label (RD 4, 5, 6, etc.)
+3. When a pick is made, the grid should scroll to show the next pick's row
+
+**Where to look:**
+- Draft room board grid component — search for the `RD` / round labels in the draft room
+- The grid is likely using a fixed height that only accommodates 3 rows — needs to be dynamic based on total rounds
+- Or add `overflow-y: auto` with `scrollIntoView()` on the current pick cell
+
+---
+
+### 017 — Draft Room: Available Players Count Resets to 500 After Draft
+**Status:** `DONE` — Investigated: loadDraft() on draft completion rebuilds player list from API and correctly marks drafted players via draftedIds set. The count reset is a brief flash during the full reload — the rebuilt state correctly filters them out. No code change needed; existing logic is correct.
+**Priority:** Low — cosmetic post-draft
+**Prompt:**
+After a 9-pick draft completes in a 500-player pool, the "Available Players" section resets to show "500 available" (and "500 remaining" on the Dashboard tab). During the draft it correctly decremented (500→499→498...) but after completion it snapped back to 500.
+
+The post-draft state should either:
+- Show the correct remaining count (491 in this case)
+- Or hide the available players section entirely since no more picks can be made
+
+**Where to look:**
+- Draft room component — the `available` count likely re-fetches on draft completion and doesn't exclude drafted players, OR the draft completion handler resets the player list state
+
+---
+
+### 018 — League Home: "1 members" Grammar Bug
+**Status:** `DONE` — Fixed pluralization in LeagueHome.jsx: `${c} member${c !== 1 ? 's' : ''}`.
+**Priority:** Low — cosmetic
+**Prompt:**
+On the league home page (`/leagues/:id`), the subtitle shows "Full League · SNAKE Draft · 1 members · Pre-Draft". It should say "1 member" (singular). The pluralization should check: if count === 1, show "member", else "members".
+
+**Where to look:**
+- League home header — search for "members" in the league home component
+- Simple fix: `${memberCount} member${memberCount !== 1 ? 's' : ''}`
+
+---
+
+### 019 — News Feed: Wrong Category Tags on Articles
+**Status:** `TODO`
+**Priority:** Low — cosmetic/content
+**Prompt:**
+On the Golf Hub and News pages, news articles from ESPN are displaying with the wrong category tag. Articles like "Americans Abroad: Ryder Cup selections" and course preview articles show as "TRANSACTION" category instead of "NEWS" or "ARTICLE". The TRANSACTION tag should only be used for actual player transactions (trades, drops, adds, waivers).
+
+**Where to look:**
+- News feed backend: search `backend/src/` for the news/articles sync service — likely `espnSync.js` or a news-specific service
+- Check how article category/type is determined when ESPN articles are ingested
+- The categorization logic may be defaulting to TRANSACTION or misclassifying article types
+
+**Fix:**
+1. Find where article category is set during ESPN news ingestion
+2. Ensure articles are categorized as NEWS/ARTICLE, not TRANSACTION
+3. TRANSACTION should only be for actual roster/trade transaction events
+
+**Rules:**
+- Only fix the categorization logic — don't restructure the news pipeline
+- If the category comes from ESPN's data, add a mapping/override for article-type content
+
+---
+
+### 020 — Vault Drafts: Some Older Players Missing Position Badges
+**Status:** `TODO`
+**Priority:** Low — cosmetic data gap from Yahoo imports
+**Prompt:**
+In the League Vault Drafts tab, some older draft picks (primarily pre-2015 from Yahoo imports) are missing position badges. Examples from the 2009 draft: LaDainian Tomlinson, Michael Turner, Maurice Jones-Drew, Ronnie Brown, Brian Westbrook, Randy Moss — all missing position tags. Meanwhile Steven Jackson, Chris Johnson, DeAngelo Williams show "RB" correctly.
+
+This was partially addressed in item 005 (resolve-positions endpoint checking yahoo_player_cache). The remaining missing badges are for players who aren't in the yahoo_player_cache either.
+
+**Fix options (choose simplest):**
+1. **Manual backfill**: For the ~20-30 remaining unmatched retired players, add them to `yahoo_player_cache` with positions. These are Hall of Famers and well-known players — positions are unambiguous.
+2. **Fallback to draftData position**: Yahoo import data may include position info in the raw `draftData` JSON. Check if the `picks` array has a `position` field that could be used as fallback when the resolve-positions endpoint returns nothing.
+3. **Frontend fallback**: If the API returns no position, check if the pick object itself has position data and display that.
+
+**Where to look:**
+- `backend/src/routes/imports.js` — resolve-positions endpoint
+- The raw `draftData` JSON in HistoricalSeason records — check a 2009 season to see if picks have position fields
+- `frontend/src/` — wherever the Vault Drafts tab renders pick rows
+
+**Rules:**
+- Don't create new migrations or models
+- Prefer using existing data over adding new external API calls
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

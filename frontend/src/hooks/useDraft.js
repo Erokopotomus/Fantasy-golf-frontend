@@ -317,8 +317,8 @@ export const useDraft = (leagueId) => {
       return
     }
 
-    const pickNumber = draft.currentPick || picks.length + 1
-    const round = draft.currentRound || Math.floor((pickNumber - 1) / totalTeams) + 1
+    const pickNumber = picks.length + 1
+    const round = Math.floor((pickNumber - 1) / totalTeams) + 1
     const pickInRound = (pickNumber - 1) % totalTeams
     const isEvenRound = round % 2 === 0
 
