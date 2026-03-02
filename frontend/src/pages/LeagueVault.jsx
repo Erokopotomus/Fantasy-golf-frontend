@@ -428,6 +428,185 @@ const HeadToHeadTab = ({ history }) => {
   )
 }
 
+// ─── Draft Owner Merge Banner ──────────────────────────────────────────────────
+const DraftOwnerMerge = ({ leagueId, onNormalized }) => {
+  const [scanData, setScanData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  // mappings: { rawName: canonicalName } — tracks what the user has assigned
+  const [mappings, setMappings] = useState({})
+
+  useEffect(() => {
+    let cancelled = false
+    api.scanDraftOwners(leagueId)
+      .then(data => { if (!cancelled) setScanData(data) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [leagueId])
+
+  if (loading || !scanData?.unmappedNames?.length) return null
+
+  const unmapped = scanData.unmappedNames
+  const canonicals = scanData.canonicalOwners || []
+
+  // How many are assigned by user so far
+  const assignedCount = Object.keys(mappings).length
+  const remaining = unmapped.length - assignedCount
+
+  const handleAssign = (rawName, canonicalName) => {
+    setMappings(prev => ({ ...prev, [rawName]: canonicalName }))
+  }
+
+  const handleUnassign = (rawName) => {
+    setMappings(prev => {
+      const next = { ...prev }
+      delete next[rawName]
+      return next
+    })
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const arr = Object.entries(mappings).map(([rawName, canonicalName]) => ({ rawName, canonicalName }))
+      await api.normalizeDraftOwners(leagueId, arr)
+      onNormalized?.()
+      // Remove saved names from scan data
+      setScanData(prev => ({
+        ...prev,
+        unmappedNames: prev.unmappedNames.filter(n => !mappings[n.name]),
+      }))
+      setMappings({})
+    } catch (err) {
+      setError(err.message || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Card className="border border-crown/30 !bg-crown/5">
+      <button
+        onClick={() => setExpanded(prev => !prev)}
+        className="w-full flex items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-crown" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span className="text-sm font-display font-bold text-text-primary">
+            {unmapped.length} unmapped draft name{unmapped.length !== 1 ? 's' : ''}
+          </span>
+          <span className="text-xs text-text-muted">
+            — link nicknames to real owners for accurate draft analytics
+          </span>
+        </div>
+        <svg
+          className={`w-4 h-4 text-text-secondary transition-transform ${expanded ? 'rotate-180' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="mt-4 space-y-3">
+          <p className="text-xs text-text-secondary">
+            These names appear in your draft data but don't match any known owner.
+            Assign each one to the correct person — this fixes the spending table and all draft analytics.
+          </p>
+
+          <div className="space-y-2">
+            {unmapped.map(item => {
+              const assigned = mappings[item.name]
+              return (
+                <div
+                  key={item.name}
+                  className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                    assigned ? 'bg-field/10 border border-field/20' : 'bg-[var(--bg-alt)]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-mono text-text-primary font-medium">{item.name}</span>
+                    <span className="text-[10px] font-mono text-text-muted">
+                      ({item.seasons.join(', ')})
+                    </span>
+                    {item.suggestedCanonical && !assigned && (
+                      <span className="text-[10px] text-crown">
+                        → maybe "{item.suggestedCanonical}"?
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {assigned ? (
+                      <>
+                        <span className="text-xs font-mono text-field">→ {assigned}</span>
+                        <button
+                          onClick={() => handleUnassign(item.name)}
+                          className="text-xs text-text-muted hover:text-live-red"
+                          title="Undo"
+                        >
+                          ×
+                        </button>
+                      </>
+                    ) : (
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value === '__custom__') {
+                            const custom = window.prompt(`Canonical name for "${item.name}":`, item.suggestedCanonical || '')
+                            if (custom?.trim()) handleAssign(item.name, custom.trim())
+                          } else if (e.target.value) {
+                            handleAssign(item.name, e.target.value)
+                          }
+                        }}
+                        className="bg-[var(--surface)] border border-[var(--card-border)] rounded-lg px-2 py-1 text-xs font-mono text-text-primary"
+                      >
+                        <option value="">Assign to…</option>
+                        {item.suggestedCanonical && (
+                          <option value={item.suggestedCanonical}>⭐ {item.suggestedCanonical}</option>
+                        )}
+                        {canonicals
+                          .filter(c => c.canonical !== item.suggestedCanonical)
+                          .map(c => (
+                            <option key={c.canonical} value={c.canonical}>{c.canonical}</option>
+                          ))
+                        }
+                        <option value="__custom__">✏️ Type a name…</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {error && <p className="text-live-red text-xs font-mono">{error}</p>}
+
+          {assignedCount > 0 && (
+            <div className="flex items-center justify-between pt-2 border-t border-[var(--card-border)]">
+              <span className="text-xs font-mono text-text-secondary">
+                {assignedCount} mapped{remaining > 0 ? `, ${remaining} remaining` : ''}
+              </span>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-1.5 bg-gold text-slate rounded-lg text-sm font-mono font-bold disabled:opacity-40 hover:bg-gold/90 transition-colors"
+              >
+                {saving ? 'Saving…' : `Save & Normalize${remaining > 0 ? ' (partial)' : ''}`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
+
 // ─── Draft History Tab ─────────────────────────────────────────────────────────
 const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap = {} }) => {
   const years = history?.seasons ? Object.keys(history.seasons).sort((a, b) => b - a) : []
@@ -943,6 +1122,11 @@ const DraftHistoryTab = ({ history, isCommissioner, leagueId, onSaved, aliasMap 
           ))}
         </div>
       </Card>
+
+      {/* Draft Owner Merge — commissioner only, shows when unmapped names exist */}
+      {isCommissioner && hasDraftData && (
+        <DraftOwnerMerge leagueId={leagueId} onNormalized={onSaved} />
+      )}
 
       {/* Edit mode header bar */}
       {editMode && (

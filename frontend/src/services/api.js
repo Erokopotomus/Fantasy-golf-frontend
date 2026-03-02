@@ -772,6 +772,18 @@ class ApiService {
     })
   }
 
+  // Draft Owner Scan & Normalize
+  async scanDraftOwners(leagueId) {
+    return this.request(`/imports/draft-owner-scan/${leagueId}`)
+  }
+
+  async normalizeDraftOwners(leagueId, mappings) {
+    return this.request(`/imports/normalize-draft-owners/${leagueId}`, {
+      method: 'POST',
+      body: JSON.stringify({ mappings }),
+    })
+  }
+
   // Owner Avatars (League Vault)
   async getOwnerAvatars(leagueId) {
     return this.request(`/imports/owner-avatars/${leagueId}`)

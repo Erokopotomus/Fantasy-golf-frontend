@@ -521,6 +521,201 @@ router.put('/owner-aliases/:leagueId', authenticate, async (req, res) => {
   }
 })
 
+// ─── Draft Owner Scan (find unmapped draft pick names) ──────────────────────
+// GET /api/imports/draft-owner-scan/:leagueId
+router.get('/draft-owner-scan/:leagueId', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.params
+
+    // Fetch all seasons with draft data
+    const seasons = await prisma.historicalSeason.findMany({
+      where: { leagueId, NOT: { draftData: null } },
+      select: { seasonYear: true, ownerName: true, teamName: true, draftData: true },
+    })
+
+    // Fetch existing aliases
+    const existingAliases = await prisma.ownerAlias.findMany({
+      where: { leagueId },
+      select: { ownerName: true, canonicalName: true },
+    })
+    const aliasMap = {}
+    for (const a of existingAliases) aliasMap[a.ownerName.toLowerCase()] = a.canonicalName
+
+    // Collect all canonical owner names from HistoricalSeason records
+    const canonicalOwners = new Set()
+    for (const s of seasons) {
+      if (s.ownerName) canonicalOwners.add(s.ownerName)
+    }
+    for (const a of existingAliases) canonicalOwners.add(a.canonicalName)
+
+    // Extract unique (teamKey → ownerName) pairs from draft picks
+    // Within a season, all picks sharing a teamKey have the same ownerName
+    const teamKeyToInfo = {} // teamKey → { names: Set, seasons: Set }
+    const allDraftNames = new Set()
+
+    for (const season of seasons) {
+      const draft = season.draftData
+      if (!draft?.picks) continue
+      for (const pick of draft.picks) {
+        if (!pick.ownerName) continue
+        allDraftNames.add(pick.ownerName)
+        if (pick.teamKey) {
+          if (!teamKeyToInfo[pick.teamKey]) {
+            teamKeyToInfo[pick.teamKey] = { names: new Set(), seasons: new Set() }
+          }
+          teamKeyToInfo[pick.teamKey].names.add(pick.ownerName)
+          teamKeyToInfo[pick.teamKey].seasons.add(season.seasonYear)
+        }
+      }
+    }
+
+    // Find draft names that don't resolve to any canonical owner
+    const unmappedNames = []
+    for (const name of allDraftNames) {
+      const lower = name.toLowerCase()
+      // Already a canonical owner?
+      if (canonicalOwners.has(name)) continue
+      // Already mapped via alias?
+      if (aliasMap[lower]) continue
+      // Collect info about where this name appears
+      const appearsInSeasons = new Set()
+      const relatedTeamKeys = []
+      for (const [tk, info] of Object.entries(teamKeyToInfo)) {
+        if (info.names.has(name)) {
+          relatedTeamKeys.push(tk)
+          for (const y of info.seasons) appearsInSeasons.add(y)
+        }
+      }
+      // Find which canonical owner shares a teamKey with this name
+      let suggestedCanonical = null
+      for (const tk of relatedTeamKeys) {
+        const info = teamKeyToInfo[tk]
+        for (const n of info.names) {
+          if (canonicalOwners.has(n)) { suggestedCanonical = n; break }
+          if (aliasMap[n.toLowerCase()]) { suggestedCanonical = aliasMap[n.toLowerCase()]; break }
+        }
+        if (suggestedCanonical) break
+      }
+      unmappedNames.push({
+        name,
+        seasons: [...appearsInSeasons].sort(),
+        suggestedCanonical,
+        teamKeys: relatedTeamKeys,
+      })
+    }
+
+    // Also build a full picture: all canonical owners and their known aliases
+    const ownerGroups = {}
+    for (const canonical of canonicalOwners) {
+      if (!ownerGroups[canonical]) ownerGroups[canonical] = new Set([canonical])
+    }
+    for (const a of existingAliases) {
+      if (!ownerGroups[a.canonicalName]) ownerGroups[a.canonicalName] = new Set()
+      ownerGroups[a.canonicalName].add(a.ownerName)
+    }
+    const canonicalList = Object.entries(ownerGroups).map(([canonical, aliases]) => ({
+      canonical,
+      aliases: [...aliases],
+    }))
+
+    res.json({ unmappedNames, canonicalOwners: canonicalList })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
+// POST /api/imports/normalize-draft-owners/:leagueId (commissioner only)
+// Saves alias mappings AND normalizes all draftData JSON to use canonical names
+router.post('/normalize-draft-owners/:leagueId', authenticate, async (req, res) => {
+  try {
+    const { leagueId } = req.params
+    const { mappings } = req.body // [{ rawName: string, canonicalName: string }]
+
+    if (!Array.isArray(mappings) || mappings.length === 0) {
+      return res.status(400).json({ error: { message: 'mappings must be a non-empty array' } })
+    }
+
+    // Commissioner check
+    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { ownerId: true } })
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+    if (league.ownerId !== req.user.id) {
+      return res.status(403).json({ error: { message: 'Only the commissioner can normalize draft owners' } })
+    }
+
+    // Build the rename map: rawName → canonicalName
+    const renameMap = {}
+    for (const m of mappings) {
+      if (m.rawName && m.canonicalName && m.rawName !== m.canonicalName) {
+        renameMap[m.rawName] = m.canonicalName
+      }
+    }
+
+    if (Object.keys(renameMap).length === 0) {
+      return res.json({ success: true, updated: 0, aliasesCreated: 0 })
+    }
+
+    // 1. Add to OwnerAlias records (merge with existing)
+    const existingAliases = await prisma.ownerAlias.findMany({ where: { leagueId } })
+    const existingMap = new Map(existingAliases.map(a => [a.ownerName, a]))
+
+    const newAliases = []
+    for (const [rawName, canonicalName] of Object.entries(renameMap)) {
+      if (!existingMap.has(rawName)) {
+        newAliases.push({ leagueId, ownerName: rawName, canonicalName, isActive: true })
+      }
+    }
+
+    // 2. Fetch all seasons with draft data and normalize ownerNames in picks
+    const seasons = await prisma.historicalSeason.findMany({
+      where: { leagueId, NOT: { draftData: null } },
+      select: { id: true, draftData: true },
+    })
+
+    const updates = []
+    for (const season of seasons) {
+      const draft = season.draftData
+      if (!draft?.picks) continue
+      let changed = false
+      const updatedPicks = draft.picks.map(pick => {
+        if (pick.ownerName && renameMap[pick.ownerName]) {
+          changed = true
+          return { ...pick, ownerName: renameMap[pick.ownerName] }
+        }
+        return pick
+      })
+      if (changed) {
+        updates.push({ id: season.id, draftData: { ...draft, picks: updatedPicks } })
+      }
+    }
+
+    // Execute in transaction
+    await prisma.$transaction(async (tx) => {
+      // Create new alias records
+      if (newAliases.length > 0) {
+        await tx.ownerAlias.createMany({ data: newAliases, skipDuplicates: true })
+      }
+      // Update draftData for each affected season
+      for (const u of updates) {
+        await tx.historicalSeason.update({
+          where: { id: u.id },
+          data: { draftData: u.draftData },
+        })
+      }
+      // Invalidate league stats cache
+      await tx.leagueStatsCache.deleteMany({ where: { leagueId } })
+    })
+
+    res.json({
+      success: true,
+      aliasesCreated: newAliases.length,
+      seasonsUpdated: updates.length,
+      namesNormalized: Object.keys(renameMap).length,
+    })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 // ─── Owner Avatars (League Vault) ────────────────────────────────────────────
 // GET /api/imports/owner-avatars/:leagueId
 router.get('/owner-avatars/:leagueId', authenticate, async (req, res) => {
