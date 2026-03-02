@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -507,13 +507,13 @@ const CustomImport = () => {
   const [loadingLeagues, setLoadingLeagues] = useState(true)
 
   // Fetch user's leagues for the selector
-  useState(() => {
+  useEffect(() => {
     api.request('/leagues').then(data => {
       const all = [...(data.owned || []), ...(data.member || [])]
       setLeagues(all)
       if (!leagueId && all.length > 0) setLeagueId(all[0].id)
     }).catch(() => {}).finally(() => setLoadingLeagues(false))
-  })
+  }, [])
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
