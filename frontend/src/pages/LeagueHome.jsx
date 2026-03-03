@@ -591,17 +591,25 @@ const LeagueHome = () => {
                 </div>
               )}
               {isDraftComplete && (
-                <Card className="border-[var(--card-border)]">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gold/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                <Card className="border-field/30 bg-gradient-to-r from-field/5 to-[var(--surface)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-field/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-field" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-text-primary font-medium">Draft Complete</h3>
+                        <p className="text-text-muted text-sm">Your roster is set. Season is underway!</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-text-primary font-medium">Draft Complete</h3>
-                      <p className="text-text-muted text-sm">The draft has finished. Manage your roster below.</p>
-                    </div>
+                    <Link
+                      to={`/draft/history/${latestDraft.id}`}
+                      className="px-4 py-2 bg-field/10 hover:bg-field/20 text-field font-medium text-sm rounded-lg transition-colors whitespace-nowrap"
+                    >
+                      View Draft Recap
+                    </Link>
                   </div>
                 </Card>
               )}
