@@ -2419,7 +2419,8 @@ The notification service (`backend/src/services/notificationService.js`) creates
 ---
 
 ### 076 — Post-Draft Engagement: Weekly Tournament Recap Email
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added generateWeeklyRecapData() to fantasyTracker.js, sendWeeklyRecapEmail() to emailService.js, weekly recap cron (Sun 11PM ET) to index.js with WEEKLY_RECAP notifications. Files: fantasyTracker.js, emailService.js, index.js
 **Priority:** High — Batch C (engagement loop)
 **Depends on:** 075
 **Prompt:**
@@ -2464,7 +2465,8 @@ After each golf tournament completes (Sunday night), send a personalized recap e
 ---
 
 ### 077 — Post-Draft Engagement: Prediction Resolution Notifications
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added PREDICTION_RESOLVED notification dispatch to resolveEventPredictions() with correct/incorrect/mixed messaging + email subject. Files: predictionService.js
 **Priority:** High — Batch C (engagement loop)
 **Depends on:** 075
 **Prompt:**
@@ -2510,7 +2512,8 @@ When predictions auto-resolve on Sunday night (10:15 PM ET via `predictionServic
 ---
 
 ### 078 — Post-Draft Engagement: Live Tournament Player Alerts (Mid-Round Push)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Created engagementAlerts.js service with checkRosterAlerts() (hot round, leader, cut danger). In-memory 2h throttle per player/user. Wired into live scoring cron in index.js. Files: engagementAlerts.js (new), index.js
 **Priority:** Medium — Batch C (engagement loop)
 **Depends on:** 075
 **Prompt:**
@@ -2550,7 +2553,8 @@ During a live tournament (Thursday through Sunday), send push notifications when
 ---
 
 ### 079 — Post-Draft Engagement: Draft Recap Email (Post-Completion)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added sendDraftRecapEmail() to emailService.js (grade circle, pick table, best pick). Wired into draft completion handler in drafts.js: auto-grades draft, sends DRAFT_RECAP notification + email per team. Files: emailService.js, drafts.js
 **Priority:** Medium — Batch C (engagement loop)
 **Prompt:**
 

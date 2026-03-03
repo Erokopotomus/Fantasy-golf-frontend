@@ -257,6 +257,61 @@ async function resolveEventPredictions(eventId, resolverFn, prisma) {
     }
   }
 
+  // Send prediction resolution notifications to affected users
+  try {
+    const { createNotification } = require('./notificationService')
+
+    // Get event name for notification
+    const event = await prisma.predictionEvent.findUnique({
+      where: { id: eventId },
+      select: { title: true },
+    })
+    const eventName = event?.title || 'this event'
+
+    for (const userId of affectedUsers) {
+      const userPreds = pending.filter(p => p.userId === userId)
+      const userCorrect = await prisma.prediction.count({
+        where: { eventId, userId, outcome: 'CORRECT' },
+      })
+      const userTotal = await prisma.prediction.count({
+        where: { eventId, userId, outcome: { in: ['CORRECT', 'INCORRECT'] } },
+      })
+
+      const pct = userTotal > 0 ? Math.round((userCorrect / userTotal) * 100) : 0
+      const majorityCorrect = userCorrect > userTotal / 2
+
+      let title, message
+      if (majorityCorrect) {
+        title = 'Nice Calls!'
+        message = `You nailed ${userCorrect}/${userTotal} calls for ${eventName}. Your accuracy: ${pct}%.`
+      } else if (userCorrect === 0 && userTotal > 0) {
+        title = 'Tough Week'
+        message = `${userCorrect}/${userTotal} calls landed for ${eventName}. Check the results and make new calls.`
+      } else {
+        title = 'Results Are In'
+        message = `${userCorrect}/${userTotal} calls for ${eventName}. See how your predictions stacked up.`
+      }
+
+      await createNotification({
+        userId,
+        type: 'PREDICTION_RESOLVED',
+        title,
+        message,
+        actionUrl: '/prove-it',
+        category: 'prediction_updates',
+        emailSubject: `Your ${eventName} Predictions: ${userCorrect}/${userTotal} Correct`,
+        data: {
+          tournamentName: eventName,
+          correct: userCorrect,
+          total: userTotal,
+          accuracy: pct / 100,
+        },
+      }, prisma)
+    }
+  } catch (err) {
+    console.error('[predictionService] Notification dispatch failed:', err.message)
+  }
+
   return results
 }
 

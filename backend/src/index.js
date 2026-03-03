@@ -428,6 +428,12 @@ httpServer.listen(PORT, () => {
       try {
         const result = await sync.syncLiveScoring(t.datagolfId, cronPrisma)
         cronLog('live', `Done: ${result.updated} players`)
+        // Check roster alerts after scoring update
+        try {
+          const { checkRosterAlerts } = require('./services/engagementAlerts')
+          const alertResult = await checkRosterAlerts(cronPrisma)
+          if (alertResult.alerts > 0) cronLog('live', `Sent ${alertResult.alerts} roster alerts`)
+        } catch (alertErr) { cronLog('live', `Roster alerts error: ${alertErr.message}`) }
       } catch (e) { cronLog('live', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
@@ -539,6 +545,51 @@ httpServer.listen(PORT, () => {
           }
         }
       } catch (e) { cronLog('fantasy', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
+    // Sunday 11:00 PM ET — Weekly recap emails (after fantasy scoring at 10:30)
+    cron.schedule('0 23 * * 0', async () => {
+      cronLog('weeklyRecap', 'Generating weekly recap emails')
+      try {
+        const recapData = await fantasyTracker.generateWeeklyRecapData(cronPrisma)
+        const userIds = Object.keys(recapData)
+        if (userIds.length === 0) return cronLog('weeklyRecap', 'No recap data to send')
+
+        const { createNotification } = require('./services/notificationService')
+        const emailService = require('./services/emailService')
+        let sent = 0
+
+        for (const userId of userIds) {
+          const recaps = recapData[userId]
+          const firstRecap = recaps[0]
+
+          // Create in-app notification
+          await createNotification({
+            userId,
+            type: 'WEEKLY_RECAP',
+            title: `${firstRecap.weekName} Results`,
+            message: recaps.length === 1
+              ? `You scored ${firstRecap.totalPoints} pts (${firstRecap.rank}/${firstRecap.totalTeams}) in ${firstRecap.leagueName}`
+              : `Results in for ${recaps.length} leagues`,
+            actionUrl: `/leagues/${firstRecap.leagueId}/scoring`,
+            category: 'weekly_recap',
+          }, cronPrisma)
+
+          // Send recap email (preference check inside sendWeeklyRecapEmail handled by notification service)
+          if (emailService.isConfigured) {
+            const user = await cronPrisma.user.findUnique({
+              where: { id: userId },
+              select: { email: true, notificationPreferences: true },
+            })
+            const prefs = user?.notificationPreferences || {}
+            if (user?.email && prefs.email_enabled === true && prefs.weekly_recap !== false) {
+              await emailService.sendWeeklyRecapEmail({ to: user.email, recaps })
+              sent++
+            }
+          }
+        }
+        cronLog('weeklyRecap', `Done: ${sent} recap emails sent to ${userIds.length} users`)
+      } catch (e) { cronLog('weeklyRecap', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
     // Wednesday 12:00 PM ET — Process waiver claims

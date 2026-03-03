@@ -198,4 +198,113 @@ ${ctaBlock}`
   }
 }
 
-module.exports = { sendVaultInviteEmail, sendLeagueInviteEmail, sendNotificationEmail, isConfigured }
+/**
+ * Send a weekly tournament recap email with per-league sections.
+ * @param {{ to: string, recaps: Array }} opts
+ */
+async function sendWeeklyRecapEmail({ to, recaps }) {
+  if (!isConfigured || !resendClient) {
+    return { success: false, error: 'Email service not configured' }
+  }
+  if (!recaps || recaps.length === 0) return { success: false, error: 'No recap data' }
+
+  const weekName = recaps[0].weekName || 'This Week'
+
+  const leagueSections = recaps.map(r => {
+    const topLine = r.topPerformer
+      ? `<div style="font-size:13px;color:#666;margin-top:8px;">Top performer: <strong>${r.topPerformer.playerName}</strong> (${r.topPerformer.points} pts)</div>`
+      : ''
+
+    const standingsRows = (r.standings || []).map((s, i) => {
+      const medals = ['🥇', '🥈', '🥉']
+      return `<tr><td style="padding:2px 8px;font-size:13px;color:#1A1A1A;">${medals[i] || ''} ${s.teamName}</td><td style="padding:2px 8px;font-size:13px;color:#666;text-align:right;">${s.totalPoints} pts</td></tr>`
+    }).join('')
+
+    return `
+<div style="background-color:#FAFAF6;border:1px solid #EEEAE2;border-radius:12px;padding:20px;margin-bottom:16px;">
+  <div style="font-size:11px;font-weight:700;color:#D4930D;letter-spacing:2px;margin-bottom:6px;">⛳ ${r.leagueName.toUpperCase()}</div>
+  <div style="font-size:18px;font-weight:700;color:#1A1A1A;">Your team: ${r.totalPoints} pts</div>
+  <div style="font-size:14px;color:#666;margin-top:4px;">Rank: ${r.rank} of ${r.totalTeams}</div>
+  ${topLine}
+  ${standingsRows ? `<table style="width:100%;margin-top:12px;border-top:1px solid #EEEAE2;padding-top:8px;">${standingsRows}</table>` : ''}
+</div>
+<div style="text-align:center;margin-bottom:20px;">
+  <a href="https://clutchfantasysports.com/leagues/${r.leagueId}/scoring" style="color:#F06820;font-size:13px;font-weight:600;text-decoration:none;">View Full Scoreboard →</a>
+</div>`
+  }).join('')
+
+  const bodyHtml = `
+<div style="font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:20px;">${weekName} Results</div>
+${leagueSections}`
+
+  const text = recaps.map(r =>
+    `${r.leagueName}: ${r.totalPoints} pts (Rank ${r.rank}/${r.totalTeams})` +
+    (r.topPerformer ? ` | Top: ${r.topPerformer.playerName} (${r.topPerformer.points} pts)` : '')
+  ).join('\n')
+
+  try {
+    await resendClient.emails.send({
+      from: 'Clutch Fantasy <noreply@clutchfantasysports.com>',
+      to,
+      subject: `⛳ ${weekName} — Your Fantasy Recap`,
+      html: emailWrapper(bodyHtml, { showManagePrefs: true }),
+      text: `${weekName} Results\n\n${text}\n\nManage preferences: https://clutchfantasysports.com/profile?tab=notifications`,
+    })
+    return { success: true }
+  } catch (err) {
+    console.error('[email] Weekly recap send failed:', err.message)
+    return { success: false, error: err.message }
+  }
+}
+
+/**
+ * Send a draft recap email with grade and highlights.
+ */
+async function sendDraftRecapEmail({ to, leagueName, sportName, grade, overallScore, bestPick, picks, leagueId }) {
+  if (!isConfigured || !resendClient) {
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  const emoji = sportEmoji(sportName)
+  const gradeColors = { 'A+': '#0D9668', 'A': '#0D9668', 'A-': '#0D9668', 'B+': '#2563EB', 'B': '#2563EB', 'B-': '#2563EB', 'C+': '#D4930D', 'C': '#D4930D', 'C-': '#D4930D', 'D+': '#F06820', 'D': '#F06820', 'D-': '#F06820', 'F': '#E83838' }
+  const gradeColor = gradeColors[grade] || '#666'
+
+  const bestPickLine = bestPick
+    ? `<div style="font-size:14px;color:#1A1A1A;margin-top:12px;"><strong>Best Pick:</strong> ${bestPick.playerName} at #${bestPick.pickNumber} ${bestPick.adpDiff > 0 ? '— Steal!' : '— Solid pick'}</div>`
+    : ''
+
+  const pickRows = (picks || []).slice(0, 12).map(p => {
+    const pg = gradeColors[p.grade] || '#666'
+    return `<tr><td style="padding:3px 8px;font-size:13px;color:#666;">R${p.round}</td><td style="padding:3px 8px;font-size:13px;color:#1A1A1A;">${p.playerName}</td><td style="padding:3px 8px;font-size:13px;font-weight:700;color:${pg};text-align:right;">${p.grade}</td></tr>`
+  }).join('')
+
+  const bodyHtml = `
+<div style="font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:20px;">${emoji} Draft Complete — ${leagueName}</div>
+<div style="text-align:center;margin-bottom:20px;">
+  <div style="display:inline-block;width:80px;height:80px;border-radius:50%;background:${gradeColor};color:#fff;font-size:32px;font-weight:800;line-height:80px;">${grade}</div>
+  <div style="font-size:14px;color:#666;margin-top:8px;">${overallScore}/100</div>
+</div>
+${bestPickLine}
+${pickRows ? `<table style="width:100%;margin-top:16px;border-top:1px solid #EEEAE2;padding-top:8px;">${pickRows}</table>` : ''}
+<div style="text-align:center;margin-top:24px;">
+  <a href="https://clutchfantasysports.com/leagues/${leagueId}/draft-recap" style="display:inline-block;background:linear-gradient(135deg,#F06820,#D4930D);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:14px 48px;border-radius:10px;">View Full Draft Recap</a>
+</div>`
+
+  const text = `Draft Complete — ${leagueName}\nYour Grade: ${grade} (${overallScore}/100)\n${bestPick ? `Best Pick: ${bestPick.playerName} at #${bestPick.pickNumber}` : ''}\n\nView recap: https://clutchfantasysports.com/leagues/${leagueId}/draft-recap`
+
+  try {
+    await resendClient.emails.send({
+      from: 'Clutch Fantasy <noreply@clutchfantasysports.com>',
+      to,
+      subject: `${emoji} Your Draft Grade: ${grade} — ${leagueName}`,
+      html: emailWrapper(bodyHtml, { showManagePrefs: true }),
+      text,
+    })
+    return { success: true }
+  } catch (err) {
+    console.error('[email] Draft recap send failed:', err.message)
+    return { success: false, error: err.message }
+  }
+}
+
+module.exports = { sendVaultInviteEmail, sendLeagueInviteEmail, sendNotificationEmail, sendWeeklyRecapEmail, sendDraftRecapEmail, isConfigured }

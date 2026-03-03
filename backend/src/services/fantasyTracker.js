@@ -609,6 +609,101 @@ async function updateMatchupScores(leagueSeason, fantasyWeekId, weekNumber, team
   console.log(`[fantasyTracker] Updated ${matchups.length} matchup scores for league ${leagueSeason.leagueId}, week ${weekNumber}`)
 }
 
+/**
+ * Generate weekly recap data for email + notification delivery.
+ * Returns data grouped by userId, each with an array of league recaps.
+ */
+async function generateWeeklyRecapData(prisma) {
+  // Find recently completed fantasy weeks (completed in last 24h)
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const completedWeeks = await prisma.fantasyWeek.findMany({
+    where: {
+      status: 'COMPLETED',
+      updatedAt: { gte: oneDayAgo },
+    },
+    include: {
+      season: { include: { sport: true } },
+    },
+  })
+
+  if (completedWeeks.length === 0) return {}
+
+  const userRecaps = {} // userId -> [{ leagueId, leagueName, ... }]
+
+  for (const week of completedWeeks) {
+    // Get all league seasons for this season
+    const leagueSeasons = await prisma.leagueSeason.findMany({
+      where: { seasonId: week.seasonId },
+      include: {
+        league: { select: { id: true, name: true } },
+        teamSeasons: {
+          include: {
+            team: { select: { id: true, name: true, userId: true } },
+          },
+          orderBy: { totalPoints: 'desc' },
+        },
+      },
+    })
+
+    for (const ls of leagueSeasons) {
+      // Get weekly team results for this week
+      const weeklyResults = await prisma.weeklyTeamResult.findMany({
+        where: { fantasyWeekId: week.id, teamSeasonId: { in: ls.teamSeasons.map(ts => ts.id) } },
+        orderBy: { totalPoints: 'desc' },
+      })
+
+      if (weeklyResults.length === 0) continue
+
+      // Get top scorer per team
+      const topScorers = await prisma.fantasyScore.findMany({
+        where: { fantasyWeekId: week.id, teamId: { in: ls.teamSeasons.map(ts => ts.team.id) } },
+        orderBy: { fantasyPoints: 'desc' },
+        include: { player: { select: { name: true } } },
+      })
+
+      // Build per-team top scorer map
+      const topScorerByTeam = {}
+      for (const score of topScorers) {
+        if (!topScorerByTeam[score.teamId]) {
+          topScorerByTeam[score.teamId] = { playerName: score.player?.name, points: score.fantasyPoints }
+        }
+      }
+
+      // Top 3 standings
+      const standings = ls.teamSeasons.slice(0, 3).map((ts, i) => ({
+        rank: i + 1,
+        teamName: ts.team.name,
+        totalPoints: ts.totalPoints,
+      }))
+
+      // Build recap per user
+      for (const ts of ls.teamSeasons) {
+        const userId = ts.team.userId
+        if (!userId) continue
+
+        const weekResult = weeklyResults.find(wr => wr.teamSeasonId === ts.id)
+        const rank = weeklyResults.findIndex(wr => wr.teamSeasonId === ts.id) + 1
+
+        if (!userRecaps[userId]) userRecaps[userId] = []
+        userRecaps[userId].push({
+          leagueId: ls.league.id,
+          leagueName: ls.league.name,
+          weekName: week.name,
+          weekNumber: week.weekNumber,
+          teamName: ts.team.name,
+          totalPoints: weekResult?.totalPoints || 0,
+          rank,
+          totalTeams: ls.teamSeasons.length,
+          topPerformer: topScorerByTeam[ts.team.id] || null,
+          standings,
+        })
+      }
+    }
+  }
+
+  return userRecaps
+}
+
 module.exports = {
   recordWeeklyScores,
   snapshotLineups,
@@ -617,4 +712,5 @@ module.exports = {
   recordTransaction,
   finalizeLeagueSeason,
   processCompletedWeeks,
+  generateWeeklyRecapData,
 }

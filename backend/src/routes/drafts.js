@@ -706,6 +706,57 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
           data: { draftId: draft.id, leagueId: draft.leagueId },
         }, [], prisma).catch(err => console.error('Draft completed notification failed:', err.message))
       } catch (err) { console.error('Draft completed notification failed:', err.message) }
+
+      // Fire-and-forget: grade draft and send recap emails/notifications
+      ;(async () => {
+        try {
+          const { gradeLeagueDraft } = require('../services/draftGrader')
+          const emailService = require('../services/emailService')
+          const grades = await gradeLeagueDraft(draft.id, prisma)
+
+          const league = await prisma.league.findUnique({
+            where: { id: draft.leagueId },
+            include: { sport: { select: { name: true } } },
+          })
+
+          for (const teamGrade of grades) {
+            if (!teamGrade.userId) continue
+
+            // In-app notification
+            await createNotification({
+              userId: teamGrade.userId,
+              type: 'DRAFT_RECAP',
+              title: `Your Draft Grade: ${teamGrade.overallGrade}`,
+              message: `Your team earned a ${teamGrade.overallGrade} in the ${league?.name || 'league'} draft. See your full recap.`,
+              actionUrl: `/leagues/${draft.leagueId}/draft-recap`,
+              category: 'drafts',
+            }, prisma).catch(() => {})
+
+            // Email (check prefs)
+            if (emailService.isConfigured) {
+              const user = await prisma.user.findUnique({
+                where: { id: teamGrade.userId },
+                select: { email: true, notificationPreferences: true },
+              })
+              const prefs = user?.notificationPreferences || {}
+              if (user?.email && prefs.email_enabled === true && prefs.drafts !== false) {
+                emailService.sendDraftRecapEmail({
+                  to: user.email,
+                  leagueName: league?.name || 'Your League',
+                  sportName: league?.sport?.name || 'Fantasy',
+                  grade: teamGrade.overallGrade,
+                  overallScore: teamGrade.overallScore,
+                  bestPick: teamGrade.bestPick,
+                  picks: teamGrade.pickGrades,
+                  leagueId: draft.leagueId,
+                }).catch(err => console.error('[draftRecap] Email failed:', err.message))
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[draftRecap] Grade + email failed:', err.message)
+        }
+      })()
     } else if (pickDeadline) {
       // Schedule server-side auto-pick for next turn
       scheduleAutoPick(draft.id, pickDeadline, io)
