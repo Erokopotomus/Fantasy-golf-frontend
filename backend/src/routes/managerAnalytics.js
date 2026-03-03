@@ -357,4 +357,18 @@ router.get('/leaderboard/rankings', authenticate, async (req, res, next) => {
   }
 })
 
+// GET /api/managers/:id/rating-history — Rating snapshots over time
+router.get('/:id/rating-history', async (req, res, next) => {
+  try {
+    const snapshots = await prisma.ratingSnapshot.findMany({
+      where: { userId: req.params.id },
+      orderBy: { snapshotDate: 'asc' },
+      select: { overall: true, snapshotDate: true },
+    })
+    res.json({ snapshots })
+  } catch (err) {
+    next(err)
+  }
+})
+
 module.exports = router

@@ -2719,6 +2719,699 @@ Phase 5A Enhanced Manager Profile — Cowork has made all edits. Commit and depl
 
 ---
 
+### 084 — Manager Profile: Performance Charts + Call Type Breakdown (Phase 5A completion)
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added GET /predictions/user/:userId/stats endpoint, GET /managers/:id/rating-history endpoint. Added SVG donut chart (prediction accuracy by type with center %) and SVG line chart (rating journey with tier bands) to ManagerProfile.jsx. Files: predictions.js, managerAnalytics.js, ManagerProfile.jsx
+**Priority:** High — Completes Phase 5A before Wednesday draft
+**Prompt:**
+
+Add two missing visualizations to ManagerProfile.jsx.
+
+**1. Performance Call Type Breakdown (donut chart)**
+
+Add a section after the Recent Calls section. Show a donut/ring chart with prediction accuracy by type. Data comes from `GET /api/predictions/user/:userId/recent?limit=50` (increase limit for stats).
+
+Better approach: add a new backend endpoint for aggregated stats:
+
+**New endpoint: `GET /api/predictions/user/:userId/stats`** in `backend/src/routes/predictions.js`:
+```javascript
+router.get('/user/:userId/stats', async (req, res) => {
+  try {
+    const { userId } = req.params
+    // Group by predictionType, count correct/incorrect/pending
+    const all = await prisma.prediction.findMany({
+      where: { userId },
+      select: { predictionType: true, outcome: true },
+    })
+    const byType = {}
+    for (const p of all) {
+      if (!byType[p.predictionType]) byType[p.predictionType] = { correct: 0, incorrect: 0, pending: 0, total: 0 }
+      byType[p.predictionType].total++
+      if (p.outcome === 'CORRECT') byType[p.predictionType].correct++
+      else if (p.outcome === 'INCORRECT') byType[p.predictionType].incorrect++
+      else byType[p.predictionType].pending++
+    }
+    const overall = { correct: 0, incorrect: 0, pending: 0, total: all.length }
+    all.forEach(p => {
+      if (p.outcome === 'CORRECT') overall.correct++
+      else if (p.outcome === 'INCORRECT') overall.incorrect++
+      else overall.pending++
+    })
+    res.json({ byType, overall })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+```
+
+Frontend: Build a `CallTypeBreakdown` inline component in ManagerProfile. Use SVG donut chart (similar pattern to SgRadarChart — custom SVG, no external lib). Ring segments colored by type. Center shows overall accuracy %. Below the ring, show a legend with each prediction type and its accuracy. Section title: "Prediction Accuracy".
+
+**2. Performance Charts (rating trend over time)**
+
+Add below the Call Type Breakdown section. Line chart showing Clutch Rating over time.
+
+Backend: `GET /api/managers/:id/rating-history` — new endpoint in `managerAnalytics.js`:
+```javascript
+router.get('/:id/rating-history', authenticate, async (req, res, next) => {
+  try {
+    const snapshots = await prisma.ratingSnapshot.findMany({
+      where: { userId: req.params.id },
+      orderBy: { createdAt: 'asc' },
+      select: { overallRating: true, confidence: true, createdAt: true },
+    })
+    res.json({ snapshots })
+  } catch (err) {
+    next(err)
+  }
+})
+```
+
+Frontend: Simple SVG line chart (same approach — custom SVG, no recharts). X-axis = dates, Y-axis = rating 0-100. Tier bands as subtle horizontal background stripes (ELITE zone 90-100 = gold tint, etc). Line connects rating snapshots. If no snapshots exist, show "Rating history will appear as your rating updates" empty state.
+
+Section title: "Rating Journey" with a small info tooltip "Your Clutch Rating tracked over time."
+
+**Files:** `frontend/src/pages/ManagerProfile.jsx`, `backend/src/routes/predictions.js`, `backend/src/routes/managerAnalytics.js`
+
+---
+
+### 085 — Manager Leaderboard Page (Phase 5D)
+**Status:** `TODO`
+**Priority:** High — Social feature, drives engagement before draft
+**Prompt:**
+
+Create a new page `frontend/src/pages/ManagerLeaderboard.jsx` at route `/leaderboard`.
+
+**Backend enhancement: `GET /api/managers/leaderboard/rankings`** — Already exists in `backend/src/routes/managerAnalytics.js` (line 302). Enhance it:
+- Add `sortBy` query param (default: `championships`). Support: `championships`, `winPct`, `totalPoints`, `draftEfficiency`, `avgFinish`, `clutchRating`.
+- Add `period` query param: `all-time` (default), `this-season`, `last-30d`. For `this-season`, filter by current season. For `last-30d`, this is aspirational — just filter to profiles with recent activity.
+- For `clutchRating` sort, join with ClutchRating model (or RatingSnapshot) to get each user's rating and sort by it.
+- Return `clutchRating` and `ratingTier` fields on each leaderboard entry (requires joining ClutchRating model for each user — batch fetch).
+
+**Frontend page structure:**
+
+1. **Hero section**: "Manager Leaderboard" title, subtitle "See how you stack up against the competition." Sport filter pills (All, Golf ⛳, NFL 🏈). Sort dropdown (Championships, Win Rate, Total Points, Draft IQ, Clutch Rating). Period pills (All Time, This Season).
+
+2. **"Hot Right Now" collection** (horizontal scroll): Show top 3-5 managers who have the biggest recent positive rating change OR highest recent win%. Use existing data — if RatingSnapshot has recent entries, compute delta. If not enough data, show top 3 by winPct with a 🔥 badge. Section is collapsible.
+
+3. **Leaderboard table**: Rank (#), Avatar + Name (link to `/manager/:id`), Clutch Rating (RatingTierBadge component), Championships 🏆, Win %, Avg Finish, Draft IQ, Achievements count, Leagues. Rows alternate bg. Rank #1 = gold border-left, #2 = silver, #3 = bronze. Own row highlighted with blaze accent.
+
+4. **Mobile**: Cards instead of table (rank + avatar + name + key stat + tier badge). Scrollable.
+
+**Add route to App.jsx**: `<Route path="/leaderboard" element={<ManagerLeaderboard />} />`
+
+**Add nav link**: In the main nav, add "Leaderboard" link. It fits in the top nav alongside Golf Hub / NFL Hub. Or add it to the user dropdown.
+
+**Add API method**: `api.getManagerLeaderboard(params)` → `GET /managers/leaderboard/rankings?sortBy=...&sport=...&period=...`
+
+**Files:** `frontend/src/pages/ManagerLeaderboard.jsx` (new), `frontend/src/App.jsx`, `frontend/src/services/api.js`, `backend/src/routes/managerAnalytics.js`
+
+---
+
+### 086 — Achievement Unlock Engine (Phase 5E foundation)
+**Status:** `TODO`
+**Priority:** Medium — Backend logic, no UI needed yet
+**Prompt:**
+
+Build the achievement evaluation service that checks criteria and auto-unlocks achievements. Currently 30 achievements are seeded in DB with criteria JSON but nothing evaluates them.
+
+**New service: `backend/src/services/achievementEngine.js`**
+
+```javascript
+// Achievement Unlock Engine
+// Evaluates achievement criteria against user stats and unlocks earned achievements.
+// Called: (1) on-demand after key events (championship win, draft complete, trade, prediction resolved)
+// (2) via daily cron for batch evaluation
+
+const prisma = require('../lib/prisma')
+
+async function evaluateUser(userId) {
+  // 1. Load all achievements + user's existing unlocks
+  const [achievements, unlocks, profile] = await Promise.all([
+    prisma.achievement.findMany(),
+    prisma.achievementUnlock.findMany({ where: { userId }, select: { achievementId: true } }),
+    prisma.managerProfile.findFirst({ where: { userId, sportId: null } }),
+  ])
+  const unlockedIds = new Set(unlocks.map(u => u.achievementId))
+  const newUnlocks = []
+
+  for (const ach of achievements) {
+    if (unlockedIds.has(ach.id)) continue
+    const earned = await checkCriteria(userId, ach.criteria, profile)
+    if (earned) {
+      newUnlocks.push({
+        userId,
+        achievementId: ach.id,
+        context: { evaluatedAt: new Date().toISOString(), source: 'engine' },
+      })
+    }
+  }
+
+  if (newUnlocks.length > 0) {
+    await prisma.achievementUnlock.createMany({ data: newUnlocks, skipDuplicates: true })
+    // Fire notifications for each unlock
+    // (import notificationService if available)
+  }
+
+  return newUnlocks.length
+}
+
+async function checkCriteria(userId, criteria, profile) {
+  if (!criteria || !criteria.type) return false
+  switch (criteria.type) {
+    case 'championships':
+      return (profile?.championships || 0) >= (criteria.threshold || 1)
+    case 'best_finish':
+      return (profile?.bestFinish || 999) <= (criteria.threshold || 3)
+    case 'total_leagues':
+      return (profile?.totalLeagues || 0) >= (criteria.threshold || 1)
+    case 'total_seasons':
+      return (profile?.totalSeasons || 0) >= (criteria.threshold || 1)
+    case 'wins':
+      return (profile?.wins || 0) >= (criteria.threshold || 1)
+    case 'total_points':
+      return (profile?.totalPoints || 0) >= (criteria.threshold || 1000)
+    case 'win_pct':
+      return (profile?.winPct || 0) >= (criteria.threshold || 0.6)
+    case 'trades': {
+      const tradeCount = await prisma.trade.count({ where: { OR: [{ proposerId: userId }, { recipientId: userId }], status: 'COMPLETED' } })
+      return tradeCount >= (criteria.threshold || 1)
+    }
+    case 'waiver_claims': {
+      const claimCount = await prisma.waiverClaim.count({ where: { userId, status: 'PROCESSED' } })
+      return claimCount >= (criteria.threshold || 1)
+    }
+    case 'predictions_correct': {
+      const correctCount = await prisma.prediction.count({ where: { userId, outcome: 'CORRECT' } })
+      return correctCount >= (criteria.threshold || 1)
+    }
+    case 'multi_sport': {
+      const sportCount = await prisma.managerProfile.count({ where: { userId, sportId: { not: null }, totalLeagues: { gt: 0 } } })
+      return sportCount >= (criteria.threshold || 2)
+    }
+    // Complex criteria (consecutive championships, worst-to-first, undefeated) —
+    // these need league history queries. Stub them as false for now, implement when vault data is richer.
+    case 'consecutive_championships':
+    case 'worst_to_first':
+    case 'undefeated_season':
+    case 'draft_steal':
+    case 'perfect_lineup':
+      return false // TODO: implement with league history data
+    default:
+      return false
+  }
+}
+
+// Batch evaluation — run for all active users
+async function evaluateAll() {
+  const users = await prisma.user.findMany({ select: { id: true } })
+  let totalUnlocks = 0
+  for (const user of users) {
+    totalUnlocks += await evaluateUser(user.id)
+  }
+  return totalUnlocks
+}
+
+module.exports = { evaluateUser, evaluateAll, checkCriteria }
+```
+
+**Cron job**: Add to `backend/src/index.js` — daily at 4 AM ET:
+```javascript
+cron.schedule('0 4 * * *', async () => {
+  const { evaluateAll } = require('./services/achievementEngine')
+  const count = await evaluateAll()
+  console.log(`[Achievement Engine] Evaluated all users, ${count} new unlocks`)
+}, { timezone: 'America/New_York' })
+```
+
+**Event triggers**: Also call `evaluateUser(userId)` after key events. Add calls in:
+- `backend/src/routes/leagues.js` — after season finalization
+- `backend/src/routes/drafts.js` — after draft completes
+- `backend/src/routes/predictions.js` — after prediction resolution
+- `backend/src/routes/trades.js` — after trade completes
+
+Just add `const { evaluateUser } = require('../services/achievementEngine')` and fire-and-forget: `evaluateUser(userId).catch(console.error)` — don't block the response.
+
+**Files:** `backend/src/services/achievementEngine.js` (new), `backend/src/index.js`
+
+---
+
+### 087 — Badge Showcase + Achievement Progress UI (Phase 5E frontend)
+**Status:** `TODO`
+**Priority:** Medium — Visual polish for manager profiles
+**Prompt:**
+
+Enhance the achievements display on ManagerProfile.jsx. Currently shows a grid of earned/unearned badges. Add:
+
+**1. Achievement Progress Bars**
+
+In the existing achievements section of ManagerProfile.jsx, for unearned achievements that have a numeric threshold (criteria.threshold), show a progress bar. This requires the backend to return progress data.
+
+Enhance `GET /api/managers/:id/achievements` in `managerAnalytics.js`:
+- For each unearned achievement, compute current progress toward the threshold
+- Return `progress` field: `{ current: N, target: threshold, pct: 0-100 }`
+- Use the same logic as achievementEngine's `checkCriteria` to get current values
+- Example: "Century Club" (100 wins) — if user has 43 wins → `{ current: 43, target: 100, pct: 43 }`
+
+Frontend: Below each unearned achievement icon, show a thin progress bar (blaze gradient fill). Show "43/100" text below. Only for achievements where progress is computable (skip complex types like worst-to-first).
+
+**2. Recent Unlocks Banner**
+
+At the top of the achievements section, if the user has unlocked any achievements in the last 7 days, show a "New!" banner with the recently unlocked achievements. Gold shimmer border, achievement icon + name + "Unlocked 2 days ago".
+
+**3. Badge Showcase Strip**
+
+Add a "Featured Badges" row to the manager profile header area (below the name, before lifetime stats). Show up to 4 achievements the user has earned, selected by highest tier. Each is an icon + tier-colored pill. If the user has zero achievements, show "No badges yet — keep playing to earn your first!"
+
+This does NOT require user selection of which badges to feature — just auto-select the highest-tier ones.
+
+**Files:** `frontend/src/pages/ManagerProfile.jsx`, `backend/src/routes/managerAnalytics.js`
+
+---
+
+### 088 — Nav Link: Leaderboard + Profile Quick Access
+**Status:** `TODO`
+**Priority:** Medium — Discoverability
+**Prompt:**
+
+Wire up navigation for the new Leaderboard page and improve profile access.
+
+1. **Top nav**: Add "Leaderboard" to the main navigation bar. Place it after the existing links (Golf Hub, NFL Hub, etc.). Icon: trophy or bar-chart. Use the same dropdown/link pattern as other nav items.
+
+2. **User dropdown**: Add "My Profile" link that goes to `/manager/[currentUserId]`. Currently users can only reach their profile through the league. Also add "Leaderboard" link here.
+
+3. **League Home**: Add "Leaderboard" to the league nav pills or as a subtle link in the standings section ("See global leaderboard →").
+
+4. **Dashboard**: In the Clutch Rating widget on the dashboard (DashboardRatingWidget), add a "See Leaderboard" link below the rating display.
+
+**Files:** `frontend/src/components/layout/Navbar.jsx` (or wherever nav is), `frontend/src/pages/Dashboard.jsx`, league nav component
+
+---
+
+### 089 — Verified Badge + Quick Stats Bar (Phase 5A final polish)
+**Status:** `TODO`
+**Priority:** Low — Polish items
+**Prompt:**
+
+Two small Phase 5A items to close it out:
+
+**1. Verified Badge**
+
+Add a verified badge next to the user's name on ManagerProfile. This is cosmetic for now — the `User` model may need a `isVerified` boolean field (check schema first; if it doesn't exist, add a migration). For now, hardcode it to show for admin users (`role === 'admin'`).
+
+Badge UI: Small blue checkmark circle (similar to Twitter/X verified) — SVG inline, positioned right after the display name. Tooltip on hover: "Verified Clutch Member".
+
+**2. Quick Stats Bar**
+
+Add a compact horizontal stats strip between the header and the lifetime stats section. 4-5 key metrics in a row: Total Leagues | Win Rate | Championships | Predictions Made | Clutch Rating. Each metric is a number + label vertically stacked. Slightly larger font for the number (font-mono), muted label below. Dividers between each. On mobile, wraps to 2 rows.
+
+This replaces the need to scroll down to the lifetime stats grid for the key numbers.
+
+**Files:** `frontend/src/pages/ManagerProfile.jsx`, possibly `backend/prisma/schema.prisma` (if verified field needed)
+
+---
+
+### 090 — Golf Prediction Categories Expansion (Phase 5C)
+**Status:** `TODO`
+**Priority:** High — Core engagement feature, makes Prove It worth visiting
+**Prompt:**
+
+Expand golf prediction types from just "player benchmark" (SG over/under) to a full slate of golf-specific categories. This is Phase 5C from CLAUDE.md.
+
+**IMPORTANT LANGUAGE RULES (from CLAUDE.md):**
+- Never say "over/under" → say "Player Benchmark" or "Performance Call"
+- Never say "picks" → say "Calls" or "Insights"
+- Never say "bets/wagers" → say "Predictions"
+- Never say "lock it in" → say "Make your call" or "Submit"
+- UI should look like community polls, NOT sportsbook props
+- No green/red flashing numbers or casino-style animations
+
+---
+
+**STEP 1: Backend — Expand prediction type validation**
+
+**File: `backend/src/services/predictionService.js`**
+
+Update `PREDICTION_TYPES` array (line 24):
+```javascript
+const PREDICTION_TYPES = [
+  'performance_call',     // start/sit
+  'player_benchmark',     // over/under a stat line (existing)
+  'tournament_winner',    // pick the tournament winner
+  'top_5',                // will player finish top 5?
+  'top_10',               // will player finish top 10?
+  'top_20',               // will player finish top 20?
+  'make_cut',             // will player make or miss the cut?
+  'round_leader',         // who leads after round 1/2/3?
+  'head_to_head',         // player A vs player B — who finishes higher?
+  'weekly_winner',        // fantasy weekly winner
+  'bold_call',            // unlikely outcome prediction
+]
+```
+
+Also update the validation array in `backend/src/routes/predictions.js` (line 11) to match.
+
+**STEP 2: Backend — predictionData shape per type**
+
+In `predictionService.js` `submitPrediction()`, add validation for the new types. The `predictionData` JSON field stores type-specific data:
+
+```javascript
+// tournament_winner
+predictionData: { playerName: 'Scottie Scheffler' }
+// subjectPlayerId = the player picked to win
+
+// top_5, top_10, top_20
+predictionData: { playerName: 'Rory McIlroy', position: 'top_5', direction: 'yes' }
+// subjectPlayerId = the player, direction = 'yes' (will finish top X) or 'no' (won't)
+
+// make_cut
+predictionData: { playerName: 'Tiger Woods', direction: 'make' }
+// direction: 'make' or 'miss'
+
+// round_leader
+predictionData: { playerName: 'Jon Rahm', round: 1 }
+// subjectPlayerId = the player picked to lead after round N
+
+// head_to_head
+predictionData: { playerA: 'Scottie Scheffler', playerB: 'Rory McIlroy', pick: 'playerA' }
+// subjectPlayerId = player A, additional field for player B ID
+// Add `opponentPlayerId` to the prediction creation (store in predictionData or add a field)
+```
+
+Add validation in `submitPrediction()` after the existing type check:
+```javascript
+// Validate predictionData shape per type
+if (['top_5', 'top_10', 'top_20', 'make_cut'].includes(data.predictionType)) {
+  if (!data.predictionData?.direction) throw new Error('direction is required for this prediction type')
+}
+if (data.predictionType === 'head_to_head') {
+  if (!data.predictionData?.opponentPlayerId) throw new Error('opponentPlayerId is required for H2H')
+}
+if (data.predictionType === 'round_leader') {
+  if (!data.predictionData?.round || ![1,2,3].includes(data.predictionData.round)) {
+    throw new Error('round (1-3) is required for round_leader')
+  }
+}
+```
+
+**STEP 3: Frontend — Redesign ProveIt WeeklySlate**
+
+**File: `frontend/src/pages/ProveIt.jsx`**
+
+Replace the current single-type SG benchmark slate with a **category picker** at the top:
+
+```
+[🏆 Winner] [🎯 Top 5] [🎯 Top 10] [🎯 Top 20] [✂️ Cut Line] [🔄 H2H] [📊 Round 1] [📈 SG Call]
+```
+
+These are horizontal scroll pill buttons. Tapping one changes the prediction creation UI below.
+
+**Category UIs:**
+
+**A. Tournament Winner (`tournament_winner`)**
+- Show tournament field as a scrollable list of player cards
+- Each card: headshot + name + OWGR + CPI badge
+- Tap a player → "Make Your Call" confirmation with BackYourCall thesis form
+- One pick per tournament
+- Section header: "Who takes it? Pick the winner of [Tournament Name]"
+- Community consensus bar: "42% of managers picked Scheffler"
+
+**B. Top 5 / Top 10 / Top 20 (`top_5`, `top_10`, `top_20`)**
+- Same player list, but each player has YES / NO pill buttons (styled like poll options, not betting buttons)
+- "Will [Player] finish in the Top 5?" → tap YES or NO
+- Show community split: "73% say Yes"
+- Can make multiple calls per category per tournament
+- Section header: "Top 5 Calls — Which players crack the top 5?"
+
+**C. Make/Miss the Cut (`make_cut`)**
+- Player list with MAKE / MISS pill buttons
+- Sorted by DataGolf skill estimate or OWGR (weaker players at top — more interesting calls)
+- "Will [Player] make the cut?" → MAKE or MISS
+- Section header: "Cut Line — Who survives Friday?"
+- Show cut history: "Made 8 of last 10 cuts at this course" (from course history data if available)
+
+**D. Round 1 Leader (`round_leader`)**
+- Same as tournament winner UI but for round 1 leader
+- "Who leads after Round 1?"
+- One pick per tournament per round
+- Only show Round 1 initially (can expand to R2/R3 later)
+
+**E. Head-to-Head (`head_to_head`)**
+- Two-player comparison card
+- Show pre-built matchups (top 5 by OWGR, or commissioner-curated) plus "Build Your Own"
+- "Build Your Own": two player search dropdowns → select Player A and Player B → pick who finishes higher
+- Matchup card shows both players side-by-side with stats, tap the one you think wins
+- Section header: "Head to Head — Who finishes higher?"
+
+**F. SG Performance Call (`player_benchmark` — existing, reframe)**
+- Keep existing UI but rename from "OVER / UNDER" to better language
+- Buttons should say "Beats Line" / "Misses Line" or "Above" / "Below" (poll-style)
+- Section header: "SG Performance Calls — Will they beat their benchmark?"
+
+**STEP 4: Mobile optimization**
+
+- Category pills scroll horizontally on mobile
+- Player cards stack vertically
+- YES/NO and MAKE/MISS buttons are full-width tappable areas
+- BackYourCall thesis form appears inline below the selected player (not a modal)
+
+**STEP 5: Prove It tab restructure**
+
+Current tabs: WeeklySlate | TrackRecord | Leaderboard | Analysts
+
+Add a "My Calls" filter on the slate itself — small toggle at top: "All Players" | "My Calls" that filters to show only players you've made predictions on, with your prediction shown.
+
+**Files:** `frontend/src/pages/ProveIt.jsx`, `backend/src/services/predictionService.js`, `backend/src/routes/predictions.js`
+
+---
+
+### 091 — Golf Prediction Auto-Resolution Service (Phase 5C backend)
+**Status:** `TODO`
+**Priority:** High — Without this, predictions stay PENDING forever
+**Prompt:**
+
+Build the golf prediction resolution service. Currently NO golf predictions auto-resolve — they sit PENDING indefinitely. This service checks completed tournaments and grades all pending predictions.
+
+**New service: `backend/src/services/golfPredictionResolver.js`**
+
+```javascript
+const prisma = require('../lib/prisma')
+const { resolvePrediction } = require('./predictionService')
+
+/**
+ * Golf Prediction Auto-Resolver
+ * Runs after tournament completion. Checks all PENDING golf predictions
+ * for the event and resolves them based on final results.
+ */
+
+async function resolveGolfEvent(eventId) {
+  // 1. Get tournament with final leaderboard
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    include: { performances: { include: { player: true } } },
+  })
+  if (!event) throw new Error(`Event ${eventId} not found`)
+
+  // 2. Build leaderboard lookup
+  // Performance records have: position, score, sgTotal, status (made_cut, missed_cut, etc.)
+  const leaderboard = event.performances
+    .filter(p => p.position != null)
+    .sort((a, b) => a.position - b.position)
+
+  const playerMap = new Map() // playerId → { position, sgTotal, status, ... }
+  for (const p of event.performances) {
+    playerMap.set(p.playerId, {
+      position: p.position,
+      sgTotal: p.sgTotal,
+      status: p.status,
+      score: p.totalScore,
+      roundScores: [], // populate from RoundScore if needed
+    })
+  }
+
+  // Winner = position 1
+  const winner = leaderboard.find(p => p.position === 1)
+
+  // 3. Get all PENDING predictions for this event
+  const pending = await prisma.prediction.findMany({
+    where: { eventId, outcome: 'PENDING', sport: 'golf' },
+  })
+
+  let resolved = 0
+  for (const pred of pending) {
+    let outcome = null
+    let accuracyScore = null
+
+    const playerData = pred.subjectPlayerId ? playerMap.get(pred.subjectPlayerId) : null
+
+    switch (pred.predictionType) {
+      case 'tournament_winner': {
+        if (!winner) break // tournament not finished
+        outcome = (pred.subjectPlayerId === winner.playerId) ? 'CORRECT' : 'INCORRECT'
+        // Accuracy bonus: closer to winning = higher score
+        if (playerData?.position) {
+          accuracyScore = outcome === 'CORRECT' ? 1.0 : Math.max(0, 1 - (playerData.position / 50))
+        }
+        break
+      }
+
+      case 'top_5': {
+        if (!playerData?.position) break
+        const inTop5 = playerData.position <= 5
+        const predictedYes = pred.predictionData?.direction === 'yes'
+        outcome = (inTop5 === predictedYes) ? 'CORRECT' : 'INCORRECT'
+        accuracyScore = outcome === 'CORRECT' ? 1.0 : 0.0
+        break
+      }
+
+      case 'top_10': {
+        if (!playerData?.position) break
+        const inTop10 = playerData.position <= 10
+        const predictedYes = pred.predictionData?.direction === 'yes'
+        outcome = (inTop10 === predictedYes) ? 'CORRECT' : 'INCORRECT'
+        accuracyScore = outcome === 'CORRECT' ? 1.0 : 0.0
+        break
+      }
+
+      case 'top_20': {
+        if (!playerData?.position) break
+        const inTop20 = playerData.position <= 20
+        const predictedYes = pred.predictionData?.direction === 'yes'
+        outcome = (inTop20 === predictedYes) ? 'CORRECT' : 'INCORRECT'
+        accuracyScore = outcome === 'CORRECT' ? 1.0 : 0.0
+        break
+      }
+
+      case 'make_cut': {
+        if (!playerData) break
+        const madeCut = playerData.status !== 'missed_cut' && playerData.status !== 'CUT'
+        const predictedMake = pred.predictionData?.direction === 'make'
+        outcome = (madeCut === predictedMake) ? 'CORRECT' : 'INCORRECT'
+        accuracyScore = outcome === 'CORRECT' ? 1.0 : 0.0
+        break
+      }
+
+      case 'round_leader': {
+        // Need round-specific leaderboard — query RoundScore for the specific round
+        const round = pred.predictionData?.round || 1
+        const roundScores = await prisma.roundScore.findMany({
+          where: { performance: { eventId }, roundNumber: round },
+          include: { performance: true },
+          orderBy: { score: 'asc' }, // lowest score = leader in golf
+        })
+        if (roundScores.length === 0) break
+        const roundLeader = roundScores[0]?.performance?.playerId
+        outcome = (pred.subjectPlayerId === roundLeader) ? 'CORRECT' : 'INCORRECT'
+        accuracyScore = outcome === 'CORRECT' ? 1.0 : 0.0
+        break
+      }
+
+      case 'head_to_head': {
+        const opponentId = pred.predictionData?.opponentPlayerId
+        if (!opponentId) break
+        const opponentData = playerMap.get(opponentId)
+        if (!playerData?.position || !opponentData?.position) break
+        const pickedPlayer = pred.predictionData?.pick === 'playerA' ? pred.subjectPlayerId : opponentId
+        const pickedData = pred.predictionData?.pick === 'playerA' ? playerData : opponentData
+        const otherData = pred.predictionData?.pick === 'playerA' ? opponentData : playerData
+        if (pickedData.position === otherData.position) {
+          outcome = 'PUSH' // tie
+        } else {
+          outcome = pickedData.position < otherData.position ? 'CORRECT' : 'INCORRECT'
+        }
+        accuracyScore = outcome === 'CORRECT' ? 1.0 : outcome === 'PUSH' ? 0.5 : 0.0
+        break
+      }
+
+      case 'player_benchmark': {
+        // Existing SG benchmark — compare final sgTotal to benchmark value
+        if (!playerData?.sgTotal && playerData?.sgTotal !== 0) break
+        const benchmark = pred.predictionData?.benchmarkValue
+        if (benchmark == null) break
+        const direction = pred.predictionData?.direction // 'over' or 'under'
+        const actual = playerData.sgTotal
+        if (actual === benchmark) {
+          outcome = 'PUSH'
+        } else if (direction === 'over') {
+          outcome = actual > benchmark ? 'CORRECT' : 'INCORRECT'
+        } else {
+          outcome = actual < benchmark ? 'CORRECT' : 'INCORRECT'
+        }
+        accuracyScore = outcome === 'CORRECT' ? 1.0 : outcome === 'PUSH' ? 0.5 : 0.0
+        break
+      }
+    }
+
+    if (outcome) {
+      await resolvePrediction(pred.id, outcome, accuracyScore, prisma)
+      resolved++
+    }
+  }
+
+  console.log(`[Golf Resolver] Event ${event.name}: resolved ${resolved}/${pending.length} predictions`)
+  return { resolved, total: pending.length }
+}
+
+/**
+ * Check for recently completed tournaments and resolve their predictions.
+ * "Completed" = all 4 rounds played, final leaderboard available.
+ */
+async function resolveCompletedTournaments() {
+  // Find tournaments that ended in the last 48 hours with unresolved predictions
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000)
+
+  const events = await prisma.event.findMany({
+    where: {
+      sport: { slug: 'golf' },
+      endDate: { gte: cutoff, lte: new Date() },
+      // Has at least one PENDING prediction
+      predictions: { some: { outcome: 'PENDING' } },
+    },
+    select: { id: true, name: true },
+  })
+
+  let totalResolved = 0
+  for (const event of events) {
+    try {
+      const result = await resolveGolfEvent(event.id)
+      totalResolved += result.resolved
+    } catch (err) {
+      console.error(`[Golf Resolver] Failed for event ${event.name}:`, err.message)
+    }
+  }
+  return totalResolved
+}
+
+module.exports = { resolveGolfEvent, resolveCompletedTournaments }
+```
+
+**Cron job**: Add to `backend/src/index.js` — runs Sunday 10:30 PM ET (after tournament finalization at 10 PM) and Monday 8 AM ET (catch-up):
+
+```javascript
+// Golf prediction resolution — Sunday night after tournaments finish
+cron.schedule('30 22 * * 0', async () => {
+  const { resolveCompletedTournaments } = require('./services/golfPredictionResolver')
+  const count = await resolveCompletedTournaments()
+  console.log(`[Cron] Golf prediction resolution: ${count} predictions resolved`)
+}, { timezone: 'America/New_York' })
+
+// Monday morning catch-up
+cron.schedule('0 8 * * 1', async () => {
+  const { resolveCompletedTournaments } = require('./services/golfPredictionResolver')
+  const count = await resolveCompletedTournaments()
+  console.log(`[Cron] Golf prediction resolution (Monday catch-up): ${count} predictions resolved`)
+}, { timezone: 'America/New_York' })
+```
+
+**Also hook into existing tournament finalization**: In whatever cron/service marks a tournament as "complete" (check `backend/src/services/datagolfSync.js` or `espnSync.js` — look for where tournament status gets set to completed/final), add a call to `resolveGolfEvent(eventId)` right after finalization.
+
+**Update reputation**: The existing `resolvePrediction()` in `predictionService.js` should already call `updateReputation()` — verify this. If not, add `await updateReputation(pred.userId, prisma)` after each resolution.
+
+**Performance note**: The resolver queries the full event leaderboard once, builds a Map, then iterates predictions in memory. Should handle hundreds of predictions per event efficiently. For round_leader, there's one extra DB query per round-leader prediction — acceptable volume.
+
+**Files:** `backend/src/services/golfPredictionResolver.js` (new), `backend/src/index.js` (cron entries)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

@@ -703,4 +703,32 @@ router.get('/user/:userId/recent', async (req, res) => {
   }
 })
 
+// GET /predictions/user/:userId/stats — Aggregated prediction stats by type
+router.get('/user/:userId/stats', async (req, res) => {
+  try {
+    const { userId } = req.params
+    const all = await prisma.prediction.findMany({
+      where: { userId },
+      select: { predictionType: true, outcome: true },
+    })
+    const byType = {}
+    for (const p of all) {
+      if (!byType[p.predictionType]) byType[p.predictionType] = { correct: 0, incorrect: 0, pending: 0, total: 0 }
+      byType[p.predictionType].total++
+      if (p.outcome === 'CORRECT') byType[p.predictionType].correct++
+      else if (p.outcome === 'INCORRECT') byType[p.predictionType].incorrect++
+      else byType[p.predictionType].pending++
+    }
+    const overall = { correct: 0, incorrect: 0, pending: 0, total: all.length }
+    all.forEach(p => {
+      if (p.outcome === 'CORRECT') overall.correct++
+      else if (p.outcome === 'INCORRECT') overall.incorrect++
+      else overall.pending++
+    })
+    res.json({ byType, overall })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 module.exports = router

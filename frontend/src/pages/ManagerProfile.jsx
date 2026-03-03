@@ -265,9 +265,11 @@ const ManagerProfile = () => {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [recentCalls, setRecentCalls] = useState([])
   const [recentCallsLoading, setRecentCallsLoading] = useState(false)
+  const [predictionStats, setPredictionStats] = useState(null)
+  const [ratingHistory, setRatingHistory] = useState([])
   const avatarInputRef = useRef(null)
 
-  // Load recent predictions
+  // Load recent predictions + prediction stats + rating history
   useEffect(() => {
     if (!userId) return
     setRecentCallsLoading(true)
@@ -275,6 +277,14 @@ const ManagerProfile = () => {
       .then(data => setRecentCalls(data.predictions || []))
       .catch(() => setRecentCalls([]))
       .finally(() => setRecentCallsLoading(false))
+
+    api.request(`/predictions/user/${userId}/stats`)
+      .then(data => setPredictionStats(data))
+      .catch(() => setPredictionStats(null))
+
+    api.request(`/managers/${userId}/rating-history`)
+      .then(data => setRatingHistory(data.snapshots || []))
+      .catch(() => setRatingHistory([]))
   }, [userId])
 
   // Avatar upload handler
@@ -859,6 +869,182 @@ const ManagerProfile = () => {
                 )
               })}
             </div>
+          </Card>
+        )}
+
+        {/* Prediction Accuracy Donut */}
+        {predictionStats && predictionStats.overall && predictionStats.overall.correct + predictionStats.overall.incorrect > 0 && (
+          <Card>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Prediction Accuracy</h2>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              {/* Donut Chart */}
+              {(() => {
+                const { correct, incorrect, pending } = predictionStats.overall
+                const resolved = correct + incorrect
+                const pct = resolved > 0 ? Math.round((correct / resolved) * 100) : 0
+                const total = correct + incorrect + pending
+                // Build segments
+                const segments = []
+                const types = Object.entries(predictionStats.byType || {})
+                const typeColors = ['#0D9668', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444', '#EC4899']
+                let offset = 0
+                types.forEach(([, stats], i) => {
+                  const correctCount = stats.correct || 0
+                  if (correctCount > 0 && total > 0) {
+                    const pctSlice = (correctCount / total) * 100
+                    segments.push({ pct: pctSlice, color: typeColors[i % typeColors.length], offset })
+                    offset += pctSlice
+                  }
+                })
+                // Incorrect segment
+                if (incorrect > 0 && total > 0) {
+                  segments.push({ pct: (incorrect / total) * 100, color: '#374151', offset })
+                  offset += (incorrect / total) * 100
+                }
+                // Pending segment
+                if (pending > 0 && total > 0) {
+                  segments.push({ pct: (pending / total) * 100, color: '#1f2937', offset })
+                }
+                const r = 60
+                const circumference = 2 * Math.PI * r
+                return (
+                  <div className="relative shrink-0">
+                    <svg width="160" height="160" viewBox="0 0 160 160">
+                      {/* Background ring */}
+                      <circle cx="80" cy="80" r={r} fill="none" stroke="var(--stone, #1f2937)" strokeWidth="20" />
+                      {/* Data segments */}
+                      {segments.map((seg, i) => (
+                        <circle
+                          key={i}
+                          cx="80" cy="80" r={r}
+                          fill="none"
+                          stroke={seg.color}
+                          strokeWidth="20"
+                          strokeDasharray={`${(seg.pct / 100) * circumference} ${circumference}`}
+                          strokeDashoffset={-(seg.offset / 100) * circumference}
+                          transform="rotate(-90 80 80)"
+                          strokeLinecap="butt"
+                        />
+                      ))}
+                    </svg>
+                    {/* Center text */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-2xl font-bold font-mono text-text-primary">{pct}%</span>
+                      <span className="text-[10px] text-text-muted">{resolved} resolved</span>
+                    </div>
+                  </div>
+                )
+              })()}
+              {/* Legend */}
+              <div className="flex-1 space-y-2 w-full">
+                {Object.entries(predictionStats.byType || {}).map(([type, stats], i) => {
+                  const typeColors = ['#0D9668', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444', '#EC4899']
+                  const resolved = (stats.correct || 0) + (stats.incorrect || 0)
+                  const typePct = resolved > 0 ? Math.round(((stats.correct || 0) / resolved) * 100) : 0
+                  return (
+                    <div key={type} className="flex items-center gap-2 text-sm">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: typeColors[i % typeColors.length] }} />
+                      <span className="text-text-secondary flex-1 truncate">{type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                      <span className="font-mono text-text-primary">{typePct}%</span>
+                      <span className="text-text-muted text-xs">({stats.correct}/{resolved})</span>
+                    </div>
+                  )
+                })}
+                {predictionStats.overall.pending > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="w-3 h-3 rounded-full shrink-0 bg-gray-700" />
+                    <span className="text-text-muted flex-1">Pending</span>
+                    <span className="font-mono text-text-muted">{predictionStats.overall.pending}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Rating Journey Line Chart */}
+        {ratingHistory.length >= 2 && (
+          <Card>
+            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Rating Journey</h2>
+            {(() => {
+              const values = ratingHistory.map(s => s.overall)
+              const minVal = Math.max(0, Math.floor(Math.min(...values) / 10) * 10 - 5)
+              const maxVal = Math.min(100, Math.ceil(Math.max(...values) / 10) * 10 + 5)
+              const range = maxVal - minVal || 1
+              const w = 480
+              const h = 200
+              const pad = { top: 20, right: 20, bottom: 30, left: 40 }
+              const chartW = w - pad.left - pad.right
+              const chartH = h - pad.top - pad.bottom
+              const points = ratingHistory.map((s, i) => ({
+                x: pad.left + (i / (ratingHistory.length - 1)) * chartW,
+                y: pad.top + chartH - ((s.overall - minVal) / range) * chartH,
+                val: s.overall,
+                date: new Date(s.snapshotDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+              }))
+              const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+              // Tier bands
+              const tiers = [
+                { label: 'Elite', min: 90, color: 'rgba(212,147,13,0.08)' },
+                { label: 'Veteran', min: 80, color: 'rgba(212,147,13,0.05)' },
+                { label: 'Competitor', min: 70, color: 'rgba(13,150,104,0.05)' },
+                { label: 'Contender', min: 60, color: 'rgba(59,130,246,0.05)' },
+              ]
+              return (
+                <div className="overflow-x-auto -mx-2">
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full min-w-[320px]" preserveAspectRatio="xMidYMid meet">
+                    {/* Tier bands */}
+                    {tiers.map(tier => {
+                      if (tier.min > maxVal || tier.min + 10 < minVal) return null
+                      const y1 = pad.top + chartH - ((Math.min(tier.min + 10, maxVal) - minVal) / range) * chartH
+                      const y2 = pad.top + chartH - ((Math.max(tier.min, minVal) - minVal) / range) * chartH
+                      return (
+                        <g key={tier.label}>
+                          <rect x={pad.left} y={y1} width={chartW} height={y2 - y1} fill={tier.color} />
+                          <text x={pad.left + 4} y={y1 + 12} fill="var(--text-muted, #6b7280)" fontSize="9" opacity="0.6">{tier.label}</text>
+                        </g>
+                      )
+                    })}
+                    {/* Grid lines */}
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const val = minVal + (range * i) / 4
+                      const y = pad.top + chartH - (i / 4) * chartH
+                      return (
+                        <g key={i}>
+                          <line x1={pad.left} y1={y} x2={pad.left + chartW} y2={y} stroke="var(--card-border, #2a2a2a)" strokeWidth="0.5" />
+                          <text x={pad.left - 6} y={y + 3} textAnchor="end" fill="var(--text-muted, #6b7280)" fontSize="10" fontFamily="monospace">{Math.round(val)}</text>
+                        </g>
+                      )
+                    })}
+                    {/* Line */}
+                    <path d={pathD} fill="none" stroke="#D4930D" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                    {/* Dots */}
+                    {points.map((p, i) => (
+                      <g key={i}>
+                        <circle cx={p.x} cy={p.y} r="4" fill="#D4930D" stroke="var(--bg, #0E1015)" strokeWidth="2" />
+                        {/* Show label for first, last, and every ~4th */}
+                        {(i === 0 || i === points.length - 1 || i % Math.max(1, Math.floor(points.length / 5)) === 0) && (
+                          <text x={p.x} y={h - 8} textAnchor="middle" fill="var(--text-muted, #6b7280)" fontSize="9">{p.date}</text>
+                        )}
+                      </g>
+                    ))}
+                    {/* Current value label */}
+                    {points.length > 0 && (
+                      <text
+                        x={points[points.length - 1].x + 6}
+                        y={points[points.length - 1].y + 4}
+                        fill="#D4930D"
+                        fontSize="12"
+                        fontWeight="bold"
+                        fontFamily="monospace"
+                      >
+                        {points[points.length - 1].val}
+                      </text>
+                    )}
+                  </svg>
+                </div>
+              )
+            })()}
           </Card>
         )}
 
