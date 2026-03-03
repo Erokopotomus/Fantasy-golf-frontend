@@ -21,6 +21,7 @@ const NOTIFICATION_TYPES = {
   DRAFT_YOUR_TURN: 'DRAFT_YOUR_TURN',
   DRAFT_COMPLETED: 'DRAFT_COMPLETED',
   DRAFT_PICK_MADE: 'DRAFT_PICK_MADE',
+  DRAFT_RECAP: 'DRAFT_RECAP',
   PLAYER_ADDED: 'PLAYER_ADDED',
   PLAYER_DROPPED: 'PLAYER_DROPPED',
   MEMBER_JOINED: 'MEMBER_JOINED',
@@ -28,6 +29,9 @@ const NOTIFICATION_TYPES = {
   MATCHUP_RESULT: 'MATCHUP_RESULT',
   TOURNAMENT_COMPLETE: 'TOURNAMENT_COMPLETE',
   CHAT_MENTION: 'CHAT_MENTION',
+  WEEKLY_RECAP: 'WEEKLY_RECAP',
+  PREDICTION_RESOLVED: 'PREDICTION_RESOLVED',
+  ROSTER_PLAYER_ALERT: 'ROSTER_PLAYER_ALERT',
 }
 
 // Map notification types to preference categories
@@ -44,6 +48,7 @@ const TYPE_TO_CATEGORY = {
   DRAFT_YOUR_TURN: 'drafts',
   DRAFT_COMPLETED: 'drafts',
   DRAFT_PICK_MADE: 'drafts',
+  DRAFT_RECAP: 'drafts',
   PLAYER_ADDED: 'roster_moves',
   PLAYER_DROPPED: 'roster_moves',
   MEMBER_JOINED: 'league_activity',
@@ -51,6 +56,9 @@ const TYPE_TO_CATEGORY = {
   MATCHUP_RESULT: 'scores',
   TOURNAMENT_COMPLETE: 'scores',
   CHAT_MENTION: 'chat',
+  WEEKLY_RECAP: 'weekly_recap',
+  PREDICTION_RESOLVED: 'prediction_updates',
+  ROSTER_PLAYER_ALERT: 'roster_alerts',
 }
 
 const DEFAULT_PREFERENCES = {
@@ -61,9 +69,18 @@ const DEFAULT_PREFERENCES = {
   league_activity: true,
   scores: true,
   chat: true,
+  weekly_recap: true,
+  prediction_updates: true,
+  roster_alerts: true,
   push_enabled: true,
   email_enabled: false,
 }
+
+// Categories that support email delivery (not all notifications should be emailed)
+const EMAIL_SUPPORTED_CATEGORIES = [
+  'trades', 'drafts', 'scores', 'league_activity',
+  'weekly_recap', 'prediction_updates',
+]
 
 /**
  * Check if a user wants notifications for a given category.
@@ -142,7 +159,49 @@ async function createNotification({ userId, type, title, message, actionUrl, dat
     // webPushService not available yet — that's fine
   }
 
+  // Email delivery (non-blocking, fire and forget)
+  if (EMAIL_SUPPORTED_CATEGORIES.includes(resolvedCategory)) {
+    sendNotificationEmailIfEnabled(userId, resolvedCategory, { type, title, message, actionUrl, data, emailSubject }, prisma).catch(err =>
+      console.error('[notificationService] Email send failed:', err.message)
+    )
+  }
+
   return notification
+}
+
+/**
+ * Send notification email if user has email_enabled + category enabled.
+ */
+async function sendNotificationEmailIfEnabled(userId, category, { type, title, message, actionUrl, data, emailSubject }, prisma) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, notificationPreferences: true },
+    })
+    if (!user?.email) return
+
+    const prefs = user.notificationPreferences || {}
+    const emailEnabled = prefs.email_enabled === true
+    const categoryEnabled = prefs[category] !== false // default true for most
+    if (!emailEnabled || !categoryEnabled) return
+
+    const emailService = require('./emailService')
+    if (!emailService.isConfigured) return
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://clutchfantasysports.com'
+    const ctaUrl = actionUrl ? `${frontendUrl}${actionUrl.startsWith('/') ? actionUrl : '/' + actionUrl}` : frontendUrl
+
+    await emailService.sendNotificationEmail({
+      to: user.email,
+      subject: emailSubject || title,
+      headline: title,
+      body: message,
+      ctaText: 'View on Clutch',
+      ctaUrl,
+    })
+  } catch (err) {
+    console.error('[notificationService] Email delivery error:', err.message)
+  }
 }
 
 /**
@@ -189,6 +248,7 @@ module.exports = {
   NOTIFICATION_TYPES,
   TYPE_TO_CATEGORY,
   DEFAULT_PREFERENCES,
+  EMAIL_SUPPORTED_CATEGORIES,
   createNotification,
   createBulkNotifications,
   notifyLeague,

@@ -32,7 +32,10 @@ function sportEmoji(sport) {
   return '🏆'
 }
 
-function emailWrapper(bodyHtml) {
+function emailWrapper(bodyHtml, { showManagePrefs = false } = {}) {
+  const prefsLink = showManagePrefs
+    ? '<div style="margin-top:8px;"><a href="https://clutchfantasysports.com/profile?tab=notifications" style="color:#999;font-size:11px;text-decoration:none;">Manage notification preferences</a></div>'
+    : ''
   return `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -53,6 +56,7 @@ ${bodyHtml}
 <tr><td style="padding:0 32px 24px;">
 <div style="border-top:1px solid #EEEAE2;padding-top:16px;text-align:center;">
 <a href="https://clutchfantasysports.com" style="color:#D4930D;font-size:12px;text-decoration:none;font-weight:600;">clutchfantasysports.com</a>
+${prefsLink}
 </div>
 </td></tr>
 </table>
@@ -156,4 +160,42 @@ async function sendVaultInviteEmail({ to, ownerName, leagueName, personalUrl, fr
   }
 }
 
-module.exports = { sendVaultInviteEmail, sendLeagueInviteEmail, isConfigured }
+/**
+ * Send a generic notification email with branded HTML.
+ * Used by notificationService to email users about activity.
+ */
+async function sendNotificationEmail({ to, subject, headline, body, ctaText, ctaUrl, accentColor }) {
+  if (!isConfigured || !resendClient) {
+    return { success: false, error: 'Email service not configured' }
+  }
+
+  const accent = accentColor || '#F06820'
+  const ctaBlock = ctaText && ctaUrl
+    ? `<div style="text-align:center;margin-bottom:24px;">
+  <a href="${ctaUrl}" style="display:inline-block;background:linear-gradient(135deg,${accent},#D4930D);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:14px 48px;border-radius:10px;">${ctaText}</a>
+</div>`
+    : ''
+
+  const bodyHtml = `
+<div style="font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:16px;">${headline}</div>
+<div style="font-size:15px;color:#1A1A1A;line-height:1.6;margin-bottom:24px;">${body}</div>
+${ctaBlock}`
+
+  const text = `${headline}\n\n${body.replace(/<[^>]+>/g, '')}${ctaUrl ? `\n\n${ctaText}: ${ctaUrl}` : ''}`
+
+  try {
+    await resendClient.emails.send({
+      from: 'Clutch Fantasy <noreply@clutchfantasysports.com>',
+      to,
+      subject,
+      html: emailWrapper(bodyHtml, { showManagePrefs: true }),
+      text: text + '\n\nManage notification preferences: https://clutchfantasysports.com/profile?tab=notifications',
+    })
+    return { success: true }
+  } catch (err) {
+    console.error('[email] Notification email failed:', err.message)
+    return { success: false, error: err.message }
+  }
+}
+
+module.exports = { sendVaultInviteEmail, sendLeagueInviteEmail, sendNotificationEmail, isConfigured }

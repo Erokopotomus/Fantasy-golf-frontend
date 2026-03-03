@@ -2377,6 +2377,279 @@ The Dashboard tab inside the draft room has NO player click handlers. Clicking a
 
 ---
 
+### 075 — Post-Draft Engagement: Wire Email into Notification Service
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added sendNotificationEmail() to emailService.js (branded HTML, manage prefs footer). Wired email into createNotification() (checks email_enabled + category). Added 3 new categories (weekly_recap, prediction_updates, roster_alerts) + 3 new types (WEEKLY_RECAP, PREDICTION_RESOLVED, ROSTER_PLAYER_ALERT, DRAFT_RECAP). Updated notification route allowed keys. Files: emailService.js, notificationService.js, notifications.js
+**Priority:** High — Batch C (engagement loop)
+**Prompt:**
+
+The notification service (`backend/src/services/notificationService.js`) creates DB records + Socket.IO + web push, but NEVER sends email. The email service (`backend/src/services/emailService.js`) has Resend configured but only has league invite and vault invite templates. These two services need to be connected.
+
+**What to build:**
+
+1. **Add `sendNotificationEmail()` to `emailService.js`:**
+   - Generic notification email template (branded HTML, same style as league invite)
+   - Params: `{ to, subject, headline, body, ctaText, ctaUrl, accentColor }`
+   - Body supports simple HTML (paragraphs, bold, lists)
+   - Footer: "Manage notification preferences" link → `${FRONTEND_URL}/profile` (preferences tab)
+   - Unsubscribe link at bottom
+
+2. **Wire email sending into `notificationService.js` `createNotification()`:**
+   - After creating DB record + Socket.IO + web push, check if user has `email_enabled: true` in their notification preferences
+   - If yes, AND the notification category has email support, call `sendNotificationEmail()`
+   - Add a `emailSubject` field to the notification data so each type can customize the email subject line
+   - Don't block on email send — fire and forget with error logging
+
+3. **Add new notification categories to preferences:**
+   - Add these categories to the preference defaults in `notificationService.js`:
+     ```javascript
+     weekly_recap: true,       // Tournament/week results
+     prediction_updates: true, // Prediction resolution alerts
+     roster_alerts: true,      // Player performance on your roster
+     ```
+   - Keep `email_enabled: false` as default for existing users (don't spam people who signed up before this feature)
+   - For NEW users (sign up after this change), default `email_enabled: true`
+
+4. **Update notification preferences route** (`backend/src/routes/notifications.js`):
+   - `GET /preferences` should return the new categories
+   - `PATCH /preferences` should accept them
+
+**Files:** `backend/src/services/emailService.js`, `backend/src/services/notificationService.js`, `backend/src/routes/notifications.js`
+
+---
+
+### 076 — Post-Draft Engagement: Weekly Tournament Recap Email
+**Status:** `TODO`
+**Priority:** High — Batch C (engagement loop)
+**Depends on:** 075
+**Prompt:**
+
+After each golf tournament completes (Sunday night), send a personalized recap email to every manager who has a league with fantasy scoring for that tournament. This is the #1 engagement driver — it pulls people back into the app on Monday morning.
+
+**What to build:**
+
+1. **Add `sendWeeklyRecapEmail()` to `emailService.js`:**
+   - Branded HTML email template
+   - Content sections:
+     - **Header:** "Week {N} Results — {Tournament Name}" with tournament course image or fallback
+     - **Your Team Score:** Total fantasy points, rank vs league, W/L if H2H
+     - **Top Performer:** Your highest-scoring rostered player (name, points, tournament finish)
+     - **Biggest Mover:** Player who gained the most fantasy points vs last week
+     - **League Standings Snapshot:** Top 3 teams with points (abbreviated table)
+     - **CTA Button:** "View Full Scoreboard" → `/leagues/{leagueId}/scoring`
+   - If user has multiple leagues, send ONE email with sections per league (not separate emails)
+
+2. **Add `generateWeeklyRecapData()` to `fantasyTracker.js`:**
+   - Called after `processCompletedWeeks()` completes
+   - For each league with a completed fantasy week:
+     - Get WeeklyTeamResult for each team
+     - Get top scorer per team (from FantasyScore)
+     - Get league standings (from TeamSeason)
+     - Get H2H matchup result if applicable
+   - Return structured data per user (aggregated across their leagues)
+
+3. **Add cron job in `backend/src/index.js`:**
+   - Schedule: Sunday 11:00 PM ET (`0 23 * * 0` in UTC-5 = `0 4 * * 1` UTC)
+   - Runs AFTER `processCompletedWeeks` (10:30 PM) and prediction resolution (10:15 PM)
+   - Calls `generateWeeklyRecapData()` then loops through users and sends emails
+   - Log: `[WeeklyRecap] Sent {count} recap emails for {tournament}`
+   - Skip users where `email_enabled: false` or `weekly_recap: false`
+
+4. **Add notification record** (type: `WEEKLY_RECAP`):
+   - Also push to Socket.IO so in-app notification shows
+   - actionUrl: `/leagues/{leagueId}/scoring`
+
+**Files:** `backend/src/services/emailService.js`, `backend/src/services/fantasyTracker.js`, `backend/src/index.js`, `backend/src/services/notificationService.js`
+
+---
+
+### 077 — Post-Draft Engagement: Prediction Resolution Notifications
+**Status:** `TODO`
+**Priority:** High — Batch C (engagement loop)
+**Depends on:** 075
+**Prompt:**
+
+When predictions auto-resolve on Sunday night (10:15 PM ET via `predictionService.resolveEventPredictions()`), notify users about their results. This is the "Your call on Scheffler is looking good" loop that Eric specifically wants.
+
+**What to build:**
+
+1. **Add notification dispatch to `predictionService.js` `resolveEventPredictions()`:**
+   - After resolving each user's predictions for a tournament, create a notification:
+     - Type: `PREDICTION_RESOLVED`
+     - If user got majority correct: Title: "Nice Calls! 🎯", Message: "You nailed {correct}/{total} calls for {tournament}. Your accuracy: {pct}%."
+     - If user got majority wrong: Title: "Tough Week", Message: "{correct}/{total} calls landed for {tournament}. Check the results and make new calls."
+     - If mixed: Title: "Results Are In", Message: "{correct}/{total} calls for {tournament}. See how your predictions stacked up."
+     - actionUrl: `/prove-it` (prediction tracking page)
+     - category: `prediction_updates`
+
+2. **Add per-prediction detail to notification data (JSON):**
+   ```javascript
+   data: {
+     tournamentName: 'The Players Championship',
+     correct: 3,
+     total: 5,
+     accuracy: 0.6,
+     highlights: [
+       { playerName: 'Scottie Scheffler', type: 'Top 5', outcome: 'CORRECT' },
+       { playerName: 'Rory McIlroy', type: 'Winner', outcome: 'INCORRECT' },
+     ]
+   }
+   ```
+
+3. **Send email if `prediction_updates: true` AND `email_enabled: true`:**
+   - Use the generic `sendNotificationEmail()` from item 075
+   - Subject: "Your {tournament} Predictions: {correct}/{total} Correct"
+   - Body: Prediction results table + accuracy + link to Prove It page
+   - CTA: "View Results & Make New Calls"
+
+4. **Add new notification type** to the types enum in `notificationService.js`:
+   - `PREDICTION_RESOLVED` with category `prediction_updates`
+
+**Files:** `backend/src/services/predictionService.js`, `backend/src/services/notificationService.js`, `backend/src/services/emailService.js`
+
+---
+
+### 078 — Post-Draft Engagement: Live Tournament Player Alerts (Mid-Round Push)
+**Status:** `TODO`
+**Priority:** Medium — Batch C (engagement loop)
+**Depends on:** 075
+**Prompt:**
+
+During a live tournament (Thursday through Sunday), send push notifications when rostered players have notable performances. This is the "check Clutch on a random Wednesday" killer — except it's Thursday through Sunday when golf is actually happening.
+
+**What to build:**
+
+1. **Add `checkRosterAlerts()` to a new service `backend/src/services/engagementAlerts.js`:**
+   - Called from the existing 5-minute live scoring cron (only when tournament is IN_PROGRESS)
+   - For each active league with a live tournament:
+     - Get all rostered players (from active lineups)
+     - Compare current round performance to thresholds:
+       - **Hot Round Alert:** Player is -4 or better through 9+ holes in current round → "🔥 {Player} is on fire! {score} through {holes} holes"
+       - **Leader Alert:** Rostered player moves into Top 3 overall → "👑 {Player} has moved to {position} at {tournament}"
+       - **Eagle/Hole-in-One Alert:** Player makes eagle or ace → "🦅 {Player} just made eagle on hole {N}!"
+       - **Cut Danger Alert:** Player is projected to miss cut (bottom half after R2) → "⚠️ {Player} is on the cut line at {tournament}"
+   - **Throttling:** Max 1 alert per player per user per 2 hours (use a simple in-memory Map or Redis key). Don't spam.
+   - Only send to users with `roster_alerts: true` in preferences
+
+2. **Notification type:** `ROSTER_PLAYER_ALERT` with category `roster_alerts`
+   - Push notification only (web push + Socket.IO). NOT email (too frequent).
+   - actionUrl: `/leagues/{leagueId}/scoring`
+
+3. **Wire into the live scoring cron** in `index.js`:
+   - After `syncLiveScoring()` completes on Thu-Sun, call `checkRosterAlerts()`
+   - Only runs if there are active leagues with live fantasy weeks
+   - Add error handling so alert failures don't block scoring
+
+4. **State tracking:**
+   - Need to track "last alerted score" per player per user to avoid re-alerting on the same event
+   - Simple approach: in-memory `Map<string, { lastAlertTime, lastScore }>` keyed by `${userId}-${playerId}-${tournamentId}`
+   - Resets when server restarts (acceptable — tournaments are 4 days)
+
+**Files:** `backend/src/services/engagementAlerts.js` (new), `backend/src/index.js`
+
+---
+
+### 079 — Post-Draft Engagement: Draft Recap Email (Post-Completion)
+**Status:** `TODO`
+**Priority:** Medium — Batch C (engagement loop)
+**Prompt:**
+
+When a draft completes, send a branded recap email to all participants with their draft grade and highlights. This bridges the gap between "cool draft experience" and "I should check my league."
+
+**What to build:**
+
+1. **Add `sendDraftRecapEmail()` to `emailService.js`:**
+   - Branded HTML email template
+   - Content:
+     - **Header:** "Draft Complete — {League Name}" with sport emoji
+     - **Your Grade:** Large letter grade (A+ through F) with color
+     - **Grade Summary:** "Your team earned a {grade} with {overallScore}/100"
+     - **Best Pick:** "{Player} at #{pickNumber} — {adpDiff > 0 ? 'Steal!' : 'Solid pick'}"
+     - **Team Overview:** List of all picks with round number and grade
+     - **CTA:** "View Full Draft Recap" → `/leagues/{leagueId}/draft-recap`
+   - Send to each team's user
+
+2. **Trigger in `backend/src/routes/drafts.js`:**
+   - After the existing `DRAFT_COMPLETED` notification fires (when last pick is made)
+   - Call `gradeMockDraft()` or `gradeLeagueDraft()` from `draftGrader.js` to get grades
+   - Then call `sendDraftRecapEmail()` for each team
+   - Fire and forget — don't block the draft completion response
+
+3. **Add notification type:** `DRAFT_RECAP` with category `drafts`
+   - Title: "Your Draft Grade: {grade}"
+   - Message: "Your team earned a {grade} in the {leagueName} draft. See your full recap."
+   - actionUrl: `/leagues/{leagueId}/draft-recap`
+
+**Files:** `backend/src/services/emailService.js`, `backend/src/routes/drafts.js`, `backend/src/services/notificationService.js`
+
+---
+
+### 080 — Post-Draft Engagement: Personalized Coach Briefing Upgrade
+**Status:** `TODO`
+**Priority:** Medium — Batch C (engagement loop)
+**Prompt:**
+
+The AI coach briefing (`GET /api/ai/coach-briefing`) is currently template-based with zero actual personalization. It picks a template based on user state (cold start, activation, live event, draft prep, active insight) but doesn't reference the user's actual roster, predictions, or league standings. Upgrade it to pull real data.
+
+**What to build:**
+
+1. **Enhance the coach briefing endpoint** (`backend/src/routes/ai.js` — find the `GET /coach-briefing` route):
+   - Add data queries for the authenticated user:
+     - Active leagues + current standings position
+     - Upcoming tournament info (if golf)
+     - Number of rostered players in upcoming field
+     - Recent prediction results (last resolved event)
+     - Draft board status (if they have boards)
+   - Use this data to fill template variables instead of generic placeholders
+
+2. **New template types based on real context:**
+   - **"Your Players This Week"**: "{count} of your rostered players are in the field at {tournament}. {topPlayer} is ranked #{rank} in the field."
+   - **"League Update"**: "You're currently {position}{suffix} in {leagueName} with {points} points. {gap} points behind the leader."
+   - **"Prediction Check"**: "You went {correct}/{total} last week. Your accuracy is {pct}% — {tierMessage}."
+   - **"Waiver Wire"**: "{count} unrostered players are in this week's field. {topFreeAgent} (ranked #{rank}) is available."
+   - Keep existing templates as fallbacks for users with no active data
+
+3. **Caching:** Cache briefing per user for 1 hour (avoid recomputing on every page load). Use a simple in-memory cache or short-lived DB/Redis entry. Clear on relevant events (prediction resolved, week scored, etc.)
+
+**Files:** `backend/src/routes/ai.js` (coach-briefing endpoint), possibly `backend/src/services/coachBriefingService.js` (new, if the logic gets complex enough to extract)
+
+---
+
+### 081 — Frontend: Notification Preferences UI
+**Status:** `TODO`
+**Priority:** Medium — Batch C (engagement loop)
+**Depends on:** 075
+**Prompt:**
+
+Users need to be able to control their notification preferences from the Profile page. Currently the Profile page has no notification settings section.
+
+**What to build:**
+
+1. **Add "Notifications" section to `frontend/src/pages/Profile.jsx`:**
+   - Section header: "Notification Preferences"
+   - Toggle switches for each category:
+     - Email notifications (master toggle) — `email_enabled`
+     - Weekly tournament recaps — `weekly_recap`
+     - Prediction results — `prediction_updates`
+     - Roster player alerts — `roster_alerts`
+     - Trade notifications — `trades`
+     - Waiver results — `waivers`
+     - Draft alerts — `drafts`
+     - League activity — `league_activity`
+     - Chat mentions — `chat`
+   - When `email_enabled` is off, grey out and disable the email-specific toggles (weekly_recap, prediction_updates)
+   - Push notification toggle — `push_enabled`
+   - Save on toggle change (optimistic UI with PATCH to `/api/notifications/preferences`)
+   - Load current preferences on mount from `GET /api/notifications/preferences`
+
+2. **Styling:** Use the existing toggle component pattern from Profile page (if one exists) or create a simple toggle switch. Dark/light mode aware. Use Clutch brand colors.
+
+3. **Add "Manage Preferences" link** to the email footer template (from item 075) that deep-links to this section: `${FRONTEND_URL}/profile#notifications`
+
+**Files:** `frontend/src/pages/Profile.jsx`
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

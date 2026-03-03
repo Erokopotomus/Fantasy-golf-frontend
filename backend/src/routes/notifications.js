@@ -8,6 +8,7 @@ const prisma = require('../lib/prisma.js')
 const ALLOWED_PREF_KEYS = [
   'trades', 'waivers', 'drafts', 'roster_moves',
   'league_activity', 'scores', 'chat',
+  'weekly_recap', 'prediction_updates', 'roster_alerts',
   'push_enabled', 'email_enabled',
 ]
 
