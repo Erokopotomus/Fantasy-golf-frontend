@@ -753,6 +753,12 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
               }
             }
           }
+          // Evaluate achievements for all drafters
+          for (const tg of grades) {
+            if (tg.userId) {
+              require('../services/achievementEngine').evaluateUser(tg.userId).catch(() => {})
+            }
+          }
         } catch (err) {
           console.error('[draftRecap] Grade + email failed:', err.message)
         }

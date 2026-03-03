@@ -1060,6 +1060,19 @@ httpServer.listen(PORT, () => {
     console.log('[Cron] Intelligence profile regeneration scheduled (Wed 4 AM)')
   }
 
+  // ── Achievement Engine ──
+  cron.schedule('0 4 * * *', async () => {
+    console.log(`[Cron:achievements] ${new Date().toISOString()} — Evaluating all users`)
+    try {
+      const { evaluateAll } = require('./services/achievementEngine')
+      const count = await evaluateAll()
+      console.log(`[Cron:achievements] Done: ${count} new unlocks`)
+    } catch (err) {
+      console.error(`[Cron:achievements] Error:`, err.message)
+    }
+  }, { timezone: 'America/New_York' })
+  console.log('[Cron] Achievement engine scheduled (daily 4 AM)')
+
   // ── Phase 6C: Daily AI Insight Pipeline ──
   {
     const aiInsightPipeline = require('./services/aiInsightPipeline')

@@ -2795,7 +2795,8 @@ Section title: "Rating Journey" with a small info tooltip "Your Clutch Rating tr
 ---
 
 ### 085 — Manager Leaderboard Page (Phase 5D)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Created ManagerLeaderboard.jsx page with sport filter pills, sort dropdown, Hot Right Now cards, desktop table with rank medals + own-row highlight, mobile card layout. Enhanced leaderboard endpoint with sortBy param + clutchRating/tier data. Added route + API method. Files: ManagerLeaderboard.jsx (new), managerAnalytics.js, api.js, App.jsx
 **Priority:** High — Social feature, drives engagement before draft
 **Prompt:**
 
@@ -2828,7 +2829,8 @@ Create a new page `frontend/src/pages/ManagerLeaderboard.jsx` at route `/leaderb
 ---
 
 ### 086 — Achievement Unlock Engine (Phase 5E foundation)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Created achievementEngine.js with evaluateUser(), evaluateAll(), checkCriteria() (12 criteria types), getProgress() for progress bars. Daily 4AM cron. Event triggers in drafts.js (draft complete), predictionService.js (resolution), trades.js (trade accepted). Files: achievementEngine.js (new), index.js, drafts.js, predictionService.js, trades.js
 **Priority:** Medium — Backend logic, no UI needed yet
 **Prompt:**
 
@@ -2956,7 +2958,8 @@ Just add `const { evaluateUser } = require('../services/achievementEngine')` and
 ---
 
 ### 087 — Badge Showcase + Achievement Progress UI (Phase 5E frontend)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Enhanced achievements endpoint to return progress data (current/target/pct). Added progress bars on unearned achievements, "New!" banner for recent unlocks (7-day), Featured Badges strip below header. Files: managerAnalytics.js, ManagerProfile.jsx
 **Priority:** Medium — Visual polish for manager profiles
 **Prompt:**
 
@@ -2989,7 +2992,8 @@ This does NOT require user selection of which badges to feature — just auto-se
 ---
 
 ### 088 — Nav Link: Leaderboard + Profile Quick Access
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added Leaderboard to top nav bar (desktop + mobile), My Profile + Leaderboard to user dropdown menu. Files: Navbar.jsx
 **Priority:** Medium — Discoverability
 **Prompt:**
 
@@ -3008,7 +3012,8 @@ Wire up navigation for the new Leaderboard page and improve profile access.
 ---
 
 ### 089 — Verified Badge + Quick Stats Bar (Phase 5A final polish)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added blue verified badge (shield checkmark) for admin users next to name. Enhanced quick stats bar from 4 to 5 metrics (added Predictions count + Clutch Rating). Files: ManagerProfile.jsx
 **Priority:** Low — Polish items
 **Prompt:**
 

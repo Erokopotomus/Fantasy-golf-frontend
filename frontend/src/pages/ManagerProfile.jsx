@@ -155,7 +155,16 @@ const AchievementBadge = ({ achievement, editing, isPinned, onTogglePin }) => {
         <div className="text-2xl mb-1">{achievement.icon || '?'}</div>
         <p className="text-xs font-medium text-text-primary truncate">{achievement.name}</p>
         <p className="text-[10px] text-text-muted mt-0.5 capitalize">{achievement.tier?.toLowerCase()}</p>
-        {!unlocked && (
+        {/* Progress bar for unearned achievements */}
+        {!unlocked && achievement.progress && achievement.progress.pct < 100 && (
+          <div className="mt-1.5">
+            <div className="h-1 bg-[var(--stone)] rounded-full overflow-hidden">
+              <div className="h-full bg-blaze/60 rounded-full" style={{ width: `${achievement.progress.pct}%` }} />
+            </div>
+            <p className="text-[9px] text-text-muted mt-0.5 font-mono">{achievement.progress.current}/{achievement.progress.target}</p>
+          </div>
+        )}
+        {!unlocked && !achievement.progress && (
           <div className="absolute inset-0 flex items-center justify-center">
             <svg className="w-5 h-5 text-text-muted" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
@@ -482,6 +491,13 @@ const ManagerProfile = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold font-display text-text-primary truncate">{user?.name || 'Manager'}</h1>
+                {user?.role === 'admin' && (
+                  <span className="shrink-0" title="Verified Clutch Member">
+                    <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </span>
+                )}
                 {effectivePinnedBadges.length > 0 && (
                   <span className="flex items-center gap-1 ml-1">
                     {effectivePinnedBadges.slice(0, 3).map((badge, i) => (
@@ -673,13 +689,42 @@ const ManagerProfile = () => {
           )}
 
           {/* Quick stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
             <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
-            <StatBox label="Wins" value={formatNum(p.wins)} color="text-crown" />
-            <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
             <StatBox label="Win %" value={formatPct(p.winPct)} />
+            <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
+            <StatBox label="Predictions" value={predictionStats?.overall?.total != null ? formatNum(predictionStats.overall.total) : '-'} />
+            <StatBox label="Clutch Rating" value={clutchRating?.overall != null ? Math.round(clutchRating.overall) : '-'} color="text-crown" />
           </div>
         </Card>
+
+        {/* Featured Badges */}
+        {(() => {
+          const tierOrder = { PLATINUM: 0, GOLD: 1, SILVER: 2, BRONZE: 3 }
+          const earned = achievements.filter(a => a.unlocked).sort((a, b) => (tierOrder[a.tier] ?? 99) - (tierOrder[b.tier] ?? 99))
+          if (earned.length === 0) return null
+          return (
+            <div className="flex items-center gap-2 flex-wrap mb-4">
+              <span className="text-xs text-text-muted font-medium uppercase tracking-wider mr-1">Badges</span>
+              {earned.slice(0, 4).map(a => (
+                <span
+                  key={a.id}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${
+                    TIER_BG[a.tier] || 'bg-[var(--bg-alt)]'
+                  }`}
+                  style={{ borderColor: TIER_COLORS[a.tier] || '#444' }}
+                  title={a.description}
+                >
+                  <span>{a.icon || '?'}</span>
+                  <span className="text-text-primary">{a.name}</span>
+                </span>
+              ))}
+              {earned.length > 4 && (
+                <span className="text-[10px] text-text-muted font-mono">+{earned.length - 4} more</span>
+              )}
+            </div>
+          )
+        })()}
 
         {/* Clutch Rating Breakdown — V2 7-component view */}
         {!(clutchRating && clutchRating.overall != null) && (
@@ -1148,6 +1193,31 @@ const ManagerProfile = () => {
                     </p>
                   </div>
                 )}
+
+                {/* Recent Unlocks Banner */}
+                {(() => {
+                  const sevenDaysAgo = Date.now() - 7 * 86400000
+                  const recentUnlocks = achievements.filter(a => a.unlocked && a.unlockedAt && new Date(a.unlockedAt).getTime() > sevenDaysAgo)
+                  if (recentUnlocks.length === 0) return null
+                  return (
+                    <div className="mb-6 rounded-lg border-2 border-crown/40 bg-crown/5 p-3">
+                      <p className="text-xs font-bold text-crown uppercase tracking-wider mb-2">New!</p>
+                      <div className="flex gap-3 overflow-x-auto">
+                        {recentUnlocks.map(a => (
+                          <div key={a.id} className="flex items-center gap-2 shrink-0">
+                            <span className="text-xl">{a.icon || '?'}</span>
+                            <div>
+                              <p className="text-xs font-medium text-text-primary">{a.name}</p>
+                              <p className="text-[10px] text-text-muted">
+                                Unlocked {Math.ceil((Date.now() - new Date(a.unlockedAt).getTime()) / 86400000)}d ago
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Achievement Categories */}
                 {Object.entries(achievementsByCategory).map(([category, items]) => (

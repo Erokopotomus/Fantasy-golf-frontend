@@ -255,24 +255,33 @@ router.get('/:id/achievements', optionalAuth, async (req, res, next) => {
     })
     const unlockMap = new Map(unlocks.map(u => [u.achievementId, u]))
 
-    const achievements = allAchievements
-      .filter(a => !a.isHidden || unlockMap.has(a.id)) // hide hidden unless unlocked
-      .map(a => {
-        const unlock = unlockMap.get(a.id)
-        return {
-          id: a.id,
-          slug: a.slug,
-          name: a.name,
-          description: a.description,
-          tier: a.tier,
-          icon: a.icon,
-          category: a.category,
-          isHidden: a.isHidden,
-          unlocked: !!unlock,
-          unlockedAt: unlock?.unlockedAt || null,
-          context: unlock?.context || null,
-        }
+    // Load profile for progress computation
+    const profile = await prisma.managerProfile.findFirst({ where: { userId, sportId: null } })
+    const { getProgress } = require('../services/achievementEngine')
+
+    const achievements = []
+    for (const a of allAchievements) {
+      if (a.isHidden && !unlockMap.has(a.id)) continue
+      const unlock = unlockMap.get(a.id)
+      let progress = null
+      if (!unlock && a.criteria?.threshold) {
+        progress = await getProgress(userId, a.criteria, profile).catch(() => null)
+      }
+      achievements.push({
+        id: a.id,
+        slug: a.slug,
+        name: a.name,
+        description: a.description,
+        tier: a.tier,
+        icon: a.icon,
+        category: a.category,
+        isHidden: a.isHidden,
+        unlocked: !!unlock,
+        unlockedAt: unlock?.unlockedAt || null,
+        context: unlock?.context || null,
+        progress,
       })
+    }
 
     const stats = {
       total: allAchievements.filter(a => !a.isHidden).length,
@@ -299,9 +308,9 @@ router.get('/:id/achievements', optionalAuth, async (req, res, next) => {
 
 // ─── GET /api/managers/leaderboard ──────────────────────────────────────────
 // Manager power rankings
-router.get('/leaderboard/rankings', authenticate, async (req, res, next) => {
+router.get('/leaderboard/rankings', optionalAuth, async (req, res, next) => {
   try {
-    const { sport, limit = 25 } = req.query
+    const { sport, limit = 25, sortBy = 'championships' } = req.query
 
     let sportId = null
     if (sport) {
@@ -309,47 +318,73 @@ router.get('/leaderboard/rankings', authenticate, async (req, res, next) => {
       sportId = s?.id || null
     }
 
+    // Dynamic sort
+    const sortMap = {
+      championships: [{ championships: 'desc' }, { winPct: 'desc' }],
+      winPct: [{ winPct: 'desc' }, { wins: 'desc' }],
+      totalPoints: [{ totalPoints: 'desc' }],
+      draftEfficiency: [{ draftEfficiency: 'desc' }],
+      avgFinish: [{ avgFinish: 'asc' }],
+    }
+    const orderBy = sortMap[sortBy] || sortMap.championships
+
     const profiles = await prisma.managerProfile.findMany({
       where: {
         ...(sportId ? { sportId } : { sportId: null }),
         totalLeagues: { gt: 0 },
       },
       include: {
-        user: { select: { id: true, name: true, avatar: true } },
+        user: { select: { id: true, name: true, avatar: true, username: true } },
       },
-      orderBy: [
-        { championships: 'desc' },
-        { winPct: 'desc' },
-        { totalPoints: 'desc' },
-      ],
+      orderBy,
       take: parseInt(limit),
     })
 
-    // Add achievement counts
     const userIds = profiles.map(p => p.userId)
-    const achievementCounts = await prisma.achievementUnlock.groupBy({
-      by: ['userId'],
-      where: { userId: { in: userIds } },
-      _count: true,
-    })
-    const achMap = new Map(achievementCounts.map(a => [a.userId, a._count]))
 
-    const leaderboard = profiles.map((p, i) => ({
-      rank: i + 1,
-      user: p.user,
-      championships: p.championships,
-      wins: p.wins,
-      losses: p.losses,
-      ties: p.ties,
-      winPct: p.winPct,
-      avgFinish: p.avgFinish,
-      bestFinish: p.bestFinish,
-      totalPoints: p.totalPoints,
-      totalLeagues: p.totalLeagues,
-      totalSeasons: p.totalSeasons,
-      draftEfficiency: p.draftEfficiency,
-      achievementCount: achMap.get(p.userId) || 0,
-    }))
+    // Batch fetch achievement counts + clutch ratings
+    const [achievementCounts, ratings] = await Promise.all([
+      prisma.achievementUnlock.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds } },
+        _count: true,
+      }),
+      prisma.clutchManagerRating.findMany({
+        where: { userId: { in: userIds } },
+        select: { userId: true, overallRating: true, tier: true, trend: true },
+      }),
+    ])
+    const achMap = new Map(achievementCounts.map(a => [a.userId, a._count]))
+    const ratingMap = new Map(ratings.map(r => [r.userId, r]))
+
+    let leaderboard = profiles.map((p, i) => {
+      const rating = ratingMap.get(p.userId)
+      return {
+        rank: i + 1,
+        user: p.user,
+        championships: p.championships,
+        wins: p.wins,
+        losses: p.losses,
+        ties: p.ties,
+        winPct: p.winPct,
+        avgFinish: p.avgFinish,
+        bestFinish: p.bestFinish,
+        totalPoints: p.totalPoints,
+        totalLeagues: p.totalLeagues,
+        totalSeasons: p.totalSeasons,
+        draftEfficiency: p.draftEfficiency,
+        achievementCount: achMap.get(p.userId) || 0,
+        clutchRating: rating?.overallRating || null,
+        ratingTier: rating?.tier || null,
+        ratingTrend: rating?.trend || null,
+      }
+    })
+
+    // If sorting by clutchRating, re-sort since it wasn't in the DB query
+    if (sortBy === 'clutchRating') {
+      leaderboard.sort((a, b) => (b.clutchRating || 0) - (a.clutchRating || 0))
+      leaderboard.forEach((entry, i) => { entry.rank = i + 1 })
+    }
 
     res.json({ leaderboard })
   } catch (error) {

@@ -312,6 +312,15 @@ async function resolveEventPredictions(eventId, resolverFn, prisma) {
     console.error('[predictionService] Notification dispatch failed:', err.message)
   }
 
+  // Evaluate achievements for affected users
+  try {
+    const { evaluateUser } = require('./achievementEngine')
+    const affectedUsers = [...new Set(results.map(r => r.userId).filter(Boolean))]
+    for (const uid of affectedUsers) {
+      evaluateUser(uid).catch(() => {})
+    }
+  } catch (e) { /* achievement engine may not be available */ }
+
   return results
 }
 

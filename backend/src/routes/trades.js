@@ -448,6 +448,11 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
     const io = req.app.get('io')
     io.to(`league-${trade.leagueId}`).emit('trade-accepted', { tradeId: trade.id })
 
+    // Achievement check for both parties
+    const { evaluateUser } = require('../services/achievementEngine')
+    evaluateUser(trade.initiatorId).catch(() => {})
+    evaluateUser(trade.recipientId).catch(() => {})
+
     res.json({ message: 'Trade accepted' })
   } catch (error) {
     next(error)

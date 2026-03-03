@@ -40,6 +40,7 @@ import LeagueSettings from './pages/LeagueSettings'
 import TeamSettings from './pages/TeamSettings'
 import News from './pages/News'
 import ManagerProfile from './pages/ManagerProfile'
+import ManagerLeaderboard from './pages/ManagerLeaderboard'
 import MockDraft from './pages/MockDraft'
 import MockDraftRoom from './pages/MockDraftRoom'
 import DraftHistory from './pages/DraftHistory'
@@ -517,6 +518,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/leaderboard" element={<ManagerLeaderboard />} />
           {/* Mock Draft routes */}
           <Route
             path="/mock-draft"
