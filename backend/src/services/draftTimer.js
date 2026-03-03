@@ -1,5 +1,7 @@
 const prisma = require('../lib/prisma.js')
 const { recordTransaction } = require('./fantasyTracker')
+const { initializeLeagueSeason } = require('./seasonSetup')
+const { createNotification, notifyLeague } = require('./notificationService')
 
 // In-memory timers for auto-pick on timeout
 const activeTimers = new Map() // draftId -> timeoutId
@@ -140,6 +142,10 @@ async function executeAutoPick(draftId, io) {
         where: { id: draft.leagueId },
         data: { status: 'ACTIVE' }
       })
+
+      // Fire-and-forget: initialize season records (LeagueSeason, TeamSeason, Matchups, Budgets)
+      initializeLeagueSeason(draft.leagueId, prisma)
+        .catch(err => console.error('[AutoPick] Season setup failed:', err.message))
     }
 
     const pickDeadline = isComplete ? null : new Date(Date.now() + (draft.timePerPick * 1000)).toISOString()
@@ -156,6 +162,26 @@ async function executeAutoPick(draftId, io) {
       nextDrafterTeamId = nextDrafter?.teamId || null
     }
 
+    // Notify next drafter it's their turn
+    if (!isComplete && nextDrafterTeamId) {
+      try {
+        const nextTeam = await prisma.team.findUnique({
+          where: { id: nextDrafterTeamId },
+          select: { userId: true },
+        })
+        if (nextTeam) {
+          createNotification({
+            userId: nextTeam.userId,
+            type: 'DRAFT_YOUR_TURN',
+            title: "It's Your Turn!",
+            message: `It's your turn to pick in the draft (Round ${newRound}, Pick ${newPickNumber})`,
+            actionUrl: `/leagues/${draft.leagueId}/draft`,
+            data: { draftId: draft.id, leagueId: draft.leagueId },
+          }, prisma).catch(err => console.error('[AutoPick] Your turn notification failed:', err.message))
+        }
+      } catch (err) { console.error('[AutoPick] Your turn notification failed:', err.message) }
+    }
+
     // Emit events
     io.to(`draft-${draftId}`).emit('draft-pick', {
       pick,
@@ -169,6 +195,74 @@ async function executeAutoPick(draftId, io) {
 
     if (isComplete) {
       io.to(`draft-${draftId}`).emit('draft-completed', { draftId })
+
+      // Notify league that draft is complete
+      try {
+        notifyLeague(draft.leagueId, {
+          type: 'DRAFT_COMPLETED',
+          title: 'Draft Complete!',
+          message: `The draft for your league is complete. Good luck this season!`,
+          actionUrl: `/leagues/${draft.leagueId}`,
+          data: { draftId: draft.id, leagueId: draft.leagueId },
+        }, [], prisma).catch(err => console.error('[AutoPick] Draft completed notification failed:', err.message))
+      } catch (err) { console.error('[AutoPick] Draft completed notification failed:', err.message) }
+
+      // Fire-and-forget: grade draft and send recap emails/notifications
+      ;(async () => {
+        try {
+          const { gradeLeagueDraft } = require('./draftGrader')
+          const emailService = require('./emailService')
+          const grades = await gradeLeagueDraft(draft.id, prisma)
+
+          const league = await prisma.league.findUnique({
+            where: { id: draft.leagueId },
+            include: { sport: { select: { name: true } } },
+          })
+
+          for (const teamGrade of grades) {
+            if (!teamGrade.userId) continue
+
+            // In-app notification
+            await createNotification({
+              userId: teamGrade.userId,
+              type: 'DRAFT_RECAP',
+              title: `Your Draft Grade: ${teamGrade.overallGrade}`,
+              message: `Your team earned a ${teamGrade.overallGrade} in the ${league?.name || 'league'} draft. See your full recap.`,
+              actionUrl: `/leagues/${draft.leagueId}/draft-recap`,
+              category: 'drafts',
+            }, prisma).catch(() => {})
+
+            // Email (check prefs)
+            if (emailService.isConfigured) {
+              const user = await prisma.user.findUnique({
+                where: { id: teamGrade.userId },
+                select: { email: true, notificationPreferences: true },
+              })
+              const prefs = user?.notificationPreferences || {}
+              if (user?.email && prefs.email_enabled === true && prefs.drafts !== false) {
+                emailService.sendDraftRecapEmail({
+                  to: user.email,
+                  leagueName: league?.name || 'Your League',
+                  sportName: league?.sport?.name || 'Fantasy',
+                  grade: teamGrade.overallGrade,
+                  overallScore: teamGrade.overallScore,
+                  bestPick: teamGrade.bestPick,
+                  picks: teamGrade.pickGrades,
+                  leagueId: draft.leagueId,
+                }).catch(err => console.error('[AutoPick] Draft recap email failed:', err.message))
+              }
+            }
+          }
+          // Evaluate achievements for all drafters
+          for (const tg of grades) {
+            if (tg.userId) {
+              require('./achievementEngine').evaluateUser(tg.userId).catch(() => {})
+            }
+          }
+        } catch (err) {
+          console.error('[AutoPick] Grade + email failed:', err.message)
+        }
+      })()
     } else {
       // Schedule next auto-pick
       scheduleAutoPick(draftId, pickDeadline, io)
@@ -399,6 +493,10 @@ async function awardPlayer(draftId, io) {
         where: { id: draft.leagueId },
         data: { status: 'ACTIVE' }
       })
+
+      // Fire-and-forget: initialize season records (LeagueSeason, TeamSeason, Matchups, Budgets)
+      initializeLeagueSeason(draft.leagueId, prisma)
+        .catch(err => console.error('[Auction] Season setup failed:', err.message))
     }
 
     // Emit award event
@@ -425,6 +523,75 @@ async function awardPlayer(draftId, io) {
     if (isComplete) {
       io.to(`draft-${draftId}`).emit('draft-completed', { draftId })
       clearAuctionState(draftId)
+
+      // Notify league that draft is complete
+      try {
+        notifyLeague(draft.leagueId, {
+          type: 'DRAFT_COMPLETED',
+          title: 'Draft Complete!',
+          message: `The draft for your league is complete. Good luck this season!`,
+          actionUrl: `/leagues/${draft.leagueId}`,
+          data: { draftId: draftId, leagueId: draft.leagueId },
+        }, [], prisma).catch(err => console.error('[Auction] Draft completed notification failed:', err.message))
+      } catch (err) { console.error('[Auction] Draft completed notification failed:', err.message) }
+
+      // Fire-and-forget: grade draft and send recap emails/notifications
+      ;(async () => {
+        try {
+          const { gradeLeagueDraft } = require('./draftGrader')
+          const emailService = require('./emailService')
+          const grades = await gradeLeagueDraft(draftId, prisma)
+
+          const leagueData = await prisma.league.findUnique({
+            where: { id: draft.leagueId },
+            include: { sport: { select: { name: true } } },
+          })
+
+          for (const teamGrade of grades) {
+            if (!teamGrade.userId) continue
+
+            // In-app notification
+            await createNotification({
+              userId: teamGrade.userId,
+              type: 'DRAFT_RECAP',
+              title: `Your Draft Grade: ${teamGrade.overallGrade}`,
+              message: `Your team earned a ${teamGrade.overallGrade} in the ${leagueData?.name || 'league'} draft. See your full recap.`,
+              actionUrl: `/leagues/${draft.leagueId}/draft-recap`,
+              category: 'drafts',
+            }, prisma).catch(() => {})
+
+            // Email (check prefs)
+            if (emailService.isConfigured) {
+              const user = await prisma.user.findUnique({
+                where: { id: teamGrade.userId },
+                select: { email: true, notificationPreferences: true },
+              })
+              const prefs = user?.notificationPreferences || {}
+              if (user?.email && prefs.email_enabled === true && prefs.drafts !== false) {
+                emailService.sendDraftRecapEmail({
+                  to: user.email,
+                  leagueName: leagueData?.name || 'Your League',
+                  sportName: leagueData?.sport?.name || 'Fantasy',
+                  grade: teamGrade.overallGrade,
+                  overallScore: teamGrade.overallScore,
+                  bestPick: teamGrade.bestPick,
+                  picks: teamGrade.pickGrades,
+                  leagueId: draft.leagueId,
+                }).catch(err => console.error('[Auction] Draft recap email failed:', err.message))
+              }
+            }
+          }
+          // Evaluate achievements for all drafters
+          for (const tg of grades) {
+            if (tg.userId) {
+              require('./achievementEngine').evaluateUser(tg.userId).catch(() => {})
+            }
+          }
+        } catch (err) {
+          console.error('[Auction] Grade + email failed:', err.message)
+        }
+      })()
+
       return
     }
 
