@@ -45,6 +45,7 @@ const intelligenceRoutes = require('./routes/intelligence')
 const aiRoutes = require('./routes/ai')
 const customImportRoutes = require('./routes/customImport')
 const errorRoutes = require('./routes/errors')
+const coachMemoryRoutes = require('./routes/coachMemory')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -153,6 +154,7 @@ app.use('/api/intelligence', intelligenceRoutes)
 app.use('/api/ai', aiRoutes)
 app.use('/api/import/custom', customImportRoutes)
 app.use('/api/errors', errorRoutes)
+app.use('/api/coach', coachMemoryRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -1059,6 +1061,18 @@ httpServer.listen(PORT, () => {
 
     console.log('[Cron] Intelligence profile regeneration scheduled (Wed 4 AM)')
   }
+
+  // ── Coaching Memory Writer (after Pattern Engine at 4 AM) ──
+  // Wednesday 4:30 AM ET — Coaching Memory Writer
+  cron.schedule('30 4 * * 3', async () => {
+    cronLog('memoryWriter', 'Starting coaching memory writer')
+    try {
+      const { runMemoryWriter } = require('./services/coachingMemoryWriter')
+      const result = await runMemoryWriter()
+      cronLog('memoryWriter', `Done: ${result.updatedDocs || 0} docs for ${result.usersProcessed} users (${result.errors} errors)`)
+    } catch (e) { cronLog('memoryWriter', `Error: ${e.message}`) }
+  }, { timezone: 'America/New_York' })
+  console.log('[Cron] Coaching memory writer scheduled (Wed 4:30 AM)')
 
   // ── Achievement Engine ──
   cron.schedule('0 4 * * *', async () => {
