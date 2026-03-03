@@ -115,7 +115,13 @@ export default function PredictionCell({
             ? (isPos ? ACTIVE_STYLES.pos : ACTIVE_STYLES.neg)
             : (isPos ? IDLE_STYLES.pos : IDLE_STYLES.neg)
 
-          return (
+          return [
+            // SG benchmark between the two buttons
+            i === 1 && sgLabel && (
+              <span key="sg-val" className="text-[10px] font-mono font-semibold text-text-primary/60 px-0.5 shrink-0">
+                {sgLabel}
+              </span>
+            ),
             <button
               key={dir}
               type="button"
@@ -133,16 +139,10 @@ export default function PredictionCell({
               ].join(' ')}
             >
               {label}
-            </button>
-          )
+            </button>,
+          ]
         })}
       </div>
-      {/* SG benchmark below buttons */}
-      {sgLabel && (
-        <div className="text-[9px] font-mono text-text-primary/30 leading-none mt-0.5 text-center">
-          {sgLabel}
-        </div>
-      )}
     </td>
   )
 }
