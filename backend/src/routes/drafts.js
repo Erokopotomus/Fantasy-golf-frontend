@@ -728,7 +728,7 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
               type: 'DRAFT_RECAP',
               title: `Your Draft Grade: ${teamGrade.overallGrade}`,
               message: `Your team earned a ${teamGrade.overallGrade} in the ${league?.name || 'league'} draft. See your full recap.`,
-              actionUrl: `/leagues/${draft.leagueId}/draft-recap`,
+              actionUrl: `/draft/history/${draft.id}`,
               category: 'drafts',
             }, prisma).catch(() => {})
 

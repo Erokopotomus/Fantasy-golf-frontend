@@ -11,6 +11,7 @@ import DraftBoard from '../components/draft/DraftBoard'
 import DraftDashboard from '../components/draft/DraftDashboard'
 import BidPanel from '../components/draft/BidPanel'
 import PickAnnouncement from '../components/draft/PickAnnouncement'
+import DraftCompletionOverlay from '../components/draft/DraftCompletionOverlay'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
 import Card from '../components/common/Card'
 import api from '../services/api'
@@ -55,6 +56,29 @@ const DraftRoomContent = () => {
   const [chatInput, setChatInput] = useState('')
   const chatEndRef = useRef(null)
   const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
+
+  // Draft completion celebration overlay
+  const [showCompletionOverlay, setShowCompletionOverlay] = useState(false)
+  const prevDraftStatusRef = useRef(null)
+  const completionShownRef = useRef(false)
+
+  // Detect live IN_PROGRESS -> COMPLETED transition (not page refresh of completed draft)
+  useEffect(() => {
+    const currentStatus = draft?.status
+    const prevStatus = prevDraftStatusRef.current
+
+    if (
+      prevStatus &&
+      prevStatus !== 'COMPLETED' &&
+      currentStatus === 'COMPLETED' &&
+      !completionShownRef.current
+    ) {
+      completionShownRef.current = true
+      setShowCompletionOverlay(true)
+    }
+
+    prevDraftStatusRef.current = currentStatus
+  }, [draft?.status])
 
   // Board integration
   const [boards, setBoards] = useState([])
@@ -458,6 +482,14 @@ const DraftRoomContent = () => {
       <PickAnnouncement
         pick={recentPick}
         isUserPick={recentPick?.teamId === draft?.userTeamId}
+      />
+
+      {/* Draft Completion Celebration */}
+      <DraftCompletionOverlay
+        draftId={draft?.id}
+        leagueId={league?.id || leagueId}
+        leagueName={league?.name}
+        visible={showCompletionOverlay}
       />
     </div>
   )
