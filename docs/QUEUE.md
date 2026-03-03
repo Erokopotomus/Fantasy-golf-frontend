@@ -2656,6 +2656,43 @@ Users need to be able to control their notification preferences from the Profile
 
 ---
 
+### 082 — Admin Error Dashboard Tab + Summary Endpoint Fix
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Committed Cowork's admin error dashboard tab (summary cards, severity bars, top endpoints, recent errors table with expand/resolve/filter/pagination), 4 API methods, BigInt + groupBy fixes. Files: AdminDashboard.jsx, api.js, errors.js
+**Priority:** High — admin visibility for friend testing
+**Prompt:**
+
+The error capture system is live (AppError model, batch endpoint, frontend capture service) but there's no admin UI to view errors, and the summary endpoint has a BigInt serialization bug. Both are fixed in Cowork's edits — commit and deploy.
+
+**Changes already made by Cowork (commit these):**
+
+1. **`frontend/src/services/api.js`** — Added 4 new API methods:
+   - `getErrorSummary()` → `GET /errors/summary`
+   - `getErrorRecent(params)` → `GET /errors/recent` with query params
+   - `resolveError(errorId)` → `PATCH /errors/:id/resolve`
+   - `resolveBulkErrors(data)` → `POST /errors/resolve-bulk`
+
+2. **`frontend/src/pages/AdminDashboard.jsx`** — Added "Errors" tab (5th tab, between Tournaments and AI Engine):
+   - Summary cards: Last 24h, Last 7d, Unresolved, Affected Users
+   - Severity breakdown: horizontal bar chart (high=red, medium=gold, low=gray)
+   - Top Failing Endpoints: ranked list with status badges + "resolve" bulk action per endpoint
+   - Error Type Breakdown: clickable filter pills (api_error, js_error, component_crash, etc.)
+   - Recent Errors Table: severity badge, type, message (truncated), URL, relative time, resolve button
+   - Expandable row detail: category, userId, sessionId, viewport, full metadata JSON, user agent
+   - Filters: resolved/unresolved, severity, type
+   - Pagination (25 per page)
+   - Tab badge shows unresolved count
+   - Uses `Fragment` from React for keyed table row groups
+   - `timeAgo()` helper for relative timestamps
+
+3. **`backend/src/routes/errors.js`** — Two fixes:
+   - `COUNT(*)` → `COUNT(*)::int` in topEndpoints raw SQL (BigInt → int cast fixes JSON serialization crash)
+   - `s._count` → `s._count?._all || s._count` in bySeverity/byType reducers (Prisma groupBy returns `{ _all: N }` object)
+
+**Files:** `frontend/src/services/api.js`, `frontend/src/pages/AdminDashboard.jsx`, `backend/src/routes/errors.js`
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

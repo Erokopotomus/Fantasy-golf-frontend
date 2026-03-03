@@ -59,7 +59,7 @@ router.get('/summary', authenticate, requireAdmin, async (req, res) => {
         orderBy: { _count: { type: 'desc' } },
       }),
       prisma.$queryRaw`
-        SELECT metadata->>'endpoint' as endpoint, metadata->>'status' as status, COUNT(*) as count
+        SELECT metadata->>'endpoint' as endpoint, metadata->>'status' as status, COUNT(*)::int as count
         FROM "AppError"
         WHERE type = 'api_error' AND "createdAt" > ${sevenDaysAgo}
         AND metadata->>'endpoint' IS NOT NULL
@@ -80,8 +80,8 @@ router.get('/summary', authenticate, requireAdmin, async (req, res) => {
       last7d,
       unresolvedCount,
       affectedUserCount: affectedUsers.length,
-      bySeverity: bySeverity.reduce((acc, s) => ({ ...acc, [s.severity]: s._count }), {}),
-      byType: byType.map(t => ({ type: t.type, count: t._count })),
+      bySeverity: bySeverity.reduce((acc, s) => ({ ...acc, [s.severity]: s._count?._all || s._count }), {}),
+      byType: byType.map(t => ({ type: t.type, count: t._count?._all || t._count })),
       topEndpoints,
     })
   } catch (error) {

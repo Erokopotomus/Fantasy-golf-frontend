@@ -977,6 +977,28 @@ class ApiService {
     return this.request('/admin/ai-spend')
   }
 
+  // Error Dashboard (Admin)
+  async getErrorSummary() {
+    return this.request('/errors/summary')
+  }
+
+  async getErrorRecent(params = {}) {
+    const filtered = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''))
+    const qs = new URLSearchParams(filtered).toString()
+    return this.request(`/errors/recent${qs ? '?' + qs : ''}`)
+  }
+
+  async resolveError(errorId) {
+    return this.request(`/errors/${errorId}/resolve`, { method: 'PATCH' })
+  }
+
+  async resolveBulkErrors(data = {}) {
+    return this.request('/errors/resolve-bulk', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
   // Draft - Undo Pick
   async undoDraftPick(draftId) {
     return this.request(`/drafts/${draftId}/undo-pick`, {

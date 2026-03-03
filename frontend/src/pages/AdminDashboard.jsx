@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
@@ -40,12 +40,24 @@ const AdminDashboard = () => {
   const [aiSaving, setAiSaving] = useState(false)
   const [budgetInput, setBudgetInput] = useState('')
 
+  // Error Dashboard state
+  const [errorSummary, setErrorSummary] = useState(null)
+  const [errors, setErrors] = useState([])
+  const [errorPage, setErrorPage] = useState(1)
+  const [errorTotal, setErrorTotal] = useState(0)
+  const [errorSeverityFilter, setErrorSeverityFilter] = useState('')
+  const [errorTypeFilter, setErrorTypeFilter] = useState('')
+  const [errorResolvedFilter, setErrorResolvedFilter] = useState('false')
+  const [errorLoading, setErrorLoading] = useState(false)
+  const [expandedError, setExpandedError] = useState(null)
+
   useEffect(() => {
     if (user?.role !== 'admin') {
       navigate('/dashboard')
       return
     }
     loadStats()
+    loadErrorSummary()
   }, [user])
 
   useEffect(() => {
@@ -63,6 +75,17 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (user?.role === 'admin' && activeTab === 'ai') loadAiConfig()
   }, [activeTab])
+
+  useEffect(() => {
+    if (user?.role === 'admin' && activeTab === 'errors') {
+      loadErrorSummary()
+      loadErrors()
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (user?.role === 'admin' && activeTab === 'errors') loadErrors()
+  }, [errorPage, errorSeverityFilter, errorTypeFilter, errorResolvedFilter])
 
   const loadStats = async () => {
     try {
@@ -121,6 +144,54 @@ const AdminDashboard = () => {
       setBudgetInput(String(configData.config?.dailyTokenBudget || 100000))
     } catch (err) {
       console.error('Failed to load AI config:', err.message)
+    }
+  }
+
+  const loadErrorSummary = async () => {
+    try {
+      const data = await api.getErrorSummary()
+      setErrorSummary(data)
+    } catch (err) {
+      console.error('Failed to load error summary:', err.message)
+    }
+  }
+
+  const loadErrors = async () => {
+    setErrorLoading(true)
+    try {
+      const data = await api.getErrorRecent({
+        page: errorPage,
+        limit: 25,
+        severity: errorSeverityFilter || undefined,
+        type: errorTypeFilter || undefined,
+        resolved: errorResolvedFilter || undefined,
+      })
+      setErrors(data.errors || [])
+      setErrorTotal(data.total || 0)
+    } catch (err) {
+      console.error('Failed to load errors:', err.message)
+    } finally {
+      setErrorLoading(false)
+    }
+  }
+
+  const handleResolveError = async (errorId) => {
+    try {
+      await api.resolveError(errorId)
+      loadErrors()
+      loadErrorSummary()
+    } catch (err) {
+      console.error('Failed to resolve error:', err.message)
+    }
+  }
+
+  const handleBulkResolve = async (type, endpoint) => {
+    try {
+      await api.resolveBulkErrors({ type: type || undefined, endpoint: endpoint || undefined })
+      loadErrors()
+      loadErrorSummary()
+    } catch (err) {
+      console.error('Failed to bulk resolve:', err.message)
     }
   }
 
@@ -214,6 +285,19 @@ const AdminDashboard = () => {
     return `$${(purse / 1000).toFixed(0)}K`
   }
 
+  const timeAgo = (dateStr) => {
+    if (!dateStr) return '—'
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    const days = Math.floor(hrs / 24)
+    if (days < 7) return `${days}d ago`
+    return new Date(dateStr).toLocaleDateString()
+  }
+
   const formatTokens = (n) => {
     if (!n) return '0'
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
@@ -258,7 +342,7 @@ const AdminDashboard = () => {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {['users', 'leagues', 'tournaments', 'ai'].map(tab => (
+        {['users', 'leagues', 'tournaments', 'errors', 'ai'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -268,7 +352,7 @@ const AdminDashboard = () => {
                 : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
             }`}
           >
-            {tab === 'ai' ? 'AI Engine' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'ai' ? 'AI Engine' : tab === 'errors' ? `Errors${errorSummary?.unresolvedCount ? ` (${errorSummary.unresolvedCount})` : ''}` : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -485,6 +569,238 @@ const AdminDashboard = () => {
             </div>
           )}
         </Card>
+      )}
+
+      {/* Errors Tab */}
+      {activeTab === 'errors' && (
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          {errorSummary && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="text-center">
+                <p className="text-3xl font-bold font-display text-live-red">{errorSummary.last24h || 0}</p>
+                <p className="text-xs text-text-muted mt-1">Last 24h</p>
+              </Card>
+              <Card className="text-center">
+                <p className="text-3xl font-bold font-display text-orange">{errorSummary.last7d || 0}</p>
+                <p className="text-xs text-text-muted mt-1">Last 7 Days</p>
+              </Card>
+              <Card className="text-center">
+                <p className="text-3xl font-bold font-display text-gold">{errorSummary.unresolvedCount || 0}</p>
+                <p className="text-xs text-text-muted mt-1">Unresolved</p>
+              </Card>
+              <Card className="text-center">
+                <p className="text-3xl font-bold font-display text-blue-400">{errorSummary.affectedUserCount || 0}</p>
+                <p className="text-xs text-text-muted mt-1">Affected Users</p>
+              </Card>
+            </div>
+          )}
+
+          {/* Severity + Type Breakdown */}
+          {errorSummary && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* By Severity */}
+              <Card>
+                <h3 className="text-sm font-semibold text-text-primary mb-3">By Severity</h3>
+                <div className="space-y-2">
+                  {['high', 'medium', 'low'].map(sev => {
+                    const count = errorSummary.bySeverity?.[sev] || 0
+                    const total = (errorSummary.bySeverity?.high || 0) + (errorSummary.bySeverity?.medium || 0) + (errorSummary.bySeverity?.low || 0)
+                    const pct = total > 0 ? (count / total) * 100 : 0
+                    const color = sev === 'high' ? 'bg-live-red' : sev === 'medium' ? 'bg-crown' : 'bg-gray-500'
+                    return (
+                      <div key={sev} className="flex items-center gap-3">
+                        <span className={`w-16 text-xs font-medium capitalize ${sev === 'high' ? 'text-live-red' : sev === 'medium' ? 'text-crown' : 'text-text-muted'}`}>{sev}</span>
+                        <div className="flex-1 bg-[var(--card-bg)] rounded-full h-2">
+                          <div className={`h-2 rounded-full ${color}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-xs text-text-muted font-mono w-8 text-right">{count}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </Card>
+
+              {/* Top Failing Endpoints */}
+              <Card>
+                <h3 className="text-sm font-semibold text-text-primary mb-3">Top Failing Endpoints</h3>
+                {errorSummary.topEndpoints?.length > 0 ? (
+                  <div className="space-y-1">
+                    {errorSummary.topEndpoints.slice(0, 5).map((ep, i) => (
+                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-[var(--card-border)]/30 last:border-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                            String(ep.status).startsWith('5') ? 'bg-live-red/20 text-live-red' : 'bg-crown/20 text-crown'
+                          }`}>{ep.status}</span>
+                          <span className="text-xs text-text-primary font-mono truncate">{ep.endpoint}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-text-muted font-mono">{ep.count}x</span>
+                          <button
+                            onClick={() => handleBulkResolve(null, ep.endpoint)}
+                            className="text-[10px] text-field hover:text-field-bright transition-colors"
+                            title="Resolve all errors for this endpoint"
+                          >
+                            resolve
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-text-muted text-xs">No failing endpoints</p>
+                )}
+              </Card>
+            </div>
+          )}
+
+          {/* Error Type Breakdown */}
+          {errorSummary?.byType?.length > 0 && (
+            <Card>
+              <h3 className="text-sm font-semibold text-text-primary mb-3">By Type</h3>
+              <div className="flex flex-wrap gap-2">
+                {errorSummary.byType.map(t => (
+                  <button
+                    key={t.type}
+                    onClick={() => { setErrorTypeFilter(t.type === errorTypeFilter ? '' : t.type); setErrorPage(1) }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      t.type === errorTypeFilter
+                        ? 'bg-gold text-slate'
+                        : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
+                    }`}
+                  >
+                    {t.type.replace(/_/g, ' ')} <span className="font-mono ml-1">{t.count}</span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Recent Errors Table */}
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-text-primary">
+                {errorResolvedFilter === 'true' ? 'Resolved' : errorResolvedFilter === 'false' ? 'Unresolved' : 'All'} Errors ({errorTotal})
+              </h3>
+              <div className="flex gap-2">
+                <select
+                  value={errorResolvedFilter}
+                  onChange={e => { setErrorResolvedFilter(e.target.value); setErrorPage(1) }}
+                  className="px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                >
+                  <option value="">All</option>
+                  <option value="false">Unresolved</option>
+                  <option value="true">Resolved</option>
+                </select>
+                <select
+                  value={errorSeverityFilter}
+                  onChange={e => { setErrorSeverityFilter(e.target.value); setErrorPage(1) }}
+                  className="px-3 py-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                >
+                  <option value="">All Severities</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-text-muted border-b border-[var(--card-border)]">
+                    <th className="text-left py-2 px-3">Severity</th>
+                    <th className="text-left py-2 px-3">Type</th>
+                    <th className="text-left py-2 px-3">Message</th>
+                    <th className="text-left py-2 px-3">URL</th>
+                    <th className="text-left py-2 px-3">When</th>
+                    <th className="text-left py-2 px-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {errors.map(err => (
+                    <Fragment key={err.id}>
+                      <tr
+                        className={`border-b border-[var(--card-border)]/50 hover:bg-surface-hover cursor-pointer ${err.resolved ? 'opacity-50' : ''}`}
+                        onClick={() => setExpandedError(expandedError === err.id ? null : err.id)}
+                      >
+                        <td className="py-2 px-3">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            err.severity === 'high' ? 'bg-live-red/20 text-live-red' :
+                            err.severity === 'medium' ? 'bg-crown/20 text-crown' :
+                            'bg-gray-500/20 text-text-muted'
+                          }`}>
+                            {err.severity}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-text-secondary font-mono text-xs">{err.type?.replace(/_/g, ' ')}</td>
+                        <td className="py-2 px-3 text-text-primary max-w-xs truncate">{err.message}</td>
+                        <td className="py-2 px-3 text-text-muted font-mono text-xs max-w-[160px] truncate">{err.url || '—'}</td>
+                        <td className="py-2 px-3 text-text-muted text-xs whitespace-nowrap">{timeAgo(err.createdAt)}</td>
+                        <td className="py-2 px-3">
+                          {!err.resolved && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleResolveError(err.id) }}
+                              className="text-xs text-field hover:text-field-bright transition-colors"
+                            >
+                              resolve
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {expandedError === err.id && (
+                        <tr key={`${err.id}-detail`}>
+                          <td colSpan={6} className="px-3 py-3 bg-[var(--card-bg)]">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                              <div>
+                                <span className="text-text-muted">Category:</span>
+                                <span className="ml-1 text-text-primary">{err.category || '—'}</span>
+                              </div>
+                              <div>
+                                <span className="text-text-muted">User:</span>
+                                <span className="ml-1 text-text-primary font-mono">{err.userId ? err.userId.slice(0, 8) + '...' : 'anonymous'}</span>
+                              </div>
+                              <div>
+                                <span className="text-text-muted">Session:</span>
+                                <span className="ml-1 text-text-primary font-mono">{err.sessionId ? err.sessionId.slice(0, 8) + '...' : '—'}</span>
+                              </div>
+                              <div>
+                                <span className="text-text-muted">Viewport:</span>
+                                <span className="ml-1 text-text-primary font-mono">{err.viewport || '—'}</span>
+                              </div>
+                            </div>
+                            {err.metadata && (
+                              <div className="mt-2 p-2 bg-[var(--bg)] rounded text-xs font-mono text-text-secondary overflow-x-auto">
+                                <pre className="whitespace-pre-wrap">{JSON.stringify(err.metadata, null, 2)}</pre>
+                              </div>
+                            )}
+                            {err.userAgent && (
+                              <p className="mt-2 text-[10px] text-text-muted truncate">UA: {err.userAgent}</p>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  ))}
+                  {errors.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-text-muted">
+                        {errorLoading ? 'Loading...' : 'No errors found'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {Math.ceil(errorTotal / 25) > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <button onClick={() => setErrorPage(p => Math.max(1, p - 1))} disabled={errorPage === 1} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Prev</button>
+                <span className="text-text-muted text-sm">Page {errorPage} of {Math.ceil(errorTotal / 25)}</span>
+                <button onClick={() => setErrorPage(p => Math.min(Math.ceil(errorTotal / 25), p + 1))} disabled={errorPage === Math.ceil(errorTotal / 25)} className="px-3 py-1 bg-[var(--card-bg)] rounded text-sm text-text-secondary disabled:opacity-50">Next</button>
+              </div>
+            )}
+          </Card>
+        </div>
       )}
 
       {/* AI Engine Tab */}
