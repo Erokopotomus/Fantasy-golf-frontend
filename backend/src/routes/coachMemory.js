@@ -329,7 +329,7 @@ router.patch('/interactions/:id/react', async (req, res) => {
     const { id } = req.params
     const { reaction } = req.body
 
-    if (!reaction || !['helpful', 'not_useful'].includes(reaction)) {
+    if (reaction !== null && !['helpful', 'not_useful'].includes(reaction)) {
       return res.status(400).json({ error: { message: 'Reaction must be "helpful" or "not_useful"' } })
     }
 

@@ -34,7 +34,7 @@ export function useCoachMemory() {
     setError(null)
     try {
       const res = await api.updateCoachIdentity(updates)
-      setIdentity(res.identity)
+      setIdentity(res.document.content)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -46,7 +46,7 @@ export function useCoachMemory() {
     setError(null)
     try {
       const res = await api.addCoachNote(text)
-      setIdentity(prev => ({ ...prev, userNotes: res.notes }))
+      setIdentity(prev => ({ ...prev, userNotes: res.document.content.userNotes }))
     } catch (err) {
       setError(err.message)
     }
@@ -56,7 +56,7 @@ export function useCoachMemory() {
     setError(null)
     try {
       const res = await api.deleteCoachNote(index)
-      setIdentity(prev => ({ ...prev, userNotes: res.notes }))
+      setIdentity(prev => ({ ...prev, userNotes: res.document.content.userNotes }))
     } catch (err) {
       setError(err.message)
     }

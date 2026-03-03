@@ -97,7 +97,7 @@ async function getActiveUsers() {
 
   const userIdSet = new Set()
   for (const r of predictionUsers) userIdSet.add(r.userId)
-  for (const r of draftPickUsers) userIdSet.add(r.team.userId)
+  for (const r of draftPickUsers) if (r.team?.userId) userIdSet.add(r.team.userId)
   for (const r of teamUpdateUsers) userIdSet.add(r.userId)
   for (const r of coachingUsers) userIdSet.add(r.userId)
 

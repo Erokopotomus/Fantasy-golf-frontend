@@ -1069,7 +1069,7 @@ httpServer.listen(PORT, () => {
     try {
       const { runMemoryWriter } = require('./services/coachingMemoryWriter')
       const result = await runMemoryWriter()
-      cronLog('memoryWriter', `Done: ${result.updatedDocs || 0} docs for ${result.usersProcessed} users (${result.errors} errors)`)
+      cronLog('memoryWriter', `Done: ${result.usersProcessed} users processed, ${result.errors} errors, ${result.elapsed} elapsed`)
     } catch (e) { cronLog('memoryWriter', `Error: ${e.message}`) }
   }, { timezone: 'America/New_York' })
   console.log('[Cron] Coaching memory writer scheduled (Wed 4:30 AM)')

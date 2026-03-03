@@ -99,7 +99,7 @@ function InteractionCard({ interaction, onReact }) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-body text-sm text-[var(--text-1)] leading-relaxed">
-            {interaction.coachMessage || interaction.summary || 'Coach interaction'}
+            {interaction.summary || 'Coach interaction'}
           </p>
           <p className="font-body text-xs text-[var(--text-3)] mt-1">{date}</p>
         </div>
@@ -262,7 +262,14 @@ const CoachSettings = () => {
                 key={i}
                 className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg bg-[var(--bg)] border border-[var(--border)]"
               >
-                <span className="font-body text-sm text-[var(--text-1)] flex-1">{note}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="font-body text-sm text-[var(--text-1)]">{note.text}</span>
+                  {note.addedAt && (
+                    <p className="font-body text-xs text-[var(--text-3)] mt-0.5">
+                      {new Date(note.addedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
+                </div>
                 <button
                   onClick={() => deleteNote(i)}
                   className="p-1 text-[var(--text-3)] hover:text-live-red transition-colors flex-shrink-0"
