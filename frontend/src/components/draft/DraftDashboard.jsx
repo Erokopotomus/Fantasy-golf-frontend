@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import Card from '../common/Card'
 
-const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
+const DraftDashboard = ({ picks, teams, players, rosterSize, draft, onViewPlayer }) => {
   const [search, setSearch] = useState('')
   const [posFilter, setPosFilter] = useState('all')
   const [sortBy, setSortBy] = useState('rank')
@@ -134,8 +134,16 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
                           }`}
                         >
                           {pick ? (
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-text-primary font-medium truncate">{pick.playerName}</span>
+                            <div
+                              className="flex items-center justify-between gap-1 cursor-pointer hover:text-gold transition-colors"
+                              onClick={() => {
+                                if (!onViewPlayer) return
+                                // Find full player object for the drawer
+                                const fullPlayer = players.find(p => p.id === pick.playerId)
+                                if (fullPlayer) onViewPlayer(fullPlayer)
+                              }}
+                            >
+                              <span className="text-text-primary font-medium truncate hover:text-gold">{pick.playerName}</span>
                               <span className="text-text-muted flex-shrink-0">#{pick.playerRank}</span>
                             </div>
                           ) : (
@@ -206,13 +214,17 @@ const DraftDashboard = ({ picks, teams, players, rosterSize, draft }) => {
               </thead>
               <tbody>
                 {availablePlayers.map((player) => (
-                  <tr key={player.id} className="border-b border-[var(--card-border)]/30 hover:bg-[var(--surface-alt)] transition-colors">
+                  <tr
+                    key={player.id}
+                    className="border-b border-[var(--card-border)]/30 hover:bg-[var(--surface-alt)] transition-colors cursor-pointer"
+                    onClick={() => onViewPlayer && onViewPlayer(player)}
+                  >
                     <td className="py-1.5 pr-2 text-text-muted text-xs">#{player.rank}</td>
                     <td className="py-1.5 pr-2">
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm">{player.countryFlag}</span>
                         <div className="min-w-0">
-                          <p className="text-text-primary text-xs font-medium truncate">{player.name}</p>
+                          <p className="text-text-primary text-xs font-medium truncate hover:text-gold">{player.name}</p>
                           <p className="text-text-muted text-[10px]">{player.country}</p>
                         </div>
                       </div>

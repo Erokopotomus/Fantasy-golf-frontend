@@ -1,8 +1,33 @@
 # CLUTCH FANTASY SPORTS — Project Status Report
 
-> Generated: February 26, 2026
+> Generated: February 26, 2026 | Last session sync: March 3, 2026 (late night)
 > Repository: github.com/Erokopotomus/Clutch
-> Branch: master (567 commits)
+> Branch: master (590+ commits)
+
+---
+
+## HANDOFF NOTES (for next Cowork session — morning of Mar 4)
+
+**What happened tonight (Mar 3 late session):**
+1. Batch C (075-081, engagement loop) — all DONE by Claude Code during session
+2. Admin error dashboard (082) — built by Cowork, committed by Claude Code, DONE
+3. Manager profile Phase 5A (083) — avatar upload, sports badges, recent calls — built by Cowork, DONE by Claude Code
+4. Queued Batch D (084-089) — profile charts, leaderboard page, achievement engine, badge showcase, nav links, verified badge
+5. Queued Phase 5C (090-091) — golf prediction expansion (8 types) + auto-resolution service
+
+**What Claude Code should be working on:** Items 084-091 in `docs/QUEUE.md`. Check which are DONE vs still TODO.
+
+**What Cowork should do next:**
+- Verify Claude Code's deploys for 084-091 in Chrome (check production site)
+- First real draft is **Wednesday Mar 5** — make sure draft room works with friends
+- After draft: verify draft recap email fires, draft grading works, engagement notifications flow
+- Prove It page should look much richer once 090 ships (8 golf prediction categories vs just SG benchmark)
+- Once 091 ships, predictions will actually auto-resolve — verify Sunday night cron grades them correctly
+- The **personal AI coach vault** (per-user logic memory) is the next big thing Eric wants to discuss after Phase 5 items land
+
+**Key decision still needed:** Eric mentioned wanting to discuss the AI coach vault concept — per-user Obsidian-style memory that remembers tendencies, patterns, coaching preferences over time. Not queued yet, needs product discussion first.
+
+**Language reminder for Prove It:** The current UI says "OVER" / "UNDER" which violates CLAUDE.md design rules. Item 090 reframes this. Make sure new prediction UIs use poll-style language (yes/no, make/miss) not sportsbook language.
 
 ---
 
