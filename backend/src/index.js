@@ -1073,6 +1073,32 @@ httpServer.listen(PORT, () => {
   }, { timezone: 'America/New_York' })
   console.log('[Cron] Achievement engine scheduled (daily 4 AM)')
 
+  // ── Golf Prediction Resolution ──
+  // Sunday night after tournaments finish
+  cron.schedule('30 22 * * 0', async () => {
+    console.log(`[Cron:golfResolver] ${new Date().toISOString()} — Resolving completed tournaments`)
+    try {
+      const { resolveCompletedTournaments } = require('./services/golfPredictionResolver')
+      const count = await resolveCompletedTournaments()
+      console.log(`[Cron:golfResolver] Done: ${count} predictions resolved`)
+    } catch (err) {
+      console.error(`[Cron:golfResolver] Error:`, err.message)
+    }
+  }, { timezone: 'America/New_York' })
+
+  // Monday morning catch-up
+  cron.schedule('0 8 * * 1', async () => {
+    console.log(`[Cron:golfResolver] ${new Date().toISOString()} — Monday catch-up resolution`)
+    try {
+      const { resolveCompletedTournaments } = require('./services/golfPredictionResolver')
+      const count = await resolveCompletedTournaments()
+      console.log(`[Cron:golfResolver] Monday catch-up: ${count} predictions resolved`)
+    } catch (err) {
+      console.error(`[Cron:golfResolver] Error:`, err.message)
+    }
+  }, { timezone: 'America/New_York' })
+  console.log('[Cron] Golf prediction resolver scheduled (Sun 10:30 PM + Mon 8 AM)')
+
   // ── Phase 6C: Daily AI Insight Pipeline ──
   {
     const aiInsightPipeline = require('./services/aiInsightPipeline')

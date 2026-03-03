@@ -3036,7 +3036,8 @@ This replaces the need to scroll down to the lifetime stats grid for the key num
 ---
 
 ### 090 — Golf Prediction Categories Expansion (Phase 5C)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Expanded PREDICTION_TYPES from 4 to 11 (added tournament_winner, top_5, top_10, top_20, make_cut, round_leader, head_to_head). Added per-type validation in predictionService.js. Redesigned WeeklySlate with 8 category pill picker, type-specific UIs (winner pick, yes/no polls, make/miss, H2H matchup builder, R1 leader, SG calls renamed to Above/Below), My Calls filter toggle. Files: predictionService.js, predictions.js, ProveIt.jsx
 **Priority:** High — Core engagement feature, makes Prove It worth visiting
 **Prompt:**
 
@@ -3190,7 +3191,8 @@ Add a "My Calls" filter on the slate itself — small toggle at top: "All Player
 ---
 
 ### 091 — Golf Prediction Auto-Resolution Service (Phase 5C backend)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Created golfPredictionResolver.js with resolveGolfEvent() (handles all 8 prediction types: winner, top 5/10/20, make_cut, round_leader, h2h, player_benchmark) and resolveCompletedTournaments(). Crons: Sun 10:30 PM + Mon 8 AM ET. Triggers reputation update + achievement evaluation after resolution. Files: golfPredictionResolver.js (new), index.js
 **Priority:** High — Without this, predictions stay PENDING forever
 **Prompt:**
 

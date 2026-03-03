@@ -22,10 +22,17 @@ const TIER_THRESHOLDS = {
 }
 
 const PREDICTION_TYPES = [
-  'performance_call',   // start/sit
-  'player_benchmark',   // over/under a stat line
-  'weekly_winner',      // who wins this week's matchup
-  'bold_call',          // unlikely outcome prediction
+  'performance_call',     // start/sit
+  'player_benchmark',     // over/under a stat line (existing)
+  'tournament_winner',    // pick the tournament winner
+  'top_5',                // will player finish top 5?
+  'top_10',               // will player finish top 10?
+  'top_20',               // will player finish top 20?
+  'make_cut',             // will player make or miss the cut?
+  'round_leader',         // who leads after round 1/2/3?
+  'head_to_head',         // player A vs player B — who finishes higher?
+  'weekly_winner',        // fantasy weekly winner
+  'bold_call',            // unlikely outcome prediction
 ]
 
 /**
@@ -78,6 +85,19 @@ async function submitPrediction(userId, data, prisma) {
   // Check deadline — reject if locked
   if (effectiveLocksAt && effectiveLocksAt <= new Date()) {
     throw new Error('Predictions are locked — this tournament has already started')
+  }
+
+  // Validate predictionData shape per type
+  if (['top_5', 'top_10', 'top_20', 'make_cut'].includes(predictionType)) {
+    if (!predictionData?.direction) throw new Error('direction is required for this prediction type')
+  }
+  if (predictionType === 'head_to_head') {
+    if (!predictionData?.opponentPlayerId) throw new Error('opponentPlayerId is required for H2H')
+  }
+  if (predictionType === 'round_leader') {
+    if (!predictionData?.round || ![1, 2, 3].includes(predictionData.round)) {
+      throw new Error('round (1-3) is required for round_leader')
+    }
   }
 
   // Check for duplicate prediction (same user, same event, same subject, same type)

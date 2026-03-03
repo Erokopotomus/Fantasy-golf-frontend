@@ -8,7 +8,7 @@ const prisma = require('../lib/prisma.js')
 
 const validatePrediction = validateBody({
   sport: { required: true, type: 'string', enum: ['golf', 'nfl', 'nba', 'mlb'] },
-  predictionType: { required: true, type: 'string', enum: ['performance_call', 'player_benchmark', 'weekly_winner', 'bold_call'] },
+  predictionType: { required: true, type: 'string', enum: ['performance_call', 'player_benchmark', 'tournament_winner', 'top_5', 'top_10', 'top_20', 'make_cut', 'round_leader', 'head_to_head', 'weekly_winner', 'bold_call'] },
   predictionData: { required: true },
 })
 
