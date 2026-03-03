@@ -191,13 +191,16 @@ async function writeDraftPatterns(userId, sport, profile) {
   })
 
   // Summarize grade history
+  const validGrades = grades.filter(g => g.overallScore != null)
   const gradeSummary = grades.length > 0
     ? {
         totalDraftsGraded: grades.length,
-        avgScore: Math.round((grades.reduce((s, g) => s + g.overallScore, 0) / grades.length) * 10) / 10,
+        avgScore: validGrades.length > 0
+          ? Math.round((validGrades.reduce((s, g) => s + g.overallScore, 0) / validGrades.length) * 10) / 10
+          : null,
         gradeDistribution: buildGradeDistribution(grades),
-        bestOverall: grades.reduce((best, g) => g.overallScore > (best?.overallScore || 0) ? g : best, null),
-        worstOverall: grades.reduce((worst, g) => g.overallScore < (worst?.overallScore || 100) ? g : worst, null),
+        bestOverall: validGrades.reduce((best, g) => g.overallScore > (best?.overallScore || 0) ? g : best, null),
+        worstOverall: validGrades.reduce((worst, g) => g.overallScore < (worst?.overallScore || 100) ? g : worst, null),
         totalSleepers: grades.reduce((s, g) => s + (Array.isArray(g.sleepers) ? g.sleepers.length : 0), 0),
         totalReaches: grades.reduce((s, g) => s + (Array.isArray(g.reaches) ? g.reaches.length : 0), 0),
       }
