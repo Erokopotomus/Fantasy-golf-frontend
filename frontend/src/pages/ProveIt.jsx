@@ -75,6 +75,8 @@ function WeeklySlate({ onPredictionMade }) {
             headshotUrl: p.player?.headshotUrl || p.headshotUrl,
             position: p.position,
             rank: p.player?.owgrRank || p.owgrRank || p.rank,
+            cpi: p.clutchMetrics?.cpi ?? null,
+            courseFitScore: p.clutchMetrics?.courseFitScore ?? null,
           }))
         targets.sort((a, b) => {
           const aRank = a.rank || 9999
