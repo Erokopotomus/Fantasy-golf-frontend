@@ -2589,7 +2589,8 @@ When a draft completes, send a branded recap email to all participants with thei
 ---
 
 ### 080 — Post-Draft Engagement: Personalized Coach Briefing Upgrade
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added prediction accuracy check template ("Your recent accuracy: X%"), waiver wire tip (unrostered players in field), 1-hour in-memory briefing cache. Files: ai.js
 **Priority:** Medium — Batch C (engagement loop)
 **Prompt:**
 
@@ -2620,7 +2621,8 @@ The AI coach briefing (`GET /api/ai/coach-briefing`) is currently template-based
 ---
 
 ### 081 — Frontend: Notification Preferences UI
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Added notification preferences section to Profile.jsx with toggle switches for all 11 categories. Master email toggle disables email-specific toggles. Optimistic UI with instant PATCH. Files: Profile.jsx
 **Priority:** Medium — Batch C (engagement loop)
 **Depends on:** 075
 **Prompt:**

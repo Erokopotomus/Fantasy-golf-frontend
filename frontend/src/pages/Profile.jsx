@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useStats } from '../hooks/useStats'
@@ -6,6 +6,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import ImageUpload from '../components/common/ImageUpload'
+import api from '../services/api'
 
 const Profile = () => {
   const { user, updateUser } = useAuth()
@@ -20,6 +21,26 @@ const Profile = () => {
     username: user?.username || '',
     avatar: user?.avatar || null,
   })
+  const [notifPrefs, setNotifPrefs] = useState(null)
+  const [notifLoading, setNotifLoading] = useState(true)
+
+  // Load notification preferences
+  useEffect(() => {
+    api.getNotificationPreferences()
+      .then(data => setNotifPrefs(data.preferences))
+      .catch(() => {})
+      .finally(() => setNotifLoading(false))
+  }, [])
+
+  const toggleNotifPref = useCallback(async (key) => {
+    const newVal = !notifPrefs[key]
+    setNotifPrefs(prev => ({ ...prev, [key]: newVal }))
+    try {
+      await api.updateNotificationPreferences({ [key]: newVal })
+    } catch {
+      setNotifPrefs(prev => ({ ...prev, [key]: !newVal }))
+    }
+  }, [notifPrefs])
 
   // Update form data when user changes
   useEffect(() => {
@@ -327,6 +348,52 @@ const Profile = () => {
                 </svg>
               </Link>
             </div>
+          </Card>
+
+          {/* Notification Preferences */}
+          <Card id="notifications">
+            <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Notification Preferences</h3>
+            {notifLoading ? (
+              <p className="text-text-muted text-sm">Loading...</p>
+            ) : notifPrefs ? (
+              <div className="space-y-1">
+                {[
+                  { key: 'email_enabled', label: 'Email Notifications', desc: 'Receive notifications via email', master: true },
+                  { key: 'push_enabled', label: 'Push Notifications', desc: 'Browser push notifications', master: true },
+                  { key: 'weekly_recap', label: 'Weekly Tournament Recaps', desc: 'Scores and standings after each event', email: true },
+                  { key: 'prediction_updates', label: 'Prediction Results', desc: 'How your calls turned out', email: true },
+                  { key: 'roster_alerts', label: 'Roster Player Alerts', desc: 'Live alerts when your players perform' },
+                  { key: 'trades', label: 'Trade Notifications', desc: 'Proposals, accepts, and rejections' },
+                  { key: 'waivers', label: 'Waiver Results', desc: 'Claims won, lost, or invalidated' },
+                  { key: 'drafts', label: 'Draft Alerts', desc: 'Your turn, draft start, and recaps' },
+                  { key: 'league_activity', label: 'League Activity', desc: 'Members joining, invites sent' },
+                  { key: 'scores', label: 'Scoring Updates', desc: 'Matchup results and tournament completions' },
+                  { key: 'chat', label: 'Chat Mentions', desc: 'When someone mentions you in chat' },
+                ].map(({ key, label, desc, master, email }) => {
+                  const disabled = email && !notifPrefs.email_enabled
+                  return (
+                    <div
+                      key={key}
+                      className={`flex items-center justify-between py-3 ${master ? 'border-b border-[var(--surface-alt)]' : ''} ${disabled ? 'opacity-40' : ''}`}
+                    >
+                      <div>
+                        <p className="text-text-primary font-medium text-sm">{label}</p>
+                        <p className="text-text-muted text-xs">{desc}</p>
+                      </div>
+                      <button
+                        onClick={() => !disabled && toggleNotifPref(key)}
+                        disabled={disabled}
+                        className={`relative w-11 h-6 rounded-full transition-colors ${notifPrefs[key] ? 'bg-field' : 'bg-[var(--surface-alt)]'} ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${notifPrefs[key] ? 'translate-x-5' : ''}`} />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-text-muted text-sm">Unable to load preferences</p>
+            )}
           </Card>
 
           {/* Danger Zone */}

@@ -31,11 +31,28 @@ function rateLimit(userId, group, maxPerHour) {
 //  COACH BRIEFING (Living Dashboard Headline)
 // ═══════════════════════════════════════════════
 
+// In-memory briefing cache (1 hour TTL)
+const briefingCache = new Map()
+const BRIEFING_TTL = 60 * 60 * 1000 // 1 hour
+
 // GET /api/ai/coach-briefing — Personalized coach headline for dashboard / league home
 router.get('/coach-briefing', authenticate, async (req, res) => {
   try {
     const userId = req.user.id
     const { leagueId } = req.query
+
+    // Check cache
+    const cacheKey = `${userId}-${leagueId || 'global'}`
+    const cached = briefingCache.get(cacheKey)
+    if (cached && Date.now() - cached.time < BRIEFING_TTL) {
+      return res.json({ briefing: cached.briefing })
+    }
+
+    // Helper: cache + respond
+    const sendBriefing = (briefing) => {
+      briefingCache.set(cacheKey, { briefing, time: Date.now() })
+      return res.json({ briefing })
+    }
 
     // Gather user data state
     const [leagueCount, boardCount, predictionCount] = await Promise.all([
@@ -275,13 +292,11 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
 
     // COLD START: no leagues, no boards
     if (leagueCount === 0 && boardCount === 0) {
-      return res.json({
-        briefing: {
-          headline: 'Your coaching brain is warming up',
-          body: 'Join or create a league to activate your AI coach. The more you play, the more I learn.',
-          cta: { label: 'Create League', to: '/leagues/create' },
-          type: 'onboarding',
-        },
+      return sendBriefing({
+        headline: 'Your coaching brain is warming up',
+        body: 'Join or create a league to activate your AI coach. The more you play, the more I learn.',
+        cta: { label: 'Create League', to: '/leagues/create' },
+        type: 'onboarding',
       })
     }
 
@@ -373,6 +388,30 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
       })
     }
 
+    // PREDICTION CHECK: Recent resolved predictions
+    if (predictionCount > 0) {
+      const recentResolved = await prisma.prediction.findMany({
+        where: { userId, outcome: { in: ['CORRECT', 'INCORRECT'] } },
+        orderBy: { resolvedAt: 'desc' },
+        take: 20,
+        select: { outcome: true },
+      })
+      if (recentResolved.length >= 3) {
+        const correct = recentResolved.filter(p => p.outcome === 'CORRECT').length
+        const total = recentResolved.length
+        const pct = Math.round((correct / total) * 100)
+        const tierMessage = pct >= 70 ? "You're on fire." : pct >= 50 ? 'Solid track record.' : 'Room to improve.'
+        return res.json({
+          briefing: {
+            headline: `Your recent accuracy: ${pct}%`,
+            body: `You went ${correct}/${total} on your last calls. ${tierMessage}`,
+            cta: { label: 'Prove It', to: '/prove-it' },
+            type: 'prediction_check',
+          },
+        })
+      }
+    }
+
     // ACTIVE: has data — pull top insight
     try {
       const insights = await aiInsightPipeline.getActiveInsights(userId, { limit: 1 })
@@ -417,20 +456,50 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
       }
     }
 
-    return res.json({
-      briefing: {
-        headline: leagueCount === 1
-          ? `${firstLeague?.league?.name || 'Your league'} is active — stay sharp`
-          : `${leagueCount} leagues active — stay sharp`,
-        body: recentActivity
-          || (boardCount > 0
-            ? `You have ${boardCount} board${boardCount > 1 ? 's' : ''} and ${predictionCount} prediction${predictionCount !== 1 ? 's' : ''} on record.`
-            : 'Build a draft board to start sharpening your edge.'),
-        cta: firstLeague?.league?.id
-          ? { label: 'Go to League', to: `/leagues/${firstLeague.league.id}` }
-          : null,
-        type: 'active',
-      },
+    // WAIVER WIRE TIP: unrostered players in upcoming field
+    let waiverTip = null
+    if (firstLeague?.league?.id) {
+      const nextTournament = await prisma.tournament.findFirst({
+        where: { startDate: { gt: new Date() }, status: { not: 'COMPLETED' } },
+        orderBy: { startDate: 'asc' },
+        select: { id: true, name: true },
+      }).catch(() => null)
+
+      if (nextTournament) {
+        const fieldPlayers = await prisma.performance.findMany({
+          where: { tournamentId: nextTournament.id },
+          select: { playerId: true, player: { select: { name: true, owgr: true } } },
+        })
+        if (fieldPlayers.length > 0) {
+          const rosteredIds = new Set(
+            (await prisma.rosterEntry.findMany({
+              where: { team: { leagueId: firstLeague.league.id }, isActive: true },
+              select: { playerId: true },
+            })).map(r => r.playerId)
+          )
+          const unrostered = fieldPlayers.filter(fp => !rosteredIds.has(fp.playerId))
+            .sort((a, b) => (a.player?.owgr || 999) - (b.player?.owgr || 999))
+          if (unrostered.length > 0) {
+            const top = unrostered[0]
+            waiverTip = `${top.player?.name} (OWGR #${top.player?.owgr || '?'}) is in next week's field and available on waivers.`
+          }
+        }
+      }
+    }
+
+    return sendBriefing({
+      headline: leagueCount === 1
+        ? `${firstLeague?.league?.name || 'Your league'} is active — stay sharp`
+        : `${leagueCount} leagues active — stay sharp`,
+      body: recentActivity
+        || waiverTip
+        || (boardCount > 0
+          ? `You have ${boardCount} board${boardCount > 1 ? 's' : ''} and ${predictionCount} prediction${predictionCount !== 1 ? 's' : ''} on record.`
+          : 'Build a draft board to start sharpening your edge.'),
+      cta: firstLeague?.league?.id
+        ? { label: 'Go to League', to: `/leagues/${firstLeague.league.id}` }
+        : null,
+      type: 'active',
     })
   } catch (err) {
     console.error('[AI] Coach briefing error:', err.message, err.stack)
