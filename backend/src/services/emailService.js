@@ -36,7 +36,7 @@ async function sendVaultInviteEmail({ to, ownerName, leagueName, personalUrl, fr
 
   try {
     await resendClient.emails.send({
-      from: 'Clutch Fantasy <onboarding@resend.dev>',
+      from: 'Clutch Fantasy <noreply@clutchfantasysports.com>',
       to,
       subject: `${leagueName} — Your All-Time Fantasy Stats`,
       text:
@@ -63,7 +63,7 @@ async function sendLeagueInviteEmail({ to, commissionerName, leagueName, joinUrl
 
   try {
     await resendClient.emails.send({
-      from: 'Clutch Fantasy <onboarding@resend.dev>',
+      from: 'Clutch Fantasy <noreply@clutchfantasysports.com>',
       to,
       subject: `You're invited to ${leagueName} on Clutch Fantasy`,
       text:
