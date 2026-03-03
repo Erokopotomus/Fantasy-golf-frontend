@@ -380,7 +380,11 @@ router.post('/:id/invite-email', authenticate, async (req, res, next) => {
 
     const league = await prisma.league.findUnique({
       where: { id: req.params.id },
-      include: { owner: { select: { name: true } } },
+      include: {
+        owner: { select: { name: true } },
+        sport: { select: { name: true } },
+        _count: { select: { members: true } },
+      },
     })
     if (!league) return res.status(404).json({ error: { message: 'League not found' } })
 
@@ -402,6 +406,9 @@ router.post('/:id/invite-email', authenticate, async (req, res, next) => {
       commissionerName: league.owner?.name || 'Your commissioner',
       leagueName: league.name,
       joinUrl,
+      sportName: league.sport?.name || 'Fantasy',
+      memberCount: league._count?.members || null,
+      maxTeams: league.maxTeams || null,
     })
 
     if (result.success) {

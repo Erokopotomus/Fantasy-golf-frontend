@@ -2258,6 +2258,47 @@ Cowork already created and wired up the frontend error capture system. Just comm
 
 ---
 
+### 071 — Upgrade League Invite Email to Branded HTML
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Rewrote emailService.js with branded HTML templates (inline-styled, mobile-friendly) for both league invite and vault invite emails. Updated leagues.js route to pass sportName, memberCount, maxTeams. Files: emailService.js, leagues.js
+**Priority:** HIGH — First impression for every invited user. Current email is plain text that looks like spam.
+**Prompt:**
+The league invite email in `backend/src/services/emailService.js` (line 59, `sendLeagueInviteEmail`) currently sends plain text only. It needs to send branded HTML that looks professional and makes people want to click.
+
+**Replace the `sendLeagueInviteEmail` function** with one that sends both `html` and `text` (Resend supports both). The HTML should be inline-styled (email clients strip `<style>` tags) and use a single-column centered layout that works on mobile.
+
+**The function signature should accept additional params:**
+```js
+async function sendLeagueInviteEmail({ to, commissionerName, leagueName, joinUrl, sportName, memberCount, maxTeams })
+```
+
+**HTML email design requirements:**
+- **Background:** Light cream `#F5F5F0`, centered content card `#FFFFFF` with `max-width: 480px`, `border-radius: 16px`, subtle shadow
+- **Header bar:** Dark slate gradient `#1E2A3A → #2D3F54`, "CLUTCH" in white 24px bold, "FANTASY SPORTS" below in gold `#D4930D` 11px with letter-spacing
+- **Body section:**
+  - Text: `"{commissionerName} invited you to join their fantasy league:"`
+  - League card: cream `#FAFAF6` background with 1px border, sport emoji (⛳ golf, 🏈 NFL, 🏆 default) + "LEAGUE INVITE" label in gold, league name large 22px bold, member count if available (`"3/6 members joined"`)
+  - CTA button: gradient `#F06820 → #D4930D`, white text, "Join the League", 14px 48px padding, rounded 10px
+  - Subtext: "Clutch is a season-long fantasy platform with AI-powered coaching, deep stats, league history, and more." in gray 13px
+- **Footer:** Subtle divider, link to clutchfantasysports.com in gold
+- **Plain text fallback** for email clients that don't render HTML
+- **Subject line:** `{sportEmoji} {commissionerName} invited you to {leagueName}`
+
+**Also update the caller** in `backend/src/routes/leagues.js` — find the `POST /:id/invite-email` endpoint and pass the new fields to `sendLeagueInviteEmail()`:
+- `sportName: league.sport?.name || 'Fantasy'`
+- `memberCount` (count of current league members)
+- `maxTeams: league.maxTeams`
+
+Check what data is already available in the route handler and add any needed includes.
+
+**Also upgrade `sendVaultInviteEmail`** with the same HTML template style — same layout and branding, but the card says "YOUR LEAGUE HISTORY IS READY" instead of "LEAGUE INVITE", shows the league name, and the CTA says "View Your Stats" instead of "Join the League".
+
+**Files to modify:**
+- `backend/src/services/emailService.js` — replace both email functions with HTML+text versions
+- `backend/src/routes/leagues.js` — pass additional fields to sendLeagueInviteEmail
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
