@@ -1652,6 +1652,49 @@ class ApiService {
   async getSegmentStandings(leagueId) {
     return this.request(`/leagues/${leagueId}/segment-standings`)
   }
+
+  // Coach Memory (Personal AI Coach Vault)
+
+  async getCoachVault(sport) {
+    const params = sport ? `?sport=${sport}` : ''
+    return this.request(`/coach/memory${params}`)
+  }
+
+  async getCoachDocument(documentType, sport) {
+    const params = sport ? `?sport=${sport}` : ''
+    return this.request(`/coach/memory/${documentType}${params}`)
+  }
+
+  async updateCoachIdentity(data) {
+    return this.request('/coach/identity', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async addCoachNote(text) {
+    return this.request('/coach/identity/notes', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    })
+  }
+
+  async deleteCoachNote(index) {
+    return this.request(`/coach/identity/notes/${index}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async getCoachInteractions(limit = 20, offset = 0) {
+    return this.request(`/coach/interactions?limit=${limit}&offset=${offset}`)
+  }
+
+  async reactToCoachInteraction(id, reaction) {
+    return this.request(`/coach/interactions/${id}/react`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reaction }),
+    })
+  }
 }
 
 export const api = new ApiService()

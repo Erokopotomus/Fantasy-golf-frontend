@@ -76,6 +76,7 @@ import NflCompare from './pages/NflCompare'
 import NflLeaderboards from './pages/NflLeaderboards'
 import GamedayPortal from './pages/GamedayPortal'
 // AI Coaching + Scout + Sim
+import CoachSettings from './pages/CoachSettings'
 import CoachingReport from './pages/CoachingReport'
 import ScoutReport from './pages/ScoutReport'
 import ClutchSim from './pages/ClutchSim'
@@ -465,6 +466,14 @@ function App() {
             }
           />
           {/* AI Coaching + Scout + Sim */}
+          <Route
+            path="/coach/settings"
+            element={
+              <ProtectedRoute>
+                <CoachSettings />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/coach/:reportId"
             element={
