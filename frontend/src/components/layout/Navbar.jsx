@@ -393,7 +393,7 @@ const Navbar = () => {
                   location={location}
                 />
                 <NavDropdown
-                  label="The Lab"
+                  label="Lab"
                   to="/lab"
                   items={navDropdownItems.lab.items}
                   accent={navDropdownItems.lab.accent}
@@ -431,7 +431,7 @@ const Navbar = () => {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Prove It
+                  Prove
                 </Link>
                 <Link
                   to="/leaderboard"
@@ -821,7 +821,7 @@ const Navbar = () => {
                   className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 ${isLabActive ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  The Lab
+                  Lab
                 </Link>
                 {navDropdownItems.lab.items.filter(i => i.to !== '/lab').map(item => (
                   <Link

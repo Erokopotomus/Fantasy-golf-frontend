@@ -35,11 +35,11 @@ const LABELS = {
   under: 'Undr',
 }
 
-// Ghost labels — shown faded in empty cells to hint what first tap does
+// Ghost labels — neutral hints showing both directions are available
 const GHOST_LABELS = {
   winner: '\u{1F3C6}',
-  top:    'Yes',
-  cut:    'Make',
+  top:    'Y/N',
+  cut:    'M/X',
   sg:     null, // SG shows benchmark number as ghost instead
 }
 
