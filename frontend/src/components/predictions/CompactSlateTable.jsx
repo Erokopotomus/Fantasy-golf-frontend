@@ -19,13 +19,13 @@ const COLUMNS = [
   { key: 'top_10',  label: 'Top 10', shortLabel: 'T10', type: 'top_10',            columnType: 'top' },
   { key: 'top_20',  label: 'Top 20', shortLabel: 'T20', type: 'top_20',            columnType: 'top' },
   { key: 'cut',     label: 'Cut Line', shortLabel: 'Cut', type: 'make_cut',        columnType: 'cut' },
-  { key: 'sg',      label: 'SG Call', shortLabel: 'SG',  type: 'player_benchmark', columnType: 'sg' },
+  { key: 'sg',      label: 'SG O/U', shortLabel: 'SG',  type: 'player_benchmark', columnType: 'sg' },
 ]
 
 export default function CompactSlateTable({
   players,
   predictions,
-  submitting,
+  inflight,
   onCellTap,
   onPlayerClick,
 }) {
@@ -135,7 +135,7 @@ export default function CompactSlateTable({
                       columnType={col.columnType}
                       prediction={prediction}
                       player={player}
-                      disabled={submitting != null}
+                      disabled={inflight?.has(predKey)}
                       onTap={(direction) => onCellTap?.(player, col.type, direction)}
                       benchmarkValue={col.columnType === 'sg' ? sgBenchmark : undefined}
                       isWinnerSelected={col.columnType === 'winner' && winnerPlayerId === player.id}

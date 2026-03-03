@@ -89,6 +89,7 @@ const LeagueSettings = () => {
       setSettings(prev => ({
         ...prev,
         name: league.name,
+        maxTeams: league.maxTeams || prev.maxTeams,
         scoringType: league.settings?.scoringType || 'standard',
         rosterSize: league.settings?.rosterSize || 6,
         irSlots: league.settings?.irSlots || 0,

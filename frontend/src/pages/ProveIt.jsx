@@ -44,7 +44,7 @@ function getTierProgress(total, accuracy) {
 function WeeklySlate({ onPredictionMade }) {
   const [slate, setSlate] = useState([])
   const [allPredictions, setAllPredictions] = useState([])
-  const [submitting, setSubmitting] = useState(null)
+  const [inflight, setInflight] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [currentTournament, setCurrentTournament] = useState(null)
   const [drawerPlayer, setDrawerPlayer] = useState(null)
@@ -97,105 +97,38 @@ function WeeklySlate({ onPredictionMade }) {
     load()
   }, [])
 
-  const handleCellTap = async (player, predictionType, direction, extraData = {}) => {
-    if (submitting || !currentTournament) return
-    const submitKey = `${player.id}_${predictionType}`
+  // ── Helper: add a key to inflight Set ──
+  const addInflight = (key) => setInflight(prev => new Set(prev).add(key))
+  const removeInflight = (key) => setInflight(prev => { const s = new Set(prev); s.delete(key); return s })
 
-    // Find existing prediction for this player+type
+  // ── Helper: submit a single prediction with optimistic state ──
+  const submitSingle = async (player, predictionType, direction, extraData = {}) => {
+    const submitKey = `${player.id}_${predictionType}`
     const existingPred = allPredictions.find(
       p => p.subjectPlayerId === player.id && p.predictionType === predictionType
     )
 
-    setSubmitting(submitKey)
+    // Save snapshot for rollback
+    const snapshot = [...allPredictions]
+    addInflight(submitKey)
+
     try {
-      // ── Tournament Winner: single-pick with atomic state update ──
-      if (predictionType === 'tournament_winner') {
-        const prevWinner = allPredictions.find(p => p.predictionType === 'tournament_winner')
-        if (prevWinner && prevWinner.subjectPlayerId === player.id) {
-          // Tapping same winner = clear
-          await api.deletePrediction(prevWinner.id)
-          setAllPredictions(prev => prev.filter(p => p.id !== prevWinner.id))
-          track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: null, action: 'clear', context: 'prove_it_table' })
-          setSubmitting(null)
-          return
-        }
-        // Delete previous winner if switching
-        if (prevWinner) {
-          await api.deletePrediction(prevWinner.id)
-        }
-        const res = await api.submitPrediction({
-          sport: 'golf',
-          predictionType,
-          category: 'tournament',
-          eventId: currentTournament.id,
-          subjectPlayerId: player.id,
-          predictionData: { playerName: player.name },
-          isPublic: true,
-        })
-        // Single atomic state update — remove old + add new in one pass
-        setAllPredictions(prev => [
-          ...prev.filter(p => p.id !== prevWinner?.id),
-          res.prediction || res
-        ])
-        onPredictionMade?.()
-        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: 'pick', action: 'new', context: 'prove_it_table' })
-        setSubmitting(null)
-        return
-      }
-
-      // ── Round Leader: single-pick, mirrors winner logic ──
-      if (predictionType === 'round_leader') {
-        const prevLeader = allPredictions.find(p => p.predictionType === 'round_leader')
-        if (prevLeader && prevLeader.subjectPlayerId === player.id) {
-          // Tapping same leader = clear
-          await api.deletePrediction(prevLeader.id)
-          setAllPredictions(prev => prev.filter(p => p.id !== prevLeader.id))
-          track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: null, action: 'clear', context: 'prove_it_table' })
-          setSubmitting(null)
-          return
-        }
-        // Delete previous leader if switching
-        if (prevLeader) {
-          await api.deletePrediction(prevLeader.id)
-        }
-        const res = await api.submitPrediction({
-          sport: 'golf',
-          predictionType,
-          category: 'tournament',
-          eventId: currentTournament.id,
-          subjectPlayerId: player.id,
-          predictionData: { playerName: player.name },
-          isPublic: true,
-        })
-        // Atomic state update
-        setAllPredictions(prev => [
-          ...prev.filter(p => p.id !== prevLeader?.id),
-          res.prediction || res
-        ])
-        onPredictionMade?.()
-        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: 'pick', action: 'new', context: 'prove_it_table' })
-        setSubmitting(null)
-        return
-      }
-
-      // ── Generic flow: clear / update / create ──
       if (direction === null && existingPred) {
-        // Clear: delete the prediction
-        await api.deletePrediction(existingPred.id)
+        // Optimistic clear
         setAllPredictions(prev => prev.filter(p => p.id !== existingPred.id))
+        await api.deletePrediction(existingPred.id)
         track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, action: 'clear', context: 'prove_it_table' })
       } else if (existingPred && direction !== null) {
-        // Toggle direction on existing prediction
+        // Optimistic update
         const updatedData = { ...existingPred.predictionData, direction }
-        await api.updatePrediction(existingPred.id, { predictionData: updatedData })
         setAllPredictions(prev => prev.map(p =>
           p.id === existingPred.id ? { ...p, predictionData: updatedData } : p
         ))
+        await api.updatePrediction(existingPred.id, { predictionData: updatedData })
         track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, action: 'update', context: 'prove_it_table' })
       } else if (direction !== null) {
-        // New prediction
+        // Optimistic create — add a temp prediction so UI reflects immediately
         const predictionData = { playerName: player.name, ...extraData }
-
         if (predictionType === 'player_benchmark') {
           predictionData.metric = 'sgTotal'
           predictionData.benchmarkValue = Math.round((player.sgTotal || 0) * 10) / 10
@@ -204,6 +137,15 @@ function WeeklySlate({ onPredictionMade }) {
         } else {
           predictionData.direction = direction
         }
+
+        const tempId = `temp_${submitKey}_${Date.now()}`
+        setAllPredictions(prev => [...prev, {
+          id: tempId,
+          subjectPlayerId: player.id,
+          predictionType,
+          predictionData,
+          eventId: currentTournament.id,
+        }])
 
         const res = await api.submitPrediction({
           sport: 'golf',
@@ -214,15 +156,163 @@ function WeeklySlate({ onPredictionMade }) {
           predictionData,
           isPublic: true,
         })
-        setAllPredictions(prev => [...prev, res.prediction || res])
+
+        // Replace temp with real prediction
+        const real = res.prediction || res
+        setAllPredictions(prev => prev.map(p => p.id === tempId ? real : p))
         onPredictionMade?.()
         track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, action: 'new', context: 'prove_it_table' })
       }
     } catch (err) {
       console.error('Prediction failed:', err)
+      // Revert to snapshot on error
+      setAllPredictions(snapshot)
     } finally {
-      setSubmitting(null)
+      removeInflight(submitKey)
     }
+  }
+
+  // ── Winner cascade: auto-fill Top 5/10/20 = Yes, Make Cut = Make ──
+  const CASCADE_TYPES = [
+    { type: 'top_5', direction: 'yes' },
+    { type: 'top_10', direction: 'yes' },
+    { type: 'top_20', direction: 'yes' },
+    { type: 'make_cut', direction: 'make' },
+  ]
+
+  const clearCascadeForPlayer = async (playerId) => {
+    const toDelete = allPredictions.filter(
+      p => p.subjectPlayerId === playerId && CASCADE_TYPES.some(c => c.type === p.predictionType)
+    )
+    if (toDelete.length === 0) return
+    // Optimistic remove
+    const deleteIds = new Set(toDelete.map(p => p.id))
+    setAllPredictions(prev => prev.filter(p => !deleteIds.has(p.id)))
+    await Promise.all(toDelete.map(p => api.deletePrediction(p.id).catch(() => {})))
+  }
+
+  const createCascadeForPlayer = async (player) => {
+    const promises = CASCADE_TYPES.map(({ type, direction }) => {
+      const existing = allPredictions.find(
+        p => p.subjectPlayerId === player.id && p.predictionType === type
+      )
+      if (existing && existing.predictionData?.direction === direction) return null // already correct
+      return submitSingle(player, type, direction)
+    })
+    await Promise.all(promises.filter(Boolean))
+  }
+
+  const handleCellTap = async (player, predictionType, direction, extraData = {}) => {
+    if (!currentTournament) return
+    const submitKey = `${player.id}_${predictionType}`
+    if (inflight.has(submitKey)) return
+
+    // ── Tournament Winner: single-pick + cascade ──
+    if (predictionType === 'tournament_winner') {
+      const prevWinner = allPredictions.find(p => p.predictionType === 'tournament_winner')
+      const isSamePlayer = prevWinner && prevWinner.subjectPlayerId === player.id
+
+      if (isSamePlayer) {
+        // Clear winner + cascade
+        addInflight(submitKey)
+        const snapshot = [...allPredictions]
+        try {
+          setAllPredictions(prev => prev.filter(p => p.id !== prevWinner.id))
+          await api.deletePrediction(prevWinner.id)
+          await clearCascadeForPlayer(player.id)
+          track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: null, action: 'clear', context: 'prove_it_table' })
+        } catch (err) {
+          console.error('Winner clear failed:', err)
+          setAllPredictions(snapshot)
+        } finally {
+          removeInflight(submitKey)
+        }
+        return
+      }
+
+      // Switch or new winner
+      addInflight(submitKey)
+      const snapshot = [...allPredictions]
+      try {
+        // Delete previous winner + its cascade
+        if (prevWinner) {
+          setAllPredictions(prev => prev.filter(p => p.id !== prevWinner.id))
+          await api.deletePrediction(prevWinner.id)
+          await clearCascadeForPlayer(prevWinner.subjectPlayerId)
+        }
+
+        // Create new winner
+        const res = await api.submitPrediction({
+          sport: 'golf',
+          predictionType,
+          category: 'tournament',
+          eventId: currentTournament.id,
+          subjectPlayerId: player.id,
+          predictionData: { playerName: player.name },
+          isPublic: true,
+        })
+        setAllPredictions(prev => [
+          ...prev.filter(p => p.id !== prevWinner?.id),
+          res.prediction || res
+        ])
+        onPredictionMade?.()
+        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: 'pick', action: 'new', context: 'prove_it_table' })
+
+        // Auto-cascade: Top 5/10/20 = Yes, Make Cut = Make
+        await createCascadeForPlayer(player)
+      } catch (err) {
+        console.error('Winner submit failed:', err)
+        setAllPredictions(snapshot)
+      } finally {
+        removeInflight(submitKey)
+      }
+      return
+    }
+
+    // ── Round Leader: single-pick, mirrors winner logic (no cascade) ──
+    if (predictionType === 'round_leader') {
+      const prevLeader = allPredictions.find(p => p.predictionType === 'round_leader')
+      const isSamePlayer = prevLeader && prevLeader.subjectPlayerId === player.id
+
+      addInflight(submitKey)
+      const snapshot = [...allPredictions]
+      try {
+        if (isSamePlayer) {
+          setAllPredictions(prev => prev.filter(p => p.id !== prevLeader.id))
+          await api.deletePrediction(prevLeader.id)
+          track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: null, action: 'clear', context: 'prove_it_table' })
+        } else {
+          if (prevLeader) {
+            setAllPredictions(prev => prev.filter(p => p.id !== prevLeader.id))
+            await api.deletePrediction(prevLeader.id)
+          }
+          const res = await api.submitPrediction({
+            sport: 'golf',
+            predictionType,
+            category: 'tournament',
+            eventId: currentTournament.id,
+            subjectPlayerId: player.id,
+            predictionData: { playerName: player.name },
+            isPublic: true,
+          })
+          setAllPredictions(prev => [
+            ...prev.filter(p => p.id !== prevLeader?.id),
+            res.prediction || res
+          ])
+          onPredictionMade?.()
+          track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: 'pick', action: 'new', context: 'prove_it_table' })
+        }
+      } catch (err) {
+        console.error('Leader submit failed:', err)
+        setAllPredictions(snapshot)
+      } finally {
+        removeInflight(submitKey)
+      }
+      return
+    }
+
+    // ── Generic flow (top, cut, sg, h2h): optimistic single submit ──
+    await submitSingle(player, predictionType, direction, extraData)
   }
 
   if (loading) {
@@ -305,7 +395,7 @@ function WeeklySlate({ onPredictionMade }) {
         <CompactSlateTable
           players={filteredSlate}
           predictions={allPredictions}
-          submitting={submitting}
+          inflight={inflight}
           onCellTap={handleCellTap}
           onPlayerClick={setDrawerPlayer}
         />
@@ -324,7 +414,7 @@ function WeeklySlate({ onPredictionMade }) {
               <button
                 key={player.id}
                 onClick={() => handleCellTap(player, 'round_leader', isSelected ? null : 'pick')}
-                disabled={submitting != null}
+                disabled={inflight.has(`${player.id}_round_leader`)}
                 className={`flex items-center gap-1.5 p-2 rounded-lg text-xs transition-all ${
                   isSelected
                     ? 'bg-crown/15 border border-crown/30 text-crown'
@@ -399,7 +489,7 @@ function WeeklySlate({ onPredictionMade }) {
                         opponentPlayerId: h2hPlayerB.id,
                         opponentPlayerName: h2hPlayerB.name
                       })}
-                      disabled={!!submitting}
+                      disabled={inflight.size > 0}
                       className="flex-1 py-2 text-xs rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
                     >
                       {h2hPlayerA.name?.split(' ').pop()}
@@ -409,7 +499,7 @@ function WeeklySlate({ onPredictionMade }) {
                         opponentPlayerId: h2hPlayerA.id,
                         opponentPlayerName: h2hPlayerA.name
                       })}
-                      disabled={!!submitting}
+                      disabled={inflight.size > 0}
                       className="flex-1 py-2 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
                     >
                       {h2hPlayerB.name?.split(' ').pop()}
@@ -457,7 +547,7 @@ function WeeklySlate({ onPredictionMade }) {
                         opponentPlayerId: playerB.id,
                         opponentPlayerName: playerB.name
                       })}
-                      disabled={!!submitting}
+                      disabled={inflight.size > 0}
                       className="flex-1 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
                     >
                       {playerA.name?.split(' ').pop()}
@@ -467,7 +557,7 @@ function WeeklySlate({ onPredictionMade }) {
                         opponentPlayerId: playerA.id,
                         opponentPlayerName: playerA.name
                       })}
-                      disabled={!!submitting}
+                      disabled={inflight.size > 0}
                       className="flex-1 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
                     >
                       {playerB.name?.split(' ').pop()}

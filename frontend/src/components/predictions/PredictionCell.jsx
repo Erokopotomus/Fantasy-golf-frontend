@@ -11,6 +11,9 @@ import { useCallback, useMemo } from 'react'
  *   top:    empty → yes → no → empty
  *   cut:    empty → make → miss → empty
  *   sg:     empty → over → under → empty
+ *
+ * Empty cells show ghost labels hinting what the first tap does.
+ * Selected cells show readable words instead of cryptic letters.
  */
 
 // Direction cycle maps per column type
@@ -21,15 +24,23 @@ const CYCLES = {
   sg:     [null, 'over', 'under'],
 }
 
-// Display labels per direction
+// Readable display labels per direction
 const LABELS = {
-  pick:  '🏆',
-  yes:   'Y',
-  no:    'N',
-  make:  'M',
-  miss:  'X',
-  over:  'A',
-  under: 'B',
+  pick:  '\u{1F3C6}',
+  yes:   'Yes',
+  no:    'No',
+  make:  'Make',
+  miss:  'Miss',
+  over:  'Over',
+  under: 'Undr',
+}
+
+// Ghost labels — shown faded in empty cells to hint what first tap does
+const GHOST_LABELS = {
+  winner: '\u{1F3C6}',
+  top:    'Yes',
+  cut:    'Make',
+  sg:     null, // SG shows benchmark number as ghost instead
 }
 
 // Classify direction as positive, negative, or empty for styling
@@ -42,7 +53,7 @@ function getPolarity(direction) {
 
 // Style maps for each visual state
 const STYLE_MAP = {
-  empty:    'bg-[var(--bg-alt)] text-text-primary/40 border border-[var(--card-border)] hover:border-blaze/30 hover:bg-blaze/5 cursor-pointer',
+  empty:    'bg-[var(--bg-alt)] text-text-primary/25 border border-[var(--card-border)] hover:border-blaze/30 hover:bg-blaze/5 cursor-pointer',
   positive: 'bg-field/10 text-field border border-field/30',
   negative: 'bg-live-red/10 text-live-red border border-live-red/30',
   winner:   'bg-crown/20 text-crown border border-crown/40',
@@ -108,37 +119,38 @@ export default function PredictionCell({
   const content = useMemo(() => {
     // Resolved: show result icon
     if (isResolved) {
-      return outcome === 'CORRECT' ? '✓' : '✗'
+      return outcome === 'CORRECT' ? '\u2713' : '\u2717'
     }
 
-    // SG column: always show benchmark value, prefixed with direction letter
+    // SG column: show benchmark as ghost when empty, Over/Under when selected
     if (columnType === 'sg') {
       const formatted = benchmarkValue != null
         ? `${benchmarkValue > 0 ? '+' : ''}${Number(benchmarkValue).toFixed(1)}`
-        : '—'
+        : '\u2014'
 
-      if (!effectiveDirection) return formatted
-      const prefix = effectiveDirection === 'over' ? 'A' : 'B'
-      return `${prefix} ${formatted}`
+      if (!effectiveDirection) return formatted // ghost benchmark number
+      return LABELS[effectiveDirection] // "Over" or "Undr"
     }
 
     // Winner selected
     if (columnType === 'winner' && effectiveDirection === 'pick') {
-      return '🏆'
+      return '\u{1F3C6}'
     }
 
-    // Empty state — visible dash so cells look tappable
-    if (!effectiveDirection) return '–'
+    // Empty state — show ghost label hinting what first tap does
+    if (!effectiveDirection) {
+      return GHOST_LABELS[columnType] || '\u2013'
+    }
 
-    // Active direction label
-    return LABELS[effectiveDirection] ?? '·'
+    // Active direction label (readable words)
+    return LABELS[effectiveDirection] ?? '\u00B7'
   }, [isResolved, outcome, columnType, effectiveDirection, benchmarkValue])
 
-  // Width: SG column needs more space for the benchmark value
-  const widthClass = columnType === 'sg' ? 'min-w-[3.5rem]' : 'w-9'
+  // Width: SG column needs more space, standard columns wider for words
+  const widthClass = columnType === 'sg' ? 'min-w-[3rem]' : 'min-w-[2.75rem]'
 
   return (
-    <td className="px-0.5 py-0.5">
+    <td className="px-0.5 py-0.5 text-center">
       <button
         type="button"
         onClick={handleTap}
@@ -146,8 +158,8 @@ export default function PredictionCell({
         className={[
           // Base touch target
           `${widthClass} h-8 rounded`,
-          // Text styling
-          'text-xs font-mono font-semibold',
+          // Text styling — smaller font for words to fit
+          'text-[10px] font-medium',
           // Flex centering
           'flex items-center justify-center',
           // Transitions
@@ -175,5 +187,5 @@ function getAriaLabel(columnType, direction, isResolved, outcome) {
   if (!direction) {
     return `${columnType}: tap to predict`
   }
-  return `${columnType}: ${direction} — tap to change`
+  return `${columnType}: ${direction} \u2014 tap to change`
 }
