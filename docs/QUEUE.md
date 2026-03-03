@@ -2693,6 +2693,32 @@ The error capture system is live (AppError model, batch endpoint, frontend captu
 
 ---
 
+### 083 — Enhanced Manager Profile (Phase 5A: Avatar Upload, Sports Badges, Recent Calls)
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Committed Cowork's manager profile enhancements: avatar upload with hover overlay, active sports emoji badges, recent predictions feed (last 6 calls with outcomes). New GET /predictions/user/:userId/recent endpoint. Files: ManagerProfile.jsx, predictions.js
+**Priority:** High — Phase 5A, visible to friends Wednesday
+**Prompt:**
+
+Phase 5A Enhanced Manager Profile — Cowork has made all edits. Commit and deploy.
+
+**Changes already made by Cowork (commit these):**
+
+1. **`frontend/src/pages/ManagerProfile.jsx`** — Three enhancements:
+   - **Avatar upload**: Avatar now has hover overlay with camera icon. Clicking triggers file input, uploads via Cloudinary (`uploadImage` util), calls `api.updateProfile({ avatar })`, refetches. Only shows on own profile. Increased avatar from 16x16 to 20x20.
+   - **Active sports badges**: Small emoji badges (⛳🏈🏀⚾) positioned bottom-right of avatar, showing which sports the user has played in. Pulled from existing `bySport` data.
+   - **Recent Calls feed**: New section after Prove It Track Record showing last 6 predictions with outcome indicator (green ✓, red ✗, gold ?), prediction type, player name, thesis excerpt, and resolved date. Links to Prove It page. Fetches from new backend endpoint `GET /api/predictions/user/:userId/recent`.
+   - Added imports: `useEffect`, `useRef`, `uploadImage`
+
+2. **`backend/src/routes/predictions.js`** — New endpoint:
+   - `GET /predictions/user/:userId/recent?limit=8` — Returns most recent predictions for any user
+   - Public endpoint (no auth required, for viewing other manager profiles)
+   - Returns: id, predictionType, outcome, thesis, sport, confidenceLevel, resolvedAt, createdAt, subjectPlayer (id+name), event (id+name)
+   - Max 20 results, default 8
+
+**Files:** `frontend/src/pages/ManagerProfile.jsx`, `backend/src/routes/predictions.js`
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

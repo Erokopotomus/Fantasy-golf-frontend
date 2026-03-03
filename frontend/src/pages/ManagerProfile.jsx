@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import useManagerProfile from '../hooks/useManagerProfile'
@@ -10,6 +10,7 @@ import RatingTierBadge from '../components/vault/RatingTierBadge'
 import RatingTrendIndicator from '../components/vault/RatingTrendIndicator'
 import RatingConfidenceIndicator from '../components/vault/RatingConfidenceIndicator'
 import api from '../services/api'
+import { uploadImage } from '../utils/uploadImage'
 import ShareButton from '../components/share/ShareButton'
 import RatingCard from '../components/share/cards/RatingCard'
 import BadgeCard from '../components/share/cards/BadgeCard'
@@ -261,6 +262,41 @@ const ManagerProfile = () => {
   const [saveError, setSaveError] = useState(null)
   const [shareToast, setShareToast] = useState(false)
   const [pinnedBadges, setPinnedBadges] = useState(user?.pinnedBadges || [])
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [recentCalls, setRecentCalls] = useState([])
+  const [recentCallsLoading, setRecentCallsLoading] = useState(false)
+  const avatarInputRef = useRef(null)
+
+  // Load recent predictions
+  useEffect(() => {
+    if (!userId) return
+    setRecentCallsLoading(true)
+    api.request(`/predictions/user/${userId}/recent?limit=8`)
+      .then(data => setRecentCalls(data.predictions || []))
+      .catch(() => setRecentCalls([]))
+      .finally(() => setRecentCallsLoading(false))
+  }, [userId])
+
+  // Avatar upload handler
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarUploading(true)
+    try {
+      const imageUrl = await uploadImage(file, {
+        maxWidth: 120,
+        maxHeight: 120,
+        squareCrop: true,
+        folder: 'clutch-avatars',
+      })
+      await api.updateProfile({ avatar: imageUrl })
+      refetch()
+    } catch (err) {
+      console.error('Avatar upload failed:', err)
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -383,14 +419,54 @@ const ManagerProfile = () => {
         {/* Header with Clutch Rating */}
         <Card className="mb-6">
           <div className="flex items-start gap-4 mb-4">
-            {/* Avatar */}
-            {user?.avatar && user.avatar.startsWith('http') ? (
-              <img src={user.avatar} alt={user?.name} className="w-16 h-16 rounded-full object-cover shadow-button shrink-0" />
-            ) : (
-              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-text-primary text-2xl font-bold font-display shadow-button shrink-0">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
-              </div>
-            )}
+            {/* Avatar with upload */}
+            <div className="relative shrink-0 group">
+              {user?.avatar && user.avatar.startsWith('http') ? (
+                <img src={user.avatar} alt={user?.name} className="w-20 h-20 rounded-full object-cover shadow-button" />
+              ) : (
+                <div className="w-20 h-20 bg-gold rounded-full flex items-center justify-center text-text-primary text-3xl font-bold font-display shadow-button">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              )}
+              {isOwnProfile && (
+                <>
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                    disabled={avatarUploading}
+                  >
+                    {avatarUploading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                </>
+              )}{/* Active Sports Badges */}
+              {bySport.length > 0 && (
+                <div className="absolute -bottom-1 -right-1 flex gap-0.5">
+                  {bySport.map(sp => (
+                    <span
+                      key={sp.id}
+                      className="w-6 h-6 rounded-full bg-[var(--surface)] border-2 border-[var(--card-border)] flex items-center justify-center text-xs shadow-sm"
+                      title={sp.sport?.name}
+                    >
+                      {sp.sport?.name === 'Golf' ? '⛳' : sp.sport?.name === 'NFL' ? '🏈' : sp.sport?.name === 'NBA' ? '🏀' : sp.sport?.name === 'MLB' ? '⚾' : '🏆'}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Name + bio */}
             <div className="flex-1 min-w-0">
@@ -731,6 +807,58 @@ const ManagerProfile = () => {
                 Best streak: {reputation.streakBest} correct in a row
               </div>
             )}
+          </Card>
+        )}
+
+        {/* Recent Calls Feed */}
+        {recentCalls.length > 0 && (
+          <Card className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold font-display text-text-primary">Recent Calls</h2>
+              <Link
+                to={isOwnProfile ? '/prove-it' : `/prove-it?tab=compare&target=${userId}`}
+                className="text-xs text-text-secondary hover:text-text-primary font-mono transition-colors"
+              >
+                View all &rarr;
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {recentCalls.slice(0, 6).map(call => {
+                const isCorrect = call.outcome === 'CORRECT'
+                const isPending = call.outcome === 'PENDING'
+                const isWrong = call.outcome === 'INCORRECT'
+                return (
+                  <div key={call.id} className="flex items-center gap-3 py-2 border-b border-[var(--card-border)]/30 last:border-0">
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      isCorrect ? 'bg-field-bright/20 text-field' :
+                      isWrong ? 'bg-live-red/20 text-live-red' :
+                      'bg-crown/20 text-crown'
+                    }`}>
+                      {isCorrect ? '✓' : isWrong ? '✗' : '?'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-text-primary truncate">
+                        {call.predictionType?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        {call.subjectPlayer?.name ? ` — ${call.subjectPlayer.name}` : ''}
+                      </p>
+                      {call.thesis && (
+                        <p className="text-xs text-text-muted truncate">{call.thesis}</p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className={`text-xs font-mono font-medium ${
+                        isCorrect ? 'text-field' : isWrong ? 'text-live-red' : 'text-text-muted'
+                      }`}>
+                        {isPending ? 'pending' : call.outcome?.toLowerCase()}
+                      </span>
+                      {call.resolvedAt && (
+                        <p className="text-[10px] text-text-muted">{new Date(call.resolvedAt).toLocaleDateString()}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </Card>
         )}
 

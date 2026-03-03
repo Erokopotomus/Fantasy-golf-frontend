@@ -669,4 +669,38 @@ router.get('/compare/:targetUserId', authenticate, async (req, res) => {
   }
 })
 
+// GET /user/:userId/recent — Recent predictions for a user's manager profile
+router.get('/user/:userId/recent', async (req, res) => {
+  try {
+    const { userId } = req.params
+    const limit = Math.min(parseInt(req.query.limit) || 8, 20)
+
+    const predictions = await prisma.prediction.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        predictionType: true,
+        outcome: true,
+        thesis: true,
+        sport: true,
+        confidenceLevel: true,
+        resolvedAt: true,
+        createdAt: true,
+        subjectPlayer: {
+          select: { id: true, name: true },
+        },
+        event: {
+          select: { id: true, name: true },
+        },
+      },
+    })
+
+    res.json({ predictions })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 module.exports = router
