@@ -59,7 +59,7 @@ export default function CompactSlateTable({
           <tr>
             {/* Player column header — sticky left + top (corner cell gets highest z) */}
             <th
-              className="sticky left-0 z-30 bg-[var(--surface)] text-left px-2 py-2 text-[10px] font-semibold text-text-primary/40 uppercase tracking-wider"
+              className="sticky left-0 z-30 bg-[var(--surface)] text-left px-2 py-2 text-[10px] font-semibold text-text-primary/40 uppercase tracking-wider border-r border-[var(--card-border)]"
             >
               Player
             </th>
@@ -88,14 +88,14 @@ export default function CompactSlateTable({
             return (
               <tr
                 key={player.id}
-                className="border-b border-[var(--card-border)] hover:bg-[var(--bg-alt)] h-[42px]"
+                className="group border-b border-[var(--card-border)] hover:bg-[var(--bg-alt)] h-[42px]"
               >
                 {/* Player column — sticky left */}
-                <td className="sticky left-0 z-10 bg-[var(--surface)] px-2 py-1">
+                <td className="sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--bg-alt)] transition-colors px-2 py-1 border-r border-[var(--card-border)]">
                   <button
                     type="button"
                     onClick={() => onPlayerClick?.(player)}
-                    className="group flex items-center gap-2 min-w-0 max-w-[140px]"
+                    className="group/player flex items-center gap-2 min-w-0 max-w-[140px]"
                   >
                     {/* Headshot or initial fallback */}
                     {player.headshotUrl ? (
@@ -112,7 +112,7 @@ export default function CompactSlateTable({
 
                     {/* Name + rank */}
                     <div className="min-w-0 text-left">
-                      <div className="text-xs text-text-primary font-medium truncate group-hover:text-blaze transition-colors">
+                      <div className="text-xs text-text-primary font-medium truncate group-hover/player:text-blaze transition-colors">
                         {lastName}
                       </div>
                       {player.rank && (
