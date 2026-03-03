@@ -384,9 +384,13 @@ const ManagerProfile = () => {
         <Card className="mb-6">
           <div className="flex items-start gap-4 mb-4">
             {/* Avatar */}
-            <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-text-primary text-2xl font-bold font-display shadow-button shrink-0">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
-            </div>
+            {user?.avatar && user.avatar.startsWith('http') ? (
+              <img src={user.avatar} alt={user?.name} className="w-16 h-16 rounded-full object-cover shadow-button shrink-0" />
+            ) : (
+              <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center text-text-primary text-2xl font-bold font-display shadow-button shrink-0">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
 
             {/* Name + bio */}
             <div className="flex-1 min-w-0">
@@ -592,6 +596,25 @@ const ManagerProfile = () => {
         </Card>
 
         {/* Clutch Rating Breakdown — V2 7-component view */}
+        {!(clutchRating && clutchRating.overall != null) && (
+          <Card className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-full border-2 border-dashed border-[var(--stone)] flex items-center justify-center">
+                <span className="text-text-muted text-lg">?</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold font-display text-text-primary">Clutch Rating</h2>
+                <p className="text-text-muted text-sm">Building...</p>
+              </div>
+            </div>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              {isOwnProfile
+                ? 'Your Clutch Rating builds as you play — draft players, make predictions, and compete in leagues to see your rating emerge.'
+                : `${user?.name || 'This manager'}'s Clutch Rating hasn't been calculated yet.`
+              }
+            </p>
+          </Card>
+        )}
         {clutchRating && clutchRating.overall != null && (
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-4">

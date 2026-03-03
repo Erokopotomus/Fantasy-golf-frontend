@@ -143,6 +143,8 @@ function App() {
           <Route path="/create-league" element={<Navigate to="/leagues/create" replace />} />
           <Route path="/register" element={<Navigate to="/signup" replace />} />
           <Route path="/golf/tournaments" element={<Navigate to="/tournaments" replace />} />
+          <Route path="/golf/players" element={<Navigate to="/players" replace />} />
+          <Route path="/live" element={<Navigate to="/tournaments" replace />} />
           <Route
             path="/dashboard"
             element={

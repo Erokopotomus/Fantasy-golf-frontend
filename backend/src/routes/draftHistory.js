@@ -86,7 +86,7 @@ router.get('/drafts/:draftId', async (req, res) => {
         picks: {
           include: {
             player: {
-              select: { id: true, name: true, owgrRank: true, datagolfRank: true, headshotUrl: true, countryFlag: true, primaryTour: true, sgTotal: true },
+              select: { id: true, name: true, owgrRank: true, datagolfRank: true, headshotUrl: true, countryFlag: true, primaryTour: true, sgTotal: true, sgOffTee: true, sgApproach: true, sgAroundGreen: true, sgPutting: true, sgTeeToGreen: true },
             },
             team: { select: { id: true, name: true, userId: true } },
           },
@@ -135,6 +135,10 @@ router.get('/drafts/:draftId', async (req, res) => {
         countryFlag: p.player.countryFlag,
         primaryTour: p.player.primaryTour,
         sgTotal: p.player.sgTotal,
+        sgOffTee: p.player.sgOffTee,
+        sgApproach: p.player.sgApproach,
+        sgAroundGreen: p.player.sgAroundGreen,
+        sgPutting: p.player.sgPutting,
         amount: p.amount,
         isAutoPick: p.isAutoPick,
       })),

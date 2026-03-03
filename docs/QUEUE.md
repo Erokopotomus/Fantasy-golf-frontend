@@ -1860,6 +1860,113 @@ Cowork already made the edits in `frontend/src/pages/ProveIt.jsx`. Just commit a
 
 ---
 
+### 066 — Commit: Dead Route Redirects + ManagerProfile Avatar & Rating Placeholder
+**Status:** `DONE`
+**Priority:** MEDIUM — friend-testing polish
+**Prompt:**
+Cowork already made the edits. Just commit and deploy.
+
+**Changes already made (2 files):**
+
+1. **`frontend/src/App.jsx`** — Added two dead route redirects:
+   - `/golf/players` → `/players` (the actual players page)
+   - `/live` → `/tournaments` (the actual tournaments list)
+   These join the existing redirects for `/create-league`, `/register`, `/golf/tournaments` from item 056. Anyone typing these URLs directly or bookmarking old routes will now land somewhere useful instead of a blank page.
+
+2. **`frontend/src/pages/ManagerProfile.jsx`** — Two fixes:
+   - **Avatar display (lines ~387-393):** The header avatar was hardcoded as a gold initial circle. Now checks `user.avatar && user.avatar.startsWith('http')` and renders an `<img>` tag for real avatars, falling back to the initial circle for users without uploaded avatars.
+   - **Rating placeholder (above the existing rating card):** New users with no Clutch Rating data now see a "Clutch Rating — Building..." placeholder card explaining how the rating builds over time, instead of the entire section being invisible. Different copy for own profile vs viewing another user.
+
+**Files changed:**
+- `frontend/src/App.jsx` (2 redirect routes added)
+- `frontend/src/pages/ManagerProfile.jsx` (2 edits: avatar + rating placeholder)
+
+---
+
+---
+
+### 067 — Backend: Enrich Draft Recap Endpoint with Full SG Stats
+**Status:** `DONE`
+**Priority:** HIGH — The new DraftRecap page shows SG radar charts, SG breakdown tables, and team SG power rankings. Without this backend change, only `sgTotal` is available — the radar chart and per-category stats will show dashes.
+**Prompt:**
+In `backend/src/routes/draftHistory.js`, the `GET /drafts/:draftId` endpoint (line 78) currently selects only `sgTotal` from the player model (line 89):
+
+```js
+player: {
+  select: { id: true, name: true, owgrRank: true, datagolfRank: true, headshotUrl: true, countryFlag: true, primaryTour: true, sgTotal: true },
+},
+```
+
+**Add these fields to the player select:**
+- `sgOffTee`
+- `sgApproach`
+- `sgAroundGreen`
+- `sgPutting`
+- `sgTeeToGreen`
+
+Then in the response mapping (lines 125-140), add these to each pick object:
+
+```js
+sgOffTee: p.player.sgOffTee,
+sgApproach: p.player.sgApproach,
+sgAroundGreen: p.player.sgAroundGreen,
+sgPutting: p.player.sgPutting,
+```
+
+These fields should already exist on the Player model from the DataGolf SG backfill (migration/backfill in Phase 4E). Check `schema.prisma` to confirm the exact field names.
+
+**Files to modify:**
+- `backend/src/routes/draftHistory.js` — lines 89 and 125-140
+
+---
+
+### 068 — Commit: DraftRecap.jsx Wow-Factor Overhaul
+**Status:** `DONE`
+**Priority:** HIGH — The draft is tomorrow. This is the "holy shit" moment.
+**Prompt:**
+Cowork already rewrote `frontend/src/pages/DraftRecap.jsx` from scratch. Just commit and deploy.
+
+**What changed (complete rewrite from 293 → 724 lines):**
+
+The old DraftRecap was functional but plain — letter grade card, simple pick list, basic draft board grid, and a flat team grades list. The new version is designed to make friends say "holy shit" after their first draft.
+
+**New features:**
+
+1. **Cinematic reveal** — Sections fade in sequentially (300ms → 2000ms) instead of appearing all at once. Loading screen shows NeuralCluster animation with "Analyzing your draft..."
+
+2. **Hero Grade Card** — Large GradeRing (animated SVG progress ring), grade emoji, descriptive message ("Elite Draft", "Legendary Draft"), draft rank badge with crown for #1. Gradient glow effect behind grade.
+
+3. **Quick Stats Row** — 4-card grid: Avg SG Total (animated counter), Total Value, Steals count, Best Pick SG. Each with rank indicators.
+
+4. **Tabbed sections** — Overview, Your Roster, Leaderboard, Draft Board. Clean pill navigation.
+
+5. **Team SG Power Ranking** (Overview tab) — Horizontal bar chart showing every team ranked by average Strokes Gained. Gold/silver/bronze gradient bars for top 3. Team names + numeric values.
+
+6. **SG Radar Chart** (Overview tab) — Uses existing `SgRadarChart` component to show the user's top 5 picks' SG DNA (Off the Tee, Approach, Around Green, Putting, Total). Visual proof of roster strengths.
+
+7. **AI Coach's Take** (Overview tab) — NeuralCluster-branded card with editorial italic text. Dynamic commentary based on grade, SG average, steals, and best pick. The AI coach "analyzes" the draft.
+
+8. **Enhanced Roster Tab** — Each pick shows headshot, GradeRing, player name, rank, SG Total, and value tag ("HIGHWAY ROBBERY", "GREAT VALUE", "NICE STEAL", "SLIGHT REACH", "BIG REACH"). Clickable rows open PlayerDrawer for full stats. Below: SG breakdown table with all 5 SG categories per player + team average row.
+
+9. **Rich Leaderboard** — Crown/medal emoji for top 3, GradeRings per team, avg SG shown alongside grade score, current user highlighted with gold styling.
+
+10. **Interactive Draft Board** — Clickable cells open PlayerDrawer. User's column highlighted. Tooltips on hover.
+
+11. **PlayerDrawer integration** — Click any player anywhere in the recap to see full stats, SG radar, career history.
+
+**Components used:**
+- `NeuralCluster` — animated brain visual (loading + coach section)
+- `SgRadarChart` — SVG radar chart for team SG profile
+- `PlayerDrawer` — full player stats sidebar
+- `GradeRing` — new inline component (animated SVG progress ring)
+- `AnimatedNumber` — new inline component (eased number counter)
+- `TeamSgBarChart` — new inline component (horizontal bar chart)
+
+**Files changed:**
+- `frontend/src/pages/DraftRecap.jsx` (complete rewrite)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
