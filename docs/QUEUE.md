@@ -2356,6 +2356,27 @@ The draft room is broken on mobile (390px). Several layout issues:
 
 ---
 
+### 074 — Draft Dashboard Tab: Add PlayerDrawer Click Handlers
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Already committed with 073. DraftDashboard.jsx has onViewPlayer prop wired, DraftRoom.jsx passes openPlayerDetail. Files: DraftDashboard.jsx, DraftRoom.jsx
+**Priority:** Critical — draft is tomorrow
+**Prompt:**
+
+The Dashboard tab inside the draft room has NO player click handlers. Clicking any player name (Available list or roster picks) does nothing — no PlayerDrawer opens. The Draft tab works fine (PlayerPool has `onViewPlayer`), but the Dashboard tab was missed.
+
+**Changes already made by Cowork (commit these):**
+- `frontend/src/components/draft/DraftDashboard.jsx`:
+  - Accept `onViewPlayer` prop
+  - Available Players table rows: `onClick={() => onViewPlayer && onViewPlayer(player)}` (passes full player object)
+  - Roster pick names: looks up full player from `players` array by `pick.playerId`, passes to `onViewPlayer`
+  - Added `cursor-pointer` and `hover:text-gold` styling on clickable names
+- `frontend/src/pages/DraftRoom.jsx`:
+  - Pass `onViewPlayer={openPlayerDetail}` to `<DraftDashboard />`
+
+**Files:** DraftDashboard.jsx, DraftRoom.jsx
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
