@@ -1,4 +1,5 @@
 // Real API service for Clutch backend
+import { captureApiError } from './errorCapture'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
@@ -41,6 +42,8 @@ class ApiService {
     const data = await response.json()
 
     if (!response.ok) {
+      // Silent error capture — no UI impact, just logs for the team
+      captureApiError(endpoint, response.status, data.error?.message, options.method || 'GET')
       throw new Error(data.error?.message || 'Request failed')
     }
 

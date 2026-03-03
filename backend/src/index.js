@@ -44,6 +44,7 @@ const cheatSheetRoutes = require('./routes/cheatSheets')
 const intelligenceRoutes = require('./routes/intelligence')
 const aiRoutes = require('./routes/ai')
 const customImportRoutes = require('./routes/customImport')
+const errorRoutes = require('./routes/errors')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -151,6 +152,7 @@ app.use('/api/lab/cheatsheet', cheatSheetRoutes)
 app.use('/api/intelligence', intelligenceRoutes)
 app.use('/api/ai', aiRoutes)
 app.use('/api/import/custom', customImportRoutes)
+app.use('/api/errors', errorRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -1024,6 +1026,23 @@ httpServer.listen(PORT, () => {
 
     console.log('[Cron] AI Insight pipeline scheduled (daily 5 AM)')
   }
+
+  // ── Error Capture Cleanup ──
+  // Weekly Sunday 2:00 AM ET — purge resolved errors older than 30 days
+  cron.schedule('0 2 * * 0', async () => {
+    console.log(`[Cron:errorCleanup] ${new Date().toISOString()} — Cleaning old resolved errors`)
+    try {
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() - 30)
+      const result = await prisma.appError.deleteMany({
+        where: { resolved: true, resolvedAt: { lt: cutoff } },
+      })
+      console.log(`[Cron:errorCleanup] Done: ${result.count} old resolved errors deleted`)
+    } catch (err) {
+      console.error(`[Cron:errorCleanup] Error:`, err.message)
+    }
+  }, { timezone: 'America/New_York' })
+  console.log('[Cron] Error cleanup scheduled (Sun 2 AM)')
 
   // Trade review processor — runs every 15 minutes
   const tradePrisma = require('./lib/prisma')

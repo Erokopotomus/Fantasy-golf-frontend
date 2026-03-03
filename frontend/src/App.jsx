@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
+import { useEffect } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
@@ -12,6 +13,7 @@ import MobileNav from './components/layout/MobileNav'
 import AuroraBackground from './components/layout/AuroraBackground'
 import NotificationContainer from './components/notifications/NotificationContainer'
 import OnboardingModal from './components/onboarding/OnboardingModal'
+import { initErrorCapture } from './services/errorCapture'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -119,6 +121,8 @@ function AppShell({ children }) {
 }
 
 function App() {
+  useEffect(() => { initErrorCapture() }, [])
+
   return (
     <ThemeProvider>
     <AuthProvider>

@@ -1967,6 +1967,297 @@ The old DraftRecap was functional but plain — letter grade card, simple pick l
 
 ---
 
+### 069 — Backend: Silent Error Capture System (Migration + Route + Admin View)
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Added AppError model to schema (prisma db push), created errors.js route with 5 endpoints (batch, summary, recent, resolve, resolve-bulk), registered route in index.js, added weekly cleanup cron. Files: schema.prisma, errors.js (new), index.js
+**Priority:** HIGH — Foundation for scaling. Captures errors silently so we can fix issues users never even report.
+**Prompt:**
+Cowork built the frontend error capture service (`frontend/src/services/errorCapture.js`) which silently captures API errors, JS crashes, component failures, and churn signals. It batches errors and sends them to `POST /api/errors/batch`. The frontend is already wired up — `api.js` calls `captureApiError()` on every non-401 error, `App.jsx` calls `initErrorCapture()` on mount, and an `ErrorBoundary` component catches React render crashes.
+
+**Now we need the backend to receive, store, and surface this data.**
+
+**1. Create a Prisma migration for the `AppError` model:**
+
+```prisma
+model AppError {
+  id          String   @id @default(cuid())
+  type        String   // 'api_error', 'js_error', 'component_crash', 'promise_rejection', 'churn_signal'
+  category    String   // 'server_error', 'client_error', 'render_error', 'unhandled_error', 'user_behavior'
+  severity    String   @default("low") // 'low', 'medium', 'high'
+  message     String
+  metadata    Json?    // endpoint, status, stack, component name, etc.
+  url         String?  // page where error occurred
+  userId      String?  // null if not logged in
+  sessionId   String?  // browser session ID for grouping
+  userAgent   String?
+  viewport    String?
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?  // admin user ID who resolved it
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([severity])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resolved])
+}
+```
+
+Run `npx prisma migrate dev --name add_app_error_tracking`.
+
+**2. Create route file `backend/src/routes/errors.js`:**
+
+```js
+const express = require('express')
+const router = express.Router()
+const prisma = require('../lib/prisma.js')
+const { authenticate } = require('../middleware/auth')
+const { requireAdmin } = require('../middleware/requireAdmin')
+
+// POST /batch — receive error batches from frontend (auth optional)
+router.post('/batch', async (req, res) => {
+  try {
+    const { errors } = req.body
+    if (!errors || !Array.isArray(errors) || errors.length === 0) {
+      return res.status(400).json({ error: { message: 'No errors provided' } })
+    }
+
+    // Limit batch size to prevent abuse
+    const batch = errors.slice(0, 50)
+
+    // Don't let error tracking errors crash the app
+    const created = await prisma.appError.createMany({
+      data: batch.map(e => ({
+        type: e.type || 'unknown',
+        category: e.category || 'unknown',
+        severity: e.severity || 'low',
+        message: (e.message || '').slice(0, 2000),
+        metadata: e.metadata || null,
+        url: e.url || null,
+        userId: e.userId || null,
+        sessionId: e.sessionId || null,
+        userAgent: (e.userAgent || '').slice(0, 500),
+        viewport: e.viewport || null,
+      })),
+      skipDuplicates: true,
+    })
+
+    res.json({ received: created.count })
+  } catch (error) {
+    console.error('[ErrorCapture] Failed to store errors:', error.message)
+    // Always return 200 — error tracking should never fail visibly
+    res.json({ received: 0 })
+  }
+})
+
+// GET /summary — admin dashboard: error summary (last 24h, 7d)
+router.get('/summary', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const now = new Date()
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000)
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000)
+
+    const [last24h, last7d, bySeverity, byType, topEndpoints, affectedUsers, unresolvedCount] = await Promise.all([
+      prisma.appError.count({ where: { createdAt: { gte: oneDayAgo } } }),
+      prisma.appError.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      prisma.appError.groupBy({
+        by: ['severity'],
+        where: { createdAt: { gte: sevenDaysAgo } },
+        _count: true,
+      }),
+      prisma.appError.groupBy({
+        by: ['type'],
+        where: { createdAt: { gte: sevenDaysAgo } },
+        _count: true,
+        orderBy: { _count: { type: 'desc' } },
+      }),
+      // Top failing endpoints
+      prisma.$queryRaw`
+        SELECT metadata->>'endpoint' as endpoint, metadata->>'status' as status, COUNT(*) as count
+        FROM "AppError"
+        WHERE type = 'api_error' AND "createdAt" > ${sevenDaysAgo}
+        AND metadata->>'endpoint' IS NOT NULL
+        GROUP BY metadata->>'endpoint', metadata->>'status'
+        ORDER BY count DESC
+        LIMIT 10
+      `,
+      // Unique affected users
+      prisma.appError.findMany({
+        where: { createdAt: { gte: sevenDaysAgo }, userId: { not: null } },
+        distinct: ['userId'],
+        select: { userId: true },
+      }),
+      prisma.appError.count({ where: { resolved: false } }),
+    ])
+
+    res.json({
+      last24h,
+      last7d,
+      unresolvedCount,
+      affectedUserCount: affectedUsers.length,
+      bySeverity: bySeverity.reduce((acc, s) => ({ ...acc, [s.severity]: s._count }), {}),
+      byType: byType.map(t => ({ type: t.type, count: t._count })),
+      topEndpoints,
+    })
+  } catch (error) {
+    console.error('[ErrorCapture] Summary failed:', error.message)
+    res.status(500).json({ error: { message: 'Failed to fetch error summary' } })
+  }
+})
+
+// GET /recent — admin: recent errors with pagination
+router.get('/recent', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100)
+    const severity = req.query.severity || null
+    const type = req.query.type || null
+    const resolved = req.query.resolved === 'true' ? true : req.query.resolved === 'false' ? false : undefined
+
+    const where = {}
+    if (severity) where.severity = severity
+    if (type) where.type = type
+    if (resolved !== undefined) where.resolved = resolved
+
+    const [errors, total] = await Promise.all([
+      prisma.appError.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.appError.count({ where }),
+    ])
+
+    res.json({ errors, total, page, totalPages: Math.ceil(total / limit) })
+  } catch (error) {
+    res.status(500).json({ error: { message: 'Failed to fetch errors' } })
+  }
+})
+
+// PATCH /:id/resolve — admin: mark error as resolved
+router.patch('/:id/resolve', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const updated = await prisma.appError.update({
+      where: { id: req.params.id },
+      data: { resolved: true, resolvedAt: new Date(), resolvedBy: req.user.id },
+    })
+    res.json(updated)
+  } catch (error) {
+    res.status(500).json({ error: { message: 'Failed to resolve error' } })
+  }
+})
+
+// POST /resolve-bulk — admin: bulk resolve by type or endpoint
+router.post('/resolve-bulk', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { type, endpoint } = req.body
+    const where = { resolved: false }
+    if (type) where.type = type
+    // For endpoint-specific bulk resolve, use raw query
+    if (endpoint) {
+      const result = await prisma.$executeRaw`
+        UPDATE "AppError" SET resolved = true, "resolvedAt" = NOW(), "resolvedBy" = ${req.user.id}
+        WHERE resolved = false AND metadata->>'endpoint' = ${endpoint}
+      `
+      return res.json({ resolved: result })
+    }
+    const result = await prisma.appError.updateMany({
+      where,
+      data: { resolved: true, resolvedAt: new Date(), resolvedBy: req.user.id },
+    })
+    res.json({ resolved: result.count })
+  } catch (error) {
+    res.status(500).json({ error: { message: 'Failed to bulk resolve' } })
+  }
+})
+
+module.exports = router
+```
+
+**3. Register the route in `backend/src/index.js`:**
+
+Add near the other route imports:
+```js
+const errorRoutes = require('./routes/errors')
+```
+
+And near the other `app.use` calls:
+```js
+app.use('/api/errors', errorRoutes)
+```
+
+**4. Add a cleanup cron** (optional but recommended) — delete resolved errors older than 30 days to keep the table lean. Add to the cron section in `index.js`:
+```js
+// Clean up old resolved errors — daily at 3 AM ET
+cron.schedule('0 3 * * *', async () => {
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const deleted = await prisma.appError.deleteMany({
+      where: { resolved: true, createdAt: { lt: thirtyDaysAgo } }
+    })
+    if (deleted.count > 0) console.log(`[Cron] Cleaned up ${deleted.count} old resolved errors`)
+  } catch (e) {
+    console.error('[Cron] Error cleanup failed:', e.message)
+  }
+})
+```
+
+**Files to create:**
+- `backend/src/routes/errors.js` (new file — full code above)
+
+**Files to modify:**
+- `backend/prisma/schema.prisma` — add AppError model
+- `backend/src/index.js` — register route + optional cleanup cron
+
+**After deploying:** The frontend will immediately start sending error batches. Verify with `GET /api/errors/summary` (requires admin auth).
+
+---
+
+### 070 — Commit: Frontend Error Capture System (Service + API Hook + ErrorBoundary + App Init)
+**Status:** `DONE`
+**Completed:** 2026-03-02 — Committed Cowork's frontend error capture edits (errorCapture.js, ErrorBoundary.jsx, api.js, App.jsx). Files: errorCapture.js, ErrorBoundary.jsx, api.js, App.jsx
+**Priority:** HIGH — Must deploy alongside 069.
+**Prompt:**
+Cowork already created and wired up the frontend error capture system. Just commit and deploy.
+
+**New files created:**
+
+1. **`frontend/src/services/errorCapture.js`** (230 lines) — Silent error capture service:
+   - `initErrorCapture()` — registers global error handlers (window.onerror, unhandledrejection, beforeunload, visibilitychange)
+   - `captureApiError(endpoint, status, message, method)` — called from api.js on every non-401 API error
+   - `reportComponentError(componentName, error, errorInfo)` — called from ErrorBoundary on React crashes
+   - `captureError(type, message, metadata)` — manual capture for custom errors
+   - Batches errors in a queue (max 50), flushes every 30s or on page unload/tab switch
+   - Churn signal detection: if user leaves within 60s of an error, flags it as high-severity churn
+   - Auto-captures context: URL, viewport, user agent, session ID, user ID (from JWT)
+   - Uses `keepalive: true` on fetch for reliable delivery during page unload
+
+2. **`frontend/src/components/common/ErrorBoundary.jsx`** (63 lines) — React error boundary:
+   - Catches render crashes in any wrapped component tree
+   - Reports to `reportComponentError()` silently
+   - Shows graceful fallback: warning icon + "Something went wrong" + "We've been notified" + retry button
+   - Accepts `name` prop for component identification, `fallback` prop for custom fallback UI, `onRetry` callback
+
+**Files modified:**
+
+3. **`frontend/src/services/api.js`** (2 edits):
+   - Added import: `import { captureApiError } from './errorCapture'`
+   - In `request()` method, before throwing on `!response.ok`, calls `captureApiError(endpoint, response.status, data.error?.message, options.method || 'GET')`
+
+4. **`frontend/src/App.jsx`** (2 edits):
+   - Added imports: `import { useEffect } from 'react'` and `import { initErrorCapture } from './services/errorCapture'`
+   - Added `useEffect(() => { initErrorCapture() }, [])` in the App function body before the return
+
+**Files changed:**
+- `frontend/src/services/errorCapture.js` (new)
+- `frontend/src/components/common/ErrorBoundary.jsx` (new)
+- `frontend/src/services/api.js` (2 edits)
+- `frontend/src/App.jsx` (2 edits)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
