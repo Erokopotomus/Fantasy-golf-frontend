@@ -7,6 +7,9 @@ const MobileNav = () => {
 
   if (!user) return null
 
+  // Hide bottom nav on full-screen experiences (draft room, mock draft)
+  if (location.pathname.match(/\/leagues\/[^/]+\/draft/) || location.pathname.startsWith('/mock-draft/')) return null
+
   const isActive = (path) => {
     if (path === '/dashboard') {
       return location.pathname === '/dashboard'

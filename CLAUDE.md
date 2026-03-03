@@ -70,8 +70,8 @@ Three agents work in parallel: **Cowork** (audit/fix/queue), **Claude Code** (bu
 
 ## DEVELOPMENT PHASES
 
-### Current Status: PHASE 5 — IN PROGRESS
-> Phases 1-4 complete (4E partially complete). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 + Commissioner blog built. ESPN historical backfill (2018-2026, 9 years) complete. DataGolf SG backfill (2018-2026) complete. Tournament intelligence + SG Intelligence (radar charts, trend viz) live. Golf Hub + Season Race + Compare page live. Live fantasy scoring pipeline + scoring page redesign live. Board editor overhauled (compare mode, SG columns, auction values, reason chips). Draft room season stats + tooltips. iPod Reframe (all 6 phases) complete. Profile enhancement (avatar upload, username, backend persist) complete. Leagues dropdown nav. Next: finish Phase 5 remaining items.
+### Current Status: PHASE 5 — IN PROGRESS (Friend Testing Sprint Active)
+> Phases 1-4 complete (4E partially complete). Phase 5B (Clutch Rating V2) built. Phase 6 (AI Engine) complete. League Vault V2 + Commissioner blog built. ESPN historical backfill (2018-2026, 9 years) complete. DataGolf SG backfill (2018-2026) complete. Tournament intelligence + SG Intelligence (radar charts, trend viz) live. Golf Hub + Season Race + Compare page live. Live fantasy scoring pipeline + scoring page redesign live. Board editor overhauled (compare mode, SG columns, auction values, reason chips). Draft room season stats + tooltips. iPod Reframe (all 6 phases) complete. Profile enhancement (avatar upload, username, backend persist) complete. Leagues dropdown nav. **Friend Testing Sprint (Mar 2026):** New user flow fixed (avatar bug, join-by-code double-join, post-signup routing). Prove It page overhauled (Golf Slate default, AI coach engagement banner, top picks spotlight, PlayerDrawer integration). DraftRecap completely rewritten with cinematic reveal, SG radar charts, team SG power ranking, AI coach commentary, animated counters, interactive draft board. Branded HTML email templates (league invite + vault invite). Silent error capture system built (frontend service + ErrorBoundary + backend AppError model + admin endpoints + churn detection). Dead route redirects. ManagerProfile avatar + rating placeholder. Any-member invite permissions. Next: finish Phase 5 remaining items, admin error dashboard, first real draft (Mar 4 4PM ET).
 
 ### Phase 1: Core Platform — COMPLETE
 Auth (JWT), league CRUD, commissioner tools, invite codes, snake+auction drafts (Socket.IO), roster management (add/drop/FAAB/rolling waivers), live scoring (DataGolf, 12 sync functions, 7 crons), H2H matchups, trading (veto voting, draft dollars), notifications (Socket.IO + web push), in-league chat, standings (H2H/Roto/Survivor/OAD/Segment), playoffs (bracket, seeding, auto-advance, history), IR slots, season recap & awards, security hardening (rate-limit + input validation), analytics foundation (Sport/Season/FantasyWeek/ScoringSystem models, 32 achievements), keeper leagues (no-cost/round penalty/auction/escalator), divisions, mobile responsive.
@@ -305,6 +305,20 @@ Route: `/admin` (gated by `role: admin` on user model)
 
 ---
 
+## SILENT ERROR CAPTURE SYSTEM (Mar 2026)
+
+Automatic error tracking — no user-facing UI, fully invisible. Captures API errors, JS crashes, React component failures, and churn signals.
+
+- **Frontend service:** `frontend/src/services/errorCapture.js` — hooks into API errors (via `api.js`), `window.onerror`, unhandled promise rejections, `beforeunload` (churn detection). Batches errors, flushes every 30s or on page unload. Initialized in `App.jsx` via `initErrorCapture()`.
+- **ErrorBoundary:** `frontend/src/components/common/ErrorBoundary.jsx` — React error boundary, reports to `reportComponentError()`, graceful "Something went wrong" fallback with retry.
+- **Backend:** `AppError` model (migration 49), `backend/src/routes/errors.js` — `POST /batch` (receives error batches, no auth required), `GET /summary` (admin: 24h/7d stats, top failing endpoints, affected users), `GET /recent` (admin: paginated error list with filters), `PATCH /:id/resolve`, `POST /resolve-bulk`.
+- **Churn signal:** If user leaves within 60s of hitting an error, captured as high-severity `churn_signal` event.
+- **Cleanup cron:** Daily 3 AM — deletes resolved errors older than 30 days.
+
+**Future:** Admin dashboard panel to visualize errors. AI triage layer to auto-categorize and deduplicate. Auto-draft queue items from high-frequency errors.
+
+---
+
 ## UI/UX PRINCIPLES
 
 1. **Season-long first.** Every design decision should optimize for the season-long league experience. DFS, pick'em, and one-off games are not the priority.
@@ -464,9 +478,9 @@ Every feature should answer: "Which persona is this for?" When in doubt, optimiz
 - **Seasonal Flywheel:** Feed auto-adjusts by sports calendar. Golf fills NFL gaps (Feb-May). No dead months.
 
 ### Current Build Priority
-Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill (2018-2026) done → DataGolf SG Backfill done → SG Intelligence done → Golf Hub + Season Race + Compare done → Live Scoring Pipeline done → Scoring Page Redesign done → Board Editor Overhaul done → iPod Reframe (6 phases) done → Profile Enhancement done → Nav + League UX done → Clutch Loop audit (19 fixes deployed) → **Next: Vault Playoff History Tab (021), finish platform audit (Dashboard, Lab, NFL, Prove It), Phase 5 remaining (manager profile, leaderboards, badges v2)**
+Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intelligence done → Vault V2 done → Rating V2 done → Blog done → AI Coach reframe done → Tournament Intelligence done → ESPN Historical Backfill (2018-2026) done → DataGolf SG Backfill done → SG Intelligence done → Golf Hub + Season Race + Compare done → Live Scoring Pipeline done → Scoring Page Redesign done → Board Editor Overhaul done → iPod Reframe (6 phases) done → Profile Enhancement done → Nav + League UX done → Clutch Loop audit (19 fixes deployed) → Friend Testing Sprint (new user flow, DraftRecap overhaul, Prove It engagement, branded emails, error capture) done → **Next: First real draft (Mar 4), admin error dashboard, Phase 5 remaining (manager profile, leaderboards, badges v2), personal AI coach per-user logic vault**
 
-**Backlog:** NFL team pages need polish. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags). Vault Playoff History (brackets, championship history, consolation, playoff intelligence — data confirmed in DB).
+**Backlog:** NFL team pages need polish. NFL 2025 data not synced. NFL game weather pipeline needed (Open-Meteo, venue coordinates, dome/roof flags). Vault Playoff History (brackets, championship history, consolation, playoff intelligence — data confirmed in DB). Personal AI Coach: per-user Obsidian-style logic vault that remembers tendencies, patterns, and coaching preferences over time (Eric wants to discuss).
 
 ---
 
@@ -513,10 +527,10 @@ Data Layer 1-7 done → Lab Phases 1-5 done → Phase 6 AI done → Import Intel
 
 ---
 
-*Last updated: March 2, 2026*
-*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & SG Intelligence complete. ESPN historical backfill (2018-2026) complete. DataGolf SG backfill complete. Golf Hub + Season Race + Compare page live. Live scoring pipeline + scoring page redesign live. Board editor overhauled + compare mode. iPod Reframe (6 phases) complete. Profile enhancement complete. Nav + League UX improvements live. 567 commits. 91+ database models. 165+ API endpoints. 70+ frontend pages. 34 cron jobs. 66 backend services. 51 migrations. 2 sports live.*
+*Last updated: March 3, 2026*
+*Phases 1-4 complete (4E partially done). Phase 5B (Clutch Rating V2) complete. Phase 6 complete (AI Engine + Coach reframe). Import Intelligence Pipeline complete. League Vault V2 complete. Commissioner blog complete. Brand System Wave 1 deployed. Tournament Intelligence & SG Intelligence complete. ESPN historical backfill (2018-2026) complete. DataGolf SG backfill complete. Golf Hub + Season Race + Compare page live. Live scoring pipeline + scoring page redesign live. Board editor overhauled + compare mode. iPod Reframe (6 phases) complete. Profile enhancement complete. Nav + League UX improvements live. Friend Testing Sprint: new user flow fixes, DraftRecap cinematic overhaul (SG radar, power rankings, AI coach commentary), branded HTML emails, silent error capture system, Prove It engagement overhaul. 580+ commits. 92+ database models. 170+ API endpoints. 70+ frontend pages. 35 cron jobs. 67 backend services. 52 migrations. 2 sports live.*
 
-**All migrations (1-48) deployed to Railway.**
+**All migrations (1-49) deployed to Railway.**
 
 **Infrastructure fix (Feb 2026):** All backend route files now import from `src/lib/prisma.js` singleton instead of creating individual PrismaClient instances. Pool: 20 connections, 30s timeout.
 

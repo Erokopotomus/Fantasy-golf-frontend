@@ -1,7 +1,7 @@
 import { useDraftContext } from '../../context/DraftContext'
 import { useDraftTimer } from '../../hooks/useDraftTimer'
 
-const DraftTimer = ({ onTimeout }) => {
+const DraftTimer = ({ onTimeout, compact = false }) => {
   const { isPaused } = useDraftContext()
   const { timerSeconds, formattedTime } = useDraftTimer(onTimeout)
 
@@ -15,6 +15,26 @@ const DraftTimer = ({ onTimeout }) => {
   const getProgressWidth = () => {
     const maxTime = 90 // Default max time
     return Math.min((timerSeconds / maxTime) * 100, 100)
+  }
+
+  // Compact mode: inline timer for mobile header
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className={`text-lg font-mono font-bold ${getTimerColor()}`}>
+          {formattedTime}
+        </span>
+        <div className="w-12 h-1.5 bg-[var(--bg)] rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-1000 ${
+              timerSeconds <= 10 ? 'bg-live-red' :
+              timerSeconds <= 30 ? 'bg-crown' : 'bg-gold'
+            }`}
+            style={{ width: `${getProgressWidth()}%` }}
+          />
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -237,8 +237,8 @@ const DraftRoomContent = () => {
         </div>
       ) : (
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top: Draft Board (full width) */}
-          <div className="h-[55%] flex flex-col min-h-0 border-b-2 border-gold/30 p-2">
+          {/* Top: Draft Board (full width) — shorter on mobile to leave room for player pool */}
+          <div className="h-[30%] lg:h-[55%] flex flex-col min-h-0 border-b-2 border-gold/30 p-2">
             {draft?.type === 'auction' ? (
               <BidPanel
                 currentBid={currentBid}
@@ -268,8 +268,8 @@ const DraftRoomContent = () => {
 
           {/* Bottom: Player Pool + Queue */}
           <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
-            {/* Left: Player Pool */}
-            <div className="flex-1 lg:w-[60%] lg:border-r lg:border-[var(--card-border)] min-h-0 flex flex-col">
+            {/* Left: Player Pool — ensure it gets enough space on mobile */}
+            <div className="flex-[2] lg:flex-1 lg:w-[60%] lg:border-r lg:border-[var(--card-border)] min-h-0 flex flex-col">
               {/* Board selector */}
               {boards.length > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--card-border)] bg-[var(--surface)] shrink-0">
@@ -299,8 +299,8 @@ const DraftRoomContent = () => {
                 />
               </div>
             </div>
-            {/* Right: Queue / Chat */}
-            <div className="lg:w-[40%] flex flex-col min-h-0">
+            {/* Right: Queue / Chat — constrained on mobile */}
+            <div className="flex-1 max-h-[30%] lg:max-h-none lg:w-[40%] flex flex-col min-h-0">
               {/* Side Panel Tabs */}
               <div className="flex border-b border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
                 {[

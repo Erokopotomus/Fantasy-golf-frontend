@@ -2299,6 +2299,63 @@ Check what data is already available in the route handler and add any needed inc
 
 ---
 
+### 072 — Fix Draft Grading Algorithm (adpDiff inverted + grades too harsh)
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Committed Cowork's draftGrader.js fix: adpDiff formula corrected (pickNumber - playerRank), value baseline raised to 88, quality baseline to 85, blend 65/35, elite player floors expanded. Files: draftGrader.js
+**Priority:** Critical — draft is tomorrow (Mar 4 4PM ET)
+**Prompt:**
+
+The draft grading algorithm in `backend/src/services/draftGrader.js` has two bugs:
+
+1. **adpDiff formula is inverted.** It was `playerRank - pickNumber` which makes rank #36 at pick #4 look like a +32 steal when it's actually a -32 reach. Fixed to `pickNumber - playerRank`. Positive = steal (you got a better player than your position), negative = reach.
+
+2. **Grades too harsh for correct picks.** Picking Scheffler #1 overall was grading as B, Rory #2 was C+. The value baseline was 80 (B) for fair-value picks, so even perfect quality picks got dragged down. Fixed: value baseline raised to 88 (A-), quality baseline to 85 (B+), blend shifted to 65/35 quality/value, expanded elite player floors (rank 1 = A+, top 3 = A+, top 5 = A, top 10 = A-, top 15 B+, top 25 B).
+
+**Changes already made by Cowork (commit these):**
+- `backend/src/services/draftGrader.js` — `gradePick()` function rewritten
+
+**After committing, regrade the Test Golf League draft:**
+Run the regrade endpoint or execute directly:
+```js
+const { gradeLeagueDraft } = require('./src/services/draftGrader')
+const prisma = require('./src/lib/prisma')
+// Find the completed draft
+const draft = await prisma.draft.findFirst({ where: { status: 'COMPLETED' } })
+await gradeLeagueDraft(draft.id, prisma)
+```
+
+**Files:** `backend/src/services/draftGrader.js`
+
+---
+
+### 073 — Draft Room Mobile Layout Fixes
+**Status:** `DONE`
+**Completed:** 2026-03-03 — Committed Cowork's mobile draft room fixes: board height 30%/55%, player pool flex-2, compact DraftHeader, DraftTimer compact mode, MobileNav hidden on draft routes. Files: DraftRoom.jsx, DraftHeader.jsx, DraftTimer.jsx, MobileNav.jsx
+**Priority:** Critical — draft is tomorrow
+**Prompt:**
+
+The draft room is broken on mobile (390px). Several layout issues:
+
+1. **Draft board too tall on mobile.** Was `h-[55%]` for all screen sizes, leaving almost no room for the player pool. Fixed to `h-[30%] lg:h-[55%]`.
+
+2. **Player pool squeezed to zero.** When draft board + queue/chat stack vertically on mobile, the player pool gets no space. Fixed: player pool div gets `flex-[2]`, queue/chat gets `max-h-[30%] lg:max-h-none`.
+
+3. **DraftHeader too verbose on mobile.** Three stacked sections (league info, status banner, timer) eat half the screen before draft content. Created a compact mobile layout: single row with league name + badge + inline timer, second row with draft info + status, optional third row for commissioner controls. Desktop layout unchanged.
+
+4. **DraftTimer compact mode.** Added `compact` prop for inline mobile display (just the time + tiny progress bar).
+
+5. **MobileNav visible in draft room.** The bottom nav bar takes ~60px of viewport in the draft room where every pixel matters. Added route exclusion so MobileNav hides on `/leagues/:id/draft` and `/mock-draft/` routes.
+
+**Changes already made by Cowork (commit these):**
+- `frontend/src/pages/DraftRoom.jsx` — mobile height adjustments
+- `frontend/src/components/draft/DraftHeader.jsx` — compact mobile layout
+- `frontend/src/components/draft/DraftTimer.jsx` — compact mode prop
+- `frontend/src/components/layout/MobileNav.jsx` — hide on draft routes
+
+**Files:** DraftRoom.jsx, DraftHeader.jsx, DraftTimer.jsx, MobileNav.jsx
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

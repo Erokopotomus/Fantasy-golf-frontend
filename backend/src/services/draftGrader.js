@@ -40,8 +40,10 @@ function gradeColor(grade) {
  *   1. Value score — did you get a player later than expected? (steal vs reach)
  *   2. Quality score — how good is the player relative to the round?
  *
- * A pick like Scottie Scheffler (#1 rank) at pick #1 is a perfect quality pick
- * even though adpDiff=0. A rank #50 player at pick #1 is a terrible quality pick.
+ * Philosophy: picking the right player at the right spot IS a good pick.
+ * Scheffler #1 overall = A+. Rory at #2 = A. Fair value in early rounds
+ * should never grade below B+. The grader rewards steals but doesn't
+ * punish sensible, consensus-level picks.
  *
  * @param {object} pick - { pickNumber, round, playerRank }
  * @param {object} context - { totalPicks, totalRounds, totalTeams }
@@ -51,21 +53,24 @@ function gradePick(pick, context) {
   const { pickNumber, round, playerRank } = pick
   const { totalTeams, totalRounds } = context
 
-  // adpDiff: positive = steal (picked later than expected), negative = reach
-  const adpDiff = playerRank - pickNumber
+  // adpDiff: positive = steal (got a better-ranked player than pick position)
+  // negative = reach (player ranked worse than the pick position)
+  // e.g. rank #1 at pick #5 = +4 (steal), rank #36 at pick #4 = -32 (reach)
+  const adpDiff = pickNumber - playerRank
 
-  // ── Value score (40% weight): based on adpDiff ─────────────────────────
-  // +3 per pick of value from a baseline of 80 (B grade = expected value)
-  let valueScore = 80 + (adpDiff * 3)
+  // ── Value score (35% weight): based on adpDiff ─────────────────────────
+  // Baseline of 88 (A-) for picking at expected value — you made the right call.
+  // +2.5 per pick of surplus value, -4 per pick of reach (reaching hurts more).
+  let valueScore = 88 + (adpDiff > 0 ? adpDiff * 2.5 : adpDiff * 4)
 
-  // Late-round steal bonus
+  // Late-round steal bonus: finding value late is impressive
   if (adpDiff > 0 && round >= 3) {
-    valueScore += Math.min(adpDiff * 0.5, 5)
+    valueScore += Math.min(adpDiff * 0.8, 6)
   }
 
   valueScore = Math.max(0, Math.min(100, valueScore))
 
-  // ── Quality score (60% weight): how good is this player for this round? ─
+  // ── Quality score (65% weight): how good is this player for this round? ─
   // What's the "expected" rank range for this round?
   // Round 1 expects ranks 1–totalTeams, Round 2 expects totalTeams+1 to 2*totalTeams, etc.
   const roundStart = (round - 1) * totalTeams + 1
@@ -75,27 +80,40 @@ function gradePick(pick, context) {
   // How much better (positive) or worse (negative) is this player vs round expectation?
   const qualityDiff = roundMidpoint - playerRank
 
-  // Quality baseline: 80 (B) + bonuses/penalties
-  // Each position better than expected = +2 points, each worse = -3 points (reaching hurts more)
-  let qualityScore = 80 + (qualityDiff > 0 ? qualityDiff * 2 : qualityDiff * 3)
+  // Quality baseline: 85 (B+) + bonuses/penalties
+  // Each position better than expected = +2 points, each worse = -3.5 points (reaching hurts more)
+  let qualityScore = 85 + (qualityDiff > 0 ? qualityDiff * 2 : qualityDiff * 3.5)
 
-  // Elite player bonus: top-3 in round 1 are always A+ picks
-  if (playerRank <= 3 && round === 1) {
-    qualityScore = Math.max(qualityScore, 98)
+  // ── Elite player floors — these are never bad picks ─────────────────────
+  // #1 player in round 1 = perfect pick, always A+
+  if (playerRank === 1 && round === 1) {
+    qualityScore = Math.max(qualityScore, 100)
   }
-  // Top-5 in round 1 are always A picks
+  // Top-3 in round 1 are always A+ (Scheffler, Xander, Rory type picks)
+  else if (playerRank <= 3 && round === 1) {
+    qualityScore = Math.max(qualityScore, 97)
+  }
+  // Top-5 in round 1 are always A
   else if (playerRank <= 5 && round === 1) {
-    qualityScore = Math.max(qualityScore, 95)
+    qualityScore = Math.max(qualityScore, 93)
   }
-  // Top-15 in rounds 1-2 always grade well
+  // Top-10 in round 1 are always A- or better
+  else if (playerRank <= 10 && round === 1) {
+    qualityScore = Math.max(qualityScore, 90)
+  }
+  // Top-15 in rounds 1-2 always grade well (B+ floor)
   if (playerRank <= 15 && round <= 2) {
     qualityScore = Math.max(qualityScore, 87)
+  }
+  // Top-25 in rounds 1-3 never grade badly (B floor)
+  if (playerRank <= 25 && round <= 3) {
+    qualityScore = Math.max(qualityScore, 83)
   }
 
   qualityScore = Math.max(0, Math.min(100, qualityScore))
 
-  // ── Blend: 60% quality + 40% value ─────────────────────────────────────
-  let score = qualityScore * 0.6 + valueScore * 0.4
+  // ── Blend: 65% quality + 35% value ─────────────────────────────────────
+  let score = qualityScore * 0.65 + valueScore * 0.35
 
   score = Math.max(0, Math.min(100, score))
 
