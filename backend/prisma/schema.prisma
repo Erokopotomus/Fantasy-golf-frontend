@@ -92,6 +92,10 @@ model User {
   clutchManagerRating ClutchManagerRating?
   ratingSnapshots     RatingSnapshot[]
 
+  // Coaching Memory Vault (Personal AI Coach)
+  coachingMemories     CoachingMemory[]
+  coachingInteractions CoachingInteraction[]
+
   @@map("users")
 }
 
@@ -3006,6 +3010,42 @@ model UserIntelligenceProfile {
 
   @@unique([userId, sport])
   @@index([userId])
+}
+
+// ============ COACHING MEMORY VAULT (Per-User AI Coach) ============
+
+model CoachingMemory {
+  id            String   @id @default(cuid())
+  userId        String
+  sport         String?
+  documentType  String
+  content       Json
+  version       Int      @default(1)
+  lastUpdatedBy String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, sport, documentType])
+  @@index([userId])
+  @@index([documentType])
+}
+
+model CoachingInteraction {
+  id              String   @id @default(cuid())
+  userId          String
+  insightType     String
+  summary         String
+  context         String?
+  userReaction    String?
+  behaviorChanged Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([userId, createdAt])
 }
 
 // ============ AI INSIGHTS + REPORTS (Phase 6C) ============
