@@ -14,6 +14,7 @@ import PickAnnouncement from '../components/draft/PickAnnouncement'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
 import Card from '../components/common/Card'
 import api from '../services/api'
+import socketService from '../services/socket'
 
 const DraftRoomContent = () => {
   const { leagueId } = useParams()
@@ -82,19 +83,43 @@ const DraftRoomContent = () => {
 
   const handleSendChat = useCallback(() => {
     if (!chatInput.trim()) return
+    const msgId = `msg-${Date.now()}-${user?.id || 'local'}`
     setChatMessages(prev => [...prev, {
-      id: `msg-${Date.now()}`,
+      id: msgId,
       sender: 'You',
+      senderId: user?.id,
       text: chatInput.trim(),
       isUser: true,
     }])
+    socketService.sendDraftChat(
+      draft?.id,
+      chatInput.trim(),
+      user?.name || 'Anonymous',
+      user?.id
+    )
     setChatInput('')
-    // TODO: emit via socket for live draft
-  }, [chatInput])
+  }, [chatInput, draft?.id, user?.id, user?.name])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages])
+
+  // Listen for incoming draft chat messages from other participants
+  useEffect(() => {
+    if (!draft?.id) return
+    const unsub = socketService.onDraftChat((data) => {
+      // Skip messages from this user — already added optimistically
+      if (data.senderId === user?.id) return
+      setChatMessages(prev => [...prev, {
+        id: data.id,
+        sender: data.sender,
+        senderId: data.senderId,
+        text: data.message,
+        isUser: false,
+      }])
+    })
+    return unsub
+  }, [draft?.id, user?.id])
 
   const handleSelectPlayer = useCallback(async (player) => {
     if (draft?.type === 'auction') {
@@ -233,6 +258,7 @@ const DraftRoomContent = () => {
             players={players}
             rosterSize={rosterSize}
             draft={draft}
+            onViewPlayer={openPlayerDetail}
           />
         </div>
       ) : (

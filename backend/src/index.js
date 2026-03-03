@@ -210,6 +210,19 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} joined draft-${draftId}`)
   })
 
+  // Draft chat
+  socket.on('draft-chat', (data) => {
+    const payload = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      draftId: data.draftId,
+      message: data.message,
+      sender: data.sender,
+      senderId: data.senderId,
+      timestamp: new Date().toISOString(),
+    }
+    io.to(`draft-${data.draftId}`).emit('draft-chat', payload)
+  })
+
   // Leave rooms
   socket.on('leave-league', (leagueId) => {
     socket.leave(`league-${leagueId}`)

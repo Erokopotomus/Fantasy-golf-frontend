@@ -111,7 +111,17 @@ export const socketService = {
     socket?.emit('leave-league', leagueId)
   },
 
-  // Chat methods
+  // Draft chat methods
+  sendDraftChat(draftId, message, sender, senderId) {
+    socket?.emit('draft-chat', { draftId, message, sender, senderId })
+  },
+
+  onDraftChat(callback) {
+    socket?.on('draft-chat', callback)
+    return () => socket?.off('draft-chat', callback)
+  },
+
+  // League chat methods
   sendChatMessage(leagueId, content) {
     socket?.emit('chat-message', { leagueId, content })
   },
