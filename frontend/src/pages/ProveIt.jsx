@@ -4,7 +4,7 @@ import { track, Events } from '../services/analytics'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import HeadToHead from '../components/predictions/HeadToHead'
-import BackYourCall from '../components/predictions/BackYourCall'
+import CompactSlateTable from '../components/predictions/CompactSlateTable'
 import ShareButton from '../components/share/ShareButton'
 import PicksResultCard from '../components/share/cards/PicksResultCard'
 import StreakCard from '../components/share/cards/StreakCard'
@@ -40,27 +40,6 @@ function getTierProgress(total, accuracy) {
 }
 
 // ─── Tab: This Week's Slate ─────────────────────────────────────────────────
-const SLATE_CATEGORIES = [
-  { id: 'sg_call', label: 'SG Call', icon: '📊', type: 'player_benchmark' },
-  { id: 'winner', label: 'Winner', icon: '🏆', type: 'tournament_winner' },
-  { id: 'top_5', label: 'Top 5', icon: '🎯', type: 'top_5' },
-  { id: 'top_10', label: 'Top 10', icon: '🎯', type: 'top_10' },
-  { id: 'top_20', label: 'Top 20', icon: '🎯', type: 'top_20' },
-  { id: 'cut', label: 'Cut Line', icon: '✂️', type: 'make_cut' },
-  { id: 'h2h', label: 'H2H', icon: '🔄', type: 'head_to_head' },
-  { id: 'r1_leader', label: 'R1 Leader', icon: '📈', type: 'round_leader' },
-]
-
-const CATEGORY_HEADERS = {
-  sg_call: 'SG Performance Calls — Will they beat their benchmark?',
-  winner: 'Who takes it? Pick the winner.',
-  top_5: 'Top 5 Calls — Which players crack the top 5?',
-  top_10: 'Top 10 Calls — Which players crack the top 10?',
-  top_20: 'Top 20 Calls — Which players crack the top 20?',
-  cut: 'Cut Line — Who survives Friday?',
-  h2h: 'Head to Head — Who finishes higher?',
-  r1_leader: 'Round 1 Leader — Who leads after day one?',
-}
 
 function WeeklySlate({ onPredictionMade }) {
   const [slate, setSlate] = useState([])
@@ -68,10 +47,7 @@ function WeeklySlate({ onPredictionMade }) {
   const [submitting, setSubmitting] = useState(null)
   const [loading, setLoading] = useState(true)
   const [currentTournament, setCurrentTournament] = useState(null)
-  const [showBackingFor, setShowBackingFor] = useState(null)
-  const [backingData, setBackingData] = useState({})
   const [drawerPlayer, setDrawerPlayer] = useState(null)
-  const [activeCategory, setActiveCategory] = useState('sg_call')
   const [h2hPlayerA, setH2hPlayerA] = useState(null)
   const [h2hPlayerB, setH2hPlayerB] = useState(null)
   const [showMyCalls, setShowMyCalls] = useState(false)
@@ -121,69 +97,67 @@ function WeeklySlate({ onPredictionMade }) {
     load()
   }, [])
 
-  // Build predictions lookup per category
-  const myPredictions = {}
-  const activeCat = SLATE_CATEGORIES.find(c => c.id === activeCategory)
-  const predType = activeCat?.type
-  for (const p of allPredictions) {
-    if (p.predictionType === predType) {
-      const key = p.predictionType === 'head_to_head'
-        ? `${p.subjectPlayerId}_${p.predictionData?.opponentPlayerId}`
-        : p.subjectPlayerId
-      myPredictions[key] = p
-    }
-  }
-
-  const handleSubmit = async (player, direction, extraData = {}) => {
+  const handleCellTap = async (player, predictionType, direction) => {
     if (submitting || !currentTournament) return
-    const submitKey = extraData._submitKey || player.id
+    const submitKey = `${player.id}_${predictionType}`
+
+    // Find existing prediction for this player+type
+    const existingPred = allPredictions.find(
+      p => p.subjectPlayerId === player.id && p.predictionType === predictionType
+    )
+
     setSubmitting(submitKey)
-
     try {
-      const predictionData = { playerName: player.name, ...extraData }
-      delete predictionData._submitKey
+      if (direction === null && existingPred) {
+        // Clear: delete the prediction
+        await api.deletePrediction(existingPred.id)
+        setAllPredictions(prev => prev.filter(p => p.id !== existingPred.id))
+      } else if (existingPred && direction !== null) {
+        // Toggle direction on existing prediction
+        const updatedData = { ...existingPred.predictionData, direction }
+        await api.updatePrediction(existingPred.id, { predictionData: updatedData })
+        setAllPredictions(prev => prev.map(p =>
+          p.id === existingPred.id ? { ...p, predictionData: updatedData } : p
+        ))
+      } else if (direction !== null) {
+        // New prediction
+        const predictionData = { playerName: player.name }
 
-      // Type-specific data
-      if (predType === 'player_benchmark') {
-        const benchmarkValue = Math.round(player.sgTotal * 10) / 10
-        predictionData.metric = 'sgTotal'
-        predictionData.benchmarkValue = benchmarkValue
-        predictionData.direction = direction
-        predictionData.confidence = 'medium'
-      } else if (['top_5', 'top_10', 'top_20', 'make_cut'].includes(predType)) {
-        predictionData.direction = direction
+        if (predictionType === 'player_benchmark') {
+          predictionData.metric = 'sgTotal'
+          predictionData.benchmarkValue = Math.round((player.sgTotal || 0) * 10) / 10
+          predictionData.direction = direction
+          predictionData.confidence = 'medium'
+        } else if (predictionType === 'tournament_winner') {
+          // Winner is single-pick — delete previous winner if exists
+          const prevWinner = allPredictions.find(p => p.predictionType === 'tournament_winner')
+          if (prevWinner) {
+            await api.deletePrediction(prevWinner.id)
+            setAllPredictions(prev => prev.filter(p => p.id !== prevWinner.id))
+          }
+          // No direction needed for winner — just the pick
+        } else {
+          predictionData.direction = direction
+        }
+
+        const res = await api.submitPrediction({
+          sport: 'golf',
+          predictionType,
+          category: 'tournament',
+          eventId: currentTournament.id,
+          subjectPlayerId: player.id,
+          predictionData,
+          isPublic: true,
+        })
+        setAllPredictions(prev => [...prev, res.prediction || res])
+        onPredictionMade?.()
       }
-
-      const res = await api.submitPrediction({
-        sport: 'golf',
-        predictionType: predType,
-        category: 'tournament',
-        eventId: currentTournament.id,
-        subjectPlayerId: player.id,
-        predictionData,
-        isPublic: true,
-      })
-
-      setAllPredictions(prev => [...prev, res.prediction || res])
-      setShowBackingFor(submitKey)
-      track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predType, direction, context: 'prove_it_slate' })
-      onPredictionMade?.()
+      track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, context: 'prove_it_table' })
     } catch (err) {
       console.error('Prediction failed:', err)
     } finally {
       setSubmitting(null)
     }
-  }
-
-  const handleBackingUpdate = async (playerId) => {
-    const prediction = myPredictions[playerId]
-    const data = backingData[playerId]
-    if (!prediction?.id || !data) return
-    try {
-      await api.updatePrediction(prediction.id, data)
-    } catch {}
-    setShowBackingFor(null)
-    setBackingData(prev => { const n = { ...prev }; delete n[playerId]; return n })
   }
 
   if (loading) {
@@ -209,7 +183,9 @@ function WeeklySlate({ onPredictionMade }) {
   }
 
   const madeCount = allPredictions.length
-  const filteredSlate = showMyCalls ? slate.filter(p => myPredictions[p.id]) : slate
+  const filteredSlate = showMyCalls
+    ? slate.filter(p => allPredictions.some(pred => pred.subjectPlayerId === p.id))
+    : slate
 
   return (
     <div>
@@ -233,31 +209,13 @@ function WeeklySlate({ onPredictionMade }) {
         </div>
       </div>
 
-      {/* Category Picker */}
-      <div className="flex gap-1.5 overflow-x-auto pb-2 mb-4 -mx-1 px-1">
-        {SLATE_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => { setActiveCategory(cat.id); setShowMyCalls(false) }}
-            className={`shrink-0 px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
-              activeCategory === cat.id
-                ? 'bg-blaze text-white'
-                : 'bg-[var(--surface)] text-text-secondary hover:text-text-primary border border-[var(--card-border)]'
-            }`}
-          >
-            <span>{cat.icon}</span>
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
       {/* Tournament header */}
       <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-text-primary font-semibold">{currentTournament.name}</h3>
             <p className="text-text-primary/40 text-sm mt-0.5">
-              {CATEGORY_HEADERS[activeCategory]}
+              Tap any cell to make your call. Tap again to change it.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -277,325 +235,173 @@ function WeeklySlate({ onPredictionMade }) {
         </div>
       </div>
 
-      {/* Category-specific content */}
-      {activeCategory === 'sg_call' && (
-        <div className="space-y-2">
-          {filteredSlate.map(player => {
-            const existing = myPredictions[player.id]
-            const benchmarkValue = Math.round(player.sgTotal * 10) / 10
-            return (
-              <div key={player.id} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden">
-                <div className="p-3 flex items-center gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group" onClick={() => setDrawerPlayer(player)}>
-                    {player.headshotUrl ? (
-                      <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover group-hover:ring-2 group-hover:ring-[var(--crown)]/50 transition-all" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm">{player.name?.charAt(0)}</div>
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{player.name}</div>
-                      {player.rank && <div className="text-xs text-text-primary/40 font-mono">Rank #{player.rank}</div>}
-                    </div>
-                  </div>
-                  <div className="text-center px-2">
-                    <div className="text-xs text-text-primary/40">{player.isSeasonAvg ? 'Avg SG' : 'SG'}</div>
-                    <div className="text-sm font-mono font-bold text-text-primary">{benchmarkValue > 0 ? '+' : ''}{benchmarkValue}</div>
-                  </div>
-                  {existing ? (
-                    <div className="flex items-center gap-1.5 w-24 justify-end">
-                      <span className={`text-xs font-mono font-bold ${existing.predictionData?.direction === 'over' ? 'text-field' : 'text-rose-400'}`}>
-                        {existing.predictionData?.direction === 'over' ? 'ABOVE' : 'BELOW'}
-                      </span>
-                      {existing.outcome && existing.outcome !== 'PENDING' && (
-                        <span className={`text-sm ${existing.outcome === 'CORRECT' ? 'text-field' : 'text-rose-400'}`}>{existing.outcome === 'CORRECT' ? '✓' : '✗'}</span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex gap-1.5 w-24 justify-end">
-                      <button onClick={() => handleSubmit(player, 'over')} disabled={submitting === player.id} className="px-2.5 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50">Above</button>
-                      <button onClick={() => handleSubmit(player, 'under')} disabled={submitting === player.id} className="px-2.5 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50">Below</button>
-                    </div>
-                  )}
-                </div>
-                {showBackingFor === player.id && existing?.outcome === 'PENDING' && (
-                  <div className="px-3 pb-3">
-                    <BackYourCall sport="golf" compact onChange={data => setBackingData(prev => ({ ...prev, [player.id]: data }))} />
-                    <div className="flex items-center gap-2 mt-2">
-                      <button onClick={() => handleBackingUpdate(player.id)} className="px-3 py-1 rounded text-[10px] font-medium bg-gold/20 text-gold hover:bg-gold/30 transition-colors">Save</button>
-                      <button onClick={() => { setShowBackingFor(null) }} className="text-[10px] text-text-primary/30 hover:text-text-primary/50 transition-colors">Skip</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
+      {/* Compact prediction table */}
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden mb-4">
+        <CompactSlateTable
+          players={filteredSlate}
+          predictions={allPredictions}
+          submitting={submitting}
+          onCellTap={handleCellTap}
+          onPlayerClick={setDrawerPlayer}
+        />
+      </div>
 
-      {/* Tournament Winner */}
-      {activeCategory === 'winner' && (
-        <div className="space-y-2">
-          {filteredSlate.map(player => {
-            const existing = myPredictions[player.id]
+      {/* R1 Leader — compact grid below table */}
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
+        <h4 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">
+          Round 1 Leader — Who leads after day one?
+        </h4>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
+          {filteredSlate.slice(0, 12).map(player => {
+            const pred = allPredictions.find(p => p.subjectPlayerId === player.id && p.predictionType === 'round_leader')
+            const isSelected = !!pred
             return (
-              <div key={player.id} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-3 flex items-center gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group" onClick={() => setDrawerPlayer(player)}>
-                  {player.headshotUrl ? (
-                    <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover group-hover:ring-2 group-hover:ring-[var(--crown)]/50 transition-all" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm">{player.name?.charAt(0)}</div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{player.name}</div>
-                    {player.rank && <div className="text-xs text-text-primary/40 font-mono">OWGR #{player.rank}</div>}
-                  </div>
-                </div>
-                {existing ? (
-                  <span className="text-xs font-bold text-crown px-3 py-1.5 rounded-lg bg-crown/10 border border-crown/20">Your Pick</span>
+              <button
+                key={player.id}
+                onClick={() => handleCellTap(player, 'round_leader', isSelected ? null : 'pick')}
+                disabled={submitting != null}
+                className={`flex items-center gap-1.5 p-2 rounded-lg text-xs transition-all ${
+                  isSelected
+                    ? 'bg-crown/15 border border-crown/30 text-crown'
+                    : 'bg-[var(--bg-alt)] border border-transparent text-text-primary/60 hover:text-text-primary'
+                } disabled:opacity-50`}
+              >
+                {player.headshotUrl ? (
+                  <img src={player.headshotUrl} alt="" className="w-5 h-5 rounded-full shrink-0" />
                 ) : (
-                  <button
-                    onClick={() => handleSubmit(player, null, { playerName: player.name })}
-                    disabled={!!submitting || Object.values(myPredictions).length > 0}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-crown/20 border border-crown/30 text-crown font-semibold hover:bg-crown/30 transition-colors disabled:opacity-30"
-                  >
-                    My Pick
-                  </button>
+                  <div className="w-5 h-5 rounded-full bg-[var(--stone)] text-[8px] flex items-center justify-center shrink-0">
+                    {(player.name || '?').charAt(0)}
+                  </div>
                 )}
-              </div>
+                <span className="truncate font-medium">{player.name?.split(' ').pop()}</span>
+              </button>
             )
           })}
         </div>
-      )}
-
-      {/* Top 5 / Top 10 / Top 20 */}
-      {['top_5', 'top_10', 'top_20'].includes(activeCategory) && (
-        <div className="space-y-2">
-          {filteredSlate.map(player => {
-            const existing = myPredictions[player.id]
-            return (
-              <div key={player.id} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-3 flex items-center gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group" onClick={() => setDrawerPlayer(player)}>
-                  {player.headshotUrl ? (
-                    <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover group-hover:ring-2 group-hover:ring-[var(--crown)]/50 transition-all" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm">{player.name?.charAt(0)}</div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{player.name}</div>
-                    {player.rank && <div className="text-xs text-text-primary/40 font-mono">OWGR #{player.rank}</div>}
-                  </div>
-                </div>
-                {existing ? (
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-xs font-bold ${existing.predictionData?.direction === 'yes' ? 'text-field' : 'text-rose-400'}`}>
-                      {existing.predictionData?.direction === 'yes' ? 'YES' : 'NO'}
-                    </span>
-                    {existing.outcome && existing.outcome !== 'PENDING' && (
-                      <span className={`text-sm ${existing.outcome === 'CORRECT' ? 'text-field' : 'text-rose-400'}`}>{existing.outcome === 'CORRECT' ? '✓' : '✗'}</span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex gap-1.5">
-                    <button onClick={() => handleSubmit(player, 'yes', { playerName: player.name, position: activeCategory })} disabled={submitting === player.id} className="px-3 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50">Yes</button>
-                    <button onClick={() => handleSubmit(player, 'no', { playerName: player.name, position: activeCategory })} disabled={submitting === player.id} className="px-3 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50">No</button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Make/Miss Cut */}
-      {activeCategory === 'cut' && (
-        <div className="space-y-2">
-          {(showMyCalls ? filteredSlate : [...slate].reverse()).map(player => {
-            const existing = myPredictions[player.id]
-            return (
-              <div key={player.id} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-3 flex items-center gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group" onClick={() => setDrawerPlayer(player)}>
-                  {player.headshotUrl ? (
-                    <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover group-hover:ring-2 group-hover:ring-[var(--crown)]/50 transition-all" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm">{player.name?.charAt(0)}</div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{player.name}</div>
-                    {player.rank && <div className="text-xs text-text-primary/40 font-mono">OWGR #{player.rank}</div>}
-                  </div>
-                </div>
-                {existing ? (
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-xs font-bold ${existing.predictionData?.direction === 'make' ? 'text-field' : 'text-rose-400'}`}>
-                      {existing.predictionData?.direction === 'make' ? 'MAKE' : 'MISS'}
-                    </span>
-                    {existing.outcome && existing.outcome !== 'PENDING' && (
-                      <span className={`text-sm ${existing.outcome === 'CORRECT' ? 'text-field' : 'text-rose-400'}`}>{existing.outcome === 'CORRECT' ? '✓' : '✗'}</span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex gap-1.5">
-                    <button onClick={() => handleSubmit(player, 'make', { playerName: player.name })} disabled={submitting === player.id} className="px-3 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50">Make</button>
-                    <button onClick={() => handleSubmit(player, 'miss', { playerName: player.name })} disabled={submitting === player.id} className="px-3 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50">Miss</button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Round 1 Leader */}
-      {activeCategory === 'r1_leader' && (
-        <div className="space-y-2">
-          {filteredSlate.map(player => {
-            const existing = myPredictions[player.id]
-            return (
-              <div key={player.id} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-3 flex items-center gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group" onClick={() => setDrawerPlayer(player)}>
-                  {player.headshotUrl ? (
-                    <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover group-hover:ring-2 group-hover:ring-[var(--crown)]/50 transition-all" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-sm">{player.name?.charAt(0)}</div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="text-sm text-text-primary font-medium truncate group-hover:text-[var(--crown)] transition-colors">{player.name}</div>
-                    {player.rank && <div className="text-xs text-text-primary/40 font-mono">OWGR #{player.rank}</div>}
-                  </div>
-                </div>
-                {existing ? (
-                  <span className="text-xs font-bold text-crown px-3 py-1.5 rounded-lg bg-crown/10 border border-crown/20">Your Pick</span>
-                ) : (
-                  <button
-                    onClick={() => handleSubmit(player, null, { playerName: player.name, round: 1, _submitKey: player.id })}
-                    disabled={!!submitting || Object.values(myPredictions).length > 0}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-crown/20 border border-crown/30 text-crown font-semibold hover:bg-crown/30 transition-colors disabled:opacity-30"
-                  >
-                    My Pick
-                  </button>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
+      </div>
 
       {/* Head to Head */}
-      {activeCategory === 'h2h' && (
-        <div>
-          {/* Build Your Own H2H */}
-          <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
-            <h4 className="text-sm font-semibold text-text-primary mb-3">Build Your Matchup</h4>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              {/* Player A */}
-              <div>
-                <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player A</label>
-                <select
-                  value={h2hPlayerA?.id || ''}
-                  onChange={e => setH2hPlayerA(slate.find(p => p.id === e.target.value) || null)}
-                  className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
-                >
-                  <option value="">Select...</option>
-                  {slate.filter(p => p.id !== h2hPlayerB?.id).map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-              {/* Player B */}
-              <div>
-                <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player B</label>
-                <select
-                  value={h2hPlayerB?.id || ''}
-                  onChange={e => setH2hPlayerB(slate.find(p => p.id === e.target.value) || null)}
-                  className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
-                >
-                  <option value="">Select...</option>
-                  {slate.filter(p => p.id !== h2hPlayerA?.id).map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
+      <div>
+        {/* Build Your Own H2H */}
+        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
+          <h4 className="text-sm font-semibold text-text-primary mb-3">Build Your Matchup</h4>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {/* Player A */}
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player A</label>
+              <select
+                value={h2hPlayerA?.id || ''}
+                onChange={e => setH2hPlayerA(slate.find(p => p.id === e.target.value) || null)}
+                className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
+              >
+                <option value="">Select...</option>
+                {slate.filter(p => p.id !== h2hPlayerB?.id).map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             </div>
-            {h2hPlayerA && h2hPlayerB && (
-              <div className="flex gap-2">
-                {(() => {
-                  const key = `${h2hPlayerA.id}_${h2hPlayerB.id}`
-                  const existing = myPredictions[key]
-                  if (existing) {
-                    return <span className="text-xs font-bold text-crown px-3 py-1.5 rounded-lg bg-crown/10 border border-crown/20">Called</span>
-                  }
-                  return (
-                    <>
-                      <button
-                        onClick={() => handleSubmit(h2hPlayerA, null, { playerA: h2hPlayerA.name, playerB: h2hPlayerB.name, opponentPlayerId: h2hPlayerB.id, pick: 'playerA', _submitKey: `${h2hPlayerA.id}_${h2hPlayerB.id}` })}
-                        disabled={!!submitting}
-                        className="flex-1 py-2 text-xs rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
-                      >
-                        {h2hPlayerA.name?.split(' ').pop()}
-                      </button>
-                      <button
-                        onClick={() => handleSubmit(h2hPlayerA, null, { playerA: h2hPlayerA.name, playerB: h2hPlayerB.name, opponentPlayerId: h2hPlayerB.id, pick: 'playerB', _submitKey: `${h2hPlayerA.id}_${h2hPlayerB.id}` })}
-                        disabled={!!submitting}
-                        className="flex-1 py-2 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
-                      >
-                        {h2hPlayerB.name?.split(' ').pop()}
-                      </button>
-                    </>
-                  )
-                })()}
-              </div>
-            )}
+            {/* Player B */}
+            <div>
+              <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player B</label>
+              <select
+                value={h2hPlayerB?.id || ''}
+                onChange={e => setH2hPlayerB(slate.find(p => p.id === e.target.value) || null)}
+                className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
+              >
+                <option value="">Select...</option>
+                {slate.filter(p => p.id !== h2hPlayerA?.id).map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
-
-          {/* Pre-built matchups: top 5 vs the field */}
-          <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Suggested Matchups</h4>
-          <div className="space-y-2">
-            {slate.slice(0, 5).map((playerA, i) => {
-              const playerB = slate[slate.length - 1 - i] || slate[i + 5]
-              if (!playerB || playerA.id === playerB.id) return null
-              const key = `${playerA.id}_${playerB.id}`
-              const existing = myPredictions[key]
-              return (
-                <div key={key} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => setDrawerPlayer(playerA)}>
-                      {playerA.headshotUrl ? <img src={playerA.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs">{playerA.name?.charAt(0)}</div>}
-                      <span className="text-sm font-medium text-text-primary truncate">{playerA.name}</span>
-                    </div>
-                    <span className="text-xs text-text-muted font-mono shrink-0">vs</span>
-                    <div className="flex items-center gap-2 flex-1 min-w-0 justify-end cursor-pointer" onClick={() => setDrawerPlayer(playerB)}>
-                      <span className="text-sm font-medium text-text-primary truncate text-right">{playerB.name}</span>
-                      {playerB.headshotUrl ? <img src={playerB.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs">{playerB.name?.charAt(0)}</div>}
-                    </div>
-                  </div>
-                  {existing ? (
-                    <div className="text-center">
-                      <span className="text-xs font-bold text-crown">Called</span>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleSubmit(playerA, null, { playerA: playerA.name, playerB: playerB.name, opponentPlayerId: playerB.id, pick: 'playerA', _submitKey: key })}
-                        disabled={!!submitting}
-                        className="flex-1 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
-                      >
-                        {playerA.name?.split(' ').pop()}
-                      </button>
-                      <button
-                        onClick={() => handleSubmit(playerA, null, { playerA: playerA.name, playerB: playerB.name, opponentPlayerId: playerB.id, pick: 'playerB', _submitKey: key })}
-                        disabled={!!submitting}
-                        className="flex-1 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
-                      >
-                        {playerB.name?.split(' ').pop()}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          {h2hPlayerA && h2hPlayerB && (
+            <div className="flex gap-2">
+              {(() => {
+                const key = `${h2hPlayerA.id}_${h2hPlayerB.id}`
+                const existing = allPredictions.find(
+                  p => p.predictionType === 'head_to_head' &&
+                    p.subjectPlayerId === h2hPlayerA.id &&
+                    p.predictionData?.opponentPlayerId === h2hPlayerB.id
+                )
+                if (existing) {
+                  return <span className="text-xs font-bold text-crown px-3 py-1.5 rounded-lg bg-crown/10 border border-crown/20">Called</span>
+                }
+                return (
+                  <>
+                    <button
+                      onClick={() => handleCellTap(h2hPlayerA, 'head_to_head', 'playerA')}
+                      disabled={!!submitting}
+                      className="flex-1 py-2 text-xs rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
+                    >
+                      {h2hPlayerA.name?.split(' ').pop()}
+                    </button>
+                    <button
+                      onClick={() => handleCellTap(h2hPlayerA, 'head_to_head', 'playerB')}
+                      disabled={!!submitting}
+                      className="flex-1 py-2 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
+                    >
+                      {h2hPlayerB.name?.split(' ').pop()}
+                    </button>
+                  </>
+                )
+              })()}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Pre-built matchups: top 5 vs the field */}
+        <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Suggested Matchups</h4>
+        <div className="space-y-2">
+          {slate.slice(0, 5).map((playerA, i) => {
+            const playerB = slate[slate.length - 1 - i] || slate[i + 5]
+            if (!playerB || playerA.id === playerB.id) return null
+            const key = `${playerA.id}_${playerB.id}`
+            const existing = allPredictions.find(
+              p => p.predictionType === 'head_to_head' &&
+                p.subjectPlayerId === playerA.id &&
+                p.predictionData?.opponentPlayerId === playerB.id
+            )
+            return (
+              <div key={key} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => setDrawerPlayer(playerA)}>
+                    {playerA.headshotUrl ? <img src={playerA.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs">{playerA.name?.charAt(0)}</div>}
+                    <span className="text-sm font-medium text-text-primary truncate">{playerA.name}</span>
+                  </div>
+                  <span className="text-xs text-text-muted font-mono shrink-0">vs</span>
+                  <div className="flex items-center gap-2 flex-1 min-w-0 justify-end cursor-pointer" onClick={() => setDrawerPlayer(playerB)}>
+                    <span className="text-sm font-medium text-text-primary truncate text-right">{playerB.name}</span>
+                    {playerB.headshotUrl ? <img src={playerB.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs">{playerB.name?.charAt(0)}</div>}
+                  </div>
+                </div>
+                {existing ? (
+                  <div className="text-center">
+                    <span className="text-xs font-bold text-crown">Called</span>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCellTap(playerA, 'head_to_head', 'playerA')}
+                      disabled={!!submitting}
+                      className="flex-1 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
+                    >
+                      {playerA.name?.split(' ').pop()}
+                    </button>
+                    <button
+                      onClick={() => handleCellTap(playerA, 'head_to_head', 'playerB')}
+                      disabled={!!submitting}
+                      className="flex-1 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
+                    >
+                      {playerB.name?.split(' ').pop()}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
 
       {/* Player Drawer */}
       <PlayerDrawer
