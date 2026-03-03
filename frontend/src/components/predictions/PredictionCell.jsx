@@ -42,7 +42,7 @@ function getPolarity(direction) {
 
 // Style maps for each visual state
 const STYLE_MAP = {
-  empty:    'bg-[var(--bg-alt)] text-text-primary/20 border border-transparent',
+  empty:    'bg-[var(--bg-alt)] text-text-primary/40 border border-[var(--card-border)] hover:border-blaze/30 hover:bg-blaze/5 cursor-pointer',
   positive: 'bg-field/10 text-field border border-field/30',
   negative: 'bg-live-red/10 text-live-red border border-live-red/30',
   winner:   'bg-crown/20 text-crown border border-crown/40',
@@ -127,8 +127,8 @@ export default function PredictionCell({
       return '🏆'
     }
 
-    // Empty state
-    if (!effectiveDirection) return '·'
+    // Empty state — visible dash so cells look tappable
+    if (!effectiveDirection) return '–'
 
     // Active direction label
     return LABELS[effectiveDirection] ?? '·'
