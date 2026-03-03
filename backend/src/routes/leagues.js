@@ -370,7 +370,7 @@ router.patch('/:id', authenticate, async (req, res, next) => {
   }
 })
 
-// POST /api/leagues/:id/invite-email - Send league invite via email (commissioner only)
+// POST /api/leagues/:id/invite-email - Send league invite via email (any member)
 router.post('/:id/invite-email', authenticate, async (req, res, next) => {
   try {
     const { email } = req.body
@@ -383,8 +383,12 @@ router.post('/:id/invite-email', authenticate, async (req, res, next) => {
       include: { owner: { select: { name: true } } },
     })
     if (!league) return res.status(404).json({ error: { message: 'League not found' } })
-    if (league.ownerId !== req.user.id) {
-      return res.status(403).json({ error: { message: 'Only the commissioner can send invites' } })
+
+    const membership = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId: league.id } },
+    })
+    if (!membership) {
+      return res.status(403).json({ error: { message: 'You must be a league member to send invites' } })
     }
 
     const emailService = require('../services/emailService')
