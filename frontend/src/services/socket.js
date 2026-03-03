@@ -3,6 +3,7 @@ import { io } from 'socket.io-client'
 const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'
 
 let socket = null
+let _currentDraftId = null
 
 export const socketService = {
   connect() {
@@ -20,6 +21,11 @@ export const socketService = {
 
     socket.on('connect', () => {
       console.log('[Socket] Connected:', socket.id)
+      // Re-join draft room on reconnect
+      if (_currentDraftId) {
+        console.log('[Socket] Reconnecting to draft room:', _currentDraftId)
+        socket.emit('join-draft', _currentDraftId)
+      }
     })
 
     socket.on('disconnect', (reason) => {
@@ -47,10 +53,12 @@ export const socketService = {
   // Draft room methods
   joinDraft(draftId) {
     if (!socket?.connected) this.connect()
+    _currentDraftId = draftId
     socket?.emit('join-draft', draftId)
   },
 
   leaveDraft(draftId) {
+    _currentDraftId = null
     socket?.emit('leave-draft', draftId)
   },
 

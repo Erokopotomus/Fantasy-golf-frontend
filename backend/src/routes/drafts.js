@@ -441,12 +441,12 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       return res.status(404).json({ error: { message: 'Draft not found' } })
     }
 
-    if (draft.status !== 'IN_PROGRESS') {
-      return res.status(400).json({ error: { message: 'Draft is not in progress' } })
+    if (draft.status === 'PAUSED') {
+      return res.status(400).json({ error: { message: 'Draft is paused — the commissioner will resume shortly' } })
     }
 
-    if (draft.status === 'PAUSED') {
-      return res.status(400).json({ error: { message: 'Draft is paused' } })
+    if (draft.status !== 'IN_PROGRESS') {
+      return res.status(400).json({ error: { message: 'Draft is not in progress' } })
     }
 
     // Determine whose pick it is (snake draft logic)
