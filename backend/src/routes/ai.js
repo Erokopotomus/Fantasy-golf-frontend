@@ -12,6 +12,7 @@ const aiInsightPipeline = require('../services/aiInsightPipeline')
 const aiCoachService = require('../services/aiCoachService')
 const { buildBoardSnapshot } = require('../services/draftBoardService')
 const leagueIntelligence = require('../services/leagueIntelligenceService')
+const { assembleCoachContext } = require('../services/coachContextAssembly')
 const prisma = require('../lib/prisma.js')
 
 // Simple per-user rate limiter
@@ -52,6 +53,16 @@ router.get('/coach-briefing', authenticate, async (req, res) => {
     const sendBriefing = (briefing) => {
       briefingCache.set(cacheKey, { briefing, time: Date.now() })
       return res.json({ briefing })
+    }
+
+    // Read coaching identity from vault (if exists)
+    let coachIdentity = null
+    try {
+      const coachCtx = await assembleCoachContext(userId, { type: 'briefing', sport: 'golf' })
+      coachIdentity = coachCtx.identity
+    } catch (err) {
+      // Non-critical — fall back to default behavior
+      console.error('[CoachBriefing] Vault read failed:', err.message)
     }
 
     // Gather user data state

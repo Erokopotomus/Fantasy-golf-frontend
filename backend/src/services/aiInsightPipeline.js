@@ -226,7 +226,7 @@ async function storeInsight(userId, insight) {
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7) // 1 week expiry
 
-  return prisma.aiInsight.create({
+  const created = await prisma.aiInsight.create({
     data: {
       userId,
       sport: insight.sport || null,
@@ -240,6 +240,23 @@ async function storeInsight(userId, insight) {
       tokenCount: insight.tokenCount || null,
     },
   })
+
+  // Log to coaching interaction history for vault
+  try {
+    await prisma.coachingInteraction.create({
+      data: {
+        userId: userId,
+        insightType: 'ambient',
+        summary: insight.title,
+        context: insight.insightType,
+      },
+    })
+  } catch (interactionErr) {
+    // Non-critical — don't fail the insight pipeline
+    console.error('[InsightPipeline] Failed to log coaching interaction:', interactionErr.message)
+  }
+
+  return created
 }
 
 /**
