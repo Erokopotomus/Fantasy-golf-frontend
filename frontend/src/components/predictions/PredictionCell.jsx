@@ -114,7 +114,7 @@ export default function PredictionCell({
     // SG column: always show benchmark value, prefixed with direction letter
     if (columnType === 'sg') {
       const formatted = benchmarkValue != null
-        ? `${benchmarkValue > 0 ? '+' : ''}${benchmarkValue}`
+        ? `${benchmarkValue > 0 ? '+' : ''}${Number(benchmarkValue).toFixed(1)}`
         : '—'
 
       if (!effectiveDirection) return formatted

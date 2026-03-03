@@ -97,7 +97,7 @@ function WeeklySlate({ onPredictionMade }) {
     load()
   }, [])
 
-  const handleCellTap = async (player, predictionType, direction) => {
+  const handleCellTap = async (player, predictionType, direction, extraData = {}) => {
     if (submitting || !currentTournament) return
     const submitKey = `${player.id}_${predictionType}`
 
@@ -108,10 +108,82 @@ function WeeklySlate({ onPredictionMade }) {
 
     setSubmitting(submitKey)
     try {
+      // ── Tournament Winner: single-pick with atomic state update ──
+      if (predictionType === 'tournament_winner') {
+        const prevWinner = allPredictions.find(p => p.predictionType === 'tournament_winner')
+        if (prevWinner && prevWinner.subjectPlayerId === player.id) {
+          // Tapping same winner = clear
+          await api.deletePrediction(prevWinner.id)
+          setAllPredictions(prev => prev.filter(p => p.id !== prevWinner.id))
+          track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: null, action: 'clear', context: 'prove_it_table' })
+          setSubmitting(null)
+          return
+        }
+        // Delete previous winner if switching
+        if (prevWinner) {
+          await api.deletePrediction(prevWinner.id)
+        }
+        const res = await api.submitPrediction({
+          sport: 'golf',
+          predictionType,
+          category: 'tournament',
+          eventId: currentTournament.id,
+          subjectPlayerId: player.id,
+          predictionData: { playerName: player.name },
+          isPublic: true,
+        })
+        // Single atomic state update — remove old + add new in one pass
+        setAllPredictions(prev => [
+          ...prev.filter(p => p.id !== prevWinner?.id),
+          res.prediction || res
+        ])
+        onPredictionMade?.()
+        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: 'pick', action: 'new', context: 'prove_it_table' })
+        setSubmitting(null)
+        return
+      }
+
+      // ── Round Leader: single-pick, mirrors winner logic ──
+      if (predictionType === 'round_leader') {
+        const prevLeader = allPredictions.find(p => p.predictionType === 'round_leader')
+        if (prevLeader && prevLeader.subjectPlayerId === player.id) {
+          // Tapping same leader = clear
+          await api.deletePrediction(prevLeader.id)
+          setAllPredictions(prev => prev.filter(p => p.id !== prevLeader.id))
+          track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: null, action: 'clear', context: 'prove_it_table' })
+          setSubmitting(null)
+          return
+        }
+        // Delete previous leader if switching
+        if (prevLeader) {
+          await api.deletePrediction(prevLeader.id)
+        }
+        const res = await api.submitPrediction({
+          sport: 'golf',
+          predictionType,
+          category: 'tournament',
+          eventId: currentTournament.id,
+          subjectPlayerId: player.id,
+          predictionData: { playerName: player.name },
+          isPublic: true,
+        })
+        // Atomic state update
+        setAllPredictions(prev => [
+          ...prev.filter(p => p.id !== prevLeader?.id),
+          res.prediction || res
+        ])
+        onPredictionMade?.()
+        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction: 'pick', action: 'new', context: 'prove_it_table' })
+        setSubmitting(null)
+        return
+      }
+
+      // ── Generic flow: clear / update / create ──
       if (direction === null && existingPred) {
         // Clear: delete the prediction
         await api.deletePrediction(existingPred.id)
         setAllPredictions(prev => prev.filter(p => p.id !== existingPred.id))
+        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, action: 'clear', context: 'prove_it_table' })
       } else if (existingPred && direction !== null) {
         // Toggle direction on existing prediction
         const updatedData = { ...existingPred.predictionData, direction }
@@ -119,23 +191,16 @@ function WeeklySlate({ onPredictionMade }) {
         setAllPredictions(prev => prev.map(p =>
           p.id === existingPred.id ? { ...p, predictionData: updatedData } : p
         ))
+        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, action: 'update', context: 'prove_it_table' })
       } else if (direction !== null) {
         // New prediction
-        const predictionData = { playerName: player.name }
+        const predictionData = { playerName: player.name, ...extraData }
 
         if (predictionType === 'player_benchmark') {
           predictionData.metric = 'sgTotal'
           predictionData.benchmarkValue = Math.round((player.sgTotal || 0) * 10) / 10
           predictionData.direction = direction
           predictionData.confidence = 'medium'
-        } else if (predictionType === 'tournament_winner') {
-          // Winner is single-pick — delete previous winner if exists
-          const prevWinner = allPredictions.find(p => p.predictionType === 'tournament_winner')
-          if (prevWinner) {
-            await api.deletePrediction(prevWinner.id)
-            setAllPredictions(prev => prev.filter(p => p.id !== prevWinner.id))
-          }
-          // No direction needed for winner — just the pick
         } else {
           predictionData.direction = direction
         }
@@ -151,8 +216,8 @@ function WeeklySlate({ onPredictionMade }) {
         })
         setAllPredictions(prev => [...prev, res.prediction || res])
         onPredictionMade?.()
+        track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, action: 'new', context: 'prove_it_table' })
       }
-      track(Events.PREDICTION_SUBMITTED, { sport: 'golf', type: predictionType, direction, context: 'prove_it_table' })
     } catch (err) {
       console.error('Prediction failed:', err)
     } finally {
@@ -330,14 +395,20 @@ function WeeklySlate({ onPredictionMade }) {
                 return (
                   <>
                     <button
-                      onClick={() => handleCellTap(h2hPlayerA, 'head_to_head', 'playerA')}
+                      onClick={() => handleCellTap(h2hPlayerA, 'head_to_head', 'playerA', {
+                        opponentPlayerId: h2hPlayerB.id,
+                        opponentPlayerName: h2hPlayerB.name
+                      })}
                       disabled={!!submitting}
                       className="flex-1 py-2 text-xs rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
                     >
                       {h2hPlayerA.name?.split(' ').pop()}
                     </button>
                     <button
-                      onClick={() => handleCellTap(h2hPlayerA, 'head_to_head', 'playerB')}
+                      onClick={() => handleCellTap(h2hPlayerB, 'head_to_head', 'playerB', {
+                        opponentPlayerId: h2hPlayerA.id,
+                        opponentPlayerName: h2hPlayerA.name
+                      })}
                       disabled={!!submitting}
                       className="flex-1 py-2 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
                     >
@@ -382,14 +453,20 @@ function WeeklySlate({ onPredictionMade }) {
                 ) : (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleCellTap(playerA, 'head_to_head', 'playerA')}
+                      onClick={() => handleCellTap(playerA, 'head_to_head', 'playerA', {
+                        opponentPlayerId: playerB.id,
+                        opponentPlayerName: playerB.name
+                      })}
                       disabled={!!submitting}
                       className="flex-1 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
                     >
                       {playerA.name?.split(' ').pop()}
                     </button>
                     <button
-                      onClick={() => handleCellTap(playerA, 'head_to_head', 'playerB')}
+                      onClick={() => handleCellTap(playerB, 'head_to_head', 'playerB', {
+                        opponentPlayerId: playerA.id,
+                        opponentPlayerName: playerA.name
+                      })}
                       disabled={!!submitting}
                       className="flex-1 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
                     >
