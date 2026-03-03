@@ -1,31 +1,35 @@
-import { useCallback, useMemo } from 'react'
-
 /**
  * PredictionCell — Dual-button prediction cell for the Prove It table.
  *
- * Renders a <td> with two side-by-side buttons for each prediction type:
- *   winner: single trophy toggle
- *   top:    Yes | No
- *   cut:    Make | Miss
- *   sg:     Over | Under (with benchmark value shown above)
- *
- * One button can be active at a time. Tapping the active button clears it.
+ * Each cell shows two compact buttons (Y|N, M|X, O|U).
+ * Positive side has a green tint, negative side has a red tint — even when
+ * unselected, so the table has visual rhythm. Selected = bold fill.
+ * Winner is a single trophy toggle.
  */
 
-// Button configs per column type: [positiveDirection, negativeDirection]
 const BUTTON_PAIRS = {
   top: [
-    { dir: 'yes',  label: 'Yes',  short: 'Y' },
-    { dir: 'no',   label: 'No',   short: 'N' },
+    { dir: 'yes',  label: 'Y' },
+    { dir: 'no',   label: 'N' },
   ],
   cut: [
-    { dir: 'make', label: 'Make', short: 'M' },
-    { dir: 'miss', label: 'Miss', short: 'X' },
+    { dir: 'make', label: 'M' },
+    { dir: 'miss', label: 'X' },
   ],
   sg: [
-    { dir: 'over',  label: 'Over',  short: 'O' },
-    { dir: 'under', label: 'Under', short: 'U' },
+    { dir: 'over',  label: 'O' },
+    { dir: 'under', label: 'U' },
   ],
+}
+
+// Unselected buttons get a subtle tint so the two sides are distinguishable
+const IDLE_STYLES = {
+  pos: 'bg-field/5 text-field/40 border border-field/15 hover:bg-field/10 hover:text-field/70 cursor-pointer',
+  neg: 'bg-live-red/5 text-live-red/40 border border-live-red/15 hover:bg-live-red/10 hover:text-live-red/70 cursor-pointer',
+}
+const ACTIVE_STYLES = {
+  pos: 'bg-field/20 text-field border border-field/50 font-bold',
+  neg: 'bg-live-red/20 text-live-red border border-live-red/50 font-bold',
 }
 
 export default function PredictionCell({
@@ -59,7 +63,7 @@ export default function PredictionCell({
           }}
           disabled={disabled || isResolved}
           className={[
-            'w-9 h-8 rounded text-sm',
+            'w-9 h-8 rounded text-sm mx-auto',
             'flex items-center justify-center',
             'transition-colors duration-150 active:scale-95',
             'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -67,9 +71,8 @@ export default function PredictionCell({
               ? (outcome === 'CORRECT' ? 'bg-field-bright/20 text-field border border-field-bright/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30')
               : isActive
                 ? 'bg-crown/20 text-crown border border-crown/40'
-                : 'bg-[var(--bg-alt)] text-text-primary/20 border border-[var(--card-border)] hover:border-crown/30 hover:text-crown/40 cursor-pointer',
+                : 'bg-crown/5 text-crown/30 border border-crown/15 hover:bg-crown/10 hover:text-crown/50 cursor-pointer',
           ].join(' ')}
-          aria-label={isActive ? 'Winner selected — tap to clear' : 'Tap to pick as winner'}
         >
           {isResolved ? (outcome === 'CORRECT' ? '\u2713' : '\u2717') : '\u{1F3C6}'}
         </button>
@@ -77,15 +80,15 @@ export default function PredictionCell({
     )
   }
 
-  // ── Resolved state: show result ──
+  // ── Resolved state ──
   if (isResolved) {
     return (
       <td className="px-0.5 py-0.5 text-center">
         <div className={[
-          'h-8 rounded flex items-center justify-center text-xs font-medium',
+          'h-8 rounded flex items-center justify-center text-xs font-bold',
           outcome === 'CORRECT'
-            ? 'bg-field-bright/20 text-field border border-field-bright/30'
-            : 'bg-rose-500/20 text-rose-400 border border-rose-500/30',
+            ? 'bg-field/20 text-field border border-field/40'
+            : 'bg-live-red/20 text-live-red border border-live-red/40',
         ].join(' ')}>
           {outcome === 'CORRECT' ? '\u2713' : '\u2717'}
         </div>
@@ -93,22 +96,24 @@ export default function PredictionCell({
     )
   }
 
-  // ── Dual-button cell (top, cut, sg) ──
+  // ── Dual-button cell ──
   const pair = BUTTON_PAIRS[columnType]
   if (!pair) return <td />
 
+  // SG: show benchmark inline between buttons
+  const sgLabel = columnType === 'sg' && benchmarkValue != null
+    ? (benchmarkValue > 0 ? '+' : '') + Number(benchmarkValue).toFixed(1)
+    : null
+
   return (
     <td className="px-0.5 py-0.5 text-center">
-      {/* SG benchmark label above buttons */}
-      {columnType === 'sg' && benchmarkValue != null && (
-        <div className="text-[9px] font-mono text-text-primary/30 leading-none mb-0.5">
-          {benchmarkValue > 0 ? '+' : ''}{Number(benchmarkValue).toFixed(1)}
-        </div>
-      )}
-      <div className="flex gap-px">
-        {pair.map(({ dir, label, short }) => {
+      <div className="flex items-center gap-px">
+        {pair.map(({ dir, label }, i) => {
           const isActive = effectiveDirection === dir
-          const isPositive = dir === pair[0].dir
+          const isPos = i === 0
+          const style = isActive
+            ? (isPos ? ACTIVE_STYLES.pos : ACTIVE_STYLES.neg)
+            : (isPos ? IDLE_STYLES.pos : IDLE_STYLES.neg)
 
           return (
             <button
@@ -120,24 +125,24 @@ export default function PredictionCell({
               }}
               disabled={disabled}
               className={[
-                'flex-1 h-7 rounded text-[10px] font-medium',
+                'flex-1 h-7 rounded text-[11px] font-semibold',
                 'flex items-center justify-center',
-                'transition-colors duration-150 active:scale-95',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                isActive
-                  ? isPositive
-                    ? 'bg-field/15 text-field border border-field/40 font-semibold'
-                    : 'bg-live-red/15 text-live-red border border-live-red/40 font-semibold'
-                  : 'bg-[var(--bg-alt)] text-text-primary/35 border border-[var(--card-border)] hover:border-blaze/30 hover:text-text-primary/60 cursor-pointer',
+                'transition-all duration-150 active:scale-95',
+                'disabled:opacity-40 disabled:cursor-not-allowed',
+                style,
               ].join(' ')}
-              aria-label={`${label} — ${isActive ? 'selected, tap to clear' : 'tap to select'}`}
             >
-              <span className="sm:hidden">{short}</span>
-              <span className="hidden sm:inline">{label}</span>
+              {label}
             </button>
           )
         })}
       </div>
+      {/* SG benchmark below buttons */}
+      {sgLabel && (
+        <div className="text-[9px] font-mono text-text-primary/30 leading-none mt-0.5 text-center">
+          {sgLabel}
+        </div>
+      )}
     </td>
   )
 }
