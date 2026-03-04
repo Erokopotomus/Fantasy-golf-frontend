@@ -3,6 +3,9 @@
  *
  * CRUD for the personal AI coach vault: identity prefs, memory documents,
  * coaching interactions, and reaction tracking.
+ *
+ * NOTE: Prisma's findUnique/upsert don't support nullable fields (sport String?)
+ * in composite unique keys. All lookups use findFirst + create/update by id instead.
  */
 
 const express = require('express')
@@ -13,6 +16,39 @@ const { getDefaultIdentity } = require('../services/coachContextAssembly')
 
 // All routes require authentication
 router.use(authenticate)
+
+// Helper: find a coaching memory doc by userId + sport + documentType
+// Uses findFirst instead of findUnique to handle nullable sport field
+async function findMemoryDoc(userId, sport, documentType) {
+  return prisma.coachingMemory.findFirst({
+    where: { userId, sport: sport || null, documentType },
+  })
+}
+
+// Helper: upsert a coaching memory doc (find first, then create or update)
+async function upsertMemoryDoc(userId, sport, documentType, content, lastUpdatedBy, existingDoc) {
+  if (existingDoc) {
+    return prisma.coachingMemory.update({
+      where: { id: existingDoc.id },
+      data: {
+        content,
+        version: existingDoc.version + 1,
+        lastUpdatedBy,
+      },
+    })
+  } else {
+    return prisma.coachingMemory.create({
+      data: {
+        userId,
+        sport: sport || null,
+        documentType,
+        content,
+        version: 1,
+        lastUpdatedBy,
+      },
+    })
+  }
+}
 
 // ═══════════════════════════════════════════════
 //  GET /memory — All vault documents for current user
@@ -54,15 +90,7 @@ router.get('/memory/:documentType', async (req, res) => {
     const { documentType } = req.params
     const { sport } = req.query
 
-    const doc = await prisma.coachingMemory.findUnique({
-      where: {
-        userId_sport_documentType: {
-          userId,
-          sport: sport || null,
-          documentType,
-        },
-      },
-    })
+    const doc = await findMemoryDoc(userId, sport, documentType)
 
     // Return default identity if type is 'identity' and no doc exists
     if (!doc && documentType === 'identity') {
@@ -101,16 +129,7 @@ router.put('/identity', async (req, res) => {
     const { coachingTone, coachingFrequency, riskAppetite, draftPhilosophy } = req.body
 
     // Fetch existing or default
-    const existing = await prisma.coachingMemory.findUnique({
-      where: {
-        userId_sport_documentType: {
-          userId,
-          sport: null,
-          documentType: 'identity',
-        },
-      },
-    })
-
+    const existing = await findMemoryDoc(userId, null, 'identity')
     const currentContent = existing ? existing.content : getDefaultIdentity()
 
     // Merge only provided fields
@@ -120,28 +139,7 @@ router.put('/identity', async (req, res) => {
     if (riskAppetite !== undefined) merged.riskAppetite = riskAppetite
     if (draftPhilosophy !== undefined) merged.draftPhilosophy = draftPhilosophy
 
-    const doc = await prisma.coachingMemory.upsert({
-      where: {
-        userId_sport_documentType: {
-          userId,
-          sport: null,
-          documentType: 'identity',
-        },
-      },
-      create: {
-        userId,
-        sport: null,
-        documentType: 'identity',
-        content: merged,
-        version: 1,
-        lastUpdatedBy: 'user',
-      },
-      update: {
-        content: merged,
-        version: existing ? existing.version + 1 : 1,
-        lastUpdatedBy: 'user',
-      },
-    })
+    const doc = await upsertMemoryDoc(userId, null, 'identity', merged, 'user', existing)
 
     res.json({
       document: {
@@ -174,16 +172,7 @@ router.post('/identity/notes', async (req, res) => {
     }
 
     // Fetch existing identity
-    const existing = await prisma.coachingMemory.findUnique({
-      where: {
-        userId_sport_documentType: {
-          userId,
-          sport: null,
-          documentType: 'identity',
-        },
-      },
-    })
-
+    const existing = await findMemoryDoc(userId, null, 'identity')
     const currentContent = existing ? existing.content : getDefaultIdentity()
     const notes = currentContent.userNotes || []
 
@@ -194,28 +183,7 @@ router.post('/identity/notes', async (req, res) => {
     notes.push({ text: text.trim(), addedAt: new Date().toISOString() })
     currentContent.userNotes = notes
 
-    const doc = await prisma.coachingMemory.upsert({
-      where: {
-        userId_sport_documentType: {
-          userId,
-          sport: null,
-          documentType: 'identity',
-        },
-      },
-      create: {
-        userId,
-        sport: null,
-        documentType: 'identity',
-        content: currentContent,
-        version: 1,
-        lastUpdatedBy: 'user',
-      },
-      update: {
-        content: currentContent,
-        version: existing ? existing.version + 1 : 1,
-        lastUpdatedBy: 'user',
-      },
-    })
+    const doc = await upsertMemoryDoc(userId, null, 'identity', currentContent, 'user', existing)
 
     res.json({
       document: {
@@ -243,15 +211,7 @@ router.delete('/identity/notes/:index', async (req, res) => {
       return res.status(400).json({ error: { message: 'Invalid note index' } })
     }
 
-    const existing = await prisma.coachingMemory.findUnique({
-      where: {
-        userId_sport_documentType: {
-          userId,
-          sport: null,
-          documentType: 'identity',
-        },
-      },
-    })
+    const existing = await findMemoryDoc(userId, null, 'identity')
 
     if (!existing) {
       return res.status(404).json({ error: { message: 'Identity document not found' } })
@@ -266,13 +226,7 @@ router.delete('/identity/notes/:index', async (req, res) => {
     existing.content.userNotes = notes
 
     const doc = await prisma.coachingMemory.update({
-      where: {
-        userId_sport_documentType: {
-          userId,
-          sport: null,
-          documentType: 'identity',
-        },
-      },
+      where: { id: existing.id },
       data: {
         content: existing.content,
         version: existing.version + 1,

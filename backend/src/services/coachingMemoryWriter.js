@@ -437,10 +437,10 @@ async function writeSeasonNarrative(userId, sport) {
  * (deep JSON comparison). Increments version on real updates.
  */
 async function upsertVaultDoc(userId, sport, documentType, newContent) {
-  const existing = await prisma.coachingMemory.findUnique({
-    where: {
-      userId_sport_documentType: { userId, sport, documentType },
-    },
+  // Use findFirst instead of findUnique — Prisma doesn't support nullable fields
+  // (sport String?) in composite unique key lookups
+  const existing = await prisma.coachingMemory.findFirst({
+    where: { userId, sport: sport || null, documentType },
   })
 
   // Strip generatedAt for comparison so timestamp alone doesn't trigger an update
@@ -455,26 +455,27 @@ async function upsertVaultDoc(userId, sport, documentType, newContent) {
     return // No change — skip write
   }
 
-  const nextVersion = existing ? existing.version + 1 : 1
-
-  await prisma.coachingMemory.upsert({
-    where: {
-      userId_sport_documentType: { userId, sport, documentType },
-    },
-    create: {
-      userId,
-      sport,
-      documentType,
-      content: newContent,
-      version: 1,
-      lastUpdatedBy: 'memory_writer',
-    },
-    update: {
-      content: newContent,
-      version: nextVersion,
-      lastUpdatedBy: 'memory_writer',
-    },
-  })
+  if (existing) {
+    await prisma.coachingMemory.update({
+      where: { id: existing.id },
+      data: {
+        content: newContent,
+        version: existing.version + 1,
+        lastUpdatedBy: 'memory_writer',
+      },
+    })
+  } else {
+    await prisma.coachingMemory.create({
+      data: {
+        userId,
+        sport: sport || null,
+        documentType,
+        content: newContent,
+        version: 1,
+        lastUpdatedBy: 'memory_writer',
+      },
+    })
+  }
 }
 
 // ════════════════════════════════════════════════

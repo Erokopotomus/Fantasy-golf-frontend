@@ -3419,6 +3419,83 @@ cron.schedule('0 8 * * 1', async () => {
 
 ---
 
+### 092 — Fix: Onboarding Modal Not Scrollable on Small Mobile Screens
+**Status:** `DONE`
+**Priority:** URGENT — blocking new users right now
+**Prompt:**
+The onboarding modal (`frontend/src/components/onboarding/OnboardingModal.jsx`) is already fixed in the working tree. The fix changes line 92-93:
+
+- Outer div: added `overflow-y-auto` to the `fixed inset-0` container
+- Inner div: changed `overflow-hidden` to `overflow-y-auto max-h-[90vh]`
+
+This prevents the modal from trapping users on small phone screens where the content overflows past the viewport and they can't reach the sport pills, Continue button, or Skip button.
+
+**Just commit and deploy.** The file is already edited. One-liner:
+
+```bash
+git add frontend/src/components/onboarding/OnboardingModal.jsx
+git commit -m "fix: onboarding modal scrollable on small mobile screens"
+git push
+```
+
+**Files:** `frontend/src/components/onboarding/OnboardingModal.jsx` (already modified)
+
+---
+
+### 093 — Fix: Email Invite 500 Error (PrismaClientValidationError)
+**Status:** `DONE`
+**Priority:** URGENT — Blocks league invites entirely
+**Prompt:**
+The `POST /:id/invite-email` route in `backend/src/routes/leagues.js` was crashing with a `PrismaClientValidationError` because the Prisma query tried to use `sport` as a relation with `{ select: { name: true } }`, but `sport` is a plain String field on the League model (not a relation — the relation is `sportRef`).
+
+**Fix already applied by Cowork (just commit and deploy):**
+
+In `backend/src/routes/leagues.js` (around line 381-412):
+1. Removed `sport: { select: { name: true } }` from the Prisma `include` block
+2. Changed `sportName: league.sport?.name || 'Fantasy'` to `sportName: league.sport || 'Fantasy'`
+
+The `league.sport` field is already a string like `"GOLF"` — no need to query a relation.
+
+Just commit the modified file and deploy:
+```bash
+git add backend/src/routes/leagues.js
+git commit -m "fix: email invite 500 error — sport is a String field, not a relation"
+git push
+```
+
+**Files:** `backend/src/routes/leagues.js` (already modified)
+
+---
+
+### 094 — Fix: Coach Settings "Failed to fetch document" (PrismaClientValidationError)
+**Status:** `TODO`
+**Priority:** URGENT — Coach Settings page broken for all users
+**Prompt:**
+The Coach Settings page (`/coach/settings`) crashes with "Failed to fetch document" because Prisma's `findUnique` and `upsert` don't support nullable fields (`sport String?`) in composite unique key lookups. Passing `sport: null` in `userId_sport_documentType` throws `PrismaClientValidationError`.
+
+**Fix already applied by Cowork (just commit and deploy):**
+
+1. `backend/src/routes/coachMemory.js` — Rewrote all 7 Prisma queries:
+   - All `findUnique` with composite key → `findFirst` with regular where clause
+   - All `upsert` with composite key → `findFirst` + `create` or `update` by `id`
+   - All `update` with composite key → `update` by `id` (after findFirst)
+   - Added `findMemoryDoc()` and `upsertMemoryDoc()` helper functions
+
+2. `backend/src/services/coachingMemoryWriter.js` — Same fix for `upsertVaultDoc()`:
+   - `findUnique` → `findFirst`
+   - `upsert` → `findFirst` + `create` or `update` by `id`
+
+Just commit and deploy:
+```bash
+git add backend/src/routes/coachMemory.js backend/src/services/coachingMemoryWriter.js
+git commit -m "fix: coach memory queries — Prisma nullable composite key workaround"
+git push
+```
+
+**Files:** `backend/src/routes/coachMemory.js`, `backend/src/services/coachingMemoryWriter.js` (both already modified)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

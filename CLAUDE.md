@@ -277,6 +277,7 @@ All 5 platforms enhanced with raw data preservation, transaction import, opinion
 - **NFL live scoring frequency review**: Current nflSync runs weekly. During game windows need 1-2 min updates. Evaluate nflverse latency, alternative live sources, WebSocket push, caching.
 - **Cleanup NFL test data**: `node backend/prisma/seedNflTestLeague.js cleanup` — run before production deploy
 - **Draft Owner Name Merge Tool**: Yahoo-imported draft picks use short nicknames ("Tank", "AO", "Mase R", "Spencer H") that don't map to canonical owner names. Need a merge UI (similar to the owner assignment wizard in league import) where commissioners can map Yahoo draft nicknames → canonical owners, then persist the mappings. Final step of data backfill cleanup — cosmetic only, draft intelligence shows extra rows for unmapped names.
+- **New Member Welcome Experience**: When a user joins a league via invite link, add a visually engaging "You're In" moment — welcome animation, league info reveal, team name prompt, meet-the-league roster preview. Think mini vault-reveal energy for first-time league entry. Makes joining feel like an event, not just a redirect.
 
 ---
 
