@@ -3940,6 +3940,55 @@ This is lower priority — Parts 1 and 2 are the critical fix. Part 3 is defense
 
 ---
 
+### 109 — Fix: Invite dropdown must merge OwnerAlias + HistoricalSeason sources (not if/else)
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Cowork merged alias + historical owner sources in parallel fetch with dedup. Commit dd8e17a. Files: LeagueSettings.jsx
+**Priority:** HIGH — GirthBrooks09 still missing from invite dropdown despite items 107+108 being DONE
+**Prompt:**
+
+**The bug (verified on live site Mar 4):** Item 107 added a `/historical-owners` fallback endpoint and frontend logic. But the frontend uses `if (unclaimed.length > 0) { use aliases } else { use historical-owners }`. Since Code's item 108 auto-created 15 OwnerAlias records (14 unique unclaimed canonical names), the `else` branch NEVER fires. GirthBrooks09 exists in HistoricalSeason but NOT in OwnerAlias — so it's still invisible in the dropdown.
+
+**Root cause:** The if/else logic means aliases OR historical-owners, never both. Josh's Sleeper display_name was something other than "GirthBrooks09", so the auto-created OwnerAlias records don't include that name. But HistoricalSeason DOES have "GirthBrooks09" as an ownerName.
+
+**The fix is already committed locally (commit dd8e17a) but needs to be pushed:**
+
+In `frontend/src/pages/LeagueSettings.jsx`, the useEffect that fetches unclaimed owners now:
+1. Fetches BOTH `/owner-aliases` and `/historical-owners` in parallel via `Promise.all`
+2. Extracts unclaimed canonical names from aliases + ownerName/teamName from historical-owners
+3. Merges and deduplicates both sets with `[...new Set([...aliasNames, ...histNames])]`
+4. Sets the merged list as unclaimed owners
+
+**If commit dd8e17a is already pushed, just verify. If not, the exact change is:**
+
+Replace the useEffect at ~line 123-144 in LeagueSettings.jsx. Change from if/else to parallel fetch + merge:
+
+```jsx
+useEffect(() => {
+  if (!leagueId || !isImportedLeague) return
+  ;(async () => {
+    try {
+      const [aliasData, histData] = await Promise.all([
+        api.getOwnerAliases(leagueId).catch(() => ({ aliases: [] })),
+        api.request(`/imports/leagues/${leagueId}/historical-owners`).catch(() => ({ owners: [] }))
+      ])
+      const aliases = aliasData.aliases || aliasData || []
+      const aliasNames = aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName)
+      const histNames = (histData?.owners || []).map(o => o.teamName || o.ownerName)
+      const merged = [...new Set([...aliasNames, ...histNames].filter(Boolean))]
+      if (merged.length > 0) {
+        setUnclaimedOwners(merged)
+        setSendVaultInvite(true)
+      }
+    } catch (e) { /* silent */ }
+  })()
+}, [leagueId, isImportedLeague])
+```
+
+**Files:** `frontend/src/pages/LeagueSettings.jsx`
+**Test:** Hard refresh `/leagues/cmm2x8cgv0071li65d4apztng/settings`, open Members tab, check "Match to owner" dropdown — GirthBrooks09 should now appear alongside all 14 other names.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
