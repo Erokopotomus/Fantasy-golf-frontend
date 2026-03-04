@@ -602,6 +602,9 @@ const DraftRoomContent = () => {
         } : null}
         isOpen={isModalOpen}
         onClose={closePlayerDetail}
+        isDraftContext={true}
+        onAddToQueue={addToQueue}
+        onDraft={isUserTurn ? handleSelectPlayer : undefined}
       />
 
       {/* Pick Announcement */}

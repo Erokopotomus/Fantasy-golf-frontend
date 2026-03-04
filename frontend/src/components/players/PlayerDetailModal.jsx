@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Card from '../common/Card'
 import Button from '../common/Button'
 
-const PlayerDetailModal = ({ player, onClose, isOpen }) => {
+const PlayerDetailModal = ({ player, onClose, isOpen, onAddToQueue, onDraft, isDraftContext = false }) => {
   const [activeTab, setActiveTab] = useState('overview')
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -451,7 +451,17 @@ const PlayerDetailModal = ({ player, onClose, isOpen }) => {
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
-          {!player.owned && (
+          {isDraftContext && onAddToQueue && !player.owned && (
+            <Button variant="secondary" onClick={() => { onAddToQueue(player); onClose() }}>
+              + Queue
+            </Button>
+          )}
+          {isDraftContext && onDraft && !player.owned && (
+            <Button onClick={() => { onDraft(player); onClose() }}>
+              Draft Player
+            </Button>
+          )}
+          {!isDraftContext && !player.owned && (
             <Button>Add to Watchlist</Button>
           )}
         </div>
