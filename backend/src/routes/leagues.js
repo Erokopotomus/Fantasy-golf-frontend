@@ -249,7 +249,6 @@ router.get('/preview-by-code', authenticate, async (req, res, next) => {
       include: {
         owner: { select: { name: true } },
         _count: { select: { members: true } },
-        sport: { select: { name: true, slug: true } },
       }
     })
 
@@ -269,7 +268,7 @@ router.get('/preview-by-code', authenticate, async (req, res, next) => {
         maxMembers: league.maxTeams,
         scoringType: league.scoringType,
         rosterSize: league.rosterSize,
-        sport: league.sport?.name || 'Golf',
+        sport: league.sport || 'Golf',
         alreadyMember: !!existingMember,
       }
     })
