@@ -237,6 +237,116 @@ router.get('/roster-map', authenticate, async (req, res, next) => {
   }
 })
 
+// GET /api/leagues/preview-by-code?code=XXXX - Preview league by invite code (no join)
+// IMPORTANT: Must be defined BEFORE /:id route to avoid Express treating "preview-by-code" as an :id param
+router.get('/preview-by-code', authenticate, async (req, res, next) => {
+  try {
+    const code = req.query.code
+    if (!code) return res.status(400).json({ error: { message: 'Code required' } })
+
+    const league = await prisma.league.findUnique({
+      where: { inviteCode: code },
+      include: {
+        owner: { select: { name: true } },
+        _count: { select: { members: true } },
+        sport: { select: { name: true, slug: true } },
+      }
+    })
+
+    if (!league) return res.status(404).json({ error: { message: 'League not found' } })
+
+    const existingMember = await prisma.leagueMember.findUnique({
+      where: { userId_leagueId: { userId: req.user.id, leagueId: league.id } }
+    })
+
+    res.json({
+      league: {
+        id: league.id,
+        name: league.name,
+        commissioner: league.owner?.name,
+        type: league.draftType || 'snake',
+        memberCount: league._count.members,
+        maxMembers: league.maxTeams,
+        scoringType: league.scoringType,
+        rosterSize: league.rosterSize,
+        sport: league.sport?.name || 'Golf',
+        alreadyMember: !!existingMember,
+      }
+    })
+  } catch (error) { next(error) }
+})
+
+// POST /api/leagues/join-by-code - Join league by invite code
+// IMPORTANT: Must be defined BEFORE /:id route
+router.post('/join-by-code', authenticate, async (req, res, next) => {
+  try {
+    const { inviteCode } = req.body
+
+    const league = await prisma.league.findUnique({
+      where: { inviteCode },
+      include: {
+        _count: { select: { members: true } }
+      }
+    })
+
+    if (!league) {
+      return res.status(404).json({ error: { message: 'League not found' } })
+    }
+
+    // Check if league is full
+    if (league._count.members >= league.maxTeams) {
+      return res.status(400).json({ error: { message: 'League is full' } })
+    }
+
+    // Check if already a member
+    const existingMember = await prisma.leagueMember.findUnique({
+      where: {
+        userId_leagueId: {
+          userId: req.user.id,
+          leagueId: league.id
+        }
+      }
+    })
+
+    if (existingMember) {
+      return res.status(400).json({ error: { message: 'Already a member of this league' } })
+    }
+
+    // Add member and create team
+    await prisma.$transaction([
+      prisma.leagueMember.create({
+        data: {
+          userId: req.user.id,
+          leagueId: league.id,
+          role: 'MEMBER'
+        }
+      }),
+      prisma.team.create({
+        data: {
+          name: `${req.user.name}'s Team`,
+          userId: req.user.id,
+          leagueId: league.id
+        }
+      })
+    ])
+
+    // Notify league members about new member
+    try {
+      notifyLeague(league.id, {
+        type: 'MEMBER_JOINED',
+        title: 'New Member',
+        message: `${req.user.name} joined ${league.name}`,
+        actionUrl: `/leagues/${league.id}`,
+        data: { leagueId: league.id, userId: req.user.id, userName: req.user.name },
+      }, [req.user.id], prisma).catch(err => console.error('Member joined notification failed:', err.message))
+    } catch (err) { console.error('Member joined notification failed:', err.message) }
+
+    res.json({ league, message: 'Successfully joined league' })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/leagues/:id - Get league details
 router.get('/:id', authenticate, async (req, res, next) => {
   try {
@@ -719,113 +829,7 @@ router.post('/:id/join', authenticate, async (req, res, next) => {
   }
 })
 
-// GET /api/leagues/preview-by-code?code=XXXX - Preview league by invite code (no join)
-router.get('/preview-by-code', authenticate, async (req, res, next) => {
-  try {
-    const code = req.query.code
-    if (!code) return res.status(400).json({ error: { message: 'Code required' } })
-
-    const league = await prisma.league.findUnique({
-      where: { inviteCode: code },
-      include: {
-        owner: { select: { name: true } },
-        _count: { select: { members: true } },
-        sport: { select: { name: true, slug: true } },
-      }
-    })
-
-    if (!league) return res.status(404).json({ error: { message: 'Invalid invite code' } })
-
-    const existingMember = await prisma.leagueMember.findUnique({
-      where: { userId_leagueId: { userId: req.user.id, leagueId: league.id } }
-    })
-
-    res.json({
-      league: {
-        id: league.id,
-        name: league.name,
-        commissioner: league.owner?.name,
-        type: league.draftType || 'snake',
-        memberCount: league._count.members,
-        maxMembers: league.maxTeams,
-        scoringType: league.scoringType,
-        rosterSize: league.rosterSize,
-        sport: league.sport?.name || 'Golf',
-        alreadyMember: !!existingMember,
-      }
-    })
-  } catch (error) { next(error) }
-})
-
-// POST /api/leagues/join-by-code - Join league by invite code
-router.post('/join-by-code', authenticate, async (req, res, next) => {
-  try {
-    const { inviteCode } = req.body
-
-    const league = await prisma.league.findUnique({
-      where: { inviteCode },
-      include: {
-        _count: { select: { members: true } }
-      }
-    })
-
-    if (!league) {
-      return res.status(404).json({ error: { message: 'Invalid invite code' } })
-    }
-
-    // Check if league is full
-    if (league._count.members >= league.maxTeams) {
-      return res.status(400).json({ error: { message: 'League is full' } })
-    }
-
-    // Check if already a member
-    const existingMember = await prisma.leagueMember.findUnique({
-      where: {
-        userId_leagueId: {
-          userId: req.user.id,
-          leagueId: league.id
-        }
-      }
-    })
-
-    if (existingMember) {
-      return res.status(400).json({ error: { message: 'Already a member of this league' } })
-    }
-
-    // Add member and create team
-    await prisma.$transaction([
-      prisma.leagueMember.create({
-        data: {
-          userId: req.user.id,
-          leagueId: league.id,
-          role: 'MEMBER'
-        }
-      }),
-      prisma.team.create({
-        data: {
-          name: `${req.user.name}'s Team`,
-          userId: req.user.id,
-          leagueId: league.id
-        }
-      })
-    ])
-
-    // Notify league members about new member
-    try {
-      notifyLeague(league.id, {
-        type: 'MEMBER_JOINED',
-        title: 'New Member',
-        message: `${req.user.name} joined ${league.name}`,
-        actionUrl: `/leagues/${league.id}`,
-        data: { leagueId: league.id, userId: req.user.id, userName: req.user.name },
-      }, [req.user.id], prisma).catch(err => console.error('Member joined notification failed:', err.message))
-    } catch (err) { console.error('Member joined notification failed:', err.message) }
-
-    res.json({ league, message: 'Successfully joined league' })
-  } catch (error) {
-    next(error)
-  }
-})
+// preview-by-code and join-by-code routes moved above /:id route to prevent Express param capture
 
 // POST /api/leagues/:id/draft - Create a draft for this league (commissioner only)
 router.post('/:id/draft', authenticate, async (req, res, next) => {
