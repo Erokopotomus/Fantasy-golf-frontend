@@ -89,8 +89,8 @@ const OnboardingModal = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-[var(--surface)] rounded-2xl overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div className="w-full max-w-lg bg-[var(--surface)] rounded-2xl overflow-y-auto max-h-[90vh] shadow-2xl">
         {/* Progress */}
         <div className="flex gap-1 p-4 pb-0">
           {[0, 1].map(idx => (
