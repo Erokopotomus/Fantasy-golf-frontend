@@ -80,6 +80,14 @@ const DraftRoomContent = () => {
     prevDraftStatusRef.current = currentStatus
   }, [draft?.status])
 
+  // Desktop detection for conditional inline styles
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
+  useEffect(() => {
+    const handler = () => setIsDesktop(window.innerWidth >= 1024)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   // Resizable divider between board and player panel
   const [boardPct, setBoardPct] = useState(() => {
     const saved = localStorage.getItem('clutch-draft-board-pct')
@@ -109,6 +117,39 @@ const DraftRoomContent = () => {
       document.removeEventListener('mouseup', onMouseUp)
       // Persist preference
       setBoardPct(prev => { localStorage.setItem('clutch-draft-board-pct', prev); return prev })
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [])
+
+  // Horizontal resizer between player pool and queue/chat
+  const [playerPct, setPlayerPct] = useState(() => {
+    const saved = localStorage.getItem('clutch-draft-player-pct')
+    return saved ? Number(saved) : 60
+  })
+  const isHDragging = useRef(false)
+  const bottomRef = useRef(null)
+
+  const handleHDividerMouseDown = useCallback((e) => {
+    e.preventDefault()
+    isHDragging.current = true
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+
+    const onMouseMove = (ev) => {
+      if (!isHDragging.current || !bottomRef.current) return
+      const rect = bottomRef.current.getBoundingClientRect()
+      const x = ev.clientX - rect.left
+      const pct = Math.max(30, Math.min(85, (x / rect.width) * 100))
+      setPlayerPct(pct)
+    }
+    const onMouseUp = () => {
+      isHDragging.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      setPlayerPct(prev => { localStorage.setItem('clutch-draft-player-pct', prev); return prev })
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
@@ -199,6 +240,17 @@ const DraftRoomContent = () => {
     })
     return unsub
   }, [draft?.id, user?.id])
+
+  // Draft lobby presence — track who's connected
+  const [connectedUserIds, setConnectedUserIds] = useState([])
+
+  useEffect(() => {
+    if (!draft?.id) return
+    const unsub = socketService.onDraftPresence((data) => {
+      setConnectedUserIds(data.connectedUserIds || [])
+    })
+    return unsub
+  }, [draft?.id])
 
   const handleSelectPlayer = useCallback(async (player) => {
     if (draft?.type === 'auction') {
@@ -367,6 +419,7 @@ const DraftRoomContent = () => {
                 userTeamId={draft?.userTeamId}
                 onViewPlayer={openPlayerDetail}
                 players={players}
+                connectedUserIds={connectedUserIds}
               />
             )}
           </div>
@@ -382,9 +435,9 @@ const DraftRoomContent = () => {
           </div>
 
           {/* Bottom: Player Pool + Queue */}
-          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
-            {/* Left: Player Pool — ensure it gets enough space on mobile */}
-            <div className="flex-[2] lg:flex-1 lg:w-[60%] lg:border-r lg:border-[var(--card-border)] min-h-0 flex flex-col">
+          <div ref={bottomRef} className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
+            {/* Left: Player Pool — resizable width */}
+            <div className="flex-[2] lg:flex-none lg:shrink-0 min-h-0 flex flex-col" style={isDesktop ? { width: `${playerPct}%` } : undefined}>
               {/* Board selector */}
               {boards.length > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--card-border)] bg-[var(--surface)] shrink-0">
@@ -414,8 +467,16 @@ const DraftRoomContent = () => {
                 />
               </div>
             </div>
+            {/* Horizontal drag divider (desktop only) */}
+            <div
+              onMouseDown={handleHDividerMouseDown}
+              className="hidden lg:flex shrink-0 w-2 cursor-col-resize items-center justify-center group hover:bg-gold/10 active:bg-gold/20 transition-colors border-x border-[var(--card-border)]"
+              title="Drag to resize"
+            >
+              <div className="h-10 w-0.5 rounded-full bg-[var(--card-border)] group-hover:bg-gold group-active:bg-gold transition-colors" />
+            </div>
             {/* Right: Queue / Chat — constrained on mobile */}
-            <div className="flex-1 max-h-[30%] lg:max-h-none lg:w-[40%] flex flex-col min-h-0">
+            <div className="flex-1 max-h-[30%] lg:max-h-none flex flex-col min-h-0">
               {/* Side Panel Tabs */}
               <div className="flex border-b border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
                 {[

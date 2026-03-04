@@ -129,6 +129,11 @@ export const socketService = {
     return () => socket?.off('draft-chat', callback)
   },
 
+  onDraftPresence(callback) {
+    socket?.on('draft-presence', callback)
+    return () => socket?.off('draft-presence', callback)
+  },
+
   // League chat methods
   sendChatMessage(leagueId, content) {
     socket?.emit('chat-message', { leagueId, content })

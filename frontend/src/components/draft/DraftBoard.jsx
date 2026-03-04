@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewPlayer, players }) => {
+const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewPlayer, players, connectedUserIds = [] }) => {
   const rounds = Array.from({ length: rosterSize }, (_, i) => i + 1)
   const currentRoundRef = useRef(null)
   const scrollContainerRef = useRef(null)
@@ -22,24 +22,30 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
             style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
           >
             <div className="bg-[var(--bg-alt)] px-1 py-2.5 text-text-muted text-[10px] font-semibold text-center">RD</div>
-            {teams.map(team => (
-              <div
-                key={team.id}
-                className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
-                  team.id === userTeamId
-                    ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
-                    : currentPick?.teamId === team.id
-                      ? 'bg-crown/20 text-crown'
-                      : 'bg-[var(--bg-alt)] text-text-muted'
-                }`}
-              >
-                {team.id === userTeamId ? (
-                  <span className="font-bold">YOU</span>
-                ) : (
-                  team.name.length > 10 ? team.name.slice(0, 9) + '…' : team.name
-                )}
-              </div>
-            ))}
+            {teams.map(team => {
+              const isOnline = connectedUserIds.includes(team.userId)
+              return (
+                <div
+                  key={team.id}
+                  className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate relative ${
+                    team.id === userTeamId
+                      ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
+                      : currentPick?.teamId === team.id
+                        ? 'bg-crown/20 text-crown'
+                        : 'bg-[var(--bg-alt)] text-text-muted'
+                  }`}
+                >
+                  <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 align-middle ${
+                    isOnline ? 'bg-emerald-500' : 'bg-gray-400/50'
+                  }`} title={isOnline ? 'Connected' : 'Not connected'} />
+                  {team.id === userTeamId ? (
+                    <span className="font-bold">YOU</span>
+                  ) : (
+                    team.name.length > 10 ? team.name.slice(0, 9) + '…' : team.name
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>

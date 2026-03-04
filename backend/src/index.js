@@ -204,10 +204,21 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} joined league-${leagueId}`)
   })
 
-  // Join draft room
-  socket.on('join-draft', (draftId) => {
+  // Join draft room with presence tracking
+  socket.on('join-draft', async (draftId) => {
     socket.join(`draft-${draftId}`)
-    console.log(`Socket ${socket.id} joined draft-${draftId}`)
+    socket._draftId = draftId
+    console.log(`Socket ${socket.id} (user ${socket.userId}) joined draft-${draftId}`)
+    // Broadcast updated presence list to all in the room
+    const room = io.sockets.adapter.rooms.get(`draft-${draftId}`)
+    if (room) {
+      const connectedUserIds = []
+      for (const sid of room) {
+        const s = io.sockets.sockets.get(sid)
+        if (s?.userId && !connectedUserIds.includes(s.userId)) connectedUserIds.push(s.userId)
+      }
+      io.to(`draft-${draftId}`).emit('draft-presence', { connectedUserIds })
+    }
   })
 
   // Draft chat
@@ -231,7 +242,18 @@ io.on('connection', (socket) => {
 
   socket.on('leave-draft', (draftId) => {
     socket.leave(`draft-${draftId}`)
+    socket._draftId = null
     console.log(`Socket ${socket.id} left draft-${draftId}`)
+    // Broadcast updated presence
+    const room = io.sockets.adapter.rooms.get(`draft-${draftId}`)
+    const connectedUserIds = []
+    if (room) {
+      for (const sid of room) {
+        const s = io.sockets.sockets.get(sid)
+        if (s?.userId && !connectedUserIds.includes(s.userId)) connectedUserIds.push(s.userId)
+      }
+    }
+    io.to(`draft-${draftId}`).emit('draft-presence', { connectedUserIds })
   })
 
   // Chat message
@@ -241,6 +263,19 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id)
+    // Broadcast updated draft presence if user was in a draft room
+    if (socket._draftId) {
+      const draftId = socket._draftId
+      const room = io.sockets.adapter.rooms.get(`draft-${draftId}`)
+      const connectedUserIds = []
+      if (room) {
+        for (const sid of room) {
+          const s = io.sockets.sockets.get(sid)
+          if (s?.userId && !connectedUserIds.includes(s.userId)) connectedUserIds.push(s.userId)
+        }
+      }
+      io.to(`draft-${draftId}`).emit('draft-presence', { connectedUserIds })
+    }
   })
 })
 
