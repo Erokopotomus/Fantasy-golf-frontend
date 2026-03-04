@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { DraftProvider } from '../context/DraftContext'
 import { useAuth } from '../context/AuthContext'
@@ -79,6 +79,61 @@ const DraftRoomContent = () => {
 
     prevDraftStatusRef.current = currentStatus
   }, [draft?.status])
+
+  // Resizable divider between board and player panel
+  const [boardPct, setBoardPct] = useState(() => {
+    const saved = localStorage.getItem('clutch-draft-board-pct')
+    return saved ? Number(saved) : 35 // Default 35% board, 65% players
+  })
+  const isDragging = useRef(false)
+  const containerRef = useRef(null)
+
+  const handleDividerMouseDown = useCallback((e) => {
+    e.preventDefault()
+    isDragging.current = true
+    document.body.style.cursor = 'row-resize'
+    document.body.style.userSelect = 'none'
+
+    const onMouseMove = (ev) => {
+      if (!isDragging.current || !containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const y = ev.clientY - rect.top
+      const pct = Math.max(15, Math.min(75, (y / rect.height) * 100))
+      setBoardPct(pct)
+    }
+    const onMouseUp = () => {
+      isDragging.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      // Persist preference
+      setBoardPct(prev => { localStorage.setItem('clutch-draft-board-pct', prev); return prev })
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [])
+
+  // Touch support for mobile
+  const handleDividerTouchStart = useCallback((e) => {
+    isDragging.current = true
+    const onTouchMove = (ev) => {
+      if (!isDragging.current || !containerRef.current) return
+      const touch = ev.touches[0]
+      const rect = containerRef.current.getBoundingClientRect()
+      const y = touch.clientY - rect.top
+      const pct = Math.max(15, Math.min(75, (y / rect.height) * 100))
+      setBoardPct(pct)
+    }
+    const onTouchEnd = () => {
+      isDragging.current = false
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+      setBoardPct(prev => { localStorage.setItem('clutch-draft-board-pct', prev); return prev })
+    }
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend', onTouchEnd)
+  }, [])
 
   // Board integration
   const [boards, setBoards] = useState([])
@@ -286,9 +341,9 @@ const DraftRoomContent = () => {
           />
         </div>
       ) : (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top: Draft Board (full width) — shorter on mobile to leave room for player pool */}
-          <div className="h-[30%] lg:h-[55%] flex flex-col min-h-0 border-b-2 border-gold/30 p-2">
+        <div ref={containerRef} className="flex-1 flex flex-col overflow-hidden">
+          {/* Top: Draft Board — resizable via drag divider */}
+          <div style={{ height: `${boardPct}%` }} className="flex flex-col min-h-0 p-2 shrink-0">
             {draft?.type === 'auction' ? (
               <BidPanel
                 currentBid={currentBid}
@@ -314,6 +369,16 @@ const DraftRoomContent = () => {
                 players={players}
               />
             )}
+          </div>
+
+          {/* Resizable drag divider */}
+          <div
+            onMouseDown={handleDividerMouseDown}
+            onTouchStart={handleDividerTouchStart}
+            className="shrink-0 h-2 cursor-row-resize flex items-center justify-center group hover:bg-gold/10 active:bg-gold/20 transition-colors border-y border-[var(--card-border)]"
+            title="Drag to resize"
+          >
+            <div className="w-10 h-0.5 rounded-full bg-[var(--card-border)] group-hover:bg-gold group-active:bg-gold transition-colors" />
           </div>
 
           {/* Bottom: Player Pool + Queue */}
