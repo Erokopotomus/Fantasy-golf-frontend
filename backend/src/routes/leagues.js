@@ -382,7 +382,6 @@ router.post('/:id/invite-email', authenticate, async (req, res, next) => {
       where: { id: req.params.id },
       include: {
         owner: { select: { name: true } },
-        sport: { select: { name: true } },
         _count: { select: { members: true } },
       },
     })
@@ -406,7 +405,7 @@ router.post('/:id/invite-email', authenticate, async (req, res, next) => {
       commissionerName: league.owner?.name || 'Your commissioner',
       leagueName: league.name,
       joinUrl,
-      sportName: league.sport?.name || 'Fantasy',
+      sportName: league.sport || 'Fantasy',
       memberCount: league._count?.members || null,
       maxTeams: league.maxTeams || null,
     })
