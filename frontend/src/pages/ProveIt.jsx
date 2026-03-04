@@ -500,9 +500,10 @@ function WeeklySlate({ onPredictionMade }) {
         <div className="border-t border-[var(--card-border)] pt-3 mt-1">
           <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2 font-semibold">Suggested</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {slate.slice(0, 5).map((playerA, i) => {
-              const playerB = slate[slate.length - 1 - i] || slate[i + 5]
-              if (!playerB || playerA.id === playerB.id) return null
+            {Array.from({ length: 5 }, (_, i) => {
+              const playerA = slate[i * 2]
+              const playerB = slate[i * 2 + 1]
+              if (!playerA || !playerB) return null
               const existing = allPredictions.find(
                 p => p.predictionType === 'head_to_head' &&
                   p.subjectPlayerId === playerA.id &&
