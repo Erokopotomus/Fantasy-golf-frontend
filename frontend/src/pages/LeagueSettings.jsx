@@ -133,9 +133,13 @@ const LeagueSettings = () => {
         ])
         const aliases = aliasData.aliases || aliasData || []
         const aliasNames = aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName)
-        const histNames = (histData?.owners || []).map(o => o.teamName || o.ownerName)
-        // Merge and deduplicate both sources
-        const merged = [...new Set([...aliasNames, ...histNames].filter(Boolean))]
+        // Build set of all names already covered by aliases (canonical + raw owner names)
+        const aliasAllNames = new Set(aliases.flatMap(a => [a.canonicalName, a.ownerName].filter(Boolean)))
+        // Only add historical names that aren't already represented in aliases
+        const histExtras = (histData?.owners || [])
+          .map(o => o.ownerName)
+          .filter(n => n && !aliasAllNames.has(n))
+        const merged = [...new Set([...aliasNames, ...histExtras])]
         if (merged.length > 0) {
           setUnclaimedOwners(merged)
           setSendVaultInvite(true)
