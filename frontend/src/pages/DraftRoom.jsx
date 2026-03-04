@@ -14,6 +14,7 @@ import PickAnnouncement from '../components/draft/PickAnnouncement'
 import DraftCompletionOverlay from '../components/draft/DraftCompletionOverlay'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
 import Card from '../components/common/Card'
+import useDraftSounds from '../hooks/useDraftSounds'
 import api from '../services/api'
 import socketService from '../services/socket'
 
@@ -56,6 +57,36 @@ const DraftRoomContent = () => {
   const [chatInput, setChatInput] = useState('')
   const chatEndRef = useRef(null)
   const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
+  const { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playDraftStart, playBid, playDraftComplete } = useDraftSounds()
+
+  // Initialize audio context on first user interaction
+  useEffect(() => {
+    const handler = () => { initSounds(); document.removeEventListener('click', handler) }
+    document.addEventListener('click', handler)
+    return () => document.removeEventListener('click', handler)
+  }, [initSounds])
+
+  // Sound: your turn notification
+  const prevIsUserTurn = useRef(false)
+  useEffect(() => {
+    if (isUserTurn && !prevIsUserTurn.current) playYourTurn()
+    prevIsUserTurn.current = isUserTurn
+  }, [isUserTurn, playYourTurn])
+
+  // Sound: pick made
+  const prevPickCount = useRef(0)
+  useEffect(() => {
+    if (picks.length > prevPickCount.current && prevPickCount.current > 0) playPick()
+    prevPickCount.current = picks.length
+  }, [picks.length, playPick])
+
+  // Sound: draft started
+  const prevDraftStatus = useRef(null)
+  useEffect(() => {
+    if (prevDraftStatus.current === 'SCHEDULED' && draft?.status === 'IN_PROGRESS') playDraftStart()
+    if (prevDraftStatus.current === 'IN_PROGRESS' && draft?.status === 'COMPLETED') playDraftComplete()
+    prevDraftStatus.current = draft?.status
+  }, [draft?.status, playDraftStart, playDraftComplete])
 
   // Draft completion celebration overlay
   const [showCompletionOverlay, setShowCompletionOverlay] = useState(false)
@@ -359,7 +390,7 @@ const DraftRoomContent = () => {
 
       {/* Tab Bar */}
       <div className="bg-[var(--surface)] border-b border-[var(--card-border)] flex-shrink-0">
-        <div className="px-4 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex gap-1">
             {['draft', 'dashboard'].map((tab) => (
               <button
@@ -378,6 +409,23 @@ const DraftRoomContent = () => {
               </button>
             ))}
           </div>
+          <button
+            onClick={toggleSound}
+            className="p-2 rounded-lg hover:bg-[var(--bg-alt)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            title={soundEnabled ? 'Mute sounds' : 'Enable sounds'}
+            aria-label={soundEnabled ? 'Mute draft sounds' : 'Enable draft sounds'}
+          >
+            {soundEnabled ? (
+              <svg className="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M17.95 6.05a8 8 0 010 11.9M11 5L6 9H2v6h4l5 4V5z" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
 
