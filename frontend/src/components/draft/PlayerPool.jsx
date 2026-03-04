@@ -113,9 +113,11 @@ const PlayerPool = ({
     )
   }
 
+  // Mobile: hide T5/T10/T25/MC/Form — show Rk, (Bd), Player, CPI, SG, actions
+  // Desktop: show all columns
   const gridCols = hasBoard
-    ? 'grid-cols-[26px_26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
-    : 'grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
+    ? 'grid-cols-[26px_26px_1fr_36px_40px_44px] sm:grid-cols-[26px_26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
+    : 'grid-cols-[26px_1fr_36px_40px_44px] sm:grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
 
   return (
     <Card className="h-full flex flex-col" padding="none">
@@ -164,19 +166,19 @@ const PlayerPool = ({
             <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-text-primary transition-colors" title="Strokes Gained: Total per round vs. field average">
               SG <SortIcon field="sgTotal" />
             </button>
-            <button onClick={() => handleSort('top5')} className="text-right hover:text-text-primary transition-colors" title="Top-5 finishes this season">
+            <button onClick={() => handleSort('top5')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top-5 finishes this season">
               T5 <SortIcon field="top5" />
             </button>
-            <button onClick={() => handleSort('top10')} className="text-right hover:text-text-primary transition-colors" title="Top-10 finishes this season">
+            <button onClick={() => handleSort('top10')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top-10 finishes this season">
               T10 <SortIcon field="top10" />
             </button>
-            <button onClick={() => handleSort('top25')} className="text-right hover:text-text-primary transition-colors" title="Top-25 finishes this season">
+            <button onClick={() => handleSort('top25')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top-25 finishes this season">
               T25 <SortIcon field="top25" />
             </button>
-            <button onClick={() => handleSort('cuts')} className="text-center hover:text-text-primary transition-colors" title="Cuts made / events entered">
+            <button onClick={() => handleSort('cuts')} className="hidden sm:block text-center hover:text-text-primary transition-colors" title="Cuts made / events entered">
               MC <SortIcon field="cuts" />
             </button>
-            <span className="text-center" title="Last 4 tournament finishes (most recent first)">Form</span>
+            <span className="hidden sm:block text-center" title="Last 4 tournament finishes (most recent first)">Form</span>
             <div />
           </div>
         </div>
@@ -239,19 +241,19 @@ const PlayerPool = ({
               }`}>
                 {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '\u2014'}
               </span>
-              <span className="text-xs text-right text-text-secondary tabular-nums">
+              <span className="hidden sm:block text-xs text-right text-text-secondary tabular-nums">
                 {player.top5s || '\u2014'}
               </span>
-              <span className="text-xs text-right text-text-secondary tabular-nums">
+              <span className="hidden sm:block text-xs text-right text-text-secondary tabular-nums">
                 {player.top10s || '\u2014'}
               </span>
-              <span className="text-xs text-right text-text-secondary tabular-nums">
+              <span className="hidden sm:block text-xs text-right text-text-secondary tabular-nums">
                 {player.top25s || '\u2014'}
               </span>
-              <span className="text-xs text-center text-text-muted tabular-nums">
+              <span className="hidden sm:block text-xs text-center text-text-muted tabular-nums">
                 {player.cutsMade || 0}/{player.events || 0}
               </span>
-              <div className="flex items-center justify-center gap-1">
+              <div className="hidden sm:flex items-center justify-center gap-1">
                 {(player.recentForm || []).slice(0, 4).map((f, i) => {
                   const pos = parseInt(String(f).replace('T', ''))
                   return (

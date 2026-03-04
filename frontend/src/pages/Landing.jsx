@@ -315,7 +315,7 @@ const Landing = () => {
 
       {/* ══════════ THE CLUTCH RATING ══════════ */}
       <section
-        className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8"
+        className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
         style={{
           background: `
             radial-gradient(ellipse 40% 28% at 25% 15%, ${CR}${isLight ? '06' : '0A'}, transparent),
