@@ -3603,6 +3603,32 @@ From PageSpeed audit:
 
 ---
 
+### 101 — Fix: Sport filter emoji buttons missing aria-labels
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Added aria-label="Golf"/"NFL"/"All sports" to sport filter emoji buttons. Files: Dashboard.jsx
+**Priority:** LOW — Accessibility polish
+**Prompt:**
+On the Dashboard, the sport filter buttons (⛳ Golf and 🏈 NFL) are emoji-only buttons with no `aria-label`. Screen readers can't announce what they do.
+
+**Fix:** Add `aria-label="Golf"` to the ⛳ button and `aria-label="NFL"` to the 🏈 button in the sport filter component on the Dashboard. These buttons already have `min-w-[44px] min-h-[44px]` from item 098 — they just need the labels.
+
+**File:** Likely `frontend/src/pages/Dashboard.jsx` or whichever component renders the sport filter pills (look for the `⛳` and `🏈` emoji buttons near the "My Leagues" section).
+
+---
+
+### 102 — Fix: "Bay Hill" coach briefing link too short for touch target
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Added min-h-[44px] to coach briefing CTA link. Files: CoachBriefing.jsx
+**Priority:** LOW — Mobile UX polish
+**Prompt:**
+The coach briefing line on Dashboard, League Home, and Golf Hub includes an inline link (currently "Bay Hill" or the current tournament name) that renders at only 19px tall — below the 44px WCAG touch target minimum. This link appears on multiple pages wherever the `CoachBriefing` component renders.
+
+**Fix:** Add `min-h-[44px] inline-flex items-center` to the tournament link inside the coach briefing component so the tap target meets the minimum height without changing the visual text size. Alternatively, increase the line-height/padding of the entire briefing line to ensure the link naturally reaches 44px.
+
+**File:** `frontend/src/components/common/CoachBriefing.jsx` (or wherever the coach briefing renders the inline tournament link).
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

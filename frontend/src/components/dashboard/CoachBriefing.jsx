@@ -81,7 +81,7 @@ const CoachBriefing = ({ feedCards = [], feedLoading = false }) => {
               {briefing.cta && (
                 <Link
                   to={briefing.cta.to}
-                  className="text-sm font-semibold text-[var(--crown)] hover:text-[var(--crown)]/80 transition-colors flex items-center gap-1 shrink-0 mt-1"
+                  className="text-sm font-semibold text-[var(--crown)] hover:text-[var(--crown)]/80 transition-colors inline-flex items-center gap-1 shrink-0 mt-1 min-h-[44px]"
                 >
                   {briefing.cta.label}
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

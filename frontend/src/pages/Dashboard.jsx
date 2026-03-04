@@ -218,6 +218,7 @@ const Dashboard = () => {
                       <button
                         key={opt.key}
                         onClick={() => setSportFilter(opt.key)}
+                        aria-label={opt.key === 'all' ? 'All sports' : opt.key === 'golf' ? 'Golf' : 'NFL'}
                         className={`min-w-[44px] min-h-[44px] flex items-center justify-center px-2.5 rounded-md text-xs font-bold transition-colors ${
                           sportFilter === opt.key
                             ? 'bg-gold/20 text-gold'
