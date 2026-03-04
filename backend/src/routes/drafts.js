@@ -242,9 +242,75 @@ router.get('/:id/players', authenticate, async (req, res, next) => {
       }
     }
 
+    // Batch-fetch ClutchScores (CPI) for draft players
+    const clutchScores = draftPlayerIds.length > 0 ? await prisma.clutchScore.findMany({
+      where: {
+        playerId: { in: draftPlayerIds },
+        tournamentId: null,
+        formulaVersion: { in: ['v1.0', 'v1.1'] },
+      },
+      orderBy: { computedAt: 'desc' },
+      distinct: ['playerId'],
+    }) : []
+    const clutchMap = new Map(clutchScores.map(cs => [cs.playerId, cs]))
+
+    // Batch-fetch recent form (last 6 performances) for draft players
+    const recentPerfs = draftPlayerIds.length > 0 ? await prisma.performance.findMany({
+      where: { playerId: { in: draftPlayerIds } },
+      orderBy: { tournament: { startDate: 'desc' } },
+      select: { playerId: true, position: true, positionTied: true, status: true },
+      take: draftPlayerIds.length * 6,
+    }) : []
+    const formMap = new Map()
+    for (const perf of recentPerfs) {
+      if (!formMap.has(perf.playerId)) formMap.set(perf.playerId, [])
+      const arr = formMap.get(perf.playerId)
+      if (arr.length >= 6) continue
+      if (perf.status === 'CUT') arr.push('CUT')
+      else if (perf.status === 'WD') arr.push('WD')
+      else if (perf.position != null) arr.push(perf.positionTied ? `T${perf.position}` : String(perf.position))
+    }
+
+    // Batch-fetch current-season SG stats from performances
+    const seasonSgPerfs = draftPlayerIds.length > 0 ? await prisma.performance.findMany({
+      where: {
+        playerId: { in: draftPlayerIds },
+        tournament: { startDate: { gte: seasonStart, lt: seasonEnd } },
+        sgTotal: { not: null },
+      },
+      select: { playerId: true, sgTotal: true, sgOffTee: true, sgApproach: true, sgAroundGreen: true, sgPutting: true },
+    }) : []
+    const sgMap = new Map()
+    for (const perf of seasonSgPerfs) {
+      if (!sgMap.has(perf.playerId)) sgMap.set(perf.playerId, [])
+      sgMap.get(perf.playerId).push(perf)
+    }
+
     const playersWithSeasonStats = players.map(p => {
       const ss = seasonMap.get(p.id)
-      return ss ? { ...p, events: ss.events, wins: ss.wins, top5s: ss.top5s, top10s: ss.top10s, top25s: ss.top25s, cutsMade: ss.cutsMade } : p
+      const cs = clutchMap.get(p.id)
+      const form = formMap.get(p.id) || []
+      // Average season SG stats
+      const sgPerfs = sgMap.get(p.id) || []
+      const sgAvg = sgPerfs.length > 0 ? {
+        sgTotal: sgPerfs.reduce((a, s) => a + (s.sgTotal || 0), 0) / sgPerfs.length,
+        sgOffTee: sgPerfs.reduce((a, s) => a + (s.sgOffTee || 0), 0) / sgPerfs.length,
+        sgApproach: sgPerfs.reduce((a, s) => a + (s.sgApproach || 0), 0) / sgPerfs.length,
+        sgAroundGreen: sgPerfs.reduce((a, s) => a + (s.sgAroundGreen || 0), 0) / sgPerfs.length,
+        sgPutting: sgPerfs.reduce((a, s) => a + (s.sgPutting || 0), 0) / sgPerfs.length,
+      } : {}
+      return {
+        ...p,
+        ...(ss ? { events: ss.events, wins: ss.wins, top5s: ss.top5s, top10s: ss.top10s, top25s: ss.top25s, cutsMade: ss.cutsMade } : {}),
+        ...sgAvg,
+        recentForm: form,
+        clutchMetrics: cs ? {
+          cpi: cs.cpi,
+          formScore: cs.formScore,
+          pressureScore: cs.pressureScore,
+          computedAt: cs.computedAt,
+        } : null,
+      }
     })
 
     res.json({
