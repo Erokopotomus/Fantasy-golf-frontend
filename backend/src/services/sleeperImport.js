@@ -691,6 +691,37 @@ async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId, select
       } catch (e) { /* non-fatal */ }
     }
 
+    // Auto-create OwnerAlias records from all imported seasons
+    try {
+      const allSeasons = await db.historicalSeason.findMany({
+        where: { leagueId: clutchLeague.id },
+        select: { ownerName: true, teamName: true, seasonYear: true },
+        orderBy: { seasonYear: 'desc' },
+      })
+      // Group by ownerName → collect all name variants, pick most recent as canonical
+      const ownerGroups = new Map()
+      for (const s of allSeasons) {
+        if (!s.ownerName) continue
+        if (!ownerGroups.has(s.ownerName)) {
+          ownerGroups.set(s.ownerName, { canonicalName: s.ownerName, names: new Set([s.ownerName]) })
+        }
+        const group = ownerGroups.get(s.ownerName)
+        if (s.teamName && s.teamName !== s.ownerName) group.names.add(s.teamName)
+      }
+      // Upsert OwnerAlias for each unique name variant
+      for (const [, group] of ownerGroups) {
+        for (const name of group.names) {
+          await db.ownerAlias.upsert({
+            where: { leagueId_ownerName: { leagueId: clutchLeague.id, ownerName: name } },
+            create: { leagueId: clutchLeague.id, ownerName: name, canonicalName: group.canonicalName },
+            update: {},
+          })
+        }
+      }
+    } catch (e) {
+      console.error('Auto-create OwnerAlias failed (non-fatal):', e.message)
+    }
+
     await db.leagueImport.update({
       where: { id: importRecord.id },
       data: {

@@ -3862,6 +3862,84 @@ If OwnerAlias records exist, show them with parenthetical aliases:
 
 ---
 
+### 108 — Sleeper Import: Auto-create OwnerAlias records + capture team_name per roster
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Auto-create OwnerAlias records after Sleeper import (groups all name variants per owner, upserts aliases with canonical name). team_name capture was done in #107. Files: sleeperImport.js
+**Priority:** MEDIUM — Prevents future name mismatch bugs for all imported Sleeper leagues
+**Prompt:**
+
+**Context:** Item 107 patched the symptom (invite dropdown missing "GirthBrooks09") with a HistoricalSeason fallback. But the root cause remains: the Sleeper import doesn't capture team names or auto-create OwnerAlias records, so the vault/invite system and the standings page show different names for the same person. This happened in real life — Eric invited a friend (Josh, aka "GirthBrooks09") and Josh's name wasn't findable anywhere in the invite flow.
+
+**Audit finding:** The vault Profiles dropdown correctly shows all 15 unique owner names (including GirthBrooks09) from HistoricalSeason records. The settings invite dropdown only showed 14 — it was pulling from OwnerAlias records, which had ZERO entries for this league. The OwnerAlias table was completely empty because no one ran the vault owner assignment wizard. The 14 names in the dropdown came from whatever the deployed code was doing before item 107's fix.
+
+**The preventive fix (3 parts):**
+
+**Part 1: Capture Sleeper `team_name` during import**
+
+In `backend/src/services/sleeperImport.js`, the Sleeper roster object has `metadata.team_name` (the per-league team name a user sets). Currently ignored. Capture it:
+
+```js
+// ~line 225, in rosters.map()
+const user = userMap[r.owner_id] || { displayName: `Team ${r.roster_id}`, avatar: null }
+const teamName = r.metadata?.team_name || user.displayName  // NEW
+return {
+  rosterId: r.roster_id,
+  ownerId: r.owner_id,
+  ownerName: user.displayName,   // Sleeper display_name (account-level)
+  teamName: teamName,            // NEW — Sleeper team_name (league-level, user-set)
+  ...
+}
+```
+
+Then in the HistoricalSeason upsert (~line 565-594), store them separately:
+```js
+teamName: roster.teamName || roster.ownerName || `Team ${roster.rosterId}`,
+ownerName: roster.ownerName || `Team ${roster.rosterId}`,
+```
+
+**Part 2: Auto-create OwnerAlias records during import**
+
+After all seasons are imported for a league, run a reconciliation pass that:
+
+1. Groups all HistoricalSeason records by Sleeper `owner_id` (available in the raw roster data — `r.owner_id`). This is the stable identifier that stays the same even when someone changes their display name or team name.
+2. For each unique Sleeper user, collect ALL name variants they've used across seasons (display names + team names).
+3. Pick the most recent display_name as the `canonicalName`.
+4. Create OwnerAlias records for each name variant → canonical name mapping.
+
+Example for Josh:
+- Sleeper owner_id: `abc123`
+- Seasons 2019-2023: display_name "Josh", team_name null
+- Seasons 2024-2025: display_name "Josh", team_name "GirthBrooks09"
+- → Create OwnerAlias: `ownerName: "Josh", canonicalName: "Josh"` (identity)
+- → Create OwnerAlias: `ownerName: "GirthBrooks09", canonicalName: "Josh"` (team name variant)
+
+This way the invite dropdown will show "Josh" as the canonical name, AND searches for "GirthBrooks09" will resolve to Josh.
+
+To implement this, you need to:
+- Store the Sleeper `owner_id` on HistoricalSeason records (add field if not present, or use the raw roster data stored in `rosterData` JSON)
+- After all season upserts complete, query all HistoricalSeason records for the league
+- Group by Sleeper owner_id
+- For each group, collect unique (ownerName, teamName) pairs
+- Upsert OwnerAlias records: one per unique name variant, all pointing to the most recent display_name as canonical
+
+**Part 3: Post-import name coverage validation**
+
+After import + alias creation, compare the names that will appear in the invite dropdown against the names on the league standings. If any standings name can't be found in the alias set, log a warning. Optionally surface this to the commissioner: "We found some names in your league history that may need manual matching."
+
+This is lower priority — Parts 1 and 2 are the critical fix. Part 3 is defense-in-depth.
+
+**Files to modify:**
+- `backend/src/services/sleeperImport.js` — capture team_name, store owner_id, auto-create aliases
+- `backend/prisma/schema.prisma` — potentially add `sleeperOwnerId` field to HistoricalSeason (check if it's already in rosterData JSON)
+- `backend/src/routes/imports.js` — no changes needed if alias creation happens in the import service
+
+**Test:** After fix, re-import B Squad Bros from Sleeper (or use a test import). Verify:
+1. HistoricalSeason records have distinct `teamName` vs `ownerName` where they differ
+2. OwnerAlias records are auto-created for ALL name variants
+3. The invite dropdown shows all names without needing the fallback
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
