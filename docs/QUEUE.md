@@ -3737,6 +3737,48 @@ When a user is invited to an imported league and joins, they become a `LeagueMem
 
 ---
 
+### 106 — Feature: Combined league + vault invite from settings page
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Added "Also send league history reveal" checkbox + owner dropdown to invite form for imported leagues. Backend accepts sendVaultInvite + ownerName params and sends both emails. Files: LeagueSettings.jsx, leagues.js
+**Priority:** HIGH — Critical UX gap in imported league invite flow
+**Prompt:**
+When a commissioner has an imported league (one with `HistoricalSeason` data / vault history), the invite flow from the league settings page should offer to send the vault reveal invite alongside the league invite. Right now these are two completely separate flows — league invite from settings, vault invite from the vault page — and commissioners don't know they need to go to the vault page separately.
+
+**Current state:**
+- League settings has an invite section that sends `sendLeagueInviteEmail()` via `POST /api/leagues/:id/invite-email`
+- Vault page has a separate invite section that sends `sendVaultInviteEmail()` via the imports route
+- These are disconnected — a commissioner who invites from settings never triggers the vault invite
+
+**Desired behavior:**
+When inviting a member from the league settings page of an imported league:
+
+1. **Detect imported league**: Check if the league has `HistoricalSeason` records or `OwnerAlias` records (i.e., it has vault history). This can be a simple boolean flag on the league or a quick DB check.
+
+2. **Show owner assignment dropdown**: If the league has vault history, show an optional dropdown/select next to the email input: "Match to historical owner:" with a list of unclaimed `OwnerAlias` canonical names for that league. Default: "Don't match" or "Auto-detect".
+
+3. **Send combined invite**: When the commissioner sends the invite:
+   - Always send the league invite email (join the league)
+   - If an owner was selected, ALSO send the vault invite email to the same address with that owner's name
+   - If "Auto-detect" was selected, still send the vault invite — the auto-match logic from item 105 will handle it when they join
+
+4. **Alternative simpler approach**: Instead of a dropdown, just add a checkbox: "☑ Also send league history reveal" that appears when the league has imported history. When checked, send both emails. The vault invite uses the email recipient's name (or a best-guess owner match) as the `ownerName`.
+
+**Frontend changes:**
+- `frontend/src/pages/LeagueSettings.jsx` (or wherever the invite form lives) — add the checkbox/dropdown for imported leagues
+- Need to fetch whether the league has vault data (could be a field on the league object or a separate API call)
+
+**Backend changes:**
+- The invite endpoint (`POST /api/leagues/:id/invite-email`) should accept an optional `sendVaultInvite: true` and `ownerName: string` parameter
+- When present, also call `sendVaultInviteEmail()` with the appropriate `personalUrl` and `ownerName`
+- Need to look up the league's `inviteCode` and construct the vault URL
+
+**Files:**
+- `frontend/src/pages/LeagueSettings.jsx` (invite form UI)
+- `backend/src/routes/leagues.js` (invite endpoint — add vault invite option)
+- `backend/src/services/emailService.js` (already has both email functions)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

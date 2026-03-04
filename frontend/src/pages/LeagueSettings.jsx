@@ -39,6 +39,9 @@ const LeagueSettings = () => {
   const [saving, setSaving] = useState(false)
   const [inviteEmails, setInviteEmails] = useState([''])
   const [sendingInvites, setSendingInvites] = useState(false)
+  const [sendVaultInvite, setSendVaultInvite] = useState(false)
+  const [unclaimedOwners, setUnclaimedOwners] = useState([])
+  const [selectedOwner, setSelectedOwner] = useState('')
 
   const [settings, setSettings] = useState({
     name: league?.name || '',
@@ -116,6 +119,20 @@ const LeagueSettings = () => {
       }))
     }
   }, [league])
+
+  // Fetch unclaimed vault owners for imported leagues
+  const isImportedLeague = !!league?.settings?.importedFrom
+  useEffect(() => {
+    if (!leagueId || !isImportedLeague) return
+    api.getOwnerAliases(leagueId)
+      .then(data => {
+        const aliases = data.aliases || data || []
+        const unclaimed = [...new Set(aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName))]
+        setUnclaimedOwners(unclaimed)
+        if (unclaimed.length > 0) setSendVaultInvite(true)
+      })
+      .catch(() => {})
+  }, [leagueId, isImportedLeague])
 
   if (loading) {
     return (
@@ -1229,6 +1246,34 @@ const LeagueSettings = () => {
                     )}
                   </div>
                 ))}
+                {isImportedLeague && unclaimedOwners.length > 0 && (
+                  <div className="flex flex-col gap-2 p-3 rounded-lg bg-crown/5 border border-crown/20">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={sendVaultInvite}
+                        onChange={(e) => setSendVaultInvite(e.target.checked)}
+                        className="w-4 h-4 rounded border-[var(--card-border)] accent-crown"
+                      />
+                      <span className="text-sm text-text-primary font-medium">Also send league history reveal</span>
+                    </label>
+                    {sendVaultInvite && (
+                      <div className="flex items-center gap-2 ml-6">
+                        <span className="text-xs text-text-muted">Match to owner:</span>
+                        <select
+                          value={selectedOwner}
+                          onChange={(e) => setSelectedOwner(e.target.value)}
+                          className="flex-1 p-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded text-text-primary text-xs focus:border-gold focus:outline-none"
+                        >
+                          <option value="">Auto-detect on join</option>
+                          {unclaimedOwners.map(name => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -1255,7 +1300,11 @@ const LeagueSettings = () => {
                         try {
                           await api.request(`/leagues/${leagueId}/invite-email`, {
                             method: 'POST',
-                            body: JSON.stringify({ email }),
+                            body: JSON.stringify({
+                              email,
+                              sendVaultInvite: sendVaultInvite && isImportedLeague,
+                              ownerName: sendVaultInvite ? selectedOwner || undefined : undefined,
+                            }),
                           })
                           sent++
                         } catch {

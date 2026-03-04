@@ -373,7 +373,7 @@ router.patch('/:id', authenticate, async (req, res, next) => {
 // POST /api/leagues/:id/invite-email - Send league invite via email (any member)
 router.post('/:id/invite-email', authenticate, async (req, res, next) => {
   try {
-    const { email } = req.body
+    const { email, sendVaultInvite, ownerName } = req.body
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: { message: 'Valid email address required' } })
     }
@@ -409,6 +409,23 @@ router.post('/:id/invite-email', authenticate, async (req, res, next) => {
       memberCount: league._count?.members || null,
       maxTeams: league.maxTeams || null,
     })
+
+    // Also send vault invite if requested (for imported leagues)
+    if (sendVaultInvite && league.inviteCode) {
+      try {
+        const vaultOwner = ownerName || email.split('@')[0] // fallback to email prefix
+        const personalUrl = `https://clutchfantasysports.com/vault/invite/${league.inviteCode}?member=${encodeURIComponent(vaultOwner)}`
+        await emailService.sendVaultInviteEmail({
+          to: email,
+          ownerName: vaultOwner,
+          leagueName: league.name,
+          personalUrl,
+          fromName: req.user.name || 'Your commissioner',
+        })
+      } catch (err) {
+        console.error('Vault invite email failed (non-fatal):', err.message)
+      }
+    }
 
     if (result.success) {
       res.json({ message: 'Invite sent' })
