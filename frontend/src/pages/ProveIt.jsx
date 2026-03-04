@@ -51,6 +51,7 @@ function WeeklySlate({ onPredictionMade }) {
   const [h2hPlayerA, setH2hPlayerA] = useState(null)
   const [h2hPlayerB, setH2hPlayerB] = useState(null)
   const [showMyCalls, setShowMyCalls] = useState(false)
+  const [showAllPlayers, setShowAllPlayers] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -392,18 +393,7 @@ function WeeklySlate({ onPredictionMade }) {
         </div>
       </div>
 
-      {/* Compact prediction table */}
-      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden mb-4">
-        <CompactSlateTable
-          players={filteredSlate}
-          predictions={allPredictions}
-          inflight={inflight}
-          onCellTap={handleCellTap}
-          onPlayerClick={setDrawerPlayer}
-        />
-      </div>
-
-      {/* R1 Leader — compact grid below table */}
+      {/* ─── R1 Leader — above table ─── */}
       <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
         <h4 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">
           Round 1 Leader — Who leads after day one?
@@ -437,139 +427,128 @@ function WeeklySlate({ onPredictionMade }) {
         </div>
       </div>
 
-      {/* Head to Head */}
-      <div>
-        {/* Build Your Own H2H */}
-        <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
-          <h4 className="text-sm font-semibold text-text-primary mb-3">Build Your Matchup</h4>
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            {/* Player A */}
-            <div>
-              <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player A</label>
-              <select
-                value={h2hPlayerA?.id || ''}
-                onChange={e => setH2hPlayerA(slate.find(p => p.id === e.target.value) || null)}
-                className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
-              >
-                <option value="">Select...</option>
-                {slate.filter(p => p.id !== h2hPlayerB?.id).map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-            {/* Player B */}
-            <div>
-              <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player B</label>
-              <select
-                value={h2hPlayerB?.id || ''}
-                onChange={e => setH2hPlayerB(slate.find(p => p.id === e.target.value) || null)}
-                className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
-              >
-                <option value="">Select...</option>
-                {slate.filter(p => p.id !== h2hPlayerA?.id).map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
+      {/* ─── Head to Head — above table ─── */}
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
+        <h4 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">Head to Head</h4>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player A</label>
+            <select
+              value={h2hPlayerA?.id || ''}
+              onChange={e => setH2hPlayerA(slate.find(p => p.id === e.target.value) || null)}
+              className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
+            >
+              <option value="">Select...</option>
+              {slate.filter(p => p.id !== h2hPlayerB?.id).map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
           </div>
-          {h2hPlayerA && h2hPlayerB && (
-            <div className="flex gap-2">
-              {(() => {
-                const key = `${h2hPlayerA.id}_${h2hPlayerB.id}`
-                const existing = allPredictions.find(
-                  p => p.predictionType === 'head_to_head' &&
-                    p.subjectPlayerId === h2hPlayerA.id &&
-                    p.predictionData?.opponentPlayerId === h2hPlayerB.id
-                )
-                if (existing) {
-                  return <span className="text-xs font-bold text-crown px-3 py-1.5 rounded-lg bg-crown/10 border border-crown/20">Called</span>
-                }
-                return (
-                  <>
-                    <button
-                      onClick={() => handleCellTap(h2hPlayerA, 'head_to_head', 'playerA', {
-                        opponentPlayerId: h2hPlayerB.id,
-                        opponentPlayerName: h2hPlayerB.name
-                      })}
-                      disabled={inflight.size > 0}
-                      className="flex-1 py-2 text-xs rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
-                    >
-                      {h2hPlayerA.name?.split(' ').pop()}
-                    </button>
-                    <button
-                      onClick={() => handleCellTap(h2hPlayerB, 'head_to_head', 'playerB', {
-                        opponentPlayerId: h2hPlayerA.id,
-                        opponentPlayerName: h2hPlayerA.name
-                      })}
-                      disabled={inflight.size > 0}
-                      className="flex-1 py-2 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
-                    >
-                      {h2hPlayerB.name?.split(' ').pop()}
-                    </button>
-                  </>
-                )
-              })()}
-            </div>
-          )}
+          <div>
+            <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">Player B</label>
+            <select
+              value={h2hPlayerB?.id || ''}
+              onChange={e => setH2hPlayerB(slate.find(p => p.id === e.target.value) || null)}
+              className="w-full bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-2 py-2 text-sm text-text-primary"
+            >
+              <option value="">Select...</option>
+              {slate.filter(p => p.id !== h2hPlayerA?.id).map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
-
-        {/* Pre-built matchups: top 5 vs the field */}
-        <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Suggested Matchups</h4>
-        <div className="space-y-2">
-          {slate.slice(0, 5).map((playerA, i) => {
-            const playerB = slate[slate.length - 1 - i] || slate[i + 5]
-            if (!playerB || playerA.id === playerB.id) return null
-            const key = `${playerA.id}_${playerB.id}`
-            const existing = allPredictions.find(
-              p => p.predictionType === 'head_to_head' &&
-                p.subjectPlayerId === playerA.id &&
-                p.predictionData?.opponentPlayerId === playerB.id
-            )
-            return (
-              <div key={key} className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => setDrawerPlayer(playerA)}>
-                    {playerA.headshotUrl ? <img src={playerA.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs">{playerA.name?.charAt(0)}</div>}
-                    <span className="text-sm font-medium text-text-primary truncate">{playerA.name}</span>
-                  </div>
-                  <span className="text-xs text-text-muted font-mono shrink-0">vs</span>
-                  <div className="flex items-center gap-2 flex-1 min-w-0 justify-end cursor-pointer" onClick={() => setDrawerPlayer(playerB)}>
-                    <span className="text-sm font-medium text-text-primary truncate text-right">{playerB.name}</span>
-                    {playerB.headshotUrl ? <img src={playerB.headshotUrl} alt="" className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-[var(--bg-alt)] flex items-center justify-center text-text-primary/30 text-xs">{playerB.name?.charAt(0)}</div>}
-                  </div>
+        {h2hPlayerA && h2hPlayerB && (
+          <div className="flex gap-2 mb-3">
+            {(() => {
+              const existing = allPredictions.find(
+                p => p.predictionType === 'head_to_head' &&
+                  p.subjectPlayerId === h2hPlayerA.id &&
+                  p.predictionData?.opponentPlayerId === h2hPlayerB.id
+              )
+              if (existing) {
+                return <span className="text-xs font-bold text-crown px-3 py-1.5 rounded-lg bg-crown/10 border border-crown/20">Called</span>
+              }
+              return (
+                <>
+                  <button
+                    onClick={() => handleCellTap(h2hPlayerA, 'head_to_head', 'playerA', {
+                      opponentPlayerId: h2hPlayerB.id,
+                      opponentPlayerName: h2hPlayerB.name
+                    })}
+                    disabled={inflight.size > 0}
+                    className="flex-1 py-2 text-xs rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
+                  >
+                    {h2hPlayerA.name?.split(' ').pop()}
+                  </button>
+                  <button
+                    onClick={() => handleCellTap(h2hPlayerB, 'head_to_head', 'playerB', {
+                      opponentPlayerId: h2hPlayerA.id,
+                      opponentPlayerName: h2hPlayerA.name
+                    })}
+                    disabled={inflight.size > 0}
+                    className="flex-1 py-2 text-xs rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
+                  >
+                    {h2hPlayerB.name?.split(' ').pop()}
+                  </button>
+                </>
+              )
+            })()}
+          </div>
+        )}
+        {/* Suggested matchups inline */}
+        <div className="border-t border-[var(--card-border)] pt-3 mt-1">
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2 font-semibold">Suggested</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {slate.slice(0, 5).map((playerA, i) => {
+              const playerB = slate[slate.length - 1 - i] || slate[i + 5]
+              if (!playerB || playerA.id === playerB.id) return null
+              const existing = allPredictions.find(
+                p => p.predictionType === 'head_to_head' &&
+                  p.subjectPlayerId === playerA.id &&
+                  p.predictionData?.opponentPlayerId === playerB.id
+              )
+              return (
+                <div key={`${playerA.id}_${playerB.id}`} className="flex items-center gap-1.5 p-1.5 rounded-lg bg-[var(--bg-alt)]">
+                  <button
+                    onClick={() => { if (!existing) handleCellTap(playerA, 'head_to_head', 'playerA', { opponentPlayerId: playerB.id, opponentPlayerName: playerB.name }) }}
+                    disabled={inflight.size > 0 || !!existing}
+                    className={`flex-1 py-1 text-[10px] rounded font-semibold transition-colors disabled:opacity-50 ${existing ? 'bg-crown/10 text-crown border border-crown/20' : 'bg-field/10 text-field/70 border border-field/20 hover:bg-field/20'}`}
+                  >
+                    {playerA.name?.split(' ').pop()}
+                  </button>
+                  <span className="text-[9px] text-text-muted font-mono">vs</span>
+                  <button
+                    onClick={() => { if (!existing) handleCellTap(playerB, 'head_to_head', 'playerB', { opponentPlayerId: playerA.id, opponentPlayerName: playerA.name }) }}
+                    disabled={inflight.size > 0 || !!existing}
+                    className={`flex-1 py-1 text-[10px] rounded font-semibold transition-colors disabled:opacity-50 ${existing ? 'bg-crown/10 text-crown border border-crown/20' : 'bg-live-red/10 text-live-red/70 border border-live-red/20 hover:bg-live-red/20'}`}
+                  >
+                    {playerB.name?.split(' ').pop()}
+                  </button>
                 </div>
-                {existing ? (
-                  <div className="text-center">
-                    <span className="text-xs font-bold text-crown">Called</span>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleCellTap(playerA, 'head_to_head', 'playerA', {
-                        opponentPlayerId: playerB.id,
-                        opponentPlayerName: playerB.name
-                      })}
-                      disabled={inflight.size > 0}
-                      className="flex-1 py-1.5 text-[10px] rounded-lg bg-field-bright/20 border border-field-bright/30 text-field font-bold hover:bg-field-bright/30 transition-colors disabled:opacity-50"
-                    >
-                      {playerA.name?.split(' ').pop()}
-                    </button>
-                    <button
-                      onClick={() => handleCellTap(playerB, 'head_to_head', 'playerB', {
-                        opponentPlayerId: playerA.id,
-                        opponentPlayerName: playerA.name
-                      })}
-                      disabled={inflight.size > 0}
-                      className="flex-1 py-1.5 text-[10px] rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold hover:bg-rose-500/30 transition-colors disabled:opacity-50"
-                    >
-                      {playerB.name?.split(' ').pop()}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
+      </div>
+
+      {/* ─── Compact prediction table with show more ─── */}
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl overflow-hidden mb-4">
+        <CompactSlateTable
+          players={showAllPlayers ? filteredSlate : filteredSlate.slice(0, 10)}
+          predictions={allPredictions}
+          inflight={inflight}
+          onCellTap={handleCellTap}
+          onPlayerClick={setDrawerPlayer}
+        />
+        {filteredSlate.length > 10 && (
+          <button
+            onClick={() => setShowAllPlayers(prev => !prev)}
+            className="w-full py-2.5 text-xs font-semibold text-blaze hover:bg-blaze/5 border-t border-[var(--card-border)] transition-colors"
+          >
+            {showAllPlayers ? `Show top 10` : `Show all ${filteredSlate.length} players`}
+          </button>
+        )}
       </div>
 
       {/* Player Drawer */}
