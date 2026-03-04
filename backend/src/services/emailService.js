@@ -88,9 +88,16 @@ async function sendLeagueInviteEmail({ to, commissionerName, leagueName, joinUrl
   <div style="font-size:22px;font-weight:700;color:#1A1A1A;">${leagueName}</div>
   ${memberLine}
 </div>
-<div style="text-align:center;margin-bottom:24px;">
-  <a href="${joinUrl}" style="display:inline-block;background:linear-gradient(135deg,#F06820,#D4930D);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:14px 48px;border-radius:10px;">Join the League</a>
-</div>
+<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;">
+  <tr>
+    <td align="center" style="border-radius:10px;background-color:#F06820;" bgcolor="#F06820">
+      <a href="${joinUrl}" target="_blank"
+         style="display:inline-block;background-color:#F06820;color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;padding:16px 52px;border-radius:10px;border:1px solid #E05A10;">
+        Join the League
+      </a>
+    </td>
+  </tr>
+</table>
 <div style="font-size:13px;color:#888;line-height:1.5;text-align:center;">
   Clutch is a season-long fantasy platform with AI-powered coaching, deep stats, league history, and more.
 </div>`
@@ -131,9 +138,16 @@ async function sendVaultInviteEmail({ to, ownerName, leagueName, personalUrl, fr
   <div style="font-size:11px;font-weight:700;color:#D4930D;letter-spacing:2px;margin-bottom:8px;">🏆 YOUR LEAGUE HISTORY IS READY</div>
   <div style="font-size:22px;font-weight:700;color:#1A1A1A;">${leagueName}</div>
 </div>
-<div style="text-align:center;margin-bottom:24px;">
-  <a href="${personalUrl}" style="display:inline-block;background:linear-gradient(135deg,#F06820,#D4930D);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:14px 48px;border-radius:10px;">View Your Stats</a>
-</div>
+<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;">
+  <tr>
+    <td align="center" style="border-radius:10px;background-color:#F06820;" bgcolor="#F06820">
+      <a href="${personalUrl}" target="_blank"
+         style="display:inline-block;background-color:#F06820;color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;padding:16px 52px;border-radius:10px;border:1px solid #E05A10;">
+        View Your Stats
+      </a>
+    </td>
+  </tr>
+</table>
 <div style="font-size:13px;color:#888;line-height:1.5;text-align:center;">
   Check out your all-time stats, ranking, and season-by-season breakdown. See where you stack up!
 </div>`
@@ -171,9 +185,16 @@ async function sendNotificationEmail({ to, subject, headline, body, ctaText, cta
 
   const accent = accentColor || '#F06820'
   const ctaBlock = ctaText && ctaUrl
-    ? `<div style="text-align:center;margin-bottom:24px;">
-  <a href="${ctaUrl}" style="display:inline-block;background:linear-gradient(135deg,${accent},#D4930D);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:14px 48px;border-radius:10px;">${ctaText}</a>
-</div>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;">
+  <tr>
+    <td align="center" style="border-radius:10px;background-color:${accent};" bgcolor="${accent}">
+      <a href="${ctaUrl}" target="_blank"
+         style="display:inline-block;background-color:${accent};color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;padding:16px 52px;border-radius:10px;border:1px solid #E05A10;">
+        ${ctaText}
+      </a>
+    </td>
+  </tr>
+</table>`
     : ''
 
   const bodyHtml = `
@@ -286,9 +307,16 @@ async function sendDraftRecapEmail({ to, leagueName, sportName, grade, overallSc
 </div>
 ${bestPickLine}
 ${pickRows ? `<table style="width:100%;margin-top:16px;border-top:1px solid #EEEAE2;padding-top:8px;">${pickRows}</table>` : ''}
-<div style="text-align:center;margin-top:24px;">
-  <a href="https://clutchfantasysports.com/leagues/${leagueId}/draft-recap" style="display:inline-block;background:linear-gradient(135deg,#F06820,#D4930D);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:14px 48px;border-radius:10px;">View Full Draft Recap</a>
-</div>`
+<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:24px auto 0;">
+  <tr>
+    <td align="center" style="border-radius:10px;background-color:#F06820;" bgcolor="#F06820">
+      <a href="https://clutchfantasysports.com/leagues/${leagueId}/draft-recap" target="_blank"
+         style="display:inline-block;background-color:#F06820;color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;padding:16px 52px;border-radius:10px;border:1px solid #E05A10;">
+        View Full Draft Recap
+      </a>
+    </td>
+  </tr>
+</table>`
 
   const text = `Draft Complete — ${leagueName}\nYour Grade: ${grade} (${overallScore}/100)\n${bestPick ? `Best Pick: ${bestPick.playerName} at #${bestPick.pickNumber}` : ''}\n\nView recap: https://clutchfantasysports.com/leagues/${leagueId}/draft-recap`
 

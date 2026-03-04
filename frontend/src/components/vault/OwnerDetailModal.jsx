@@ -44,7 +44,7 @@ export default function OwnerDetailModal({ owner, rank, onClose, rating = null }
         onClick={onClose}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{
-          background: 'rgba(5,7,6,0.85)',
+          background: 'rgba(0,0,0,0.5)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           animation: 'modalFadeIn 0.25s ease',
@@ -55,7 +55,7 @@ export default function OwnerDetailModal({ owner, rank, onClose, rating = null }
           onClick={e => e.stopPropagation()}
           className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-[var(--card-border)]"
           style={{
-            background: '#0E100F',
+            background: 'var(--bg)',
             animation: 'modalSlideUp 0.3s ease',
           }}
         >

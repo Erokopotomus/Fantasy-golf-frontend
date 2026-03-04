@@ -167,11 +167,11 @@ export default function VaultRevealView({
             className="flex items-center gap-3 mb-6"
             style={{ animation: 'vaultFadeUp 0.8s ease 1s both' }}
           >
-            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, #2A2520)' }} />
+            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, var(--card-border))' }} />
             <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.12em] flex-shrink-0">
               {Object.keys(ratings).length > 0 ? 'Clutch Rating Rankings' : 'All-Time Owner Rankings'}
             </span>
-            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, #2A2520, transparent)' }} />
+            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, var(--card-border), transparent)' }} />
           </div>
 
           {/* Owner rows */}

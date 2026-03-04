@@ -3629,6 +3629,113 @@ The coach briefing line on Dashboard, League Home, and Golf Hub includes an inli
 
 ---
 
+### 103 — Fix: Email CTA button invisible in Gmail/Outlook (gradient stripped)
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Replaced all 4 gradient CTA buttons with table-based bulletproof pattern using solid bgcolor fallback. Files: emailService.js
+**Priority:** HIGH — Broke the first real invite experience
+**Prompt:**
+The "Join the League" and "View Your Stats" CTA buttons in league invite and vault invite emails use `background: linear-gradient(135deg, #F06820, #D4930D)` as an inline style on an `<a>` tag. Many email clients (Gmail app, Outlook, Yahoo Mail) strip CSS gradients from inline styles, leaving the button with no background — white text on white background = invisible button.
+
+**Fix in `backend/src/services/emailService.js`:**
+
+1. **Replace all gradient CTA buttons** with table-based buttons that use `background-color` (solid color) as the primary background, with the gradient as a progressive enhancement. The pattern:
+
+```html
+<table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;">
+  <tr>
+    <td align="center" style="border-radius:10px;background-color:#F06820;" bgcolor="#F06820">
+      <a href="${url}" target="_blank"
+         style="display:inline-block;background-color:#F06820;color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;padding:16px 52px;border-radius:10px;border:1px solid #E05A10;">
+        Button Text
+      </a>
+    </td>
+  </tr>
+</table>
+```
+
+Key changes:
+- `bgcolor="#F06820"` on the `<td>` — bulletproof fallback for all email clients
+- `background-color:#F06820` (solid, not gradient) on the `<a>` tag
+- `border:1px solid #E05A10` gives it depth without relying on gradient
+- Table-based layout ensures the entire cell is clickable
+
+2. **Add a fallback text link** below every CTA button:
+```html
+<div style="text-align:center;margin-top:12px;">
+  <span style="font-size:12px;color:#999;">Button not working? </span>
+  <a href="${url}" style="font-size:12px;color:#F06820;text-decoration:underline;">Click here</a>
+</div>
+```
+
+3. **Apply to ALL email functions** — `sendLeagueInviteEmail`, `sendVaultInviteEmail`, `sendNotificationEmail`, `sendDraftRecapEmail`. Every CTA button in the service needs this fix.
+
+4. **Also enlarge the sport emoji** — move it above the "LEAGUE INVITE" label as a standalone 32px element for visual impact.
+
+5. **After deploying**, send a test email to `ericmsaylor@gmail.com` by hitting the league invite endpoint from a curl or script. Use any existing league's invite code.
+
+**Reference:** See `email-preview-league-invite.html` and `email-preview-vault-invite.html` in repo root for the improved HTML templates.
+
+**File:** `backend/src/services/emailService.js`
+
+---
+
+### 104 — Fix: OwnerDetailModal hardcoded dark background (vault page)
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Replaced hardcoded dark hex colors with CSS variables (--bg, --card-border) in OwnerDetailModal and VaultRevealView. Files: OwnerDetailModal.jsx, VaultRevealView.jsx
+**Priority:** HIGH — Looks broken in light mode, ruins vault reveal experience
+**Prompt:**
+`frontend/src/components/vault/OwnerDetailModal.jsx` has hardcoded dark mode colors that make the modal look terrible when the app is in light mode:
+
+1. **Line 58:** `background: '#0E100F'` — hardcoded dark background on the modal panel. Should be `background: 'var(--bg)'` or `bg-[var(--bg)]` via Tailwind class.
+
+2. **Line 47:** `background: 'rgba(5,7,6,0.85)'` — hardcoded near-black backdrop. In light mode should be lighter. Change to `background: 'rgba(0,0,0,0.5)'` for a more neutral overlay that works in both modes, or use a CSS variable.
+
+3. **Also check `VaultRevealView.jsx` line ~170:** A section divider uses `background: 'linear-gradient(90deg, transparent, #2A2520)'` — hardcoded dark brown. Should use `var(--card-border)` or similar theme-aware token.
+
+**The fix pattern:** Replace all hardcoded hex colors in inline styles with CSS variable references. The modal panel should use `var(--bg)` for background and `var(--text-1)` for text, which automatically adapts to light/dark mode via the ThemeContext.
+
+**Test:** Open any imported league's vault, click on an owner row to open the detail modal. Verify it looks correct in both light mode (cream bg, dark text) and dark mode (dark bg, light text).
+
+**Files:**
+- `frontend/src/components/vault/OwnerDetailModal.jsx` (primary — lines 47, 58)
+- `frontend/src/components/vault/VaultRevealView.jsx` (divider line ~170)
+
+---
+
+### 105 — Investigate: Missing owner in imported league vault (auto-match on join)
+**Status:** `TODO`
+**Priority:** MEDIUM — UX gap in the invite→vault flow
+**Prompt:**
+When a user is invited to an imported league and joins, they become a `LeagueMember` but are NOT automatically matched to their `HistoricalSeason` / `OwnerAlias` records. This means they show up in the league but their vault history is missing — they're the only person without stats.
+
+**Current flow:**
+1. Commissioner imports league → `HistoricalSeason` records created with `ownerUserId = NULL`
+2. Commissioner uses Owner Assignment Wizard → sets `OwnerAlias.canonicalName` mappings
+3. Commissioner sends invite → user joins as `LeagueMember`
+4. **GAP:** No automatic link between the new `LeagueMember` and their `OwnerAlias` / `HistoricalSeason` records
+
+**Desired flow:** When a user joins an imported league, attempt to auto-match them to an unclaimed owner:
+1. Check if the invite email was sent alongside a vault invite that specified an `ownerName`
+2. If yes, auto-set `OwnerAlias.ownerUserId` and backfill `HistoricalSeason.ownerUserId` for matching records
+3. If no direct match, check if there's exactly 1 unclaimed owner remaining — if so, auto-assign
+
+**Implementation approach:**
+- In the league join route (`POST /api/leagues/:id/join` or wherever members are added), after creating the `LeagueMember`, check for unclaimed `OwnerAlias` records for that league
+- If the joining user's email matches a vault invite that was sent with an `ownerName`, auto-claim that owner
+- Update `OwnerAlias.ownerUserId` and all matching `HistoricalSeason.ownerUserId` records
+- This is the same logic as `POST /api/imports/vault-claim` but triggered automatically on join
+
+**Alternative simpler fix:** In the league invite email sending route, store the `ownerName` alongside the invite. When the user joins via that invite code, auto-match them to that owner. This requires a small schema addition (e.g., `pendingOwnerClaim` field on `LeagueMember` or a new `PendingOwnerClaim` table).
+
+**For now, at minimum:** Add a prominent "Claim Your History" banner on the league home page for members of imported leagues who haven't been matched to an owner yet. This makes the manual claim flow discoverable.
+
+**Files:**
+- `backend/src/routes/leagues.js` (join route)
+- `backend/src/routes/imports.js` (vault claim logic to reuse)
+- `frontend/src/pages/LeagueHome.jsx` (claim banner)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
