@@ -120,27 +120,28 @@ const LeagueSettings = () => {
     }
   }, [league])
 
-  // Fetch unclaimed vault owners for imported leagues
+  // Fetch unclaimed vault owners for imported leagues — merge aliases + historical owners
   const isImportedLeague = !!league?.settings?.importedFrom
   useEffect(() => {
     if (!leagueId || !isImportedLeague) return
-    api.getOwnerAliases(leagueId)
-      .then(async (data) => {
-        const aliases = data.aliases || data || []
-        const unclaimed = [...new Set(aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName))]
-        if (unclaimed.length > 0) {
-          setUnclaimedOwners(unclaimed)
+    ;(async () => {
+      try {
+        // Fetch both sources in parallel
+        const [aliasData, histData] = await Promise.all([
+          api.getOwnerAliases(leagueId).catch(() => ({ aliases: [] })),
+          api.request(`/imports/leagues/${leagueId}/historical-owners`).catch(() => ({ owners: [] }))
+        ])
+        const aliases = aliasData.aliases || aliasData || []
+        const aliasNames = aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName)
+        const histNames = (histData?.owners || []).map(o => o.teamName || o.ownerName)
+        // Merge and deduplicate both sources
+        const merged = [...new Set([...aliasNames, ...histNames].filter(Boolean))]
+        if (merged.length > 0) {
+          setUnclaimedOwners(merged)
           setSendVaultInvite(true)
-        } else {
-          // Fallback: get unique owner names from historical seasons
-          const fallback = await api.request(`/imports/leagues/${leagueId}/historical-owners`)
-          if (fallback?.owners?.length) {
-            setUnclaimedOwners(fallback.owners.map(o => o.teamName || o.ownerName))
-            setSendVaultInvite(true)
-          }
         }
-      })
-      .catch(() => {})
+      } catch (e) { /* silent */ }
+    })()
   }, [leagueId, isImportedLeague])
 
   if (loading) {
