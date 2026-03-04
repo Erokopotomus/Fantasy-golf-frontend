@@ -28,7 +28,7 @@ function cpiColor(v) {
   return 'text-live-red'
 }
 
-function fitColor(v) {
+function formColor(v) {
   if (v == null) return 'text-text-primary/25'
   if (v >= 80) return 'text-field'
   if (v >= 60) return 'text-field/70'
@@ -79,7 +79,7 @@ export default function CompactSlateTable({
 
             {/* Data columns */}
             <th className={thBase} title="Clutch Performance Index">CPI</th>
-            <th className={thBase} title="Course Fit Score">Fit</th>
+            <th className={thBase} title="Form Score (0-100)">Form</th>
 
             {/* Prediction column headers */}
             {PRED_COLUMNS.map(col => (
@@ -98,7 +98,7 @@ export default function CompactSlateTable({
             const initial = player.name?.charAt(0) || '?'
             const sgBenchmark = Math.round((player.sgTotal || 0) * 10) / 10
             const cpi = player.cpi
-            const fit = player.courseFitScore
+            const form = player.formScore
 
             return (
               <tr
@@ -139,10 +139,10 @@ export default function CompactSlateTable({
                   </span>
                 </td>
 
-                {/* Fit column */}
+                {/* Form column */}
                 <td className="px-1 py-0.5 text-center">
-                  <span className={`text-[11px] font-mono font-medium ${fitColor(fit)}`}>
-                    {fit != null ? Math.round(fit) : '\u2014'}
+                  <span className={`text-[11px] font-mono font-medium ${formColor(form)}`}>
+                    {form != null ? Math.round(form) : '\u2014'}
                   </span>
                 </td>
 
