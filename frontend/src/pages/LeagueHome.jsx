@@ -412,7 +412,7 @@ const LeagueHome = () => {
                 <Link
                   key={nav.to}
                   to={nav.to}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-text-secondary bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors"
+                  className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs font-medium text-text-secondary bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors"
                 >
                   {nav.label}
                 </Link>
@@ -633,7 +633,7 @@ const LeagueHome = () => {
               {leagueBriefing.cta && (
                 <Link
                   to={leagueBriefing.cta.to}
-                  className="text-xs font-mono font-semibold text-purple-400 hover:text-purple-300 transition-colors shrink-0"
+                  className="min-h-[44px] inline-flex items-center text-xs font-mono font-semibold text-purple-400 hover:text-purple-300 transition-colors shrink-0"
                 >
                   {leagueBriefing.cta.label} &rarr;
                 </Link>
@@ -976,7 +976,7 @@ const LeagueHome = () => {
                       </p>
                       <Link
                         to={`/leagues/${leagueId}/vault`}
-                        className="text-xs text-accent-gold hover:text-accent-gold/80 font-medium"
+                        className="min-h-[44px] inline-flex items-center text-xs text-accent-gold hover:text-accent-gold/80 font-medium"
                       >
                         View All History →
                       </Link>
@@ -1018,16 +1018,16 @@ const LeagueHome = () => {
               {/* Secondary links (only what's not in top nav pills) */}
               <div className="flex flex-wrap gap-1.5">
                 {!isOneAndDone && (
-                  <Link to={`/leagues/${leagueId}/trades`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                  <Link to={`/leagues/${leagueId}/trades`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
                     Trades
                   </Link>
                 )}
                 {isHeadToHead && (
-                  <Link to={`/leagues/${leagueId}/playoffs`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                  <Link to={`/leagues/${leagueId}/playoffs`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
                     Playoffs
                   </Link>
                 )}
-                <Link to={`/leagues/${leagueId}/recap`} className="px-3 py-1.5 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                <Link to={`/leagues/${leagueId}/recap`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
                   Recap
                 </Link>
               </div>
@@ -1053,7 +1053,7 @@ const LeagueHome = () => {
                 <Card>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-display font-bold text-text-primary">Sharpest Predictors</h3>
-                    <Link to="/prove-it" className="text-xs text-accent-gold hover:text-accent-gold/80 font-mono">View All</Link>
+                    <Link to="/prove-it" className="min-h-[44px] inline-flex items-center text-xs text-accent-gold hover:text-accent-gold/80 font-mono">View All</Link>
                   </div>
                   <div className="space-y-2">
                     {leagueLeaderboard.map((entry, i) => (

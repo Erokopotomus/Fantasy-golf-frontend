@@ -120,7 +120,7 @@ const Dashboard = () => {
                       {' '}
                       <Link
                         to={briefing.cta.to}
-                        className="text-[var(--crown)] font-semibold hover:text-[var(--crown)]/80 transition-colors"
+                        className="text-[var(--crown)] font-semibold hover:text-[var(--crown)]/80 transition-colors inline-flex items-center min-h-[44px]"
                       >
                         {briefing.cta.label} &rarr;
                       </Link>
@@ -218,7 +218,7 @@ const Dashboard = () => {
                       <button
                         key={opt.key}
                         onClick={() => setSportFilter(opt.key)}
-                        className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
+                        className={`min-w-[44px] min-h-[44px] flex items-center justify-center px-2.5 rounded-md text-xs font-bold transition-colors ${
                           sportFilter === opt.key
                             ? 'bg-gold/20 text-gold'
                             : 'text-text-primary/30 hover:text-text-primary/50'

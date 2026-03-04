@@ -3468,7 +3468,7 @@ git push
 ---
 
 ### 094 — Fix: Coach Settings "Failed to fetch document" (PrismaClientValidationError)
-**Status:** `TODO`
+**Status:** `DONE`
 **Priority:** URGENT — Coach Settings page broken for all users
 **Prompt:**
 The Coach Settings page (`/coach/settings`) crashes with "Failed to fetch document" because Prisma's `findUnique` and `upsert` don't support nullable fields (`sport String?`) in composite unique key lookups. Passing `sport: null` in `userId_sport_documentType` throws `PrismaClientValidationError`.
@@ -3493,6 +3493,113 @@ git push
 ```
 
 **Files:** `backend/src/routes/coachMemory.js`, `backend/src/services/coachingMemoryWriter.js` (both already modified)
+
+---
+
+### 095 — CRITICAL: Draft Room player names invisible at mobile width
+**Status:** `DONE`
+**Priority:** CRITICAL — Draft today at 4 PM ET. Users cannot see player names on phones.
+**Prompt:**
+The Draft Room player list at mobile viewport widths (<640px) renders player names at 0px width. The grid uses `min-w-[500px]` inside `overflow-x-auto`, but the Player column gets zero space because 10 stat columns (Rk, Bd, Player, CPI, SG, T5, T10, T25, MC, FORM) consume all available width.
+
+**Evidence:** DOM contains full player names ("Scottie Scheffler", "Rory McIlroy") but `getBoundingClientRect().width === 0` on all player name spans.
+
+**Fix approach — choose one:**
+
+**Option A (quick fix, recommended for today):** On mobile (`@media (max-width: 640px)` or Tailwind `sm:` breakpoint), hide the secondary stat columns (T5, T10, T25, MC, SG) using `hidden sm:table-cell` or equivalent. Keep only: Rk, Player (with `min-w-[120px]`), CPI, FORM, and the bookmark button. This gives the Player column enough breathing room.
+
+**Option B (better UX, more work):** Create a mobile-specific compact player row component: Player headshot + name + CPI badge + FORM badge in a single row, with tap-to-expand showing full stats underneath.
+
+**Files to check:**
+- Draft Room player list component (likely in `frontend/src/components/draft/` — look for the available players table/grid)
+- Search for `min-w-[500px]` in draft components
+- The grid column definitions that allocate space to each stat
+
+---
+
+### 096 — Fix: Landing page hero horizontal overflow on mobile
+**Status:** `DONE`
+**Priority:** HIGH — visible to all new visitors on mobile
+**Prompt:**
+The landing page hero section (section 0) has `scrollWidth: 400` in a ~376px mobile viewport, causing ~24px horizontal overflow. The Clutch Rating card display causes this. Section 4 (Clutch Rating breakdown) has the same issue.
+
+**Fix:** Add `overflow-x: hidden` to the hero section container, or constrain the rating card with `max-w-full` on mobile. Check the hero section class `relative pt-20 sm:pt-28 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8` — the rating card inside likely needs `max-w-full` or the parent needs `overflow-hidden`.
+
+**File:** `frontend/src/pages/LandingPage.jsx` (or equivalent) — hero section
+
+---
+
+### 097 — Performance: Mobile PageSpeed score 61 → target 80+
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Converted ~70 static page imports to React.lazy() + Suspense in App.jsx. Main bundle dropped from ~2.8MB to 412KB (~85% reduction). Added Railway API preconnect and deferred font loading in index.html. Files: App.jsx, index.html
+**Priority:** HIGH — 6.2s FCP on mobile, 611 KiB unused JS
+**Prompt:**
+Full audit: `docs/PAGESPEED_AUDIT_MAR4_2026.md`. Key fixes:
+
+1. **Route-level code splitting** — Wrap all route components in `React.lazy()` + `Suspense` in `App.jsx`. The landing page currently loads code for draft room, admin panel, vault, etc. Est: 611 KiB JS savings → 2-3s FCP improvement.
+
+2. **Preload/preconnect** — Add to `index.html`:
+   ```html
+   <link rel="preconnect" href="https://clutch-production-8def.up.railway.app">
+   <link rel="preload" href="[critical font URL]" as="font" crossorigin>
+   ```
+
+3. **Defer non-critical scripts** — Move analytics, error capture, Socket.IO init to after first paint using `requestIdleCallback` or dynamic import.
+
+4. **Font loading** — Landing page loads 4 fonts (Bricolage, DM Sans, JetBrains Mono, Instrument Serif) but only needs 2. Defer mono + editorial fonts.
+
+**File:** `frontend/src/App.jsx` (route splitting), `frontend/index.html` (preload/preconnect), `frontend/src/services/` (deferred init)
+
+---
+
+### 098 — Fix: Small touch targets across mobile pages
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Added min-w-[44px] min-h-[44px] to icon buttons (hamburger, bell, theme toggle) in Navbar. Added min-h-[44px] to links in Dashboard, LeagueHome nav pills, and ProveIt filter buttons. Files: Navbar.jsx, Dashboard.jsx, LeagueHome.jsx, ProveIt.jsx
+**Priority:** MEDIUM — affects usability, also flagged in PageSpeed accessibility
+**Prompt:**
+Several interactive elements are below the 44×44px WCAG minimum touch target:
+
+1. Navbar: hamburger (36×44), notification bell (36×44), theme toggle (40×44)
+2. Dashboard: "Review Board →" link is 108×19px — only 19px tall
+3. Dashboard: Sport filter emojis (⛳, 🏈) are 32×44
+4. League Home: "Bay Hill" link at 46×19px
+5. Prove It: "All" filter 28×44, trophy emoji 36×44
+
+**Fix:** Add `min-h-[44px]` to all interactive link elements. For icon-only buttons, ensure `min-w-[44px] min-h-[44px]`. For text links like "Review Board →" and "Bay Hill", wrap in a container with `py-3` (12px vertical padding) to hit 44px height.
+
+**Files:** `frontend/src/components/layout/Navbar.jsx`, Dashboard page, League Home page
+
+---
+
+### 099 — Fix: Prove It R1 Leader chip truncation + FAB overlap
+**Status:** `DONE`
+**Completed:** 2026-03-04 — R1 Leader chips already used last-name-only (no change needed). Added pb-20 to R1 Leader container for FAB clearance. Files: ProveIt.jsx
+**Priority:** LOW — cosmetic
+**Prompt:**
+On the Prove It page at mobile width:
+
+1. **R1 Leader player chips truncate names**: "Fleetwo...", "MacInty...", "Spaun...", "Schauff...". The chips are 3 per row with limited width. Fix: Either use last name only (most are fine as-is), increase chip font size or width, or allow 2 per row on very narrow screens.
+
+2. **FAB overlaps bottom-right R1 Leader chip**: The floating compose button covers the last chip. Fix: Add `pb-20` bottom padding to the R1 Leader section container.
+
+**File:** `frontend/src/pages/ProveIt.jsx` — CompactSlateTable section and R1 Leader grid
+
+---
+
+### 100 — Accessibility: Contrast ratios + aria-labels + heading hierarchy
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Added aria-labels to Navbar logo link, notification bell, hamburger. Bumped 4 low-contrast text opacities on Landing page (rating card labels, editorial subtitle, final CTA text). Heading hierarchy already correct. Files: Navbar.jsx, Landing.jsx
+**Priority:** MEDIUM — Accessibility score 88 → target 95+
+**Prompt:**
+From PageSpeed audit:
+
+1. **Contrast ratios**: Some text doesn't meet WCAG AA (4.5:1 for normal, 3:1 for large). Likely the `slate-light` or `crown` color tokens on light backgrounds. Audit landing page CTA text and feature descriptions.
+
+2. **Missing aria-labels**: Some `<a>` tags have no text content or aria-label — screen readers can't announce them. Add `aria-label` to: social icons, logo link, icon-only navigation buttons.
+
+3. **Heading hierarchy**: Page has heading level jumps (e.g., h1 → h3 skipping h2). Fix on landing page to ensure sequential h1 → h2 → h3 flow.
+
+**Files:** Landing page component, `Navbar.jsx` (icon buttons), global CSS color tokens
 
 ---
 

@@ -172,7 +172,7 @@ const Landing = () => {
                     { label: 'Bold Calls', value: '65' },
                   ].map((s, i) => (
                     <div key={i} className="p-2.5 rounded-[10px]" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="font-mono text-[9px] uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
+                      <p className="font-mono text-[9px] uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{s.label}</p>
                       <p className="font-mono text-lg font-bold" style={{ color: '#F0EBE0' }}>{s.value}<span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>%</span></p>
                     </div>
                   ))}
@@ -240,7 +240,7 @@ const Landing = () => {
             Everyone's got <span style={{ color: BZ_H }}>opinions.</span><br />
             We've got <span style={{ color: CR_B }}>receipts.</span>
           </h2>
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.55)' }}>
             Clutch Rating — one number for everything you know
           </p>
         </div>
@@ -841,7 +841,7 @@ const Landing = () => {
             Ready to prove{' '}
             <span className="font-editorial italic" style={{ color: BZ, fontSize: '1.05em' }}>it?</span>
           </h2>
-          <p className="text-base mb-7 max-w-[400px] mx-auto" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <p className="text-base mb-7 max-w-[400px] mx-auto" style={{ color: 'rgba(255,255,255,0.6)' }}>
             Golf is live. Football is coming. Get in before your friends do.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
@@ -863,7 +863,7 @@ const Landing = () => {
               Learn More
             </button>
           </div>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>No credit card required. Free to play.</p>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>No credit card required. Free to play.</p>
         </div>
       </section>
 

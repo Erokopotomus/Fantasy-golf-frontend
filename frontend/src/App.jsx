@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
@@ -14,83 +14,95 @@ import AuroraBackground from './components/layout/AuroraBackground'
 import NotificationContainer from './components/notifications/NotificationContainer'
 import OnboardingModal from './components/onboarding/OnboardingModal'
 import { initErrorCapture } from './services/errorCapture'
+import FloatingCaptureButton from './components/lab/FloatingCaptureButton'
+
+// Critical path — eager load (public pages users hit first)
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import Dashboard from './pages/Dashboard'
-import CreateLeague from './pages/CreateLeague'
-import JoinLeague from './pages/JoinLeague'
-import DraftRoom from './pages/DraftRoom'
-import TeamRoster from './pages/TeamRoster'
-import WaiverWire from './pages/WaiverWire'
-import Players from './pages/Players'
-import Leagues from './pages/Leagues'
-import LeagueHome from './pages/LeagueHome'
-import Draft from './pages/Draft'
-import Profile from './pages/Profile'
-import Tournaments from './pages/Tournaments'
-import TournamentScoring from './pages/TournamentScoring'
-import TournamentPreviewPage from './pages/TournamentPreviewPage'
-import Courses from './pages/Courses'
-import Standings from './pages/Standings'
-import LeagueLiveScoring from './pages/LeagueLiveScoring'
-import PlayerProfile from './pages/PlayerProfile'
-import TradeCenter from './pages/TradeCenter'
-import LeagueSettings from './pages/LeagueSettings'
-import TeamSettings from './pages/TeamSettings'
-import News from './pages/News'
-import ManagerProfile from './pages/ManagerProfile'
-import ManagerLeaderboard from './pages/ManagerLeaderboard'
-import MockDraft from './pages/MockDraft'
-import MockDraftRoom from './pages/MockDraftRoom'
-import DraftHistory from './pages/DraftHistory'
-import DraftRecap from './pages/DraftRecap'
-import MockDraftRecap from './pages/MockDraftRecap'
-import NotificationSettings from './components/settings/NotificationSettings'
-import AdminDashboard from './pages/AdminDashboard'
-import ProveIt from './pages/ProveIt'
-import ImportLeague from './pages/ImportLeague'
-import CustomImport from './pages/CustomImport'
-import LeagueVault from './pages/LeagueVault'
-import VaultLanding from './pages/VaultLanding'
-import VaultReveal from './pages/VaultReveal'
-import VaultPublicLanding from './pages/VaultPublicLanding'
-import OwnerAssignment from './pages/OwnerAssignment'
-import SeasonRecap from './pages/SeasonRecap'
-import DraftDollars from './pages/DraftDollars'
-import PublicProfile from './pages/PublicProfile'
-import CourseDetail from './pages/CourseDetail'
+
+// Everything else — lazy loaded (code-split per route)
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const CreateLeague = lazy(() => import('./pages/CreateLeague'))
+const JoinLeague = lazy(() => import('./pages/JoinLeague'))
+const DraftRoom = lazy(() => import('./pages/DraftRoom'))
+const TeamRoster = lazy(() => import('./pages/TeamRoster'))
+const WaiverWire = lazy(() => import('./pages/WaiverWire'))
+const Players = lazy(() => import('./pages/Players'))
+const Leagues = lazy(() => import('./pages/Leagues'))
+const LeagueHome = lazy(() => import('./pages/LeagueHome'))
+const Draft = lazy(() => import('./pages/Draft'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Tournaments = lazy(() => import('./pages/Tournaments'))
+const TournamentScoring = lazy(() => import('./pages/TournamentScoring'))
+const TournamentPreviewPage = lazy(() => import('./pages/TournamentPreviewPage'))
+const Courses = lazy(() => import('./pages/Courses'))
+const Standings = lazy(() => import('./pages/Standings'))
+const LeagueLiveScoring = lazy(() => import('./pages/LeagueLiveScoring'))
+const PlayerProfile = lazy(() => import('./pages/PlayerProfile'))
+const TradeCenter = lazy(() => import('./pages/TradeCenter'))
+const LeagueSettings = lazy(() => import('./pages/LeagueSettings'))
+const TeamSettings = lazy(() => import('./pages/TeamSettings'))
+const News = lazy(() => import('./pages/News'))
+const ManagerProfile = lazy(() => import('./pages/ManagerProfile'))
+const ManagerLeaderboard = lazy(() => import('./pages/ManagerLeaderboard'))
+const MockDraft = lazy(() => import('./pages/MockDraft'))
+const MockDraftRoom = lazy(() => import('./pages/MockDraftRoom'))
+const DraftHistory = lazy(() => import('./pages/DraftHistory'))
+const DraftRecap = lazy(() => import('./pages/DraftRecap'))
+const MockDraftRecap = lazy(() => import('./pages/MockDraftRecap'))
+const NotificationSettings = lazy(() => import('./components/settings/NotificationSettings'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const ProveIt = lazy(() => import('./pages/ProveIt'))
+const ImportLeague = lazy(() => import('./pages/ImportLeague'))
+const CustomImport = lazy(() => import('./pages/CustomImport'))
+const LeagueVault = lazy(() => import('./pages/LeagueVault'))
+const VaultLanding = lazy(() => import('./pages/VaultLanding'))
+const VaultReveal = lazy(() => import('./pages/VaultReveal'))
+const VaultPublicLanding = lazy(() => import('./pages/VaultPublicLanding'))
+const OwnerAssignment = lazy(() => import('./pages/OwnerAssignment'))
+const SeasonRecap = lazy(() => import('./pages/SeasonRecap'))
+const DraftDollars = lazy(() => import('./pages/DraftDollars'))
+const PublicProfile = lazy(() => import('./pages/PublicProfile'))
+const CourseDetail = lazy(() => import('./pages/CourseDetail'))
+const Terms = lazy(() => import('./pages/Terms'))
+const Privacy = lazy(() => import('./pages/Privacy'))
 // Sport Hubs + Feed
-import NflHub from './pages/NflHub'
-import GolfHub from './pages/GolfHub'
-import GolfCompare from './pages/GolfCompare'
-import TournamentRecap from './pages/TournamentRecap'
-import Feed from './pages/Feed'
+const NflHub = lazy(() => import('./pages/NflHub'))
+const GolfHub = lazy(() => import('./pages/GolfHub'))
+const GolfCompare = lazy(() => import('./pages/GolfCompare'))
+const TournamentRecap = lazy(() => import('./pages/TournamentRecap'))
+const Feed = lazy(() => import('./pages/Feed'))
 // NFL pages
-import NflPlayers from './pages/NflPlayers'
-import NflPlayerDetail from './pages/NflPlayerDetail'
-import NflSchedule from './pages/NflSchedule'
-import NflTeams from './pages/NflTeams'
-import NflTeamDetail from './pages/NflTeamDetail'
-import NflCompare from './pages/NflCompare'
-import NflLeaderboards from './pages/NflLeaderboards'
-import GamedayPortal from './pages/GamedayPortal'
+const NflPlayers = lazy(() => import('./pages/NflPlayers'))
+const NflPlayerDetail = lazy(() => import('./pages/NflPlayerDetail'))
+const NflSchedule = lazy(() => import('./pages/NflSchedule'))
+const NflTeams = lazy(() => import('./pages/NflTeams'))
+const NflTeamDetail = lazy(() => import('./pages/NflTeamDetail'))
+const NflCompare = lazy(() => import('./pages/NflCompare'))
+const NflLeaderboards = lazy(() => import('./pages/NflLeaderboards'))
+const GamedayPortal = lazy(() => import('./pages/GamedayPortal'))
 // AI Coaching + Scout + Sim
-import CoachSettings from './pages/CoachSettings'
-import CoachingReport from './pages/CoachingReport'
-import ScoutReport from './pages/ScoutReport'
-import ClutchSim from './pages/ClutchSim'
+const CoachSettings = lazy(() => import('./pages/CoachSettings'))
+const CoachingReport = lazy(() => import('./pages/CoachingReport'))
+const ScoutReport = lazy(() => import('./pages/ScoutReport'))
+const ClutchSim = lazy(() => import('./pages/ClutchSim'))
 // Clutch Rating
-import ClutchRatingPage from './pages/ClutchRatingPage'
-// The Lab (formerly Workspace)
-import DraftBoards from './pages/DraftBoards'
-import DraftBoardEditor from './pages/DraftBoardEditor'
-import WatchList from './pages/WatchList'
-import DecisionJournal from './pages/DecisionJournal'
-import LabCaptures from './pages/LabCaptures'
-import LabCheatSheet from './pages/LabCheatSheet'
-import SeasonRace from './pages/SeasonRace'
-import FloatingCaptureButton from './components/lab/FloatingCaptureButton'
+const ClutchRatingPage = lazy(() => import('./pages/ClutchRatingPage'))
+// The Lab
+const DraftBoards = lazy(() => import('./pages/DraftBoards'))
+const DraftBoardEditor = lazy(() => import('./pages/DraftBoardEditor'))
+const WatchList = lazy(() => import('./pages/WatchList'))
+const DecisionJournal = lazy(() => import('./pages/DecisionJournal'))
+const LabCaptures = lazy(() => import('./pages/LabCaptures'))
+const LabCheatSheet = lazy(() => import('./pages/LabCheatSheet'))
+const SeasonRace = lazy(() => import('./pages/SeasonRace'))
+// Format-specific pages
+const Matchups = lazy(() => import('./pages/Matchups'))
+const PlayoffHistory = lazy(() => import('./pages/PlayoffHistory'))
+const CategoryStandings = lazy(() => import('./pages/CategoryStandings'))
+const SurvivorBoard = lazy(() => import('./pages/SurvivorBoard'))
+const PickCenter = lazy(() => import('./pages/PickCenter'))
 
 function WorkspaceRedirect() {
   const location = useLocation()
@@ -101,15 +113,6 @@ function JoinRedirect() {
   const { code } = useParams()
   return <Navigate to={`/leagues/join?code=${code}`} replace />
 }
-// Format-specific pages
-import Matchups from './pages/Matchups'
-import PlayoffHistory from './pages/PlayoffHistory'
-import CategoryStandings from './pages/CategoryStandings'
-import SurvivorBoard from './pages/SurvivorBoard'
-import PickCenter from './pages/PickCenter'
-import Terms from './pages/Terms'
-import Privacy from './pages/Privacy'
-
 function AppShell({ children }) {
   const { theme } = useTheme()
   return (
@@ -138,6 +141,7 @@ function App() {
           <NotificationContainer />
           <OnboardingModal />
           <main className="pb-20 md:pb-0">
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
           <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -635,6 +639,7 @@ function App() {
             }
           />
           </Routes>
+          </Suspense>
           </main>
           <Analytics />
           <SpeedInsights />

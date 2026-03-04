@@ -358,7 +358,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5" aria-label="Clutch home">
             <ClutchLogo size={32} className="rounded-lg" />
             <span className="text-xl font-display font-extrabold text-[#F06820] tracking-tight">CLUTCH</span>
           </Link>
@@ -468,7 +468,7 @@ const Navbar = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'light' ? (
@@ -491,7 +491,8 @@ const Navbar = () => {
                       setNotifOpen(!notifOpen)
                       setProfileMenuOpen(false)
                     }}
-                    className="relative p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="relative min-w-[44px] min-h-[44px] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    aria-label="Notifications"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -724,8 +725,8 @@ const Navbar = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all duration-300"
-              aria-label="Toggle menu"
+              className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all duration-300"
+              aria-label="Toggle navigation"
             >
               {mobileMenuOpen ? (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

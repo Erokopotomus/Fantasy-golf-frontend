@@ -394,7 +394,7 @@ function WeeklySlate({ onPredictionMade }) {
       </div>
 
       {/* ─── R1 Leader — above table ─── */}
-      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 mb-4">
+      <div className="bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl p-4 pb-20 mb-4">
         <h4 className="text-xs font-bold text-text-primary/50 uppercase tracking-wider mb-3">
           Round 1 Leader — Who leads after day one?
         </h4>
@@ -651,7 +651,7 @@ function TrackRecord() {
           <button
             key={s}
             onClick={() => setSportFilter(s)}
-            className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+            className={`min-w-[44px] min-h-[44px] flex items-center justify-center px-3 text-xs rounded-md font-medium transition-colors ${
               sportFilter === s ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
             }`}
           >
@@ -672,7 +672,7 @@ function TrackRecord() {
             <button
               key={t.id}
               onClick={() => setTypeFilter(t.id)}
-              className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+              className={`min-w-[44px] min-h-[44px] flex items-center justify-center px-3 text-xs rounded-md font-medium transition-colors ${
                 typeFilter === t.id ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
               }`}
             >
@@ -799,7 +799,7 @@ function TrackRecord() {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-2 py-1 text-xs rounded transition-colors ${
+                className={`min-w-[44px] min-h-[44px] flex items-center justify-center px-2 text-xs rounded transition-colors ${
                   filter === f ? 'bg-[var(--bg-alt)] text-text-primary' : 'text-text-primary/40 hover:text-text-primary/60'
                 }`}
               >
