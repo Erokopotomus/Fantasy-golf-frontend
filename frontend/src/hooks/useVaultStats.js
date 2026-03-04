@@ -57,7 +57,9 @@ export function computeVaultStats(history, aliases) {
       ownerMap.set(canonical, {
         name: canonical,
         color: ownerColorMap.get(canonical),
-        isActive: activeOwners.size > 0 ? activeOwners.has(canonical) : true,
+        // Owner is active unless explicitly marked inactive via alias.
+        // Owners not in any alias record (unmapped) are assumed active.
+        isActive: activeOwners.size > 0 ? (activeOwners.has(canonical) || !aliasMap.has(rawName)) : true,
         teams: [],
       })
     }
