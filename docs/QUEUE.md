@@ -3703,7 +3703,8 @@ Key changes:
 ---
 
 ### 105 — Investigate: Missing owner in imported league vault (auto-match on join)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Auto-match vault owner on league join (name match or last-unclaimed). Added "Claim Your History" banner on LeagueHome for unmatched members of imported leagues. Files: leagues.js, LeagueHome.jsx
 **Priority:** MEDIUM — UX gap in the invite→vault flow
 **Prompt:**
 When a user is invited to an imported league and joins, they become a `LeagueMember` but are NOT automatically matched to their `HistoricalSeason` / `OwnerAlias` records. This means they show up in the league but their vault history is missing — they're the only person without stats.

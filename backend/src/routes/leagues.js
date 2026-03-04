@@ -650,6 +650,41 @@ router.post('/:id/join', authenticate, async (req, res, next) => {
       })
     ])
 
+    // Auto-match vault owner for imported leagues (non-blocking)
+    try {
+      const unclaimed = await prisma.ownerAlias.findMany({
+        where: { leagueId: league.id, ownerUserId: null },
+        distinct: ['canonicalName'],
+      })
+      if (unclaimed.length > 0) {
+        const userName = (req.user.name || '').toLowerCase().trim()
+        // Try exact name match against canonical or raw owner names
+        const nameMatch = unclaimed.find(a =>
+          a.canonicalName.toLowerCase() === userName ||
+          a.ownerName.toLowerCase() === userName
+        )
+        // If no name match and exactly 1 unclaimed owner left, auto-assign
+        const matched = nameMatch || (unclaimed.length === 1 ? unclaimed[0] : null)
+        if (matched) {
+          const aliases = await prisma.ownerAlias.findMany({
+            where: { leagueId: league.id, canonicalName: matched.canonicalName }
+          })
+          await prisma.$transaction([
+            prisma.ownerAlias.updateMany({
+              where: { leagueId: league.id, canonicalName: matched.canonicalName },
+              data: { ownerUserId: req.user.id }
+            }),
+            prisma.historicalSeason.updateMany({
+              where: { leagueId: league.id, ownerName: { in: aliases.map(a => a.ownerName) } },
+              data: { ownerUserId: req.user.id }
+            })
+          ])
+        }
+      }
+    } catch (err) {
+      console.error('Auto-match vault owner error (non-fatal):', err.message)
+    }
+
     // Notify league members about new member
     try {
       notifyLeague(league.id, {

@@ -43,6 +43,7 @@ const LeagueHome = () => {
   const [historicalTeams, setHistoricalTeams] = useState(null) // most recent season from import
   const [existingBoardId, setExistingBoardId] = useState(null)
   const [leagueBriefing, setLeagueBriefing] = useState(null)
+  const [unclaimedOwners, setUnclaimedOwners] = useState(null) // unclaimed vault owners for banner
 
   const loading = leaguesLoading && detailLoading
   const league = detailedLeague || leagues?.find(l => l.id === leagueId)
@@ -203,6 +204,21 @@ const LeagueHome = () => {
       })
       .catch(() => {})
   }, [leagueId, isImportedLeague, hasNoActiveTeams])
+
+  // Check for unclaimed vault owners (show "Claim Your History" banner)
+  useEffect(() => {
+    if (!leagueId || !isImportedLeague || !user?.id) return
+    api.getOwnerAliases(leagueId)
+      .then(data => {
+        const aliases = data.aliases || data || []
+        const userClaimed = aliases.some(a => a.ownerUserId === user.id)
+        if (!userClaimed) {
+          const unclaimed = [...new Set(aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName))]
+          if (unclaimed.length > 0) setUnclaimedOwners(unclaimed)
+        }
+      })
+      .catch(() => {})
+  }, [leagueId, isImportedLeague, user?.id])
 
   // Derive user position from standings data
   const userTeamStanding = league?.standings?.find(t => t.userId === user?.id)
@@ -419,6 +435,22 @@ const LeagueHome = () => {
               ))}
             </div>
           </div>
+
+          {/* Claim Your History banner for imported leagues */}
+          {unclaimedOwners && (
+            <div className="mb-4 rounded-lg border border-crown/30 bg-crown/5 px-4 py-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-text-primary">Your league history is ready</p>
+                <p className="text-xs text-text-secondary truncate">Claim your owner identity to see your all-time stats in the Vault.</p>
+              </div>
+              <Link
+                to={`/leagues/${leagueId}/vault`}
+                className="shrink-0 px-4 py-2 bg-crown text-white text-xs font-bold rounded-lg hover:bg-crown/80 transition-colors"
+              >
+                Claim History
+              </Link>
+            </div>
+          )}
 
           {/* Coach + Draft Hero Section */}
           {hasDraft && !isOneAndDone && (
