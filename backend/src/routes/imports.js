@@ -486,6 +486,26 @@ router.get('/owner-aliases/:leagueId', authenticate, async (req, res) => {
   }
 })
 
+// GET /api/imports/leagues/:leagueId/historical-owners — unclaimed owner names from HistoricalSeason
+router.get('/leagues/:leagueId/historical-owners', authenticate, async (req, res) => {
+  try {
+    const rows = await prisma.historicalSeason.findMany({
+      where: { leagueId: req.params.leagueId, ownerUserId: null },
+      select: { ownerName: true, teamName: true },
+      distinct: ['ownerName'],
+    })
+    const owners = rows
+      .filter(r => r.ownerName)
+      .map(r => ({
+        ownerName: r.ownerName,
+        teamName: r.teamName !== r.ownerName ? r.teamName : null,
+      }))
+    res.json({ owners })
+  } catch (err) {
+    res.status(500).json({ error: { message: err.message } })
+  }
+})
+
 // PUT /api/imports/owner-aliases/:leagueId (commissioner only)
 router.put('/owner-aliases/:leagueId', authenticate, async (req, res) => {
   try {

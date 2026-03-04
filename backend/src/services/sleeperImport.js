@@ -224,10 +224,12 @@ async function importSeason(sleeperLeagueId, seasonYear) {
   // Build roster data with standings — now includes ppts (potential points)
   const rosterData = rosters.map(r => {
     const user = userMap[r.owner_id] || { displayName: `Team ${r.roster_id}`, avatar: null }
+    const teamName = r.metadata?.team_name || user.displayName
     return {
       rosterId: r.roster_id,
       ownerId: r.owner_id,
       ownerName: user.displayName,
+      teamName: teamName !== user.displayName ? teamName : undefined,
       ownerAvatar: user.avatar,
       players: r.players || [],
       starters: r.starters || [],
@@ -574,7 +576,7 @@ async function runFullImport(sleeperLeagueId, userId, db, targetLeagueId, select
               leagueId: clutchLeague.id,
               importId: importRecord.id,
               seasonYear: seasonData.seasonYear,
-              teamName: roster.ownerName || `Team ${roster.rosterId}`,
+              teamName: roster.teamName || roster.ownerName || `Team ${roster.rosterId}`,
               ownerName: roster.ownerName || `Team ${roster.rosterId}`,
               ownerUserId,
               finalStanding: standing,

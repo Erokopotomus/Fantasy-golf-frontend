@@ -3779,6 +3779,89 @@ When inviting a member from the league settings page of an imported league:
 
 ---
 
+### 107 — Bug: "Match to owner" dropdown missing names (team name vs display name mismatch)
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Added /historical-owners endpoint as fallback when OwnerAlias records don't cover all names. Sleeper import now captures team_name separately from display_name. Frontend falls back to HistoricalSeason owner names when aliases are empty. Files: imports.js, sleeperImport.js, LeagueSettings.jsx
+**Priority:** HIGH — Blocking invite flow for imported Sleeper leagues (real user hit this)
+**Prompt:**
+
+**The bug:** On the B Squad Bros league settings page (`/leagues/cmm2x8cgv0071li65d4apztng/settings`), the "Match to owner" dropdown in the invite section shows 14 owner names but is **missing "GirthBrooks09"**, which is clearly visible as row 11 on the league's main page standings. The commissioner (Eric) tried to invite a friend who goes by "GirthBrooks09" in the league but couldn't find them in the dropdown.
+
+**What the dropdown shows (14 names):**
+Eric, Masebuster, AbusiveTree, CVIN23, calebtrow, justcalmdown06, peytrone, Hayden, SalladDrama, thejessearchy, JustRageQuit, rageng08, Anthony, Spencer H
+
+**What the league standings show (12 teams):**
+Erokopotomus, CVIN23, AbusiveTree, rageng08, calebtrow, Masebuster, SalladDrama, JustRageQuit, justcalmdown06, thejessearchy, **GirthBrooks09**, peytrone
+
+**The mismatch:** The dropdown has names like "Hayden", "Anthony", "Spencer H" that DON'T appear on the standings. The standings have "GirthBrooks09" and "Erokopotomus" that DON'T appear in the dropdown. This is a **Sleeper display_name vs team_name problem** — the import stores `display_name` from the Sleeper Users API as `ownerName`, but some people use different team names in the league (e.g., display_name "Hayden" → team name "GirthBrooks09").
+
+**Root cause in code:**
+- `backend/src/services/sleeperImport.js` line 230: `ownerName: user.displayName` — uses Sleeper `display_name`
+- Lines 577-578: Both `teamName` and `ownerName` in HistoricalSeason get set to the same Sleeper `display_name`
+- The Sleeper roster metadata also contains a `team_name` field (set per-league) that is NOT captured during import
+- During the vault wizard owner assignment, the commissioner merges multiple-season names into canonical names, which may differ from any single season's team name
+- The dropdown (`LeagueSettings.jsx` lines 127-135) fetches from `getOwnerAliases(leagueId)` which returns OwnerAlias.canonicalName — these are the vault wizard canonical names, NOT the per-season team names users recognize
+
+**The fix (two parts):**
+
+**Part 1: Capture Sleeper team_name during import**
+In `sleeperImport.js`, the Sleeper roster metadata contains a team_name field. When building `rosterData`, also capture the team name:
+```js
+// In the rosters.map() at line 225
+const teamName = r.metadata?.team_name || user.displayName
+return {
+  rosterId: r.roster_id,
+  ownerName: user.displayName,
+  teamName: teamName,  // ADD THIS — Sleeper per-league team name
+  ...
+}
+```
+Then when creating HistoricalSeason records, store teamName separately from ownerName:
+```js
+teamName: roster.teamName || roster.ownerName || `Team ${roster.rosterId}`,
+ownerName: roster.ownerName || `Team ${roster.rosterId}`,
+```
+
+**Part 2: Fix the dropdown to show recognizable names**
+The "Match to owner" dropdown should show names users actually recognize. Two approaches (pick the better one):
+
+**Option A (preferred): Fall back to HistoricalSeason unique owner names**
+If `getOwnerAliases()` returns empty (no vault wizard run yet), fall back to fetching unique `ownerName` values from HistoricalSeason for this league. This ensures ALL names from imported seasons appear:
+```jsx
+// LeagueSettings.jsx — after the getOwnerAliases call
+api.getOwnerAliases(leagueId).then(data => {
+  const aliases = data.aliases || data || []
+  let unclaimed = [...new Set(aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName))]
+  if (unclaimed.length === 0) {
+    // Fallback: get unique owner names from historical seasons
+    return api.request(`/imports/leagues/${leagueId}/historical-owners`)
+  }
+  setUnclaimedOwners(unclaimed)
+}).then(fallbackData => {
+  if (fallbackData?.owners) setUnclaimedOwners(fallbackData.owners)
+})
+```
+Add a new backend endpoint `GET /api/imports/leagues/:leagueId/historical-owners` that returns:
+```sql
+SELECT DISTINCT "ownerName" FROM "HistoricalSeason" WHERE "leagueId" = ? AND "ownerUserId" IS NULL
+```
+
+**Option B: Show both canonical name + aliases in dropdown**
+If OwnerAlias records exist, show them with parenthetical aliases:
+"Hayden (GirthBrooks09)" — so users can recognize both the vault canonical name and the season team name.
+
+**Also important:** The league standings ("Teams" section on league home) shows `ownerName` from the most recent season's HistoricalSeason records. This is where Eric sees "GirthBrooks09". The dropdown must include this exact name (or clearly map to it) for the flow to work.
+
+**Files to modify:**
+- `backend/src/services/sleeperImport.js` — capture Sleeper team_name separately from display_name
+- `backend/src/routes/imports.js` — add `/historical-owners` endpoint
+- `frontend/src/pages/LeagueSettings.jsx` — fallback to historical owners when aliases empty
+- Optionally: `frontend/src/services/api.js` — add `getHistoricalOwners()` method
+
+**Test with league:** `cmm2x8cgv0071li65d4apztng` (B Squad Bros) — verify "GirthBrooks09" appears in dropdown after fix.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

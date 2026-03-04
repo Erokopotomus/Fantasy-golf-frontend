@@ -125,11 +125,20 @@ const LeagueSettings = () => {
   useEffect(() => {
     if (!leagueId || !isImportedLeague) return
     api.getOwnerAliases(leagueId)
-      .then(data => {
+      .then(async (data) => {
         const aliases = data.aliases || data || []
         const unclaimed = [...new Set(aliases.filter(a => !a.ownerUserId).map(a => a.canonicalName))]
-        setUnclaimedOwners(unclaimed)
-        if (unclaimed.length > 0) setSendVaultInvite(true)
+        if (unclaimed.length > 0) {
+          setUnclaimedOwners(unclaimed)
+          setSendVaultInvite(true)
+        } else {
+          // Fallback: get unique owner names from historical seasons
+          const fallback = await api.request(`/imports/leagues/${leagueId}/historical-owners`)
+          if (fallback?.owners?.length) {
+            setUnclaimedOwners(fallback.owners.map(o => o.teamName || o.ownerName))
+            setSendVaultInvite(true)
+          }
+        }
       })
       .catch(() => {})
   }, [leagueId, isImportedLeague])
