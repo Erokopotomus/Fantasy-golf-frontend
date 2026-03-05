@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useLeagueLiveScoring } from '../../hooks/useLeagueLiveScoring'
 
@@ -6,6 +6,8 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
   const navigate = useNavigate()
   const { tournament, isLive, teams, userTeam, loading, error } = useLeagueLiveScoring(leagueId)
   const [selectedTeam, setSelectedTeam] = useState(null)
+  const [drawerWidth, setDrawerWidth] = useState(420)
+  const isResizing = useRef(false)
 
   // Close drawer on Escape key
   useEffect(() => {
@@ -17,6 +19,26 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
     }
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [selectedTeam])
+
+  // Drawer resize handlers
+  const startResize = useCallback((e) => {
+    e.preventDefault()
+    isResizing.current = true
+    const startX = e.clientX
+    const startWidth = drawerWidth
+    const onMouseMove = (e) => {
+      if (!isResizing.current) return
+      const newWidth = Math.max(320, Math.min(700, startWidth - (e.clientX - startX)))
+      setDrawerWidth(newWidth)
+    }
+    const onMouseUp = () => {
+      isResizing.current = false
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [drawerWidth])
 
   // Don't render if there's no tournament data and we're done loading
   if (!loading && (!tournament || error)) return null
@@ -173,33 +195,43 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                     </div>
                   </div>
 
-                  {topStarters.map((player) => (
-                    <div
-                      key={player.playerId}
-                      className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] transition-colors"
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOnCourse(player.thru) ? 'bg-field-bright' : 'bg-gray-300 dark:bg-white/20'}`} />
-                        <span className="text-sm text-gray-900 dark:text-white/90 font-medium truncate">
-                          {player.playerName}
-                        </span>
+                  {topStarters.map((player) => {
+                    const isPlaying = isOnCourse(player.thru)
+                    const isUnderPar = player.totalToPar != null && player.totalToPar < 0
+                    return (
+                      <div
+                        key={player.playerId}
+                        className={`flex items-center justify-between py-2 px-3 rounded-lg transition-colors border ${
+                          isUnderPar
+                            ? 'bg-field/5 border-field/15 hover:bg-field/10 dark:bg-field/5 dark:border-field/15 dark:hover:bg-field/10'
+                            : player.totalToPar > 0
+                              ? 'bg-live-red/[0.03] border-live-red/10 hover:bg-live-red/[0.06] dark:bg-live-red/[0.04] dark:border-live-red/10 dark:hover:bg-live-red/[0.08]'
+                              : 'bg-gray-50 border-gray-100 hover:bg-gray-100 dark:bg-white/[0.04] dark:border-white/[0.06] dark:hover:bg-white/[0.08]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isPlaying ? 'bg-field-bright animate-pulse' : player.thru === 18 || player.thru === 'F' ? 'bg-gray-400 dark:bg-white/30' : 'bg-gray-300 dark:bg-white/20'}`} />
+                          <span className="text-sm text-gray-900 dark:text-white/90 font-medium truncate">
+                            {player.playerName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+                          <span className="text-xs font-mono text-gray-400 dark:text-white/30 w-8 text-center">
+                            {formatPosition(player.position)}
+                          </span>
+                          <span className={`text-xs font-mono font-semibold w-8 text-center ${toParColor(player.totalToPar)}`}>
+                            {formatToPar(player.totalToPar)}
+                          </span>
+                          <span className="text-xs font-mono text-gray-400 dark:text-white/30 w-6 text-center">
+                            {formatThru(player.thru)}
+                          </span>
+                          <span className="text-sm font-mono font-bold text-blaze dark:text-crown w-12 text-right">
+                            {player.fantasyPoints.toFixed(1)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                        <span className="text-xs font-mono text-gray-400 dark:text-white/30 w-8 text-center">
-                          {formatPosition(player.position)}
-                        </span>
-                        <span className={`text-xs font-mono w-8 text-center ${toParColor(player.totalToPar)}`}>
-                          {formatToPar(player.totalToPar)}
-                        </span>
-                        <span className="text-xs font-mono text-gray-400 dark:text-white/30 w-6 text-center">
-                          {formatThru(player.thru)}
-                        </span>
-                        <span className="text-sm font-mono font-semibold text-blaze dark:text-crown w-12 text-right">
-                          {player.fantasyPoints.toFixed(1)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
 
                   {/* Bottom hint */}
                   <p className="text-[10px] text-gray-300 dark:text-white/20 mt-2 px-3">
@@ -305,10 +337,16 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
       )}
       {/* Panel */}
       <div
-        className={`fixed right-0 top-0 h-full w-80 max-w-[85vw] z-50 overflow-y-auto transition-transform duration-300 bg-white shadow-xl dark:bg-slate-900 dark:shadow-2xl ${
+        className={`fixed right-0 top-0 h-full max-w-[85vw] z-50 overflow-y-auto transition-transform duration-300 bg-white shadow-xl dark:bg-slate-900 dark:shadow-2xl border-l border-gray-200 dark:border-white/10 ${
           selectedTeam ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{ width: `${drawerWidth}px` }}
       >
+        {/* Resize handle — left edge */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-blaze/20 dark:hover:bg-crown/20 transition-colors z-20"
+          onMouseDown={startResize}
+        />
         {selectedTeam && (() => {
           const drawerStarters = selectedTeam.starters
             ? [...selectedTeam.starters].sort((a, b) => b.fantasyPoints - a.fantasyPoints)
@@ -362,10 +400,19 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                       Starters ({drawerStarters.length})
                     </p>
                     <div className="space-y-1.5 mb-4">
-                      {drawerStarters.map((player) => (
+                      {drawerStarters.map((player) => {
+                        const pUnderPar = player.totalToPar != null && player.totalToPar < 0
+                        const pOverPar = player.totalToPar != null && player.totalToPar > 0
+                        return (
                         <div
                           key={player.playerId}
-                          className="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors"
+                          className={`flex items-center justify-between py-2 px-3 rounded-lg border transition-colors ${
+                            pUnderPar
+                              ? 'bg-field/5 border-field/15 dark:bg-field/5 dark:border-field/15'
+                              : pOverPar
+                                ? 'bg-live-red/[0.03] border-live-red/10 dark:bg-live-red/[0.04] dark:border-live-red/10'
+                                : 'bg-slate-50 border-slate-100 dark:bg-white/[0.04] dark:border-white/[0.06]'
+                          }`}
                         >
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
@@ -394,7 +441,8 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                             </span>
                           </div>
                         </div>
-                      ))}
+                        )
+                      })}
                     </div>
 
                     {/* Bench */}
