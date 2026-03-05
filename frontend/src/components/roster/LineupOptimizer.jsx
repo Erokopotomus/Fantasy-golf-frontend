@@ -1,14 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { api } from '../../services/api'
+
+/**
+ * Composite power score: blends CPI + SG Total for ranking when projections
+ * aren't available.  CPI range ~[-3,+3], SG Total ~[-2,+3].
+ * Normalise both to a 0-100 scale, weight CPI 55%, SG 45%.
+ */
+const computePowerScore = (p) => {
+  const cpi = p.cpi ?? 0     // -3 to +3
+  const sg  = p.sgTotal ?? 0 // roughly -2 to +3
+  const cpiNorm = Math.min(100, Math.max(0, ((cpi + 3) / 6) * 100))
+  const sgNorm  = Math.min(100, Math.max(0, ((sg + 2) / 5) * 100))
+  return cpiNorm * 0.55 + sgNorm * 0.45
+}
 
 /**
  * Lineup Optimizer — fetches projections for all roster players,
  * ranks them, and suggests the best active lineup.
+ * Falls back to CPI + SG Total composite when projections are unavailable.
  */
 const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose }) => {
   const [playerProfiles, setPlayerProfiles] = useState([])
   const [loading, setLoading] = useState(true)
-  const [sortBy, setSortBy] = useState('projected')
+  const [sortBy, setSortBy] = useState('composite') // default to composite (always available)
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -29,6 +43,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                 sgOffTee: data.player?.sgOffTee ?? p.sgOffTee,
                 sgPutting: data.player?.sgPutting ?? p.sgPutting,
                 sgAroundGreen: data.player?.sgAroundGreen,
+                cpi: data.player?.clutchMetrics?.cpi ?? data.player?.cpi ?? null,
                 projection: data.projection || null,
                 rosterPosition: p.rosterPosition,
               }
@@ -44,6 +59,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                 sgOffTee: p.sgOffTee,
                 sgPutting: p.sgPutting,
                 sgAroundGreen: null,
+                cpi: null,
                 projection: null,
                 rosterPosition: p.rosterPosition,
               }
@@ -60,12 +76,26 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
     if (roster.length > 0) fetchAll()
   }, [roster])
 
+  // Check if any player has real projection data
+  const hasProjections = useMemo(
+    () => playerProfiles.some(p => p.projection?.projected != null),
+    [playerProfiles]
+  )
+
+  // Best ranking function: use projections when available, otherwise CPI+SG composite
+  const getRankScore = (p) => {
+    if (hasProjections && p.projection?.projected != null) return p.projection.projected
+    return computePowerScore(p)
+  }
+
   // Sort players by the selected metric
   const sorted = [...playerProfiles].sort((a, b) => {
+    if (sortBy === 'composite') return computePowerScore(b) - computePowerScore(a)
     if (sortBy === 'projected') {
       return (b.projection?.projected || 0) - (a.projection?.projected || 0)
     }
     if (sortBy === 'sgTotal') return (b.sgTotal || 0) - (a.sgTotal || 0)
+    if (sortBy === 'cpi') return (b.cpi ?? -99) - (a.cpi ?? -99)
     if (sortBy === 'recentAvg') {
       return (b.projection?.recentAvg || 0) - (a.projection?.recentAvg || 0)
     }
@@ -75,10 +105,10 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
     return 0
   })
 
-  // Optimal lineup = top N by projected points
+  // Optimal lineup = top N by best available ranking
   const optimalIds = new Set(
     [...playerProfiles]
-      .sort((a, b) => (b.projection?.projected || 0) - (a.projection?.projected || 0))
+      .sort((a, b) => getRankScore(b) - getRankScore(a))
       .slice(0, maxActive)
       .map(p => p.id)
   )
@@ -93,10 +123,11 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
   })()
 
   const sortOptions = [
-    { id: 'projected', label: 'Projected' },
+    { id: 'composite', label: 'Power Score' },
+    ...(hasProjections ? [{ id: 'projected', label: 'Projected' }] : []),
     { id: 'sgTotal', label: 'SG: Total' },
-    { id: 'recentAvg', label: 'Recent Avg' },
-    { id: 'consistency', label: 'Consistency' },
+    { id: 'cpi', label: 'CPI' },
+    ...(hasProjections ? [{ id: 'consistency', label: 'Consistency' }] : []),
   ]
 
   return (
@@ -141,23 +172,24 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
 
           {/* Player comparison table */}
           <div className="px-3 pb-3">
-            <div className="grid grid-cols-[auto_1fr_60px_60px_60px_50px] gap-x-2 text-[10px] text-text-muted uppercase tracking-wider font-medium px-2 pb-1">
+            <div className={`grid ${hasProjections ? 'grid-cols-[auto_1fr_50px_50px_50px_50px]' : 'grid-cols-[auto_1fr_50px_50px_50px]'} gap-x-2 text-[10px] text-text-muted uppercase tracking-wider font-medium px-2 pb-1`}>
               <div className="w-5"></div>
               <div>Player</div>
-              <div className="text-center">Proj</div>
-              <div className="text-center">SG</div>
-              <div className="text-center">Trend</div>
-              <div className="text-center">Conf</div>
+              <div className="text-center" title="Power Score — composite of CPI (55%) + SG Total (45%)">Power</div>
+              <div className="text-center" title="Clutch Performance Index (-3.0 to +3.0)">CPI</div>
+              <div className="text-center" title="Strokes Gained Total per round">SG</div>
+              {hasProjections && <div className="text-center">Proj</div>}
             </div>
 
             <div className="space-y-1">
               {sorted.map((p, idx) => {
                 const isOptimal = optimalIds.has(p.id)
                 const isCurrent = currentSet.has(p.id)
+                const power = computePowerScore(p)
                 return (
                   <div
                     key={p.id}
-                    className={`grid grid-cols-[auto_1fr_60px_60px_60px_50px] gap-x-2 items-center p-2 rounded-lg transition-colors ${
+                    className={`grid ${hasProjections ? 'grid-cols-[auto_1fr_50px_50px_50px_50px]' : 'grid-cols-[auto_1fr_50px_50px_50px]'} gap-x-2 items-center p-2 rounded-lg transition-colors ${
                       isOptimal
                         ? 'bg-field-bright/10 border border-field-bright/20'
                         : 'bg-[var(--surface)] border border-transparent'
@@ -183,13 +215,23 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                       </div>
                     </div>
 
-                    {/* Projected */}
+                    {/* Power Score (composite) */}
                     <div className="text-center">
                       <span className={`text-xs font-bold ${
-                        (p.projection?.projected || 0) > 30 ? 'text-field' :
-                        (p.projection?.projected || 0) > 20 ? 'text-text-primary' : 'text-text-muted'
+                        power > 70 ? 'text-field' :
+                        power > 50 ? 'text-text-primary' : 'text-text-muted'
                       }`}>
-                        {p.projection?.projected?.toFixed(1) || '\u2014'}
+                        {power.toFixed(0)}
+                      </span>
+                    </div>
+
+                    {/* CPI */}
+                    <div className="text-center">
+                      <span className={`text-xs font-medium ${
+                        (p.cpi ?? 0) > 0.5 ? 'text-field' :
+                        (p.cpi ?? 0) > -0.3 ? 'text-text-primary' : 'text-live-red'
+                      }`}>
+                        {p.cpi != null ? (p.cpi > 0 ? '+' : '') + p.cpi.toFixed(1) : '\u2014'}
                       </span>
                     </div>
 
@@ -203,27 +245,17 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                       </span>
                     </div>
 
-                    {/* Trend */}
-                    <div className="text-center">
-                      <span className={`text-xs font-medium ${
-                        (p.projection?.trend || 0) > 5 ? 'text-field' :
-                        (p.projection?.trend || 0) < -5 ? 'text-live-red' : 'text-text-muted'
-                      }`}>
-                        {p.projection?.trend != null
-                          ? `${p.projection.trend > 0 ? '+' : ''}${p.projection.trend.toFixed(0)}%`
-                          : '\u2014'}
-                      </span>
-                    </div>
-
-                    {/* Consistency */}
-                    <div className="text-center">
-                      <span className={`text-xs font-medium ${
-                        (p.projection?.consistency || 0) > 70 ? 'text-field' :
-                        (p.projection?.consistency || 0) > 40 ? 'text-text-primary' : 'text-crown'
-                      }`}>
-                        {p.projection?.consistency?.toFixed(0) || '\u2014'}
-                      </span>
-                    </div>
+                    {/* Projected (only when available) */}
+                    {hasProjections && (
+                      <div className="text-center">
+                        <span className={`text-xs font-medium ${
+                          (p.projection?.projected || 0) > 30 ? 'text-field' :
+                          (p.projection?.projected || 0) > 20 ? 'text-text-primary' : 'text-text-muted'
+                        }`}>
+                          {p.projection?.projected?.toFixed(1) || '\u2014'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -240,7 +272,7 @@ const LineupOptimizer = ({ roster, maxActive, currentActiveIds, onApply, onClose
                 Apply Suggested Lineup
               </button>
               <p className="text-[10px] text-text-muted text-center mt-1.5">
-                This will set the top {maxActive} projected players as active
+                This will set the top {maxActive} players by {hasProjections ? 'projected points' : 'CPI + SG Total'} as active
               </p>
             </div>
           )}

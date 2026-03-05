@@ -96,6 +96,25 @@ export default function useDraftSounds() {
     tone(700, 0.08, 0.1)
   }, [tone])
 
+  // U16: Softer/shorter "heads up" tone when user is ONE pick away from their turn
+  const playUpNext = useCallback(() => {
+    if (!soundEnabledRef.current) return
+    try {
+      const ctx = getCtx()
+      const osc = ctx.createOscillator()
+      const g = ctx.createGain()
+      osc.type = 'sine'
+      osc.connect(g)
+      g.connect(ctx.destination)
+      osc.frequency.setValueAtTime(660, ctx.currentTime)
+      osc.frequency.linearRampToValueAtTime(720, ctx.currentTime + 0.15)
+      g.gain.setValueAtTime(0.08, ctx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.2)
+    } catch { /* ignore audio errors */ }
+  }, [])
+
   const playDraftComplete = useCallback(() => {
     if (!soundEnabledRef.current) return
     try {
@@ -120,5 +139,5 @@ export default function useDraftSounds() {
     try { getCtx() } catch { /* ignore */ }
   }, [])
 
-  return { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playDraftStart, playBid, playDraftComplete }
+  return { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playUpNext, playTimerWarning, playDraftStart, playBid, playDraftComplete }
 }

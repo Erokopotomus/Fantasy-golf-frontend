@@ -261,6 +261,14 @@ export const useDraft = (leagueId) => {
       }
     })
 
+    // B13: Timer sync — server emits every 30s with authoritative pickDeadline
+    const handleTimeSync = (data) => {
+      if (data.pickDeadline) {
+        pickDeadlineRef.current = data.pickDeadline
+      }
+    }
+    socket?.on('draft-time-sync', handleTimeSync)
+
     return () => {
       unsubPick()
       unsubStarted()
@@ -272,6 +280,7 @@ export const useDraft = (leagueId) => {
       unsubAuctionWon()
       unsubNextNominator()
       socket?.off('draft-pick-undone', handleUndone)
+      socket?.off('draft-time-sync', handleTimeSync)
       socketService.leaveDraft(draftId)
     }
   }, [draftId, draft?.userTeamId, dispatchPick, dispatchPause, dispatchResume, loadDraft, setCurrentBid, updateBudget])

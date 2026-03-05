@@ -19,6 +19,13 @@ const CPI_THRESHOLDS = [1.5, 0.5, -0.3, -1.0]
 // SG Total thresholds
 const SG_THRESHOLDS = [1.5, 0.5, 0, -0.5]
 
+const TOUR_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'PGA', label: 'PGA' },
+  { key: 'LIV', label: 'LIV' },
+  { key: 'DP World', label: 'DP World' },
+]
+
 const PlayerPool = ({
   players,
   onSelectPlayer,
@@ -32,6 +39,7 @@ const PlayerPool = ({
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('rank')
   const [sortDir, setSortDir] = useState('asc')
+  const [tourFilter, setTourFilter] = useState('all')
 
   const hasBoard = boardEntries.length > 0
 
@@ -52,6 +60,11 @@ const PlayerPool = ({
 
   const filteredPlayers = useMemo(() => {
     let result = players.filter(p => !p.drafted)
+
+    // Tour filter
+    if (tourFilter !== 'all') {
+      result = result.filter(p => p.primaryTour === tourFilter)
+    }
 
     if (search) {
       const searchLower = search.toLowerCase()
@@ -107,7 +120,7 @@ const PlayerPool = ({
     })
 
     return result
-  }, [players, search, sortBy, sortDir, getBoardEntry])
+  }, [players, search, sortBy, sortDir, getBoardEntry, tourFilter])
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -132,9 +145,10 @@ const PlayerPool = ({
 
   // Mobile: hide T5/T10/T25/MC/Form — show Rk, (Bd), Player, CPI, SG, actions
   // Desktop: show all columns (added Evts column)
+  // Action column widened from 44px → 56px to prevent Draft button + bookmark overlap
   const gridCols = hasBoard
-    ? 'grid-cols-[26px_26px_1fr_36px_40px_44px] sm:grid-cols-[26px_26px_1fr_36px_40px_30px_30px_30px_30px_46px_38px_44px]'
-    : 'grid-cols-[26px_1fr_36px_40px_44px] sm:grid-cols-[26px_1fr_36px_40px_30px_30px_30px_30px_46px_38px_44px]'
+    ? 'grid-cols-[26px_26px_1fr_36px_40px_56px] sm:grid-cols-[26px_26px_1fr_36px_40px_30px_30px_30px_30px_46px_38px_56px]'
+    : 'grid-cols-[26px_1fr_36px_40px_56px] sm:grid-cols-[26px_1fr_36px_40px_30px_30px_30px_30px_46px_38px_56px]'
 
   return (
     <Card className="h-full flex flex-col" padding="none">
@@ -143,6 +157,23 @@ const PlayerPool = ({
         <span className="text-text-muted text-xs">
           {filteredPlayers.length} available
         </span>
+      </div>
+
+      {/* Tour Filter Pills */}
+      <div className="flex items-center gap-1 px-3 pb-1.5">
+        {TOUR_FILTERS.map(tf => (
+          <button
+            key={tf.key}
+            onClick={() => setTourFilter(tf.key)}
+            className={`px-2 py-1 text-[10px] font-semibold rounded-full transition-colors ${
+              tourFilter === tf.key
+                ? 'bg-gold text-[var(--bg)] shadow-sm'
+                : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary hover:bg-[var(--card-border)]'
+            }`}
+          >
+            {tf.label}
+          </button>
+        ))}
       </div>
 
       {/* Search */}
@@ -236,6 +267,10 @@ const PlayerPool = ({
                       'bg-purple-500/20 text-purple-400'
                     }`}>{player.primaryTour}</span>
                   )}
+                  {/* TODO: player.inNextField not yet populated from backend — show indicator when available */}
+                  {player.inNextField && (
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-field" title="In next tournament field" />
+                  )}
                   {boardEntry?.tags?.[0] && (
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                       boardEntry.tags[0] === 'target' ? 'bg-field' :
@@ -292,11 +327,11 @@ const PlayerPool = ({
               <span className="hidden sm:block text-xs text-right text-text-muted tabular-nums">
                 {player.events || '\u2014'}
               </span>
-              <div className="flex items-center justify-end gap-1">
+              <div className="flex items-center justify-end gap-1.5">
                 {isUserTurn && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onSelectPlayer(player) }}
-                    className="px-2 py-1 bg-gold text-text-primary text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
+                    className="px-2 py-1 bg-gold text-text-primary text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors whitespace-nowrap"
                   >
                     {draftType === 'auction' ? 'Nom' : 'Draft'}
                   </button>
@@ -304,7 +339,7 @@ const PlayerPool = ({
                 {!inQueue && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onAddToQueue(player) }}
-                    className="p-1 rounded text-text-muted hover:text-orange transition-colors"
+                    className="p-1 rounded text-text-muted hover:text-orange transition-colors flex-shrink-0"
                     title="Add to queue"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -59,11 +59,19 @@ const TeamRoster = () => {
   const userTeam = league?.teams?.find(t => t.userId === user?.id)
   const teamId = userTeam?.id
 
-  const { roster: rawRoster, loading: rosterLoading, error: rosterError, dropPlayer, refetch } = useRoster(teamId)
+  // P02: Team selector for viewing other teams' rosters
+  const [selectedTeamId, setSelectedTeamId] = useState(null)
+  const viewingOwnTeam = !selectedTeamId || selectedTeamId === teamId
+  const activeTeamId = viewingOwnTeam ? teamId : selectedTeamId
+
+  const { roster: rawRoster, loading: rosterLoading, error: rosterError, dropPlayer, refetch } = useRoster(activeTeamId)
   const { saveLineup, loading: lineupLoading, saved } = useLineup(teamId)
 
   const roster = rawRoster.map(e => flattenRosterEntry(e, isNflLeague))
   const activePlayers = roster.filter(p => p.rosterPosition === 'ACTIVE')
+
+  // Find the team object for the currently viewed team
+  const viewedTeam = league?.teams?.find(t => t.id === activeTeamId)
 
   // Golf schedule awareness — fetch upcoming fields
   const [scheduleData, setScheduleData] = useState(null)
@@ -223,6 +231,20 @@ const TeamRoster = () => {
     }
   }, [teamId, refetch])
 
+  // B08: Quick toggle a player between ACTIVE and BENCH (single-player API call)
+  const handleQuickToggle = useCallback(async (player) => {
+    if (!teamId || !viewingOwnTeam) return
+    const newPosition = player.rosterPosition === 'ACTIVE' ? 'BENCH' : 'ACTIVE'
+    // Don't allow activating beyond max
+    if (newPosition === 'ACTIVE' && activePlayers.length >= maxActive) return
+    try {
+      await api.updateRosterPosition(teamId, player.id, newPosition)
+      await refetch()
+    } catch (err) {
+      console.error('Quick toggle failed:', err.message)
+    }
+  }, [teamId, viewingOwnTeam, activePlayers.length, maxActive, refetch])
+
   // Compute schedule dots for each golf roster player (next 5 events)
   const getScheduleBadge = (playerId) => {
     if (isNflLeague || !scheduleData || scheduleData.length === 0) return null
@@ -257,7 +279,7 @@ const TeamRoster = () => {
     return {
       isOnRoster: true,
       position: player.rosterPosition,
-      onDrop: (pid) => handleDrop(pid),
+      ...(viewingOwnTeam ? { onDrop: (pid) => handleDrop(pid) } : {}),
     }
   }
 
@@ -313,7 +335,7 @@ const TeamRoster = () => {
     setDrawerPlayerId(player.id)
   }
 
-  if (leagueLoading || (teamId && rosterLoading)) {
+  if (leagueLoading || (activeTeamId && rosterLoading)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -324,7 +346,7 @@ const TeamRoster = () => {
     )
   }
 
-  if (!userTeam || roster.length === 0) {
+  if (viewingOwnTeam && (!userTeam || roster.length === 0)) {
     const emptyMaxActive = league?.settings?.maxActiveLineup || 4
     const emptyRosterSize = league?.settings?.rosterSize || 6
     const emptyIrSlots = league?.settings?.irSlots || 0
@@ -476,6 +498,29 @@ const TeamRoster = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* P02: Team Selector */}
+      {league?.teams?.length > 1 && (
+        <div className="mb-4">
+          <select
+            value={selectedTeamId || teamId || ''}
+            onChange={(e) => {
+              const val = e.target.value
+              setSelectedTeamId(val === teamId ? null : val)
+              setIsEditing(false)
+              setPendingActive(null)
+              setPendingIR(null)
+            }}
+            className="w-full sm:w-auto px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface)] text-text-primary text-sm font-medium focus:outline-none focus:ring-2 focus:ring-field-bright/50"
+          >
+            {league.teams.map(t => (
+              <option key={t.id} value={t.id}>
+                {t.id === teamId ? `${t.name || t.user?.name || 'My Team'} (You)` : t.name || t.user?.name || 'Team'}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -488,38 +533,47 @@ const TeamRoster = () => {
             </svg>
             {league?.name}
           </Link>
-          <h1 className="text-2xl font-bold font-display text-text-primary">My Team</h1>
-          <p className="text-text-muted text-sm">{roster.length} / {rosterSize} players</p>
+          <h1 className="text-2xl font-bold font-display text-text-primary">
+            {viewingOwnTeam ? 'My Team' : (viewedTeam?.name || viewedTeam?.user?.name || 'Team Roster')}
+          </h1>
+          <p className="text-text-muted text-sm">
+            {roster.length} / {rosterSize} players
+            {!viewingOwnTeam && <span className="ml-2 text-text-muted/60">(read-only)</span>}
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
-            Free Agents
-          </Button>
-          {isEditing ? (
+          {viewingOwnTeam && (
             <>
-              <Button variant="secondary" size="sm" onClick={cancelEditing}>Cancel</Button>
-              <Button size="sm" onClick={handleSaveLineup} loading={lineupLoading}>
-                {saved ? 'Saved!' : 'Save Lineup'}
+              <Button variant="secondary" size="sm" onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
+                Free Agents
               </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowOptimizer(!showOptimizer)}
-                disabled={isLineupsLocked}
-              >
-                {showOptimizer ? 'Hide' : 'Optimize'}
-              </Button>
-              <Button size="sm" onClick={startEditing} disabled={isLineupsLocked}>Edit Lineup</Button>
+              {isEditing ? (
+                <>
+                  <Button variant="secondary" size="sm" onClick={cancelEditing}>Cancel</Button>
+                  <Button size="sm" onClick={handleSaveLineup} loading={lineupLoading}>
+                    {saved ? 'Saved!' : 'Save Lineup'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowOptimizer(!showOptimizer)}
+                    disabled={isLineupsLocked}
+                  >
+                    {showOptimizer ? 'Hide' : 'Optimize'}
+                  </Button>
+                  <Button size="sm" onClick={startEditing} disabled={isLineupsLocked}>Edit Lineup</Button>
+                </>
+              )}
             </>
           )}
         </div>
       </div>
 
-      {/* Lineup Lock Banner */}
-      {isLineupsLocked && (
+      {/* Lineup Lock Banner — B06: uses tournament start time from lockInfo (server-authoritative) */}
+      {viewingOwnTeam && isLineupsLocked && (
         <div className="mb-4 p-4 bg-live-red/10 border border-live-red/30 rounded-lg flex items-center gap-3">
           <svg className="w-6 h-6 text-live-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -527,12 +581,12 @@ const TeamRoster = () => {
           <div>
             <p className="text-live-red font-semibold text-sm">Lineups Locked</p>
             <p className="text-live-red/70 text-xs">
-              {scheduleData?.[0]?.name || lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} has started. Lineup changes are locked until this {isNflLeague ? 'week' : 'event'} ends.
+              {lockInfo?.tournament?.name || lockInfo?.currentWeek?.name || scheduleData?.[0]?.name || (isNflLeague ? 'NFL week' : 'Tournament')} has started. Lineup changes are locked until this {isNflLeague ? 'week' : 'event'} ends.
             </p>
           </div>
         </div>
       )}
-      {!isLineupsLocked && countdown && lockInfo?.lockTime && (
+      {viewingOwnTeam && !isLineupsLocked && countdown && lockInfo?.lockTime && (
         <div className="mb-4 p-4 bg-crown/10 border border-crown/30 rounded-lg flex items-center gap-3">
           <svg className="w-6 h-6 text-crown flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -542,7 +596,7 @@ const TeamRoster = () => {
               Lineups lock in {countdown}
             </p>
             <p className="text-crown/70 text-xs">
-              {scheduleData?.[0]?.name || lockInfo.tournament?.name || lockInfo.currentWeek?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {formatDateTimeET(lockInfo.lockTime)}
+              {lockInfo.tournament?.name || lockInfo.currentWeek?.name || scheduleData?.[0]?.name || (isNflLeague ? 'NFL week' : 'Tournament')} starts {formatDateTimeET(lockInfo.lockTime)}
             </p>
           </div>
           <span className="font-mono text-crown text-lg font-bold">{countdown}</span>
@@ -550,7 +604,7 @@ const TeamRoster = () => {
       )}
 
       {/* Reduced roster banner */}
-      {hasStarterOverride && (
+      {viewingOwnTeam && hasStarterOverride && (
         <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2">
           <span className="text-amber-400 text-sm">
             Reduced roster this week — <span className="font-bold">{maxActive} starters</span> (normally {defaultMaxActive})
@@ -559,7 +613,7 @@ const TeamRoster = () => {
       )}
 
       {/* Lineup progress bar (editing mode) */}
-      {isEditing && (
+      {viewingOwnTeam && isEditing && (
         <div className="mb-4 p-3 rounded-lg bg-[var(--surface)] border border-[var(--card-border)]">
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-text-muted">Active lineup — drag or tap players to move</span>
@@ -577,7 +631,7 @@ const TeamRoster = () => {
       )}
 
       {/* Lineup Optimizer */}
-      {showOptimizer && roster.length > 0 && (
+      {viewingOwnTeam && showOptimizer && roster.length > 0 && (
         <div className="mb-6">
           <LineupOptimizer
             roster={roster}
@@ -598,7 +652,7 @@ const TeamRoster = () => {
       )}
 
       {/* Keeper Counter */}
-      {keepersEnabled && (
+      {viewingOwnTeam && keepersEnabled && (
         <div className="mb-4 flex items-center gap-2 px-1">
           <span className="text-xs font-medium text-crown bg-crown/10 px-2 py-1 rounded">
             Keepers: {currentKeeperCount}/{maxKeepers}
@@ -665,6 +719,10 @@ const TeamRoster = () => {
               currentKeeperCount={currentKeeperCount}
               isNfl={isNflLeague}
               scheduleBadge={getScheduleBadge(player.id)}
+              readOnly={!viewingOwnTeam}
+              onQuickToggle={() => handleQuickToggle(player)}
+              maxActive={maxActive}
+              activeCount={activePlayers.length}
             />
           ))}
           {/* Empty slot placeholders */}
@@ -730,6 +788,10 @@ const TeamRoster = () => {
               currentKeeperCount={currentKeeperCount}
               isNfl={isNflLeague}
               scheduleBadge={getScheduleBadge(player.id)}
+              readOnly={!viewingOwnTeam}
+              onQuickToggle={() => handleQuickToggle(player)}
+              maxActive={maxActive}
+              activeCount={activePlayers.length}
             />
           ))}
           {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length === 0 && (
@@ -780,6 +842,7 @@ const TeamRoster = () => {
                 maxKeepers={maxKeepers}
                 currentKeeperCount={currentKeeperCount}
                 isNfl={isNflLeague}
+                readOnly={!viewingOwnTeam}
               />
             ))}
             {/* Empty IR slot placeholders */}
@@ -817,16 +880,16 @@ const TeamRoster = () => {
 }
 
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0, isNfl = false, scheduleBadge = null }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0, isNfl = false, scheduleBadge = null, readOnly = false, onQuickToggle, maxActive = 4, activeCount = 0 }) => {
   return (
     <div
-      draggable={isEditing}
-      onDragStart={isEditing ? (e) => onDragStart(e) : undefined}
-      onDragEnd={isEditing ? onDragEnd : undefined}
-      onClick={isEditing ? (e) => { e.stopPropagation(); onToggle() } : onClick}
+      draggable={isEditing && !readOnly}
+      onDragStart={isEditing && !readOnly ? (e) => onDragStart(e) : undefined}
+      onDragEnd={isEditing && !readOnly ? onDragEnd : undefined}
+      onClick={isEditing && !readOnly ? (e) => { e.stopPropagation(); onToggle() } : onClick}
       className={`
         flex items-center gap-3 p-3 rounded-lg transition-all select-none
-        ${isEditing ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:bg-[var(--surface-alt)]'}
+        ${isEditing && !readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:bg-[var(--surface-alt)]'}
         ${isDragging ? 'opacity-40 scale-95' : ''}
         ${isActive
           ? 'bg-[var(--surface)] border border-field-bright/30'
@@ -837,7 +900,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       `}
     >
       {/* Drag handle (edit mode) */}
-      {isEditing && (
+      {isEditing && !readOnly && (
         <div className="flex flex-col items-center justify-center w-5 flex-shrink-0 text-text-muted/60">
           <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
             <circle cx="7" cy="4" r="1.5" />
@@ -920,7 +983,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       )}
 
       {/* IR toggle button in edit mode (for bench players) */}
-      {isEditing && onToggleIR && !isActive && !isIR && (
+      {isEditing && !readOnly && onToggleIR && !isActive && !isIR && (
         <button
           onClick={(e) => { e.stopPropagation(); onToggleIR() }}
           disabled={!canIR}
@@ -933,12 +996,30 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       )}
 
       {/* Active/Bench/IR badge in edit mode */}
-      {isEditing && (
+      {isEditing && !readOnly && (
         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
           isActive ? 'text-field bg-field-bright/10' : isIR ? 'text-live-red bg-live-red/10' : 'text-text-muted bg-[var(--stone)]'
         }`}>
           {isActive ? 'ACTIVE' : isIR ? 'IR' : 'BENCH'}
         </span>
+      )}
+
+      {/* B08: Quick toggle button (non-editing mode, own team only) */}
+      {!isEditing && !readOnly && !isLocked && !isIR && onQuickToggle && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onQuickToggle() }}
+          disabled={!isActive && activeCount >= maxActive}
+          title={isActive ? 'Move to bench' : activeCount >= maxActive ? 'Active lineup full' : 'Move to active'}
+          className={`text-[10px] font-medium px-2 py-1 rounded flex-shrink-0 transition-colors ${
+            isActive
+              ? 'text-text-muted bg-[var(--stone)] hover:bg-neutral-300 dark:hover:bg-neutral-600'
+              : activeCount >= maxActive
+                ? 'text-text-muted/30 bg-[var(--stone)] cursor-not-allowed'
+                : 'text-field bg-field-bright/10 hover:bg-field-bright/20'
+          }`}
+        >
+          {isActive ? 'Bench' : 'Start'}
+        </button>
       )}
 
       {/* Chevron indicator for drill-in */}
@@ -948,8 +1029,8 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
         </svg>
       )}
 
-      {/* Keeper toggle (non-editing mode) */}
-      {!isEditing && keepersEnabled && onToggleKeeper && (
+      {/* Keeper toggle (non-editing mode, own team only) */}
+      {!isEditing && !readOnly && keepersEnabled && onToggleKeeper && (
         <button
           onClick={(e) => { e.stopPropagation(); onToggleKeeper() }}
           disabled={!player.isKeeper && currentKeeperCount >= maxKeepers}
@@ -965,8 +1046,8 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
         </button>
       )}
 
-      {/* Drop button (only in non-editing mode, hidden when locked) */}
-      {!isEditing && !isLocked && (
+      {/* Drop button (only in non-editing mode, own team only, hidden when locked) */}
+      {!isEditing && !readOnly && !isLocked && (
         <button
           onClick={(e) => { e.stopPropagation(); onDrop() }}
           className="text-xs text-live-red/60 hover:text-live-red transition-colors px-2 py-1"

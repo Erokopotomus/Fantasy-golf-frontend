@@ -58,14 +58,23 @@ function gradePick(pick, context) {
   // e.g. rank #1 at pick #5 = +4 (steal), rank #36 at pick #4 = -32 (reach)
   const adpDiff = pickNumber - playerRank
 
-  // ── Value score (35% weight): based on adpDiff ─────────────────────────
+  // ── League-size normalization ──────────────────────────────────────────
+  // In a 4-team league, each round only spans 4 picks vs 12 in a standard league.
+  // Raw adpDiff values are compressed in small leagues (max steal in R1 of a
+  // 4-team draft is +3 vs +11 in a 12-team draft). Normalize to a 10-team
+  // reference so grade thresholds work consistently across league sizes.
+  const REFERENCE_TEAMS = 10
+  const scaleFactor = REFERENCE_TEAMS / totalTeams
+  const normalizedAdpDiff = adpDiff * scaleFactor
+
+  // ── Value score (35% weight): based on normalized adpDiff ──────────────
   // Baseline of 88 (A-) for picking at expected value — you made the right call.
   // +2.5 per pick of surplus value, -4 per pick of reach (reaching hurts more).
-  let valueScore = 88 + (adpDiff > 0 ? adpDiff * 2.5 : adpDiff * 4)
+  let valueScore = 88 + (normalizedAdpDiff > 0 ? normalizedAdpDiff * 2.5 : normalizedAdpDiff * 4)
 
   // Late-round steal bonus: finding value late is impressive
-  if (adpDiff > 0 && round >= 3) {
-    valueScore += Math.min(adpDiff * 0.8, 6)
+  if (normalizedAdpDiff > 0 && round >= 3) {
+    valueScore += Math.min(normalizedAdpDiff * 0.8, 6)
   }
 
   valueScore = Math.max(0, Math.min(100, valueScore))
@@ -78,7 +87,9 @@ function gradePick(pick, context) {
   const roundMidpoint = (roundStart + roundEnd) / 2
 
   // How much better (positive) or worse (negative) is this player vs round expectation?
-  const qualityDiff = roundMidpoint - playerRank
+  // Normalize by league size so a 1-position-better pick in a 4-team league
+  // carries the same weight as a 2.5-position-better pick in a 10-team league.
+  const qualityDiff = (roundMidpoint - playerRank) * scaleFactor
 
   // Quality baseline: 85 (B+) + bonuses/penalties
   // Each position better than expected = +2 points, each worse = -3.5 points (reaching hurts more)

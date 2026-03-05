@@ -51,7 +51,7 @@ const DraftConfirmModal = ({ isOpen, player, currentPick, onConfirm, onCancel, i
           {currentPick && (
             <div className="text-center py-3 px-4 bg-[var(--bg)] rounded-lg border border-gold/20">
               <p className="text-text-secondary text-sm">
-                Round <span className="font-semibold text-gold">{currentPick.round}</span>, Pick #{<span className="font-semibold text-gold">{currentPick.pick}</span>)
+                Round <span className="font-semibold text-gold">{currentPick.round}</span>, Pick #{<span className="font-semibold text-gold">{currentPick.pick}</span>}
               </p>
             </div>
           )}

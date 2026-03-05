@@ -25,11 +25,13 @@ function getPoint(axisIndex, fraction, center, radius) {
 
 const RINGS = [0.25, 0.5, 0.75, 1.0]
 
-export default function SgRadarChart({ players, size = 280 }) {
+export default function SgRadarChart({ players, size = 280, showAxisValues = false }) {
   if (!players || players.length === 0) return null
 
-  const center = size / 2
-  const radius = size * 0.357 // ~100 at size 280
+  // R06: Enforce minimum 300px when showAxisValues is on for readability
+  const effectiveSize = showAxisValues ? Math.max(size, 300) : size
+  const center = effectiveSize / 2
+  const radius = effectiveSize * 0.357 // ~100 at size 280
 
   // Build polygon points string for a player
   function polygonPoints(player) {
@@ -42,7 +44,7 @@ export default function SgRadarChart({ players, size = 280 }) {
 
   return (
     <div className="flex flex-col items-center">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+      <svg width={effectiveSize} height={effectiveSize} viewBox={`0 0 ${effectiveSize} ${effectiveSize}`} className="overflow-visible">
         {/* Concentric rings */}
         {RINGS.map((r) => (
           <polygon
@@ -126,12 +128,36 @@ export default function SgRadarChart({ players, size = 280 }) {
               y={pt.y}
               textAnchor="middle"
               dominantBaseline="central"
-              fontSize={size < 260 ? 9 : 10}
+              fontSize={effectiveSize < 260 ? 9 : 10}
               fontWeight={600}
               fill="var(--text-1)"
               opacity={0.5}
             >
               {axis.label}
+            </text>
+          )
+        })}
+
+        {/* R06: Axis endpoint value labels — show avg SG per axis across players */}
+        {showAxisValues && players.length > 0 && AXES.map((axis, i) => {
+          const values = players.map(p => p[axis.key]).filter(v => v != null)
+          if (values.length === 0) return null
+          const avg = values.reduce((a, b) => a + b, 0) / values.length
+          const pt = getPoint(i, 1.35, center, radius)
+          return (
+            <text
+              key={`val-${i}`}
+              x={pt.x}
+              y={pt.y + 12}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={8}
+              fontFamily="JetBrains Mono, monospace"
+              fontWeight={700}
+              fill={avg >= 0.5 ? '#10B981' : avg >= 0 ? 'var(--text-1)' : '#E83838'}
+              opacity={0.65}
+            >
+              {avg >= 0 ? '+' : ''}{avg.toFixed(1)}
             </text>
           )
         })}

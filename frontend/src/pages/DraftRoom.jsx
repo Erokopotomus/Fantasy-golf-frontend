@@ -13,6 +13,7 @@ import BidPanel from '../components/draft/BidPanel'
 import PickAnnouncement from '../components/draft/PickAnnouncement'
 import DraftCompletionOverlay from '../components/draft/DraftCompletionOverlay'
 import DraftConfirmModal from '../components/draft/DraftConfirmModal'
+import BestAvailableStrip from '../components/draft/BestAvailableStrip'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
 import Card from '../components/common/Card'
 import useDraftSounds from '../hooks/useDraftSounds'
@@ -62,7 +63,7 @@ const DraftRoomContent = () => {
   const [visiblePickError, setVisiblePickError] = useState(null)
   const chatEndRef = useRef(null)
   const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
-  const { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playDraftStart, playBid, playDraftComplete } = useDraftSounds()
+  const { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playUpNext, playTimerWarning, playDraftStart, playBid, playDraftComplete } = useDraftSounds()
 
   // Initialize audio context on first user interaction
   useEffect(() => {
@@ -81,6 +82,29 @@ const DraftRoomContent = () => {
       return () => clearTimeout(timer)
     }
   }, [pickError])
+
+  // U16: Detect when user is ONE pick away from their turn
+  const isUserUpNext = useMemo(() => {
+    if (!draft || !draft.draftOrder?.length || !draft.userTeamId || draft.status !== 'IN_PROGRESS') return false
+    if (isUserTurn) return false
+    const totalTeams = draft.draftOrder.length
+    const totalPicks = totalTeams * (draft.totalRounds || 6)
+    const nextPickNumber = picks.length + 2
+    if (nextPickNumber > totalPicks) return false
+    const nextRound = Math.floor((nextPickNumber - 1) / totalTeams) + 1
+    const nextPickInRound = (nextPickNumber - 1) % totalTeams
+    const isEvenRound = nextRound % 2 === 0
+    const nextPosition = isEvenRound ? totalTeams - nextPickInRound : nextPickInRound + 1
+    const nextOrder = draft.draftOrder.find(o => o.position === nextPosition)
+    return nextOrder?.teamId === draft.userTeamId
+  }, [draft, picks.length, isUserTurn])
+
+  // Sound: up-next notification (softer tone when user is one pick away)
+  const prevIsUpNext = useRef(false)
+  useEffect(() => {
+    if (isUserUpNext && !prevIsUpNext.current) playUpNext()
+    prevIsUpNext.current = isUserUpNext
+  }, [isUserUpNext, playUpNext])
 
   // Sound: your turn notification
   const prevIsUserTurn = useRef(false)
@@ -283,6 +307,22 @@ const DraftRoomContent = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages])
 
+  // Load persisted chat history on mount
+  useEffect(() => {
+    if (!draft?.id) return
+    api.getDraftChat(draft.id).then(data => {
+      if (data.messages && data.messages.length > 0) {
+        setChatMessages(data.messages.map(msg => ({
+          id: msg.id,
+          sender: msg.userName,
+          senderId: msg.userId,
+          text: msg.message,
+          isUser: msg.userId === user?.id,
+        })))
+      }
+    }).catch(() => {})
+  }, [draft?.id, user?.id])
+
   // Listen for incoming draft chat messages from other participants
   useEffect(() => {
     if (!draft?.id) return
@@ -409,8 +449,26 @@ const DraftRoomContent = () => {
   const teams = draft?.teams || []
   const rosterSize = league?.settings?.rosterSize || 6
 
+  // Compute next team for between-picks experience (U05)
+  // Using IIFE instead of useMemo since this is after early returns
+  const nextTeamName = (() => {
+    if (!draft?.draftOrder?.length) return null
+    const totalTeams = draft.draftOrder.length
+    const totalPicks = totalTeams * (draft.totalRounds || rosterSize)
+    const nextPickNumber = picks.length + 2 // one after the current pick
+    if (nextPickNumber > totalPicks) return null
+
+    const round = Math.floor((nextPickNumber - 1) / totalTeams) + 1
+    const pickInRound = (nextPickNumber - 1) % totalTeams
+    const isEvenRound = round % 2 === 0
+    const nextPosition = isEvenRound ? totalTeams - pickInRound : pickInRound + 1
+    const nextOrder = draft.draftOrder.find(o => o.position === nextPosition)
+    const nextTeam = draft.teams?.find(t => t.id === nextOrder?.teamId)
+    return nextTeam?.name || null
+  })()
+
   return (
-    <div className="h-screen bg-[var(--bg)] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[var(--bg)] flex flex-col overflow-hidden max-w-[1600px] mx-auto w-full">
       <DraftHeader
         league={league}
         draft={draft}
@@ -525,6 +583,38 @@ const DraftRoomContent = () => {
           <div ref={bottomRef} className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
             {/* Left: Player Pool — resizable width */}
             <div className="flex-[2] lg:flex-none lg:shrink-0 min-h-0 flex flex-col" style={isDesktop ? { width: `${playerPct}%` } : undefined}>
+              {/* Between-Picks Experience (U05) — shown when not user's turn and draft is in progress */}
+              {draft?.status === 'IN_PROGRESS' && !isUserTurn && !currentPick?.complete && (
+                <div className="shrink-0 px-3 py-2 bg-[var(--surface)] border-b border-[var(--card-border)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2 h-2 rounded-full bg-gold animate-pulse shrink-0" />
+                      <span className="text-xs font-semibold text-text-primary truncate">
+                        On the clock: {currentPick?.teamName || 'Waiting...'}
+                      </span>
+                    </div>
+                    {nextTeamName && (
+                      <span className="text-[10px] text-text-muted shrink-0">
+                        Up next: <span className="text-text-secondary font-medium">{nextTeamName}</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-text-muted mt-0.5 italic">Research your next pick while you wait</p>
+                </div>
+              )}
+
+              {/* Best Available Recommendation Strip (U01) */}
+              {draft?.status === 'IN_PROGRESS' && !currentPick?.complete && (
+                <div className="shrink-0 px-2 pt-1.5">
+                  <BestAvailableStrip
+                    players={availablePlayers}
+                    boardEntries={boardEntries}
+                    isUserTurn={isUserTurn}
+                    onViewPlayer={openPlayerDetail}
+                  />
+                </div>
+              )}
+
               {/* Board selector */}
               {boards.length > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--card-border)] bg-[var(--surface)] shrink-0">

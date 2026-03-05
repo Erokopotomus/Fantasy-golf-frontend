@@ -222,16 +222,27 @@ io.on('connection', (socket) => {
   })
 
   // Draft chat
-  socket.on('draft-chat', (data) => {
+  socket.on('draft-chat', async (data) => {
+    const draftId = data.draftId
     const payload = {
       id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      draftId: data.draftId,
+      draftId,
       message: data.message,
       sender: data.sender,
       senderId: data.senderId,
       timestamp: new Date().toISOString(),
     }
-    io.to(`draft-${data.draftId}`).emit('draft-chat', payload)
+    io.to(`draft-${draftId}`).emit('draft-chat', payload)
+
+    // Persist chat message to DB (fire-and-forget, chat still works if DB save fails)
+    try {
+      const chatPrisma = require('./lib/prisma')
+      await chatPrisma.draftChatMessage.create({
+        data: { draftId, userId: socket.userId || data.senderId || 'anonymous', userName: data.sender || 'Anonymous', message: data.message }
+      })
+    } catch (err) {
+      console.error('[draft-chat] DB save failed:', err.message)
+    }
   })
 
   // Leave rooms
@@ -278,6 +289,33 @@ io.on('connection', (socket) => {
     }
   })
 })
+
+// B13: Draft timer sync — every 30s, emit server time + pickDeadline to active draft rooms
+setInterval(() => {
+  const rooms = io.sockets.adapter.rooms
+  for (const [roomName] of rooms) {
+    if (!roomName.startsWith('draft-')) continue
+    const draftId = roomName.replace('draft-', '')
+    // Only emit if there are actual connected sockets in the room
+    const room = rooms.get(roomName)
+    if (!room || room.size === 0) continue
+    // Fetch current draft state to get pickDeadline
+    const timerPrisma = require('./lib/prisma')
+    timerPrisma.draft.findUnique({
+      where: { id: draftId },
+      select: { status: true, timePerPick: true, startTime: true, picks: { orderBy: { pickedAt: 'desc' }, take: 1, select: { pickedAt: true } } }
+    }).then(draft => {
+      if (!draft || draft.status !== 'IN_PROGRESS') return
+      let pickDeadline = null
+      if (draft.picks.length > 0) {
+        pickDeadline = new Date(draft.picks[0].pickedAt.getTime() + (draft.timePerPick * 1000)).toISOString()
+      } else if (draft.startTime) {
+        pickDeadline = new Date(draft.startTime.getTime() + (draft.timePerPick * 1000)).toISOString()
+      }
+      io.to(roomName).emit('draft-time-sync', { pickDeadline, serverTime: Date.now() })
+    }).catch(() => {})
+  }
+}, 30000)
 
 // Error handling middleware
 app.use((err, req, res, next) => {

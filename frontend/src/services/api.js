@@ -304,6 +304,10 @@ class ApiService {
     return this.request(`/drafts/${draftId}/players${params ? '?' + params : ''}`)
   }
 
+  async getDraftChat(draftId) {
+    return this.request(`/drafts/${draftId}/chat`)
+  }
+
   async pauseDraft(draftId) {
     return this.request(`/drafts/${draftId}/pause`, {
       method: 'POST',

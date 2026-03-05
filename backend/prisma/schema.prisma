@@ -921,14 +921,28 @@ model Draft {
   league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
 
   // Relations
-  picks       DraftPick[]
-  draftOrder  DraftOrder[]
-  draftGrades DraftGrade[]
+  picks        DraftPick[]
+  draftOrder   DraftOrder[]
+  draftGrades  DraftGrade[]
+  chatMessages DraftChatMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("drafts")
+}
+
+model DraftChatMessage {
+  id        String   @id @default(cuid())
+  draftId   String
+  userId    String
+  userName  String
+  message   String
+  createdAt DateTime @default(now())
+  draft     Draft    @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId, createdAt])
+  @@map("draft_chat_messages")
 }
 
 model DraftOrder {

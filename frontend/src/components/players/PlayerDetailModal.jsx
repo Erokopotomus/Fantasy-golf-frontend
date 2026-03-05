@@ -37,13 +37,64 @@ const PlayerDetailModal = ({ player, onClose, isOpen, onAddToQueue, onDraft, isD
     { course: 'Valhalla GC', events: 2, avgFinish: 'T22', bestFinish: 'T15', avgScore: 71.2 },
   ]
 
-  // Mock AI insights
-  const aiInsights = [
-    { type: 'positive', text: `${player.name} has been trending upward, with top-10 finishes in 3 of the last 5 events.` },
-    { type: 'neutral', text: `Strong approach play (SG: Approach ${formatStat(player.stats?.sgApproach, '+')}) suggests good performance on courses with demanding approach shots.` },
-    { type: 'positive', text: `Course history at TPC Sawgrass is favorable with an average finish of T12 in 5 appearances.` },
-    { type: 'warning', text: `Putting has been slightly below average recently. Monitor performance on fast greens.` },
-  ]
+  // Build player-specific AI insights (only show when we have real data to reference)
+  const aiInsights = (() => {
+    const insights = []
+
+    // Trend insight — only if we have recent form data
+    const recentTop10 = (player.recentForm || []).filter(r => {
+      const pos = parseInt(String(r).replace('T', ''))
+      return !isNaN(pos) && pos <= 10
+    }).length
+    if (recentTop10 > 0 && player.recentForm?.length >= 3) {
+      insights.push({
+        type: 'positive',
+        text: `${player.name} has ${recentTop10} top-10 finish${recentTop10 > 1 ? 'es' : ''} in the last ${player.recentForm.length} events.`,
+      })
+    }
+
+    // Approach play insight — only if we have the stat
+    if (player.stats?.sgApproach != null) {
+      const sgApp = player.stats.sgApproach
+      if (sgApp > 0.3) {
+        insights.push({
+          type: 'positive',
+          text: `Strong approach play (SG: Approach ${formatStat(sgApp, '+')}) suggests good performance on courses with demanding approach shots.`,
+        })
+      } else if (sgApp < -0.3) {
+        insights.push({
+          type: 'warning',
+          text: `Approach play has been a weakness (SG: Approach ${formatStat(sgApp, '+')}). May struggle on courses that demand precise iron play.`,
+        })
+      }
+    }
+
+    // Putting insight — only if we have the stat
+    if (player.stats?.sgPutting != null) {
+      const sgPutt = player.stats.sgPutting
+      if (sgPutt > 0.3) {
+        insights.push({
+          type: 'positive',
+          text: `${player.name}'s putting has been a strength (SG: Putting ${formatStat(sgPutt, '+')}), providing a floor in most weeks.`,
+        })
+      } else if (sgPutt < -0.3) {
+        insights.push({
+          type: 'warning',
+          text: `Putting has been below average (SG: Putting ${formatStat(sgPutt, '+')}). Monitor performance on fast greens.`,
+        })
+      }
+    }
+
+    // Off-the-tee insight — only if we have the stat
+    if (player.stats?.sgOffTee != null && player.stats.sgOffTee > 0.5) {
+      insights.push({
+        type: 'neutral',
+        text: `${player.name} gains strokes off the tee (SG: OTT ${formatStat(player.stats.sgOffTee, '+')}), an advantage on courses that reward driving.`,
+      })
+    }
+
+    return insights
+  })()
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -379,6 +430,13 @@ const PlayerDetailModal = ({ player, onClose, isOpen, onAddToQueue, onDraft, isD
                   <p className="text-text-muted text-xs">Powered by predictive analytics</p>
                 </div>
               </div>
+
+              {aiInsights.length === 0 && (
+                <div className="text-center py-8 text-text-muted">
+                  <p className="text-sm">Not enough data to generate insights for {player.name}.</p>
+                  <p className="text-xs mt-1">Check back after more tournament results are available.</p>
+                </div>
+              )}
 
               <div className="space-y-3">
                 {aiInsights.map((insight, idx) => (

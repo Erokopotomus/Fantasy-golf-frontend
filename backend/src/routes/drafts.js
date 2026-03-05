@@ -600,13 +600,13 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       }
     })
 
-    // Add player to team roster
+    // Add player to team roster (BENCH by default — user sets their own lineup)
     await prisma.rosterEntry.create({
       data: {
         teamId: userTeam.id,
         playerId,
-        position: 'ACTIVE',
-        rosterStatus: 'ACTIVE'
+        position: 'BENCH',
+        rosterStatus: 'BENCH'
       }
     })
 
@@ -1213,6 +1213,20 @@ router.delete('/:id', authenticate, async (req, res, next) => {
     })
 
     res.json({ message: 'Draft cancelled' })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/drafts/:id/chat - Get chat history for a draft
+router.get('/:id/chat', authenticate, async (req, res, next) => {
+  try {
+    const messages = await prisma.draftChatMessage.findMany({
+      where: { draftId: req.params.id },
+      orderBy: { createdAt: 'asc' },
+      take: 200,
+    })
+    res.json({ messages })
   } catch (error) {
     next(error)
   }

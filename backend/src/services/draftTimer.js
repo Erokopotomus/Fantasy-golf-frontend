@@ -101,13 +101,13 @@ async function executeAutoPick(draftId, io) {
       }
     })
 
-    // Add to roster
+    // Add to roster (BENCH by default — user sets their own lineup)
     await prisma.rosterEntry.create({
       data: {
         teamId: currentDrafter.teamId,
         playerId: bestPlayer.id,
-        position: 'ACTIVE',
-        rosterStatus: 'ACTIVE'
+        position: 'BENCH',
+        rosterStatus: 'BENCH'
       }
     })
 
@@ -452,13 +452,13 @@ async function awardPlayer(draftId, io) {
       }
     })
 
-    // Add to roster
+    // Add to roster (BENCH by default — user sets their own lineup)
     await prisma.rosterEntry.create({
       data: {
         teamId: highBidderTeamId,
         playerId,
-        position: 'ACTIVE',
-        rosterStatus: 'ACTIVE'
+        position: 'BENCH',
+        rosterStatus: 'BENCH'
       }
     })
 
