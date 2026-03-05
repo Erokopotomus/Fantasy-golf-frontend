@@ -50,6 +50,8 @@ const coachMemoryRoutes = require('./routes/coachMemory')
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
 const app = express()
+// Trust Railway's proxy so rate limiter uses real client IPs (X-Forwarded-For)
+app.set('trust proxy', 1)
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: {

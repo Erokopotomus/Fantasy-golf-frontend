@@ -12,7 +12,7 @@ const authLimiter = rateLimit({
 // Moderate limiter for general API endpoints
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 120, // 120 requests per minute
+  max: 300, // 300 requests per minute (SPA fires 20-30 calls per page load)
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: 'Too many requests. Please slow down.' } },
