@@ -739,7 +739,7 @@ const LeagueHome = () => {
 
               {/* Compact Tournament Intel Strip */}
               {(topFieldPlayers.length > 0 || courseDnaSummary || tournamentWeather.length > 0) && (
-                <div className="mt-2 rounded-xl border border-white/10 dark:border-white/10 bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg px-5 py-3">
+                <div className="mt-2 rounded-xl border border-white/10 bg-slate-900/80 backdrop-blur-md shadow-lg px-5 py-3">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                     {/* Top Field Players by Power Rank */}
                     {topFieldPlayers.length > 0 && (
