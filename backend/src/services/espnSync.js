@@ -76,8 +76,32 @@ async function syncHoleScores(tournamentId, prisma) {
   // 5. Load existing RoundScores for this tournament (for linking HoleScores)
   const existingRoundScores = await prisma.roundScore.findMany({
     where: { tournamentId },
-    select: { id: true, playerId: true, roundNumber: true },
+    select: { id: true, playerId: true, roundNumber: true, createdAt: true },
   })
+
+  // YEAR GUARD: If tournament is current/upcoming but existing scores are from
+  // a prior year, purge them to prevent stale data contamination (e.g., 2025
+  // Arnold Palmer results showing up in 2026 tournament record).
+  const tournamentYear = tournament.startDate ? new Date(tournament.startDate).getFullYear() : null
+  if (tournamentYear && existingRoundScores.length > 0 &&
+      (tournament.status === 'IN_PROGRESS' || tournament.status === 'UPCOMING' || tournament.status === 'SCHEDULED')) {
+    const hasStaleData = existingRoundScores.some(rs => {
+      const rsYear = rs.createdAt ? new Date(rs.createdAt).getFullYear() : null
+      return rsYear && rsYear < tournamentYear
+    })
+    if (hasStaleData) {
+      console.log(`[ESPN Sync] YEAR GUARD: Found stale prior-year data for ${tournament.name} (${tournamentYear}). Purging stale RoundScores + HoleScores.`)
+      // Delete HoleScores first (they reference RoundScores)
+      await prisma.holeScore.deleteMany({ where: { tournamentId } })
+      // Delete stale RoundScores
+      await prisma.roundScore.deleteMany({ where: { tournamentId } })
+      // Also purge stale Performance records so aggregation starts fresh
+      await prisma.performance.deleteMany({ where: { tournamentId } })
+      console.log(`[ESPN Sync] YEAR GUARD: Purged all prior-year scores for tournament ${tournamentId}`)
+      existingRoundScores.length = 0 // Clear the array so the map below is empty
+    }
+  }
+
   const roundScoreMap = new Map()
   for (const rs of existingRoundScores) {
     roundScoreMap.set(`${rs.playerId}_${rs.roundNumber}`, rs.id)
@@ -563,6 +587,28 @@ async function syncPlayerBios(prisma) {
  */
 async function aggregateHoleScoresToPerformance(tournamentId, prisma) {
   console.log(`[ESPN Agg] Aggregating hole scores for tournament ${tournamentId}`)
+
+  // YEAR GUARD: Verify hole score data belongs to the tournament's year
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    select: { startDate: true, name: true, status: true },
+  })
+  if (tournament && tournament.startDate) {
+    const tournamentYear = new Date(tournament.startDate).getFullYear()
+    const sampleScores = await prisma.holeScore.findMany({
+      where: { tournamentId },
+      select: { createdAt: true },
+      take: 5,
+    })
+    const hasStaleData = sampleScores.some(hs => {
+      const hsYear = hs.createdAt ? new Date(hs.createdAt).getFullYear() : null
+      return hsYear && hsYear < tournamentYear
+    })
+    if (hasStaleData && (tournament.status === 'IN_PROGRESS' || tournament.status === 'UPCOMING' || tournament.status === 'SCHEDULED')) {
+      console.log(`[ESPN Agg] YEAR GUARD: Stale prior-year hole scores detected for "${tournament.name}" (${tournamentYear}). Skipping aggregation — run syncHoleScores first to purge stale data.`)
+      return { performances: 0, rounds: 0 }
+    }
+  }
 
   // 1. Load all HoleScores for this tournament, grouped by roundScore
   const holeScores = await prisma.holeScore.findMany({

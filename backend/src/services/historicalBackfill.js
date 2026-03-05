@@ -121,9 +121,17 @@ async function backfillYear(year, prisma) {
       // Try matching by name/date to existing tournament
       const evtName = normalizeName(evt.name)
       const evtDate = evt.date ? new Date(evt.date) : null
+      const evtYear = evtDate ? evtDate.getFullYear() : year
       for (const t of existingTournaments) {
         if (t.espnEventId) continue
         const ourName = normalizeName(t.name)
+
+        // YEAR GUARD: Never match an ESPN event to a tournament from a different year.
+        // This prevents 2025 results from being written into a 2026 tournament record
+        // when they share the same name (e.g., "Arnold Palmer Invitational").
+        const tournamentYear = t.startDate ? new Date(t.startDate).getFullYear() : null
+        if (tournamentYear && tournamentYear !== evtYear) continue
+
         const dateMatch = evtDate && t.startDate &&
           Math.abs(new Date(t.startDate).getTime() - evtDate.getTime()) < 3 * 24 * 60 * 60 * 1000
         if (ourName === evtName || ourName.includes(evtName) || evtName.includes(ourName) || dateMatch) {

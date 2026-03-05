@@ -194,13 +194,13 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                 )}
               </div>
 
-              {/* Leader / Winner — pulled out of the wrapping stats so it doesn't get clipped */}
+              {/* Leader / Winner — full width row so it never gets clipped by overflow-hidden */}
               {leader && (isCompleted || isLive) && (
-                <div className="text-right flex-shrink-0">
+                <div className="w-full">
                   <span className={`${txtMuted} text-xs uppercase tracking-wide`}>
                     {isCompleted ? 'Winner' : 'Leader'}
                   </span>
-                  <p className={`${txtPrimary} font-medium flex items-center gap-1.5 justify-end`}>
+                  <p className={`${txtPrimary} font-medium flex items-center gap-1.5 whitespace-nowrap`}>
                     {isCompleted && <span className="text-crown">&#127942;</span>}
                     <span className="text-lg">{leader.countryFlag}</span>
                     {leader.name}
