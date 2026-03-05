@@ -323,7 +323,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               return teeTime ? (
                 <span className="text-xs text-text-muted font-medium">{teeTime}</span>
               ) : (
-                <span className="text-xs text-text-muted">\u2013</span>
+                <span className="text-xs text-text-muted">{'\u2013'}</span>
               )
             })()}
           </div>
@@ -334,29 +334,29 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
           <div className="bg-gray-50 border-t border-gray-200 dark:bg-slate-900/95 dark:border-white/10 px-4 py-4">
             {/* Probability chips — ABOVE round tabs */}
             {player.probabilities && (
-              <div className="flex gap-2 mb-3">
+              <div className="flex gap-1.5 mb-2">
                 {player.probabilities.win != null && (
-                  <div className="flex-1 rounded-lg px-4 py-2 text-center border border-blaze/50 bg-blaze/5 dark:border-blaze/40 dark:bg-blaze/10">
-                    <div className="text-lg font-bold font-mono text-blaze">{(player.probabilities.win * 100).toFixed(1)}%</div>
-                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Win</div>
+                  <div className="flex-1 rounded-md px-2 py-1.5 text-center border border-blaze/50 bg-blaze/5 dark:border-blaze/40 dark:bg-blaze/10">
+                    <div className="text-sm font-bold font-mono text-blaze">{(player.probabilities.win * 100).toFixed(1)}%</div>
+                    <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Win</div>
                   </div>
                 )}
                 {player.probabilities.top5 != null && (
-                  <div className="flex-1 rounded-lg px-4 py-2 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="text-lg font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.top5 * 100).toFixed(1)}%</div>
-                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Top 5</div>
+                  <div className="flex-1 rounded-md px-2 py-1.5 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-sm font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.top5 * 100).toFixed(1)}%</div>
+                    <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Top 5</div>
                   </div>
                 )}
                 {player.probabilities.top10 != null && (
-                  <div className="flex-1 rounded-lg px-4 py-2 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="text-lg font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.top10 * 100).toFixed(1)}%</div>
-                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Top 10</div>
+                  <div className="flex-1 rounded-md px-2 py-1.5 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-sm font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.top10 * 100).toFixed(1)}%</div>
+                    <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Top 10</div>
                   </div>
                 )}
                 {player.probabilities.makeCut != null && (
-                  <div className="flex-1 rounded-lg px-4 py-2 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
-                    <div className="text-lg font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.makeCut * 100).toFixed(1)}%</div>
-                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Make Cut</div>
+                  <div className="flex-1 rounded-md px-2 py-1.5 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-sm font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.makeCut * 100).toFixed(1)}%</div>
+                    <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Make Cut</div>
                   </div>
                 )}
               </div>
@@ -511,22 +511,22 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                       </div>
 
                       {/* Summary row — THREE CARDS */}
-                      <div className="grid grid-cols-3 gap-2 mt-4">
-                        <div className="bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-lg py-3 text-center">
-                          <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Front</div>
-                          <div className={`text-lg font-bold font-mono ${front9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
+                      <div className="grid grid-cols-3 gap-1.5 mt-3">
+                        <div className="bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-md py-2 text-center">
+                          <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Front</div>
+                          <div className={`text-base font-bold font-mono ${front9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
                             {front9Score != null ? front9Score : '\u2013'}
                           </div>
                         </div>
-                        <div className="bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-lg py-3 text-center">
-                          <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Back</div>
-                          <div className={`text-lg font-bold font-mono ${back9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
+                        <div className="bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-md py-2 text-center">
+                          <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Back</div>
+                          <div className={`text-base font-bold font-mono ${back9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
                             {back9Score != null ? back9Score : '\u2013'}
                           </div>
                         </div>
-                        <div className="bg-field/5 border border-field/20 dark:bg-field/10 dark:border-field/30 rounded-lg py-3 text-center">
-                          <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Total</div>
-                          <div className="text-xl font-bold font-mono text-field">
+                        <div className="bg-field/5 border border-field/20 dark:bg-field/10 dark:border-field/30 rounded-md py-2 text-center">
+                          <div className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Total</div>
+                          <div className="text-lg font-bold font-mono text-field">
                             {totalScore != null ? totalScore : '\u2013'}
                           </div>
                         </div>

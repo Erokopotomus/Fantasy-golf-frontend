@@ -5477,7 +5477,8 @@ Restyle the **inline scorecard** in `frontend/src/components/tournament/Tourname
 
 ---
 
-### 149 — Scorecard drawer V2: card-grid layout with light+dark mode (SUPERSEDES 148, MOCKUP PROVIDED) `TODO` `HIGH`
+### 149 — Scorecard drawer V2: card-grid layout with light+dark mode (SUPERSEDES 148, MOCKUP PROVIDED) `DONE` `HIGH`
+**Completed:** 2026-03-05 — Full redesign: CSS Grid, filled score shapes, prob chips above tabs, inline legend, FRONT/BACK/TOTAL cards, light+dark mode. Files: TournamentLeaderboard.jsx (commit 870a382)
 
 **Priority:** HIGH — user provided mockups, wants this specific design. Live tournament today. Item 148 was dark-only which user rejected ("just looks like dark mode on light mode screen"). This is a full layout redesign.
 
@@ -5581,6 +5582,121 @@ Redesign the **inline scorecard** in `frontend/src/components/tournament/Tournam
 - No CSS variable colors (`var(--surface)`, `var(--bg-alt)`, etc.) in the scorecard section — Tailwind only
 - Mobile: horizontal scroll preserved via `overflow-x-auto` wrapper around each grid
 - ScoreCell shapes are filled (solid color) with white text inside, not just bordered
+
+---
+
+### 150 — LiveScoringWidget V2: light+dark mode redesign (MOCKUP PROVIDED) `TODO` `HIGH`
+
+**Priority:** HIGH — user provided both light and dark mode mockups. Current widget is dark-only (item 146).
+
+**Problem:** Item 146 restyled `LiveScoringWidget.jsx` with hardcoded dark colors (`bg-slate-900/90`, `text-white/60`, etc.). The user wants proper light+dark dual-mode support matching the Clutch brand system (light-first, cream backgrounds). The mockups show the same two-panel layout but with theme-aware colors.
+
+**Prompt:**
+
+Restyle `frontend/src/components/league/LiveScoringWidget.jsx` to support BOTH light mode (default) and dark mode using Tailwind `dark:` prefix. The overall layout (header, two-panel body, footer) is good — this is a color/styling pass only.
+
+**DESIGN SPEC (from user mockups):**
+
+**1. Outer wrapper:**
+- Light: `bg-white border border-gray-200 rounded-xl shadow-lg`
+- Dark: `dark:bg-slate-900/90 dark:border-white/10 dark:backdrop-blur-md dark:shadow-2xl`
+- Keep `mb-6 rounded-xl overflow-hidden`
+
+**2. Header bar (tournament name + LIVE badge + Full Scoring link):**
+- Light: `bg-gray-50 border-b border-gray-200` with gradient `bg-gradient-to-r from-field/5 via-transparent to-crown/5`
+- Dark: `dark:bg-transparent dark:border-white/10` with existing dark gradient
+- Tournament name: `text-gray-900 dark:text-white font-display font-bold`
+- Round text: `text-gray-500 dark:text-white/60`
+- LIVE badge: keep `bg-field-bright/25 text-field-bright` (works both modes)
+- "Full Scoring ›" link: `text-blaze hover:text-blaze/70 dark:text-crown dark:hover:text-crown/80 font-display font-semibold`
+
+**3. Section labels ("YOUR TEAM", "LEAGUE"):**
+- Light: `text-gray-400` / Dark: `dark:text-white/40`
+- Keep `text-[10px] font-bold uppercase tracking-wider`
+
+**4. YOUR TEAM — rank + points:**
+- Rank number (#5): `text-gray-900 dark:text-white text-3xl font-display font-bold`
+- "of 5": `text-gray-400 dark:text-white/40`
+- Points value (2.0): `text-blaze dark:text-crown text-3xl font-display font-bold`
+- "pts": `text-gray-400 dark:text-white/40`
+
+**5. YOUR TEAM — player rows:**
+- Add column headers: `PLAYER  POS  SCORE  THRU  PTS` in `text-[10px] uppercase tracking-wider text-gray-400 dark:text-white/40 font-medium`
+- Player status dot (left of name): green `bg-field-bright` if on course, gray `bg-gray-300 dark:bg-white/20` if not started
+- Player name: `text-gray-900 dark:text-white/90 font-medium`
+- Row bg — Light: `bg-gray-50 hover:bg-gray-100` / Dark: `dark:bg-white/[0.04] dark:hover:bg-white/[0.08]`
+- POS: `text-gray-400 dark:text-white/30 font-mono`
+- SCORE: under par `text-field dark:text-field-bright`, over par `text-live-red`, even `text-gray-500 dark:text-white/60`
+- THRU: `text-gray-400 dark:text-white/30 font-mono`
+- PTS: `text-blaze dark:text-crown font-mono font-semibold`
+- Bottom hint: `↑ Click any player for scorecard` in `text-[10px] text-gray-300 dark:text-white/20 mt-2`
+
+**6. LEAGUE standings:**
+- "X pts behind 1st": `text-gray-500 dark:text-white/50` with thin progress bar `bg-blaze/60 dark:bg-crown/60 h-1 rounded-full`
+- Rank colors: 1st `text-crown`, 2nd `text-gray-400`, 3rd `text-amber-500`, rest `text-gray-300 dark:text-white/30`
+- Team name: `text-gray-800 dark:text-white/80`
+- Points: `text-gray-900 dark:text-white/90 font-mono font-semibold`
+- User's row — Light: `bg-blaze/5 border border-blaze/20` / Dark: `dark:bg-crown/10 dark:border-crown/25`
+- YOU badge: `bg-blaze/15 text-blaze dark:bg-crown/20 dark:text-crown text-[9px] px-1.5 py-0.5 rounded font-bold uppercase`
+
+**7. Footer:** `text-gray-300 dark:text-white/20`
+
+**FILES:**
+- `frontend/src/components/league/LiveScoringWidget.jsx`
+
+**VERIFICATION:**
+- Light mode: white/cream backgrounds, gray text, blaze (orange) accents
+- Dark mode: slate-900 backgrounds, white/opacity text, crown (gold) accents
+- Column headers visible above player rows
+- Player status dots present
+- User's LEAGUE row has distinct highlight + YOU badge
+- No hardcoded dark-only colors remaining
+- Mobile stacks to single column
+
+---
+
+### 151 — Clickable team names in LiveScoringWidget → team roster drawer `TODO` `MEDIUM`
+
+**Priority:** MEDIUM — quality-of-life feature for glancing at opponents' rosters during live tournaments
+
+**Problem:** Clicking a team name in the LEAGUE standings does nothing. User wants to click any team name and see that team's roster with live scores in a simple drawer, without navigating to the full scoring page.
+
+**Context:** The `useLeagueLiveScoring` hook returns a `teams` array. Check whether each team object includes `starters` for ALL teams or just the user's team. If only user's team has starters, the backend `calculateLiveTournamentScoring` function needs updating to include starters for all teams.
+
+**Prompt:**
+
+Add a team roster drawer to `frontend/src/components/league/LiveScoringWidget.jsx`.
+
+**1. State:** `const [selectedTeam, setSelectedTeam] = useState(null)`
+
+**2. Make team names clickable:** Add `onClick={() => setSelectedTeam(team)}` + `cursor-pointer hover:underline` to team name spans in the LEAGUE section.
+
+**3. Drawer — simple slide-in from right:**
+- Backdrop: `fixed inset-0 bg-black/30 dark:bg-black/50 z-40` (click to close)
+- Panel: `fixed right-0 top-0 h-full w-80 max-w-[85vw] z-50 overflow-y-auto`
+  - Light: `bg-white shadow-xl` / Dark: `dark:bg-slate-900 dark:shadow-2xl`
+- Animation: `transition-transform duration-300` — `translate-x-full` ↔ `translate-x-0`
+- Close on: backdrop click, X button, Escape key
+
+**4. Drawer content:**
+- Header: team name + rank badge + close X
+- Total points: `text-2xl font-bold font-mono text-blaze dark:text-crown`
+- Roster list: same player row layout as YOUR TEAM section (status dot, name, POS, SCORE, THRU, PTS), sorted by fantasy points desc
+- Footer: "Go to Full Scoring →" link
+
+**5. Backend check:** Verify `calculateLiveTournamentScoring` returns `starters` array for ALL teams (not just the requesting user's). If not, update it. The starters data per team needs: `playerName`, `playerId`, `position` (tournament position like T27), `totalToPar`, `thru`, `fantasyPoints`.
+
+**FILES:**
+- `frontend/src/components/league/LiveScoringWidget.jsx` (primary)
+- Possibly backend scoring service if starters aren't returned for all teams
+
+**VERIFICATION:**
+- Click any team name → drawer slides in from right
+- Drawer shows team name, rank, total points, full roster with live scores
+- Works in both light and dark mode
+- Backdrop click, X button, Escape all close drawer
+- No extra API calls (uses existing teams data)
+- Mobile: drawer width capped at 85vw
 
 ---
 
