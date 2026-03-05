@@ -5700,6 +5700,37 @@ Add a team roster drawer to `frontend/src/components/league/LiveScoringWidget.js
 - No extra API calls (uses existing teams data)
 - Mobile: drawer width capped at 85vw
 
+### 152 — Fix ESPN hole-by-hole sync: convert espnClient to axios + deploy `CRITICAL`
+**Status:** `TODO`
+**Priority:** CRITICAL — Scorecards are completely empty during live Arnold Palmer Invitational R1. Draft is tonight.
+
+**Problem:** The hole-by-hole scorecard data is not populating. The `syncHoleScores` ESPN cron runs every 5 min on Thu-Sun, finds the IN_PROGRESS tournament (espnEventId=401811935), and should upsert HoleScore records. But `GET /api/tournaments/:id/scorecards/:playerId` returns `{ scorecards: {} }` for every player — zero HoleScore records exist despite ESPN API having full 18-hole data.
+
+**Root cause (likely):** `espnClient.js` uses native `fetch()` instead of `axios`. If Railway's Node version has any issues with native fetch (experimental in Node 18, or ESM-only module resolution), the ESPN API call silently fails inside the cron's catch block. The cron logs `Error: fetch is not defined` or similar, but the error is swallowed. Meanwhile `datagolfClient.js` uses `axios` and works fine.
+
+**Cowork already fixed (2 files):**
+1. `backend/src/services/espnClient.js` — Replaced native `fetch()` with `axios.get()` (added `const axios = require('axios')`, changed `fetchJSON` to use `axios.get` with 30s timeout)
+2. `backend/src/index.js` — ESPN cron now logs tournament name + espnEventId, logs full stack trace on error, handles "no tournament found" case explicitly
+3. `backend/src/routes/tournaments.js` — Added `GET /api/tournaments/:id/scorecard-status` diagnostic endpoint (shows roundScore count, holeScore count, sample data)
+
+**Prompt:**
+
+The files are already edited. Your job:
+
+1. **Review the changes** in `espnClient.js`, `index.js`, and `tournaments.js` (routes) — make sure they look correct.
+2. **Commit and deploy** to Railway.
+3. **Wait 5-10 minutes** for the ESPN cron to fire (runs `*/5 * * * 4,5,6,0`).
+4. **Verify** by hitting:
+   - `GET /api/tournaments/cmlabp7ot02mlo02tsztxojvb/scorecard-status` — should show `holeScores > 0`
+   - `GET /api/tournaments/cmlabp7ot02mlo02tsztxojvb/scorecards/cmlabnsux005bo02tzra9sykc` — Berger's scorecard should have R1 data
+5. If holeScores are still 0 after the cron fires, check Railway logs for `[ESPN Sync]` or `[CRON][espn]` entries to see the actual error. The enhanced logging will now show the full stack trace.
+6. If the cron still fails, try manually triggering: `POST /api/sync/tournament/cmlabp7ot02mlo02tsztxojvb/espn` (requires `x-sync-secret` header matching `SYNC_ADMIN_SECRET` env var on Railway).
+
+**FILES ALREADY CHANGED (just commit+deploy):**
+- `backend/src/services/espnClient.js` — axios conversion
+- `backend/src/index.js` — enhanced ESPN cron logging
+- `backend/src/routes/tournaments.js` — scorecard-status diagnostic endpoint
+
 ---
 
 ## DONE

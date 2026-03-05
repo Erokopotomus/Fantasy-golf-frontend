@@ -5,12 +5,13 @@
  * Base: https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard
  */
 
+const axios = require('axios')
+
 const BASE_URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard'
 
 async function fetchJSON(url) {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`ESPN API error: ${res.status} ${res.statusText}`)
-  return res.json()
+  const { data } = await axios.get(url, { timeout: 30000 })
+  return data
 }
 
 /**

@@ -537,6 +537,35 @@ router.get('/:id/scorecards/:playerId', async (req, res, next) => {
   }
 })
 
+// GET /api/tournaments/:id/scorecard-status - Diagnostic: check hole score data availability
+router.get('/:id/scorecard-status', async (req, res, next) => {
+  try {
+    const tournamentId = req.params.id
+    const [roundScoreCount, holeScoreCount, sampleRound] = await Promise.all([
+      prisma.roundScore.count({ where: { tournamentId } }),
+      prisma.holeScore.count({ where: { tournamentId } }),
+      prisma.roundScore.findFirst({
+        where: { tournamentId },
+        include: { holeScores: { take: 3 } },
+        orderBy: { roundNumber: 'asc' },
+      }),
+    ])
+    res.json({
+      tournamentId,
+      roundScores: roundScoreCount,
+      holeScores: holeScoreCount,
+      sampleRound: sampleRound ? {
+        playerId: sampleRound.playerId,
+        roundNumber: sampleRound.roundNumber,
+        score: sampleRound.score,
+        holeScoresAttached: sampleRound.holeScores.length,
+      } : null,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 // GET /api/tournaments/:id/weather - Get tournament weather forecast
 router.get('/:id/weather', async (req, res, next) => {
   try {

@@ -533,17 +533,20 @@ httpServer.listen(PORT, () => {
       const t = await cronPrisma.tournament.findFirst({
         where: { status: 'IN_PROGRESS' },
         orderBy: { startDate: 'asc' },
-        select: { id: true },
+        select: { id: true, name: true, espnEventId: true },
       })
-      if (!t) return
-      cronLog('espn', `Syncing ESPN hole scores for ${t.id}`)
+      if (!t) return cronLog('espn', 'No IN_PROGRESS tournament found')
+      cronLog('espn', `Syncing ESPN hole scores for "${t.name}" (id=${t.id}, espnEventId=${t.espnEventId})`)
       try {
         const result = await espnSync.syncHoleScores(t.id, cronPrisma)
-        cronLog('espn', `Done: ${result.matched} players, ${result.holes} holes`)
+        cronLog('espn', `Done: ${result.matched} players, ${result.holes} holes${result.error ? ` (error: ${result.error})` : ''}`)
         // Aggregate hole data into Performance + RoundScore for fantasy scoring
         const aggResult = await espnSync.aggregateHoleScoresToPerformance(t.id, cronPrisma)
         cronLog('espn', `Aggregated: ${aggResult.performances} performances, ${aggResult.rounds} rounds`)
-      } catch (e) { cronLog('espn', `Error: ${e.message}`) }
+      } catch (e) {
+        cronLog('espn', `ERROR: ${e.message}`)
+        console.error('[ESPN Sync] Full error:', e.stack || e)
+      }
     }, { timezone: 'America/New_York' })
 
     // Tuesday 4:00 AM ET — ESPN ID sync (after Sunday finalize + Monday DataGolf sync)
