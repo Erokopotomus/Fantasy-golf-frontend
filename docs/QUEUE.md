@@ -4517,7 +4517,8 @@ This is a future task — build a "Draft Data Import" tool that lets commissione
 ---
 
 ### 123 — Run Draft Values Backfill Script V3 (BroMontana 2014-2025)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — V3 script committed (9b2b36a). Needs `node backend/scripts/backfill-draft-values.js` run on Railway.
 **Priority:** CRITICAL — Draft TONIGHT. Eric needs this NOW.
 **Prompt:**
 
@@ -4550,7 +4551,8 @@ Verification — 2020 Eric CMC cost: $116 (expected: $116)
 ---
 
 ### 124 — FantasyWeekHelper: Prefer flagship tournament over alternate events
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Replaced findFirst with multi-candidate selection (non-alternate > major > signature > purse). Lock status uses 7AM ET instead of midnight UTC. Files: fantasyWeekHelper.js (commit e0ce737)
 **Priority:** CRITICAL — Draft is TODAY (Mar 5). Roster page shows wrong tournament + wrong lock time.
 
 **The problem:**
@@ -4636,7 +4638,8 @@ Then update the return to use the already-included tournament select fields (the
 ---
 
 ### 125 — Roster Player Card: Stats too far right, invisible on mobile
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Moved stats (W/T5/T10) inline below player name as third line, visible on all screen sizes. Removed old hidden sm:flex stats div. Files: TeamRoster.jsx (commit e0ce737)
 **Priority:** HIGH — Visible on every roster page view.
 
 **The problem:**
@@ -4679,7 +4682,8 @@ Then remove the old stats div (lines 977-983) that's pushed to the right edge.
 ---
 
 ### 126 — Run V3 draft values backfill script on Railway
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Script already committed. Needs Railway run: `node backend/scripts/backfill-draft-values.js`
 **Priority:** HIGH — BroMontana vault draft dollar values still wrong.
 
 **Prompt:**
