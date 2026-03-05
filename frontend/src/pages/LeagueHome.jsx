@@ -622,7 +622,7 @@ const LeagueHome = () => {
                   </div>
                 </div>
               )}
-              {isDraftComplete && (
+              {isDraftComplete && !(currentTournament?.status === 'IN_PROGRESS' || currentTournament?.status === 'COMPLETED') && (
                 <Card className="border-field/30 bg-gradient-to-r from-field/5 to-[var(--surface)]">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">

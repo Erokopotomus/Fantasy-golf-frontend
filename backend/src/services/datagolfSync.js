@@ -705,6 +705,18 @@ async function syncLiveScoring(tournamentDgId, prisma) {
   })
 
   console.log(`[Sync] Live scoring done: ${liveScoreOps.length} players updated, round ${effectiveRound} (api=${maxRound}, date=${dateBasedRound})`)
+
+  // Clean up stale LiveScore records (data from previous events that leaked in)
+  const deletedStale = await prisma.liveScore.deleteMany({
+    where: {
+      tournamentId: tournament.id,
+      currentRound: { gt: effectiveRound },
+    },
+  })
+  if (deletedStale.count > 0) {
+    console.log(`[Sync] Cleaned up ${deletedStale.count} stale LiveScore records (currentRound > ${effectiveRound})`)
+  }
+
   return { updated: liveScoreOps.length, tournamentStatus: 'IN_PROGRESS' }
 }
 

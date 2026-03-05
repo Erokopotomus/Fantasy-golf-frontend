@@ -5818,6 +5818,143 @@ Rebuild the LEFT player scorecard drawer in `frontend/src/components/league/Live
 - Escape closes both, backdrop click closes the relevant one
 - Works in both light and dark mode
 
+### 155 — Fix stale LiveScore data bleeding into roster display (Rasmus Hojgaard bug) `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Reviewed Cowork's stale data guard in scoringService.js (correct, no changes needed). Added LiveScore cleanup to datagolfSync.js syncLiveScoring() — deletes records where currentRound > effectiveRound. Files: datagolfSync.js
+**Priority:** HIGH — players not in the current tournament field show stale position/score data from previous events
+
+**Problem:** Rasmus Hojgaard is rostered on a team (bench) but is NOT in the Arnold Palmer Invitational field. His roster display shows `position: 9, totalToPar: -10, currentRound: 4, fantasyPoints: 0` — all stale data from a previous tournament that DataGolf's leaderboard sync wrote into the current tournament's LiveScore/Performance records.
+
+**Root cause:** `datagolfSync.js` `syncLiveScoring()` processes ALL players in the DataGolf leaderboard API response and writes LiveScore + Performance records tagged with the current tournament ID. If the API returns stale data (from a previous event) or includes a player who was in the predicted field but withdrew, those stale values (position, totalToPar, currentRound=4) get written onto records for the CURRENT tournament.
+
+**Cowork already applied a guard** in `backend/src/services/scoringService.js` in `calculateLiveTournamentScoring()`. The guard detects stale data by checking:
+1. **Stale round:** If the player's LiveScore `currentRound` > `tournament.currentRound` (e.g., R4 data during R1)
+2. **Not in field:** If Performance `status === 'WD'` AND zero RoundScores for the tournament
+
+When either condition is true, it resets position/totalToPar/todayToPar/thru to `null`, zeroes fantasy points, and sets status to `DNS` or `WD`.
+
+**Prompt:**
+
+1. **Review the stale data guard** Cowork added in `backend/src/services/scoringService.js` around line 509-540 (after the score computation, before the `row` object). Make sure the logic is correct and doesn't break legitimate scenarios (player hasn't teed off yet in R1 should NOT be caught — they'd have `currentRound: null` or `currentRound: 1`, not > tournament round).
+
+2. **Add a cleanup step to `datagolfSync.js` `syncLiveScoring()`** — after the main sync loop (after line 694 `await batchTransaction(prisma, perfOps)`), delete any LiveScore records for this tournament where the `currentRound` on the LiveScore exceeds the computed `effectiveRound` for the tournament. This prevents stale data from persisting:
+```javascript
+// Clean up stale LiveScore records (data from previous events that leaked in)
+const deletedStale = await prisma.liveScore.deleteMany({
+  where: {
+    tournamentId: tournament.id,
+    currentRound: { gt: effectiveRound },
+  },
+})
+if (deletedStale.count > 0) {
+  console.log(`[Sync] Cleaned up ${deletedStale.count} stale LiveScore records (currentRound > ${effectiveRound})`)
+}
+```
+
+3. **Commit and deploy.**
+
+4. **Verify:** After deploy, check `GET /api/leagues/:id/live-scoring` — Rasmus Hojgaard (or any player not in the field) should show `position: null, totalToPar: null, status: "DNS"` instead of stale data.
+
+**FILES:**
+- `backend/src/services/scoringService.js` — Cowork's stale data guard (already applied, needs review)
+- `backend/src/services/datagolfSync.js` — Add LiveScore cleanup after sync loop
+
+---
+
+### 156 — Hide "Draft Complete" banner once tournament starts `LOW`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Already applied by Cowork. Verified condition hides banner when currentTournament is IN_PROGRESS or COMPLETED. No changes needed. Files: LeagueHome.jsx (Cowork)
+**Priority:** LOW — cosmetic, banner takes up space once the season is live
+
+**Problem:** The "Draft Complete!" success banner on LeagueHome.jsx persists indefinitely after the draft finishes. It should disappear once the first tournament/week is IN_PROGRESS or COMPLETED.
+
+**Cowork already applied the fix** in `frontend/src/pages/LeagueHome.jsx` — added a condition to hide the banner when `currentTournament?.status === 'IN_PROGRESS' || currentTournament?.status === 'COMPLETED'`.
+
+**Prompt:**
+
+1. **Review** the change Cowork made in `frontend/src/pages/LeagueHome.jsx` around line 625. The original condition was just `{isDraftComplete && (`. The new condition is:
+```jsx
+{isDraftComplete && !(currentTournament?.status === 'IN_PROGRESS' || currentTournament?.status === 'COMPLETED') && (
+```
+2. Make sure `currentTournament` is available in scope at that point (it should be — it's used elsewhere on the page for the LiveScoringWidget).
+3. **Commit and deploy.**
+
+**FILES ALREADY CHANGED:**
+- `frontend/src/pages/LeagueHome.jsx`
+
+---
+
+### 157 — My Team page redesign: live scoring + two-panel layout `MEDIUM`
+**Status:** `TODO`
+**Priority:** MEDIUM — post-draft improvement, enhances in-season experience
+
+**Problem:** The My Team page (`TeamRoster.jsx`) has no live scoring data during tournaments. Every competitor (Sleeper, ESPN, Yahoo) shows live fantasy points per player on the roster page. Currently Clutch only shows static player info (OWGR, SG Total, wins/T5s) — no position, toPar, thru, or fantasy points during live events.
+
+**Design direction (Cowork research):**
+
+**Layout:** Two-panel on desktop (`max-w-5xl`):
+- Left panel (60%): Roster — starters section, bench section, IR. Each player row shows live tournament data.
+- Right panel (40%): Context — this week's matchup (if H2H), team total points, tournament banner, schedule.
+- Mobile: stacks vertically (roster first, context below).
+
+**Player row during live tournament:**
+```
+[Headshot] [Name]           [POS]  [Score] [Thru]  [Fantasy Pts]
+           [OWGR #12 · PGA]                         [Start/Bench]
+```
+
+**Player row when no active tournament:**
+```
+[Headshot] [Name]           [SG Total] [Form] [OWGR] [Schedule dots]
+           [Tour · Wins · T5s]                        [Start/Bench]
+```
+
+**New data needed:**
+- Fetch live scoring data from `GET /api/leagues/:id/live-scoring` on the My Team page
+- Match each roster player to their live scoring entry by playerId
+- Display position, totalToPar, thru, fantasyPoints per player row
+- Add team total points and team rank at top
+
+**Prompt:**
+
+Redesign `frontend/src/pages/TeamRoster.jsx` to show live tournament scoring per player.
+
+1. **Add live scoring fetch:** When a golf tournament is IN_PROGRESS, call `GET /api/leagues/${leagueId}/live-scoring` and index the response by `playerId`. Poll every 60 seconds during live events.
+
+2. **Update PlayerRow component:** Add a `liveData` prop. When `liveData` exists, show:
+   - Position (e.g., "T5") — with color coding (top 10 green, cut line red)
+   - Score to par (e.g., "-4") — with +/- color
+   - Thru (e.g., "12" or "F") — with on-course indicator dot
+   - Fantasy points (e.g., "42.5 pts") — bold, prominent
+   - Replace the static wins/T5s/T10s row with this live data
+
+3. **Add team summary header:** Between the page header and the roster sections, add:
+   - Team total fantasy points (sum of starters)
+   - Team rank in league (from live-scoring response)
+   - Bench points (shown smaller)
+   - Optimal points (shown subtle)
+
+4. **Two-panel layout (desktop):** Use `grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6`. Left = roster. Right = context panel with:
+   - Tournament info card (name, round, course)
+   - Team vs opponent (if H2H matchup exists)
+   - Upcoming schedule summary
+
+5. **Fallback:** When no tournament is live, show the current static layout (OWGR, SG, schedule dots).
+
+**FILES:**
+- `frontend/src/pages/TeamRoster.jsx` (primary)
+
+**REFERENCE:**
+- `frontend/src/components/league/LiveScoringWidget.jsx` — live scoring data fetch pattern
+- `frontend/src/pages/TournamentScoring.jsx` — tournament scoring display patterns
+
+**VERIFICATION:**
+- During live tournament: each player row shows position, score, thru, fantasy pts
+- Team total points shown in header
+- Two-panel layout on desktop (stacked on mobile)
+- Data refreshes every 60s during live events
+- Non-live state still shows current info (OWGR, SG, schedule)
+
 ---
 
 ## DONE

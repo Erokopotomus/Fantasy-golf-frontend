@@ -506,15 +506,36 @@ async function calculateLiveTournamentScoring(tournamentId, leagueId, prisma) {
         breakdown = result.breakdown
       }
 
-      const position = live?.position ?? perf?.position ?? null
-      const totalToPar = live?.totalToPar ?? perf?.totalToPar ?? null
-      const todayToPar = live?.todayToPar ?? null
+      let position = live?.position ?? perf?.position ?? null
+      let totalToPar = live?.totalToPar ?? perf?.totalToPar ?? null
+      let todayToPar = live?.todayToPar ?? null
       // Only show thru=18 (finished) if player has actual score data (position or toPar).
       // Without this guard, empty/placeholder perf records show "F" for players who haven't teed off.
       const perfHasScoreData = perf && (perf.position != null || perf.totalToPar != null)
-      const thru = live?.thru ?? (perf?.status === 'CUT' ? 'CUT' : perfHasScoreData ? 18 : null)
-      const currentRound = live?.currentRound ?? tournament.currentRound ?? null
-      const status = perfHasScoreData ? (perf?.status || 'ACTIVE') : (live ? 'ACTIVE' : 'DNS')
+      let thru = live?.thru ?? (perf?.status === 'CUT' ? 'CUT' : perfHasScoreData ? 18 : null)
+      let currentRound = live?.currentRound ?? tournament.currentRound ?? null
+      let status = perfHasScoreData ? (perf?.status || 'ACTIVE') : (live ? 'ACTIVE' : 'DNS')
+
+      // ── Stale data guard ──────────────────────────────────────────────
+      // If the player's data shows a round higher than the tournament's current
+      // round, it's leftover from a previous event's sync (DataGolf leaderboard
+      // can bleed stale scores into the current tournament's records).
+      // Also catch WD/DNS players who still have stale position/score data.
+      const playerRound = live?.currentRound ?? null
+      const isStaleData = isLive && playerRound != null && tournament.currentRound != null
+        && playerRound > tournament.currentRound
+      const isNotInField = perf?.status === 'WD' && roundScores.length === 0
+
+      if (isStaleData || isNotInField) {
+        position = null
+        totalToPar = null
+        todayToPar = null
+        thru = null
+        currentRound = tournament.currentRound
+        fantasyPoints = 0
+        breakdown = { position: 0, holes: 0, bonuses: 0, strokesGained: 0 }
+        status = isNotInField ? 'WD' : 'DNS'
+      }
 
       const row = {
         playerId: entry.player.id,
