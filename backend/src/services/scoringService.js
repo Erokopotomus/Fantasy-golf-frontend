@@ -509,9 +509,12 @@ async function calculateLiveTournamentScoring(tournamentId, leagueId, prisma) {
       const position = live?.position ?? perf?.position ?? null
       const totalToPar = live?.totalToPar ?? perf?.totalToPar ?? null
       const todayToPar = live?.todayToPar ?? null
-      const thru = live?.thru ?? (perf?.status === 'CUT' ? 'CUT' : perf ? 18 : null)
+      // Only show thru=18 (finished) if player has actual score data (position or toPar).
+      // Without this guard, empty/placeholder perf records show "F" for players who haven't teed off.
+      const perfHasScoreData = perf && (perf.position != null || perf.totalToPar != null)
+      const thru = live?.thru ?? (perf?.status === 'CUT' ? 'CUT' : perfHasScoreData ? 18 : null)
       const currentRound = live?.currentRound ?? tournament.currentRound ?? null
-      const status = perf?.status || 'DNS'
+      const status = perfHasScoreData ? (perf?.status || 'ACTIVE') : (live ? 'ACTIVE' : 'DNS')
 
       const row = {
         playerId: entry.player.id,

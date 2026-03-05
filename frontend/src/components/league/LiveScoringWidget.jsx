@@ -62,7 +62,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
     : []
 
   const formatToPar = (toPar) => {
-    if (toPar === null || toPar === undefined) return 'E'
+    if (toPar === null || toPar === undefined) return '–'
     if (toPar === 0) return 'E'
     return toPar > 0 ? `+${toPar}` : `${toPar}`
   }

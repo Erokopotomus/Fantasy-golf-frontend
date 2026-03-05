@@ -4754,7 +4754,8 @@ Refactor `frontend/src/components/roster/LineupOptimizer.jsx` to stop making ind
 
 ---
 
-### 129 — Fix live scoring widget showing Puerto Rico Open instead of Arnold Palmer `TODO` `CRITICAL`
+### 129 — Fix live scoring widget showing Puerto Rico Open instead of Arnold Palmer `DONE` `CRITICAL`
+**Completed:** 2026-03-05 — Cowork's fix committed. findMany + sort by non-alternate/major/signature/purse. Files: leagues.js (commit fc70962)
 
 **Priority:** CRITICAL — affects live tournament scoring right now
 
@@ -4769,6 +4770,74 @@ Refactor `frontend/src/components/roster/LineupOptimizer.jsx` to stop making ind
 - Navigate to any league's page — LiveScoringWidget should show Arnold Palmer Invitational, not Puerto Rico Open
 - Click "Full Scoring" link — scoring page should also show Arnold Palmer
 - After Arnold Palmer ends, the widget should show the next main event, not an alternate
+
+---
+
+### 130 — Fix live scoring phantom scores + stale tournament data `TODO` `CRITICAL`
+
+**Priority:** CRITICAL — live tournament starts today, widget shows fake data
+
+**Problem:** Three related bugs in the live scoring pipeline:
+
+1. **Arnold Palmer Invitational has `currentRound: 4` in the DB** — tournament starts today (Mar 5, 2026) but the DB shows round 4. Likely stale data from ESPN/DataGolf sync pulling previous year's final round state. Tournament ID: `cmlabp7ot02mlo02tsztxojvb`.
+
+2. **`thru` defaults to 18 ("F" = finished) for players with no actual scores.** In `scoringService.js` line 512, the old code was: `const thru = live?.thru ?? (perf?.status === 'CUT' ? 'CUT' : perf ? 18 : null)`. If a Performance record exists (even an empty placeholder), `thru` shows 18. 41 out of 45 rostered players show "F" despite not having teed off.
+
+3. **`formatToPar` in LiveScoringWidget returns "E" for null toPar** — players with no score data show "E" (even par) instead of "–" (no data).
+
+4. **4 stale Performance records** with last year's scores attached to the 2026 Arnold Palmer tournament: Shane Lowry (pos 2, -15), Nicolai Hojgaard (pos 6, -11), Rasmus Hojgaard (pos 9, -10, WD), Ryan Gerard (pos 23, -7). These are 2025 results.
+
+**Fixes already applied by Cowork:**
+
+**File 1: `backend/src/services/scoringService.js`** — Lines 509-514
+- `thru` now checks `perfHasScoreData` (position != null OR totalToPar != null) before defaulting to 18
+- `status` now returns 'DNS' for players without score data instead of 'ACTIVE'
+
+**File 2: `frontend/src/components/league/LiveScoringWidget.jsx`** — Line 65
+- `formatToPar(null)` now returns '–' instead of 'E'
+
+**DB fix needed (Claude Code must run):**
+```sql
+-- Reset Arnold Palmer 2026 currentRound from 4 to 1
+UPDATE "Tournament" SET "currentRound" = 1 WHERE id = 'cmlabp7ot02mlo02tsztxojvb';
+
+-- Delete stale Performance records (2025 data on 2026 tournament)
+DELETE FROM "Performance" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb' AND "position" IS NOT NULL;
+
+-- Delete any stale RoundScore records for this tournament
+DELETE FROM "RoundScore" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb' AND "playerId" IN (
+  SELECT "playerId" FROM "Performance" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb' AND "position" IS NOT NULL
+);
+```
+**Important:** Run the RoundScore delete BEFORE the Performance delete. Or better: use Prisma to query and clean up.
+
+**Verification:**
+- League page live scoring widget should show "Round 1" (not "Round 4")
+- All players should show "–" for position, toPar, and thru (not "E", "F", or stale numbers)
+- All teams should show 0.0 pts
+- After ESPN sync picks up real R1 scores, data should populate correctly
+
+---
+
+### 131 — Add tournament intel widgets to league page banner `TODO` `MEDIUM`
+
+**Priority:** MEDIUM — user wants weather, top players in field, and course fit widgets on the league home page tournament banner
+
+**Problem:** The tournament banner on the league home page (`LeagueHome.jsx`) shows basic tournament info (name, dates, course, field count, leader) but doesn't include the tournament intelligence widgets that exist on the Golf Hub / Tournament Preview pages — specifically: weather conditions, top players in field, course fit analysis.
+
+**Context:** These widgets already exist on the tournament preview/Golf Hub pages. Need to either:
+- Import and render the existing widget components below/inside the league page tournament banner
+- Or create compact versions that fit the league page layout
+
+**Files to check:**
+- `frontend/src/pages/LeagueHome.jsx` — where the tournament banner renders
+- `frontend/src/pages/TournamentPreview.jsx` — where the intel widgets already exist
+- `frontend/src/components/tournament/` — existing tournament components
+
+**Verification:**
+- League home page banner should show weather, top field players, and course fit data
+- Should not clutter the page — keep it compact
+- Mobile responsive
 
 ---
 
