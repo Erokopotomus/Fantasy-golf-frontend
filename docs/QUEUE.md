@@ -4516,32 +4516,36 @@ This is a future task — build a "Draft Data Import" tool that lets commissione
 
 ---
 
-### 123 — Run Draft Values Backfill Script V2 (BroMontana 2014-2025)
+### 123 — Run Draft Values Backfill Script V3 (BroMontana 2014-2025)
 **Status:** `TODO`
-**Priority:** CRITICAL — Draft tonight (Mar 5). Eric wants auction values in the vault.
+**Priority:** CRITICAL — Draft TONIGHT. Eric needs this NOW.
 **Prompt:**
 
-**V1 of this script was committed (87db2c8) but had bugs.** Cowork has REWRITTEN the script at `backend/scripts/backfill-draft-values.js` with these fixes:
+**V1 and V2 both failed.** Root cause: Yahoo player names ("Christian McCaffrey") don't match Google Sheet names ("C McCaffery") — different spellings broke exact and simple fuzzy matching.
 
-1. **Structure fix:** Existing draftData is `{type: "auction", picks: [...]}` — V1 assumed flat array and broke
-2. **Field name fix:** Existing picks use `cost` field — V1 wrote to `amount` which vault frontend doesn't read
-3. **Owner filtering:** Now filters picks by `ownerName` before matching, so CMC gets matched to Eric not someone else
+**Cowork has rewritten the script a THIRD time** at `backend/scripts/backfill-draft-values.js` with a 3-pass matching strategy:
+- Pass 1: Fuzzy last name (first 4 chars) + first initial match (score >= 70)
+- Pass 2: Weaker fuzzy (score >= 40) for remaining
+- Pass 3: Position-order fallback for anything still unmatched
+- Built-in verification: prints 2020 Eric CMC cost + budget at the end
 
-**Commit the UPDATED script and run it on Railway:**
+**Just commit and run:**
 
 ```bash
 git add backend/scripts/backfill-draft-values.js
-git commit -m "fix: rewrite draft values backfill script (structure + field name bugs)"
+git commit -m "fix: v3 draft backfill with fuzzy name matching"
 node backend/scripts/backfill-draft-values.js
 ```
 
-**Verification after running:**
-1. Check 2020 Eric via Prisma: CMC should show `cost: 116` (was `cost: 64` from Yahoo)
-2. Check 2020 Eric: Lamar Jackson should show `cost: 14`
-3. Check 2024 any owner: should have correct dollar amounts
-4. Check that `startingBudget` is set on the draftData object (e.g., 2020 Eric = 447)
+**Expected output at end of script:**
+```
+Verification — 2020 Eric CMC cost: $116 (expected: $116)
+2020 Eric budget: $447 (expected: $447)
+```
 
-**Files:** `backend/scripts/backfill-draft-values.js` (already rewritten by Cowork, just needs commit + run)
+**If verification fails,** the name matching is still off. Check the unmatched count in the logs.
+
+**Files:** `backend/scripts/backfill-draft-values.js` (V3, already saved by Cowork)
 
 ---
 

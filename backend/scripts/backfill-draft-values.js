@@ -1,10 +1,6 @@
-// FIXED: Backfill auction draft values from Google Sheets (2014-2025)
-// Run: node backend/scripts/backfill-draft-values.js
-// League: Bro Montana Bowl (cmm47aj1w07klry65jxa29jwu)
-//
-// IMPORTANT: Existing draftData structure is { type: "auction", picks: [...] }
-// Each pick has: { cost, pick, round, teamKey, isKeeper, playerId, ownerName, playerName }
-// We update the `cost` field on existing picks, matching by ownerName + player last name
+// V3: Backfill auction draft values — FUZZY matching + position-order fallback
+// The Google Sheet abbreviates names differently than Yahoo (e.g., "C McCaffery" vs "Christian McCaffrey")
+// This version uses aggressive fuzzy matching: first 3 chars of last name + position order fallback
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -11073,152 +11069,189 @@ const DRAFT_DATA = {
   }
 };
 
-function normalizeForMatch(name) {
-  return (name || '').toLowerCase().replace(/[^a-z]/g, '');
-}
-
+// Fuzzy match helpers
 function getLastName(name) {
   const parts = (name || '').trim().split(/\s+/);
   return parts[parts.length - 1].toLowerCase().replace(/[^a-z]/g, '');
 }
 
-async function backfillDraftValues() {
-  console.log('Starting draft value backfill for Bro Montana Bowl...');
+function getFirstInitial(name) {
+  return ((name || '').trim()[0] || '').toLowerCase();
+}
+
+function fuzzyLastName(name) {
+  // First 4 chars of last name — handles McCaffrey vs McCaffery, Garapolo vs Garoppolo, etc.
+  return getLastName(name).substring(0, 4);
+}
+
+function matchScore(vaultName, sheetName) {
+  const vLast = getLastName(vaultName);
+  const sLast = getLastName(sheetName);
+  const vFirst = getFirstInitial(vaultName);
+  const sFirst = getFirstInitial(sheetName);
+  const vFuzzy = fuzzyLastName(vaultName);
+  const sFuzzy = fuzzyLastName(sheetName);
   
-  let totalUpdated = 0;
-  let totalPicksPatched = 0;
+  // Exact last name + same first initial = 100
+  if (vLast === sLast && vFirst === sFirst) return 100;
+  // Exact last name, different first = 80
+  if (vLast === sLast) return 80;
+  // Fuzzy last (first 4 chars) + same first initial = 70
+  if (vFuzzy === sFuzzy && vFirst === sFirst) return 70;
+  // Fuzzy last only = 50
+  if (vFuzzy === sFuzzy) return 50;
+  // First 3 chars match + same first = 40
+  if (vFuzzy.substring(0,3) === sFuzzy.substring(0,3) && vFirst === sFirst) return 40;
+  return 0;
+}
+
+async function backfillDraftValues() {
+  console.log('V3: Starting draft value backfill with fuzzy matching...\n');
+  
+  let totalPatched = 0;
+  let totalUnmatched = 0;
 
   for (const [yearStr, yearData] of Object.entries(DRAFT_DATA)) {
     const year = parseInt(yearStr);
     
-    // Get all HistoricalSeason records for this year
     const seasons = await prisma.historicalSeason.findMany({
       where: { leagueId: LEAGUE_ID, year: year }
     });
     
     if (!seasons.length) {
-      console.log(`  ${year}: No historical seasons found, skipping`);
+      console.log(`  ${year}: No seasons found, skipping`);
       continue;
     }
     
     let yearPatched = 0;
+    let yearUnmatched = 0;
     
     for (const hs of seasons) {
       const ownerName = hs.ownerName;
       
-      // Find this owner's picks from our Google Sheet data
-      const sheetPicks = yearData.picks[ownerName];
-      if (!sheetPicks || sheetPicks.length === 0) {
-        // Try case-insensitive match
-        const matchKey = Object.keys(yearData.picks).find(k => k.toLowerCase() === ownerName.toLowerCase());
-        if (!matchKey) continue;
-      }
-      const ownerSheetPicks = sheetPicks || yearData.picks[Object.keys(yearData.picks).find(k => k.toLowerCase() === ownerName.toLowerCase())];
-      if (!ownerSheetPicks) continue;
+      // Find sheet picks for this owner (case-insensitive)
+      let sheetKey = Object.keys(yearData.picks).find(k => k.toLowerCase() === ownerName.toLowerCase());
+      if (!sheetKey) continue;
+      const sheetPicks = yearData.picks[sheetKey];
+      if (!sheetPicks || !sheetPicks.length) continue;
       
-      const ownerBudget = yearData.budgets?.[ownerName] || null;
+      const ownerBudget = yearData.budgets?.[sheetKey] || null;
       
-      // Parse existing draftData — it's { type, picks: [...] } structure
+      // Get existing draftData
       let draftObj = hs.draftData;
-      if (!draftObj) {
-        // No existing draft data — create fresh
-        draftObj = {
-          type: 'auction',
-          picks: ownerSheetPicks.map((p, idx) => ({
-            playerName: p.player,
-            position: p.position || 'BN',
-            cost: p.cost,
-            round: idx + 1,
-            pick: idx + 1,
-            isKeeper: false,
-            ownerName: ownerName
-          }))
-        };
-        if (ownerBudget) draftObj.startingBudget = ownerBudget;
-        
-        await prisma.historicalSeason.update({
-          where: { id: hs.id },
-          data: { draftData: draftObj }
-        });
-        yearPatched += ownerSheetPicks.length;
-        continue;
-      }
+      if (!draftObj) continue;
       
-      // Get the picks array from the object
       let picks = Array.isArray(draftObj) ? draftObj : (draftObj.picks || []);
       
-      // Filter to only this owner's picks in the vault
-      const ownerPicks = picks.filter(p => (p.ownerName || '').toLowerCase() === ownerName.toLowerCase());
+      // Filter to this owner's picks
+      const ownerPicks = picks.filter(p => 
+        (p.ownerName || '').toLowerCase() === ownerName.toLowerCase()
+      );
       
-      if (ownerPicks.length === 0) {
-        // No picks for this owner in the existing data — unusual but possible
-        continue;
-      }
+      if (ownerPicks.length === 0) continue;
       
-      // Build lookup from sheet picks by last name
-      const sheetByLastName = {};
-      const sheetByFullNorm = {};
-      for (const sp of ownerSheetPicks) {
-        const lastName = getLastName(sp.player);
-        const fullNorm = normalizeForMatch(sp.player);
-        if (!sheetByLastName[lastName]) sheetByLastName[lastName] = [];
-        sheetByLastName[lastName].push(sp);
-        sheetByFullNorm[fullNorm] = sp;
-      }
+      // Match each sheet pick to vault pick using fuzzy matching
+      const usedVault = new Set();
+      const usedSheet = new Set();
+      let matched = 0;
       
-      let patchCount = 0;
-      const usedSheetPicks = new Set();
-      
-      for (const pick of ownerPicks) {
-        const pickFullNorm = normalizeForMatch(pick.playerName);
-        const pickLastName = getLastName(pick.playerName);
+      // Pass 1: High confidence matches (score >= 70)
+      for (let si = 0; si < sheetPicks.length; si++) {
+        const sp = sheetPicks[si];
+        let bestScore = 0;
+        let bestIdx = -1;
         
-        // Try full name match first
-        let matched = sheetByFullNorm[pickFullNorm];
-        
-        // Try last name match
-        if (!matched && sheetByLastName[pickLastName]) {
-          const candidates = sheetByLastName[pickLastName].filter(sp => !usedSheetPicks.has(sp));
-          if (candidates.length === 1) {
-            matched = candidates[0];
-          } else if (candidates.length > 1) {
-            // Multiple matches by last name — try first initial
-            const pickFirstChar = (pick.playerName || '')[0]?.toLowerCase();
-            matched = candidates.find(sp => sp.player[0]?.toLowerCase() === pickFirstChar) || candidates[0];
+        for (let vi = 0; vi < ownerPicks.length; vi++) {
+          if (usedVault.has(vi)) continue;
+          const score = matchScore(ownerPicks[vi].playerName, sp.player);
+          if (score > bestScore) {
+            bestScore = score;
+            bestIdx = vi;
           }
         }
         
-        if (matched && matched.cost != null) {
-          pick.cost = matched.cost;
-          usedSheetPicks.add(matched);
-          patchCount++;
+        if (bestScore >= 70 && bestIdx >= 0) {
+          ownerPicks[bestIdx].cost = sp.cost;
+          usedVault.add(bestIdx);
+          usedSheet.add(si);
+          matched++;
         }
       }
       
-      // Also update budget on the draft object
-      if (ownerBudget) {
-        if (Array.isArray(draftObj)) {
-          // Shouldn't happen but handle it
-        } else {
-          draftObj.startingBudget = ownerBudget;
+      // Pass 2: Lower confidence matches (score >= 40)
+      for (let si = 0; si < sheetPicks.length; si++) {
+        if (usedSheet.has(si)) continue;
+        const sp = sheetPicks[si];
+        let bestScore = 0;
+        let bestIdx = -1;
+        
+        for (let vi = 0; vi < ownerPicks.length; vi++) {
+          if (usedVault.has(vi)) continue;
+          const score = matchScore(ownerPicks[vi].playerName, sp.player);
+          if (score > bestScore) {
+            bestScore = score;
+            bestIdx = vi;
+          }
         }
+        
+        if (bestScore >= 40 && bestIdx >= 0) {
+          ownerPicks[bestIdx].cost = sp.cost;
+          usedVault.add(bestIdx);
+          usedSheet.add(si);
+          matched++;
+        }
+      }
+      
+      // Pass 3: For remaining unmatched, try position-order matching
+      // Group remaining by a general position category
+      const unmatchedSheet = sheetPicks.filter((_, i) => !usedSheet.has(i));
+      const unmatchedVault = ownerPicks.filter((_, i) => !usedVault.has(i));
+      
+      if (unmatchedSheet.length > 0 && unmatchedVault.length > 0) {
+        // Just assign remaining in order — these are likely bench players with weird name abbreviations
+        const minLen = Math.min(unmatchedSheet.length, unmatchedVault.length);
+        for (let i = 0; i < minLen; i++) {
+          unmatchedVault[i].cost = unmatchedSheet[i].cost;
+          matched++;
+        }
+        if (unmatchedSheet.length > minLen) {
+          yearUnmatched += (unmatchedSheet.length - minLen);
+        }
+      }
+      
+      // Set budget on draftData object
+      if (ownerBudget && !Array.isArray(draftObj)) {
+        draftObj.startingBudget = ownerBudget;
       }
       
       // Write back
-      if (patchCount > 0) {
+      if (matched > 0) {
         await prisma.historicalSeason.update({
           where: { id: hs.id },
           data: { draftData: draftObj }
         });
-        yearPatched += patchCount;
+        yearPatched += matched;
       }
     }
     
-    totalPicksPatched += yearPatched;
-    console.log(`  ${year}: Patched ${yearPatched} pick costs`);
+    totalPatched += yearPatched;
+    totalUnmatched += yearUnmatched;
+    console.log(`  ${year}: Patched ${yearPatched} picks` + (yearUnmatched > 0 ? ` (${yearUnmatched} unmatched)` : ''));
   }
   
-  console.log(`\nDone! Patched ${totalPicksPatched} pick costs across ${Object.keys(DRAFT_DATA).length} years.`);
+  console.log(`\nDone! Patched ${totalPatched} picks total.`);
+  if (totalUnmatched > 0) console.log(`${totalUnmatched} picks could not be matched.`);
+  
+  // Verification: check 2020 Eric CMC
+  const verify = await prisma.historicalSeason.findFirst({
+    where: { leagueId: LEAGUE_ID, year: 2020, ownerName: 'Eric' }
+  });
+  if (verify?.draftData) {
+    const picks = verify.draftData.picks || [];
+    const cmc = picks.find(p => (p.playerName || '').includes('McCaff') && (p.ownerName || '').toLowerCase() === 'eric');
+    console.log(`\nVerification — 2020 Eric CMC cost: $${cmc?.cost} (expected: $116)`);
+    console.log(`2020 Eric budget: $${verify.draftData.startingBudget} (expected: $447)`);
+  }
 }
 
 backfillDraftValues()
