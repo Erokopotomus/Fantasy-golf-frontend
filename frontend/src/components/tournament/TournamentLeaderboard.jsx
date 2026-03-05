@@ -342,7 +342,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
         {/* Expanded inline scorecard */}
         {isExpanded && (
-          <div className="bg-[var(--surface-alt)] border-t border-[var(--card-border)]">
+          <div className="bg-slate-900/95 backdrop-blur-md border-t border-white/10">
             {/* Round tabs */}
             <div className="flex items-center gap-1 px-4 pt-3 pb-2">
               {[1, 2, 3, 4].map(r => {
@@ -361,12 +361,12 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                       ${isActive
                         ? 'bg-field-bright/20 text-field ring-1 ring-field-bright/30'
                         : isReachable
-                          ? 'bg-[var(--surface)] text-text-secondary hover:text-text-primary hover:bg-[var(--surface-alt)]'
-                          : 'bg-[var(--bg-alt)] text-text-muted/40 cursor-not-allowed'}
+                          ? 'bg-white/[0.06] text-white/60 hover:text-white/80 hover:bg-white/[0.10]'
+                          : 'bg-white/[0.03] text-white/20 cursor-not-allowed'}
                     `}
                   >
                     R{r}
-                    {hasScore && <span className="ml-1 opacity-70">({roundScore})</span>}
+                    {hasScore && <span className="ml-1 text-white/50">({roundScore})</span>}
                     {isCurrent && !hasScore && <span className="ml-1 text-crown/70">*</span>}
                   </button>
                 )
@@ -375,7 +375,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               {/* Overall summary chip */}
               <div className="ml-auto flex items-center gap-3 text-xs">
                 {player.score != null && (
-                  <span className={`font-bold ${getScoreColor(player.score)}`}>
+                  <span className={`font-bold px-2 py-0.5 rounded-full bg-white/[0.06] ${getScoreColor(player.score)}`}>
                     {formatScore(player.score)}
                   </span>
                 )}
@@ -422,7 +422,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                       {/* Round label + status */}
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-text-primary">Round {expandedRound}</span>
+                          <span className="text-xs text-white/90 font-semibold">Round {expandedRound}</span>
                           {isInProgress && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-crown/15 text-crown font-medium">
                               {player.thru > 0 ? `Thru ${player.thru}` : 'Not started'}
@@ -436,10 +436,10 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                         </div>
                         <div className="flex items-center gap-2">
                           {isInProgress && player.thru > 0 && (
-                            <span className={`text-sm font-bold ${getScoreColor(player.today)}`}>{formatScore(player.today)}</span>
+                            <span className={`text-sm font-bold px-2 py-0.5 rounded bg-white/[0.08] ${getScoreColor(player.today)}`}>{formatScore(player.today)}</span>
                           )}
                           {roundScore && (
-                            <span className={`text-sm font-bold ${roundScore < front9Par + back9Par ? 'text-field' : roundScore > front9Par + back9Par ? 'text-live-red' : 'text-text-primary'}`}>
+                            <span className={`text-sm font-bold px-2 py-0.5 rounded bg-white/[0.08] ${roundScore < front9Par + back9Par ? 'text-field' : roundScore > front9Par + back9Par ? 'text-live-red' : 'text-text-primary'}`}>
                               {roundScore} ({roundScore - (front9Par + back9Par) > 0 ? '+' : ''}{roundScore - (front9Par + back9Par)})
                             </span>
                           )}
@@ -448,88 +448,92 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
                       {/* Front 9 scorecard */}
                       <div className="overflow-x-auto">
-                        <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium mb-1">Front 9</p>
-                        <table className="w-full mb-1.5 text-xs border-collapse">
-                          <thead>
-                            <tr>
-                              <th className="p-1.5 text-left bg-[var(--surface)] text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
-                              {front9.map((h, i) => (
-                                <th key={i} className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-medium min-w-[28px]">{i + 1}</th>
-                              ))}
-                              <th className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-bold min-w-[32px]">Out</th>
-                              <th className="p-1.5 bg-[var(--surface)] min-w-[32px] rounded-tr"></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td className="p-1.5 text-left bg-[var(--bg-alt)] text-text-muted text-[10px]">Par</td>
-                              {front9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px]">{h.par || defaultPars[i]}</td>
-                              ))}
-                              <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{front9Par}</td>
-                              <td className="p-1.5 bg-[var(--bg-alt)]"></td>
-                            </tr>
-                            <tr className="border-t-2 border-field-bright/30">
-                              <td className="p-1.5 text-left bg-[var(--surface)] text-field text-[10px] font-bold">Score</td>
-                              {front9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center bg-[var(--surface)]">
-                                  <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
-                                </td>
-                              ))}
-                              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-text-primary text-[11px]">
-                                {front9Score != null ? front9Score : '–'}
-                              </td>
-                              <td className="p-1.5 bg-[var(--surface)]"></td>
-                            </tr>
-                          </tbody>
-                        </table>
-
-                        {/* Back 9 scorecard */}
-                        <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium mb-1 mt-2">Back 9</p>
+                        <p className="text-[10px] text-white/40 uppercase tracking-wider font-bold mb-1 flex items-center"><span className="w-1 h-3 bg-field-bright/40 rounded-full mr-1.5 inline-block" />Front 9</p>
+                        <div className="rounded-lg overflow-hidden mb-1.5">
                         <table className="w-full text-xs border-collapse">
                           <thead>
                             <tr>
-                              <th className="p-1.5 text-left bg-[var(--surface)] text-text-muted text-[10px] font-medium w-12 rounded-tl">Hole</th>
-                              {back9.map((h, i) => (
-                                <th key={i} className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-medium min-w-[28px]">{i + 10}</th>
+                              <th className="p-1.5 text-left bg-slate-800 text-white/60 font-mono text-[10px] font-medium w-12">Hole</th>
+                              {front9.map((h, i) => (
+                                <th key={i} className="p-1.5 text-center bg-slate-800 text-white/60 font-mono text-[10px] font-medium min-w-[28px]">{i + 1}</th>
                               ))}
-                              <th className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-bold min-w-[32px]">In</th>
-                              <th className="p-1.5 text-center bg-[var(--surface)] text-text-muted text-[10px] font-bold min-w-[32px] rounded-tr">Tot</th>
+                              <th className="p-1.5 text-center bg-slate-800 text-white/80 font-mono text-[10px] font-bold min-w-[32px]">Out</th>
+                              <th className="p-1.5 bg-slate-800 min-w-[32px]"></th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr>
-                              <td className="p-1.5 text-left bg-[var(--bg-alt)] text-text-muted text-[10px]">Par</td>
-                              {back9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px]">{h.par || defaultPars[i + 9]}</td>
+                              <td className="p-1.5 text-left bg-slate-800/40 text-white/40 font-mono text-[10px]">Par</td>
+                              {front9.map((h, i) => (
+                                <td key={i} className="p-1.5 text-center bg-slate-800/40 text-white/40 font-mono text-[10px]">{h.par || defaultPars[i]}</td>
                               ))}
-                              <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{back9Par}</td>
-                              <td className="p-1.5 text-center bg-[var(--bg-alt)] text-text-muted text-[10px] font-bold">{front9Par + back9Par}</td>
+                              <td className="p-1.5 text-center bg-slate-800/40 font-bold text-white/50 font-mono text-[10px]">{front9Par}</td>
+                              <td className="p-1.5 bg-slate-800/40"></td>
                             </tr>
                             <tr className="border-t-2 border-field-bright/30">
-                              <td className="p-1.5 text-left bg-[var(--surface)] text-field text-[10px] font-bold">Score</td>
+                              <td className="p-1.5 text-left bg-slate-900/50 text-field-bright text-[10px] font-bold">Score</td>
+                              {front9.map((h, i) => (
+                                <td key={i} className="p-0.5 text-center bg-slate-900/50 text-white">
+                                  <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
+                                </td>
+                              ))}
+                              <td className={`p-1.5 text-center bg-slate-900/50 font-bold text-[11px] ${front9Score != null && front9Par ? (front9Score < front9Par ? 'text-field-bright' : front9Score > front9Par ? 'text-live-red' : 'text-white/60') : 'text-white/60'}`}>
+                                {front9Score != null ? front9Score : '–'}
+                              </td>
+                              <td className="p-1.5 bg-slate-900/50"></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        </div>
+
+                        {/* Back 9 scorecard */}
+                        <p className="text-[10px] text-white/40 uppercase tracking-wider font-bold mb-1 mt-2 flex items-center"><span className="w-1 h-3 bg-field-bright/40 rounded-full mr-1.5 inline-block" />Back 9</p>
+                        <div className="rounded-lg overflow-hidden">
+                        <table className="w-full text-xs border-collapse">
+                          <thead>
+                            <tr>
+                              <th className="p-1.5 text-left bg-slate-800 text-white/60 font-mono text-[10px] font-medium w-12">Hole</th>
                               {back9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center bg-[var(--surface)]">
+                                <th key={i} className="p-1.5 text-center bg-slate-800 text-white/60 font-mono text-[10px] font-medium min-w-[28px]">{i + 10}</th>
+                              ))}
+                              <th className="p-1.5 text-center bg-slate-800 text-white/80 font-mono text-[10px] font-bold min-w-[32px]">In</th>
+                              <th className="p-1.5 text-center bg-slate-800 text-white/80 font-mono text-[10px] font-bold min-w-[32px]">Tot</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="p-1.5 text-left bg-slate-800/40 text-white/40 font-mono text-[10px]">Par</td>
+                              {back9.map((h, i) => (
+                                <td key={i} className="p-1.5 text-center bg-slate-800/40 text-white/40 font-mono text-[10px]">{h.par || defaultPars[i + 9]}</td>
+                              ))}
+                              <td className="p-1.5 text-center bg-slate-800/40 font-bold text-white/50 font-mono text-[10px]">{back9Par}</td>
+                              <td className="p-1.5 text-center bg-slate-800/40 font-bold text-white/50 font-mono text-[10px]">{front9Par + back9Par}</td>
+                            </tr>
+                            <tr className="border-t-2 border-field-bright/30">
+                              <td className="p-1.5 text-left bg-slate-900/50 text-field-bright text-[10px] font-bold">Score</td>
+                              {back9.map((h, i) => (
+                                <td key={i} className="p-0.5 text-center bg-slate-900/50 text-white">
                                   <ScoreCell score={h.score} par={h.par || defaultPars[i + 9]} />
                                 </td>
                               ))}
-                              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-text-primary text-[11px]">
+                              <td className={`p-1.5 text-center bg-slate-900/50 font-bold text-[11px] ${back9Score != null && back9Par ? (back9Score < back9Par ? 'text-field-bright' : back9Score > back9Par ? 'text-live-red' : 'text-white/60') : 'text-white/60'}`}>
                                 {back9Score != null ? back9Score : '–'}
                               </td>
-                              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-text-primary text-[11px]">
+                              <td className={`p-1.5 text-center bg-slate-900/50 font-bold text-[11px] ${(() => { const total = roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : null); const totalPar = front9Par + back9Par; return total != null ? (total < totalPar ? 'text-field-bright' : total > totalPar ? 'text-live-red' : 'text-white/60') : 'text-white/60' })()}`}>
                                 {roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : '–')}
                               </td>
                             </tr>
                           </tbody>
                         </table>
+                        </div>
                       </div>
 
                       {/* Legend */}
                       {hasScores && (
-                        <div className="flex items-center gap-3 mt-2 text-[9px] text-text-muted">
+                        <div className="flex items-center gap-3 mt-2 text-[9px] text-white/30">
                           <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-crown" /> Eagle</div>
                           <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-field" /> Birdie</div>
-                          <div className="flex items-center gap-1"><span className="text-text-secondary text-[10px]">—</span> Par</div>
+                          <div className="flex items-center gap-1"><span className="text-white/40 text-[10px]">—</span> Par</div>
                           <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-live-red" /> Bogey</div>
                           <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-live-red" /> Dbl+</div>
                         </div>
@@ -559,7 +563,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                   </span>
                 )}
                 {player.probabilities.makeCut != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--surface)] text-text-secondary font-medium">
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-white/[0.06] text-white/50 font-medium">
                     Cut {(player.probabilities.makeCut * 100).toFixed(1)}%
                   </span>
                 )}

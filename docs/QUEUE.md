@@ -5338,7 +5338,8 @@ This gives it the same dark glass look as the tournament banner's floating cards
 
 ---
 
-### 147 — Redesign PlayerScoreCard with better visual separation and color contrast `TODO` `MEDIUM`
+### 147 — Redesign PlayerScoreCard with better visual separation and color contrast `DONE` `MEDIUM`
+**Completed:** 2026-03-05 — Full restyle: dark header, distinct par/score rows, color-coded summaries, middle-dot empties, green accent labels, rounded tables, gold fantasy pts. Files: PlayerScoreCard.jsx (commit 1932061)
 
 **Priority:** MEDIUM — user experience during live tournament viewing
 
@@ -5401,6 +5402,77 @@ Redesign `frontend/src/components/tournament/PlayerScoreCard.jsx` with these imp
 - Summary columns (Out, In, Tot) stand out
 - Fantasy points breakdown is easy to scan
 - Works well on both light and dark mode
+
+---
+
+### 148 — Restyle TournamentLeaderboard inline scorecard drawer (the ACTUAL visible scorecard) `TODO` `HIGH`
+
+**Priority:** HIGH — this is the scorecard users actually see when clicking a player on the scoring page
+
+**Problem:** Item 147 updated `PlayerScoreCard.jsx` (standalone component), but the scorecard visible on the `/leagues/:id/scoring` page is actually an **inline scorecard embedded in `TournamentLeaderboard.jsx` (lines 343-568)**. This inline version still uses flat `bg-[var(--surface)]` / `bg-[var(--bg-alt)]` backgrounds that blend into the page. The user said: "feels like we could make the scorecard drawer have a different background color maybe to help" and noted the round score numbers feel oddly placed.
+
+**Prompt:**
+
+Restyle the **inline scorecard** in `frontend/src/components/tournament/TournamentLeaderboard.jsx` (lines 343-568). This is the expanded view that appears when you click a player row on the leaderboard. Apply the same design philosophy from the PlayerScoreCard.jsx redesign but adapted for this inline context.
+
+**1. Scorecard drawer wrapper (line 345):**
+- Current: `bg-[var(--surface-alt)] border-t border-[var(--card-border)]`
+- Change to: `bg-slate-900/95 backdrop-blur-md border-t border-white/10` — dark glassmorphic panel that clearly separates from the leaderboard rows above
+- This creates an obvious visual distinction when the scorecard expands
+
+**2. Round tabs (lines 347-373):**
+- Active tab: keep `bg-field-bright/20 text-field` (looks good)
+- Inactive reachable tabs: change from `bg-[var(--surface)]` to `bg-white/[0.06] text-white/60 hover:text-white/80 hover:bg-white/[0.10]`
+- Disabled tabs: `bg-white/[0.03] text-white/20 cursor-not-allowed`
+- Round score in parens: `text-white/50`
+
+**3. Overall summary chip (lines 376-382) — the "floating score":**
+- This is the overall to-par score sitting alone on the right of the round tabs. Make it more intentional:
+- Wrap in a subtle pill: `px-2 py-0.5 rounded-full bg-white/[0.06]`
+- Keep the existing color coding (green under par, red over)
+
+**4. Round label + status row (lines 422-447):**
+- "Round X" text: `text-white/90 font-semibold` (was `text-text-primary`)
+- Status badges: keep existing crown/field colors, they work
+- Round score on right (lines 437-445): the "floating -6" — give it context. Change to:
+  ```jsx
+  <span className="text-sm font-mono font-bold px-2 py-0.5 rounded bg-white/[0.08] {colorClass}">
+    {roundScore} ({toPar})
+  </span>
+  ```
+  So it's clearly a contained score chip, not a floating number
+
+**5. Scorecard tables — Front 9 and Back 9 (lines 449-524):**
+- Section labels ("Front 9", "Back 9"): `text-[10px] text-white/40 uppercase tracking-wider font-bold` with a left accent: add `<span className="w-1 h-3 bg-field-bright/40 rounded-full mr-1.5 inline-block" />` before the text
+- **Hole header row:** `bg-slate-800 text-white/60 font-mono` — dark distinct header
+- "Out" / "In" / "Tot" cells: `text-white/80 font-bold`
+- **Par row:** `bg-slate-800/40 text-white/40 font-mono` — slightly lighter than header
+- Par summary values: `font-bold text-white/50`
+- **Score row:** `bg-slate-900/50 text-white` — clean background for scores to pop
+- "Score" label: `text-field-bright text-[10px] font-bold`
+- Score summary totals: color-coded (under par `text-field-bright`, over par `text-live-red`, even `text-white/60`), `font-bold text-[11px]`
+- Add `rounded-lg overflow-hidden` to each table wrapper
+- Green top border on score row: keep the existing `border-t-2 border-field-bright/30`
+
+**6. Legend (lines 527-536):**
+- Update colors to work on dark background: `text-white/30` for label text
+- Circle/square borders should use the same colors (crown, field, live-red) — those are fine
+- "Par" dash: `text-white/40`
+
+**7. Probability chips (lines 543-567):**
+- These already use colored backgrounds — they should look fine on the dark drawer. Just verify `bg-[var(--surface)]` on the Cut chip changes to `bg-white/[0.06] text-white/50`
+
+**Files:**
+- `frontend/src/components/tournament/TournamentLeaderboard.jsx` — lines 343-568
+
+**Verification:**
+- Expanded scorecard drawer is visually distinct from the leaderboard rows (dark background creates clear separation)
+- Hole/Par/Score rows have clear visual hierarchy
+- Round scores are contained in pills/chips (not floating numbers)
+- All text is legible on the dark background (no `text-text-primary` or CSS var colors left in the scorecard section)
+- Front 9 / Back 9 labels have accent indicators
+- Works on mobile (overflow-x-auto is preserved)
+- ScoreCell component is untouched (circles/squares for birdie/bogey already work well)
 
 ---
 
