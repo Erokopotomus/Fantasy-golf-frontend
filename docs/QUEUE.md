@@ -4841,6 +4841,160 @@ DELETE FROM "RoundScore" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb' AND 
 
 ---
 
+### 132 — Stale 2025 Arnold Palmer data contaminating 2026 tournament `TODO` `CRITICAL`
+
+**Priority:** CRITICAL — affects every golf page on the platform right now
+
+**Problem:** The 2026 Arnold Palmer Invitational tournament record (`cmlabp7ot02mlo02tsztxojvb`) has been populated with the 2025 tournament's complete results. This stale data appears on EVERY golf surface:
+
+- **Tournament detail page** (`/tournaments/:id`): Full leaderboard shows 2025 final results — Nico Echavarria -17 (1st), Shane Lowry -15 (T2), Austin Smotherman -15 (T2), all marked "F" (finished). 182 players with positions and scores.
+- **Golf Hub** (`/golf`): "Last Week's Results" section shows Cognizant Classic as the header BUT the actual results listed (Nico Echavarria -17, Shane Lowry -15) are the Arnold Palmer 2025 data, not Cognizant Classic results. Cross-contaminated.
+- **League scoring page** (`/leagues/:id/scoring`): Leaderboard shows stale 2025 data. "LEADER: Nico Echavarria -17" on banner.
+- **League scoring widget**: Phantom "Optimal lineup: 13.5 pts" from stale Performance records for rostered players (Lowry, Hojgaard).
+
+**Root cause:** The ESPN or DataGolf sync created Performance + RoundScore records under the 2026 tournament ID using 2025 results. Also set `currentRound: 4` on the tournament record (should be 1 for R1 day).
+
+**DB fix needed:**
+```sql
+-- 1. Reset currentRound
+UPDATE "Tournament" SET "currentRound" = 1 WHERE id = 'cmlabp7ot02mlo02tsztxojvb';
+
+-- 2. Delete ALL stale RoundScore records for 2026 Arnold Palmer
+DELETE FROM "RoundScore" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb';
+
+-- 3. Delete ALL stale Performance records for 2026 Arnold Palmer
+DELETE FROM "Performance" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb';
+```
+
+**IMPORTANT:** The ESPN live sync cron should re-create these records with REAL 2026 R1 data on its next run. Verify the sync is running and pointing at the correct ESPN event ID for 2026.
+
+**Also investigate:** How did 2025 data get attached to the 2026 tournament? Check `historicalBackfill.js`, `espnSync.js`, and `datagolfSync.js` for year filtering bugs. The backfill may have matched the Arnold Palmer event name without checking the year.
+
+**Verification:**
+- Tournament detail page should show empty leaderboard or "Round not started" before R1 tee times
+- Golf Hub "Last Week's Results" should show actual Cognizant Classic results
+- League scoring should show 0.0 pts for all teams until real scores come in
+- After ESPN sync runs, real R1 data should populate
+
+---
+
+### 133 — Season Race page renders blank (route mismatch) `TODO` `HIGH`
+
+**Priority:** HIGH — entire page is broken
+
+**Problem:** The Season Race page at `/golf/season-race` renders a completely blank page — no content, no errors, no loading state, no API calls.
+
+**Root cause:** Route mismatch in `frontend/src/App.jsx`:
+- Line 582: Route is defined as `<Route path="/season-race" element={<SeasonRace />} />`
+- Golf Hub nav card links to `/golf/season-race`
+- React Router doesn't match `/golf/season-race` to `/season-race`, so nothing renders
+
+**Fix:** Change the route path in App.jsx:
+```jsx
+// Change line 582 from:
+<Route path="/season-race" element={<SeasonRace />} />
+// To:
+<Route path="/golf/season-race" element={<SeasonRace />} />
+```
+
+Also add a redirect from the old path:
+```jsx
+<Route path="/season-race" element={<Navigate to="/golf/season-race" replace />} />
+```
+
+**Files:**
+- `frontend/src/App.jsx` — line 582
+
+**Verification:**
+- Navigate to `/golf/season-race` from Golf Hub nav card — should render the Season Race page
+- Direct URL `/golf/season-race` should work
+- Old URL `/season-race` should redirect
+
+---
+
+### 134 — Prove It page shows "No Active Tournament" despite Arnold Palmer being IN_PROGRESS `TODO` `HIGH`
+
+**Priority:** HIGH — prediction slate unavailable during live tournament
+
+**Problem:** The Prove It page (`/prove-it`) shows "No Active Tournament — Performance calls will be available when the next tournament field is set" even though Arnold Palmer Invitational is `status: IN_PROGRESS` with 182 players in the field.
+
+**Likely cause:** The Prove It page's tournament detection query may:
+1. Look for a specific FantasyWeek status instead of tournament status
+2. Have the same `findFirst` ordering bug (picking Puerto Rico Open, then failing because it has no field data)
+3. Require a prediction slate to be manually created by an admin
+4. Check for `currentRound === 1` but the tournament has `currentRound: 4` (stale data)
+
+**Files to investigate:**
+- `frontend/src/pages/ProveIt.jsx` — how it fetches the active tournament/slate
+- `backend/src/routes/predictions.js` — active slate endpoint
+- Related: item 132 (stale data cleanup) may resolve this if the detection checks currentRound
+
+**Verification:**
+- Prove It page should show the Arnold Palmer Golf Slate with prediction options
+- All 8 prediction types should be available (winner, top 5/10/20, cut, R1 leader, H2H, SG)
+
+---
+
+### 135 — Golf Hub: All Course Fits show 100 "Elite Fit" `TODO` `MEDIUM`
+
+**Priority:** MEDIUM — misleading data
+
+**Problem:** The "Best Course Fits" section on the Golf Hub shows all 5 players at 100 "Elite Fit" for Bay Hill. Course Fit should differentiate between players — not every player is a perfect fit for every course. The metric appears broken or the normalization is too generous.
+
+**Files to investigate:**
+- Backend service that calculates Course Fit (likely `clutchMetricsService.js` or similar)
+- Check the Course Fit formula — may need recalibration or the course demand profile may be empty/defaulting to match-everything
+
+**Verification:**
+- Course Fit should show varying scores (e.g., Scheffler 95, McIlroy 88, etc.)
+- "Elite Fit" label should only apply to genuinely high-fit players
+
+---
+
+### 136 — Golf Hub: Puerto Rico Open under "Upcoming" despite being IN_PROGRESS + missing course name `TODO` `LOW`
+
+**Priority:** LOW — cosmetic/categorization
+
+**Problem:** On the Golf Hub page, the "Upcoming Schedule" section shows Puerto Rico Open as upcoming even though it's `status: IN_PROGRESS`. It should either:
+- Move to a "Live Now" section alongside the banner
+- Be excluded from "Upcoming"
+- Show an "In Progress" badge
+
+Also: Puerto Rico Open card is missing its course name (Grand Reserve Golf Club). Arnold Palmer correctly shows "Bay Hill".
+
+**Files:**
+- `frontend/src/pages/GolfHub.jsx` — upcoming schedule section, tournament card rendering
+- Check if the backend tournament record for Puerto Rico Open has `courseId` populated
+
+---
+
+### 137 — PlayerDrawer: IN_PROGRESS tournaments shown under "Recent Results" with "–" scores `TODO` `LOW`
+
+**Priority:** LOW — confusing but not blocking
+
+**Problem:** In the PlayerDrawer "This Week" tab, the "Recent Results" section shows Puerto Rico Open and Arnold Palmer with "–" for position and score. These are current/in-field events, not past results. Players who haven't started should either:
+- Not appear in "Recent Results" (only show COMPLETED tournaments)
+- Show "In Field" status instead of "–"
+
+**Files:**
+- `frontend/src/components/players/PlayerDrawer.jsx` — recent results rendering
+- Backend player profile endpoint — filter out IN_PROGRESS tournaments from recent results
+
+---
+
+### 138 — Tournament banner LEADER text clipped on Golf Hub `TODO` `LOW`
+
+**Priority:** LOW — cosmetic
+
+**Problem:** On the Golf Hub tournament banner, the "LEADER" label is visible at the bottom-right but the player name + score is clipped below the banner edge. The banner height may be insufficient or the leader section needs repositioning.
+
+**Note:** The leader data itself is also stale (Nico Echavarria -17 from 2025) — will be resolved by item 132.
+
+**Files:**
+- `frontend/src/pages/GolfHub.jsx` — tournament banner component, height/overflow
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
