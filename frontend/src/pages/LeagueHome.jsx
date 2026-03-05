@@ -21,7 +21,6 @@ import PhaseActionRow from '../components/league/PhaseActionRow'
 import { useLeaguePhase } from '../hooks/useLeaguePhase'
 import { formatDate } from '../utils/dateUtils'
 import { buildLabUrl } from '../utils/labBridge'
-import { computePowerScore } from '../utils/clutchMetrics'
 
 const LeagueHome = () => {
   const { leagueId } = useParams()
@@ -130,7 +129,6 @@ const LeagueHome = () => {
 
   // Fetch current tournament for the widget (golf leagues only)
   const [tournamentField, setTournamentField] = useState([])
-  const [tournamentWeather, setTournamentWeather] = useState([])
   useEffect(() => {
     if (isNflLeague) return
     api.getCurrentTournament()
@@ -149,12 +147,6 @@ const LeagueHome = () => {
               setTournamentField(flat)
             })
             .catch(() => {})
-          // Fetch weather for upcoming/live tournaments
-          if (t.status === 'UPCOMING' || t.status === 'IN_PROGRESS') {
-            api.getTournamentWeather(t.id)
-              .then(wData => setTournamentWeather(wData?.weather || []))
-              .catch(() => {})
-          }
         }
       })
       .catch(() => {})
@@ -235,42 +227,6 @@ const LeagueHome = () => {
   const leaderStanding = league?.standings?.[0]
   const leaderPoints = leaderStanding?.totalPoints || 0
   const pointsDiff = leaderPoints - userPoints
-
-  // --- Tournament Intel (compact widgets below banner) ---
-  const topFieldPlayers = useMemo(() => {
-    if (!tournamentField || tournamentField.length === 0) return []
-    return [...tournamentField]
-      .map(p => ({ ...p, _powerScore: computePowerScore(p) }))
-      .filter(p => p._powerScore != null)
-      .sort((a, b) => b._powerScore - a._powerScore)
-      .slice(0, 5)
-  }, [tournamentField])
-
-  const courseDnaSummary = useMemo(() => {
-    const course = currentTournament?.course && typeof currentTournament.course === 'object'
-      ? currentTournament.course : null
-    if (!course) return null
-    const cats = [
-      { label: 'Driving', value: course.drivingImportance },
-      { label: 'Approach', value: course.approachImportance },
-      { label: 'Short Game', value: course.aroundGreenImportance },
-      { label: 'Putting', value: course.puttingImportance },
-    ].filter(d => d.value != null)
-    const premium = cats.filter(d => d.value >= 0.27).sort((a, b) => b.value - a.value)
-    if (premium.length === 0) return null
-    return premium.map(s => `SG: ${s.label}`).join(' + ') + ' dominant'
-  }, [currentTournament])
-
-  const weatherConditionIcon = (cond) => {
-    if (!cond) return '☀'
-    const c = cond.toLowerCase()
-    if (c.includes('rain') || c.includes('shower')) return '🌧'
-    if (c.includes('storm') || c.includes('thunder')) return '⛈'
-    if (c.includes('cloud') || c.includes('overcast')) return '☁'
-    if (c.includes('clear') || c.includes('sunny')) return '☀'
-    if (c.includes('partly')) return '⛅'
-    return '🌤'
-  }
 
   const { phase: leaguePhase } = useLeaguePhase({ league, currentTournament })
   const isCommissioner = league?.ownerId === user?.id || league?.owner?.id === user?.id
@@ -737,84 +693,6 @@ const LeagueHome = () => {
                 </div>
               </Link>
 
-              {/* Compact Tournament Intel Strip */}
-              {(topFieldPlayers.length > 0 || courseDnaSummary || tournamentWeather.length > 0) && (
-                <div className="mt-2 rounded-xl border border-white/10 bg-slate-900/80 backdrop-blur-md shadow-lg px-5 py-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                    {/* Top Field Players by Power Rank */}
-                    {topFieldPlayers.length > 0 && (
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[10px] text-white/50 uppercase tracking-wider font-bold whitespace-nowrap">Top Field</span>
-                        <div className="flex items-center gap-1.5 overflow-x-auto min-w-0">
-                          {topFieldPlayers.map((p, i) => (
-                            <Link
-                              key={p.id}
-                              to={`/players/${p.id}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/[0.06] hover:bg-gold/15 transition-colors shrink-0 group/player"
-                              title={`#${i + 1} Power Rank — CPI: ${p.clutchMetrics?.cpi?.toFixed(1) ?? '?'} | Form: ${p.clutchMetrics?.formScore != null ? Math.round(p.clutchMetrics.formScore) : '?'} | Fit: ${p.clutchMetrics?.courseFitScore != null ? Math.round(p.clutchMetrics.courseFitScore) : '?'}`}
-                            >
-                              <span className={`text-[10px] font-mono font-bold ${i === 0 ? 'text-gold' : i < 3 ? 'text-crown' : 'text-white/40'}`}>
-                                {i + 1}
-                              </span>
-                              {p.headshotUrl ? (
-                                <img src={p.headshotUrl} alt="" className="w-4 h-4 rounded-full object-cover bg-white/10" />
-                              ) : p.countryFlag ? (
-                                <span className="text-[10px]">{p.countryFlag}</span>
-                              ) : null}
-                              <span className="text-[11px] font-medium text-white/90 group-hover/player:text-gold transition-colors whitespace-nowrap">
-                                {p.name?.split(' ').pop()}
-                              </span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Divider (desktop only) */}
-                    {topFieldPlayers.length > 0 && (courseDnaSummary || tournamentWeather.length > 0) && (
-                      <div className="hidden sm:block w-px h-5 bg-white/15" />
-                    )}
-
-                    {/* Course DNA one-liner */}
-                    {courseDnaSummary && (
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] text-white/50 uppercase tracking-wider font-bold whitespace-nowrap">Course DNA</span>
-                        <span className="text-[11px] font-mono font-medium text-emerald-400 whitespace-nowrap">
-                          {courseDnaSummary}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Divider (desktop only) */}
-                    {courseDnaSummary && tournamentWeather.length > 0 && (
-                      <div className="hidden sm:block w-px h-5 bg-white/15" />
-                    )}
-
-                    {/* Weather compact */}
-                    {tournamentWeather.length > 0 && (
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] text-white/50 uppercase tracking-wider font-bold whitespace-nowrap">Weather</span>
-                        <div className="flex items-center gap-2">
-                          {tournamentWeather.slice(0, 4).map((w) => (
-                            <div key={w.round} className="flex items-center gap-0.5" title={`Round ${w.round}: ${w.conditions || ''}`}>
-                              <span className="text-[10px] font-mono text-white/40">R{w.round}</span>
-                              <span className="text-xs">{weatherConditionIcon(w.conditions)}</span>
-                              <span className="text-[10px] font-mono font-bold text-white/90">
-                                {w.temperature != null ? `${Math.round(w.temperature)}°` : '--'}
-                              </span>
-                              {w.windSpeed != null && (
-                                <span className="text-[9px] font-mono text-white/40">
-                                  {Math.round(w.windSpeed)}mph
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
