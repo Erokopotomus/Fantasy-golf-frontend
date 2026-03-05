@@ -5585,7 +5585,8 @@ Redesign the **inline scorecard** in `frontend/src/components/tournament/Tournam
 
 ---
 
-### 150 — LiveScoringWidget V2: light+dark mode redesign (MOCKUP PROVIDED) `TODO` `HIGH`
+### 150 — LiveScoringWidget V2: light+dark mode redesign (MOCKUP PROVIDED) `DONE` `HIGH`
+**Completed:** 2026-03-05 — Full light+dark restyle: column headers, status dots, progress bar, YOU badge, rank colors, skeleton. Files: LiveScoringWidget.jsx (commit e0e798b)
 
 **Priority:** HIGH — user provided both light and dark mode mockups. Current widget is dark-only (item 146).
 
@@ -5655,7 +5656,8 @@ Restyle `frontend/src/components/league/LiveScoringWidget.jsx` to support BOTH l
 
 ---
 
-### 151 — Clickable team names in LiveScoringWidget → team roster drawer `TODO` `MEDIUM`
+### 151 — Clickable team names in LiveScoringWidget → team roster drawer `DONE` `MEDIUM`
+**Completed:** 2026-03-05 — Slide-in drawer with rank badge, total pts, full roster + bench, status dots, Escape/backdrop/X close. Backend already returns starters for all teams. Files: LiveScoringWidget.jsx (commit e0e798b)
 
 **Priority:** MEDIUM — quality-of-life feature for glancing at opponents' rosters during live tournaments
 
