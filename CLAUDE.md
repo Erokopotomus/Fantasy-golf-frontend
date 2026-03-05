@@ -262,6 +262,7 @@ Per-user coaching memory system — the AI coach remembers each user's tendencie
 - [ ] **Native Mobile App** (React Native / Expo)
 - [ ] **League Entry Fee Processing** (Stripe Connect, 5-10% platform fee)
 - [ ] **In-Roster Expert Insights** — per-player consensus + top analyst calls (requires ~50 active predictors)
+- [ ] **White-Glove League History Import** (one-time fee, ~$50-$100) — Commissioner provides their data (spreadsheets, Yahoo credentials, screenshots, Google Sheets) and Clutch handles the full backfill: draft history with auction values, keeper flags, owner name mapping, season records, playoff results. Think "concierge data migration." Targets commissioners who value their league history but don't want to deal with the tedious cleanup. Eric's insight: "I'd pay $100 to get my league history imported and not have to deal with all this." Even if not every commissioner values it equally, the ones who do will pay premium. Revenue model: one-time per-league fee, potentially tiered by league age (5yr/$50, 10yr/$75, 15+yr/$100). Implementation: admin tool + manual review pipeline, eventually semi-automated with AI-assisted data matching.
 
 ---
 
@@ -278,6 +279,7 @@ All 5 platforms enhanced with raw data preservation, transaction import, opinion
 - **Cleanup NFL test data**: `node backend/prisma/seedNflTestLeague.js cleanup` — run before production deploy
 - **Draft Owner Name Merge Tool**: Yahoo-imported draft picks use short nicknames ("Tank", "AO", "Mase R", "Spencer H") that don't map to canonical owner names. Need a merge UI (similar to the owner assignment wizard in league import) where commissioners can map Yahoo draft nicknames → canonical owners, then persist the mappings. Final step of data backfill cleanup — cosmetic only, draft intelligence shows extra rows for unmapped names.
 - **New Member Welcome Experience**: When a user joins a league via invite link, add a visually engaging "You're In" moment — welcome animation, league info reveal, team name prompt, meet-the-league roster preview. Think mini vault-reveal energy for first-time league entry. Makes joining feel like an event, not just a redirect.
+- **Yahoo Website Draft Data Scraping**: Yahoo's API omits auction `cost` values for most historical seasons, but the website (`/league/{key}/{year}/draftresults`) may display them. Need to verify once Yahoo is back up. If confirmed, build a copy/paste or screenshot-based import path for draft dollar values. Could feed into the white-glove service or be a self-serve tool.
 
 ---
 

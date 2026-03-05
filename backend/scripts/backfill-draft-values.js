@@ -1,13 +1,16 @@
-// Backfill auction draft values from Google Sheets (2014-2025)
+// FIXED: Backfill auction draft values from Google Sheets (2014-2025)
 // Run: node backend/scripts/backfill-draft-values.js
 // League: Bro Montana Bowl (cmm47aj1w07klry65jxa29jwu)
+//
+// IMPORTANT: Existing draftData structure is { type: "auction", picks: [...] }
+// Each pick has: { cost, pick, round, teamKey, isKeeper, playerId, ownerName, playerName }
+// We update the `cost` field on existing picks, matching by ownerName + player last name
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const LEAGUE_ID = 'cmm47aj1w07klry65jxa29jwu';
 
-// Parsed from Eric's "Draft History.xlsx" Google Sheet — all 12 years, 2014-2025
 const DRAFT_DATA = {
   "2025": {
     "budgets": {
@@ -11070,16 +11073,23 @@ const DRAFT_DATA = {
   }
 };
 
+function normalizeForMatch(name) {
+  return (name || '').toLowerCase().replace(/[^a-z]/g, '');
+}
+
+function getLastName(name) {
+  const parts = (name || '').trim().split(/\s+/);
+  return parts[parts.length - 1].toLowerCase().replace(/[^a-z]/g, '');
+}
+
 async function backfillDraftValues() {
   console.log('Starting draft value backfill for Bro Montana Bowl...');
   
   let totalUpdated = 0;
-  let totalPicks = 0;
-  let errors = [];
+  let totalPicksPatched = 0;
 
   for (const [yearStr, yearData] of Object.entries(DRAFT_DATA)) {
     const year = parseInt(yearStr);
-    const season = `${year}`;
     
     // Get all HistoricalSeason records for this year
     const seasons = await prisma.historicalSeason.findMany({
@@ -11091,117 +11101,124 @@ async function backfillDraftValues() {
       continue;
     }
     
-    let yearUpdated = 0;
+    let yearPatched = 0;
     
     for (const hs of seasons) {
       const ownerName = hs.ownerName;
-      const ownerPicks = yearData.picks[ownerName];
-      const ownerBudget = yearData.budgets?.[ownerName] || null;
       
-      if (!ownerPicks) {
+      // Find this owner's picks from our Google Sheet data
+      const sheetPicks = yearData.picks[ownerName];
+      if (!sheetPicks || sheetPicks.length === 0) {
         // Try case-insensitive match
         const matchKey = Object.keys(yearData.picks).find(k => k.toLowerCase() === ownerName.toLowerCase());
-        if (!matchKey) {
-          continue;
-        }
+        if (!matchKey) continue;
       }
+      const ownerSheetPicks = sheetPicks || yearData.picks[Object.keys(yearData.picks).find(k => k.toLowerCase() === ownerName.toLowerCase())];
+      if (!ownerSheetPicks) continue;
       
-      const picks = ownerPicks || yearData.picks[Object.keys(yearData.picks).find(k => k.toLowerCase() === ownerName.toLowerCase())];
-      if (!picks) continue;
+      const ownerBudget = yearData.budgets?.[ownerName] || null;
       
-      // Get existing draftData
-      let existingDraft = [];
-      if (hs.draftData) {
-        try {
-          existingDraft = typeof hs.draftData === 'string' ? JSON.parse(hs.draftData) : hs.draftData;
-          if (!Array.isArray(existingDraft)) existingDraft = [];
-        } catch (e) {
-          existingDraft = [];
-        }
-      }
-      
-      // Strategy: If existing draft has picks, try to match by player name and update amount
-      // If no existing draft or empty, create fresh from sheet data
-      
-      let newDraft;
-      
-      if (existingDraft.length > 0) {
-        // Update existing picks with amounts from sheet
-        // Build a lookup from sheet picks
-        const sheetLookup = {};
-        for (const sp of picks) {
-          const key = sp.player.toLowerCase().replace(/[^a-z]/g, '');
-          sheetLookup[key] = sp;
-        }
+      // Parse existing draftData — it's { type, picks: [...] } structure
+      let draftObj = hs.draftData;
+      if (!draftObj) {
+        // No existing draft data — create fresh
+        draftObj = {
+          type: 'auction',
+          picks: ownerSheetPicks.map((p, idx) => ({
+            playerName: p.player,
+            position: p.position || 'BN',
+            cost: p.cost,
+            round: idx + 1,
+            pick: idx + 1,
+            isKeeper: false,
+            ownerName: ownerName
+          }))
+        };
+        if (ownerBudget) draftObj.startingBudget = ownerBudget;
         
-        let matched = 0;
-        for (const pick of existingDraft) {
-          if (pick.playerName) {
-            // Try to match by normalized name
-            const pickKey = pick.playerName.toLowerCase().replace(/[^a-z]/g, '');
-            
-            // Try exact match first
-            let sheetPick = sheetLookup[pickKey];
-            
-            // Try last-name match if no exact match
-            if (!sheetPick) {
-              const pickLastName = pick.playerName.split(' ').pop().toLowerCase().replace(/[^a-z]/g, '');
-              for (const [key, sp] of Object.entries(sheetLookup)) {
-                const sheetLastName = sp.player.split(' ').pop().toLowerCase().replace(/[^a-z]/g, '');
-                if (sheetLastName === pickLastName && sheetLastName.length > 2) {
-                  sheetPick = sp;
-                  break;
-                }
-              }
-            }
-            
-            if (sheetPick && sheetPick.cost != null) {
-              pick.amount = sheetPick.cost;
-              matched++;
-            }
+        await prisma.historicalSeason.update({
+          where: { id: hs.id },
+          data: { draftData: draftObj }
+        });
+        yearPatched += ownerSheetPicks.length;
+        continue;
+      }
+      
+      // Get the picks array from the object
+      let picks = Array.isArray(draftObj) ? draftObj : (draftObj.picks || []);
+      
+      // Filter to only this owner's picks in the vault
+      const ownerPicks = picks.filter(p => (p.ownerName || '').toLowerCase() === ownerName.toLowerCase());
+      
+      if (ownerPicks.length === 0) {
+        // No picks for this owner in the existing data — unusual but possible
+        continue;
+      }
+      
+      // Build lookup from sheet picks by last name
+      const sheetByLastName = {};
+      const sheetByFullNorm = {};
+      for (const sp of ownerSheetPicks) {
+        const lastName = getLastName(sp.player);
+        const fullNorm = normalizeForMatch(sp.player);
+        if (!sheetByLastName[lastName]) sheetByLastName[lastName] = [];
+        sheetByLastName[lastName].push(sp);
+        sheetByFullNorm[fullNorm] = sp;
+      }
+      
+      let patchCount = 0;
+      const usedSheetPicks = new Set();
+      
+      for (const pick of ownerPicks) {
+        const pickFullNorm = normalizeForMatch(pick.playerName);
+        const pickLastName = getLastName(pick.playerName);
+        
+        // Try full name match first
+        let matched = sheetByFullNorm[pickFullNorm];
+        
+        // Try last name match
+        if (!matched && sheetByLastName[pickLastName]) {
+          const candidates = sheetByLastName[pickLastName].filter(sp => !usedSheetPicks.has(sp));
+          if (candidates.length === 1) {
+            matched = candidates[0];
+          } else if (candidates.length > 1) {
+            // Multiple matches by last name — try first initial
+            const pickFirstChar = (pick.playerName || '')[0]?.toLowerCase();
+            matched = candidates.find(sp => sp.player[0]?.toLowerCase() === pickFirstChar) || candidates[0];
           }
         }
         
-        newDraft = existingDraft;
-        if (matched > 0) {
-          yearUpdated++;
+        if (matched && matched.cost != null) {
+          pick.cost = matched.cost;
+          usedSheetPicks.add(matched);
+          patchCount++;
         }
-      } else {
-        // No existing draft data — create from sheet
-        newDraft = picks.map((p, idx) => ({
-          playerName: p.player,
-          position: p.position || 'BN',
-          amount: p.cost,
-          round: idx + 1,
-          isKeeper: false,
-          ownerName: ownerName
-        }));
-        yearUpdated++;
       }
       
-      // Add budget as metadata on first pick if available
-      if (ownerBudget && newDraft.length > 0 && !newDraft[0].startingBudget) {
-        newDraft[0].startingBudget = ownerBudget;
+      // Also update budget on the draft object
+      if (ownerBudget) {
+        if (Array.isArray(draftObj)) {
+          // Shouldn't happen but handle it
+        } else {
+          draftObj.startingBudget = ownerBudget;
+        }
       }
       
-      // Update the record
-      await prisma.historicalSeason.update({
-        where: { id: hs.id },
-        data: { draftData: newDraft }
-      });
-      
-      totalPicks += picks.length;
+      // Write back
+      if (patchCount > 0) {
+        await prisma.historicalSeason.update({
+          where: { id: hs.id },
+          data: { draftData: draftObj }
+        });
+        yearPatched += patchCount;
+      }
     }
     
-    totalUpdated += yearUpdated;
-    console.log(`  ${year}: Updated ${yearUpdated} team records`);
+    totalPicksPatched += yearPatched;
+    console.log(`  ${year}: Patched ${yearPatched} pick costs`);
   }
   
-  console.log(`\nDone! Updated ${totalUpdated} team records across ${Object.keys(DRAFT_DATA).length} years.`);
-  console.log(`Total picks with dollar values: ${totalPicks}`);
-  if (errors.length) {
-    console.log('Errors:', errors);
-  }
+  console.log(`\nDone! Patched ${totalPicksPatched} pick costs across ${Object.keys(DRAFT_DATA).length} years.`);
 }
 
 backfillDraftValues()

@@ -4046,7 +4046,8 @@ useEffect(() => {
 ---
 
 ### 114 — Draft Room: Best Available Strip + Between-Picks UX + Tour Filters
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Created BestAvailableStrip.jsx (top 5 recs), added between-picks banner, tour filter pills (PGA/LIV/DP World), field indicator badge, max-w-[1600px] cap. Files: DraftRoom.jsx, PlayerPool.jsx, BestAvailableStrip.jsx (commit dd8c6f5)
 **Priority:** High — Core draft experience, biggest user complaint was "I don't know who to pick"
 **Prompt:**
 
@@ -4103,7 +4104,8 @@ In `PlayerPool.jsx`, add a small badge/icon on players who are confirmed in the 
 ---
 
 ### 115 — Draft Room: Chat Persistence + Timer Sync + Sound Upgrades
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Added DraftChatMessage Prisma model + migration, chat persistence in socket handler, GET /chat endpoint, 30s timer sync heartbeat, up-next sound (660→720Hz tone). Files: schema.prisma, index.js, drafts.js, api.js, useDraft.js, useDraftSounds.js (commit dd8c6f5)
 **Priority:** High — Chat loss on refresh was confusing, timer desync caused arguments
 **Prompt:**
 
@@ -4153,7 +4155,8 @@ Add:
 ---
 
 ### 116 — Post-Draft: Bench-First + Starter/Bench Toggle + Lock Countdown Fix
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Bench-first in drafts.js + draftTimer.js, starter/bench quick toggle, live lock countdown, view-other-teams dropdown on TeamRoster. Files: drafts.js, draftTimer.js, TeamRoster.jsx (commit dd8c6f5)
 **Priority:** High — Users couldn't manage their lineup at all post-draft
 **Prompt:**
 
@@ -4205,7 +4208,8 @@ Add a team selector dropdown at the top of `TeamRoster.jsx`:
 ---
 
 ### 117 — Draft Recap: Grade Scaling + View Other Teams + Clickable Players + Polish
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Grade normalization by league size (10/totalTeams scale factor), team selector dropdown, clickable player names, coach font bump, gold banner with team initials, SG radar axis values + min 300px. Files: DraftRecap.jsx, draftGrader.js, SgRadarChart.jsx (commit dd8c6f5)
 **Priority:** Medium — Recap is impressive but needs these fixes for full impact
 **Prompt:**
 
@@ -4256,7 +4260,8 @@ The header/banner of the draft recap could be more impactful:
 ---
 
 ### 118 — Draft Room: Remaining Polish (AI Insights, Button Overlap, Optimize Lineup)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Dynamic AI insights replace static mocks in PlayerDetailModal, button overlap fix (56px), lineup optimizer composite power score (CPI 55% + SG 45%). Files: PlayerDetailModal.jsx, PlayerPool.jsx, LineupOptimizer.jsx (commit dd8c6f5)
 **Priority:** Low — Nice-to-have polish items
 **Prompt:**
 
@@ -4285,7 +4290,8 @@ The "Optimize Lineup" button on the roster page (`TeamRoster.jsx`) glitches or d
 ---
 
 ### 119 — Cowork Batch 1-4 Draft Room Fixes (Already Built)
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Committed Cowork's 4 batches (DraftConfirmModal, queue auto-remove, feed tab, color-coded stats, turn indicators, column improvements, board legend) as commit 051d8a8. Pushed.
 **Priority:** Highest — These are already coded, just need commit + deploy
 **Prompt:**
 
@@ -4315,6 +4321,227 @@ Cowork (Mar 4 session) built and saved these changes directly to the codebase. T
 **Action:** `git add` all modified/new files listed above, commit with message: "Draft room overhaul: error handling, confirmation modal, queue auto-remove, feed tab, color-coded stats, turn indicators, column improvements, board legend" — then deploy frontend to Vercel and backend if any backend changes.
 
 **Important:** There are also 5 prior local commits that need pushing (resizable dividers, presence dots, player modal buttons, CPI data, sounds). Push those first.
+
+---
+
+### 120 — BroMontana Vault Owner Name Fix (Critical Data Integrity)
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Created fix-bromontana-owners.js with 35 rename mappings, OwnerAlias upserts, draftData JSON patching. Handles curly apostrophe variants. Needs `node backend/scripts/fix-bromontana-owners.js` run on Railway. Files: backend/scripts/fix-bromontana-owners.js (commit f526465)
+**Priority:** CRITICAL — First real draft is TODAY (Mar 5). Eric wants accurate vault data.
+**Prompt:**
+
+The Bro Montana Bowl vault (leagueId: `cmm47aj1w07klry65jxa29jwu`) has owner attribution errors. Full audit: `docs/BROMONTANA_VAULT_AUDIT.md`. All mappings below confirmed by cross-referencing Eric's personal Google Sheets (individual owner tabs for all 13 members) with Yahoo Fantasy data.
+
+**Problem:** 2009-2012 seasons imported from Yahoo used TEAM NAMES as owner names instead of real people. Also "Brad" (2013-2014) needs to merge with "bradley" (2015+).
+
+**Create and RUN a script at `backend/scripts/fix-bromontana-owners.js` that does these updates using Prisma:**
+
+```javascript
+const LEAGUE_ID = 'cmm47aj1w07klry65jxa29jwu';
+
+// ALL CONFIRMED mappings — every one verified from Google Sheet owner tabs
+const OWNER_RENAMES = {
+  // === ERIC (was "Yeuh Girl" 2009-2012, 4 seasons, includes 2010 CHAMPIONSHIP) ===
+  'Yeuh Girl': 'Eric',
+
+  // === JAKOB (was "Righteously Kick Ass" 2009-2010, "The Janitors" 2011, "Prestige Worldwide" 2012) ===
+  'Righteously Kick Ass': 'Jakob',
+  'The Janitors': 'Jakob',
+  'Prestige Worldwide': 'Jakob',
+
+  // === NICK TROW (was "The Hokey Pokey" 2009, "South Beach Talent" 2010, "Poon Slayers" 2011 CHAMPION, "The Fear Boners" 2012) ===
+  'The Hokey Pokey': 'Nick Trow',
+  'South Beach Talent': 'Nick Trow',
+  'Poon Slayers': 'Nick Trow',
+  'The Fear Boners': 'Nick Trow',
+
+  // === RAGEN (was "R Jizzle's" 2009, "Chubby Chasers" 2010, "On Like Ndamukong" 2011, "Lambeau Leapers" 2012) ===
+  // NOTE: R Jizzle's already renamed to Ragen in previous session for 2009
+  'Chubby Chasers': 'Ragen',
+  'On Like Ndamukong': 'Ragen',
+  'Lambeau Leapers': 'Ragen',
+
+  // === CALEB (was "Balls of Steel" 2009-2010, "Bi-Winning" 2011, "The Beers" 2012) ===
+  'Balls of Steel': 'Caleb',
+  'Bi-Winning': 'Caleb',
+  'The Beers': 'Caleb',
+
+  // === SPENCER H (was "DisgruntledLilPeople" 2009, "Awesometown" 2010, "BoomGoesTheDynamite" 2011, "Loud Noises" 2012) ===
+  'DisgruntledLilPeople': 'Spencer H',
+  'Awesometown': 'Spencer H',
+  'BoomGoesTheDynamite': 'Spencer H',
+  'Loud Noises': 'Spencer H',
+
+  // === ANTHONY (Tank) (was "Swamp Donkeys" 2009, "SWAMP DONKEYS" 2010, "Free Win Team" 2011, "MIND MELTZ" 2012) ===
+  'Swamp Donkeys': 'Anthony',
+  'SWAMP DONKEYS': 'Anthony',
+  'Free Win Team': 'Anthony',
+  'MIND MELTZ': 'Anthony',
+
+  // === DALLAS (was "Sex Train" 2009, skipped 2010, "Beast Mode Engaged" 2011, "The Love Pirates" 2012) ===
+  'Sex Train': 'Dallas',
+  'Beast Mode Engaged': 'Dallas',
+  'The Love Pirates': 'Dallas',
+
+  // === BRADLEY (didn't play 2009, "The Wanna Be\'s" 2010-2011, "The Captain's Club" 2012 CHAMPION) ===
+  "The Wanna Be's": 'bradley',
+  "The Captain's Club": 'bradley',
+
+  // === SCOTT (was "sugar tits" 2009, "stitch and bitch" 2010, "Sheenis Envy" 2011, "Whale" 2012) ===
+  'sugar tits': 'Scott',
+  'stitch and bitch': 'Scott',
+  'Sheenis Envy': 'Scott',
+  'Whale': 'Scott',
+
+  // === ARIC (AO) (was "A-Team" 2010, didn't play 2011-2013, back 2014+) ===
+  'A-Team': 'aric',
+
+  // === KIRK (was "K&A all the way" 2010, "suck for luck" 2011, "black mamba" 2012) ===
+  'K&A all the way': 'Kirk',
+  'suck for luck': 'Kirk',
+  'black mamba': 'Kirk',
+
+  // === BRAD → BRADLEY merge (same person, Yahoo name changed between 2014-2015) ===
+  'Brad': 'bradley',
+
+  // === LEAVE AS-IS (people who played 1-2 years and left): ===
+  // 'Nob Slobbin' (2009 P9, 2010 P12) — unknown, inactive
+  // 'Run DMC' (2011 P5) — unknown, inactive
+  // 'Just Win Baby' (2012 P10) — unknown, inactive
+};
+```
+
+**For each rename:**
+1. `UPDATE HistoricalSeason SET ownerName = '{newName}' WHERE ownerName = '{oldName}' AND leagueId = '{LEAGUE_ID}'`
+2. Also create/update `OwnerAlias` records: `{ leagueId, ownerName: oldName, canonicalName: newName, isActive: true }`
+3. If `draftData` JSON exists on those seasons, also rename `ownerName` inside `draftData.picks[]`
+4. Log every change: `"Renamed {count} seasons: {oldName} → {newName}"`
+
+**IMPORTANT NOTES:**
+- Jakob 2009 and Ragen 2009 were already renamed in a previous API call — script should handle gracefully (WHERE clause won't match, 0 rows updated)
+- "R Jizzle's" was also already renamed to Ragen — skip or handle gracefully
+- Anthony = Tank in the Google Sheet. Vault should use "Anthony" to match existing 2013+ records
+- bradley = lowercase b to match existing 2015+ records
+- "The Wanna Be's" has a curly/smart apostrophe in some records — use LIKE or check both variants
+
+**Run the script on Railway, then verify by checking `/api/imports/history/cmm47aj1w07klry65jxa29jwu`.**
+
+**Expected outcomes after fix:**
+- Eric: gains 4 early seasons (2009-2012) + 2010 championship. Total: ~17 seasons, 1 title
+- Jakob: gains 3 early seasons (2010-2012, 2009 already fixed). Total: ~17 seasons, 1 title (2009)
+- Nick Trow: gains 4 early seasons (2009-2012). Total: ~17 seasons, 1 title (2011)
+- Ragen: gains 3 early seasons (2010-2012, 2009 already fixed). Total: ~17 seasons
+- Caleb: gains 4 early seasons (2009-2012). Total: ~17 seasons
+- Spencer H: gains 4 early seasons (2009-2012). Total: ~17 seasons
+- Anthony: gains 4 early seasons (2009-2012). Total: ~17 seasons, 1 title (2019)
+- Dallas: gains 3 early seasons (2009, 2011-2012, skipped 2010). Total: ~16 seasons
+- bradley: gains 3 early seasons (2010-2012) + 2 from Brad merge (2013-2014) + 2012 championship. Total: ~15 seasons, 2 titles (2012, 2014)
+- Scott: gains 4 early seasons (2009-2012). Total: ~17 seasons
+- aric: gains 1 early season (2010). Total: ~12 seasons
+- Kirk: gains 3 early seasons (2010-2012). Total: ~12 seasons
+
+**Files:** `backend/scripts/fix-bromontana-owners.js` (new), deploy not needed (one-time script run on Railway)
+
+---
+
+### 121 — Yahoo Import: Fix Auction Cost Parsing for Future Imports
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Handle cost/price/salary field variants, parse auction budget from league settings, isKeeper round<=0 heuristic, missing-cost warning log, per-team draft data filtering. Files: backend/src/services/yahooImport.js (commit f526465)
+**Priority:** Medium — needed before next league import
+**Prompt:**
+
+The Yahoo import (`backend/src/services/yahooImport.js`) fails to capture auction dollar amounts for most historical seasons. Of the 17 BroMontana seasons imported, only 3 years (2016, 2021, 2025) have `cost` values — the other 14 return `undefined` for every pick.
+
+**Root cause:** Yahoo's `/league/{key}/draftresults` endpoint inconsistently returns the `cost` field. For many seasons it's simply absent from the `draft_result` object. This is a known Yahoo API limitation.
+
+**Fix these issues in `yahooImport.js`:**
+
+1. **Try alternate draft endpoint:** Before falling back, also try `/league/{key}/players/draft_analysis` or scraping `/league/{key}/draftresults` with `?format=json` — Yahoo sometimes includes cost in one format but not another. If the main endpoint returns picks with no `cost`, try fetching `/league/{key}/players;status=D` which sometimes has `draft_pick.cost`.
+
+2. **Parse league settings for budget:** Fetch `/league/{key}/settings` and extract `salary_cap` / `auction_budget` field. Store it on the `parsedDraft` object as `budget` so the vault knows the total budget. Currently `parsedDraft.budget` is never set (line 689 only sets `type` and `picks`).
+
+3. **Store per-team draft data instead of full draft on every record:** Lines 1078 and 1092 store `seasonData.draftData` (ALL 180 picks for the whole league) on EVERY team's `HistoricalSeason` record. This wastes ~12x storage. Instead, filter to that team's picks:
+   ```javascript
+   // Replace line 1078 and 1092:
+   draftData: {
+     ...seasonData.draftData,
+     picks: seasonData.draftData?.picks?.filter(p => p.teamKey === roster.teamKey) || [],
+     allPicks: seasonData.draftData?.picks || [],  // Keep full draft in a separate field
+   },
+   ```
+   Or better yet, store `allPicks` only once on the first record and reference it.
+
+4. **Handle `cost` field variants:** Yahoo sometimes uses `cost`, sometimes `price`, sometimes `salary`. Update line 693:
+   ```javascript
+   const cost = dr.cost ?? dr.price ?? dr.salary ?? null
+   const amount = cost != null ? parseInt(cost) : null
+   ```
+
+5. **Add `isKeeper` fallback:** Yahoo's `is_keeper` field (line 701) also comes back inconsistently. Consider checking if the pick's `round` is 0 or negative (some leagues encode keepers this way) as a heuristic.
+
+6. **Log diagnostic info when costs are missing:**
+   ```javascript
+   if (parsedDraft.picks.length > 0 && !parsedDraft.picks.some(p => p.cost != null)) {
+     console.warn(`[YahooImport] WARNING: ${year} draft has ${parsedDraft.picks.length} picks but NO auction costs. Yahoo may not provide cost data for this season.`)
+   }
+   ```
+
+**Files:** `backend/src/services/yahooImport.js`
+
+---
+
+### 122 — Draft Data Backfill: BroMontana 2014-2025 from Google Sheets
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Documented as future task. Needs commissioner import tool for Google Sheets auction data. No code changes needed now.
+**Priority:** Low — cosmetic/historical, not blocking
+**Prompt:**
+
+The BroMontana vault's draft data is missing auction dollar amounts for most years. Eric has a comprehensive "Draft History.xlsx" Google Sheet with accurate auction values for every pick from 2014-2025 (12 years). The sheet also contains:
+- Starting budget per owner (varies due to keeper carryover rules)
+- Keeper designations (red text = kept from prior year)
+- Total league budget ($2,400 = $200 × 12 teams, always exact)
+
+**Key data points to verify the sheet is correct:**
+- 2020 Eric: Starting budget $447, drafted C McCaffrey for $116
+- 2025 Eric: Starting budget $218, L. Jackson $37, N. Collins $22
+
+**What needs to happen:**
+This is a future task — build a "Draft Data Import" tool that lets commissioners upload/paste draft auction results. For now, document this as a known gap. The BroMontana vault shows player names and draft order correctly but dollar amounts are missing/wrong for 14 of 17 years.
+
+**Architecture note:** Consider building this as part of the existing Custom Import flow (`docs/CLUTCH_IMPORT_ADDENDUM_SPEC.md`) — a "Draft Results" tab where commissioners can paste a table of Owner | Player | Amount | IsKeeper, or upload a CSV. The AI column mapping that already exists for custom imports could parse the Google Sheet format.
+
+**Pre-2014:** No Google Sheet data available. Trust Yahoo's import (which also has no dollar amounts for those years — just player names and draft order). This is acceptable.
+
+**Files:** Future feature — no files to change yet. Document in `CLAUDE.md` under Phase 3 backlog.
+
+---
+
+### 123 — Run Draft Values Backfill Script V2 (BroMontana 2014-2025)
+**Status:** `TODO`
+**Priority:** CRITICAL — Draft tonight (Mar 5). Eric wants auction values in the vault.
+**Prompt:**
+
+**V1 of this script was committed (87db2c8) but had bugs.** Cowork has REWRITTEN the script at `backend/scripts/backfill-draft-values.js` with these fixes:
+
+1. **Structure fix:** Existing draftData is `{type: "auction", picks: [...]}` — V1 assumed flat array and broke
+2. **Field name fix:** Existing picks use `cost` field — V1 wrote to `amount` which vault frontend doesn't read
+3. **Owner filtering:** Now filters picks by `ownerName` before matching, so CMC gets matched to Eric not someone else
+
+**Commit the UPDATED script and run it on Railway:**
+
+```bash
+git add backend/scripts/backfill-draft-values.js
+git commit -m "fix: rewrite draft values backfill script (structure + field name bugs)"
+node backend/scripts/backfill-draft-values.js
+```
+
+**Verification after running:**
+1. Check 2020 Eric via Prisma: CMC should show `cost: 116` (was `cost: 64` from Yahoo)
+2. Check 2020 Eric: Lamar Jackson should show `cost: 14`
+3. Check 2024 any owner: should have correct dollar amounts
+4. Check that `startingBudget` is set on the draftData object (e.g., 2020 Eric = 447)
+
+**Files:** `backend/scripts/backfill-draft-values.js` (already rewritten by Cowork, just needs commit + run)
 
 ---
 
