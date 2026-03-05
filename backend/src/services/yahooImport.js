@@ -308,6 +308,9 @@ function extractSeasonFromResponse(data, leagueKey) {
       usesPlayoffs: fullSettings.uses_playoff === '1' || !!meta.playoff_start_week,
       usesFAAB: fullSettings.uses_faab === '1',
       faabBalance: fullSettings.budget ? parseInt(fullSettings.budget) : null,
+      auctionBudget: fullSettings.salary_cap ? parseInt(fullSettings.salary_cap)
+        : fullSettings.auction_budget ? parseInt(fullSettings.auction_budget)
+        : null,
       waiverType: fullSettings.waiver_type || null,
       waiverRule: fullSettings.waiver_rule || null,
       tradeEndDate: fullSettings.trade_end_date || null,
@@ -690,15 +693,17 @@ async function importSeason(leagueKey, year, accessToken, onTokenRefresh) {
       type: 'snake',
       picks: picks.map(p => {
         const dr = p.draft_result
-        const cost = dr.cost != null ? parseInt(dr.cost) : null
+        const cost = dr.cost ?? dr.price ?? dr.salary ?? null
+        const amount = cost != null ? parseInt(cost) : null
+        const isKeeper = dr.is_keeper === '1' || dr.is_keeper === 1 || parseInt(dr.round) <= 0
         return {
           round: parseInt(dr.round || 0),
           pick: parseInt(dr.pick || 0),
           teamKey: dr.team_key,
           playerId: dr.player_key,
           playerName: null, // Yahoo doesn't include name in draft results
-          cost,             // Auction amount (null for snake drafts)
-          isKeeper: dr.is_keeper === '1',
+          cost: amount,     // Auction amount (null for snake drafts)
+          isKeeper,
         }
       }),
     }
@@ -796,6 +801,11 @@ async function importSeason(leagueKey, year, accessToken, onTokenRefresh) {
         )
       }
     }
+  }
+
+  // ── Diagnostic: warn if auction costs are missing ──
+  if (parsedDraft && parsedDraft.picks.length > 0 && !parsedDraft.picks.some(p => p.cost != null)) {
+    console.warn(`[YahooImport] WARNING: ${year} draft has ${parsedDraft.picks.length} picks but NO auction costs. Yahoo may not provide cost data for this season.`)
   }
 
   // ── Determine Playoff Results ──
@@ -1033,6 +1043,11 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
         const seasonData = await importSeason(season.leagueKey, season.year, currentToken, wrappedImportRefresh)
         console.log(`[YahooImport] Season ${season.year}: ${seasonData.rosters.length} teams parsed`)
 
+        // Set auction budget on draftData from league settings (if available)
+        if (seasonData.draftData && season.settings?.auctionBudget != null) {
+          seasonData.draftData.budget = season.settings.auctionBudget
+        }
+
         // Try to identify which team belongs to the importing user
         let matchedTeamKey = null
         if (userDisplayName) {
@@ -1075,7 +1090,10 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
                 pointsFor: roster.pointsFor,
                 pointsAgainst: roster.pointsAgainst,
                 playoffResult,
-                draftData: seasonData.draftData,
+                draftData: seasonData.draftData ? {
+                  ...seasonData.draftData,
+                  picks: seasonData.draftData.picks?.filter(p => p.teamKey === roster.teamKey) || [],
+                } : null,
                 rosterData: {},
                 weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
                 transactions: seasonData.transactions,
@@ -1089,7 +1107,10 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
                 pointsFor: roster.pointsFor,
                 pointsAgainst: roster.pointsAgainst,
                 playoffResult,
-                draftData: seasonData.draftData,
+                draftData: seasonData.draftData ? {
+                  ...seasonData.draftData,
+                  picks: seasonData.draftData.picks?.filter(p => p.teamKey === roster.teamKey) || [],
+                } : null,
                 weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
                 transactions: seasonData.transactions,
                 settings: season.settings || {},
@@ -1180,7 +1201,10 @@ async function runFullImport(yahooLeagueId, userId, db, accessToken, targetLeagu
                   pointsFor: roster.pointsFor,
                   pointsAgainst: roster.pointsAgainst,
                   playoffResult,
-                  draftData: seasonData.draftData,
+                  draftData: seasonData.draftData ? {
+                    ...seasonData.draftData,
+                    picks: seasonData.draftData.picks?.filter(p => p.teamKey === roster.teamKey) || [],
+                  } : null,
                   rosterData: {},
                   weeklyScores: buildWeeklyScores(seasonData.matchups, roster.teamId),
                   transactions: seasonData.transactions,
