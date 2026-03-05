@@ -4704,6 +4704,74 @@ If the verification line shows wrong values or unmatched count is high, check th
 
 ---
 
+### 127 — Fix rate limiter: trust proxy + bump limit
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Added trust proxy for Railway, bumped 120→300 req/min. Files: index.js, rateLimiter.js (commit f991e0c)
+**Priority:** CRITICAL — Brandon (ThunderCunts) getting 429 on every API call, can't load any page. This is the X01 "league disappeared" bug.
+
+**Prompt:**
+Two changes already made by Cowork in the working tree — just commit and deploy:
+
+1. **`backend/src/index.js`** — Added `app.set('trust proxy', 1)` right before `const httpServer = createServer(app)`. Without this, Railway's reverse proxy means `express-rate-limit` sees the same IP for ALL users (the proxy's IP), so the rate limit was shared across everyone. Now it reads `X-Forwarded-For` for real client IPs.
+
+2. **`backend/src/middleware/rateLimiter.js`** — Bumped `apiLimiter.max` from 120 → 300 requests per minute. The SPA fires 20-30 parallel API calls per page load (leagues, tournaments, activity, coach briefing, clutch rating, errors batch, etc.). A user navigating 4-5 pages in a minute would blow through 120. 300 gives headroom for normal use while still blocking abuse.
+
+**Root cause of X01:** Brandon's "league disappeared" bug was the rate limiter blocking all his requests with 429 status codes. His console showed 30+ failed requests all returning 429. The league was fine — the data just couldn't load.
+
+**Verification:**
+- Deploy to Railway
+- Have Brandon refresh — all API calls should return 200, not 429
+- Check Railway logs for any remaining 429s from real users
+
+**Files:** `backend/src/index.js`, `backend/src/middleware/rateLimiter.js`
+
+---
+
+### 128 — Fix lineup optimizer: eliminate per-player API calls
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Removed 15 per-player API calls, uses roster prop data directly. Zero network requests, instant render. Files: LineupOptimizer.jsx (commit f991e0c)
+**Priority:** HIGH — Optimizer fires 15 separate `api.getPlayerProfile()` calls when opened, contributing to rate limiting and causing visible glitching/flickering.
+
+**Prompt:**
+Refactor `frontend/src/components/roster/LineupOptimizer.jsx` to stop making individual API calls for each roster player.
+
+**Problem:** When the user clicks "Optimize", the component mounts and fires `api.getPlayerProfile(p.id)` for every player on the roster (line 34). With 15 players that's 15 simultaneous API calls. If some fail (429 or timeout), the component renders with partial data and looks broken.
+
+**Fix:** The roster data passed as props already contains `sgTotal`, `sgApproach`, `sgOffTee`, `sgPutting`, `owgrRank`, `primaryTour`. The only thing it's fetching that isn't already there is `cpi` (from `clutchMetrics`) and `projection`. Two approaches (pick whichever is simpler):
+
+**Option A (preferred):** Create a single batch endpoint `GET /api/players/batch-stats?ids=id1,id2,id3` that returns CPI + projections for multiple players in one call. Use it in the optimizer instead of N individual calls.
+
+**Option B (quick fix):** Just use the data already on the roster props. Compute power score from `sgTotal` alone (skip CPI) since CPI values are often null anyway. Remove the `useEffect` fetch entirely. The optimizer becomes instant with zero API calls.
+
+**Files:**
+- `frontend/src/components/roster/LineupOptimizer.jsx` — refactor `useEffect` fetch
+- If Option A: `backend/src/routes/players.js` — add batch endpoint
+
+**Verification:**
+- Open roster page, click "Optimize" — should render instantly with no loading spinner
+- Check browser network tab — should see 0 new API calls (Option B) or 1 call (Option A)
+- No flickering or glitching
+
+---
+
+### 129 — Fix live scoring widget showing Puerto Rico Open instead of Arnold Palmer `TODO` `CRITICAL`
+
+**Priority:** CRITICAL — affects live tournament scoring right now
+
+**Problem:** The `GET /api/leagues/:id/live-scoring` endpoint (line 1078 of `backend/src/routes/leagues.js`) uses `prisma.tournament.findFirst({ where: { status: 'IN_PROGRESS' } })` with no ordering when no `tournamentId` is provided. When two tournaments run concurrently (e.g., Arnold Palmer Invitational + Puerto Rico Open this week), it returns whichever Prisma finds first — which is the alternate event (Puerto Rico Open). This is the same class of bug that was fixed in `fantasyWeekHelper.js` (item 124).
+
+**Fix already applied by Cowork in the file.** The fix changes `findFirst` to `findMany` and sorts by: non-alternate first → majors → signature events → highest purse. This matches the logic in `fantasyWeekHelper.js`.
+
+**Files changed:**
+- `backend/src/routes/leagues.js` — lines 1078-1103 (tournament resolution block in live-scoring endpoint)
+
+**Verification:**
+- Navigate to any league's page — LiveScoringWidget should show Arnold Palmer Invitational, not Puerto Rico Open
+- Click "Full Scoring" link — scoring page should also show Arnold Palmer
+- After Arnold Palmer ends, the widget should show the next main event, not an alternate
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

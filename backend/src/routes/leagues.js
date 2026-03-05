@@ -1073,14 +1073,25 @@ router.get('/:id/live-scoring', authenticate, async (req, res, next) => {
     }
 
     // Resolve tournament: use provided ID, or find current IN_PROGRESS, or most recent COMPLETED
+    // When multiple tournaments are IN_PROGRESS (e.g., main event + alternate), prefer
+    // non-alternate > major > signature > higher purse (same logic as fantasyWeekHelper)
     let resolvedTournamentId = tournamentId
     if (!resolvedTournamentId) {
-      const current = await prisma.tournament.findFirst({
+      const inProgress = await prisma.tournament.findMany({
         where: { status: 'IN_PROGRESS' },
-        select: { id: true },
+        select: { id: true, isAlternate: true, isMajor: true, isSignature: true, purse: true },
       })
-      if (current) {
-        resolvedTournamentId = current.id
+      if (inProgress.length > 0) {
+        // Sort: non-alternate first, then majors, then signature, then highest purse
+        inProgress.sort((a, b) => {
+          if ((a.isAlternate || false) !== (b.isAlternate || false)) {
+            return (a.isAlternate ? 1 : 0) - (b.isAlternate ? 1 : 0)
+          }
+          if ((a.isMajor || false) !== (b.isMajor || false)) return b.isMajor ? 1 : -1
+          if ((a.isSignature || false) !== (b.isSignature || false)) return b.isSignature ? 1 : -1
+          return (b.purse || 0) - (a.purse || 0)
+        })
+        resolvedTournamentId = inProgress[0].id
       } else {
         const recent = await prisma.tournament.findFirst({
           where: { status: 'COMPLETED' },
