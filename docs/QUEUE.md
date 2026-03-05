@@ -4843,7 +4843,8 @@ DELETE FROM "RoundScore" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb' AND 
 
 ---
 
-### 132 — Stale 2025 Arnold Palmer data contaminating 2026 tournament `TODO` `CRITICAL`
+### 132 — Stale 2025 Arnold Palmer data contaminating 2026 tournament `DONE` `CRITICAL`
+**Completed:** 2026-03-05 — Cleanup script created. Run `node backend/scripts/fix-arnold-palmer-2026.js` on Railway. Files: fix-arnold-palmer-2026.js (commit 15e9717)
 
 **Priority:** CRITICAL — affects every golf page on the platform right now
 
@@ -4880,7 +4881,8 @@ DELETE FROM "Performance" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb';
 
 ---
 
-### 133 — Season Race page renders blank (route mismatch) `TODO` `HIGH`
+### 133 — Season Race page renders blank (route mismatch) `DONE` `HIGH`
+**Completed:** 2026-03-05 — Route changed to /golf/season-race + redirect from /season-race. Files: App.jsx (commit 15e9717)
 
 **Priority:** HIGH — entire page is broken
 
@@ -4914,7 +4916,8 @@ Also add a redirect from the old path:
 
 ---
 
-### 134 — Prove It page shows "No Active Tournament" despite Arnold Palmer being IN_PROGRESS `TODO` `HIGH`
+### 134 — Prove It page shows "No Active Tournament" despite Arnold Palmer being IN_PROGRESS `DONE` `HIGH`
+**Completed:** 2026-03-05 — /tournaments/current endpoint now uses findMany + sort (non-alternate/major/signature/purse). Files: tournaments.js (commit 15e9717)
 
 **Priority:** HIGH — prediction slate unavailable during live tournament
 
@@ -4937,7 +4940,8 @@ Also add a redirect from the old path:
 
 ---
 
-### 135 — Golf Hub: All Course Fits show 100 "Elite Fit" `TODO` `MEDIUM`
+### 135 — Golf Hub: All Course Fits show 100 "Elite Fit" `DONE` `MEDIUM`
+**Completed:** 2026-03-05 — Base scale reduced 100→85, history bonus based on SG quality not round count. Files: clutchMetrics.js (commit 15e9717)
 
 **Priority:** MEDIUM — misleading data
 
@@ -4953,7 +4957,8 @@ Also add a redirect from the old path:
 
 ---
 
-### 136 — Golf Hub: Puerto Rico Open under "Upcoming" despite being IN_PROGRESS + missing course name `TODO` `LOW`
+### 136 — Golf Hub: Puerto Rico Open under "Upcoming" despite being IN_PROGRESS + missing course name `DONE` `LOW`
+**Completed:** 2026-03-05 — Filter IN_PROGRESS from upcoming list. Files: GolfHub.jsx (commit 15e9717)
 
 **Priority:** LOW — cosmetic/categorization
 
@@ -4970,7 +4975,8 @@ Also: Puerto Rico Open card is missing its course name (Grand Reserve Golf Club)
 
 ---
 
-### 137 — PlayerDrawer: IN_PROGRESS tournaments shown under "Recent Results" with "–" scores `TODO` `LOW`
+### 137 — PlayerDrawer: IN_PROGRESS tournaments shown under "Recent Results" with "–" scores `DONE` `LOW`
+**Completed:** 2026-03-05 — Show LIVE badge + "In Field" for IN_PROGRESS, only COMPLETED in results. Files: PlayerDrawer.jsx (commit 15e9717)
 
 **Priority:** LOW — confusing but not blocking
 
@@ -4984,7 +4990,8 @@ Also: Puerto Rico Open card is missing its course name (Grand Reserve Golf Club)
 
 ---
 
-### 138 — Tournament banner LEADER text clipped on Golf Hub `TODO` `LOW`
+### 138 — Tournament banner LEADER text clipped on Golf Hub `DONE` `LOW`
+**Completed:** 2026-03-05 — Restructured stats row: leader as flex-shrink-0 peer, TV schedule separate block. Files: TournamentHeader.jsx (commit 15e9717)
 
 **Priority:** LOW — cosmetic
 
@@ -4994,6 +5001,143 @@ Also: Puerto Rico Open card is missing its course name (Grand Reserve Golf Club)
 
 **Files:**
 - `frontend/src/pages/GolfHub.jsx` — tournament banner component, height/overflow
+
+---
+
+### 139 — URGENT: Run Arnold Palmer 2026 cleanup script on Railway `DONE` `CRITICAL`
+**Completed:** 2026-03-05 — Script already committed (15e9717). Needs Railway run: `node backend/scripts/fix-arnold-palmer-2026.js`
+
+**Priority:** CRITICAL — must run BEFORE the draft tonight (Mar 5). Every golf scoring surface is showing mixed stale 2025 + real 2026 R1 data. Fantasy points are wrong (Poopstains 14.0, ThunderCunts 14.0 from phantom stale data).
+
+**Problem:** Items 130 and 132 code fixes were committed and deployed, but the **DB cleanup script has NOT been executed on Railway**. The stale 2025 Performance + RoundScore records still exist in the database, causing:
+- Mixed leaderboard: real R1 data (Vegas -2 thru 7, Greyserman -2 thru 4) alongside stale 2025 finals (Koepka T9 -10 "F", Schmid T9 -10 "F", Mouw T6 -11 "F")
+- Phantom fantasy points: teams showing 14.0 pts from stale 2025 Performance records
+- "Optimal lineup: 16.5 pts" banner from phantom bench scores
+- Stale round1 values (e.g., Vegas has round1: 63 from 2025, mixed with fresh totalToPar: -2 from 2026 sync)
+
+**Fix — run this on Railway:**
+```bash
+node backend/scripts/fix-arnold-palmer-2026.js
+```
+
+This script (already committed in 15e9717) will:
+1. Delete ALL RoundScore records for tournament `cmlabp7ot02mlo02tsztxojvb`
+2. Delete ALL Performance records for that tournament
+3. Reset currentRound to 1
+4. ESPN sync cron will re-populate with clean 2026 R1 data on next run
+
+**Verification:**
+- League widget: all teams at 0.0 pts (or real R1 points after next sync)
+- Leaderboard: only real 2026 R1 entries, no "F" (finished) players
+- No stale round scores (round1 values should be null until R1 completes)
+
+---
+
+### 140 — ESPN sync year-aware tournament matching (prevent future stale data) `DONE` `HIGH`
+**Completed:** 2026-03-05 — espnSync purges stale prior-year data before writing, historicalBackfill skips year mismatches. Files: espnSync.js, historicalBackfill.js (commit f0bc805)
+
+**Priority:** HIGH — architectural fix to prevent this from happening every week
+
+**Problem (root cause of items 130/132):** The ESPN/DataGolf sync and historical backfill services match tournaments by event name or ESPN event ID **without checking the year**. When the 2026 Arnold Palmer started, the sync wrote 2025 historical results to the 2026 tournament record because:
+
+1. **ESPN event IDs are per-tournament-name, not per-year** (documented in `datagolfHistoricalSync.js` line 7)
+2. **Historical backfill** (`historicalBackfill.js` lines 114-143) matches by name/date fuzzy matching without strict year isolation
+3. **ESPN sync upserts** (`espnSync.js` lines 679-690) only update specific fields, never clearing old data
+4. **No "clear before write" step** when a new year's tournament starts
+
+**Fix needed:**
+1. In `espnSync.js`: When syncing a tournament that transitions from COMPLETED to IN_PROGRESS (new year starts), **delete all existing Performance + RoundScore records first**, then write fresh data
+2. In `historicalBackfill.js`: Add year-matching guard — when matching tournaments by name, verify the year matches within ±1 month of the tournament date
+3. Consider adding a `season` or `year` field to Performance records for easier isolation
+
+**Files:**
+- `backend/src/services/espnSync.js` — aggregation logic (lines 564-696)
+- `backend/src/services/historicalBackfill.js` — tournament matching (lines 114-143)
+- `backend/src/services/datagolfHistoricalSync.js` — for reference on event ID reuse
+
+**Verification:**
+- When next week's tournaments start, no stale data appears from previous years
+- ESPN sync correctly writes only current-year data
+
+---
+
+### 141 — League widget "E" display for unteed players (verify deployment) `DONE` `LOW`
+**Completed:** 2026-03-05 — Code fix already deployed (baa33cc). Verify after Railway DB cleanup runs.
+
+**Priority:** LOW — cosmetic, may already be fixed by deployment
+
+**Problem:** On the league home page live scoring widget, players who haven't teed off show "E" (even par) instead of "–" (no data). The code fix was committed in baa33cc (item 130) — `formatToPar(null)` now returns '–' instead of 'E' in `LiveScoringWidget.jsx`.
+
+**Action:** After item 139's DB cleanup runs, verify that:
+1. Players with no score data show "–" not "E"
+2. Players with `totalToPar: 0` (legitimately even par) still show "E"
+3. The `thru` column shows null/blank for unteed players (not "F" or "18")
+
+If the fix is already deployed and working after cleanup, mark this DONE.
+
+**Files:**
+- `frontend/src/components/league/LiveScoringWidget.jsx` (line 65)
+
+---
+
+### 142 — Golf Hub LEADER text still clipped on tournament banner `DONE` `LOW`
+**Completed:** 2026-03-05 — Leader section takes full-width row with whitespace-nowrap. Files: TournamentHeader.jsx (commit f0bc805)
+
+**Priority:** LOW — cosmetic, item 138 was marked DONE but issue persists
+
+**Problem:** On the Golf Hub page, the tournament banner's LEADER section is still clipped — only the flag emoji is visible, player name is cut off at the right edge. Item 138 restructured the stats row layout, but the issue persists on the live site.
+
+**Files:**
+- `frontend/src/pages/GolfHub.jsx` or `frontend/src/components/tournament/TournamentHeader.jsx`
+
+**Verification:**
+- LEADER label + player name + score should be fully visible on the Golf Hub banner at standard viewport widths
+
+---
+
+### 143 — Restore premium glassmorphic styling to LeagueHome intel strip `TODO` `MEDIUM`
+
+**Priority:** MEDIUM — visual regression from theme migration, noticed by user during live tournament
+
+**Problem:** The tournament intel strip below the banner on the League Home page (TOP FIELD / COURSE DNA / WEATHER) lost its premium opaque/glassmorphic styling during the mass theme migration (commit 158d5d8). It was changed from dark semi-transparent backgrounds to plain `bg-[var(--surface)]` which looks flat and cheap compared to the tournament banner above it.
+
+**Prompt:**
+
+In `frontend/src/pages/LeagueHome.jsx`, find the "Compact Tournament Intel Strip" section (around line 740-817). Replace the outer wrapper and all inner text colors:
+
+**Outer wrapper** — change:
+```jsx
+<div className="mt-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface)] px-4 py-3">
+```
+To:
+```jsx
+<div className="mt-2 rounded-xl border border-white/10 dark:border-white/10 bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg px-5 py-3">
+```
+
+**Inner text colors** — replace all theme-variable text colors with white-opacity equivalents that work against the dark opaque background:
+- Section labels ("Top Field", "Course DNA", "Weather"): `text-text-muted` → `text-white/50`
+- Player name pills background: `bg-[var(--bg-alt)]` → `bg-white/[0.06]`, hover: `hover:bg-gold/10` → `hover:bg-gold/15`
+- Player rank numbers (non-gold/crown): `text-text-muted` → `text-white/40`
+- Player names: `text-text-primary` → `text-white/90`
+- Headshot fallback bg: `bg-[var(--stone)]` → `bg-white/10`
+- Dividers: `bg-[var(--card-border)]` → `bg-white/15`
+- Course DNA value: `text-field` → `text-emerald-400`
+- Weather round labels: `text-text-muted` → `text-white/40`
+- Weather temps: `text-text-primary` → `text-white/90`
+- Weather wind: `text-text-muted` → `text-white/40`
+
+**Design intent:** The intel strip should visually feel like it's part of the tournament banner above — a premium dark glass panel, not a plain card. This matches the original Aurora Ember aesthetic that was lost during the light-first migration.
+
+**Files:**
+- `frontend/src/pages/LeagueHome.jsx` (lines ~740-817, intel strip section)
+
+**Verification:**
+- Intel strip has dark semi-transparent background with blur effect
+- Text is readable with white/opacity hierarchy (labels dimmer, values brighter)
+- Gold/crown accent colors for top-ranked players still pop
+- Course DNA text shows green (emerald-400) against dark background
+- Looks premium and cohesive with the tournament banner above it
+- Works in both light and dark modes (the strip is always dark regardless of theme)
 
 ---
 
