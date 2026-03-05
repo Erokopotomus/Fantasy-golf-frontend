@@ -47,22 +47,45 @@ router.get('/', optionalAuth, async (req, res, next) => {
 // GET /api/tournaments/current - Get current/upcoming tournament
 router.get('/current', async (req, res, next) => {
   try {
-    // Prefer non-alternate (main) events
-    let tournament = await prisma.tournament.findFirst({
-      where: {
-        status: { in: ['IN_PROGRESS', 'UPCOMING'] },
-        isAlternate: false,
-      },
+    // Fetch all active/upcoming tournaments, then pick the best one using
+    // the same priority chain as fantasyWeekHelper.js and leagues.js:
+    // IN_PROGRESS before UPCOMING > non-alternate > major > signature > higher purse
+    const candidates = await prisma.tournament.findMany({
+      where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
       include: { course: true },
       orderBy: [{ startDate: 'asc' }],
+      take: 10,
     })
-    // Fallback to any tournament if no non-alternate found
-    if (!tournament) {
-      tournament = await prisma.tournament.findFirst({
-        where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] } },
-        include: { course: true },
-        orderBy: [{ startDate: 'asc' }],
+
+    let tournament = null
+    if (candidates.length > 0) {
+      // Group by earliest start date (same-week events share a date)
+      const earliest = candidates[0].startDate?.toISOString?.()?.split('T')[0]
+      const sameWeek = candidates.filter(t => {
+        const d = t.startDate?.toISOString?.()?.split('T')[0]
+        return d === earliest
       })
+
+      // Sort: IN_PROGRESS first, then non-alternate > major > signature > higher purse
+      sameWeek.sort((a, b) => {
+        // Prefer IN_PROGRESS over UPCOMING
+        if (a.status !== b.status) {
+          if (a.status === 'IN_PROGRESS') return -1
+          if (b.status === 'IN_PROGRESS') return 1
+        }
+        // Non-alternate events first
+        if ((a.isAlternate || false) !== (b.isAlternate || false)) {
+          return (a.isAlternate ? 1 : 0) - (b.isAlternate ? 1 : 0)
+        }
+        // Majors first
+        if ((a.isMajor || false) !== (b.isMajor || false)) return b.isMajor ? 1 : -1
+        // Signature events next
+        if ((a.isSignature || false) !== (b.isSignature || false)) return b.isSignature ? 1 : -1
+        // Higher purse wins
+        return (b.purse || 0) - (a.purse || 0)
+      })
+
+      tournament = sameWeek[0]
     }
 
     // For live tournaments, ensure currentRound accounts for date-based expected round

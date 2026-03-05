@@ -728,37 +728,60 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                         )
                       })()}
 
-                      {/* Recent Results (from profile API) */}
-                      {(player.performances || []).length > 0 && (
-                        <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
-                          <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Recent Results</h3>
-                          {/* Table header */}
-                          <div className="flex items-center justify-between pb-1 mb-1 border-b border-[var(--card-border)]">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold w-8 flex-shrink-0">Pos</span>
-                              <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold">Tournament</span>
-                            </div>
-                            <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold flex-shrink-0 ml-2">Score</span>
-                          </div>
-                          <div className="space-y-1.5">
-                            {player.performances.slice(0, 5).map((perf) => (
-                              <div key={perf.id} className="flex items-center justify-between py-1">
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <span className={`text-sm font-bold w-8 flex-shrink-0 ${getPositionColor(perf.position)}`}>
-                                    {formatPosition(perf.position, perf.positionTied)}
-                                  </span>
-                                  <span className="text-xs text-text-primary truncate">{perf.tournament?.name}</span>
-                                </div>
-                                <span className={`text-xs font-mono flex-shrink-0 ml-2 ${
-                                  perf.totalToPar != null ? (perf.totalToPar < 0 ? 'text-field' : perf.totalToPar > 0 ? 'text-live-red' : 'text-text-primary') : 'text-text-muted'
-                                }`}>
-                                  {perf.totalToPar != null ? (perf.totalToPar > 0 ? '+' : '') + perf.totalToPar : '\u2014'}
-                                </span>
+                      {/* Recent Results (from profile API) — only COMPLETED tournaments */}
+                      {(player.performances || []).length > 0 && (() => {
+                        const completedPerfs = player.performances.filter(p => p.tournament?.status === 'COMPLETED')
+                        const inProgressPerfs = player.performances.filter(p => p.tournament?.status === 'IN_PROGRESS')
+                        if (completedPerfs.length === 0 && inProgressPerfs.length === 0) return null
+                        return (
+                          <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
+                            <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Recent Results</h3>
+                            {/* In-field notice for IN_PROGRESS tournaments */}
+                            {inProgressPerfs.length > 0 && (
+                              <div className="mb-2">
+                                {inProgressPerfs.map((perf) => (
+                                  <div key={perf.id} className="flex items-center justify-between py-1">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-live-red/15 text-live-red border border-live-red/20 flex-shrink-0">LIVE</span>
+                                      <span className="text-xs text-text-primary truncate">{perf.tournament?.name}</span>
+                                    </div>
+                                    <span className="text-[10px] font-semibold text-text-muted flex-shrink-0 ml-2">In Field</span>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
+                            {/* Table header */}
+                            {completedPerfs.length > 0 && (
+                              <>
+                                <div className="flex items-center justify-between pb-1 mb-1 border-b border-[var(--card-border)]">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold w-8 flex-shrink-0">Pos</span>
+                                    <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold">Tournament</span>
+                                  </div>
+                                  <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold flex-shrink-0 ml-2">Score</span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  {completedPerfs.slice(0, 5).map((perf) => (
+                                    <div key={perf.id} className="flex items-center justify-between py-1">
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <span className={`text-sm font-bold w-8 flex-shrink-0 ${getPositionColor(perf.position)}`}>
+                                          {formatPosition(perf.position, perf.positionTied)}
+                                        </span>
+                                        <span className="text-xs text-text-primary truncate">{perf.tournament?.name}</span>
+                                      </div>
+                                      <span className={`text-xs font-mono flex-shrink-0 ml-2 ${
+                                        perf.totalToPar != null ? (perf.totalToPar < 0 ? 'text-field' : perf.totalToPar > 0 ? 'text-live-red' : 'text-text-primary') : 'text-text-muted'
+                                      }`}>
+                                        {perf.totalToPar != null ? (perf.totalToPar > 0 ? '+' : '') + perf.totalToPar : '\u2014'}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            )}
                           </div>
-                        </div>
-                      )}
+                        )
+                      })()}
 
                       {/* SG Summary (keep exactly as-is) */}
                       <div className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
@@ -967,20 +990,29 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                     player.performances.map((perf) => (
                       <div key={perf.id} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-text-primary font-semibold text-sm truncate pr-2">{perf.tournament?.name}</p>
-                          <span className={`text-lg font-bold flex-shrink-0 ${getPositionColor(perf.position)}`}>
-                            {formatPosition(perf.position, perf.positionTied)}
-                          </span>
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <p className="text-text-primary font-semibold text-sm truncate pr-2">{perf.tournament?.name}</p>
+                            {perf.tournament?.status === 'IN_PROGRESS' && (
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-live-red/15 text-live-red border border-live-red/20 flex-shrink-0">LIVE</span>
+                            )}
+                          </div>
+                          {perf.tournament?.status === 'IN_PROGRESS' ? (
+                            <span className="text-xs font-semibold text-text-muted flex-shrink-0">In Field</span>
+                          ) : (
+                            <span className={`text-lg font-bold flex-shrink-0 ${getPositionColor(perf.position)}`}>
+                              {formatPosition(perf.position, perf.positionTied)}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center justify-between text-xs text-text-muted">
                           <span>{perf.tournament?.startDate ? formatDate(perf.tournament.startDate) : ''}</span>
                           <div className="flex items-center gap-3">
-                            {perf.totalToPar != null && (
+                            {perf.tournament?.status !== 'IN_PROGRESS' && perf.totalToPar != null && (
                               <span className={perf.totalToPar < 0 ? 'text-field' : perf.totalToPar > 0 ? 'text-live-red' : 'text-text-primary'}>
                                 {perf.totalToPar > 0 ? '+' : ''}{perf.totalToPar}
                               </span>
                             )}
-                            {perf.fantasyPoints > 0 && (
+                            {perf.tournament?.status !== 'IN_PROGRESS' && perf.fantasyPoints > 0 && (
                               <span className="text-field font-medium">{perf.fantasyPoints.toFixed(1)} pts</span>
                             )}
                           </div>

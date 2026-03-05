@@ -4773,7 +4773,8 @@ Refactor `frontend/src/components/roster/LineupOptimizer.jsx` to stop making ind
 
 ---
 
-### 130 — Fix live scoring phantom scores + stale tournament data `TODO` `CRITICAL`
+### 130 — Fix live scoring phantom scores + stale tournament data `DONE` `CRITICAL`
+**Completed:** 2026-03-05 — Code fixes committed (baa33cc). DB cleanup (reset currentRound, delete stale performances) needs Railway run. Files: scoringService.js, LiveScoringWidget.jsx
 
 **Priority:** CRITICAL — live tournament starts today, widget shows fake data
 
@@ -4819,7 +4820,8 @@ DELETE FROM "RoundScore" WHERE "tournamentId" = 'cmlabp7ot02mlo02tsztxojvb' AND 
 
 ---
 
-### 131 — Add tournament intel widgets to league page banner `TODO` `MEDIUM`
+### 131 — Add tournament intel widgets to league page banner `DONE` `MEDIUM`
+**Completed:** 2026-03-05 — Added compact intel strip: top 5 field players, course DNA, R1-R4 weather. Files: LeagueHome.jsx (commit 4f3d3c6)
 
 **Priority:** MEDIUM — user wants weather, top players in field, and course fit widgets on the league home page tournament banner
 

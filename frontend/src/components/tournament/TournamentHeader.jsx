@@ -149,63 +149,54 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
               ) : null}
             </div>
 
-            {/* Stats row */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-              <div>
-                <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Dates</span>
-                <p className={`${txtPrimary} font-medium`}>
-                  {formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}
-                </p>
-              </div>
-
-              {tournament.purse && (
+            {/* Stats row + Leader */}
+            <div className="flex flex-wrap items-start gap-x-6 gap-y-2 text-sm">
+              {/* Left stats */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 flex-1 min-w-0">
                 <div>
-                  <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Purse</span>
-                  <p className={`${txtPrimary} font-medium`}>{formatPurse(tournament.purse)}</p>
-                </div>
-              )}
-
-              {leaderboard.length > 0 && (
-                <div>
-                  <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Field</span>
+                  <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Dates</span>
                   <p className={`${txtPrimary} font-medium`}>
-                    {leaderboard.length} players{cutPlayers.length > 0 ? ` (${cutPlayers.length} cut)` : ''}
+                    {formatDate(tournament.startDate)} – {formatDate(tournament.endDate)}
                   </p>
                 </div>
-              )}
 
-              {course && isUpcoming && (
-                <>
-                  {course.par && (
-                    <div>
-                      <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Par</span>
-                      <p className={`${txtPrimary} font-medium font-mono`}>{course.par}</p>
-                    </div>
-                  )}
-                  {course.yardage && (
-                    <div>
-                      <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Yards</span>
-                      <p className={`${txtPrimary} font-medium font-mono`}>{course.yardage?.toLocaleString()}</p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* TV Schedule */}
-              {isUpcoming && (
-                <div className={`w-full mt-1 pt-2 border-t ${borderColor}`}>
-                  <div className={`flex items-center gap-2 text-xs ${txtSecondary}`}>
-                    <svg className={`w-3.5 h-3.5 ${txtMuted} flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <rect x="2" y="4" width="20" height="13" rx="2" />
-                      <path d="M8 21h8M12 17v4" />
-                    </svg>
-                    <span className="font-medium">{getTvSchedule(tournament)}</span>
+                {tournament.purse && (
+                  <div>
+                    <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Purse</span>
+                    <p className={`${txtPrimary} font-medium`}>{formatPurse(tournament.purse)}</p>
                   </div>
-                </div>
-              )}
+                )}
 
+                {leaderboard.length > 0 && (
+                  <div>
+                    <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Field</span>
+                    <p className={`${txtPrimary} font-medium`}>
+                      {leaderboard.length} players{cutPlayers.length > 0 ? ` (${cutPlayers.length} cut)` : ''}
+                    </p>
+                  </div>
+                )}
+
+                {course && isUpcoming && (
+                  <>
+                    {course.par && (
+                      <div>
+                        <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Par</span>
+                        <p className={`${txtPrimary} font-medium font-mono`}>{course.par}</p>
+                      </div>
+                    )}
+                    {course.yardage && (
+                      <div>
+                        <span className={`${txtMuted} text-xs uppercase tracking-wide`}>Yards</span>
+                        <p className={`${txtPrimary} font-medium font-mono`}>{course.yardage?.toLocaleString()}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Leader / Winner — pulled out of the wrapping stats so it doesn't get clipped */}
               {leader && (isCompleted || isLive) && (
-                <div className="ml-auto text-right">
+                <div className="text-right flex-shrink-0">
                   <span className={`${txtMuted} text-xs uppercase tracking-wide`}>
                     {isCompleted ? 'Winner' : 'Leader'}
                   </span>
@@ -220,9 +211,9 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                 </div>
               )}
 
-              {/* Round indicators (non-upcoming) */}
+              {/* Round indicators (non-upcoming, no leader) */}
               {!isUpcoming && !leader && (
-                <div className="ml-auto flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   {[1, 2, 3, 4].map(r => {
                     const isCurrent = tournament.currentRound === r && isLive
                     const isPast = isCompleted || (tournament.currentRound && r < tournament.currentRound)
@@ -243,6 +234,19 @@ const TournamentHeader = ({ tournament, leaderboard = [] }) => {
                 </div>
               )}
             </div>
+
+            {/* TV Schedule (below stats, full width) */}
+            {isUpcoming && (
+              <div className={`mt-3 pt-2 border-t ${borderColor}`}>
+                <div className={`flex items-center gap-2 text-xs ${txtSecondary}`}>
+                  <svg className={`w-3.5 h-3.5 ${txtMuted} flex-shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <rect x="2" y="4" width="20" height="13" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                  </svg>
+                  <span className="font-medium">{getTvSchedule(tournament)}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right side panels (UPCOMING only) */}

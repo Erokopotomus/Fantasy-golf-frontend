@@ -170,10 +170,10 @@ const GolfHub = () => {
     return (hotForm.length > 0 || bestFit.length > 0) ? { hotForm, bestFit } : null
   }, [heroIntel])
 
-  // Upcoming schedule (exclude the hero)
+  // Upcoming schedule (exclude the hero AND any IN_PROGRESS tournaments)
   const upcomingSchedule = useMemo(() => {
     return tournaments
-      .filter(t => t.id !== heroTournament?.id)
+      .filter(t => t.id !== heroTournament?.id && t.status !== 'IN_PROGRESS')
       .slice(0, 4)
   }, [tournaments, heroTournament])
 

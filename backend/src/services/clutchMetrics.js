@@ -484,17 +484,20 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
   const overallPercentile = percentileRank(blendedTotal, sortedTotal)
   const qualityMult = 0.7 + 0.3 * overallPercentile
 
-  // 8B — History bonus: increased for deep course history
+  // Base score: scale to 0-85 so bonuses have headroom within 0-100
+  const baseScore = rawFit * 85 * qualityMult
+
+  // 8B — History bonus: rewards proven course performance
   let historyBonus = 0
   const courseHistory = await prisma.playerCourseHistory.findUnique({
     where: { playerId_courseId: { playerId, courseId: course.id } },
   })
   if (courseHistory && courseHistory.rounds >= 4 && courseHistory.sgTotal != null) {
     if (courseHistory.rounds >= 8) {
-      // Deep history: 3x multiplier, cap at 15
-      historyBonus = clamp(courseHistory.rounds * courseHistory.sgTotal * 3, -8, 15)
+      // Deep history: stronger signal, cap at 10
+      historyBonus = clamp(courseHistory.sgTotal * 8, -6, 10)
     } else {
-      historyBonus = clamp(courseHistory.rounds * courseHistory.sgTotal * 2, -5, 10)
+      historyBonus = clamp(courseHistory.sgTotal * 5, -4, 7)
     }
   }
 
@@ -536,13 +539,13 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
       if (similarHistories.length > 0) {
         const totalRounds = similarHistories.reduce((s, h) => s + h.rounds, 0)
         const weightedSg = similarHistories.reduce((s, h) => s + h.sgTotal * h.rounds, 0) / totalRounds
-        // 50% weight, capped at ±6
-        similarCourseBonus = clamp(weightedSg * 3, -6, 6)
+        // Capped at ±5
+        similarCourseBonus = clamp(weightedSg * 2.5, -5, 5)
       }
     }
   }
 
-  const courseFitScore = clamp(rawFit * 100 * qualityMult + historyBonus + similarCourseBonus, 0, 100)
+  const courseFitScore = clamp(baseScore + historyBonus + similarCourseBonus, 0, 100)
 
   return {
     value: Math.round(courseFitScore * 10) / 10,
@@ -551,6 +554,7 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
       courseProfile,
       rawFit: Math.round(rawFit * 1000) / 1000,
       qualityMult: Math.round(qualityMult * 1000) / 1000,
+      baseScore: Math.round(baseScore * 10) / 10,
       historyBonus: Math.round(historyBonus * 10) / 10,
       similarCourseBonus: Math.round(similarCourseBonus * 10) / 10,
       recentFormBlend: recentPerfs.length >= 3,
@@ -700,7 +704,7 @@ async function computeForEventFromProfiles(tournamentId, prisma, onlyPlayerIds =
       const overallPercentile = percentileRank(player.sgTotal, sortedTotal)
       const qualityMult = 0.7 + 0.3 * overallPercentile
 
-      courseFitScore = clamp(rawFit * 100 * qualityMult, 0, 100)
+      courseFitScore = clamp(rawFit * 85 * qualityMult, 0, 100)
       fitComponents = {
         playerProfile: playerProfile.map(v => Math.round(v * 1000) / 1000),
         courseProfile,

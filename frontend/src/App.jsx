@@ -579,7 +579,8 @@ function App() {
           <Route path="/nfl" element={<NflHub />} />
           <Route path="/golf" element={<GolfHub />} />
           <Route path="/golf/compare" element={<GolfCompare />} />
-          <Route path="/season-race" element={<SeasonRace />} />
+          <Route path="/golf/season-race" element={<SeasonRace />} />
+          <Route path="/season-race" element={<Navigate to="/golf/season-race" replace />} />
           {/* NFL routes */}
           <Route path="/nfl/players" element={<NflPlayers />} />
           <Route path="/nfl/players/:playerId" element={<NflPlayerDetail />} />
