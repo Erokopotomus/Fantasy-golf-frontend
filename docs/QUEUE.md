@@ -5701,7 +5701,8 @@ Add a team roster drawer to `frontend/src/components/league/LiveScoringWidget.js
 - Mobile: drawer width capped at 85vw
 
 ### 152 — Fix ESPN hole-by-hole sync: convert espnClient to axios + deploy `CRITICAL`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Cowork's fixes committed and pushed (espnClient axios conversion, enhanced cron logging, scorecard-status endpoint). Files: espnClient.js, index.js, tournaments.js (commit 0c1a83b)
 **Priority:** CRITICAL — Scorecards are completely empty during live Arnold Palmer Invitational R1. Draft is tonight.
 
 **Problem:** The hole-by-hole scorecard data is not populating. The `syncHoleScores` ESPN cron runs every 5 min on Thu-Sun, finds the IN_PROGRESS tournament (espnEventId=401811935), and should upsert HoleScore records. But `GET /api/tournaments/:id/scorecards/:playerId` returns `{ scorecards: {} }` for every player — zero HoleScore records exist despite ESPN API having full 18-hole data.
