@@ -971,16 +971,14 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
             <span className="text-text-muted/60">{player.acquiredVia.toLowerCase()}</span>
           )}
         </div>
+        {!isNfl && !isEditing && (
+          <div className="flex items-center gap-2 text-[11px] text-text-secondary mt-0.5">
+            {player.wins > 0 && <span className="font-mono">{player.wins}W</span>}
+            {player.top5s > 0 && <span className="font-mono">{player.top5s} T5</span>}
+            {player.top10s > 0 && <span className="font-mono">{player.top10s} T10</span>}
+          </div>
+        )}
       </div>
-
-      {/* Stats */}
-      {!isNfl && (
-        <div className="hidden sm:flex items-center gap-4 text-xs text-text-secondary">
-          {player.wins > 0 && <span>{player.wins}W</span>}
-          {player.top5s > 0 && <span>{player.top5s} T5</span>}
-          {player.top10s > 0 && <span>{player.top10s} T10</span>}
-        </div>
-      )}
 
       {/* IR toggle button in edit mode (for bench players) */}
       {isEditing && !readOnly && onToggleIR && !isActive && !isIR && (

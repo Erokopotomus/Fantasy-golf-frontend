@@ -4549,6 +4549,157 @@ Verification — 2020 Eric CMC cost: $116 (expected: $116)
 
 ---
 
+### 124 — FantasyWeekHelper: Prefer flagship tournament over alternate events
+**Status:** `TODO`
+**Priority:** CRITICAL — Draft is TODAY (Mar 5). Roster page shows wrong tournament + wrong lock time.
+
+**The problem:**
+The roster page shows "Puerto Rico Open has started — Lineups Locked" but the actual event this week is Arnold Palmer Invitational. The lock banner also says locked on Wednesday when Arnold Palmer starts Thursday.
+
+**Root cause:**
+`fantasyWeekHelper.js` line 30-35 does `prisma.fantasyWeek.findFirst()` ordered by `startDate asc`. When two tournaments share the same week (Arnold Palmer + Puerto Rico Open, both startDate March 5), it picks whichever has the lower insertion order — Puerto Rico Open. The `seedStatsDb.js` creates one FantasyWeek per tournament, so both exist.
+
+The `upcoming-with-fields` endpoint was already fixed (queue item ~060, uses `isMajor desc, isSignature desc, purse desc` ordering), but `fantasyWeekHelper.js` was never updated.
+
+**Fix in `backend/src/services/fantasyWeekHelper.js`:**
+
+Replace lines 29-47 (the findFirst query) with logic that:
+1. Find ALL fantasy weeks with status UPCOMING/LOCKED/IN_PROGRESS for this season
+2. Sort by startDate asc
+3. Among weeks with the same startDate, prefer the one whose tournament is NOT alternate (isAlternate = false), then by isMajor desc, isSignature desc, purse desc
+4. Return the first result
+
+```javascript
+// Replace the single findFirst with this:
+const candidateWeeks = await prisma.fantasyWeek.findMany({
+  where: {
+    seasonId: currentSeason.id,
+    status: { in: ['UPCOMING', 'LOCKED', 'IN_PROGRESS'] },
+  },
+  orderBy: { startDate: 'asc' },
+  take: 10, // Only need a few upcoming
+  include: {
+    tournament: {
+      select: {
+        id: true,
+        name: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+        isAlternate: true,
+        isMajor: true,
+        isSignature: true,
+        purse: true,
+      },
+    },
+  },
+})
+
+if (candidateWeeks.length === 0) return null
+
+// Pick the best week: among weeks starting on the same date as the earliest,
+// prefer non-alternate > major > signature > higher purse
+const earliestDate = candidateWeeks[0].startDate?.toISOString?.()?.split('T')[0]
+const sameWeekCandidates = candidateWeeks.filter(w => {
+  const d = w.startDate?.toISOString?.()?.split('T')[0]
+  return d === earliestDate
+})
+
+// Sort: non-alternate first, then major, then signature, then purse
+sameWeekCandidates.sort((a, b) => {
+  const aT = a.tournament || {}
+  const bT = b.tournament || {}
+  // Non-alternate first
+  if ((aT.isAlternate || false) !== (bT.isAlternate || false)) {
+    return (aT.isAlternate ? 1 : 0) - (bT.isAlternate ? 1 : 0)
+  }
+  // Major first
+  if ((aT.isMajor || false) !== (bT.isMajor || false)) return bT.isMajor ? 1 : -1
+  // Signature first
+  if ((aT.isSignature || false) !== (bT.isSignature || false)) return bT.isSignature ? 1 : -1
+  // Higher purse first
+  return (bT.purse || 0) - (aT.purse || 0)
+})
+
+const fantasyWeek = sameWeekCandidates[0]
+```
+
+Then update the return to use the already-included tournament select fields (they now include isAlternate, isMajor, etc. — just strip those from the return since the frontend doesn't need them).
+
+**Also important:** The tournament `startDate` in the DB for both events is `2026-03-05T00:00:00.000Z` (midnight UTC Wednesday). That's why it shows "locked" — midnight UTC March 5 has passed. The Arnold Palmer Round 1 tee times are actually Thursday March 6. The `syncSchedule` in `datagolfSync.js` (line 296) sets `startDate = new Date(evt.date || evt.start_date)` directly from DataGolf. If DataGolf says March 5, that's what gets stored. The lockTime logic at line 78 uses `tournament.startDate`, which is midnight UTC on March 5 — already in the past.
+
+**Secondary fix:** In the lock status calculation (lines 82-85), compare using timezone-aware logic similar to the tournament status check in `syncSchedule` (lines 313-320) which checks if `todayLocal >= startStr && hourLocal >= 7`. This way "started" means the tournament day has arrived AND it's past first tee time (7 AM ET), not midnight UTC.
+
+**Files:** `backend/src/services/fantasyWeekHelper.js`
+**Test:** After deploy, `GET /api/leagues/cmm16py8b006xo56567mxibpa/current-week` should return `tournament.name: "Arnold Palmer Invitational..."` and `isLocked: false` (until Thursday morning).
+
+---
+
+### 125 — Roster Player Card: Stats too far right, invisible on mobile
+**Status:** `TODO`
+**Priority:** HIGH — Visible on every roster page view.
+
+**The problem:**
+On the roster page, the player cards show stats (1W, 4 T5, 10 T10) pushed to the far-right edge with huge dead space in the middle. On mobile, stats are completely hidden (`hidden sm:flex`). Eric says "the player horizontal cards are trash for viewing the stats to the right."
+
+**Root cause:**
+In `TeamRoster.jsx`, the `PlayerRow` component (line 925) has `<div className="flex-1 min-w-0">` for the player info section, which takes ALL available horizontal space, pushing the stats `<div className="hidden sm:flex items-center gap-4">` (line 978) to the far right edge.
+
+**Fix in `frontend/src/pages/TeamRoster.jsx`:**
+
+1. **Show stats on mobile too.** Change line 978 from `hidden sm:flex` to `flex` so stats appear on all screen sizes.
+
+2. **Tighten the layout.** Instead of the player info taking `flex-1`, give it a reasonable max-width or change the flex layout. Options:
+   - Change the player info div (line 925) from `flex-1 min-w-0` to `flex-1 min-w-0 max-w-[240px] sm:max-w-none` — caps the info width on mobile
+   - OR move the stats inside the player info div, below the player name line, so they flow naturally:
+
+```jsx
+{/* Inside the player info div, after the existing metadata line */}
+{!isNfl && !isEditing && (
+  <div className="flex items-center gap-2 text-[11px] text-text-secondary mt-0.5">
+    {player.wins > 0 && <span className="font-mono">{player.wins}W</span>}
+    {player.top5s > 0 && <span className="font-mono">{player.top5s} T5</span>}
+    {player.top10s > 0 && <span className="font-mono">{player.top10s} T10</span>}
+  </div>
+)}
+```
+
+Then remove the old stats div (lines 977-983) that's pushed to the right edge.
+
+3. **Alternative approach (if you prefer keeping stats on the right):** Change the outer flex container to use `justify-between` and give stats a fixed width so they don't float to the extreme edge:
+```jsx
+<div className="flex items-center gap-2 text-xs text-text-secondary font-mono flex-shrink-0 min-w-[100px] text-right">
+```
+
+**Preferred approach:** Move stats into the player info block as a third line (name → metadata → stats). This works on all screen sizes and eliminates the dead-space problem entirely.
+
+**Files:** `frontend/src/pages/TeamRoster.jsx` (PlayerRow component, ~lines 925-983)
+**Test:** Check roster page at both desktop and mobile (390px) widths. Stats should be visible and close to player info, no huge gap.
+
+---
+
+### 126 — Run V3 draft values backfill script on Railway
+**Status:** `TODO`
+**Priority:** HIGH — BroMontana vault draft dollar values still wrong.
+
+**Prompt:**
+Item 123 has the V3 script at `backend/scripts/backfill-draft-values.js`. It should already be committed (Claude Code did this). Just run it on Railway:
+
+```bash
+node backend/scripts/backfill-draft-values.js
+```
+
+**Verification:**
+- Script should print: `Verification — 2020 Eric CMC cost: $116 (expected: $116)`
+- Script should print: `2020 Eric budget: $447 (expected: $447)`
+- Every year 2014-2025 should show league total = $2,400 (no exceptions)
+
+If the verification line shows wrong values or unmatched count is high, check the fuzzy matching logs. The script uses 3-pass matching (first 4 chars of last name + first initial, weaker fuzzy, position-order fallback).
+
+**Files:** `backend/scripts/backfill-draft-values.js`
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

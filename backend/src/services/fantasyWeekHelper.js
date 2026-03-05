@@ -2,7 +2,8 @@
  * Fantasy Week Helper Service
  *
  * Determines the current fantasy week for a league and whether lineups are locked.
- * Locked when: FantasyWeek status is LOCKED/IN_PROGRESS OR tournament.startDate <= now
+ * Locked when: FantasyWeek status is LOCKED/IN_PROGRESS, OR for golf: 7 AM ET on tournament start day, OR for NFL: earliest kickoff time.
+ * When two tournaments share a week (e.g., main event + alternate), prefers non-alternate > major > signature > higher purse.
  */
 
 /**
@@ -26,13 +27,15 @@ async function getCurrentFantasyWeek(leagueId, prisma) {
   })
   if (!currentSeason) return null
 
-  // Find the first UPCOMING, LOCKED, or IN_PROGRESS fantasy week for this season
-  const fantasyWeek = await prisma.fantasyWeek.findFirst({
+  // Find ALL active fantasy weeks, then pick the best when multiple share the same date
+  // (e.g., Arnold Palmer Invitational vs Puerto Rico Open in the same week)
+  const candidateWeeks = await prisma.fantasyWeek.findMany({
     where: {
       seasonId: currentSeason.id,
       status: { in: ['UPCOMING', 'LOCKED', 'IN_PROGRESS'] },
     },
     orderBy: { startDate: 'asc' },
+    take: 10,
     include: {
       tournament: {
         select: {
@@ -41,12 +44,41 @@ async function getCurrentFantasyWeek(leagueId, prisma) {
           startDate: true,
           endDate: true,
           status: true,
+          isAlternate: true,
+          isMajor: true,
+          isSignature: true,
+          purse: true,
         },
       },
     },
   })
 
-  if (!fantasyWeek) return null
+  if (candidateWeeks.length === 0) return null
+
+  // Among weeks sharing the earliest start date, prefer:
+  // non-alternate > major > signature > higher purse
+  const earliestDate = candidateWeeks[0].startDate?.toISOString?.()?.split('T')[0]
+  const sameWeekCandidates = candidateWeeks.filter(w => {
+    const d = w.startDate?.toISOString?.()?.split('T')[0]
+    return d === earliestDate
+  })
+
+  sameWeekCandidates.sort((a, b) => {
+    const aT = a.tournament || {}
+    const bT = b.tournament || {}
+    // Non-alternate events first
+    if ((aT.isAlternate || false) !== (bT.isAlternate || false)) {
+      return (aT.isAlternate ? 1 : 0) - (bT.isAlternate ? 1 : 0)
+    }
+    // Majors first
+    if ((aT.isMajor || false) !== (bT.isMajor || false)) return bT.isMajor ? 1 : -1
+    // Signature events next
+    if ((aT.isSignature || false) !== (bT.isSignature || false)) return bT.isSignature ? 1 : -1
+    // Higher purse wins
+    return (bT.purse || 0) - (aT.purse || 0)
+  })
+
+  const fantasyWeek = sameWeekCandidates[0]
 
   const now = new Date()
   const tournament = fantasyWeek.tournament
@@ -74,15 +106,30 @@ async function getCurrentFantasyWeek(leagueId, prisma) {
       lockTime = fantasyWeek.startDate
     }
   } else {
-    // Golf: lock at tournament start
+    // Golf: lock at 7 AM ET on tournament start day (first tee time),
+    // not midnight UTC which falsely shows "locked" the evening before.
     lockTime = tournament?.startDate || fantasyWeek.startDate
   }
 
   // Determine lock status
-  const isLocked =
+  let isLocked =
     fantasyWeek.status === 'LOCKED' ||
-    fantasyWeek.status === 'IN_PROGRESS' ||
-    (lockTime && now >= new Date(lockTime))
+    fantasyWeek.status === 'IN_PROGRESS'
+
+  if (!isLocked && lockTime) {
+    if (isNfl) {
+      // NFL: lock at exact kickoff time (already a precise timestamp)
+      isLocked = now >= new Date(lockTime)
+    } else {
+      // Golf: locked once it's past 7 AM ET on tournament start day
+      const etOffset = -5 // Eastern Time (EST; adjust to -4 for EDT if needed)
+      const nowET = new Date(now.getTime() + etOffset * 60 * 60 * 1000)
+      const todayET = nowET.toISOString().split('T')[0]
+      const etHour = nowET.getUTCHours()
+      const startDay = new Date(lockTime).toISOString().split('T')[0]
+      isLocked = todayET > startDay || (todayET === startDay && etHour >= 7)
+    }
+  }
 
   return {
     fantasyWeek: {
