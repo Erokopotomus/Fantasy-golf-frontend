@@ -5095,7 +5095,8 @@ If the fix is already deployed and working after cleanup, mark this DONE.
 
 ---
 
-### 143 — Restore premium glassmorphic styling to LeagueHome intel strip `TODO` `MEDIUM`
+### 143 — Restore premium glassmorphic styling to LeagueHome intel strip `DONE` `MEDIUM`
+**Completed:** 2026-03-05 — Styling already applied by Cowork, removed redundant dark: prefixes. Files: LeagueHome.jsx (commit 45bbbff)
 
 **Priority:** MEDIUM — visual regression from theme migration, noticed by user during live tournament
 
@@ -5138,6 +5139,268 @@ To:
 - Course DNA text shows green (emerald-400) against dark background
 - Looks premium and cohesive with the tournament banner above it
 - Works in both light and dark modes (the strip is always dark regardless of theme)
+
+---
+
+### 144 — Show floating glassmorphic info cards on TournamentHeader during LIVE tournaments (not just UPCOMING) `DONE` `HIGH`
+**Completed:** 2026-03-05 — Changed 4 isUpcoming gates to (isUpcoming || isLive): dnaCategories, par/yards, TV schedule, glass cards. Files: TournamentHeader.jsx (commit 45bbbff)
+
+**Priority:** HIGH — user-facing visual regression, these cards are a signature Clutch design element
+
+**Problem:** The TournamentHeader component has three beautiful floating glassmorphic info panels on the right side of the banner — **Field Strength** (top 25/50/100 OWGR breakdown with segmented bar), **Forecast** (4-day weather), and **Course DNA** (SG importance bars). These panels use `bg-black/40 backdrop-blur-sm border-white/15` when the course image is present, creating a premium see-through glass effect over the course photo.
+
+**However**, they are gated by `isUpcoming` on line 253:
+```jsx
+{isUpcoming && (dnaCategories.length > 0 || weather.length > 0 || leaderboard.length > 0) && (
+```
+
+This means they **disappear entirely** once the tournament goes `IN_PROGRESS` (live). The user wants these visible during live tournaments too — they're helpful context cards that should persist throughout the event.
+
+**Prompt:**
+
+In `frontend/src/components/tournament/TournamentHeader.jsx`:
+
+1. **Change the visibility gate** on line 253 from `isUpcoming` to `(isUpcoming || isLive)`:
+
+```jsx
+// BEFORE:
+{isUpcoming && (dnaCategories.length > 0 || weather.length > 0 || leaderboard.length > 0) && (
+
+// AFTER:
+{(isUpcoming || isLive) && (dnaCategories.length > 0 || weather.length > 0 || leaderboard.length > 0) && (
+```
+
+2. **Also update the dnaCategories computation** (line 51) to calculate for live tournaments too. Currently it's gated by `isUpcoming`:
+
+```jsx
+// BEFORE:
+const dnaCategories = (isUpcoming && course) ? [
+
+// AFTER:
+const dnaCategories = ((isUpcoming || isLive) && course) ? [
+```
+
+3. **Also update the Par/Yardage section** (line 179) — currently only shows for UPCOMING, should also show for LIVE:
+
+```jsx
+// BEFORE:
+{course && isUpcoming && (
+
+// AFTER:
+{course && (isUpcoming || isLive) && (
+```
+
+4. **Also update the TV Schedule** (line 239) — useful during live tournaments:
+
+```jsx
+// BEFORE:
+{isUpcoming && (
+
+// AFTER:
+{(isUpcoming || isLive) && (
+```
+
+**Design note:** The `panelBg` variable (line 80) already handles the glassmorphic styling correctly — `bg-black/40 backdrop-blur-sm border-white/15` when a course image exists. No styling changes needed, just visibility.
+
+**Files:**
+- `frontend/src/components/tournament/TournamentHeader.jsx` — lines 51, 179, 239, 253
+
+**Verification:**
+- On a LIVE tournament (Arnold Palmer Invitational), the banner should show:
+  - Left: LIVE badge, tournament name, course, dates, field count, leader
+  - Right: Floating glass cards — Field Strength (with OWGR tier bar), Forecast (4-round weather), Course DNA (SG importance bars)
+- Cards should be semi-transparent with backdrop blur, showing the course image through them
+- Cards should be hidden on mobile (`hidden md:flex` already handles this)
+- UPCOMING tournaments should continue working exactly as before
+- COMPLETED tournaments should NOT show the cards (they'd be stale/irrelevant)
+
+---
+
+### 145 — Remove redundant intel strip below tournament banner on LeagueHome `DONE` `MEDIUM`
+**Completed:** 2026-03-05 — Deleted strip + all unused vars (computePowerScore, tournamentWeather, topFieldPlayers, courseDnaSummary, weatherConditionIcon). Files: LeagueHome.jsx (commit 1a6588f)
+
+**Priority:** MEDIUM — now that item 144 restored the glassmorphic cards to the banner itself, the flat strip below is redundant
+
+**Problem:** The "Compact Tournament Intel Strip" below the TournamentHeader on the League Home page (showing TOP FIELD, COURSE DNA, WEATHER as a horizontal bar) is now redundant. Item 144 restored the premium floating glass cards (Field Strength, Forecast, Course DNA) directly on the banner. Having both is duplicative and clutters the page.
+
+Also remove item 143's dark glassmorphic restyling of this strip — it was an attempt to fix the wrong thing. The strip should simply be deleted entirely.
+
+**Prompt:**
+
+In `frontend/src/pages/LeagueHome.jsx`, delete the entire "Compact Tournament Intel Strip" section. This is the block that starts with:
+```jsx
+{/* Compact Tournament Intel Strip */}
+{(topFieldPlayers.length > 0 || courseDnaSummary || tournamentWeather.length > 0) && (
+```
+...and ends with the closing `</div>` and `)}` for that block (roughly lines 740-817).
+
+Also remove any now-unused variables/imports related to the strip:
+- `topFieldPlayers` useMemo (around line 240) — check if it's used elsewhere before removing
+- `courseDnaSummary` — check if used elsewhere
+- `tournamentWeather` — check if used elsewhere
+- `weatherConditionIcon` — check if used elsewhere
+
+Only remove variables that are exclusively used by the intel strip. If they're referenced elsewhere in LeagueHome, keep them.
+
+**Files:**
+- `frontend/src/pages/LeagueHome.jsx`
+
+**Verification:**
+- League Home page shows the tournament banner with glassmorphic cards (from item 144) and NO flat strip below it
+- No unused variable warnings in console
+- Page still loads correctly with all other content intact
+
+---
+
+### 146 — Redesign LiveScoringWidget with premium dark glassmorphic styling `DONE` `HIGH`
+**Completed:** 2026-03-05 — Full restyle: dark glassmorphic container, gold accents, broadcast overlay feel, muted FINAL state, dark skeleton. Files: LiveScoringWidget.jsx (commit 1a6588f)
+
+**Priority:** HIGH — user-facing, this is the first thing you see on the league home page during a live tournament and it looks bland
+
+**Problem:** The LiveScoringWidget on the League Home page is a plain white Card with a thin green-tinted gradient. It looks flat and generic compared to the glassmorphic tournament banner below it. During a live tournament, this widget is the most important element on the page — it should feel alive and premium.
+
+**Current state:** Plain Card component, `bg-gradient-to-r from-field-bright/10 to-[var(--surface)]`, standard borders, no depth or personality.
+
+**Prompt:**
+
+Redesign `frontend/src/components/league/LiveScoringWidget.jsx` to have a premium, tournament-broadcast feel. Here's the design spec:
+
+**1. Outer wrapper — dark glassmorphic container (replace the Card):**
+Replace the `<Card>` wrapper with a custom div:
+```jsx
+<div className="mb-6 rounded-xl overflow-hidden border border-white/10 bg-slate-900/90 backdrop-blur-md shadow-2xl">
+```
+This gives it the same dark glass look as the tournament banner's floating cards. It's always dark regardless of light/dark mode — like a TV broadcast overlay.
+
+**2. Header bar — richer with gradient accent:**
+```jsx
+<div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-gradient-to-r from-field-bright/10 via-transparent to-gold/5">
+```
+- Tournament name: `text-white font-display font-bold`
+- Round badge: `text-white/60`
+- LIVE badge: keep the green pulse but use `bg-field-bright/25 text-field-bright`
+- "Full Scoring" link: `text-gold hover:text-gold/80`
+
+**3. Body section — two columns with better contrast:**
+- Section labels ("YOUR TEAM", "LEAGUE"): `text-white/40` uppercase tracking
+- Rank number `#5`: `text-white text-3xl font-display font-bold`
+- "of 5": `text-white/40`
+- Points: `text-gold text-3xl font-display font-bold`
+- "pts": `text-white/40`
+
+**4. Player rows (Your Team starters):**
+```jsx
+<div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition-colors">
+```
+- Player name: `text-white/90 text-sm font-medium`
+- Position: `text-white/30 text-xs font-mono`
+- Score colors: under par → `text-field-bright`, over par → `text-live-red`, even → `text-white/60`
+- Fantasy points: `text-gold font-mono font-semibold`
+- Thru: `text-white/30 text-xs font-mono`
+
+**5. League leaderboard rows:**
+```jsx
+// Normal row:
+<div className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/[0.04]">
+
+// User's row (highlighted):
+<div className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-gold/10 border border-gold/25">
+```
+- Rank numbers: 1st → `text-crown`, 2nd → `text-gray-300`, 3rd → `text-amber-500`, rest → `text-white/30`
+- Team names: `text-white/80`
+- User's team: `text-gold font-semibold`
+- Points: `text-white/90 font-mono font-semibold`, user → `text-gold`
+
+**6. Footer:**
+- "Updates every 60s": `text-white/20`
+
+**7. Loading skeleton:** Update to match the dark theme — skeleton bars should use `bg-white/[0.06]` instead of `bg-[var(--bg-alt)]`.
+
+**8. FINAL state:** When tournament is completed, use slightly different styling:
+- Border: `border-white/5` (dimmer)
+- Background: `bg-slate-900/80` (slightly more transparent)
+- No green accents, use muted tones
+
+**Key principle:** This widget should feel like a live sports broadcast overlay — dark, glassy, premium. It sits on the light-mode league page but stands out as a "live window" into the tournament.
+
+**Files:**
+- `frontend/src/components/league/LiveScoringWidget.jsx` — full restyle, keep all existing logic/data unchanged
+
+**Verification:**
+- Widget has dark glassmorphic background that contrasts with the light league page
+- LIVE state has green pulse + gold accents
+- Player rows are readable with proper contrast
+- User's team row has gold highlight
+- Gold/green/red score colors pop against the dark background
+- Loading skeleton matches dark theme
+- FINAL state looks appropriately muted
+- Mobile responsive (single column on small screens)
+
+---
+
+### 147 — Redesign PlayerScoreCard with better visual separation and color contrast `TODO` `MEDIUM`
+
+**Priority:** MEDIUM — user experience during live tournament viewing
+
+**Problem:** The hole-by-hole scorecard (`PlayerScoreCard.jsx`) that expands when you click a player on the leaderboard is visually flat and hard to read. The Hole header, Par row, and Score row all blur together because the background colors are nearly identical (`bg-[var(--stone)]`, `bg-[var(--surface)]`, `bg-[var(--bg-alt)]`). The "FRONT 9" and "BACK 9" labels are tiny. Empty holes are just dashes with no context. Overall it lacks the premium feel of the rest of the app.
+
+**The ScoreCell component (circles/squares for birdie/bogey) is already well-designed — keep that.** The issue is the table structure and overall card styling.
+
+**Prompt:**
+
+Redesign `frontend/src/components/tournament/PlayerScoreCard.jsx` with these improvements:
+
+**1. Table header row (Hole numbers):**
+- Use a darker, more distinct background: `bg-slate-800 text-white/70` (dark bar that clearly separates from content)
+- Hole numbers: `text-white/60 font-mono text-[11px]`
+- "Out" / "In" / "Tot" summary cells: `text-white font-bold`
+
+**2. Par row — subtle but distinct:**
+- Background: `bg-slate-100 dark:bg-slate-800/50` (light mode: light gray, dark mode: subtle dark)
+- "Par" label: `text-text-muted text-[10px] font-medium`
+- Par values: `text-text-secondary font-mono text-[11px]`
+- Summary (36, 35, 71): `font-bold`
+
+**3. Score row — the star of the show:**
+- Background: `bg-white dark:bg-slate-900/30` (clean, bright — scores should pop)
+- "Score" label: `text-text-primary font-bold text-[10px]` (NOT orange — was confusing)
+- ScoreCell stays as-is (circles/squares are great)
+- Summary totals: larger text, color-coded (under par green, over par red)
+- Empty cells: use `·` (middle dot) instead of `-` with `text-text-muted/30` — less visual noise
+
+**4. Front 9 / Back 9 section labels:**
+- More prominent: `text-[11px] font-bold uppercase tracking-wider text-text-muted` with a left border accent
+- Example: `<div className="flex items-center gap-2 mb-1"><span className="w-1 h-3 bg-field rounded-full" /><span>FRONT 9</span></div>`
+
+**5. Table borders:**
+- Add subtle cell borders: `border border-[var(--card-border)]/50` on the table
+- Or use `divide-x divide-[var(--card-border)]/30` on rows for vertical separation between cells
+- Rounded corners on the table: `rounded-lg overflow-hidden`
+
+**6. Fantasy Points section — make it pop more:**
+- Total fantasy points: larger, more prominent — `text-2xl font-bold text-gold`
+- The breakdown grid is fine but could use slightly more padding
+
+**7. Player header — add some flair:**
+- If player is under par, add a subtle green left-border accent on the header
+- Position text should be larger/bolder
+- Add player's country flag if available
+
+**8. Legend — move inline or make more compact:**
+- Instead of a separate legend row, consider making the notation more self-explanatory (e.g. green = birdie is obvious from color context)
+- Or keep the legend but make it more compact and visually cleaner
+
+**Files:**
+- `frontend/src/components/tournament/PlayerScoreCard.jsx`
+
+**Verification:**
+- Scorecard is clearly readable with distinct visual separation between Hole/Par/Score rows
+- Birdie circles (green), eagle double-circles (gold), bogey squares (red) are visible and vibrant
+- Empty/unplayed holes are subtle (not distracting dashes)
+- Front 9 and Back 9 sections are clearly labeled
+- Summary columns (Out, In, Tot) stand out
+- Fantasy points breakdown is easy to scan
+- Works well on both light and dark mode
 
 ---
 

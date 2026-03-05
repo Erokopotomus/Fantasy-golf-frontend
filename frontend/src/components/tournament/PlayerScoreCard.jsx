@@ -95,6 +95,15 @@ const PlayerScoreCard = ({ player, onClose }) => {
 
   const breakdown = player.breakdown
 
+  const isUnderPar = parseInt(player.score) < 0
+
+  // Helper: color-code a summary total vs par
+  const summaryScoreClass = (score, par) => {
+    if (score < par) return 'text-field font-bold'
+    if (score > par) return 'text-live-red font-bold'
+    return 'text-text-primary font-bold'
+  }
+
   return (
     <Card className="relative">
       {onClose && (
@@ -108,8 +117,8 @@ const PlayerScoreCard = ({ player, onClose }) => {
         </button>
       )}
 
-      {/* Player Header */}
-      <div className="flex items-center gap-3 mb-4">
+      {/* Player Header — green left-border accent if under par */}
+      <div className={`flex items-center gap-3 mb-4 ${isUnderPar ? 'pl-3 border-l-[3px] border-field' : ''}`}>
         {player.headshotUrl ? (
           <img src={player.headshotUrl} alt="" className="w-12 h-12 rounded-full object-cover bg-[var(--stone)]" />
         ) : (
@@ -118,10 +127,15 @@ const PlayerScoreCard = ({ player, onClose }) => {
           </div>
         )}
         <div className="flex-1">
-          <h3 className="text-lg font-bold font-display text-text-primary">{player.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold font-display text-text-primary">{player.name}</h3>
+            {player.countryFlag && player.headshotUrl && (
+              <span className="text-base" title="Country">{player.countryFlag}</span>
+            )}
+          </div>
           <div className="flex items-center gap-3 text-sm text-text-secondary">
             <span>
-              Pos: <span className="text-text-primary font-semibold">{player.position}</span>
+              Pos: <span className="text-text-primary text-base font-bold">{player.position}</span>
             </span>
             <span>
               Total: <span className={`font-semibold ${parseInt(player.score) < 0 ? 'text-field' : parseInt(player.score) > 0 ? 'text-live-red' : 'text-text-primary'}`}>
@@ -139,21 +153,21 @@ const PlayerScoreCard = ({ player, onClose }) => {
 
       {/* Fantasy Points Breakdown */}
       {(player.fantasyPoints != null || breakdown) && (
-        <div className="mb-4 p-3 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)]">
+        <div className="mb-4 p-4 rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-text-muted uppercase tracking-wide">Fantasy Points</span>
-            <span className="text-lg font-bold font-display text-field">{player.fantasyPoints || 0}</span>
+            <span className="text-2xl font-bold font-display text-crown">{player.fantasyPoints || 0}</span>
           </div>
           {breakdown && (
-            <div className="grid grid-cols-2 gap-1.5 text-xs">
+            <div className="grid grid-cols-2 gap-2 text-xs">
               {breakdown.position != null && (
-                <div className="flex justify-between px-2 py-1 rounded bg-[var(--surface)]">
+                <div className="flex justify-between px-3 py-1.5 rounded bg-[var(--surface)]">
                   <span className="text-text-muted">Position</span>
                   <span className="text-field font-medium">+{breakdown.position}</span>
                 </div>
               )}
               {breakdown.holeScoring != null && (
-                <div className="flex justify-between px-2 py-1 rounded bg-[var(--surface)]">
+                <div className="flex justify-between px-3 py-1.5 rounded bg-[var(--surface)]">
                   <span className="text-text-muted">Hole Scoring</span>
                   <span className={`font-medium ${breakdown.holeScoring >= 0 ? 'text-field' : 'text-live-red'}`}>
                     {breakdown.holeScoring >= 0 ? '+' : ''}{breakdown.holeScoring}
@@ -161,13 +175,13 @@ const PlayerScoreCard = ({ player, onClose }) => {
                 </div>
               )}
               {breakdown.bonuses != null && breakdown.bonuses > 0 && (
-                <div className="flex justify-between px-2 py-1 rounded bg-[var(--surface)]">
+                <div className="flex justify-between px-3 py-1.5 rounded bg-[var(--surface)]">
                   <span className="text-text-muted">Bonuses</span>
                   <span className="text-crown font-medium">+{breakdown.bonuses}</span>
                 </div>
               )}
               {breakdown.strokesGained != null && breakdown.strokesGained > 0 && (
-                <div className="flex justify-between px-2 py-1 rounded bg-[var(--surface)]">
+                <div className="flex justify-between px-3 py-1.5 rounded bg-[var(--surface)]">
                   <span className="text-text-muted">Strokes Gained</span>
                   <span className="text-blue-400 font-medium">+{breakdown.strokesGained}</span>
                 </div>
@@ -185,111 +199,133 @@ const PlayerScoreCard = ({ player, onClose }) => {
 
       {/* Scorecard */}
       <div className="overflow-x-auto">
+        {/* Front 9 Section Label */}
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="w-1 h-3 bg-field rounded-full" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Front 9</span>
+        </div>
+
         {/* Front 9 */}
-        <table className="w-full mb-3 text-xs">
-          <thead>
-            <tr className="text-text-muted">
-              <th className="p-1.5 text-left bg-[var(--stone)] rounded-tl text-[10px] uppercase tracking-wide">Hole</th>
-              {front9.map(h => (
-                <th key={h.hole} className="p-1.5 text-center bg-[var(--stone)] w-8 text-[10px]">{h.hole}</th>
-              ))}
-              <th className="p-1.5 text-center bg-[var(--stone)] rounded-tr font-bold text-[10px]">Out</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="text-text-secondary">
-              <td className="p-1.5 text-left bg-[var(--surface)] text-[10px]">Par</td>
-              {front9.map(h => (
-                <td key={h.hole} className="p-1.5 text-center bg-[var(--surface)] text-[10px]">{h.par}</td>
-              ))}
-              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-[10px]">{front9Par}</td>
-            </tr>
-            <tr>
-              <td className="p-1.5 text-left bg-[var(--bg-alt)] text-text-primary font-medium text-[10px]">Score</td>
-              {front9.map(h => (
-                <td key={h.hole} className="p-0.5 text-center bg-[var(--bg-alt)]">
-                  <ScoreCell score={h.score} par={h.par} />
+        <div className="rounded-lg overflow-hidden mb-4 border border-[var(--card-border)]/30">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-slate-800 text-white/70">
+                <th className="p-1.5 text-left text-white/60 font-mono text-[11px]">Hole</th>
+                {front9.map(h => (
+                  <th key={h.hole} className="p-1.5 text-center w-8 text-white/60 font-mono text-[11px]">{h.hole}</th>
+                ))}
+                <th className="p-1.5 text-center text-white font-bold text-[11px]">Out</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="bg-slate-100 dark:bg-slate-800/50 divide-x divide-[var(--card-border)]/30">
+                <td className="p-1.5 text-left text-text-muted text-[10px] font-medium">Par</td>
+                {front9.map(h => (
+                  <td key={h.hole} className="p-1.5 text-center text-text-secondary font-mono text-[11px]">{h.par}</td>
+                ))}
+                <td className="p-1.5 text-center text-text-secondary font-mono text-[11px] font-bold">{front9Par}</td>
+              </tr>
+              <tr className="bg-white dark:bg-slate-900/30 divide-x divide-[var(--card-border)]/30">
+                <td className="p-1.5 text-left text-text-primary font-bold text-[10px]">Score</td>
+                {front9.map(h => (
+                  <td key={h.hole} className="p-0.5 text-center">
+                    {h.score !== null && h.score !== undefined
+                      ? <ScoreCell score={h.score} par={h.par} />
+                      : <span className="text-text-muted/30">&middot;</span>
+                    }
+                  </td>
+                ))}
+                <td className={`p-1.5 text-center text-[11px] ${front9.some(h => h.score !== null) ? summaryScoreClass(front9Score, front9Par) : 'text-text-muted/30'}`}>
+                  {front9.some(h => h.score !== null) ? front9Score : <span>&middot;</span>}
                 </td>
-              ))}
-              <td className="p-1.5 text-center bg-[var(--bg-alt)] font-bold text-text-primary text-[11px]">
-                {front9.some(h => h.score !== null) ? front9Score : '-'}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Back 9 Section Label */}
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="w-1 h-3 bg-field rounded-full" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Back 9</span>
+        </div>
 
         {/* Back 9 */}
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="text-text-muted">
-              <th className="p-1.5 text-left bg-[var(--stone)] rounded-tl text-[10px] uppercase tracking-wide">Hole</th>
-              {back9.map(h => (
-                <th key={h.hole} className="p-1.5 text-center bg-[var(--stone)] w-8 text-[10px]">{h.hole}</th>
-              ))}
-              <th className="p-1.5 text-center bg-[var(--stone)] font-bold text-[10px]">In</th>
-              <th className="p-1.5 text-center bg-[var(--stone)] rounded-tr font-bold text-[10px]">Tot</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="text-text-secondary">
-              <td className="p-1.5 text-left bg-[var(--surface)] text-[10px]">Par</td>
-              {back9.map(h => (
-                <td key={h.hole} className="p-1.5 text-center bg-[var(--surface)] text-[10px]">{h.par}</td>
-              ))}
-              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-[10px]">{back9Par}</td>
-              <td className="p-1.5 text-center bg-[var(--surface)] font-bold text-[10px]">{front9Par + back9Par}</td>
-            </tr>
-            <tr>
-              <td className="p-1.5 text-left bg-[var(--bg-alt)] text-text-primary font-medium text-[10px]">Score</td>
-              {back9.map(h => (
-                <td key={h.hole} className="p-0.5 text-center bg-[var(--bg-alt)]">
-                  <ScoreCell score={h.score} par={h.par} />
+        <div className="rounded-lg overflow-hidden border border-[var(--card-border)]/30">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-slate-800 text-white/70">
+                <th className="p-1.5 text-left text-white/60 font-mono text-[11px]">Hole</th>
+                {back9.map(h => (
+                  <th key={h.hole} className="p-1.5 text-center w-8 text-white/60 font-mono text-[11px]">{h.hole}</th>
+                ))}
+                <th className="p-1.5 text-center text-white font-bold text-[11px]">In</th>
+                <th className="p-1.5 text-center text-white font-bold text-[11px]">Tot</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="bg-slate-100 dark:bg-slate-800/50 divide-x divide-[var(--card-border)]/30">
+                <td className="p-1.5 text-left text-text-muted text-[10px] font-medium">Par</td>
+                {back9.map(h => (
+                  <td key={h.hole} className="p-1.5 text-center text-text-secondary font-mono text-[11px]">{h.par}</td>
+                ))}
+                <td className="p-1.5 text-center text-text-secondary font-mono text-[11px] font-bold">{back9Par}</td>
+                <td className="p-1.5 text-center text-text-secondary font-mono text-[11px] font-bold">{front9Par + back9Par}</td>
+              </tr>
+              <tr className="bg-white dark:bg-slate-900/30 divide-x divide-[var(--card-border)]/30">
+                <td className="p-1.5 text-left text-text-primary font-bold text-[10px]">Score</td>
+                {back9.map(h => (
+                  <td key={h.hole} className="p-0.5 text-center">
+                    {h.score !== null && h.score !== undefined
+                      ? <ScoreCell score={h.score} par={h.par} />
+                      : <span className="text-text-muted/30">&middot;</span>
+                    }
+                  </td>
+                ))}
+                <td className={`p-1.5 text-center text-[11px] ${back9.some(h => h.score !== null) ? summaryScoreClass(back9Score, back9Par) : 'text-text-muted/30'}`}>
+                  {back9.some(h => h.score !== null) ? back9Score : <span>&middot;</span>}
                 </td>
-              ))}
-              <td className="p-1.5 text-center bg-[var(--bg-alt)] font-bold text-text-primary text-[11px]">
-                {back9.some(h => h.score !== null) ? back9Score : '-'}
-              </td>
-              <td className="p-1.5 text-center bg-[var(--bg-alt)] font-bold text-text-primary text-[11px]">
-                {(front9.some(h => h.score !== null) || back9.some(h => h.score !== null))
-                  ? front9Score + back9Score
-                  : '-'}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <td className={`p-1.5 text-center text-[11px] ${(front9.some(h => h.score !== null) || back9.some(h => h.score !== null)) ? summaryScoreClass(front9Score + back9Score, front9Par + back9Par) : 'text-text-muted/30'}`}>
+                  {(front9.some(h => h.score !== null) || back9.some(h => h.score !== null))
+                    ? front9Score + back9Score
+                    : <span>&middot;</span>}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Legend — matches traditional scorecard notation */}
-      <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-[var(--card-border)] text-[10px]">
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center justify-center w-5 h-5 relative">
+      {/* Legend — compact, matches traditional scorecard notation */}
+      <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-[var(--card-border)] text-[10px]">
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center justify-center w-4 h-4 relative">
             <span className="absolute inset-0 rounded-full border-[1.5px] border-crown" />
             <span className="absolute inset-[2px] rounded-full border-[1.5px] border-crown" />
           </span>
-          <span className="text-text-secondary">Eagle</span>
+          <span className="text-text-muted">Eagle</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center justify-center w-5 h-5 relative">
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center justify-center w-4 h-4 relative">
             <span className="absolute inset-0 rounded-full border-[1.5px] border-field" />
           </span>
-          <span className="text-text-secondary">Birdie</span>
+          <span className="text-text-muted">Birdie</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center justify-center w-5 h-5 text-text-muted text-[9px]">—</span>
-          <span className="text-text-secondary">Par</span>
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center justify-center w-4 h-4 text-text-muted/40 text-[9px]">--</span>
+          <span className="text-text-muted">Par</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center justify-center w-5 h-5 relative">
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center justify-center w-4 h-4 relative">
             <span className="absolute inset-0 rounded-sm border-[1.5px] border-live-red" />
           </span>
-          <span className="text-text-secondary">Bogey</span>
+          <span className="text-text-muted">Bogey</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center justify-center w-5 h-5 relative">
+        <div className="flex items-center gap-1">
+          <span className="inline-flex items-center justify-center w-4 h-4 relative">
             <span className="absolute inset-0 rounded-sm border-[1.5px] border-live-red" />
             <span className="absolute inset-[2px] rounded-sm border-[1.5px] border-live-red" />
           </span>
-          <span className="text-text-secondary">Double+</span>
+          <span className="text-text-muted">Dbl+</span>
         </div>
       </div>
     </Card>
