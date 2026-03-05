@@ -1,46 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import api from '../../services/api'
 
-/**
- * Traditional golf scorecard notation:
- *   Eagle or better → double circle
- *   Birdie          → single circle
- *   Par             → plain number
- *   Bogey           → single square
- *   Double bogey+   → double square
- */
-const ScoreCell = ({ score, par }) => {
-  if (score == null) return <span className="text-text-muted font-mono">-</span>
-  const diff = score - par
-  if (diff <= -2) return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-full border-2 border-crown" />
-      <span className="absolute inset-[3px] rounded-full border-2 border-crown" />
-      <span className="text-crown font-bold text-[11px] relative z-10">{score}</span>
-    </span>
-  )
-  if (diff === -1) return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-full border-2 border-field" />
-      <span className="text-field font-semibold text-[11px] relative z-10">{score}</span>
-    </span>
-  )
-  if (diff === 0) return <span className="inline-flex items-center justify-center w-7 h-7 text-text-primary text-[11px] font-mono">{score}</span>
-  if (diff === 1) return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-sm border-2 border-live-red" />
-      <span className="text-live-red font-semibold text-[11px] relative z-10">{score}</span>
-    </span>
-  )
-  return (
-    <span className="inline-flex items-center justify-center w-7 h-7 relative font-mono">
-      <span className="absolute inset-0 rounded-sm border-2 border-live-red" />
-      <span className="absolute inset-[3px] rounded-sm border-2 border-live-red" />
-      <span className="text-live-red font-bold text-[11px] relative z-10">{score}</span>
-    </span>
-  )
-}
-
 const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChanges = {}, tournamentId, onPlayerExpand, onPlayerClick, timezone, currentRound: tournamentRound }) => {
   const [expandedPlayer, setExpandedPlayer] = useState(null)
   const [expandedRound, setExpandedRound] = useState(null) // which round tab is active
@@ -142,7 +102,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
   }
 
   const formatScore = (score) => {
-    if (score == null || score === '' || isNaN(score)) return '–'
+    if (score == null || score === '' || isNaN(score)) return '\u2013'
     const num = parseInt(score)
     if (num > 0) return `+${num}`
     if (num === 0) return 'E'
@@ -182,6 +142,35 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     : leaderboard
   const activePlayers = filtered.filter(p => p.status !== 'CUT')
   const cutPlayers = filtered.filter(p => p.status === 'CUT')
+
+  /** Render a single score cell with filled shapes */
+  const renderScoreCell = (score, par) => {
+    if (score == null) {
+      return <div className="w-7 h-7 rounded-md border border-dashed border-gray-300 dark:border-slate-600 mx-auto" />
+    }
+    const diff = score - par
+    if (diff <= -2) {
+      return <div className="w-7 h-7 rounded-full bg-crown text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+    }
+    if (diff === -1) {
+      return <div className="w-7 h-7 rounded-full bg-blaze text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+    }
+    if (diff === 0) {
+      return <div className="text-xs text-gray-500 dark:text-slate-400 text-center">{score}</div>
+    }
+    if (diff === 1) {
+      return <div className="w-7 h-7 rounded-sm bg-live-red/80 text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+    }
+    return <div className="w-7 h-7 rounded-sm bg-live-red text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+  }
+
+  /** Color-code a summary score */
+  const getSummaryColor = (score, par) => {
+    if (score == null) return 'text-gray-400 dark:text-slate-500'
+    if (score < par) return 'text-field'
+    if (score > par) return 'text-live-red'
+    return 'text-gray-500 dark:text-slate-400'
+  }
 
   const renderPlayer = (player, index, isCut = false) => {
     const isMyPlayer = myPlayerIds.includes(player.id)
@@ -302,7 +291,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             <>
               {[player.rounds?.r1, player.rounds?.r2, player.rounds?.r3, player.rounds?.r4].map((r, i) => (
                 <div key={i} className="text-center text-xs text-text-secondary font-mono">
-                  {r != null ? r : '–'}
+                  {r != null ? r : '\u2013'}
                 </div>
               ))}
             </>
@@ -310,7 +299,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
           {/* Today */}
           <div className={`text-center text-sm font-semibold ${getScoreColor(player.thru === 'F' || player.thru === 18 || player.thru > 0 ? player.today : null)}`}>
-            {player.thru === 'F' || player.thru === 18 || player.thru > 0 ? formatScore(player.today) : '–'}
+            {player.thru === 'F' || player.thru === 18 || player.thru > 0 ? formatScore(player.today) : '\u2013'}
           </div>
 
           {/* Thru */}
@@ -318,7 +307,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
             <div className="text-center text-xs text-text-muted">
               {player.thru === 'F' || player.thru === 18 ? (
                 <span className="text-text-secondary font-medium">F</span>
-              ) : player.thru > 0 ? player.thru : '–'}
+              ) : player.thru > 0 ? player.thru : '\u2013'}
             </div>
           )}
 
@@ -334,7 +323,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               return teeTime ? (
                 <span className="text-xs text-text-muted font-medium">{teeTime}</span>
               ) : (
-                <span className="text-xs text-text-muted">–</span>
+                <span className="text-xs text-text-muted">\u2013</span>
               )
             })()}
           </div>
@@ -342,9 +331,39 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
 
         {/* Expanded inline scorecard */}
         {isExpanded && (
-          <div className="bg-slate-900/95 backdrop-blur-md border-t border-white/10">
-            {/* Round tabs */}
-            <div className="flex items-center gap-1 px-4 pt-3 pb-2">
+          <div className="bg-gray-50 border-t border-gray-200 dark:bg-slate-900/95 dark:border-white/10 px-4 py-4">
+            {/* Probability chips — ABOVE round tabs */}
+            {player.probabilities && (
+              <div className="flex gap-2 mb-3">
+                {player.probabilities.win != null && (
+                  <div className="flex-1 rounded-lg px-4 py-2 text-center border border-blaze/50 bg-blaze/5 dark:border-blaze/40 dark:bg-blaze/10">
+                    <div className="text-lg font-bold font-mono text-blaze">{(player.probabilities.win * 100).toFixed(1)}%</div>
+                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Win</div>
+                  </div>
+                )}
+                {player.probabilities.top5 != null && (
+                  <div className="flex-1 rounded-lg px-4 py-2 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-lg font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.top5 * 100).toFixed(1)}%</div>
+                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Top 5</div>
+                  </div>
+                )}
+                {player.probabilities.top10 != null && (
+                  <div className="flex-1 rounded-lg px-4 py-2 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-lg font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.top10 * 100).toFixed(1)}%</div>
+                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Top 10</div>
+                  </div>
+                )}
+                {player.probabilities.makeCut != null && (
+                  <div className="flex-1 rounded-lg px-4 py-2 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="text-lg font-bold font-mono text-gray-700 dark:text-slate-200">{(player.probabilities.makeCut * 100).toFixed(1)}%</div>
+                    <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Make Cut</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Round tabs + inline legend */}
+            <div className="flex items-center gap-1.5 mt-3 mb-3">
               {[1, 2, 3, 4].map(r => {
                 const roundScore = player.rounds?.[`r${r}`]
                 const hasScore = roundScore != null
@@ -357,37 +376,40 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                     onClick={(e) => { e.stopPropagation(); if (isReachable) setExpandedRound(r) }}
                     disabled={!isReachable}
                     className={`
-                      px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
+                      px-3 py-1.5 rounded-lg text-xs transition-all
                       ${isActive
-                        ? 'bg-field-bright/20 text-field ring-1 ring-field-bright/30'
+                        ? 'bg-blaze/10 text-blaze border border-blaze/30 font-bold'
                         : isReachable
-                          ? 'bg-white/[0.06] text-white/60 hover:text-white/80 hover:bg-white/[0.10]'
-                          : 'bg-white/[0.03] text-white/20 cursor-not-allowed'}
+                          ? 'bg-white border border-gray-200 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 font-semibold hover:border-gray-300 dark:hover:border-slate-600'
+                          : 'bg-white border border-gray-200 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 font-semibold opacity-30 cursor-not-allowed'}
                     `}
                   >
                     R{r}
-                    {hasScore && <span className="ml-1 text-white/50">({roundScore})</span>}
-                    {isCurrent && !hasScore && <span className="ml-1 text-crown/70">*</span>}
+                    {hasScore && <span className="ml-1 text-gray-400 dark:text-slate-500">({roundScore})</span>}
+                    {isCurrent && !hasScore && <span className="ml-1 text-crown">*</span>}
                   </button>
                 )
               })}
 
-              {/* Overall summary chip */}
+              {/* Inline legend */}
               <div className="ml-auto flex items-center gap-3 text-xs">
-                {player.score != null && (
-                  <span className={`font-bold px-2 py-0.5 rounded-full bg-white/[0.06] ${getScoreColor(player.score)}`}>
-                    {formatScore(player.score)}
-                  </span>
-                )}
+                <div className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-blaze inline-block" />
+                  <span className="text-gray-500 dark:text-slate-400">Birdie</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-crown inline-block" />
+                  <span className="text-gray-500 dark:text-slate-400">Eagle</span>
+                </div>
               </div>
             </div>
 
             {/* Selected round scorecard */}
             {expandedRound && (
-              <div className="px-4 pb-3">
+              <div>
                 {loadingScorecard && !holeScores[player.id] && (
-                  <div className="flex items-center gap-2 py-2 text-xs text-text-muted">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-field-bright" />
+                  <div className="flex items-center gap-2 py-2 text-xs text-gray-400 dark:text-slate-500">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blaze" />
                     Loading scorecard...
                   </div>
                 )}
@@ -416,157 +438,102 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                   const back9Played = back9.filter(h => h.score != null)
                   const front9Score = front9Played.length > 0 ? front9Played.reduce((s, h) => s + h.score, 0) : null
                   const back9Score = back9Played.length > 0 ? back9Played.reduce((s, h) => s + h.score, 0) : null
+                  const totalScore = roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : null)
 
                   return (
                     <>
-                      {/* Round label + status */}
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-white/90 font-semibold">Round {expandedRound}</span>
-                          {isInProgress && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-crown/15 text-crown font-medium">
-                              {player.thru > 0 ? `Thru ${player.thru}` : 'Not started'}
-                            </span>
-                          )}
-                          {roundScore && !isCurrent && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-field-bright/10 text-field/80 font-medium">
-                              Complete
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isInProgress && player.thru > 0 && (
-                            <span className={`text-sm font-bold px-2 py-0.5 rounded bg-white/[0.08] ${getScoreColor(player.today)}`}>{formatScore(player.today)}</span>
-                          )}
-                          {roundScore && (
-                            <span className={`text-sm font-bold px-2 py-0.5 rounded bg-white/[0.08] ${roundScore < front9Par + back9Par ? 'text-field' : roundScore > front9Par + back9Par ? 'text-live-red' : 'text-text-primary'}`}>
-                              {roundScore} ({roundScore - (front9Par + back9Par) > 0 ? '+' : ''}{roundScore - (front9Par + back9Par)})
-                            </span>
-                          )}
-                        </div>
+                      {/* Front 9 */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-1 h-4 bg-blaze rounded-full" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Front 9</span>
                       </div>
-
-                      {/* Front 9 scorecard */}
                       <div className="overflow-x-auto">
-                        <p className="text-[10px] text-white/40 uppercase tracking-wider font-bold mb-1 flex items-center"><span className="w-1 h-3 bg-field-bright/40 rounded-full mr-1.5 inline-block" />Front 9</p>
-                        <div className="rounded-lg overflow-hidden mb-1.5">
-                        <table className="w-full text-xs border-collapse">
-                          <thead>
-                            <tr>
-                              <th className="p-1.5 text-left bg-slate-800 text-white/60 font-mono text-[10px] font-medium w-12">Hole</th>
-                              {front9.map((h, i) => (
-                                <th key={i} className="p-1.5 text-center bg-slate-800 text-white/60 font-mono text-[10px] font-medium min-w-[28px]">{i + 1}</th>
-                              ))}
-                              <th className="p-1.5 text-center bg-slate-800 text-white/80 font-mono text-[10px] font-bold min-w-[32px]">Out</th>
-                              <th className="p-1.5 bg-slate-800 min-w-[32px]"></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td className="p-1.5 text-left bg-slate-800/40 text-white/40 font-mono text-[10px]">Par</td>
-                              {front9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-slate-800/40 text-white/40 font-mono text-[10px]">{h.par || defaultPars[i]}</td>
-                              ))}
-                              <td className="p-1.5 text-center bg-slate-800/40 font-bold text-white/50 font-mono text-[10px]">{front9Par}</td>
-                              <td className="p-1.5 bg-slate-800/40"></td>
-                            </tr>
-                            <tr className="border-t-2 border-field-bright/30">
-                              <td className="p-1.5 text-left bg-slate-900/50 text-field-bright text-[10px] font-bold">Score</td>
-                              {front9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center bg-slate-900/50 text-white">
-                                  <ScoreCell score={h.score} par={h.par || defaultPars[i]} />
-                                </td>
-                              ))}
-                              <td className={`p-1.5 text-center bg-slate-900/50 font-bold text-[11px] ${front9Score != null && front9Par ? (front9Score < front9Par ? 'text-field-bright' : front9Score > front9Par ? 'text-live-red' : 'text-white/60') : 'text-white/60'}`}>
-                                {front9Score != null ? front9Score : '–'}
-                              </td>
-                              <td className="p-1.5 bg-slate-900/50"></td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        </div>
+                        <div className="grid grid-cols-[auto_repeat(9,1fr)_auto] gap-x-1 gap-y-1 items-center min-w-[340px]">
+                          {/* Row 1 — Hole numbers */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">#</div>
+                          {front9.map((h, i) => (
+                            <div key={i} className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">{i + 1}</div>
+                          ))}
+                          <div className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">Out</div>
 
-                        {/* Back 9 scorecard */}
-                        <p className="text-[10px] text-white/40 uppercase tracking-wider font-bold mb-1 mt-2 flex items-center"><span className="w-1 h-3 bg-field-bright/40 rounded-full mr-1.5 inline-block" />Back 9</p>
-                        <div className="rounded-lg overflow-hidden">
-                        <table className="w-full text-xs border-collapse">
-                          <thead>
-                            <tr>
-                              <th className="p-1.5 text-left bg-slate-800 text-white/60 font-mono text-[10px] font-medium w-12">Hole</th>
-                              {back9.map((h, i) => (
-                                <th key={i} className="p-1.5 text-center bg-slate-800 text-white/60 font-mono text-[10px] font-medium min-w-[28px]">{i + 10}</th>
-                              ))}
-                              <th className="p-1.5 text-center bg-slate-800 text-white/80 font-mono text-[10px] font-bold min-w-[32px]">In</th>
-                              <th className="p-1.5 text-center bg-slate-800 text-white/80 font-mono text-[10px] font-bold min-w-[32px]">Tot</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td className="p-1.5 text-left bg-slate-800/40 text-white/40 font-mono text-[10px]">Par</td>
-                              {back9.map((h, i) => (
-                                <td key={i} className="p-1.5 text-center bg-slate-800/40 text-white/40 font-mono text-[10px]">{h.par || defaultPars[i + 9]}</td>
-                              ))}
-                              <td className="p-1.5 text-center bg-slate-800/40 font-bold text-white/50 font-mono text-[10px]">{back9Par}</td>
-                              <td className="p-1.5 text-center bg-slate-800/40 font-bold text-white/50 font-mono text-[10px]">{front9Par + back9Par}</td>
-                            </tr>
-                            <tr className="border-t-2 border-field-bright/30">
-                              <td className="p-1.5 text-left bg-slate-900/50 text-field-bright text-[10px] font-bold">Score</td>
-                              {back9.map((h, i) => (
-                                <td key={i} className="p-0.5 text-center bg-slate-900/50 text-white">
-                                  <ScoreCell score={h.score} par={h.par || defaultPars[i + 9]} />
-                                </td>
-                              ))}
-                              <td className={`p-1.5 text-center bg-slate-900/50 font-bold text-[11px] ${back9Score != null && back9Par ? (back9Score < back9Par ? 'text-field-bright' : back9Score > back9Par ? 'text-live-red' : 'text-white/60') : 'text-white/60'}`}>
-                                {back9Score != null ? back9Score : '–'}
-                              </td>
-                              <td className={`p-1.5 text-center bg-slate-900/50 font-bold text-[11px] ${(() => { const total = roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : null); const totalPar = front9Par + back9Par; return total != null ? (total < totalPar ? 'text-field-bright' : total > totalPar ? 'text-live-red' : 'text-white/60') : 'text-white/60' })()}`}>
-                                {roundScore || (front9Score != null && back9Score != null ? front9Score + back9Score : '–')}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+                          {/* Row 2 — Par */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Par</div>
+                          {front9.map((h, i) => (
+                            <div key={i} className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center">{h.par || defaultPars[i]}</div>
+                          ))}
+                          <div className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center font-bold">{front9Par}</div>
+
+                          {/* Row 3 — Scores */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Scr</div>
+                          {front9.map((h, i) => (
+                            <div key={i}>
+                              {renderScoreCell(h.score, h.par || defaultPars[i])}
+                            </div>
+                          ))}
+                          <div className={`text-sm font-bold font-mono text-center ${getSummaryColor(front9Score, front9Par)}`}>
+                            {front9Score != null ? front9Score : '\u2013'}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Legend */}
-                      {hasScores && (
-                        <div className="flex items-center gap-3 mt-2 text-[9px] text-white/30">
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-crown" /> Eagle</div>
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border-[1.5px] border-field" /> Birdie</div>
-                          <div className="flex items-center gap-1"><span className="text-white/40 text-[10px]">—</span> Par</div>
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-live-red" /> Bogey</div>
-                          <div className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-sm border-[1.5px] border-live-red" /> Dbl+</div>
+                      {/* Back 9 */}
+                      <div className="flex items-center gap-2 mb-2 mt-4">
+                        <span className="w-1 h-4 bg-field rounded-full" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Back 9</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <div className="grid grid-cols-[auto_repeat(9,1fr)_auto] gap-x-1 gap-y-1 items-center min-w-[340px]">
+                          {/* Row 1 — Hole numbers */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">#</div>
+                          {back9.map((h, i) => (
+                            <div key={i} className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">{i + 10}</div>
+                          ))}
+                          <div className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">In</div>
+
+                          {/* Row 2 — Par */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Par</div>
+                          {back9.map((h, i) => (
+                            <div key={i} className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center">{h.par || defaultPars[i + 9]}</div>
+                          ))}
+                          <div className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center font-bold">{back9Par}</div>
+
+                          {/* Row 3 — Scores */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Scr</div>
+                          {back9.map((h, i) => (
+                            <div key={i}>
+                              {renderScoreCell(h.score, h.par || defaultPars[i + 9])}
+                            </div>
+                          ))}
+                          <div className={`text-sm font-bold font-mono text-center ${getSummaryColor(back9Score, back9Par)}`}>
+                            {back9Score != null ? back9Score : '\u2013'}
+                          </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Summary row — THREE CARDS */}
+                      <div className="grid grid-cols-3 gap-2 mt-4">
+                        <div className="bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-lg py-3 text-center">
+                          <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Front</div>
+                          <div className={`text-lg font-bold font-mono ${front9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
+                            {front9Score != null ? front9Score : '\u2013'}
+                          </div>
+                        </div>
+                        <div className="bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-lg py-3 text-center">
+                          <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Back</div>
+                          <div className={`text-lg font-bold font-mono ${back9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
+                            {back9Score != null ? back9Score : '\u2013'}
+                          </div>
+                        </div>
+                        <div className="bg-field/5 border border-field/20 dark:bg-field/10 dark:border-field/30 rounded-lg py-3 text-center">
+                          <div className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium">Total</div>
+                          <div className="text-xl font-bold font-mono text-field">
+                            {totalScore != null ? totalScore : '\u2013'}
+                          </div>
+                        </div>
+                      </div>
                     </>
                   )
                 })()}
-              </div>
-            )}
-
-            {/* Stats row: probabilities */}
-            {player.probabilities && (
-              <div className="px-4 pb-3 flex flex-wrap gap-2">
-                {player.probabilities.win != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-crown/10 text-crown font-medium">
-                    Win {(player.probabilities.win * 100).toFixed(1)}%
-                  </span>
-                )}
-                {player.probabilities.top5 != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-field-bright/10 text-field font-medium">
-                    Top 5 {(player.probabilities.top5 * 100).toFixed(1)}%
-                  </span>
-                )}
-                {player.probabilities.top10 != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 font-medium">
-                    Top 10 {(player.probabilities.top10 * 100).toFixed(1)}%
-                  </span>
-                )}
-                {player.probabilities.makeCut != null && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-white/[0.06] text-white/50 font-medium">
-                    Cut {(player.probabilities.makeCut * 100).toFixed(1)}%
-                  </span>
-                )}
               </div>
             )}
           </div>

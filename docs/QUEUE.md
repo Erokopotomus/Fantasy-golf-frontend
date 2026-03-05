@@ -5405,7 +5405,8 @@ Redesign `frontend/src/components/tournament/PlayerScoreCard.jsx` with these imp
 
 ---
 
-### 148 — Restyle TournamentLeaderboard inline scorecard drawer (the ACTUAL visible scorecard) `TODO` `HIGH`
+### 148 — Restyle TournamentLeaderboard inline scorecard drawer (the ACTUAL visible scorecard) `DONE` `HIGH`
+**Completed:** 2026-03-05 — Dark glassmorphic drawer, round tab restyle, score chips in pills, accent labels, rounded tables, color-coded summaries. Files: TournamentLeaderboard.jsx (commit 73b0013)
 
 **Priority:** HIGH — this is the scorecard users actually see when clicking a player on the scoring page
 
@@ -5473,6 +5474,113 @@ Restyle the **inline scorecard** in `frontend/src/components/tournament/Tourname
 - Front 9 / Back 9 labels have accent indicators
 - Works on mobile (overflow-x-auto is preserved)
 - ScoreCell component is untouched (circles/squares for birdie/bogey already work well)
+
+---
+
+### 149 — Scorecard drawer V2: card-grid layout with light+dark mode (SUPERSEDES 148, MOCKUP PROVIDED) `TODO` `HIGH`
+
+**Priority:** HIGH — user provided mockups, wants this specific design. Live tournament today. Item 148 was dark-only which user rejected ("just looks like dark mode on light mode screen"). This is a full layout redesign.
+
+**Problem:** Item 148 applied dark glassmorphic styling to the inline scorecard but the user wants a fundamentally different layout: card-grid instead of tables, individual score boxes instead of flat cells, probability chips at top, and a FRONT/BACK/TOTAL summary row at the bottom. Must work in both light AND dark mode.
+
+**Prompt:**
+
+Redesign the **inline scorecard** in `frontend/src/components/tournament/TournamentLeaderboard.jsx`. This is the expanded view when you click a player row on the leaderboard. Replace the current layout with a card-grid approach. **Must work in BOTH light mode (default) and dark mode** using Tailwind `dark:` prefix.
+
+**DESIGN SPEC (from user mockups):**
+
+**1. Scorecard drawer wrapper:**
+- Light: `bg-gray-50 border-t border-gray-200`
+- Dark: `dark:bg-slate-900/95 dark:border-white/10`
+- Padding: `px-4 py-4`
+
+**2. Probability chips — move ABOVE round tabs (currently at bottom of the expanded section):**
+- Horizontal row of 4 chips: WIN, TOP 5, TOP 10, CUT
+- Each chip: `rounded-lg px-4 py-2 text-center`
+- Light: `bg-white border border-gray-200` / Dark: `dark:bg-slate-800 dark:border-slate-700`
+- WIN chip special: `border-blaze/50 bg-blaze/5` / Dark: `dark:border-blaze/40 dark:bg-blaze/10`
+- Percentage: `text-lg font-bold font-mono` — WIN in `text-blaze`
+- Label: `text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium`
+- Layout: `flex gap-2` with equal-width chips (`flex-1`)
+
+**3. Round tabs row:**
+- Layout: `flex items-center gap-1.5 mt-3 mb-3`
+- Active tab: `bg-blaze/10 text-blaze border border-blaze/30 rounded-lg px-3 py-1.5 font-bold text-xs`
+- Inactive reachable: `bg-white border border-gray-200 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 rounded-lg px-3 py-1.5 text-xs font-semibold`
+- Disabled: `opacity-30 cursor-not-allowed`
+- **Legend on the RIGHT** (inline with tabs): `ml-auto flex items-center gap-3 text-xs`
+  - `<span className="w-3 h-3 rounded-full bg-blaze inline-block" /> Birdie`
+  - `<span className="w-3 h-3 rounded-full bg-crown inline-block" /> Eagle`
+- **Remove the old separate legend section** that was below the scorecard
+
+**4. Front 9 / Back 9 sections — CSS GRID layout (replace `<table>` elements):**
+- Section label with colored accent bar:
+  - Front 9: `<span className="w-1 h-4 bg-blaze rounded-full" />` + `FRONT 9` in `text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400`
+  - Back 9: `<span className="w-1 h-4 bg-field rounded-full" />` + `BACK 9`
+  - Wrapper: `flex items-center gap-2 mb-2 mt-3` (first section mt-0)
+
+- Grid: `grid grid-cols-[auto_repeat(9,1fr)_auto] gap-x-1 gap-y-1 items-center`
+  - Col 1: row label — `text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8`
+  - Cols 2-10: holes
+  - Col 11: OUT or IN summary
+
+- **Row 1 — Hole numbers (#):**
+  - Label: `#`
+  - Values: `text-xs font-bold text-gray-600 dark:text-slate-300 text-center`
+
+- **Row 2 — Par:**
+  - Label: `Par`
+  - Values: `text-xs text-gray-400 dark:text-slate-500 font-mono text-center`
+  - OUT/IN summary: `font-bold`
+
+- **Row 3 — Scores (Scr):**
+  - Label: `Scr`
+  - Each score is an individual element centered in its grid cell:
+    - **Unplayed:** `w-7 h-7 rounded-md border border-dashed border-gray-300 dark:border-slate-600 mx-auto`
+    - **Birdie (score < par):** `w-7 h-7 rounded-full bg-blaze text-white font-bold text-xs flex items-center justify-center mx-auto` — show the score number inside (e.g. "3")
+    - **Eagle (score <= par - 2):** `w-7 h-7 rounded-full bg-crown text-white font-bold text-xs flex items-center justify-center mx-auto`
+    - **Par (score === par):** plain text `text-xs text-gray-500 dark:text-slate-400 text-center` — no shape
+    - **Bogey (score === par + 1):** `w-7 h-7 rounded-sm bg-live-red/80 text-white font-bold text-xs flex items-center justify-center mx-auto`
+    - **Double bogey+ (score > par + 1):** `w-7 h-7 rounded-sm bg-live-red text-white font-bold text-xs flex items-center justify-center mx-auto`
+  - OUT/IN summary: `text-sm font-bold font-mono` color-coded (under par `text-field`, over par `text-live-red`, even `text-gray-500 dark:text-slate-400`)
+
+**5. Summary row — THREE DISTINCT CARDS at the bottom:**
+- Layout: `grid grid-cols-3 gap-2 mt-4`
+- FRONT card:
+  - Light: `bg-white border border-gray-200 rounded-lg py-3 text-center`
+  - Dark: `dark:bg-slate-800 dark:border-slate-700`
+  - Label: `text-[10px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium`
+  - Value: `text-lg font-bold font-mono text-gray-700 dark:text-slate-200` (show to-par, or "—" if no scores)
+- BACK card: same styling as FRONT
+- TOTAL card — green accent:
+  - Light: `bg-field/5 border border-field/20 rounded-lg py-3 text-center`
+  - Dark: `dark:bg-field/10 dark:border-field/30`
+  - Value: `text-xl font-bold font-mono text-field`
+
+**6. Remove old elements:**
+- Delete the "Round X" label + status row (lines ~422-447) — redundant with round tabs
+- Delete the old legend section (lines ~527-536) — legend is now inline with round tabs
+- Move probability chips from bottom to top (delete from old location)
+
+**7. ScoreCell component update:**
+- Check the existing `ScoreCell` in the file. It likely renders circles/squares with borders. Update it to match the mockup:
+  - Shapes should be FILLED (solid background color), not just bordered
+  - Score number should appear INSIDE the shape in white text
+  - Use `bg-blaze` for birdie, `bg-crown` for eagle, `bg-live-red` for bogey (not just border colors)
+
+**FILES:**
+- `frontend/src/components/tournament/TournamentLeaderboard.jsx`
+
+**VERIFICATION:**
+- Expanded scorecard uses card-grid layout (NO `<table>` elements in the scorecard)
+- Score cells are individual shapes: filled orange circles (birdie), filled gold circles (eagle), filled red squares (bogey), dashed boxes (unplayed), plain text (par)
+- Probability chips appear ABOVE round tabs as horizontal card row
+- Legend (Birdie/Eagle dots) is inline with round tabs on the right side
+- Bottom summary: FRONT / BACK / TOTAL as three distinct cards, TOTAL with green accent
+- Works in BOTH light mode (cream `bg-gray-50`) and dark mode (`dark:bg-slate-900/95`)
+- No CSS variable colors (`var(--surface)`, `var(--bg-alt)`, etc.) in the scorecard section — Tailwind only
+- Mobile: horizontal scroll preserved via `overflow-x-auto` wrapper around each grid
+- ScoreCell shapes are filled (solid color) with white text inside, not just bordered
 
 ---
 
