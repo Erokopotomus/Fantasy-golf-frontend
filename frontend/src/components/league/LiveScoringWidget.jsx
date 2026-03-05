@@ -11,7 +11,9 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
   const [scorecardData, setScorecardData] = useState(null)
   const [scorecardLoading, setScorecardLoading] = useState(false)
   const [drawerWidth, setDrawerWidth] = useState(420)
+  const [leftDrawerWidth, setLeftDrawerWidth] = useState(420)
   const isResizing = useRef(false)
+  const isLeftResizing = useRef(false)
 
   // Close drawers on Escape key
   useEffect(() => {
@@ -63,6 +65,26 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
   }, [drawerWidth])
+
+  // Left drawer resize — dragging the right edge rightward = wider
+  const startLeftResize = useCallback((e) => {
+    e.preventDefault()
+    isLeftResizing.current = true
+    const startX = e.clientX
+    const startWidth = leftDrawerWidth
+    const onMouseMove = (e) => {
+      if (!isLeftResizing.current) return
+      const newWidth = Math.max(360, Math.min(700, startWidth + (e.clientX - startX)))
+      setLeftDrawerWidth(newWidth)
+    }
+    const onMouseUp = () => {
+      isLeftResizing.current = false
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [leftDrawerWidth])
 
   // Don't render if there's no tournament data and we're done loading
   if (!loading && (!tournament || error)) return null
@@ -360,17 +382,23 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
         />
       )}
       <div
-        className={`fixed left-0 top-0 h-full w-[380px] max-w-[85vw] z-50 overflow-y-auto transition-transform duration-300 bg-white shadow-xl dark:bg-slate-900 dark:shadow-2xl border-r border-gray-200 dark:border-white/10 ${
+        className={`fixed left-0 top-0 h-full max-w-[85vw] z-50 overflow-y-auto transition-transform duration-300 bg-white shadow-xl dark:bg-slate-900 dark:shadow-2xl border-r border-gray-200 dark:border-white/10 ${
           selectedPlayer ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ width: `${leftDrawerWidth}px` }}
       >
+        {/* Resize handle — right edge */}
+        <div
+          className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-blaze/20 dark:hover:bg-crown/20 transition-colors z-20"
+          onMouseDown={startLeftResize}
+        />
         {selectedPlayer && (
           <>
             {/* Header */}
             <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-4 py-3 flex items-center justify-between z-10">
               <div className="flex items-center gap-2 min-w-0">
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                  isOnCourse(selectedPlayer.thru) ? 'bg-field-bright animate-pulse' : 'bg-gray-400 dark:bg-white/30'
+                  isOnCourse(selectedPlayer.thru) ? 'bg-field-bright animate-pulse' : selectedPlayer.thru === 18 || selectedPlayer.thru === 'F' ? 'bg-gray-400 dark:bg-white/30' : 'bg-gray-300 dark:bg-white/20'
                 }`} />
                 <h3 className="text-sm font-display font-bold text-gray-900 dark:text-white truncate">
                   {selectedPlayer.playerName}
@@ -414,128 +442,179 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                   <div className="w-5 h-5 border-2 border-blaze/30 dark:border-crown/30 border-t-blaze dark:border-t-crown rounded-full animate-spin" />
                 </div>
               ) : scorecardData && Object.keys(scorecardData).length > 0 ? (
-                Object.entries(scorecardData).map(([round, holes]) => {
-                  const frontNine = holes.filter(h => h.hole <= 9)
-                  const backNine = holes.filter(h => h.hole > 9)
-                  const frontTotal = frontNine.reduce((sum, h) => sum + (h.score || 0), 0)
-                  const backTotal = backNine.reduce((sum, h) => sum + (h.score || 0), 0)
-                  const total = frontTotal + backTotal
+                Object.entries(scorecardData).map(([round, holeData]) => {
+                  // Default 18-hole pars — merge API data into template
+                  const defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]
+                  const holeDataMap = {}
+                  if (holeData && holeData.length > 0) {
+                    for (const h of holeData) holeDataMap[h.hole] = h
+                  }
+                  const holes = defaultPars.map((defPar, i) => {
+                    const holeNum = i + 1
+                    return holeDataMap[holeNum] || { hole: holeNum, par: defPar, score: null }
+                  })
+                  const front9 = holes.slice(0, 9)
+                  const back9 = holes.slice(9, 18)
+                  const front9Par = front9.reduce((s, h) => s + h.par, 0)
+                  const back9Par = back9.reduce((s, h) => s + h.par, 0)
+                  const front9Played = front9.filter(h => h.score != null)
+                  const back9Played = back9.filter(h => h.score != null)
+                  const front9Score = front9Played.length > 0 ? front9Played.reduce((s, h) => s + h.score, 0) : null
+                  const back9Score = back9Played.length > 0 ? back9Played.reduce((s, h) => s + h.score, 0) : null
+                  const totalScore = front9Score != null || back9Score != null ? (front9Score || 0) + (back9Score || 0) : null
+
+                  // Inline renderScoreCell matching TournamentLeaderboard
+                  const renderScoreCell = (score, par) => {
+                    if (score == null) {
+                      return <div className="w-7 h-7 rounded-md border border-dashed border-gray-300 dark:border-slate-600 mx-auto" />
+                    }
+                    const diff = score - par
+                    if (diff <= -2) {
+                      return <div className="w-7 h-7 rounded-full bg-crown text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+                    }
+                    if (diff === -1) {
+                      return <div className="w-7 h-7 rounded-full bg-blaze text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+                    }
+                    if (diff === 0) {
+                      return <div className="text-xs text-gray-500 dark:text-slate-400 text-center">{score}</div>
+                    }
+                    if (diff === 1) {
+                      return <div className="w-7 h-7 rounded-sm bg-live-red/80 text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+                    }
+                    return <div className="w-7 h-7 rounded-sm bg-live-red text-white font-bold text-xs flex items-center justify-center mx-auto">{score}</div>
+                  }
+
+                  // Color-code summary scores
+                  const getSummaryColor = (score, par) => {
+                    if (score == null) return 'text-gray-400 dark:text-slate-500'
+                    if (score < par) return 'text-field'
+                    if (score > par) return 'text-live-red'
+                    return 'text-gray-500 dark:text-slate-400'
+                  }
 
                   return (
-                    <div key={round} className="mb-4">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-white/40 mb-2">
+                    <div key={round} className="mb-5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-white/40 mb-3">
                         Round {round}
                       </p>
 
-                      {/* Hole grid */}
-                      <div className="space-y-1">
-                        {/* Front 9 */}
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-white/30 w-7 text-right mr-1">Hole</span>
-                          {frontNine.map(h => (
-                            <span key={h.hole} className="text-[9px] font-mono text-gray-400 dark:text-white/30 w-7 text-center">{h.hole}</span>
+                      {/* Front 9 */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-1 h-4 bg-blaze rounded-full" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Front 9</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <div className="grid grid-cols-[auto_repeat(9,1fr)_auto] gap-x-1 gap-y-1 items-center min-w-[340px]">
+                          {/* Row 1 — Hole numbers */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">#</div>
+                          {front9.map((h, i) => (
+                            <div key={i} className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">{i + 1}</div>
                           ))}
-                          <span className="text-[8px] font-mono text-gray-400 dark:text-white/30 w-8 text-center ml-1">OUT</span>
+                          <div className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">Out</div>
+
+                          {/* Row 2 — Par */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Par</div>
+                          {front9.map((h, i) => (
+                            <div key={i} className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center">{h.par}</div>
+                          ))}
+                          <div className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center font-bold">{front9Par}</div>
+
+                          {/* Row 3 — Scores */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Scr</div>
+                          {front9.map((h, i) => (
+                            <div key={i}>
+                              {renderScoreCell(h.score, h.par)}
+                            </div>
+                          ))}
+                          <div className={`text-sm font-bold font-mono text-center ${getSummaryColor(front9Score, front9Par)}`}>
+                            {front9Score != null ? front9Score : '\u2013'}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-white/30 w-7 text-right mr-1">Par</span>
-                          {frontNine.map(h => (
-                            <span key={h.hole} className="text-[9px] font-mono text-gray-500 dark:text-white/40 w-7 text-center">{h.par}</span>
+                      </div>
+
+                      {/* Back 9 */}
+                      <div className="flex items-center gap-2 mb-2 mt-4">
+                        <span className="w-1 h-4 bg-field rounded-full" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Back 9</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <div className="grid grid-cols-[auto_repeat(9,1fr)_auto] gap-x-1 gap-y-1 items-center min-w-[340px]">
+                          {/* Row 1 — Hole numbers */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">#</div>
+                          {back9.map((h, i) => (
+                            <div key={i} className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">{i + 10}</div>
                           ))}
-                          <span className="text-[9px] font-mono text-gray-500 dark:text-white/40 w-8 text-center ml-1 font-semibold">
-                            {frontNine.reduce((s, h) => s + h.par, 0)}
+                          <div className="text-xs font-bold text-gray-600 dark:text-slate-300 text-center">In</div>
+
+                          {/* Row 2 — Par */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Par</div>
+                          {back9.map((h, i) => (
+                            <div key={i} className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center">{h.par}</div>
+                          ))}
+                          <div className="text-xs text-gray-400 dark:text-slate-500 font-mono text-center font-bold">{back9Par}</div>
+
+                          {/* Row 3 — Scores */}
+                          <div className="text-[10px] text-gray-400 dark:text-slate-500 font-medium w-8">Scr</div>
+                          {back9.map((h, i) => (
+                            <div key={i}>
+                              {renderScoreCell(h.score, h.par)}
+                            </div>
+                          ))}
+                          <div className={`text-sm font-bold font-mono text-center ${getSummaryColor(back9Score, back9Par)}`}>
+                            {back9Score != null ? back9Score : '\u2013'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* FRONT / BACK / TOTAL summary chips */}
+                      <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-gray-200 dark:border-slate-700">
+                        <div className="flex-1 rounded px-2 py-1 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium mr-1">FRONT</span>
+                          <span className={`text-xs font-bold font-mono ${front9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
+                            {front9Score != null ? front9Score : '\u2013'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-white/30 w-7 text-right mr-1">Scr</span>
-                          {frontNine.map(h => {
-                            const tp = h.toPar
-                            const bg = tp <= -2 ? 'bg-crown text-white' : tp === -1 ? 'bg-blaze text-white' : tp >= 2 ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : tp === 1 ? 'bg-gray-300 dark:bg-white/30 text-gray-900 dark:text-white' : ''
-                            const ring = tp <= -2 ? 'rounded-full' : tp === -1 ? 'rounded-full' : tp >= 2 ? 'rounded-sm' : tp === 1 ? 'rounded-sm' : ''
-                            return (
-                              <span key={h.hole} className={`text-[10px] font-mono font-bold w-7 h-6 flex items-center justify-center ${bg} ${ring} ${!bg ? 'text-gray-700 dark:text-white/70' : ''}`}>
-                                {h.score || '–'}
-                              </span>
-                            )
-                          })}
-                          <span className="text-[10px] font-mono font-bold text-gray-900 dark:text-white w-8 text-center ml-1">{frontTotal}</span>
-                        </div>
-
-                        {/* Spacer */}
-                        <div className="h-1" />
-
-                        {/* Back 9 */}
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-white/30 w-7 text-right mr-1">Hole</span>
-                          {backNine.map(h => (
-                            <span key={h.hole} className="text-[9px] font-mono text-gray-400 dark:text-white/30 w-7 text-center">{h.hole}</span>
-                          ))}
-                          <span className="text-[8px] font-mono text-gray-400 dark:text-white/30 w-8 text-center ml-1">IN</span>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-white/30 w-7 text-right mr-1">Par</span>
-                          {backNine.map(h => (
-                            <span key={h.hole} className="text-[9px] font-mono text-gray-500 dark:text-white/40 w-7 text-center">{h.par}</span>
-                          ))}
-                          <span className="text-[9px] font-mono text-gray-500 dark:text-white/40 w-8 text-center ml-1 font-semibold">
-                            {backNine.reduce((s, h) => s + h.par, 0)}
+                        <div className="flex-1 rounded px-2 py-1 text-center bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium mr-1">BACK</span>
+                          <span className={`text-xs font-bold font-mono ${back9Score != null ? 'text-gray-700 dark:text-slate-200' : 'text-gray-300 dark:text-slate-600'}`}>
+                            {back9Score != null ? back9Score : '\u2013'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-white/30 w-7 text-right mr-1">Scr</span>
-                          {backNine.map(h => {
-                            const tp = h.toPar
-                            const bg = tp <= -2 ? 'bg-crown text-white' : tp === -1 ? 'bg-blaze text-white' : tp >= 2 ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : tp === 1 ? 'bg-gray-300 dark:bg-white/30 text-gray-900 dark:text-white' : ''
-                            const ring = tp <= -2 ? 'rounded-full' : tp === -1 ? 'rounded-full' : tp >= 2 ? 'rounded-sm' : tp === 1 ? 'rounded-sm' : ''
-                            return (
-                              <span key={h.hole} className={`text-[10px] font-mono font-bold w-7 h-6 flex items-center justify-center ${bg} ${ring} ${!bg ? 'text-gray-700 dark:text-white/70' : ''}`}>
-                                {h.score || '–'}
-                              </span>
-                            )
-                          })}
-                          <span className="text-[10px] font-mono font-bold text-gray-900 dark:text-white w-8 text-center ml-1">{backTotal}</span>
-                        </div>
-
-                        {/* Total row */}
-                        <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-white/10">
-                          <span className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-white/40">Total</span>
-                          <span className={`text-base font-mono font-bold ${
-                            total < frontNine.reduce((s, h) => s + h.par, 0) + backNine.reduce((s, h) => s + h.par, 0)
-                              ? 'text-field dark:text-field-bright'
-                              : total > frontNine.reduce((s, h) => s + h.par, 0) + backNine.reduce((s, h) => s + h.par, 0)
-                                ? 'text-live-red'
-                                : 'text-gray-900 dark:text-white'
-                          }`}>
-                            {total}
+                        <div className="flex-1 rounded px-2 py-1 text-center bg-field/5 border border-field/20 dark:bg-field/10 dark:border-field/30">
+                          <span className="text-[8px] uppercase tracking-wider text-gray-400 dark:text-slate-500 font-medium mr-1">TOTAL</span>
+                          <span className={`text-sm font-bold font-mono ${getSummaryColor(totalScore, front9Par + back9Par)}`}>
+                            {totalScore != null ? totalScore : '\u2013'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Legend */}
-                      <div className="flex items-center gap-3 mt-3">
+                      {/* Inline legend */}
+                      <div className="flex items-center gap-3 mt-3 text-xs">
                         <div className="flex items-center gap-1">
-                          <span className="w-4 h-4 rounded-full bg-crown inline-flex items-center justify-center text-[7px] text-white font-bold">2</span>
-                          <span className="text-[9px] text-gray-400 dark:text-white/40">Eagle</span>
+                          <span className="w-3 h-3 rounded-full bg-blaze inline-block" />
+                          <span className="text-gray-500 dark:text-slate-400">Birdie</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="w-4 h-4 rounded-full bg-blaze inline-flex items-center justify-center text-[7px] text-white font-bold">3</span>
-                          <span className="text-[9px] text-gray-400 dark:text-white/40">Birdie</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="w-4 h-4 rounded-sm bg-gray-300 dark:bg-white/30 inline-flex items-center justify-center text-[7px] text-gray-900 dark:text-white font-bold">5</span>
-                          <span className="text-[9px] text-gray-400 dark:text-white/40">Bogey</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="w-4 h-4 rounded-sm bg-gray-900 dark:bg-white inline-flex items-center justify-center text-[7px] text-white dark:text-gray-900 font-bold">6</span>
-                          <span className="text-[9px] text-gray-400 dark:text-white/40">Dbl+</span>
+                          <span className="w-3 h-3 rounded-full bg-crown inline-block" />
+                          <span className="text-gray-500 dark:text-slate-400">Eagle</span>
                         </div>
                       </div>
                     </div>
                   )
                 })
               ) : (
-                <div className="flex items-center justify-center py-8 text-gray-400 dark:text-white/40 text-sm">
-                  <p>{selectedPlayer.thru === 0 ? 'Not yet teed off' : 'Scorecard not available'}</p>
+                <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-white/40">
+                  {selectedPlayer.thru === 0 || selectedPlayer.thru === null || selectedPlayer.thru === undefined ? (
+                    <>
+                      <svg className="w-8 h-8 mb-2 text-gray-300 dark:text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-sm font-medium">Not yet teed off</p>
+                      <p className="text-xs text-gray-300 dark:text-white/20 mt-1">Scorecard will appear once play begins</p>
+                    </>
+                  ) : (
+                    <p className="text-sm">Scorecard not available</p>
+                  )}
                 </div>
               )}
             </div>

@@ -5732,6 +5732,92 @@ The files are already edited. Your job:
 - `backend/src/index.js` — enhanced ESPN cron logging
 - `backend/src/routes/tournaments.js` — scorecard-status diagnostic endpoint
 
+### 153 — Show all 5 starters in LiveScoringWidget (not just top 4) `LOW`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Cowork removed .slice(0,4), committed in ae56b3b. Files: LiveScoringWidget.jsx
+**Priority:** LOW — simple one-line fix, Cowork already edited the file
+
+**Problem:** Widget only shows 4 of 5 starters. Line 88 had `.slice(0, 4)` hardcoded.
+
+**Prompt:**
+Cowork already fixed this in `frontend/src/components/league/LiveScoringWidget.jsx` — the `.slice(0, 4)` was removed from the `topStarters` const (line ~88). Just commit and deploy.
+
+**FILES ALREADY CHANGED:**
+- `frontend/src/components/league/LiveScoringWidget.jsx`
+
+---
+
+### 154 — Player scorecard drawer (LEFT slide) in LiveScoringWidget `HIGH`
+**Status:** `TODO`
+**Priority:** HIGH — enhances live scoring UX, symmetric with team roster drawer (RIGHT slide)
+
+**Problem:** Clicking a player name in YOUR TEAM section does nothing. User wants to click any player and see their hole-by-hole scorecard in a drawer that slides in from the LEFT (mirroring the team roster drawer that slides from the RIGHT).
+
+**Context:** Cowork started building this but the format needs to match the existing scorecard from `TournamentLeaderboard.jsx` exactly — same grid layout, same `renderScoreCell` logic, same `getSummaryColor`, same FRONT/BACK/TOTAL summary chips. The drawer also needs to be resizable (like the right drawer already is).
+
+**IMPORTANT:** Cowork already added partial code to LiveScoringWidget.jsx (state variables, fetch logic, a basic scorecard drawer). **Replace Cowork's scorecard drawer implementation** with the proper format below. Keep Cowork's state variables (`selectedPlayer`, `scorecardData`, `scorecardLoading`) and `openPlayerScorecard` callback — those are correct. Replace the drawer JSX.
+
+**Prompt:**
+
+Rebuild the LEFT player scorecard drawer in `frontend/src/components/league/LiveScoringWidget.jsx`.
+
+**1. Keep existing Cowork code:**
+- `import api from '../../services/api'` ✓
+- `const [selectedPlayer, setSelectedPlayer] = useState(null)` ✓
+- `const [scorecardData, setScorecardData] = useState(null)` ✓
+- `const [scorecardLoading, setScorecardLoading] = useState(false)` ✓
+- `openPlayerScorecard` callback that calls `api.getPlayerScorecard(tournament.id, player.playerId)` ✓
+- `onClick={() => openPlayerScorecard(player)}` on player rows ✓
+- Escape key closes both drawers ✓
+
+**2. Add left-drawer resize** (mirror of right drawer):
+- `const [leftDrawerWidth, setLeftDrawerWidth] = useState(420)`
+- `startLeftResize` callback — same pattern as `startResize` but drag goes the OPPOSITE direction (dragging right edge right = wider)
+
+**3. Replace the scorecard drawer JSX** — must match `TournamentLeaderboard.jsx` format exactly:
+
+- Drawer: `fixed left-0 top-0 h-full z-50` with `translate-x-0` / `-translate-x-full` transition
+- Resize handle on RIGHT edge (opposite of team drawer)
+- Width: `leftDrawerWidth` state, min 360, max 700, default 420
+- `overflow-x-auto` on the grid containers so holes scroll horizontally if drawer is narrow
+
+**Scorecard grid format (copy from TournamentLeaderboard):**
+- Build full 18-hole array with default pars: `[4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]`
+- Merge API hole data into the 18-hole template
+- Front 9 section: colored accent bar (blaze) + "Front 9" label + grid `grid-cols-[auto_repeat(9,1fr)_auto]` with # / Par / Scr rows + Out total
+- Back 9 section: colored accent bar (field) + "Back 9" label + same grid + In total
+- Score cells: use same `renderScoreCell` logic:
+  - Eagle (≤-2): `w-7 h-7 rounded-full bg-crown text-white`
+  - Birdie (-1): `w-7 h-7 rounded-full bg-blaze text-white`
+  - Par (0): plain text `text-gray-500`
+  - Bogey (+1): `w-7 h-7 rounded-sm bg-live-red/80 text-white`
+  - Double+ (≥+2): `w-7 h-7 rounded-sm bg-live-red text-white`
+  - Unplayed: `w-7 h-7 rounded-md border border-dashed border-gray-300 dark:border-slate-600`
+- Summary: FRONT / BACK / TOTAL compact chips (same as TournamentLeaderboard lines 514-533)
+- Legend: inline Birdie (blaze circle) + Eagle (crown circle)
+
+**Header:** Player name with on-course dot, X close button
+**Stats strip:** POS, SCORE, THRU, FANTASY PTS
+**Footer:** "Full Leaderboard →" link
+
+**4. Handle "not yet teed off":** If `thru === 0` and no scorecard data, show "Not yet teed off" message instead of empty grid.
+
+**FILES:**
+- `frontend/src/components/league/LiveScoringWidget.jsx` (primary — already has Cowork's partial code to build on)
+
+**REFERENCE:**
+- `frontend/src/components/tournament/TournamentLeaderboard.jsx` lines 147-173 (`renderScoreCell`, `getSummaryColor`), lines 422-533 (scorecard grid layout)
+
+**VERIFICATION:**
+- Click any player in YOUR TEAM → drawer slides in from LEFT with scorecard
+- Full 18 holes visible (scroll horizontally if drawer is narrow)
+- Drag right edge of drawer to resize (360-700px range)
+- Eagle/birdie/bogey colors match leaderboard scorecard exactly
+- "Not yet teed off" for players with thru=0
+- Both drawers can be open simultaneously (left=player, right=team)
+- Escape closes both, backdrop click closes the relevant one
+- Works in both light and dark mode
+
 ---
 
 ## DONE
