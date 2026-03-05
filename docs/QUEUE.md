@@ -3989,6 +3989,335 @@ useEffect(() => {
 
 ---
 
+### 110 — Fix: Join league link "League not found" — Express route ordering bug
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Moved preview-by-code and join-by-code routes above /:id param route in leagues.js. Commit abc61f7. Files: backend/src/routes/leagues.js
+**Priority:** CRITICAL — Blocked Josh from joining B Squad Bros league
+**Prompt:**
+
+**The bug:** `GET /leagues/preview-by-code?code=XXX` was defined at line 723 in `backend/src/routes/leagues.js`, but `GET /leagues/:id` was at line 241. Express matched "preview-by-code" as an `:id` parameter, looked up a league with that string ID, and returned 404 "League not found".
+
+**The fix:** Move both `preview-by-code` and `join-by-code` route handlers to before the `/:id` route (before line 240). Left a comment at the old location noting the move.
+
+**Files:** `backend/src/routes/leagues.js`
+
+---
+
+### 111 — Fix: Prisma "sport" scalar field error in preview-by-code route
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Removed sport from Prisma include (it's a scalar String, not a relation) and fixed response mapping. Commit b395fcd. Files: backend/src/routes/leagues.js
+**Priority:** CRITICAL — Join link crashed with Prisma error after route ordering fix exposed latent bug
+**Prompt:**
+
+**The bug:** After fixing item 110, the preview-by-code route was now correctly reached but crashed with: `Invalid scalar field 'sport' for include statement on model League`. The `sport` field on League is a plain String, not a relation, so Prisma's `include` directive can't use it. This bug was latent — never triggered until the route ordering fix exposed it.
+
+**The fix:** Removed `sport: { select: { name: true, slug: true } }` from the Prisma include, and changed `league.sport?.name` to `league.sport` in the response mapping.
+
+**Files:** `backend/src/routes/leagues.js`
+
+---
+
+### 112 — Fix: GirthBrooks09 missing from vault reveal (isActive filtering)
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Fixed useVaultStats.js to treat unmapped owners as active instead of inactive. Commit f67b505. Files: frontend/src/hooks/useVaultStats.js
+**Priority:** HIGH — GirthBrooks09 filtered out of vault persistent view
+**Prompt:**
+
+**The bug:** In `useVaultStats.js` line 60, the isActive logic was: `isActive: activeOwners.size > 0 ? activeOwners.has(canonical) : true`. GirthBrooks09 wasn't in the aliasMap, so canonical was just the raw name. `activeOwners` (built from aliases) didn't contain it, so `isActive = false`. `VaultPersistent.jsx` line 38 filters `.filter(({ owner }) => owner.isActive)`, hiding GirthBrooks09.
+
+**The fix:** Changed to: `isActive: activeOwners.size > 0 ? (activeOwners.has(canonical) || !aliasMap.has(rawName)) : true` — unmapped owners (not in aliasMap at all) are treated as active.
+
+**Files:** `frontend/src/hooks/useVaultStats.js`
+
+---
+
+### 113 — Fix: Invite dropdown showed 31 names (team names leaking in)
+**Status:** `DONE`
+**Completed:** 2026-03-04 — Refined merge logic to only use ownerName (not teamName) from historical data, and skip names already covered by aliases. Commit 8705b9e. Files: frontend/src/pages/LeagueSettings.jsx
+**Priority:** Medium — Cosmetic but confusing, team names like "Baba Yaga" appeared in dropdown
+**Prompt:**
+
+**The bug:** Item 109's initial merge pulled in both ownerName AND teamName from historical data, resulting in 31 options (team names like "Baba Yaga", "Sex Symbols" mixed in). Also didn't deduplicate against alias raw names.
+
+**The fix:** Only use `ownerName` from historical data. Build a set of all alias names (both canonical and raw), only add historical names not already in that set. Result: exactly 15 names (14 aliases + GirthBrooks09).
+
+**Files:** `frontend/src/pages/LeagueSettings.jsx`
+
+---
+
+### 114 — Draft Room: Best Available Strip + Between-Picks UX + Tour Filters
+**Status:** `TODO`
+**Priority:** High — Core draft experience, biggest user complaint was "I don't know who to pick"
+**Prompt:**
+
+**Context:** Live draft feedback from Mar 4 2026 (4-person golf league). Full feedback doc: `docs/DRAFT_FEEDBACK_MAR4_2026.md`. Users said they felt lost deciding who to pick and needed a "cheat sheet" feel.
+
+**U01 — Best Available Recommendation Strip:**
+Add a floating recommendation strip above the player pool in `frontend/src/pages/DraftRoom.jsx` showing top 3-5 recommended picks. Logic:
+1. From `availablePlayers`, sort by a composite: if user has a board, use board rank first; else use CPI desc, then SG Total desc, then OWGR asc.
+2. Show top 5 as horizontal cards: headshot (or flag), name, CPI pill, SG pill, OWGR. Clicking a card opens PlayerDrawer.
+3. If it's the user's turn, show a gold header "Recommended Picks". Otherwise show "Top Available".
+4. Style: compact horizontal scroll strip, subtle gold border when it's your turn.
+
+**U05 — Between-Picks Experience:**
+When it's NOT the user's turn, enhance the waiting experience:
+1. Show "On the clock: {teamName}" with their timer countdown in the queue/feed area.
+2. Below that, show "Up next: {nextTeamName}" (compute from draft order/snake logic).
+3. Add a subtle prompt: "Research your next pick while you wait" with a link to open compare mode or the player pool.
+The `currentPick` from useDraft already has `teamName`. Compute `nextTeamName` by looking at `picks.length + 2` in the snake order.
+
+**U07 — Tour Filter Pills:**
+In `frontend/src/components/draft/PlayerPool.jsx`, add filter pills above the search bar:
+- All | PGA | LIV | DP World | LPGA
+- Filter `players` by `player.primaryTour` matching the selected filter.
+- "All" shows everyone (default).
+- Simple pill buttons with active state (gold underline or bg).
+- Store in local state, doesn't persist.
+
+**U12 — Editable Team Name:**
+In `frontend/src/components/draft/DraftBoard.jsx`, the user's team column header shows "YOU". Make this editable:
+- Click "YOU" to toggle into an inline text input.
+- On blur or Enter, call `PATCH /api/teams/:teamId` with `{ name: newName }`.
+- Update local state. The API route for team rename should already exist (check `backend/src/routes/teams.js`).
+- Fallback: if no teams route for rename, just update local display name (localStorage) for now.
+
+**U14 — Quick 2-Player Compare:**
+When exactly 2 players are in the queue, show a "Compare" button in the DraftQueue header.
+- Clicking opens a compact side-by-side comparison panel (slide-over or modal).
+- Show: Name, OWGR, CPI, SG Total, SG sub-categories (approach, off tee, putting, around green), recent form dots, events played.
+- Bar chart visual: for each stat, show proportional bars for player A vs B.
+- Use existing `SgRadarChart` component from `frontend/src/components/players/SgRadarChart.jsx` if available.
+- Close button returns to normal queue view.
+
+**U19 — Less Horizontal Stretch:**
+In `DraftRoom.jsx`, wrap the main draft content in a max-width container:
+- Add `max-w-[1600px] mx-auto` to the main flex container so it doesn't stretch edge-to-edge on ultrawide monitors.
+
+**U20 — Next Tournament Field Indicator:**
+In `PlayerPool.jsx`, add a small badge/icon on players who are confirmed in the next tournament field.
+- The DataGolf sync stores upcoming tournament fields. Check if `player.inNextField` or similar flag exists.
+- If not readily available, skip this for now and add a TODO comment.
+
+**Files to modify:** `frontend/src/pages/DraftRoom.jsx`, `frontend/src/components/draft/PlayerPool.jsx`, `frontend/src/components/draft/DraftBoard.jsx`, `frontend/src/components/draft/DraftQueue.jsx`. May create `frontend/src/components/draft/BestAvailableStrip.jsx` and `frontend/src/components/draft/QuickCompare.jsx`.
+
+---
+
+### 115 — Draft Room: Chat Persistence + Timer Sync + Sound Upgrades
+**Status:** `TODO`
+**Priority:** High — Chat loss on refresh was confusing, timer desync caused arguments
+**Prompt:**
+
+**Context:** Live draft feedback Mar 4 2026. Full doc: `docs/DRAFT_FEEDBACK_MAR4_2026.md`.
+
+**B05 — Chat Persistence:**
+Draft chat messages are Socket.IO only — refreshing the page loses all history.
+1. **Backend:** In `backend/src/index.js`, the `draft-chat` handler already broadcasts messages. Add persistence:
+   - Create (or find) a `DraftChatMessage` model in Prisma schema. If it doesn't exist, add to `schema.prisma`:
+     ```prisma
+     model DraftChatMessage {
+       id        String   @id @default(cuid())
+       draftId   String
+       userId    String
+       userName  String
+       message   String
+       createdAt DateTime @default(now())
+       draft     Draft    @relation(fields: [draftId], references: [id])
+       @@index([draftId, createdAt])
+     }
+     ```
+   - In the `draft-chat` socket handler, save to DB after broadcasting.
+   - Add `GET /api/drafts/:id/chat` endpoint to load chat history (paginated, last 100 messages).
+2. **Frontend:** In `DraftRoom.jsx`, on mount (after draft loads), fetch chat history and prepopulate `chatMessages` state.
+   - Add to `api.js`: `getDraftChat(draftId)` calling `GET /api/drafts/${draftId}/chat`.
+3. Run `npx prisma migrate dev --name draft_chat_messages` and apply.
+
+**B13 — Timer Sync:**
+Timer shows different values across browsers. The current implementation in `useDraft.js` (lines 278-306) already uses `pickDeadlineRef` from server — this should be correct since all clients compute remaining time from the same server deadline. The issue is likely:
+1. `pickDeadline` not being consistently broadcast on every pick event.
+2. Clock drift between client and server.
+
+Fix: In the `draft-pick` socket handler on backend (`backend/src/index.js`), ensure `pickDeadline` is ALWAYS included in the broadcast data. Also in `useDraft.js`, after receiving a pick via socket, always update `pickDeadlineRef.current` from the data (line 175 already does this — verify it's working).
+
+Add a "sync" mechanism: every 30 seconds, emit a `draft-time-sync` event from server with current `{ pickDeadline, serverTime: Date.now() }`. Clients compute offset: `offset = serverTime - Date.now()` and use it to adjust countdown. This handles clock drift.
+
+**U16 — Sound Upgrades:**
+`frontend/src/hooks/useDraftSounds.js` already has: `playPick`, `playYourTurn`, `playTimerWarning`, `playDraftStart`, `playBid`, `playDraftComplete`.
+
+Add:
+1. **"Up Next" sound**: Trigger when user is ONE pick away from their turn. In `useDraft.js` turn detection (line 309-355), compute if the NEXT pick after current belongs to user. If so, fire a softer notification sound. Add `playUpNext` to the hook.
+2. **Timer warning escalation**: In `DraftRoom.jsx`, add an effect watching `timerSeconds` (from DraftContext). Play `playTimerWarning` at 30s, 10s, and 5s remaining (only when `isUserTurn`). Use different tones — at 5s make it urgent.
+3. **Tab notification**: Already added browser tab title in Batch 3. Also add `navigator.vibrate?.(200)` on mobile when it's user's turn.
+
+**Files:** `backend/src/index.js`, `backend/prisma/schema.prisma`, `backend/src/routes/drafts.js`, `frontend/src/pages/DraftRoom.jsx`, `frontend/src/hooks/useDraft.js`, `frontend/src/hooks/useDraftSounds.js`, `frontend/src/services/api.js`.
+
+---
+
+### 116 — Post-Draft: Bench-First + Starter/Bench Toggle + Lock Countdown Fix
+**Status:** `TODO`
+**Priority:** High — Users couldn't manage their lineup at all post-draft
+**Prompt:**
+
+**Context:** Live draft feedback Mar 4 2026. Full doc: `docs/DRAFT_FEEDBACK_MAR4_2026.md`.
+
+**B07 — Bench-First After Draft:**
+After draft completes, all players are placed in the starting lineup. Should be opposite — everyone starts on bench, user sets lineup.
+- Find where post-draft roster creation happens. Check `backend/src/routes/drafts.js` or `backend/src/services/draftService.js` — look for where `RosterEntry` records are created after draft completion.
+- Change the default `status` or `slot` to "BENCH" instead of whatever it currently is (likely "ACTIVE" or "STARTER").
+- Alternatively, if the roster page reads roster entries and assumes all are starters if no slot is set, fix the frontend to default unset players to bench.
+
+**B08 — Starter/Bench Toggle on Roster Page:**
+`frontend/src/pages/TeamRoster.jsx` — add the ability to move players between starter and bench:
+- Show two sections: "Starters" (top) and "Bench" (bottom) with a divider.
+- Each player row gets a toggle button (or drag-and-drop) to move between sections.
+- Call `PATCH /api/leagues/:leagueId/roster` or `POST /api/leagues/:leagueId/roster/set-lineup` with the updated starter/bench assignments.
+- Check what roster API endpoints exist in `backend/src/routes/roster.js` or `backend/src/routes/leagues.js`.
+- Respect the league's `rosterSize` or `starterCount` setting to enforce max starters.
+
+**B06 — Roster Lock Countdown:**
+The roster page shows "Roster lock in 1h 38m" but the tournament doesn't start until tomorrow.
+- Find the countdown logic in `TeamRoster.jsx` or wherever the lock timer is displayed.
+- The lock time should reference the actual tournament's first tee time (from the `Tournament` model's `startDate` or the earliest `TeeTime` record).
+- Query: `GET /api/tournaments/current` or check how the scoring page determines the live tournament.
+- If no tournament is currently active, show "Locks at [tournament start time]" instead of a countdown from now.
+
+**B09 — LIV Player Badges:**
+Players on LIV Golf should be clearly distinguished:
+- In `PlayerPool.jsx`, LIV players already show a red "LIV" badge (line 215-219). Verify this works.
+- In `TeamRoster.jsx` and player cards, add the same tour badge if missing.
+- LIV players' stats may be incomplete (career stats only, no SG). Add a subtle note: "Limited stats — LIV data not fully available" or show LIV-specific stats if available.
+- Check `player.primaryTour` field — ensure it's being set correctly during data sync for LIV players.
+
+**P01 — Roster Page Stats for Lineup Decisions:**
+`frontend/src/pages/TeamRoster.jsx` needs much better information for lineup decisions:
+- For each player, show: CPI, SG Total, recent form (last 4 finishes), course fit score (if available), upcoming tournament name.
+- Add a "Recommendation" indicator: green checkmark for suggested starters based on CPI+SG+form ranking.
+- The current roster page likely shows minimal data. Enhance the player rows with the same stat columns used in PlayerPool (CPI, SG, Form, etc).
+
+**P02 — View Other Teams' Rosters:**
+Add a team selector dropdown at the top of `TeamRoster.jsx`:
+- Default: your team. Dropdown lists all teams in the league.
+- When selecting another team, fetch their roster and display read-only.
+- Your own roster remains editable (starter/bench toggles).
+- API: `GET /api/leagues/:leagueId/teams/:teamId/roster` — check if this exists.
+
+**Files:** `frontend/src/pages/TeamRoster.jsx`, `backend/src/routes/drafts.js` (or draftService.js), `backend/src/routes/roster.js` (or leagues.js roster endpoints). May need to check `backend/src/routes/teams.js`.
+
+---
+
+### 117 — Draft Recap: Grade Scaling + View Other Teams + Clickable Players + Polish
+**Status:** `TODO`
+**Priority:** Medium — Recap is impressive but needs these fixes for full impact
+**Prompt:**
+
+**Context:** Live draft feedback Mar 4 2026. Full doc: `docs/DRAFT_FEEDBACK_MAR4_2026.md`.
+
+**R01 — Draft Grades League-Size Adjustment:**
+In a 4-team league, no one got an A. The grading algorithm needs to scale relative to league size.
+- Find the draft grading logic. Check `frontend/src/pages/DraftRecap.jsx` or `backend/src/services/draftGradeService.js` or similar.
+- The previous fix (item 072 in queue) fixed an inverted `adpDiff` calculation. Now the issue is grade boundaries.
+- For small leagues (4-6 teams), the top pick in each round is essentially a "great" pick. Adjust the grade curve:
+  - Scale `adpDiff` thresholds by `totalTeams`. In a 4-team league, getting a player 4 picks later than ADP is fine (1 round). In a 12-team league, 12 picks later = 1 round.
+  - Suggested: normalize adpDiff by `totalTeams`. A pick that's `adpDiff / totalTeams <= 0.5` rounds early = A territory.
+  - Or: use percentile-based grading within the league. Compare each team's average pick quality to the league average. Top 25% = A, etc.
+
+**R02 — View Other Teams' Draft Recaps:**
+In `DraftRecap.jsx`, add a team selector (dropdown or horizontal tabs) at the top:
+- Show all teams in the draft.
+- Clicking a team loads their recap (picks, grade, radar chart, coach take).
+- Default to the current user's team.
+- The data for all teams should already be available from the draft API.
+
+**R03 — Team Roster Dropdown in Recap:**
+If not covered by R02, add a way to see each team's full roster in pick order.
+
+**R04 — Clickable Players in Recap:**
+All player names in the draft recap should open the PlayerDrawer (PlayerDetailModal).
+- Import and use `usePlayerDetail` hook.
+- Wrap player names in clickable spans.
+- Pass the player object (may need to find it in the players array by ID).
+
+**R05 — Coach's Take Font Size:**
+The AI coach commentary text is too small. Find the coach take section in DraftRecap.jsx and increase from `text-xs` or `text-sm` to `text-base`.
+
+**R06 — Radar Chart Readability:**
+The SG radar chart in the recap is hard to read. Improvements:
+- Add value labels on each axis endpoint.
+- Increase chart size (if it's small, bump to min 300x300).
+- Consider adding a bar chart alternative view below the radar.
+
+**R07 — Draft Recap Banner:**
+The header/banner of the draft recap could be more impactful:
+- Show league name, draft date, "Draft Complete" with a trophy or spark icon.
+- Team avatars or initials in a row.
+- Gold gradient background.
+
+**Files:** `frontend/src/pages/DraftRecap.jsx`, possibly `backend/src/services/draftGradeService.js` or wherever grades are computed.
+
+---
+
+### 118 — Draft Room: Remaining Polish (AI Insights, Button Overlap, Optimize Lineup)
+**Status:** `TODO`
+**Priority:** Low — Nice-to-have polish items
+**Prompt:**
+
+**B10 — Player AI Insights All Identical:**
+Opening player drawers during draft shows the same AI insight text for every player. This is likely a template/placeholder issue.
+- Check `frontend/src/components/players/PlayerDetailModal.jsx` or `PlayerDrawer.jsx` — find where AI insights are displayed.
+- The insight is probably coming from a coach briefing or insight endpoint. Check `GET /api/ai/player-brief/:playerId` or similar.
+- If the insight API returns generic text, the issue is backend. Check `backend/src/services/aiCoachService.js` or `aiInsightPipeline.js`.
+- Quick fix: if AI insights aren't personalized yet, hide the section or show "Insight generating..." instead of showing the same text for everyone.
+- Better fix: ensure the player brief endpoint uses the actual player's stats (CPI, SG, form, recent results) to generate a unique insight.
+
+**B11 — Draft/Bookmark Button Overlap:**
+In `PlayerPool.jsx`, the "Draft" button and bookmark/queue icon overlap on narrow screens.
+- Find the action buttons column (line 270-290).
+- Fix: Stack vertically on mobile (`flex-col` on small screens) or hide the bookmark when "Draft" is showing.
+- Or increase the action column width from `44px` to `54px` or use `gap-1.5`.
+
+**B12 — Optimize Lineup Button:**
+The "Optimize Lineup" button on the roster page (`TeamRoster.jsx`) glitches or doesn't work.
+- Find the optimize button and its handler.
+- Check the logic: it should rank players by projected points or CPI+SG composite and auto-assign top N to starter slots.
+- Debug any state update issues (might be a race condition with API calls).
+
+**Files:** `frontend/src/components/players/PlayerDetailModal.jsx`, `frontend/src/components/draft/PlayerPool.jsx`, `frontend/src/pages/TeamRoster.jsx`, possibly backend AI services.
+
+---
+
+### 119 — Cowork Batch 1-4 Draft Room Fixes (Already Built)
+**Status:** `TODO`
+**Priority:** Highest — These are already coded, just need commit + deploy
+**Prompt:**
+
+Cowork (Mar 4 session) built and saved these changes directly to the codebase. They need to be committed and deployed:
+
+**Batch 1 — Error Handling + Confirmation Modal:**
+- Created `frontend/src/components/draft/DraftConfirmModal.jsx` (new file)
+- Modified `frontend/src/context/DraftContext.jsx` — added `pickError` state + `SET_PICK_ERROR` reducer
+- Modified `frontend/src/hooks/useDraft.js` — `makePick` uses `setPickError` instead of `setError`
+- Modified `frontend/src/pages/DraftRoom.jsx` — confirmation modal flow, pick error toast
+
+**Batch 2 — Queue Auto-Remove + Feed Tab:**
+- Modified `frontend/src/context/DraftContext.jsx` — `MAKE_PICK` reducer also filters queue
+- Modified `frontend/src/pages/DraftRoom.jsx` — added "Feed" tab with reverse-chronological pick log
+
+**Batch 3 — Visual Indicators:**
+- Modified `frontend/src/components/draft/PlayerPool.jsx` — green/red stat color scale with `getStatColor()` helper
+- Modified `frontend/src/components/draft/DraftHeader.jsx` — pulsing gold ring on your turn, stronger contrast
+- Modified `frontend/src/components/draft/DraftBoard.jsx` — color legend bar, enhanced header contrast
+- Modified `frontend/src/pages/DraftRoom.jsx` — browser tab title changes on turn
+
+**Batch 4 — Column Improvements:**
+- Modified `frontend/src/components/draft/PlayerPool.jsx` — all column tooltips, "Evts" column added
+- Modified `frontend/src/components/draft/DraftBoard.jsx` — sort teams by draft order, max-width cap 180px
+- Modified `frontend/src/pages/DraftRoom.jsx` — passes `draftOrder` prop to DraftBoard
+
+**Action:** `git add` all modified/new files listed above, commit with message: "Draft room overhaul: error handling, confirmation modal, queue auto-remove, feed tab, color-coded stats, turn indicators, column improvements, board legend" — then deploy frontend to Vercel and backend if any backend changes.
+
+**Important:** There are also 5 prior local commits that need pushing (resizable dividers, presence dots, player modal buttons, CPI data, sounds). Push those first.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

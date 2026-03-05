@@ -2,6 +2,23 @@ import { useState, useMemo, useCallback } from 'react'
 import Button from '../common/Button'
 import Card from '../common/Card'
 
+// Color scale helper for stats — green (elite) to red (poor)
+// Provides both text color and background pill styling
+const getStatColor = (value, thresholds) => {
+  if (value == null) return { text: 'text-text-muted', pill: '' }
+  if (value >= thresholds[0]) return { text: 'text-emerald-400', pill: 'bg-emerald-500/15' } // elite
+  if (value >= thresholds[1]) return { text: 'text-green-400', pill: 'bg-green-500/10' }     // good
+  if (value >= thresholds[2]) return { text: 'text-text-primary', pill: '' }                 // average
+  if (value >= thresholds[3]) return { text: 'text-orange-400', pill: 'bg-orange-500/10' }   // below avg
+  return { text: 'text-red-400', pill: 'bg-red-500/15' }                                     // poor
+}
+
+// CPI thresholds: [-3.0 to +3.0]
+const CPI_THRESHOLDS = [1.5, 0.5, -0.3, -1.0]
+
+// SG Total thresholds
+const SG_THRESHOLDS = [1.5, 0.5, 0, -0.5]
+
 const PlayerPool = ({
   players,
   onSelectPlayer,
@@ -114,10 +131,10 @@ const PlayerPool = ({
   }
 
   // Mobile: hide T5/T10/T25/MC/Form — show Rk, (Bd), Player, CPI, SG, actions
-  // Desktop: show all columns
+  // Desktop: show all columns (added Evts column)
   const gridCols = hasBoard
-    ? 'grid-cols-[26px_26px_1fr_36px_40px_44px] sm:grid-cols-[26px_26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
-    : 'grid-cols-[26px_1fr_36px_40px_44px] sm:grid-cols-[26px_1fr_36px_40px_30px_30px_30px_46px_38px_44px]'
+    ? 'grid-cols-[26px_26px_1fr_36px_40px_44px] sm:grid-cols-[26px_26px_1fr_36px_40px_30px_30px_30px_30px_46px_38px_44px]'
+    : 'grid-cols-[26px_1fr_36px_40px_44px] sm:grid-cols-[26px_1fr_36px_40px_30px_30px_30px_30px_46px_38px_44px]'
 
   return (
     <Card className="h-full flex flex-col" padding="none">
@@ -149,36 +166,37 @@ const PlayerPool = ({
         {/* Header */}
         <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
           <div className={`grid ${gridCols} px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide`}>
-            <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
+            <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="OWGR — Official World Golf Ranking">
               Rk <SortIcon field="rank" />
             </button>
             {hasBoard && (
-              <button onClick={() => handleSort('boardRank')} className="text-center hover:text-text-primary transition-colors" title="Your board rank">
+              <button onClick={() => handleSort('boardRank')} className="text-center hover:text-text-primary transition-colors" title="Board Rank — Your personal ranking from The Lab draft board">
                 Bd <SortIcon field="boardRank" />
               </button>
             )}
-            <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
+            <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors" title="Player name and tour">
               Player <SortIcon field="name" />
             </button>
-            <button onClick={() => handleSort('cpi')} className="text-right hover:text-text-primary transition-colors" title="Clutch Performance Index — proprietary rating from -3.0 to +3.0">
+            <button onClick={() => handleSort('cpi')} className="text-right hover:text-text-primary transition-colors" title="Clutch Performance Index — Proprietary rating from -3.0 to +3.0 blending form, pressure, and consistency">
               CPI <SortIcon field="cpi" />
             </button>
-            <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-text-primary transition-colors" title="Strokes Gained: Total per round vs. field average">
+            <button onClick={() => handleSort('sgTotal')} className="text-right hover:text-text-primary transition-colors" title="Strokes Gained Total — Average strokes gained per round vs field. Higher is better.">
               SG <SortIcon field="sgTotal" />
             </button>
-            <button onClick={() => handleSort('top5')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top-5 finishes this season">
+            <button onClick={() => handleSort('top5')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top 5 finishes this season">
               T5 <SortIcon field="top5" />
             </button>
-            <button onClick={() => handleSort('top10')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top-10 finishes this season">
+            <button onClick={() => handleSort('top10')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top 10 finishes this season">
               T10 <SortIcon field="top10" />
             </button>
-            <button onClick={() => handleSort('top25')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top-25 finishes this season">
+            <button onClick={() => handleSort('top25')} className="hidden sm:block text-right hover:text-text-primary transition-colors" title="Top 25 finishes this season">
               T25 <SortIcon field="top25" />
             </button>
-            <button onClick={() => handleSort('cuts')} className="hidden sm:block text-center hover:text-text-primary transition-colors" title="Cuts made / events entered">
+            <button onClick={() => handleSort('cuts')} className="hidden sm:block text-center hover:text-text-primary transition-colors" title="Cuts Made / Events Entered this season">
               MC <SortIcon field="cuts" />
             </button>
-            <span className="hidden sm:block text-center" title="Last 4 tournament finishes (most recent first)">Form</span>
+            <span className="hidden sm:block text-center" title="Recent tournament finishes — Gold=Win, Yellow=Top 5, Green=Top 15, Gray=Other, Red=Cut">Form</span>
+            <span className="hidden sm:block text-right" title="Events played last season (prior year)">Evts</span>
             <div />
           </div>
         </div>
@@ -226,21 +244,25 @@ const PlayerPool = ({
                   )}
                 </div>
               </div>
-              <span className={`text-xs text-right font-medium tabular-nums ${
-                (player.clutchMetrics?.cpi ?? 0) > 1.5 ? 'text-gold' :
-                (player.clutchMetrics?.cpi ?? 0) > 0.5 ? 'text-field' :
-                (player.clutchMetrics?.cpi ?? 0) > -0.5 ? 'text-crown' :
-                player.clutchMetrics?.cpi != null ? 'text-live-red' : 'text-text-muted'
-              }`}>
-                {player.clutchMetrics?.cpi != null
-                  ? `${player.clutchMetrics.cpi > 0 ? '+' : ''}${player.clutchMetrics.cpi.toFixed(1)}`
-                  : '\u2014'}
-              </span>
-              <span className={`text-xs text-right font-medium tabular-nums ${
-                sgTotal >= 1 ? 'text-gold' : sgTotal > 0 ? 'text-text-primary' : 'text-live-red'
-              }`}>
-                {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '\u2014'}
-              </span>
+              {(() => {
+                const cpi = player.clutchMetrics?.cpi ?? null
+                const colors = getStatColor(cpi, CPI_THRESHOLDS)
+                return (
+                  <span className={`text-xs text-right font-medium tabular-nums px-1 py-0.5 rounded ${colors.text} ${colors.pill}`}>
+                    {cpi != null
+                      ? `${cpi > 0 ? '+' : ''}${cpi.toFixed(1)}`
+                      : '\u2014'}
+                  </span>
+                )
+              })()}
+              {(() => {
+                const colors = getStatColor(sgTotal || null, SG_THRESHOLDS)
+                return (
+                  <span className={`text-xs text-center font-medium tabular-nums px-1 py-0.5 rounded ${colors.text} ${colors.pill}`}>
+                    {sgTotal !== 0 ? (sgTotal > 0 ? '+' : '') + sgTotal.toFixed(2) : '\u2014'}
+                  </span>
+                )
+              })()}
               <span className="hidden sm:block text-xs text-right text-text-secondary tabular-nums">
                 {player.top5s || '\u2014'}
               </span>
@@ -267,6 +289,9 @@ const PlayerPool = ({
                   )
                 })}
               </div>
+              <span className="hidden sm:block text-xs text-right text-text-muted tabular-nums">
+                {player.events || '\u2014'}
+              </span>
               <div className="flex items-center justify-end gap-1">
                 {isUserTurn && (
                   <button

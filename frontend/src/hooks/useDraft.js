@@ -27,9 +27,11 @@ export const useDraft = (leagueId) => {
     isPaused,
     loading,
     error,
+    pickError,
     setDraftState,
     setLoading,
     setError,
+    setPickError,
     makePick: dispatchPick,
     setCurrentPick,
     setTimer,
@@ -364,14 +366,17 @@ export const useDraft = (leagueId) => {
       // Socket will broadcast the pick to all clients including us
       // But update deadline immediately for responsiveness
       pickDeadlineRef.current = result.pickDeadline
+      // Clear any previous pick errors on success
+      setPickError(null)
       return result
     } catch (err) {
-      setError(err.message)
+      // Set pick error instead of load error — this is a transient issue
+      setPickError(err.message)
       throw err
     } finally {
       setLoading(false)
     }
-  }, [draftId, setLoading, setError])
+  }, [draftId, setLoading, setPickError])
 
   // Auto-pick on timeout
   const handleTimeout = useCallback(async () => {
@@ -500,6 +505,7 @@ export const useDraft = (leagueId) => {
     isPaused,
     loading,
     error,
+    pickError,
     recentPick,
     draftId,
     makePick,

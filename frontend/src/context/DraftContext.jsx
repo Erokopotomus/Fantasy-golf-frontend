@@ -16,6 +16,7 @@ const initialState = {
   isUserTurn: false,
   loading: true,
   error: null,
+  pickError: null,
 }
 
 function draftReducer(state, action) {
@@ -31,6 +32,8 @@ function draftReducer(state, action) {
       return { ...state, loading: action.payload }
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false }
+    case 'SET_PICK_ERROR':
+      return { ...state, pickError: action.payload }
     case 'MAKE_PICK':
       return {
         ...state,
@@ -40,6 +43,8 @@ function draftReducer(state, action) {
             ? { ...p, drafted: true, draftedBy: action.payload.teamId }
             : p
         ),
+        // Auto-remove drafted player from queue
+        queue: state.queue.filter(p => p.id !== action.payload.playerId),
       }
     case 'SET_CURRENT_PICK':
       return {
@@ -98,6 +103,10 @@ export function DraftProvider({ children }) {
     dispatch({ type: 'SET_ERROR', payload: error })
   }, [])
 
+  const setPickError = useCallback((error) => {
+    dispatch({ type: 'SET_PICK_ERROR', payload: error })
+  }, [])
+
   const makePick = useCallback((pick) => {
     dispatch({ type: 'MAKE_PICK', payload: pick })
   }, [])
@@ -143,6 +152,7 @@ export function DraftProvider({ children }) {
     setDraftState,
     setLoading,
     setError,
+    setPickError,
     makePick,
     setCurrentPick,
     setTimer,

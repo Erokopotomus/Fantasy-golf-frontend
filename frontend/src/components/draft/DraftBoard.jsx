@@ -1,9 +1,18 @@
 import { useEffect, useRef } from 'react'
 
-const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewPlayer, players, connectedUserIds = [] }) => {
+const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewPlayer, players, connectedUserIds = [], draftOrder = [] }) => {
   const rounds = Array.from({ length: rosterSize }, (_, i) => i + 1)
   const currentRoundRef = useRef(null)
   const scrollContainerRef = useRef(null)
+
+  // Sort teams by draft order position
+  const sortedTeams = draftOrder && draftOrder.length > 0
+    ? teams.slice().sort((a, b) => {
+        const posA = draftOrder.find(d => d.teamId === a.id)?.position ?? 999
+        const posB = draftOrder.find(d => d.teamId === b.id)?.position ?? 999
+        return posA - posB
+      })
+    : teams
 
   // Auto-scroll to current round when it changes
   useEffect(() => {
@@ -14,24 +23,40 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
 
   return (
     <div className="flex flex-col h-full bg-[var(--surface)] rounded-lg border border-[var(--card-border)] overflow-hidden">
+      {/* Color Legend */}
+      <div className="flex-shrink-0 flex items-center justify-between px-3 py-1.5 text-[9px] text-text-muted border-b border-[var(--card-border)] bg-[var(--bg-alt)]/40">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded bg-crown" title="Top 10 pick" /> Top 10
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded bg-gold" title="Top 25 pick" /> Top 25
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded bg-blue-400" title="Top 40 pick" /> Top 40
+          </span>
+        </div>
+        <div className="text-[8px] text-text-muted/50">Colors indicate player rank when drafted</div>
+      </div>
+
       {/* Team Column Headers */}
       <div className="flex-shrink-0">
         <div className="overflow-x-auto">
           <div
             className="grid gap-px min-w-[500px]"
-            style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
+            style={{ gridTemplateColumns: `44px repeat(${sortedTeams.length}, minmax(0, 180px))` }}
           >
             <div className="bg-[var(--bg-alt)] px-1 py-2.5 text-text-muted text-[10px] font-semibold text-center">RD</div>
-            {teams.map(team => {
+            {sortedTeams.map(team => {
               const isOnline = connectedUserIds.includes(team.userId)
               return (
                 <div
                   key={team.id}
-                  className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate relative ${
+                  className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate relative font-display ${
                     team.id === userTeamId
-                      ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
+                      ? 'bg-gold/40 text-gold border-b-2 border-b-gold'
                       : currentPick?.teamId === team.id
-                        ? 'bg-crown/20 text-crown'
+                        ? 'bg-crown/30 text-crown font-bold border-b-2 border-b-crown/50'
                         : 'bg-[var(--bg-alt)] text-text-muted'
                   }`}
                 >
@@ -62,7 +87,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                 key={round}
                 ref={isCurrentRound ? currentRoundRef : null}
                 className={`grid gap-px ${isCurrentRound ? 'bg-[var(--card-border)]' : ''}`}
-                style={{ gridTemplateColumns: `44px repeat(${teams.length}, 1fr)` }}
+                style={{ gridTemplateColumns: `44px repeat(${sortedTeams.length}, minmax(0, 180px))` }}
               >
                 <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
                   isCurrentRound ? 'text-gold bg-[var(--surface)]' : 'text-text-muted bg-[var(--bg-alt)]'
@@ -70,7 +95,7 @@ const DraftBoard = ({ picks, teams, rosterSize, currentPick, userTeamId, onViewP
                   <span>{round}</span>
                   <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>
                 </div>
-                {teams.map((team, teamIdx) => {
+                {sortedTeams.map((team, teamIdx) => {
                   const pick = picks.find(p => p.teamId === team.id && p.round === round)
                   const isCurrent = currentPick?.teamId === team.id && currentPick?.round === round && !currentPick?.complete
                   const isUserTeamCell = team.id === userTeamId

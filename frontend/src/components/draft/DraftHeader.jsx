@@ -24,7 +24,9 @@ const DraftHeader = ({
   const isInProgress = draft?.status?.toUpperCase() === 'IN_PROGRESS'
 
   return (
-    <div className="bg-[var(--surface)] border-b border-[var(--card-border)]">
+    <div className={`bg-[var(--surface)] border-b border-[var(--card-border)] ${
+      isUserTurn && isInProgress ? 'ring-2 ring-gold animate-pulse' : ''
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 lg:py-3">
 
         {/* ── Mobile Layout (compact) ── */}
@@ -35,11 +37,11 @@ const DraftHeader = ({
               <h1 className="text-base font-bold font-display text-text-primary truncate">
                 {league?.name || 'Draft Room'}
               </h1>
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase shrink-0 ${
-                isInProgress ? 'bg-gold/20 text-gold' :
-                isPaused ? 'bg-crown/20 text-crown' :
-                isScheduled ? 'bg-blue-500/20 text-blue-400' :
-                'bg-[var(--card-bg)] text-text-muted'
+              <span className={`px-2 py-1 rounded text-[10px] font-mono font-medium uppercase shrink-0 font-semibold ${
+                isInProgress ? 'bg-gold/30 text-gold border border-gold/50' :
+                isPaused ? 'bg-crown/30 text-crown border border-crown/50' :
+                isScheduled ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50' :
+                'bg-[var(--card-bg)] text-text-muted border border-[var(--card-border)]'
               }`}>
                 {isPaused ? 'Paused' : isInProgress ? 'Live' : isScheduled ? 'Scheduled' : draft?.status || 'Waiting'}
               </span>
@@ -60,7 +62,7 @@ const DraftHeader = ({
               ) : currentPick?.complete ? (
                 <span className="text-gold">Complete!</span>
               ) : isUserTurn ? (
-                <span className="text-gold font-bold">YOUR PICK!</span>
+                <span className={`text-gold font-bold px-2 py-1 rounded ${isInProgress ? 'bg-gold/20 animate-pulse' : ''}`}>🎯 YOUR PICK!</span>
               ) : (
                 <span className="text-text-muted">{currentPick?.teamName || 'Waiting...'}</span>
               )}
@@ -96,11 +98,11 @@ const DraftHeader = ({
               <h1 className="text-xl font-bold font-display text-text-primary">
                 {league?.name || 'Draft Room'}
               </h1>
-              <span className={`px-2 py-1 rounded text-xs font-mono font-medium uppercase ${
-                isInProgress ? 'bg-gold/20 text-gold' :
-                isPaused ? 'bg-crown/20 text-crown' :
-                isScheduled ? 'bg-blue-500/20 text-blue-400' :
-                'bg-[var(--card-bg)] text-text-muted'
+              <span className={`px-2 py-1 rounded text-xs font-mono font-medium uppercase font-semibold ${
+                isInProgress ? 'bg-gold/30 text-gold border border-gold/50' :
+                isPaused ? 'bg-crown/30 text-crown border border-crown/50' :
+                isScheduled ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50' :
+                'bg-[var(--card-bg)] text-text-muted border border-[var(--card-border)]'
               }`}>
                 {isPaused ? 'Paused' : isInProgress ? 'Live' : isScheduled ? 'Scheduled' : draft?.status || 'Waiting'}
               </span>
@@ -114,10 +116,13 @@ const DraftHeader = ({
 
           {/* Center - Current Pick Info */}
           <div className="flex-1">
-            <div className={`rounded-lg p-3 text-center ${
+            <div className={`rounded-lg p-3 text-center relative overflow-hidden ${
               isScheduled ? 'bg-blue-500/10 border border-blue-500/30' :
-              isUserTurn ? 'bg-gold/20 border border-gold' : 'bg-[var(--card-bg)]'
-            }`}>
+              isUserTurn ? 'bg-gradient-to-r from-gold/30 via-gold/20 to-gold/30 border-2 border-gold' : 'bg-[var(--card-bg)]'
+            } ${isUserTurn && isInProgress ? 'animate-pulse' : ''}`}>
+              {isUserTurn && isInProgress && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gold/20 to-transparent animate-[pulse_2s_ease-in-out_infinite]" />
+              )}
               {isScheduled ? (
                 <>
                   <p className="text-blue-400 text-sm font-medium">DRAFT SCHEDULED</p>
@@ -132,8 +137,8 @@ const DraftHeader = ({
                 </>
               ) : isUserTurn ? (
                 <>
-                  <p className="text-gold text-sm font-medium">YOUR PICK!</p>
-                  <p className="text-text-primary text-lg font-bold font-display">Make your selection</p>
+                  <p className="text-gold text-sm font-medium z-10 relative">🎯 YOUR PICK!</p>
+                  <p className="text-text-primary text-lg font-bold font-display z-10 relative">Make your selection</p>
                 </>
               ) : (
                 <>

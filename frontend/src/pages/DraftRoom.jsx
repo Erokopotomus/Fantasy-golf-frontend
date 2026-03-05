@@ -12,6 +12,7 @@ import DraftDashboard from '../components/draft/DraftDashboard'
 import BidPanel from '../components/draft/BidPanel'
 import PickAnnouncement from '../components/draft/PickAnnouncement'
 import DraftCompletionOverlay from '../components/draft/DraftCompletionOverlay'
+import DraftConfirmModal from '../components/draft/DraftConfirmModal'
 import PlayerDetailModal from '../components/players/PlayerDetailModal'
 import Card from '../components/common/Card'
 import useDraftSounds from '../hooks/useDraftSounds'
@@ -34,6 +35,7 @@ const DraftRoomContent = () => {
     isPaused,
     loading,
     error,
+    pickError,
     recentPick,
     makePick,
     nominatePlayer,
@@ -55,6 +57,9 @@ const DraftRoomContent = () => {
   const [sideTab, setSideTab] = useState('queue')
   const [chatMessages, setChatMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
+  const [confirmingPick, setConfirmingPick] = useState(null)
+  const [isConfirmingDraft, setIsConfirmingDraft] = useState(false)
+  const [visiblePickError, setVisiblePickError] = useState(null)
   const chatEndRef = useRef(null)
   const { selectedPlayer: detailPlayer, isModalOpen, openPlayerDetail, closePlayerDetail } = usePlayerDetail()
   const { soundEnabled, toggleSound, initSounds, playPick, playYourTurn, playTimerWarning, playDraftStart, playBid, playDraftComplete } = useDraftSounds()
@@ -66,12 +71,35 @@ const DraftRoomContent = () => {
     return () => document.removeEventListener('click', handler)
   }, [initSounds])
 
+  // Show pick error as toast and auto-dismiss after 4 seconds
+  useEffect(() => {
+    if (pickError) {
+      setVisiblePickError(pickError)
+      const timer = setTimeout(() => {
+        setVisiblePickError(null)
+      }, 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [pickError])
+
   // Sound: your turn notification
   const prevIsUserTurn = useRef(false)
   useEffect(() => {
     if (isUserTurn && !prevIsUserTurn.current) playYourTurn()
     prevIsUserTurn.current = isUserTurn
   }, [isUserTurn, playYourTurn])
+
+  // Browser tab title when it's your turn
+  useEffect(() => {
+    if (isUserTurn && draft?.status === 'IN_PROGRESS') {
+      document.title = '🟡 YOUR TURN — Clutch Draft'
+    } else if (draft?.status === 'IN_PROGRESS') {
+      document.title = `${currentPick?.teamName || 'Draft'} — Clutch Draft`
+    } else {
+      document.title = 'Clutch Fantasy Sports'
+    }
+    return () => { document.title = 'Clutch Fantasy Sports' }
+  }, [isUserTurn, draft?.status, currentPick?.teamName])
 
   // Sound: pick made
   const prevPickCount = useRef(0)
@@ -283,18 +311,28 @@ const DraftRoomContent = () => {
     return unsub
   }, [draft?.id])
 
-  const handleSelectPlayer = useCallback(async (player) => {
+  const handleSelectPlayer = useCallback((player) => {
     if (draft?.type === 'auction') {
       setSelectedPlayer(player)
       setIsNominating(true)
     } else {
-      try {
-        await makePick(player.id)
-      } catch (err) {
-        // Error handled by hook
-      }
+      // Show confirmation modal for snake/straight drafts
+      setConfirmingPick(player)
     }
-  }, [draft?.type, makePick])
+  }, [draft?.type])
+
+  const handleConfirmDraft = useCallback(async () => {
+    if (!confirmingPick) return
+    setIsConfirmingDraft(true)
+    try {
+      await makePick(confirmingPick.id)
+      setConfirmingPick(null)
+    } catch (err) {
+      // Error is displayed in pickError state and shown as toast
+    } finally {
+      setIsConfirmingDraft(false)
+    }
+  }, [confirmingPick, makePick])
 
   const handleNominate = useCallback(async (playerId, startingBid) => {
     try {
@@ -468,6 +506,7 @@ const DraftRoomContent = () => {
                 onViewPlayer={openPlayerDetail}
                 players={players}
                 connectedUserIds={connectedUserIds}
+                draftOrder={draft?.draftOrder}
               />
             )}
           </div>
@@ -529,6 +568,7 @@ const DraftRoomContent = () => {
               <div className="flex border-b border-[var(--card-border)] bg-[var(--surface)] flex-shrink-0">
                 {[
                   { key: 'queue', label: `Queue (${queue.length})` },
+                  { key: 'feed', label: `Feed (${picks.length})` },
                   { key: 'chat', label: 'Chat' },
                 ].map(tab => (
                   <button
@@ -555,6 +595,45 @@ const DraftRoomContent = () => {
                       onSelect={handleSelectPlayer}
                       isUserTurn={isUserTurn}
                     />
+                  </div>
+                ) : sideTab === 'feed' ? (
+                  <div className="h-full overflow-auto p-2 space-y-1">
+                    {picks.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-text-muted text-sm">No picks yet</p>
+                        <p className="text-text-muted text-xs mt-1">Picks will appear here as they're made</p>
+                      </div>
+                    ) : (
+                      [...picks].reverse().map((pick, i) => {
+                        const isUserPick = pick.teamId === draft?.userTeamId
+                        return (
+                          <div
+                            key={pick.id || i}
+                            className={`px-2 py-1.5 rounded text-xs border border-[var(--card-border)] transition-colors ${
+                              isUserPick
+                                ? 'bg-gold/10 border-gold/30'
+                                : 'bg-[var(--bg-alt)] hover:bg-[var(--card-bg)]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-text-muted">
+                                R{pick.round}.{pick.pickNumber}
+                              </span>
+                              <span className={`font-medium ${isUserPick ? 'text-gold' : 'text-text-primary'}`}>
+                                {pick.teamName}
+                              </span>
+                              <span className="text-text-muted">→</span>
+                              <span className="text-text-primary truncate flex-1">{pick.playerName}</span>
+                              {pick.playerRank && (
+                                <span className="text-text-muted text-[10px] whitespace-nowrap">
+                                  #{pick.playerRank}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
                   </div>
                 ) : (
                   <div className="h-full flex flex-col">
@@ -628,6 +707,7 @@ const DraftRoomContent = () => {
             userTeamId={draft?.userTeamId}
             onViewPlayer={openPlayerDetail}
             players={players}
+            draftOrder={draft?.draftOrder}
           />
         </div>
       )}
@@ -654,6 +734,39 @@ const DraftRoomContent = () => {
         onAddToQueue={addToQueue}
         onDraft={isUserTurn ? handleSelectPlayer : undefined}
       />
+
+      {/* Draft Confirmation Modal */}
+      <DraftConfirmModal
+        isOpen={!!confirmingPick}
+        player={confirmingPick}
+        currentPick={currentPick}
+        onConfirm={handleConfirmDraft}
+        onCancel={() => setConfirmingPick(null)}
+        isLoading={isConfirmingDraft}
+      />
+
+      {/* Pick Error Toast */}
+      {visiblePickError && (
+        <div className="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-live-red/95 backdrop-blur-sm text-white rounded-lg px-5 py-3 shadow-lg flex items-start gap-3 max-w-sm">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{visiblePickError}</p>
+            </div>
+            <button
+              onClick={() => setVisiblePickError(null)}
+              className="text-white/70 hover:text-white transition-colors flex-shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Pick Announcement */}
       <PickAnnouncement
