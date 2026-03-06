@@ -15,7 +15,7 @@ export default function VaultPersistent({
   ratings = {},     // Map: ownerName → ClutchRating object (optional)
 }) {
   const [selectedOwner, setSelectedOwner] = useState(null)
-  const [activeOnly, setActiveOnly] = useState(false)
+  const [activeOnly, setActiveOnly] = useState(true)
 
   const selectedOwnerData = selectedOwner
     ? ownerStats.find(o => o.name === selectedOwner)
