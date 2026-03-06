@@ -197,7 +197,18 @@ export function useVaultStats(leagueId) {
         api.getLeagueHistory(leagueId),
         api.getOwnerAliases(leagueId),
       ])
-      setHistory(historyData)
+      // Flatten the seasons map { "2025": [...], "2024": [...] } into a flat array
+      const flat = []
+      if (historyData?.seasons) {
+        for (const teams of Object.values(historyData.seasons)) {
+          if (Array.isArray(teams)) {
+            for (const t of teams) flat.push(t)
+          }
+        }
+      } else if (Array.isArray(historyData)) {
+        flat.push(...historyData)
+      }
+      setHistory(flat)
       setAliases(aliasData)
     } catch (err) {
       setError(err.message)
