@@ -248,7 +248,7 @@ async function syncHoleScores(tournamentId, prisma) {
             roundNumber: op.roundNumber,
           },
         },
-        update: { score: op.score },
+        update: { score: op.score, ...(op.teeTime ? { teeTime: op.teeTime } : {}) },
         create: op,
       })
       // Cache the new ID

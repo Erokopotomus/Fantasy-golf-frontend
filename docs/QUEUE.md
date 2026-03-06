@@ -6241,7 +6241,8 @@ When aliases are configured, only owners explicitly marked active in the alias t
 ---
 
 ### 163 — CRITICAL: ESPN hole sync only captured partial R1 data + no R2 tee times `CRITICAL`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Code review: sync logic is correct, partial data was caused by item 152's fetch→axios fix timing. Fixed RoundScore upsert to include teeTime in update clause. Cron needs manual re-run on Railway. Files: espnSync.js
 **Priority:** Critical — scorecard shows 5/18 holes, R2 not updating, fantasy scoring incomplete
 **Prompt:**
 
@@ -6268,7 +6269,8 @@ When aliases are configured, only owners explicitly marked active in the alias t
 ---
 
 ### 164 — Add WeatherStrip to live scoring league page `MEDIUM`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Added WeatherStrip to LeagueHome with weather data fetch, responsive grid layout (2/3 live scoring + 1/3 weather on desktop, stacked on mobile), only shows during IN_PROGRESS. Files: LeagueHome.jsx
 **Priority:** Medium — weather card was on tournament preview but not on the league live scoring view
 **Prompt:**
 
