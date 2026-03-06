@@ -6240,6 +6240,60 @@ When aliases are configured, only owners explicitly marked active in the alias t
 
 ---
 
+### 163 — CRITICAL: ESPN hole sync only captured partial R1 data + no R2 tee times `CRITICAL`
+**Status:** `TODO`
+**Priority:** Critical — scorecard shows 5/18 holes, R2 not updating, fantasy scoring incomplete
+**Prompt:**
+
+**Three problems with live tournament data for Arnold Palmer Invitational:**
+
+**Problem 1: Incomplete hole-by-hole data.** The ESPN sync cron (`*/5 * * * 4,5,6,0`, `espnSync.syncHoleScores()`) ran during R1 while players were mid-round and captured partial data (e.g., Aberg has 5/18 holes). Subsequent runs should have added the remaining holes via upsert, but they didn't. Check Railway logs for ESPN sync errors. The ESPN API (`site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard/401811935`) currently returns full 18-hole data for all players.
+
+**Diagnosis:** Verified via browser — ESPN returns 72 competitors with 18 holes each for R1. Our DB (`GET /api/tournaments/{id}/scorecards/{playerId}`) only has 5 holes for Aberg. The upsert logic in `espnSync.js` lines 260-291 looks correct (uses `roundScoreId_holeNumber` unique key). Most likely the cron is erroring silently — check logs.
+
+**Action:**
+1. Check Railway logs for `[ESPN Sync]` errors since Thursday 3/5.
+2. Run a manual ESPN sync: `node -e "const s = require('./src/services/espnSync'); const { PrismaClient } = require('@prisma/client'); const p = new PrismaClient(); s.syncHoleScores('cmlabp7ot02mlo02tsztxojvb', p).then(r => { console.log(r); p.$disconnect() })"`
+3. After sync completes, also run aggregation: `s.aggregateHoleScoresToPerformance('cmlabp7ot02mlo02tsztxojvb', p)` — this populates `birdies`, `bogeys`, `eagles` on Performance records.
+
+**Problem 2: No R2 tee times.** ESPN currently shows `STATUS_PLAY_COMPLETE` for R1, `period: 1`. R2 data (tee times, hole scores) isn't available yet. But our leaderboard API returns `teeTimes: { "1": "..." }` with no R2 entry. Once R2 starts, the ESPN sync should pick up R2 data. Verify the tee time extraction logic (`statistics.categories[0].stats[6].displayValue` at line 144 of espnSync.js) works for R2.
+
+**Problem 3: Fantasy scoring stale.** All players show `birdies: 0, bogeys: 0, eagles: 0`. The `aggregateHoleScoresToPerformance()` function needs to run after hole data is complete. The `fantasyPoints` breakdown shows `holes: 0, bonuses: 26, strokesGained: 0` — only position points are calculated, not per-hole fantasy points (birdies/eagles/bogeys bonuses).
+
+**FILES:**
+- `backend/src/services/espnSync.js` (syncHoleScores + aggregateHoleScoresToPerformance)
+- `backend/src/services/espnClient.js` (getEventScorecard)
+- `backend/src/index.js` (cron schedule line 532)
+
+---
+
+### 164 — Add WeatherStrip to live scoring league page `MEDIUM`
+**Status:** `TODO`
+**Priority:** Medium — weather card was on tournament preview but not on the league live scoring view
+**Prompt:**
+
+The `WeatherStrip` component exists at `frontend/src/components/tournament/WeatherStrip.jsx` and is used on `TournamentPreview.jsx` and `CourseDetail.jsx`. But it's NOT shown on the league live scoring page where users spend most of their time during a tournament.
+
+**What to do:** Add `WeatherStrip` to the league page's live tournament section — the area that shows the tournament banner + live scoring widget. It should appear as a floating card to the right of or below the live scoring widget, showing hourly weather for the current round.
+
+**Requirements:**
+1. Import WeatherStrip into the league scoring view component
+2. Fetch weather data from the tournament's weather endpoint (same pattern as TournamentPreview.jsx line 311)
+3. Position: on desktop, float right of live scoring widget. On mobile, below the live scoring widget.
+4. Only show when a tournament is IN_PROGRESS
+5. Match the glassmorphic card styling used by the tournament banner area
+
+**Reference:** See how TournamentPreview.jsx uses it:
+```jsx
+<WeatherStrip weather={weather} tournamentStart={tournament?.startDate} />
+```
+
+**FILES:**
+- Find the league live scoring page/component (likely in `frontend/src/pages/LeagueHome.jsx` or similar)
+- `frontend/src/components/tournament/WeatherStrip.jsx` (already exists)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
