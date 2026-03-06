@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import useManagerProfile from '../hooks/useManagerProfile'
 import Card from '../components/common/Card'
@@ -257,6 +257,7 @@ function normalizeRating(raw) {
 
 const ManagerProfile = () => {
   const { userId } = useParams()
+  const navigate = useNavigate()
   const { user: currentUser } = useAuth()
   const { user, profile, bySport, achievements, achievementStats, reputation, clutchRating: rawClutchRating, loading, error, refetch } = useManagerProfile(userId)
   const clutchRating = normalizeRating(rawClutchRating)
@@ -329,12 +330,12 @@ const ManagerProfile = () => {
     return (
       <div className="min-h-screen">
         <div className="max-w-3xl mx-auto px-4 py-6">
-          <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-4">
+          <button onClick={() => navigate(-1)} className="inline-flex items-center text-text-secondary hover:text-text-primary mb-4">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Profile
-          </Link>
+            Back
+          </button>
           <Card>
             <p className="text-live-red text-center">{error}</p>
           </Card>
@@ -428,12 +429,12 @@ const ManagerProfile = () => {
     <div className="min-h-screen">
       <div className="max-w-3xl mx-auto px-4 py-6">
         {/* Back Link */}
-        <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-6 transition-colors">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-text-secondary hover:text-text-primary mb-6 transition-colors">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          {isOwnProfile ? 'Back to Profile' : 'Back'}
-        </Link>
+          Back
+        </button>
 
         {/* Header with Clutch Rating */}
         <Card className="mb-4">
