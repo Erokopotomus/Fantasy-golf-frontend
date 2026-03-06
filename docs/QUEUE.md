@@ -5957,6 +5957,113 @@ Redesign `frontend/src/pages/TeamRoster.jsx` to show live tournament scoring per
 
 ---
 
+### 158 — Fix BroMontana draft cost values from spreadsheet truth `HIGH`
+**Status:** `TODO`
+**Priority:** HIGH — core league history data is wrong, affects vault display and Clutch Rating calculations
+
+**Problem:** The BroMontana Bowl league (`cmm47aj1w07klry65jxa29jwu`) was imported from Yahoo, but Yahoo's API returns incorrect auction `cost` values for most historical seasons. The owner (Eric) has a master spreadsheet with the correct draft costs for 2014-2025. A full comparison found 83 owner-year mismatches between the DB and spreadsheet.
+
+**Key issues:**
+1. Most years have small cost discrepancies (1-27 per owner) — Yahoo rounding or missing data
+2. 2024-2025 have large discrepancies (up to -103 for a single owner)
+3. 2020-2024 were 6-team keeper league years, but the DB has 12 owners for those years (non-participating owners have duplicate/incorrect draft data that shouldn't exist)
+4. The league total spend varies per year due to keeper carryover budgets — it's NOT always 2400
+
+**Truth data:** `docs/bromontana_draft_truth.json` — parsed from Eric's spreadsheet. Structure:
+```json
+{
+  "2014": {
+    "teams": {
+      "Eric": {
+        "raw_name": "Eric",
+        "budget": 218,        // null for 2014 (no budget row in sheet)
+        "spent": 218,         // sum of all pick costs
+        "picks": [
+          {"player": "PLAYER NAME", "position": "QB", "cost": 45},
+          ...
+        ]
+      },
+      ...
+    }
+  },
+  ...
+}
+```
+
+Owner names in the truth file are already mapped to vault canonical names:
+- Anthony, Caleb, Dallas, Eric, Jakob, Kirk, Mase R, Nick Trow, Paul, Ragen, Scott, Spencer H, aric, bradley
+
+**DB owner name → spreadsheet name mapping (for matching):**
+The DB `HistoricalSeason.ownerName` values may differ slightly from spreadsheet names. Known mappings:
+- DB `"Anthony"` = spreadsheet `"Anthony"` (also shows as "Tank" in some Yahoo draft pick data)
+- DB `"Mase R"` = spreadsheet `"Mase R"` (also shows as "Mason" in some contexts)
+- DB `"Nick Trow"` = spreadsheet `"Nick Trow"` (also shows as "Nick" in some contexts)
+- DB `"Spencer H"` = spreadsheet `"Spencer H"` (also shows as "Spencer" in some contexts)
+- DB `"bradley"` = spreadsheet `"bradley"` (lowercase is canonical)
+- DB `"aric"` = spreadsheet `"aric"` (lowercase is canonical)
+- DB `"Paul"` = spreadsheet `"Paul"` (2025 only — proxy for Aric who couldn't play)
+- All other names should match exactly
+
+**Prompt:**
+
+Write a one-time migration script at `backend/scripts/fix-bromontana-drafts.js` that:
+
+1. **Load truth data** from `docs/bromontana_draft_truth.json`
+
+2. **For each year 2014-2025**, fetch all `HistoricalSeason` records for league `cmm47aj1w07klry65jxa29jwu` with that `seasonYear`
+
+3. **For each HistoricalSeason record**, look up the owner in the truth data by `ownerName` (case-insensitive match). The truth data owner names are the canonical vault names.
+
+4. **Match picks by player name:** For each pick in the truth data for that owner+year, find the matching pick in the DB's `draftData.picks[]` array by fuzzy player name match (case-insensitive, ignore extra spaces). Update the `cost` field to the spreadsheet value.
+
+5. **Handle 6-team years (2020-2024):** The DB has 12 HistoricalSeason records per year but only 6 owners actually drafted. For owners NOT in the truth data for a given year:
+   - Set their `draftData.picks` to an empty array `[]`
+   - Set `draftData.totalSpent` (or equivalent) to 0
+   - This prevents phantom draft data from appearing in the vault
+
+6. **Handle the full picks array:** Each HistoricalSeason's `draftData.picks[]` contains ALL league picks (all teams), not just that owner's. So when updating costs, you need to:
+   - Match by BOTH `ownerName` on the pick AND `playerName`
+   - Update costs for ALL owners' picks in the array (since every HistoricalSeason record has the full league picks array)
+   - OR: rebuild the picks array from the truth data entirely (simpler and more reliable)
+
+7. **Rebuild approach (RECOMMENDED):** For each year, rebuild the complete `draftData.picks[]` array from truth data:
+   - For each owner in truth data for that year, create pick entries with `{playerName, cost, position, ownerName, round: pickIndex+1, pick: globalPickIndex+1}`
+   - Preserve existing `playerId`, `teamKey`, `isKeeper` fields from the DB picks where player names match
+   - Set the rebuilt picks array on EVERY HistoricalSeason record for that year (since they all share the same picks array)
+
+8. **Save** each updated HistoricalSeason record with `prisma.historicalSeason.update({ where: { id }, data: { draftData: updatedDraftData } })`
+
+9. **Logging:** Print per-year summary: number of owners in truth vs DB, total picks matched, total cost delta, any unmatched players
+
+10. **Dry run mode:** Accept `--dry-run` flag that logs all changes without writing to DB. Default to dry run. Pass `--commit` to actually write.
+
+**Run instructions:**
+```bash
+# Dry run first:
+cd backend && node scripts/fix-bromontana-drafts.js --dry-run
+
+# If output looks correct:
+cd backend && node scripts/fix-bromontana-drafts.js --commit
+```
+
+**FILES:**
+- `backend/scripts/fix-bromontana-drafts.js` (NEW — migration script)
+- `docs/bromontana_draft_truth.json` (READ ONLY — truth data, do not modify)
+
+**REFERENCE:**
+- `backend/prisma/schema.prisma` — HistoricalSeason model (~line 2293)
+- `backend/src/routes/imports.js` — GET /api/imports/history/:leagueId endpoint for reference on how draftData is structured
+- `backend/src/lib/prisma.js` — Prisma singleton
+
+**VERIFICATION:**
+- Dry run output shows all 12 years processed
+- Each year's league total cost matches truth data totals (2014=2384, 2015=2388, 2016=2389, 2017=2373, 2018=2391, 2019=2380, 2020=884, 2021=1146, 2022=1062, 2023=1224, 2024=1451, 2025=2394)
+- 6-team years (2020-2024) have exactly 6 owners with draft data, not 12
+- After commit: `GET /api/imports/history/cmm47aj1w07klry65jxa29jwu` shows correct costs
+- No unmatched players logged (or minimal with clear explanation)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

@@ -866,8 +866,20 @@ const LeagueHome = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {(league.standings || league.teams || []).map((team, i) => {
-                        const rank = team.rank || i + 1
+                      {(() => {
+                        const baseTeams = league.standings || league.teams || []
+                        // When tournament is live, sort by live points (highest first)
+                        if (isTournamentLive && liveTeams?.length > 0) {
+                          const sorted = [...baseTeams].sort((a, b) => {
+                            const aLive = liveTeams.find(lt => lt.teamId === a.id)
+                            const bLive = liveTeams.find(lt => lt.teamId === b.id)
+                            return (bLive?.totalPoints || 0) - (aLive?.totalPoints || 0)
+                          })
+                          return sorted
+                        }
+                        return baseTeams
+                      })().map((team, i) => {
+                        const rank = (isTournamentLive && liveTeams?.length > 0) ? i + 1 : (team.rank || i + 1)
                         const isMe = team.userId === user?.id
                         const ownerName = team.user?.name || team.name
                         const rosterCount = team.roster?.length || 0

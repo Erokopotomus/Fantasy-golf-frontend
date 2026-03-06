@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useRoster } from '../hooks/useRoster'
 import { useLineup } from '../hooks/useLineup'
 import { useLeague } from '../hooks/useLeague'
+import { useLeagueLiveScoring } from '../hooks/useLeagueLiveScoring'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -81,6 +82,20 @@ const TeamRoster = () => {
       .then(data => setScheduleData(data.tournaments || []))
       .catch(() => setScheduleData(null))
   }, [isNflLeague, league])
+
+  // Live scoring integration
+  const { tournament: liveTournament, isLive, teams: liveTeams, userTeam: liveUserTeam, loading: liveLoading } = useLeagueLiveScoring(leagueId)
+
+  // Build a lookup map: playerId → live scoring data
+  const liveDataByPlayerId = useMemo(() => {
+    if (!liveUserTeam) return {}
+    const map = {}
+    const allPlayers = [...(liveUserTeam.starters || []), ...(liveUserTeam.bench || [])]
+    for (const p of allPlayers) {
+      if (p.playerId) map[p.playerId] = p
+    }
+    return map
+  }, [liveUserTeam])
 
   const [isEditing, setIsEditing] = useState(false)
   const [pendingActive, setPendingActive] = useState(null)
@@ -663,8 +678,54 @@ const TeamRoster = () => {
         </div>
       )}
 
-      {/* Golf Schedule Summary */}
-      {scheduleSummary && (
+      {/* Live Scoring Summary Card */}
+      {isLive && liveUserTeam && liveTournament && !isEditing && (
+        <div className="mb-4 rounded-xl border border-field-bright/30 bg-gradient-to-r from-field-bright/5 to-field/5 overflow-hidden">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-red opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-live-red" />
+                </span>
+                <span className="text-sm font-semibold text-text-primary">{liveTournament.name}</span>
+                <span className="text-xs text-text-muted">R{liveTournament.currentRound || 1}</span>
+              </div>
+              <Link
+                to={`/leagues/${leagueId}/scoring`}
+                className="text-xs text-field hover:text-field-bright font-medium transition-colors"
+              >
+                Full Scoring →
+              </Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <div>
+                <span className="text-2xl font-bold font-mono text-text-primary">{(liveUserTeam.totalPoints || 0).toFixed(1)}</span>
+                <span className="text-xs text-text-muted ml-1">pts</span>
+              </div>
+              <div className="text-xs text-text-muted">
+                <span className="font-semibold text-text-secondary">
+                  {liveUserTeam.rank ? `${liveUserTeam.rank}${liveUserTeam.rank === 1 ? 'st' : liveUserTeam.rank === 2 ? 'nd' : liveUserTeam.rank === 3 ? 'rd' : 'th'}` : '—'}
+                </span>
+                {liveTeams.length > 0 && <span> of {liveTeams.length}</span>}
+              </div>
+              {liveUserTeam.benchPoints > 0 && (
+                <div className="text-xs text-text-muted">
+                  Bench: <span className="font-mono">{liveUserTeam.benchPoints.toFixed(1)}</span>
+                </div>
+              )}
+              {liveUserTeam.optimalPoints > 0 && liveUserTeam.optimalPoints > liveUserTeam.totalPoints && (
+                <div className="text-xs text-text-muted">
+                  Optimal: <span className="font-mono">{liveUserTeam.optimalPoints.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Golf Schedule Summary (hidden when live scoring is showing) */}
+      {scheduleSummary && !(isLive && liveUserTeam) && (
         <div className="mb-4 p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -723,6 +784,9 @@ const TeamRoster = () => {
               onQuickToggle={() => handleQuickToggle(player)}
               maxActive={maxActive}
               activeCount={activePlayers.length}
+              liveData={liveDataByPlayerId[player.id] || null}
+              isLive={isLive}
+              liveTournamentId={liveTournament?.id}
             />
           ))}
           {/* Empty slot placeholders */}
@@ -792,6 +856,9 @@ const TeamRoster = () => {
               onQuickToggle={() => handleQuickToggle(player)}
               maxActive={maxActive}
               activeCount={activePlayers.length}
+              liveData={liveDataByPlayerId[player.id] || null}
+              isLive={isLive}
+              liveTournamentId={liveTournament?.id}
             />
           ))}
           {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length === 0 && (
@@ -843,6 +910,8 @@ const TeamRoster = () => {
                 currentKeeperCount={currentKeeperCount}
                 isNfl={isNflLeague}
                 readOnly={!viewingOwnTeam}
+                liveData={liveDataByPlayerId[player.id] || null}
+                isLive={isLive}
               />
             ))}
             {/* Empty IR slot placeholders */}
@@ -879,14 +948,78 @@ const TeamRoster = () => {
   )
 }
 
+/** Helper: format score to par display */
+const formatToPar = (score) => {
+  if (score == null) return '—'
+  if (score === 0) return 'E'
+  return score > 0 ? `+${score}` : `${score}`
+}
+
+/** Helper: color class for score to par */
+const toParColor = (score) => {
+  if (score == null) return 'text-text-muted'
+  if (score < 0) return 'text-field'
+  if (score > 0) return 'text-live-red'
+  return 'text-text-primary'
+}
+
+/** Helper: color class for position */
+const positionColor = (pos) => {
+  if (!pos) return 'text-text-muted'
+  const num = parseInt(pos.toString().replace(/[^0-9]/g, ''))
+  if (isNaN(num)) return 'text-text-muted'
+  if (num <= 5) return 'text-field font-semibold'
+  if (num <= 10) return 'text-field'
+  if (num <= 20) return 'text-text-secondary'
+  return 'text-text-muted'
+}
+
 /** Individual player row */
-const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0, isNfl = false, scheduleBadge = null, readOnly = false, onQuickToggle, maxActive = 4, activeCount = 0 }) => {
+const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, canActivate = true, onToggle, onDragStart, onDragEnd, onDrop, onClick, isIR = false, onToggleIR, canIR, irSlots = 0, keepersEnabled = false, onToggleKeeper, maxKeepers = 0, currentKeeperCount = 0, isNfl = false, scheduleBadge = null, readOnly = false, onQuickToggle, maxActive = 4, activeCount = 0, liveData = null, isLive = false, liveTournamentId = null }) => {
+  const [showScorecard, setShowScorecard] = useState(false)
+  const [scorecardData, setScorecardData] = useState(null)
+  const [scorecardLoading, setScorecardLoading] = useState(false)
+
+  const hasLiveStats = isLive && liveData && !isEditing
+  const isCutOrWd = liveData && (liveData.status === 'CUT' || liveData.status === 'WD' || liveData.status === 'DNS')
+  const notInField = isLive && !liveData && !isNfl
+
+  const handleRowClick = async () => {
+    if (isEditing && !readOnly) {
+      onToggle()
+      return
+    }
+    // If live and player has live data, toggle scorecard
+    if (hasLiveStats && liveData?.playerId) {
+      if (showScorecard) {
+        setShowScorecard(false)
+        return
+      }
+      setShowScorecard(true)
+      if (!scorecardData) {
+        setScorecardLoading(true)
+        try {
+          const data = await api.getPlayerScorecard(liveTournamentId, liveData.playerId)
+          setScorecardData(data.scorecards || {})
+        } catch (err) {
+          console.error('Failed to fetch scorecard:', err)
+          setScorecardData({})
+        } finally {
+          setScorecardLoading(false)
+        }
+      }
+    } else {
+      onClick()
+    }
+  }
+
   return (
+    <div>
     <div
       draggable={isEditing && !readOnly}
       onDragStart={isEditing && !readOnly ? (e) => onDragStart(e) : undefined}
       onDragEnd={isEditing && !readOnly ? onDragEnd : undefined}
-      onClick={isEditing && !readOnly ? (e) => { e.stopPropagation(); onToggle() } : onClick}
+      onClick={isEditing && !readOnly ? (e) => { e.stopPropagation(); onToggle() } : handleRowClick}
       className={`
         flex items-center gap-3 p-3 rounded-lg transition-all select-none
         ${isEditing && !readOnly ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:bg-[var(--surface-alt)]'}
@@ -897,6 +1030,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           ? 'bg-[var(--surface)] border border-live-red/30'
           : 'bg-[var(--surface)] border border-[var(--card-border)]'
         }
+        ${showScorecard ? 'rounded-b-none border-b-0' : ''}
       `}
     >
       {/* Drag handle (edit mode) */}
@@ -925,18 +1059,24 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-text-primary font-semibold text-sm truncate">{player.name}</span>
-          {isActive && !isEditing && (
+          {isActive && !isEditing && !hasLiveStats && (
             <span className="text-[10px] font-medium text-field bg-field-bright/10 px-1.5 rounded">ACTIVE</span>
           )}
           {isIR && !isEditing && (
             <span className="text-[10px] font-medium text-live-red bg-live-red/10 px-1.5 rounded">IR</span>
+          )}
+          {isCutOrWd && (
+            <span className="text-[10px] font-medium text-live-red bg-live-red/10 px-1.5 rounded">{liveData.status}</span>
+          )}
+          {notInField && (
+            <span className="text-[10px] font-medium text-text-muted bg-[var(--stone)] px-1.5 rounded">NOT IN FIELD</span>
           )}
           {player.isKeeper && (
             <span className="text-[10px] font-medium text-crown bg-crown/10 px-1.5 rounded">
               K{player.keeperCost != null ? ` $${player.keeperCost}` : ''}{player.keeperYearsKept > 1 ? ` Yr ${player.keeperYearsKept}` : ''}
             </span>
           )}
-          {scheduleBadge && !isEditing && scheduleBadge.tournaments && (
+          {scheduleBadge && !isEditing && !hasLiveStats && scheduleBadge.tournaments && (
             <div className="flex gap-0.5 items-center ml-1">
               {scheduleBadge.tournaments.map((t, i) => {
                 const inField = t.field?.some(f => f.playerId === scheduleBadge.playerId)
@@ -954,30 +1094,53 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-text-muted">
-          {isNfl ? (
-            <>
-              {player.nflPosition && <span className="font-semibold text-text-secondary">{player.nflPosition}</span>}
-              {player.nflTeam && <span>{player.nflTeam}</span>}
-            </>
-          ) : (
-            <>
-              {player.owgrRank && <span>#{player.owgrRank}</span>}
-              {player.primaryTour && <span>{player.primaryTour}</span>}
-              {player.sgTotal != null && <span>SG: {player.sgTotal.toFixed(1)}</span>}
-            </>
-          )}
-          {player.acquiredVia && (
-            <span className="text-text-muted/60">{player.acquiredVia.toLowerCase()}</span>
-          )}
-        </div>
-        {!isNfl && !isEditing && (
+
+        {/* Live stats line (replaces static stats when live) */}
+        {hasLiveStats && !isCutOrWd ? (
+          <div className="flex items-center gap-3 text-xs mt-0.5">
+            <span className={`font-mono font-semibold ${positionColor(liveData.position)}`}>
+              {liveData.position || '—'}
+            </span>
+            <span className={`font-mono font-semibold ${toParColor(liveData.totalToPar)}`}>
+              {formatToPar(liveData.totalToPar)}
+            </span>
+            <span className="text-text-muted font-mono">
+              {liveData.thru === 18 || liveData.thru === 'F' ? 'F' : liveData.thru ? `thru ${liveData.thru}` : '—'}
+            </span>
+            {liveData.todayToPar != null && liveData.todayToPar !== liveData.totalToPar && (
+              <span className={`font-mono text-[11px] ${toParColor(liveData.todayToPar)}`}>
+                (today {formatToPar(liveData.todayToPar)})
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 text-xs text-text-muted">
+            {isNfl ? (
+              <>
+                {player.nflPosition && <span className="font-semibold text-text-secondary">{player.nflPosition}</span>}
+                {player.nflTeam && <span>{player.nflTeam}</span>}
+              </>
+            ) : (
+              <>
+                {player.owgrRank && <span>#{player.owgrRank}</span>}
+                {player.primaryTour && <span>{player.primaryTour}</span>}
+                {player.sgTotal != null && <span>SG: {player.sgTotal.toFixed(1)}</span>}
+              </>
+            )}
+            {player.acquiredVia && (
+              <span className="text-text-muted/60">{player.acquiredVia.toLowerCase()}</span>
+            )}
+          </div>
+        )}
+
+        {/* Third line: career stats (static, hidden when live) */}
+        {!isNfl && !isEditing && !hasLiveStats ? (
           <div className="flex items-center gap-2 text-[11px] text-text-secondary mt-0.5">
             {player.wins > 0 && <span className="font-mono">{player.wins}W</span>}
             {player.top5s > 0 && <span className="font-mono">{player.top5s} T5</span>}
             {player.top10s > 0 && <span className="font-mono">{player.top10s} T10</span>}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* IR toggle button in edit mode (for bench players) */}
@@ -1053,6 +1216,49 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
           Drop
         </button>
       )}
+
+      {/* Fantasy points badge (right side, when live) */}
+      {hasLiveStats && !isCutOrWd && !isEditing && (
+        <div className="flex flex-col items-end flex-shrink-0 ml-1">
+          <span className="text-sm font-bold font-mono text-text-primary">{(liveData.fantasyPoints || 0).toFixed(1)}</span>
+          <span className="text-[10px] text-text-muted">pts</span>
+        </div>
+      )}
+    </div>
+
+    {/* Scorecard expansion panel */}
+    {showScorecard && hasLiveStats && (
+      <div className={`border border-t-0 rounded-b-lg bg-[var(--surface)] overflow-hidden ${
+        isActive ? 'border-field-bright/30' : isIR ? 'border-live-red/30' : 'border-[var(--card-border)]'
+      }`}>
+        {scorecardLoading ? (
+          <div className="p-4 text-center">
+            <div className="w-6 h-6 border-2 border-field-bright/30 border-t-field-bright rounded-full animate-spin mx-auto" />
+          </div>
+        ) : scorecardData && Object.keys(scorecardData).length > 0 ? (
+          <div className="p-3 space-y-2">
+            {Object.entries(scorecardData).sort(([a], [b]) => Number(a) - Number(b)).map(([round, holes]) => (
+              <div key={round}>
+                <div className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">Round {round}</div>
+                <div className="flex gap-0.5 flex-wrap">
+                  {(Array.isArray(holes) ? holes : []).sort((a, b) => a.hole - b.hole).map(h => {
+                    const diff = h.score - h.par
+                    const bg = diff <= -2 ? 'bg-field text-white' : diff === -1 ? 'bg-field-bright/20 text-field' : diff === 0 ? 'bg-[var(--stone)] text-text-primary' : diff === 1 ? 'bg-live-red/15 text-live-red' : diff >= 2 ? 'bg-live-red text-white' : 'bg-[var(--stone)] text-text-muted'
+                    return (
+                      <div key={h.hole} className={`w-7 h-7 flex items-center justify-center rounded text-[11px] font-mono font-medium ${bg}`} title={`Hole ${h.hole} (Par ${h.par}): ${h.score}`}>
+                        {h.score || '—'}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-3 text-center text-xs text-text-muted">No scorecard data available</div>
+        )}
+      </div>
+    )}
     </div>
   )
 }
