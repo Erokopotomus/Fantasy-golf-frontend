@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useRoster } from '../hooks/useRoster'
 import { useLineup } from '../hooks/useLineup'
 import { useLeague } from '../hooks/useLeague'
@@ -62,7 +62,20 @@ const TeamRoster = () => {
   const teamId = userTeam?.id
 
   // P02: Team selector for viewing other teams' rosters
+  const [searchParams] = useSearchParams()
+  const memberParam = searchParams.get('member')
   const [selectedTeamId, setSelectedTeamId] = useState(null)
+
+  // Auto-select team when ?member=userId is in the URL
+  useEffect(() => {
+    if (memberParam && league?.teams) {
+      const targetTeam = league.teams.find(t => t.userId === memberParam)
+      if (targetTeam && targetTeam.id !== teamId) {
+        setSelectedTeamId(targetTeam.id)
+      }
+    }
+  }, [memberParam, league?.teams, teamId])
+
   const viewingOwnTeam = !selectedTeamId || selectedTeamId === teamId
   const activeTeamId = viewingOwnTeam ? teamId : selectedTeamId
 
@@ -573,6 +586,11 @@ const TeamRoster = () => {
                 <span className="font-mono">{viewedTeam?.wins || 0}W-{viewedTeam?.losses || 0}L-{viewedTeam?.ties || 0}T</span>
                 <span>{roster.length}/{rosterSize} players</span>
                 {!viewingOwnTeam && <span className="text-text-muted/60">(read-only)</span>}
+                {!viewingOwnTeam && viewedTeam?.userId && (
+                  <Link to={`/manager/${viewedTeam.userId}`} className="text-blaze hover:text-blaze-hot transition-colors">
+                    View Profile
+                  </Link>
+                )}
               </div>
             </div>
             {/* Rank badge */}

@@ -13,7 +13,7 @@ const COMPONENT_CONFIG = [
   { key: 'consistency', label: 'Consistency', unlockText: 'Needs 2+ seasons of data', icon: '📈' },
 ]
 
-export default function RatingBreakdown({ components, ownerColor = '#E8B84D', animate = false }) {
+export default function RatingBreakdown({ components, ownerColor = '#E8B84D', animate = false, isOwnProfile = true }) {
   const [visibleIndex, setVisibleIndex] = useState(animate ? -1 : COMPONENT_CONFIG.length)
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function RatingBreakdown({ components, ownerColor = '#E8B84D', an
   if (!components) return null
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-1.5">
       {COMPONENT_CONFIG.map(({ key, label, unlockText, icon }, i) => {
         const comp = components[key]
         const isActive = comp?.active
@@ -36,19 +36,19 @@ export default function RatingBreakdown({ components, ownerColor = '#E8B84D', an
         return (
           <div key={key} className={`transition-all duration-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
             <div className="flex items-center justify-between mb-0.5">
-              <span className="text-xs text-text-primary/60 font-sans flex items-center gap-1.5">
-                <span className="text-[10px]">{icon}</span>
+              <span className="text-[11px] text-text-primary/60 font-sans flex items-center gap-1">
+                <span className="text-[9px]">{icon}</span>
                 {label}
               </span>
               {isActive ? (
-                <span className="text-xs font-mono font-semibold text-text-primary">{comp.score}</span>
+                <span className="text-[11px] font-mono font-semibold text-text-primary">{comp.score}</span>
               ) : (
-                <span className="text-[10px] text-text-primary/30 flex items-center gap-1">
-                  🔒 {unlockText}
+                <span className="text-[9px] text-text-primary/30 flex items-center gap-1">
+                  🔒{isOwnProfile ? ` ${unlockText}` : ''}
                 </span>
               )}
             </div>
-            <div className="h-1.5 rounded-full bg-[var(--stone)] overflow-hidden">
+            <div className="h-1 rounded-full bg-[var(--stone)] overflow-hidden">
               {isActive ? (
                 <div
                   className="h-full rounded-full transition-all duration-700 ease-out"

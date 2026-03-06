@@ -887,7 +887,7 @@ const LeagueHome = () => {
                         return (
                           <tr
                             key={team.id || i}
-                            onClick={() => team.id && navigate(isMe ? `/leagues/${leagueId}/roster` : `/manager/${team.userId}`)}
+                            onClick={() => team.id && navigate(isMe ? `/leagues/${leagueId}/roster` : `/leagues/${leagueId}/roster?member=${team.userId}`)}
                             className={`
                               border-b border-[var(--card-border)] transition-colors cursor-pointer
                               ${isMe ? 'bg-field-bright/8' : 'hover:bg-[var(--surface-alt)]'}

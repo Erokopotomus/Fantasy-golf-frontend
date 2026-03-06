@@ -6567,6 +6567,64 @@ Two options:
 
 ---
 
+### BACKLOG — Projected Cut Line Display
+**Status:** `BACKLOG`
+**Priority:** Low — nice-to-have enhancement for live tournament experience
+
+**Feature:** Show projected cut line on leaderboard during R1/R2 of tournaments. ESPN API does NOT expose a projected cut number. Two options:
+1. **Derive from leaderboard** — find the score at position ~65 (top 65 + ties make the cut in most PGA events). Simple, no API needed.
+2. **Pull from DataGolf** — their live predictions API (`/predictions/in-play`) may include a field-level cut line projection. We already sync `makeCutProbability` per player.
+
+Display: horizontal "projected cut" line on the leaderboard between the last player projected to make it and the first projected to miss. Could also show the cut score number in the tournament header.
+
+**FILES:**
+- `frontend/src/components/tournament/TournamentLeaderboard.jsx` — cut line visual
+- `backend/src/services/datagolfSync.js` — already syncs `makeCutProbability`
+- DataGolf API docs for field-level cut projection endpoint
+
+---
+
+### BACKLOG — Manager Profile Page Visual Overhaul
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Narrowed to max-w-3xl, two-column layout (Prove It left, Rating right), compacted stats/rating/bars, hide CTAs on other profiles. Files: ManagerProfile.jsx, RatingBreakdown.jsx
+**Priority:** Medium — page works but looks stretched and poorly organized
+
+**Problems (from screenshot review):**
+- Page is too wide — Clutch Rating section stretches full width, looks oversized
+- Rating Journey (7 component bars) dominates the page with empty progress bars
+- Prove It Track Record is buried at the bottom — should be more prominent
+- Everything needs to be more compact and better organized
+- Stats cards (Leagues, Win %, Championships, Predictions, Rating) are fine but spaced too far apart
+
+**Design direction:**
+- Narrow container: `max-w-3xl` instead of current width
+- Two-column layout on desktop: Prove It track record + recent calls on left, Clutch Rating compact on right
+- Compact rating: shrink the 7-component breakdown into tighter rows, hide "Import league history" CTAs when viewing someone else's profile
+- Prove It Track Record at the top or left column — it's the most interesting data
+- Rating circle stays in header but smaller
+
+**FILES:**
+- `frontend/src/pages/ManagerProfile.jsx`
+
+---
+
+### BACKLOG — Team Name Click: Team Roster vs Profile Decision
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Team name click now goes to roster with ?member= param. TeamRoster auto-selects that team. "View Profile" link on other teams' rosters. Files: LeagueHome.jsx, TeamRoster.jsx
+**Priority:** Medium — product/UX decision needed
+
+**Question:** When clicking a team name from the league Teams table, should it:
+1. **Show their team roster** (inline expand or navigate to their roster page) — more useful in-league context, see their players during live tournament
+2. **Go to manager profile** (current behavior) — shows overall platform stats but less relevant in-league
+
+**Possible approach:** Click team name → navigate to their roster page (`/leagues/:id/team?owner=:userId`). Add a "View Profile" link on the roster page for the full manager profile. This way the league context stays primary.
+
+**FILES:**
+- `frontend/src/pages/LeagueHome.jsx` — Teams table click handler
+- `frontend/src/pages/TeamRoster.jsx` — support viewing other teams' rosters
+
+---
+
 ## DONE
 
 *(Items move here after completion)*

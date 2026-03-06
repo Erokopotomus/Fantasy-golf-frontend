@@ -108,9 +108,9 @@ const SOCIAL_LABELS = {
 }
 
 const StatBox = ({ label, value, color = 'text-text-primary' }) => (
-  <div className="bg-[var(--bg-alt)] rounded-lg p-4 text-center">
-    <p className={`text-2xl font-bold ${color}`}>{value}</p>
-    <p className="text-text-muted text-sm">{label}</p>
+  <div className="bg-[var(--bg-alt)] rounded-lg p-2.5 text-center">
+    <p className={`text-lg font-bold ${color}`}>{value}</p>
+    <p className="text-text-muted text-xs">{label}</p>
   </div>
 )
 
@@ -328,7 +328,7 @@ const ManagerProfile = () => {
   if (error) {
     return (
       <div className="min-h-screen">
-        <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="max-w-3xl mx-auto px-4 py-6">
           <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-4">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -426,7 +426,7 @@ const ManagerProfile = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-6">
         {/* Back Link */}
         <Link to="/profile" className="inline-flex items-center text-text-secondary hover:text-text-primary mb-6 transition-colors">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,8 +436,8 @@ const ManagerProfile = () => {
         </Link>
 
         {/* Header with Clutch Rating */}
-        <Card className="mb-6">
-          <div className="flex items-start gap-4 mb-4">
+        <Card className="mb-4">
+          <div className="flex items-start gap-3 mb-3">
             {/* Avatar with upload */}
             <div className="relative shrink-0 group">
               {user?.avatar && user.avatar.startsWith('http') ? (
@@ -603,7 +603,7 @@ const ManagerProfile = () => {
                   rating={clutchRating.overall}
                   confidence={clutchRating.confidence || 0}
                   tier={clutchRating.tier || 'UNRANKED'}
-                  size="md"
+                  size="sm"
                 />
               </Link>
             )}
@@ -689,7 +689,7 @@ const ManagerProfile = () => {
           )}
 
           {/* Quick stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-3">
             <StatBox label="Leagues" value={formatNum(p.totalLeagues)} />
             <StatBox label="Win %" value={formatPct(p.winPct)} />
             <StatBox label="Championships" value={formatNum(p.championships)} color="text-gold" />
@@ -726,202 +726,210 @@ const ManagerProfile = () => {
           )
         })()}
 
-        {/* Clutch Rating Breakdown — V2 7-component view */}
-        {!(clutchRating && clutchRating.overall != null) && (
-          <Card className="mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full border-2 border-dashed border-[var(--stone)] flex items-center justify-center">
-                <span className="text-text-muted text-lg">?</span>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold font-display text-text-primary">Clutch Rating</h2>
-                <p className="text-text-muted text-sm">Building...</p>
-              </div>
-            </div>
-            <p className="text-text-secondary text-sm leading-relaxed">
-              {isOwnProfile
-                ? 'Your Clutch Rating builds as you play — draft players, make predictions, and compete in leagues to see your rating emerge.'
-                : `${user?.name || 'This manager'}'s Clutch Rating hasn't been calculated yet.`
-              }
-            </p>
-          </Card>
-        )}
-        {clutchRating && clutchRating.overall != null && (
-          <Card className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold font-display text-text-primary">Clutch Rating</h2>
-                <RatingTierBadge tier={clutchRating.tier || 'UNRANKED'} size="sm" />
-                <RatingTrendIndicator trend={clutchRating.trend || 'stable'} />
-              </div>
-              <ShareButton
-                CardComponent={RatingCard}
-                cardProps={{
-                  rating: clutchRating.overall,
-                  tier: clutchRating.tier,
-                  trend: clutchRating.trend,
-                  components: clutchRating.components || {},
-                  userName: user?.name,
-                  username: user?.username,
-                }}
-                label="Share"
-              />
-            </div>
-            <div className="flex items-center gap-4 mb-4">
-              <RatingRing
-                rating={clutchRating.overall}
-                confidence={clutchRating.confidence || 0}
-                tier={clutchRating.tier || 'UNRANKED'}
-                size="md"
-              />
-              <div className="flex-1">
-                <div className="text-2xl font-mono font-bold text-text-primary mb-1">{clutchRating.overall}</div>
-                <RatingConfidenceIndicator
-                  confidence={clutchRating.confidence || 0}
-                  dataSourceSummary={clutchRating.dataSourceSummary}
-                />
-              </div>
-            </div>
-            <RatingBreakdown components={clutchRating.components} animate={false} />
-            <Link
-              to="/my-rating"
-              className="block mt-4 text-center py-2 rounded-lg border border-accent-gold/15 text-[11px] font-mono text-accent-gold hover:bg-accent-gold/5 transition-colors"
-            >
-              View full rating deep-dive &rarr;
-            </Link>
-          </Card>
-        )}
-
-        {/* Prediction Reputation */}
-        {reputation && (
-          <Card className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold font-display text-text-primary">Prove It Track Record</h2>
-              <span className={`text-xs font-mono font-bold px-2 py-1 rounded capitalize ${
-                reputation.tier === 'elite' ? 'bg-purple-500/20 text-purple-400' :
-                reputation.tier === 'expert' ? 'bg-accent-gold/20 text-accent-gold' :
-                reputation.tier === 'sharp' ? 'bg-blue-500/20 text-blue-400' :
-                reputation.tier === 'contender' ? 'bg-field-bright/20 text-field' :
-                'bg-[var(--bg-alt)] text-text-secondary'
-              }`}>
-                {reputation.tier}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <StatBox label="Accuracy" value={reputation.totalPredictions > 0 ? `${(reputation.accuracyRate * 100).toFixed(1)}%` : '—'} color="text-field" />
-              <StatBox label="Total Calls" value={formatNum(reputation.totalPredictions)} />
-              <StatBox label="Correct" value={formatNum(reputation.correctPredictions)} color="text-accent-gold" />
-              <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}` : '0'} color="text-blaze" />
-            </div>
-
-            {/* Tier progress */}
-            {reputation.tier !== 'elite' && reputation.totalPredictions > 0 && (() => {
-              const tiers = ['rookie', 'contender', 'sharp', 'expert', 'elite']
-              const currentIdx = tiers.indexOf(reputation.tier)
-              const nextTier = tiers[currentIdx + 1]
-              const thresholds = { contender: { min: 10, acc: 0 }, sharp: { min: 20, acc: 0.55 }, expert: { min: 50, acc: 0.65 }, elite: { min: 100, acc: 0.75 } }
-              const next = thresholds[nextTier]
-              if (!next) return null
-              const predPct = Math.min(1, reputation.totalPredictions / next.min)
-              const accPct = next.acc > 0 ? Math.min(1, reputation.accuracyRate / next.acc) : 1
-              const progress = Math.min(predPct, accPct)
-              return (
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-text-secondary font-mono">Progress to {nextTier}</span>
-                    <span className="text-text-secondary font-mono">{(progress * 100).toFixed(0)}%</span>
-                  </div>
-                  <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
-                    <div className="h-full bg-accent-gold rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
-                  </div>
+        {/* Two-column layout: Left = Prove It + Recent Calls, Right = Clutch Rating */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
+          {/* Left column — Prove It Track Record + Recent Calls */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* Prediction Reputation */}
+            {reputation && (
+              <Card>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-base font-semibold font-display text-text-primary">Prove It Track Record</h2>
+                  <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded capitalize ${
+                    reputation.tier === 'elite' ? 'bg-purple-500/20 text-purple-400' :
+                    reputation.tier === 'expert' ? 'bg-accent-gold/20 text-accent-gold' :
+                    reputation.tier === 'sharp' ? 'bg-blue-500/20 text-blue-400' :
+                    reputation.tier === 'contender' ? 'bg-field-bright/20 text-field' :
+                    'bg-[var(--bg-alt)] text-text-secondary'
+                  }`}>
+                    {reputation.tier}
+                  </span>
                 </div>
-              )
-            })()}
 
-            {/* Prediction badges */}
-            {reputation.badges?.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-[var(--card-border)]">
-                <p className="text-xs text-text-secondary font-mono uppercase tracking-wider mb-2">Badges</p>
-                <div className="flex flex-wrap gap-2">
-                  {reputation.badges.map((badge, i) => {
-                    const badgeName = typeof badge === 'string' ? badge : badge?.type || badge?.name || ''
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                  <StatBox label="Accuracy" value={reputation.totalPredictions > 0 ? `${(reputation.accuracyRate * 100).toFixed(1)}%` : '—'} color="text-field" />
+                  <StatBox label="Total Calls" value={formatNum(reputation.totalPredictions)} />
+                  <StatBox label="Correct" value={formatNum(reputation.correctPredictions)} color="text-accent-gold" />
+                  <StatBox label="Streak" value={reputation.streakCurrent > 0 ? `${reputation.streakCurrent}` : '0'} color="text-blaze" />
+                </div>
+
+                {/* Tier progress */}
+                {reputation.tier !== 'elite' && reputation.totalPredictions > 0 && (() => {
+                  const tiers = ['rookie', 'contender', 'sharp', 'expert', 'elite']
+                  const currentIdx = tiers.indexOf(reputation.tier)
+                  const nextTier = tiers[currentIdx + 1]
+                  const thresholds = { contender: { min: 10, acc: 0 }, sharp: { min: 20, acc: 0.55 }, expert: { min: 50, acc: 0.65 }, elite: { min: 100, acc: 0.75 } }
+                  const next = thresholds[nextTier]
+                  if (!next) return null
+                  const predPct = Math.min(1, reputation.totalPredictions / next.min)
+                  const accPct = next.acc > 0 ? Math.min(1, reputation.accuracyRate / next.acc) : 1
+                  const progress = Math.min(predPct, accPct)
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-text-secondary font-mono">Progress to {nextTier}</span>
+                        <span className="text-text-secondary font-mono">{(progress * 100).toFixed(0)}%</span>
+                      </div>
+                      <div className="h-1.5 bg-[var(--stone)] rounded-full overflow-hidden">
+                        <div className="h-full bg-accent-gold rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Prediction badges */}
+                {reputation.badges?.length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-[var(--card-border)]">
+                    <p className="text-[10px] text-text-secondary font-mono uppercase tracking-wider mb-1.5">Badges</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {reputation.badges.map((badge, i) => {
+                        const badgeName = typeof badge === 'string' ? badge : badge?.type || badge?.name || ''
+                        return (
+                          <span key={i} className="text-[10px] font-mono px-1.5 py-0.5 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
+                            {badgeName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Best streak */}
+                {reputation.streakBest > 0 && (
+                  <div className="mt-2 text-[10px] text-text-secondary font-mono">
+                    Best streak: {reputation.streakBest} correct in a row
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Recent Calls Feed */}
+            {recentCalls.length > 0 && (
+              <Card>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-base font-semibold font-display text-text-primary">Recent Calls</h2>
+                  <Link
+                    to={isOwnProfile ? '/prove-it' : `/prove-it?tab=compare&target=${userId}`}
+                    className="text-[10px] text-text-secondary hover:text-text-primary font-mono transition-colors"
+                  >
+                    View all &rarr;
+                  </Link>
+                </div>
+                <div className="space-y-1">
+                  {recentCalls.slice(0, 6).map(call => {
+                    const isCorrect = call.outcome === 'CORRECT'
+                    const isPending = call.outcome === 'PENDING'
+                    const isWrong = call.outcome === 'INCORRECT'
                     return (
-                      <span key={i} className="text-xs font-mono px-2 py-1 rounded-lg bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
-                        {badgeName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </span>
+                      <div key={call.id} className="flex items-center gap-2 py-1.5 border-b border-[var(--card-border)]/30 last:border-0">
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                          isCorrect ? 'bg-field-bright/20 text-field' :
+                          isWrong ? 'bg-live-red/20 text-live-red' :
+                          'bg-crown/20 text-crown'
+                        }`}>
+                          {isCorrect ? '✓' : isWrong ? '✗' : '?'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-text-primary truncate">
+                            {call.predictionType?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            {call.subjectPlayer?.name ? ` — ${call.subjectPlayer.name}` : ''}
+                          </p>
+                          {call.thesis && (
+                            <p className="text-[10px] text-text-muted truncate">{call.thesis}</p>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`text-[10px] font-mono font-medium ${
+                            isCorrect ? 'text-field' : isWrong ? 'text-live-red' : 'text-text-muted'
+                          }`}>
+                            {isPending ? 'pending' : call.outcome?.toLowerCase()}
+                          </span>
+                          {call.resolvedAt && (
+                            <p className="text-[9px] text-text-muted">{new Date(call.resolvedAt).toLocaleDateString()}</p>
+                          )}
+                        </div>
+                      </div>
                     )
                   })}
                 </div>
-              </div>
+              </Card>
             )}
+          </div>
 
-            {/* Best streak */}
-            {reputation.streakBest > 0 && (
-              <div className="mt-3 text-xs text-text-secondary font-mono">
-                Best streak: {reputation.streakBest} correct in a row
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* Recent Calls Feed */}
-        {recentCalls.length > 0 && (
-          <Card className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold font-display text-text-primary">Recent Calls</h2>
-              <Link
-                to={isOwnProfile ? '/prove-it' : `/prove-it?tab=compare&target=${userId}`}
-                className="text-xs text-text-secondary hover:text-text-primary font-mono transition-colors"
-              >
-                View all &rarr;
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {recentCalls.slice(0, 6).map(call => {
-                const isCorrect = call.outcome === 'CORRECT'
-                const isPending = call.outcome === 'PENDING'
-                const isWrong = call.outcome === 'INCORRECT'
-                return (
-                  <div key={call.id} className="flex items-center gap-3 py-2 border-b border-[var(--card-border)]/30 last:border-0">
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                      isCorrect ? 'bg-field-bright/20 text-field' :
-                      isWrong ? 'bg-live-red/20 text-live-red' :
-                      'bg-crown/20 text-crown'
-                    }`}>
-                      {isCorrect ? '✓' : isWrong ? '✗' : '?'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-text-primary truncate">
-                        {call.predictionType?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        {call.subjectPlayer?.name ? ` — ${call.subjectPlayer.name}` : ''}
-                      </p>
-                      {call.thesis && (
-                        <p className="text-xs text-text-muted truncate">{call.thesis}</p>
-                      )}
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className={`text-xs font-mono font-medium ${
-                        isCorrect ? 'text-field' : isWrong ? 'text-live-red' : 'text-text-muted'
-                      }`}>
-                        {isPending ? 'pending' : call.outcome?.toLowerCase()}
-                      </span>
-                      {call.resolvedAt && (
-                        <p className="text-[10px] text-text-muted">{new Date(call.resolvedAt).toLocaleDateString()}</p>
-                      )}
-                    </div>
+          {/* Right column — Clutch Rating compact breakdown */}
+          <div className="lg:col-span-2">
+            {!(clutchRating && clutchRating.overall != null) && (
+              <Card>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full border-2 border-dashed border-[var(--stone)] flex items-center justify-center">
+                    <span className="text-text-muted text-sm">?</span>
                   </div>
-                )
-              })}
-            </div>
-          </Card>
-        )}
+                  <div>
+                    <h2 className="text-sm font-semibold font-display text-text-primary">Clutch Rating</h2>
+                    <p className="text-text-muted text-[10px]">Building...</p>
+                  </div>
+                </div>
+                <p className="text-text-secondary text-xs leading-relaxed">
+                  {isOwnProfile
+                    ? 'Your Clutch Rating builds as you play — draft, predict, and compete to see it emerge.'
+                    : `${user?.name || 'This manager'}'s Clutch Rating hasn't been calculated yet.`
+                  }
+                </p>
+              </Card>
+            )}
+            {clutchRating && clutchRating.overall != null && (
+              <Card>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <h2 className="text-sm font-semibold font-display text-text-primary">Clutch Rating</h2>
+                    <RatingTierBadge tier={clutchRating.tier || 'UNRANKED'} size="sm" />
+                    <RatingTrendIndicator trend={clutchRating.trend || 'stable'} />
+                  </div>
+                  <ShareButton
+                    CardComponent={RatingCard}
+                    cardProps={{
+                      rating: clutchRating.overall,
+                      tier: clutchRating.tier,
+                      trend: clutchRating.trend,
+                      components: clutchRating.components || {},
+                      userName: user?.name,
+                      username: user?.username,
+                    }}
+                    label=""
+                  />
+                </div>
+                <div className="flex items-center gap-3 mb-3">
+                  <RatingRing
+                    rating={clutchRating.overall}
+                    confidence={clutchRating.confidence || 0}
+                    tier={clutchRating.tier || 'UNRANKED'}
+                    size="sm"
+                  />
+                  <div className="flex-1">
+                    <div className="text-base font-mono font-bold text-text-primary">{clutchRating.overall}</div>
+                    <RatingConfidenceIndicator
+                      confidence={clutchRating.confidence || 0}
+                      dataSourceSummary={clutchRating.dataSourceSummary}
+                    />
+                  </div>
+                </div>
+                <RatingBreakdown components={clutchRating.components} animate={false} isOwnProfile={isOwnProfile} />
+                <Link
+                  to="/my-rating"
+                  className="block mt-3 text-center py-1.5 rounded-lg border border-accent-gold/15 text-[10px] font-mono text-accent-gold hover:bg-accent-gold/5 transition-colors"
+                >
+                  View full rating deep-dive &rarr;
+                </Link>
+              </Card>
+            )}
+          </div>
+        </div>
 
         {/* Prediction Accuracy Donut */}
         {predictionStats && predictionStats.overall && predictionStats.overall.correct + predictionStats.overall.incorrect > 0 && (
-          <Card>
-            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Prediction Accuracy</h2>
-            <div className="flex flex-col sm:flex-row items-center gap-6">
+          <Card className="mb-4">
+            <h2 className="text-base font-semibold font-display text-text-primary mb-3">Prediction Accuracy</h2>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
               {/* Donut Chart */}
               {(() => {
                 const { correct, incorrect, pending } = predictionStats.overall
@@ -950,54 +958,54 @@ const ManagerProfile = () => {
                 if (pending > 0 && total > 0) {
                   segments.push({ pct: (pending / total) * 100, color: '#1f2937', offset })
                 }
-                const r = 60
+                const r = 50
                 const circumference = 2 * Math.PI * r
                 return (
                   <div className="relative shrink-0">
-                    <svg width="160" height="160" viewBox="0 0 160 160">
+                    <svg width="130" height="130" viewBox="0 0 130 130">
                       {/* Background ring */}
-                      <circle cx="80" cy="80" r={r} fill="none" stroke="var(--stone, #1f2937)" strokeWidth="20" />
+                      <circle cx="65" cy="65" r={r} fill="none" stroke="var(--stone, #1f2937)" strokeWidth="16" />
                       {/* Data segments */}
                       {segments.map((seg, i) => (
                         <circle
                           key={i}
-                          cx="80" cy="80" r={r}
+                          cx="65" cy="65" r={r}
                           fill="none"
                           stroke={seg.color}
-                          strokeWidth="20"
+                          strokeWidth="16"
                           strokeDasharray={`${(seg.pct / 100) * circumference} ${circumference}`}
                           strokeDashoffset={-(seg.offset / 100) * circumference}
-                          transform="rotate(-90 80 80)"
+                          transform="rotate(-90 65 65)"
                           strokeLinecap="butt"
                         />
                       ))}
                     </svg>
                     {/* Center text */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-bold font-mono text-text-primary">{pct}%</span>
-                      <span className="text-[10px] text-text-muted">{resolved} resolved</span>
+                      <span className="text-xl font-bold font-mono text-text-primary">{pct}%</span>
+                      <span className="text-[9px] text-text-muted">{resolved} resolved</span>
                     </div>
                   </div>
                 )
               })()}
               {/* Legend */}
-              <div className="flex-1 space-y-2 w-full">
+              <div className="flex-1 space-y-1.5 w-full">
                 {Object.entries(predictionStats.byType || {}).map(([type, stats], i) => {
                   const typeColors = ['#0D9668', '#3B82F6', '#F59E0B', '#8B5CF6', '#EF4444', '#EC4899']
                   const resolved = (stats.correct || 0) + (stats.incorrect || 0)
                   const typePct = resolved > 0 ? Math.round(((stats.correct || 0) / resolved) * 100) : 0
                   return (
-                    <div key={type} className="flex items-center gap-2 text-sm">
-                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: typeColors[i % typeColors.length] }} />
+                    <div key={type} className="flex items-center gap-2 text-xs">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: typeColors[i % typeColors.length] }} />
                       <span className="text-text-secondary flex-1 truncate">{type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                       <span className="font-mono text-text-primary">{typePct}%</span>
-                      <span className="text-text-muted text-xs">({stats.correct}/{resolved})</span>
+                      <span className="text-text-muted text-[10px]">({stats.correct}/{resolved})</span>
                     </div>
                   )
                 })}
                 {predictionStats.overall.pending > 0 && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="w-3 h-3 rounded-full shrink-0 bg-gray-700" />
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-gray-700" />
                     <span className="text-text-muted flex-1">Pending</span>
                     <span className="font-mono text-text-muted">{predictionStats.overall.pending}</span>
                   </div>
@@ -1009,16 +1017,16 @@ const ManagerProfile = () => {
 
         {/* Rating Journey Line Chart */}
         {ratingHistory.length >= 2 && (
-          <Card>
-            <h2 className="text-lg font-semibold font-display text-text-primary mb-4">Rating Journey</h2>
+          <Card className="mb-4">
+            <h2 className="text-base font-semibold font-display text-text-primary mb-3">Rating Journey</h2>
             {(() => {
               const values = ratingHistory.map(s => s.overall)
               const minVal = Math.max(0, Math.floor(Math.min(...values) / 10) * 10 - 5)
               const maxVal = Math.min(100, Math.ceil(Math.max(...values) / 10) * 10 + 5)
               const range = maxVal - minVal || 1
               const w = 480
-              const h = 200
-              const pad = { top: 20, right: 20, bottom: 30, left: 40 }
+              const h = 180
+              const pad = { top: 16, right: 16, bottom: 26, left: 36 }
               const chartW = w - pad.left - pad.right
               const chartH = h - pad.top - pad.bottom
               const points = ratingHistory.map((s, i) => ({
@@ -1037,7 +1045,7 @@ const ManagerProfile = () => {
               ]
               return (
                 <div className="overflow-x-auto -mx-2">
-                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full min-w-[320px]" preserveAspectRatio="xMidYMid meet">
+                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full min-w-[300px]" preserveAspectRatio="xMidYMid meet">
                     {/* Tier bands */}
                     {tiers.map(tier => {
                       if (tier.min > maxVal || tier.min + 10 < minVal) return null
@@ -1046,7 +1054,7 @@ const ManagerProfile = () => {
                       return (
                         <g key={tier.label}>
                           <rect x={pad.left} y={y1} width={chartW} height={y2 - y1} fill={tier.color} />
-                          <text x={pad.left + 4} y={y1 + 12} fill="var(--text-muted, #6b7280)" fontSize="9" opacity="0.6">{tier.label}</text>
+                          <text x={pad.left + 4} y={y1 + 10} fill="var(--text-muted, #6b7280)" fontSize="8" opacity="0.6">{tier.label}</text>
                         </g>
                       )
                     })}
@@ -1057,29 +1065,28 @@ const ManagerProfile = () => {
                       return (
                         <g key={i}>
                           <line x1={pad.left} y1={y} x2={pad.left + chartW} y2={y} stroke="var(--card-border, #2a2a2a)" strokeWidth="0.5" />
-                          <text x={pad.left - 6} y={y + 3} textAnchor="end" fill="var(--text-muted, #6b7280)" fontSize="10" fontFamily="monospace">{Math.round(val)}</text>
+                          <text x={pad.left - 5} y={y + 3} textAnchor="end" fill="var(--text-muted, #6b7280)" fontSize="9" fontFamily="monospace">{Math.round(val)}</text>
                         </g>
                       )
                     })}
                     {/* Line */}
-                    <path d={pathD} fill="none" stroke="#D4930D" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                    <path d={pathD} fill="none" stroke="#D4930D" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
                     {/* Dots */}
                     {points.map((p, i) => (
                       <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="4" fill="#D4930D" stroke="var(--bg, #0E1015)" strokeWidth="2" />
-                        {/* Show label for first, last, and every ~4th */}
+                        <circle cx={p.x} cy={p.y} r="3.5" fill="#D4930D" stroke="var(--bg, #0E1015)" strokeWidth="1.5" />
                         {(i === 0 || i === points.length - 1 || i % Math.max(1, Math.floor(points.length / 5)) === 0) && (
-                          <text x={p.x} y={h - 8} textAnchor="middle" fill="var(--text-muted, #6b7280)" fontSize="9">{p.date}</text>
+                          <text x={p.x} y={h - 6} textAnchor="middle" fill="var(--text-muted, #6b7280)" fontSize="8">{p.date}</text>
                         )}
                       </g>
                     ))}
                     {/* Current value label */}
                     {points.length > 0 && (
                       <text
-                        x={points[points.length - 1].x + 6}
-                        y={points[points.length - 1].y + 4}
+                        x={points[points.length - 1].x + 5}
+                        y={points[points.length - 1].y + 3}
                         fill="#D4930D"
-                        fontSize="12"
+                        fontSize="10"
                         fontWeight="bold"
                         fontFamily="monospace"
                       >

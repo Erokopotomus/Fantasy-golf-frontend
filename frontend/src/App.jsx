@@ -104,6 +104,14 @@ const CategoryStandings = lazy(() => import('./pages/CategoryStandings'))
 const SurvivorBoard = lazy(() => import('./pages/SurvivorBoard'))
 const PickCenter = lazy(() => import('./pages/PickCenter'))
 
+// Reset scroll position on route changes — prevents stale scroll restoration
+// when lazy-loaded content shifts page height during data fetching
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
+
 function WorkspaceRedirect() {
   const location = useLocation()
   return <Navigate to={location.pathname.replace(/^\/workspace/, '/lab') + location.search} replace />
@@ -141,6 +149,7 @@ function App() {
           <NotificationContainer />
           <OnboardingModal />
           <main className="pb-20 md:pb-0">
+          <ScrollToTop />
           <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" /></div>}>
           <Routes>
           <Route path="/" element={<Landing />} />
