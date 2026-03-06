@@ -7,6 +7,7 @@ import LiveScoreIndicator from '../components/tournament/LiveScoreIndicator'
 import useTournamentScoring from '../hooks/useTournamentScoring'
 import { useLeagues } from '../hooks/useLeagues'
 import EventPredictionSlate from '../components/predictions/EventPredictionSlate'
+import WeatherStrip from '../components/tournament/WeatherStrip'
 import api from '../services/api'
 
 /** Floating player odds card shown in sidebar when a player is expanded */
@@ -361,6 +362,11 @@ const TournamentScoring = () => {
               </div>
             )}
           </div>
+
+          {/* Weather — compact card in sidebar */}
+          {weather && weather.length > 0 && (
+            <WeatherStrip weather={weather} tournamentStart={tournament?.startDate} />
+          )}
         </div>
       </div>
     </div>
