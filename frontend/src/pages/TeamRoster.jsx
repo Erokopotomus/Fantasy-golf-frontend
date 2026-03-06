@@ -416,9 +416,9 @@ const TeamRoster = () => {
 
         {/* Roster Skeleton — Starters */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-bold text-field uppercase tracking-wider">Starters</h2>
-            <span className="text-xs text-text-muted">(0 / {emptyMaxActive})</span>
+          <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-field-bright/40">
+            <h2 className="text-base font-bold text-field uppercase tracking-wider">Starters</h2>
+            <span className="text-sm font-mono text-text-muted">0 / {emptyMaxActive}</span>
           </div>
           <div className="space-y-2">
             {Array.from({ length: emptyMaxActive }, (_, i) => (
@@ -438,9 +438,9 @@ const TeamRoster = () => {
         {/* Roster Skeleton — Bench */}
         {benchSlots > 0 && (
           <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider">Bench</h2>
-              <span className="text-xs text-text-muted">(0 / {benchSlots})</span>
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-dashed border-[var(--card-border)]">
+              <h2 className="text-base font-bold text-text-muted uppercase tracking-wider">Bench</h2>
+              <span className="text-sm font-mono text-text-muted">0 / {benchSlots}</span>
             </div>
             <div className="space-y-2">
               {Array.from({ length: benchSlots }, (_, i) => (
@@ -461,9 +461,9 @@ const TeamRoster = () => {
         {/* Roster Skeleton — IR */}
         {emptyIrSlots > 0 && (
           <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-bold text-live-red uppercase tracking-wider">Injured Reserve</h2>
-              <span className="text-xs text-text-muted">(0 / {emptyIrSlots})</span>
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-live-red/30">
+              <h2 className="text-base font-bold text-live-red uppercase tracking-wider">Injured Reserve</h2>
+              <span className="text-sm font-mono text-text-muted">0 / {emptyIrSlots}</span>
             </div>
             <div className="space-y-2">
               {Array.from({ length: emptyIrSlots }, (_, i) => (
@@ -512,7 +512,7 @@ const TeamRoster = () => {
   const irSet = getIRSet()
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       {/* P02: Team Selector */}
       {league?.teams?.length > 1 && (
         <div className="mb-4">
@@ -536,55 +536,175 @@ const TeamRoster = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
+      {/* Scoreboard Header Card */}
+      <div className="mb-4 rounded-xl border border-[var(--card-border)] bg-[var(--surface)] backdrop-blur-md overflow-hidden shadow-sm">
+        {/* Back link */}
+        <div className="px-4 pt-3">
           <Link
             to={`/leagues/${leagueId}`}
-            className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-1"
+            className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors text-sm"
           >
             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             {league?.name}
           </Link>
-          <h1 className="text-2xl font-bold font-display text-text-primary">
-            {viewingOwnTeam ? 'My Team' : (viewedTeam?.name || viewedTeam?.user?.name || 'Team Roster')}
-          </h1>
-          <p className="text-text-muted text-sm">
-            {roster.length} / {rosterSize} players
-            {!viewingOwnTeam && <span className="ml-2 text-text-muted/60">(read-only)</span>}
-          </p>
         </div>
-        <div className="flex gap-2">
-          {viewingOwnTeam && (
-            <>
-              <Button variant="secondary" size="sm" onClick={() => navigate(`/leagues/${leagueId}/waivers`)}>
-                Free Agents
-              </Button>
-              {isEditing ? (
-                <>
-                  <Button variant="secondary" size="sm" onClick={cancelEditing}>Cancel</Button>
-                  <Button size="sm" onClick={handleSaveLineup} loading={lineupLoading}>
-                    {saved ? 'Saved!' : 'Save Lineup'}
-                  </Button>
-                </>
+
+        <div className="px-4 py-3">
+          {/* Team identity row */}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-full bg-[var(--stone)] flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+              {viewedTeam?.avatarUrl ? (
+                <img src={viewedTeam.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : viewedTeam?.avatar ? (
+                <span>{viewedTeam.avatar}</span>
               ) : (
-                <>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setShowOptimizer(!showOptimizer)}
-                    disabled={isLineupsLocked}
-                  >
-                    {showOptimizer ? 'Hide' : 'Optimize'}
-                  </Button>
-                  <Button size="sm" onClick={startEditing} disabled={isLineupsLocked}>Edit Lineup</Button>
-                </>
+                <span className="text-text-muted text-lg">?</span>
               )}
-            </>
-          )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold font-display text-text-primary truncate">
+                {viewingOwnTeam ? (viewedTeam?.name || 'My Team') : (viewedTeam?.name || viewedTeam?.user?.name || 'Team Roster')}
+              </h1>
+              <div className="flex items-center gap-3 text-sm text-text-muted">
+                <span className="font-mono">{viewedTeam?.wins || 0}W-{viewedTeam?.losses || 0}L-{viewedTeam?.ties || 0}T</span>
+                <span>{roster.length}/{rosterSize} players</span>
+                {!viewingOwnTeam && <span className="text-text-muted/60">(read-only)</span>}
+              </div>
+            </div>
+            {/* Rank badge */}
+            {isLive && liveUserTeam?.rank && (
+              <div className="flex flex-col items-center flex-shrink-0">
+                <span className="text-sm text-text-muted">Rank</span>
+                <span className="text-lg font-bold font-mono text-text-primary">
+                  {liveUserTeam.rank}<span className="text-xs text-text-muted font-normal">/{liveTeams.length}</span>
+                </span>
+              </div>
+            )}
+            {viewingOwnTeam && (
+              <button
+                onClick={() => navigate(`/leagues/${leagueId}/team-settings`)}
+                className="p-2 rounded-lg hover:bg-[var(--stone)] transition-colors flex-shrink-0 text-text-muted hover:text-text-primary"
+                title="Team Settings"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Live tournament context */}
+          {isLive && liveUserTeam && liveTournament && !isEditing ? (
+            <div className="rounded-lg bg-gradient-to-r from-field-bright/8 to-field/5 border border-field-bright/20 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-red opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-live-red" />
+                  </span>
+                  <span className="text-sm font-semibold text-text-primary">{liveTournament.name}</span>
+                  <span className="text-xs text-text-muted font-mono">R{liveTournament.currentRound || 1}</span>
+                </div>
+                <Link
+                  to={`/leagues/${leagueId}/scoring`}
+                  className="text-xs text-field hover:text-field-bright font-medium transition-colors"
+                >
+                  Full Scoring →
+                </Link>
+              </div>
+              <div className="flex items-center gap-5">
+                <div>
+                  <span className="text-3xl font-bold font-mono text-text-primary">{(liveUserTeam.totalPoints || 0).toFixed(1)}</span>
+                  <span className="text-sm text-text-muted ml-1">pts</span>
+                </div>
+                <div className="flex flex-col gap-0.5 text-sm text-text-muted">
+                  {liveUserTeam.benchPoints > 0 && (
+                    <span>Bench: <span className="font-mono text-text-secondary">{liveUserTeam.benchPoints.toFixed(1)}</span></span>
+                  )}
+                  {liveUserTeam.optimalPoints > 0 && liveUserTeam.optimalPoints > liveUserTeam.totalPoints && (
+                    <span>Optimal: <span className="font-mono text-text-secondary">{liveUserTeam.optimalPoints.toFixed(1)}</span></span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : scheduleSummary ? (
+            /* Non-live: show next tournament context */
+            <div className="rounded-lg bg-[var(--bg-alt)] border border-[var(--card-border)] p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-field">Next:</span>
+                  <span className="text-sm text-text-primary font-semibold">{scheduleSummary.tournament.shortName || scheduleSummary.tournament.name}</span>
+                </div>
+                {scheduleSummary.announced ? (
+                  <span className="text-sm font-mono text-field">
+                    {scheduleSummary.confirmed}/{scheduleSummary.total} in field
+                  </span>
+                ) : (
+                  <span className="text-sm text-text-muted/60">Field TBD</span>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
+      </div>
+
+      {/* Quick Actions Pill Bar */}
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
+        {viewingOwnTeam && (
+          <>
+            {isEditing ? (
+              <>
+                <button
+                  onClick={cancelEditing}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border border-[var(--card-border)] bg-[var(--surface)] text-text-secondary hover:bg-[var(--stone)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveLineup}
+                  disabled={lineupLoading}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium bg-field text-white hover:bg-field-bright transition-colors disabled:opacity-50"
+                >
+                  {saved ? 'Saved!' : lineupLoading ? 'Saving...' : 'Save Lineup'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={startEditing}
+                  disabled={isLineupsLocked}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium bg-field text-white hover:bg-field-bright transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Edit Lineup
+                </button>
+                <button
+                  onClick={() => navigate(`/leagues/${leagueId}/waivers`)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border border-[var(--card-border)] bg-[var(--surface)] text-text-secondary hover:bg-[var(--stone)] transition-colors"
+                >
+                  Free Agents
+                </button>
+                <button
+                  onClick={() => setShowOptimizer(!showOptimizer)}
+                  disabled={isLineupsLocked}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border border-[var(--card-border)] bg-[var(--surface)] text-text-secondary hover:bg-[var(--stone)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {showOptimizer ? 'Hide Optimizer' : 'Optimize'}
+                </button>
+                {isLive && liveUserTeam && (
+                  <Link
+                    to={`/leagues/${leagueId}/scoring`}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border border-field-bright/30 bg-field-bright/5 text-field hover:bg-field-bright/10 transition-colors"
+                  >
+                    Full Scoring
+                  </Link>
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
 
       {/* Lineup Lock Banner — B06: uses tournament start time from lockInfo (server-authoritative) */}
@@ -678,71 +798,6 @@ const TeamRoster = () => {
         </div>
       )}
 
-      {/* Live Scoring Summary Card */}
-      {isLive && liveUserTeam && liveTournament && !isEditing && (
-        <div className="mb-4 rounded-xl border border-field-bright/30 bg-gradient-to-r from-field-bright/5 to-field/5 overflow-hidden">
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-red opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-live-red" />
-                </span>
-                <span className="text-sm font-semibold text-text-primary">{liveTournament.name}</span>
-                <span className="text-xs text-text-muted">R{liveTournament.currentRound || 1}</span>
-              </div>
-              <Link
-                to={`/leagues/${leagueId}/scoring`}
-                className="text-xs text-field hover:text-field-bright font-medium transition-colors"
-              >
-                Full Scoring →
-              </Link>
-            </div>
-            <div className="flex items-center gap-4">
-              <div>
-                <span className="text-2xl font-bold font-mono text-text-primary">{(liveUserTeam.totalPoints || 0).toFixed(1)}</span>
-                <span className="text-xs text-text-muted ml-1">pts</span>
-              </div>
-              <div className="text-xs text-text-muted">
-                <span className="font-semibold text-text-secondary">
-                  {liveUserTeam.rank ? `${liveUserTeam.rank}${liveUserTeam.rank === 1 ? 'st' : liveUserTeam.rank === 2 ? 'nd' : liveUserTeam.rank === 3 ? 'rd' : 'th'}` : '—'}
-                </span>
-                {liveTeams.length > 0 && <span> of {liveTeams.length}</span>}
-              </div>
-              {liveUserTeam.benchPoints > 0 && (
-                <div className="text-xs text-text-muted">
-                  Bench: <span className="font-mono">{liveUserTeam.benchPoints.toFixed(1)}</span>
-                </div>
-              )}
-              {liveUserTeam.optimalPoints > 0 && liveUserTeam.optimalPoints > liveUserTeam.totalPoints && (
-                <div className="text-xs text-text-muted">
-                  Optimal: <span className="font-mono">{liveUserTeam.optimalPoints.toFixed(1)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Golf Schedule Summary (hidden when live scoring is showing) */}
-      {scheduleSummary && !(isLive && liveUserTeam) && (
-        <div className="mb-4 p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-field">⛳ This Week:</span>
-              <span className="text-xs text-text-primary font-semibold">{scheduleSummary.tournament.shortName || scheduleSummary.tournament.name}</span>
-            </div>
-            {scheduleSummary.announced ? (
-              <span className="text-xs font-mono text-field">
-                {scheduleSummary.confirmed}/{scheduleSummary.total} players confirmed
-              </span>
-            ) : (
-              <span className="text-xs text-text-muted/60">Field expected Tuesday evening</span>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Active Lineup */}
       <div
         className={`mb-6 rounded-lg transition-all duration-200 ${
@@ -756,9 +811,9 @@ const TeamRoster = () => {
         onDragLeave={isEditing ? (e) => handleDragLeave(e, 'active') : undefined}
         onDrop={isEditing ? (e) => handleDropToZone(e, 'active') : undefined}
       >
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-bold text-field uppercase tracking-wider">Active Lineup</h2>
-          <span className="text-xs text-text-muted">({roster.filter(p => activeSet.has(p.id)).length} / {maxActive})</span>
+        <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-field-bright/40">
+          <h2 className="text-base font-bold text-field uppercase tracking-wider">Active Lineup</h2>
+          <span className="text-sm font-mono text-text-muted">{roster.filter(p => activeSet.has(p.id)).length} / {maxActive}</span>
         </div>
         <div className="space-y-2">
           {roster.filter(p => activeSet.has(p.id)).map(player => (
@@ -823,9 +878,9 @@ const TeamRoster = () => {
         onDragLeave={isEditing ? (e) => handleDragLeave(e, 'bench') : undefined}
         onDrop={isEditing ? (e) => handleDropToZone(e, 'bench') : undefined}
       >
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider">Bench</h2>
-          <span className="text-xs text-text-muted">({roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length})</span>
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-dashed border-[var(--card-border)]">
+          <h2 className="text-base font-bold text-text-muted uppercase tracking-wider">Bench</h2>
+          <span className="text-sm font-mono text-text-muted">{roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).length}</span>
         </div>
         <div className="space-y-2">
           {roster.filter(p => !activeSet.has(p.id) && !irSet.has(p.id)).map(player => (
@@ -885,9 +940,9 @@ const TeamRoster = () => {
           onDragLeave={isEditing ? (e) => handleDragLeave(e, 'ir') : undefined}
           onDrop={isEditing ? (e) => handleDropToZone(e, 'ir') : undefined}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-bold text-live-red uppercase tracking-wider">Injured Reserve</h2>
-            <span className="text-xs text-text-muted">({roster.filter(p => irSet.has(p.id)).length} / {irSlots})</span>
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-live-red/30">
+            <h2 className="text-base font-bold text-live-red uppercase tracking-wider">Injured Reserve</h2>
+            <span className="text-sm font-mono text-text-muted">{roster.filter(p => irSet.has(p.id)).length} / {irSlots}</span>
           </div>
           <div className="space-y-2">
             {roster.filter(p => irSet.has(p.id)).map(player => (
@@ -1013,8 +1068,10 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
     }
   }
 
+  const isBench = !isActive && !isIR
+
   return (
-    <div>
+    <div className={isBench && !isEditing ? 'opacity-75' : ''}>
     <div
       draggable={isEditing && !readOnly}
       onDragStart={isEditing && !readOnly ? (e) => onDragStart(e) : undefined}
@@ -1049,16 +1106,16 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
 
       {/* Player info */}
       {player.headshotUrl ? (
-        <img src={player.headshotUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
+        <img src={player.headshotUrl} alt="" className="w-14 h-14 rounded-full object-cover bg-[var(--stone)] flex-shrink-0" />
       ) : (
-        <div className="w-10 h-10 rounded-full bg-[var(--stone)] flex items-center justify-center text-lg flex-shrink-0">
+        <div className="w-14 h-14 rounded-full bg-[var(--stone)] flex items-center justify-center text-xl flex-shrink-0">
           {player.countryFlag || '?'}
         </div>
       )}
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-text-primary font-semibold text-sm truncate">{player.name}</span>
+          <span className="text-text-primary font-semibold text-base truncate">{player.name}</span>
           {isActive && !isEditing && !hasLiveStats && (
             <span className="text-[10px] font-medium text-field bg-field-bright/10 px-1.5 rounded">ACTIVE</span>
           )}
@@ -1097,7 +1154,7 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
 
         {/* Live stats line (replaces static stats when live) */}
         {hasLiveStats && !isCutOrWd ? (
-          <div className="flex items-center gap-3 text-xs mt-0.5">
+          <div className="flex items-center gap-3 text-sm mt-0.5">
             <span className={`font-mono font-semibold ${positionColor(liveData.position)}`}>
               {liveData.position || '—'}
             </span>
@@ -1114,33 +1171,44 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-3 text-xs text-text-muted">
+          <div className="flex items-center gap-3 text-sm text-text-muted">
             {isNfl ? (
               <>
                 {player.nflPosition && <span className="font-semibold text-text-secondary">{player.nflPosition}</span>}
                 {player.nflTeam && <span>{player.nflTeam}</span>}
               </>
-            ) : (
-              <>
-                {player.owgrRank && <span>#{player.owgrRank}</span>}
-                {player.primaryTour && <span>{player.primaryTour}</span>}
-                {player.sgTotal != null && <span>SG: {player.sgTotal.toFixed(1)}</span>}
-              </>
-            )}
-            {player.acquiredVia && (
-              <span className="text-text-muted/60">{player.acquiredVia.toLowerCase()}</span>
-            )}
+            ) : (() => {
+              // Context-aware golf stats
+              const thisWeekTourney = scheduleBadge?.tournaments?.[0]
+              const fieldAnnounced = thisWeekTourney && (thisWeekTourney.fieldSize > 0 || thisWeekTourney.field?.length > 0)
+              const playerInField = fieldAnnounced && thisWeekTourney.field?.some(f => f.playerId === player.id)
+
+              if (fieldAnnounced) {
+                // Tournament week: show field status + tournament name
+                return playerInField ? (
+                  <>
+                    <span className="text-field font-medium">In field</span>
+                    <span className="text-text-muted/80">{thisWeekTourney.shortName || thisWeekTourney.name}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-text-muted/60">Not in field</span>
+                    {player.owgrRank && <span className="font-mono">#{player.owgrRank} OWGR</span>}
+                  </>
+                )
+              }
+              // Off-week: OWGR + SG
+              return (
+                <>
+                  {player.owgrRank && <span className="font-mono">#{player.owgrRank} OWGR</span>}
+                  {player.sgTotal != null && <span className="font-mono">SG: {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}</span>}
+                </>
+              )
+            })()}
           </div>
         )}
 
-        {/* Third line: career stats (static, hidden when live) */}
-        {!isNfl && !isEditing && !hasLiveStats ? (
-          <div className="flex items-center gap-2 text-[11px] text-text-secondary mt-0.5">
-            {player.wins > 0 && <span className="font-mono">{player.wins}W</span>}
-            {player.top5s > 0 && <span className="font-mono">{player.top5s} T5</span>}
-            {player.top10s > 0 && <span className="font-mono">{player.top10s} T10</span>}
-          </div>
-        ) : null}
+        {/* Third line: career stats removed per redesign — moved to PlayerDrawer */}
       </div>
 
       {/* IR toggle button in edit mode (for bench players) */}
@@ -1219,14 +1287,13 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
 
       {/* Fantasy points badge (right side, when live) */}
       {hasLiveStats && !isCutOrWd && !isEditing && (
-        <div className="flex flex-col items-end flex-shrink-0 ml-1">
-          <span className="text-sm font-bold font-mono text-text-primary">{(liveData.fantasyPoints || 0).toFixed(1)}</span>
-          <span className="text-[10px] text-text-muted">pts</span>
+        <div className="flex-shrink-0 ml-auto pl-2">
+          <span className="text-lg font-bold font-mono text-text-primary">{(liveData.fantasyPoints || 0).toFixed(1)} <span className="text-sm text-text-muted font-normal">pts</span></span>
         </div>
       )}
     </div>
 
-    {/* Scorecard expansion panel */}
+    {/* Scorecard expansion panel — front 9 / back 9 grid */}
     {showScorecard && hasLiveStats && (
       <div className={`border border-t-0 rounded-b-lg bg-[var(--surface)] overflow-hidden ${
         isActive ? 'border-field-bright/30' : isIR ? 'border-live-red/30' : 'border-[var(--card-border)]'
@@ -1236,26 +1303,76 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
             <div className="w-6 h-6 border-2 border-field-bright/30 border-t-field-bright rounded-full animate-spin mx-auto" />
           </div>
         ) : scorecardData && Object.keys(scorecardData).length > 0 ? (
-          <div className="p-3 space-y-2">
-            {Object.entries(scorecardData).sort(([a], [b]) => Number(a) - Number(b)).map(([round, holes]) => (
-              <div key={round}>
-                <div className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">Round {round}</div>
-                <div className="flex gap-0.5 flex-wrap">
-                  {(Array.isArray(holes) ? holes : []).sort((a, b) => a.hole - b.hole).map(h => {
-                    const diff = h.score - h.par
-                    const bg = diff <= -2 ? 'bg-field text-white' : diff === -1 ? 'bg-field-bright/20 text-field' : diff === 0 ? 'bg-[var(--stone)] text-text-primary' : diff === 1 ? 'bg-live-red/15 text-live-red' : diff >= 2 ? 'bg-live-red text-white' : 'bg-[var(--stone)] text-text-muted'
-                    return (
-                      <div key={h.hole} className={`w-7 h-7 flex items-center justify-center rounded text-[11px] font-mono font-medium ${bg}`} title={`Hole ${h.hole} (Par ${h.par}): ${h.score}`}>
-                        {h.score || '—'}
+          <div className="p-3 space-y-3">
+            {Object.entries(scorecardData).sort(([a], [b]) => Number(a) - Number(b)).map(([round, holes]) => {
+              const sortedHoles = (Array.isArray(holes) ? holes : []).sort((a, b) => a.hole - b.hole)
+              const front9 = sortedHoles.filter(h => h.hole <= 9)
+              const back9 = sortedHoles.filter(h => h.hole > 9)
+              const front9Score = front9.reduce((sum, h) => sum + ((h.score || 0) - (h.par || 0)), 0)
+              const back9Score = back9.reduce((sum, h) => sum + ((h.score || 0) - (h.par || 0)), 0)
+              const scoreBg = (diff) =>
+                diff <= -2 ? 'bg-crown/20 text-crown' :
+                diff === -1 ? 'bg-field-bright/20 text-field' :
+                diff === 0 ? 'bg-[var(--stone)] text-text-primary' :
+                diff === 1 ? 'bg-live-red/15 text-live-red' :
+                diff >= 2 ? 'bg-live-red/30 text-live-red' :
+                'bg-[var(--stone)] text-text-muted'
+
+              return (
+                <div key={round}>
+                  <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1.5">R{round}</div>
+                  {/* Front 9 */}
+                  <div className="mb-1">
+                    <div className="grid grid-cols-10 gap-px text-center">
+                      {/* Hole numbers */}
+                      {[1,2,3,4,5,6,7,8,9].map(n => (
+                        <div key={`h${n}`} className="text-[9px] text-text-muted/60 font-mono pb-0.5">{n}</div>
+                      ))}
+                      <div className="text-[9px] text-text-muted/60 font-mono font-semibold pb-0.5">OUT</div>
+                      {/* Scores */}
+                      {[1,2,3,4,5,6,7,8,9].map(n => {
+                        const h = front9.find(x => x.hole === n)
+                        if (!h) return <div key={`s${n}`} className="w-full h-6 flex items-center justify-center rounded text-[11px] font-mono bg-[var(--stone)] text-text-muted/40">-</div>
+                        const diff = h.score - h.par
+                        return (
+                          <div key={`s${n}`} className={`w-full h-6 flex items-center justify-center rounded text-[11px] font-mono font-medium ${scoreBg(diff)}`} title={`Hole ${h.hole} (Par ${h.par}): ${h.score}`}>
+                            {h.score || '-'}
+                          </div>
+                        )
+                      })}
+                      <div className={`w-full h-6 flex items-center justify-center rounded text-[11px] font-mono font-bold ${front9.length > 0 ? (front9Score < 0 ? 'text-field' : front9Score > 0 ? 'text-live-red' : 'text-text-primary') : 'text-text-muted/40'}`}>
+                        {front9.length > 0 ? formatToPar(front9Score) : '-'}
                       </div>
-                    )
-                  })}
+                    </div>
+                  </div>
+                  {/* Back 9 */}
+                  <div>
+                    <div className="grid grid-cols-10 gap-px text-center">
+                      {[10,11,12,13,14,15,16,17,18].map(n => (
+                        <div key={`h${n}`} className="text-[9px] text-text-muted/60 font-mono pb-0.5">{n}</div>
+                      ))}
+                      <div className="text-[9px] text-text-muted/60 font-mono font-semibold pb-0.5">IN</div>
+                      {[10,11,12,13,14,15,16,17,18].map(n => {
+                        const h = back9.find(x => x.hole === n)
+                        if (!h) return <div key={`s${n}`} className="w-full h-6 flex items-center justify-center rounded text-[11px] font-mono bg-[var(--stone)] text-text-muted/40">-</div>
+                        const diff = h.score - h.par
+                        return (
+                          <div key={`s${n}`} className={`w-full h-6 flex items-center justify-center rounded text-[11px] font-mono font-medium ${scoreBg(diff)}`} title={`Hole ${h.hole} (Par ${h.par}): ${h.score}`}>
+                            {h.score || '-'}
+                          </div>
+                        )
+                      })}
+                      <div className={`w-full h-6 flex items-center justify-center rounded text-[11px] font-mono font-bold ${back9.length > 0 ? (back9Score < 0 ? 'text-field' : back9Score > 0 ? 'text-live-red' : 'text-text-primary') : 'text-text-muted/40'}`}>
+                        {back9.length > 0 ? formatToPar(back9Score) : '-'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
-          <div className="p-3 text-center text-xs text-text-muted">No scorecard data available</div>
+          <div className="p-3 text-center text-sm text-text-muted">Hole-by-hole data updates during play</div>
         )}
       </div>
     )}

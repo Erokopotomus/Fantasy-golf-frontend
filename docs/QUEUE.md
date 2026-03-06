@@ -5958,7 +5958,8 @@ Redesign `frontend/src/pages/TeamRoster.jsx` to show live tournament scoring per
 ---
 
 ### 158 — Fix BroMontana draft cost values from spreadsheet truth `HIGH`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Created fix-bromontana-drafts.js script with 3-tier fuzzy name matching, rebuild approach, 6-team year handling, dry-run/commit flags. All 12 years pass cost checks. Files: backend/scripts/fix-bromontana-drafts.js (NEW)
 **Priority:** HIGH — core league history data is wrong, affects vault display and Clutch Rating calculations
 
 **Problem:** The BroMontana Bowl league (`cmm47aj1w07klry65jxa29jwu`) was imported from Yahoo, but Yahoo's API returns incorrect auction `cost` values for most historical seasons. The owner (Eric) has a master spreadsheet with the correct draft costs for 2014-2025. A full comparison found 83 owner-year mismatches between the DB and spreadsheet.
@@ -6061,6 +6062,127 @@ cd backend && node scripts/fix-bromontana-drafts.js --commit
 - 6-team years (2020-2024) have exactly 6 owners with draft data, not 12
 - After commit: `GET /api/imports/history/cmm47aj1w07klry65jxa29jwu` shows correct costs
 - No unmatched players logged (or minimal with clear explanation)
+
+### 159 — My Team page visual redesign (Phase 1: Quick Wins + Phase 2: Structural) `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Full redesign: bigger headshots (56px), hero fantasy pts, muted bench, glassmorphic scoreboard header with live data, pill action bar, context-aware stats, front9/back9 scorecard grid with color-coded scores. Files: TeamRoster.jsx
+**Priority:** High — user explicitly said "we need massive improvements"
+**Spec:** `docs/my-team-redesign-spec.md` (full competitive research + wireframes)
+
+**Prompt:**
+
+Read the full redesign spec at `docs/my-team-redesign-spec.md` first. This was written after studying Sleeper, ESPN, Yahoo, and PGA Tour Fantasy roster pages. The current My Team page (`frontend/src/pages/TeamRoster.jsx`, ~1,180 lines) is functional but visually poor — wide layout, tiny fonts, stats that don't mean anything at a glance, tiny headshots, no visual hierarchy.
+
+**Implement the following changes in `frontend/src/pages/TeamRoster.jsx`:**
+
+**PHASE 1 — Quick Wins (do these first, they're CSS/layout only):**
+
+1. **Narrow the container** — Change `max-w-4xl` to `max-w-2xl` on the main return wrapper (line ~515). This stops player rows from stretching too wide on desktop.
+
+2. **Bigger headshots** — In the PlayerRow component (starts ~line 978), change the headshot from `w-10 h-10` (40px) to `w-14 h-14` (56px). Update both the `<img>` and the fallback `<div>`. This makes the roster feel like real people, not a spreadsheet.
+
+3. **Player name bigger** — Change `text-sm` to `text-base` on the player name `<span>` (line ~1061).
+
+4. **Fantasy points as hero number** — When live (`hasLiveStats && !isCutOrWd`), add the fantasy points as a prominent right-aligned number on the player row. Use `text-lg font-mono font-bold text-text-primary` for the points value. Place this as a flex-shrink-0 element on the far right of the row, OUTSIDE the `flex-1 min-w-0` div. Currently fantasy points exist but they're buried in a tiny badge — make them THE number you see first. Format: `14.5 pts` in large font.
+
+5. **Kill third line of stats** — Remove the "career stats" third line (lines ~1137-1143) that shows wins/T5/T10 in tiny 11px font. These stats belong in the PlayerDrawer, not on the roster row. They add noise.
+
+6. **Bump stat line font** — Change the secondary stats line from `text-xs` to `text-sm` (lines ~1100 and ~1117).
+
+7. **Mute bench players** — Add `opacity-75` to bench player rows (when `!isActive && !isIR`). This visually separates starters from bench without needing heavy section breaks.
+
+8. **Better section headers** — Change the "Starters" / "Bench" section headers from `text-sm` to `text-base`. Add a bottom border line below each header: `border-b border-field-bright/30 pb-2` for Active, `border-b border-[var(--card-border)] pb-2` for Bench.
+
+**PHASE 2 — Structural (do after Phase 1):**
+
+9. **Redesign team header as scoreboard card** — Replace the current plain header (lines ~540-588) with a premium card that shows:
+   - Team name (text-xl font-display font-bold)
+   - Record (W-L-T)
+   - When `isLive && liveUserTeam`: Show live tournament name + round, total fantasy points in `text-3xl font-mono font-bold`, rank ("4th of 5"), bench points, optimal points. Use the existing `liveTournament`, `liveUserTeam`, and `liveTeams` data — it's already fetched.
+   - When not live: Show "Next: [tournament name]" if schedule data exists, plus field status count
+   - Style: glassmorphic card with subtle gradient, similar to the live scoring widget already on the page but more prominent
+
+10. **Quick actions pill bar** — Below the header, replace the current button layout with a horizontal row of compact pill buttons: Edit Lineup, Free Agents, Optimize, Full Scoring (link to `/leagues/${leagueId}/scoring`, only when live). Style: `px-3 py-1.5 rounded-full text-sm font-medium` with appropriate colors.
+
+11. **Context-aware stats in PlayerRow** — Make the secondary info line smarter:
+    - When live: Position, score to par, thru (already done, just clean up)
+    - When NOT live but tournament week (scheduleData exists): Show "🟢 In field — [Tournament Name]" or "Not in field" instead of OWGR/tour
+    - When off-week: Show OWGR + SG Total (current behavior, but formatted better)
+    - This uses the existing `scheduleBadge` prop data — just display it as text instead of tiny dots
+
+12. **Scorecard grid improvement** — When a player's scorecard expands inline (the `showScorecard` state), display all 18 holes in a proper grid grouped by front 9 / back 9, with color-coded scores (birdie=green, bogey=red, eagle=gold, par=neutral). The current scorecard expansion already fetches the data — just improve the rendering.
+
+**FILES:**
+- `frontend/src/pages/TeamRoster.jsx` (PRIMARY — all changes here)
+- No backend changes needed
+- No new dependencies needed
+
+**DESIGN TOKENS (already in the codebase):**
+- Green (under par / good): `text-field` or `text-field-bright`
+- Red (over par / bad): `text-live-red`
+- Gold (leader / exceptional): `text-crown`
+- Muted: `text-text-muted`
+- Mono numbers: `font-mono`
+- Display headings: `font-display`
+
+**TESTING:**
+- Navigate to `/leagues/cmm16py8b006xo56567mxibpa/team` (Testicles league — active golf league with live tournament data)
+- Verify: headshots are visibly larger, fantasy points prominent on right, bench players visually muted
+- Verify: team header shows live scoring summary when tournament active
+- Verify mobile at 390px width — nothing overflows, points still visible
+- Check team selector dropdown still works
+- Check edit mode (drag/drop, activate/bench) still functions
+
+**IMPORTANT NOTES:**
+- The `useLeagueLiveScoring` hook and all live data are already wired up — don't re-fetch anything
+- The `scheduleBadge` prop with field status is already computed and passed to PlayerRow — just use it differently
+- Keep all existing functionality (drag/drop editing, quick toggle, IR management, keeper badges, team selector)
+- Don't break the NFL path — the `isNfl` conditionals need to stay
+
+---
+
+### 160 — My Team page Phase 3: Desktop sidebar layout `MEDIUM`
+**Status:** `TODO`
+**Priority:** Medium — do after 159 lands
+**Spec:** `docs/my-team-redesign-spec.md` (see "Desktop Sidebar Content" section)
+
+**Prompt:**
+
+After item 159 is deployed, add a desktop sidebar to the My Team page for screens ≥ 1024px (lg breakpoint).
+
+**Layout change in `frontend/src/pages/TeamRoster.jsx`:**
+
+Wrap the main return in a flex container:
+```jsx
+<div className="max-w-5xl mx-auto lg:flex lg:gap-6">
+  <div className="flex-1 max-w-2xl">
+    {/* Existing roster content */}
+  </div>
+  <div className="hidden lg:block w-72 flex-shrink-0">
+    {/* Sidebar */}
+  </div>
+</div>
+```
+
+**Sidebar content (new component `frontend/src/components/roster/RosterSidebar.jsx`):**
+
+1. **When live tournament:**
+   - Mini league leaderboard: Show all teams ranked by live fantasy points. Highlight current user's team. Use data from `liveTeams` (already available from `useLeagueLiveScoring`).
+   - Tournament info: Round number, cut line if available, link to full scoring page.
+
+2. **When not live:**
+   - Next tournament card: Name, date, course, number of rostered players confirmed in field
+   - League standing snapshot: User's rank, record, points behind leader
+   - AI Coach insight: One-liner from coach briefing (fetch from `GET /api/ai/coach-briefing?leagueId=${leagueId}` — endpoint already exists)
+
+3. **Always show:**
+   - Recent transactions: Last 3 adds/drops/trades in the league (fetch from existing transactions endpoint if available, or skip if no endpoint exists)
+
+**Style:** Cards with `bg-[var(--surface)] rounded-xl border border-[var(--card-border)] p-4` and `space-y-4` between cards. Clean, minimal, informational.
+
+**FILES:**
+- `frontend/src/pages/TeamRoster.jsx` (layout wrapper change)
+- `frontend/src/components/roster/RosterSidebar.jsx` (NEW)
 
 ---
 
