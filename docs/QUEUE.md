@@ -6408,7 +6408,8 @@ useEffect(() => {
 ---
 
 ### 167 — Manual ESPN hole sync re-run + verify multi-round scorecard data `CRITICAL`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Root cause found: batch transactions meant one bad record killed 50+ holes. Rewrote espnSync.js with inline RoundScore upserts, individual HoleScore upserts, per-player try/catch. Added POST /tournaments/:id/trigger-espn-sync endpoint. Manual sync triggered — data grew from 72→132+ roundScores, 925→1592+ holeScores. R2 data now flowing. Files: espnSync.js, tournaments.js
 **Priority:** Critical — item 163 fixed the code but said "cron needs manual re-run on Railway". Without this, scorecards only show 1 round of partial data and round toggle pills (R1/R2/R3/R4) never appear.
 **Prompt:**
 
@@ -6522,7 +6523,8 @@ Also: when `freshPlayerData` updates (new THRU value), optionally re-fetch the s
 ---
 
 ### 170 — ESPN hole-by-hole sync: capture ALL rounds, not just current `CRITICAL`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Investigation proved the ESPN scoreboard API DOES return all rounds' hole data (not just current round). Root cause was batch transaction failures silently killing data. Fixed in item 167's espnSync.js rewrite. Confirmed: ESPN returns 72 competitors × 18 holes R1 + partial R2 data. Files: espnSync.js
 **Priority:** Critical — Currently the ESPN scoreboard endpoint only returns hole-by-hole linescores for the round in progress. Once R1 finishes and R2 starts, R1 hole data disappears from the live feed. The cron captures whatever ESPN provides at each 5-min tick, but completed round data is lost if it wasn't captured during that round. This is why Aberg's R1 scorecard has only 5 holes (captured mid-round) and R2 has 0 holes (R2 data synced but holes not yet available for new round).
 **Prompt:**
 
