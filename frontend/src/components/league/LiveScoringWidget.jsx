@@ -557,24 +557,29 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
 
                   return (
                     <div>
-                      {/* Round toggle pills */}
-                      {availableRounds.length > 1 && (
-                        <div className="flex gap-2 mb-4">
-                          {availableRounds.map(r => (
+                      {/* Round toggle pills — always show R1-R4, grey out rounds without data */}
+                      <div className="flex gap-2 mb-4">
+                        {[1, 2, 3, 4].map(r => {
+                          const hasData = availableRounds.includes(r)
+                          const isActive = r === activeRound
+                          return (
                             <button
                               key={r}
-                              onClick={() => setSelectedRound(r)}
-                              className={`px-3 py-1 rounded-full text-xs font-mono font-medium cursor-pointer transition-colors ${
-                                r === activeRound
-                                  ? 'bg-blaze text-white'
-                                  : 'bg-[var(--bg)] text-text-secondary border border-[var(--card-border)] hover:border-gray-400 dark:hover:border-slate-500'
+                              onClick={() => hasData && setSelectedRound(r)}
+                              className={`px-3 py-1 rounded-full text-xs font-mono font-medium transition-colors ${
+                                isActive
+                                  ? 'bg-blaze text-white cursor-pointer'
+                                  : hasData
+                                    ? 'bg-[var(--bg)] text-text-secondary border border-[var(--card-border)] hover:border-gray-400 dark:hover:border-slate-500 cursor-pointer'
+                                    : 'bg-[var(--bg)] text-gray-300 dark:text-slate-600 border border-dashed border-gray-200 dark:border-slate-700 cursor-default'
                               }`}
+                              disabled={!hasData}
                             >
                               R{r}
                             </button>
-                          ))}
-                        </div>
-                      )}
+                          )
+                        })}
+                      </div>
 
                       {/* Front 9 */}
                       <div className="flex items-center gap-2 mb-2">

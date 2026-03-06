@@ -94,8 +94,8 @@ export const useTournamentScoring = (tournamentId, leagueId = null) => {
         setMyPlayers(results[2].teams)
       }
 
-      // For UPCOMING tournaments, also fetch weather
-      if (tournamentData?.status === 'UPCOMING') {
+      // Fetch weather for upcoming and live tournaments
+      if (tournamentData?.status === 'UPCOMING' || tournamentData?.status === 'IN_PROGRESS') {
         try {
           const weatherData = await api.getTournamentWeather(tournamentId)
           setWeather(weatherData?.weather || [])

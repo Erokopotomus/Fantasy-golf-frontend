@@ -6521,6 +6521,50 @@ Also: when `freshPlayerData` updates (new THRU value), optionally re-fetch the s
 
 ---
 
+### 170 — ESPN hole-by-hole sync: capture ALL rounds, not just current `CRITICAL`
+**Status:** `TODO`
+**Priority:** Critical — Currently the ESPN scoreboard endpoint only returns hole-by-hole linescores for the round in progress. Once R1 finishes and R2 starts, R1 hole data disappears from the live feed. The cron captures whatever ESPN provides at each 5-min tick, but completed round data is lost if it wasn't captured during that round. This is why Aberg's R1 scorecard has only 5 holes (captured mid-round) and R2 has 0 holes (R2 data synced but holes not yet available for new round).
+**Prompt:**
+
+**Root cause analysis:**
+- Diagnostic: 72 roundScores (1 per player), 925 holeScores (expected ~2,628 for 2 rounds × 73 players × 18 holes)
+- ESPN's `site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard/{eventId}` response only includes `comp.linescores[].linescores[]` (hole entries) for the CURRENT round being played
+- Once a round completes and the next round starts, the previous round's hole-by-hole data is no longer in the live API response
+- The cron correctly upserts what it gets, but since it missed most of R1 (only ran while player was on holes 1-5), R1 data is permanently incomplete
+
+**Possible fixes (investigate in order):**
+1. **Check if ESPN has a separate scorecard endpoint** — Something like `site.web.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard/{eventId}/scorecards` or per-player scorecard endpoints. Other ESPN sport APIs have `/scoreboard/{id}/playbyplay` style endpoints.
+2. **Run a "completed round backfill" after each round ends** — Detect when a round completes (e.g., most players have finalized R1), then fetch R1 data from a post-round endpoint or use a different data source.
+3. **Increase sync frequency during active play** — Currently `*/5 * * * 4,5,6,0`. Consider `*/2` during typical tee times (6 AM - 7 PM ET) to capture more holes before round transitions.
+4. **Alternative: Use DataGolf for hole-by-hole** — DataGolf may have more complete scorecard data. Check `datagolfSync.js` for hole-level endpoints.
+
+**Current code flow:**
+- `espnClient.js` → `getEventScorecard(eventId)` → `competition.competitors` → each competitor has `linescores[]` (rounds) → each round has `linescores[]` (holes)
+- `espnSync.js` → `syncHoleScores()` → iterates all rounds + holes, upserts RoundScore + HoleScore
+
+**FILES:**
+- `backend/src/services/espnClient.js` — may need new endpoint function
+- `backend/src/services/espnSync.js` — syncHoleScores main logic
+- `backend/src/index.js` — cron schedule (line 532)
+
+---
+
+### 171 — Scorecard default pars should come from course data, not hardcoded `LOW`
+**Status:** `TODO`
+**Priority:** Low — cosmetic issue. When a hole has no score data from ESPN, the scorecard falls back to `defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]` which doesn't match Bay Hill (or most courses). This means empty holes show wrong par values.
+**Prompt:**
+
+Two options:
+1. **Quick fix:** Fetch course pars from the tournament/event data. The TournamentHeader already has course info. Pass course pars into the scorecard API or derive from existing completed scorecard data.
+2. **Better fix:** The scorecard API (`GET /api/tournaments/:id/scorecards/:playerId`) should also return course par data. Add a `coursePars` field to the response, derived from the most common par values per hole across all HoleScores for that tournament.
+
+**FILES:**
+- `backend/src/routes/tournaments.js` — scorecard endpoint (line 508)
+- `frontend/src/components/league/LiveScoringWidget.jsx` — defaultPars (line 510)
+- `frontend/src/components/tournament/TournamentLeaderboard.jsx` — scorecard rendering
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
