@@ -9,6 +9,7 @@ import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 import LineupOptimizer from '../components/roster/LineupOptimizer'
+import RosterSidebar from '../components/roster/RosterSidebar'
 import { track, Events } from '../services/analytics'
 import api from '../services/api'
 import { formatDateTimeET } from '../utils/dateUtils'
@@ -512,7 +513,8 @@ const TeamRoster = () => {
   const irSet = getIRSet()
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto lg:flex lg:gap-6">
+    <div className="flex-1 max-w-2xl">
       {/* P02: Team Selector */}
       {league?.teams?.length > 1 && (
         <div className="mb-4">
@@ -999,6 +1001,19 @@ const TeamRoster = () => {
         rosterContext={getDrawerRosterContext()}
         isNfl={isNflLeague}
       />
+    </div>
+
+    {/* Desktop sidebar */}
+    <div className="hidden lg:block w-72 flex-shrink-0">
+      <RosterSidebar
+        liveTeams={liveTeams}
+        liveUserTeam={liveUserTeam}
+        liveTournament={liveTournament}
+        isLive={isLive}
+        leagueId={leagueId}
+        userId={user?.id}
+      />
+    </div>
     </div>
   )
 }

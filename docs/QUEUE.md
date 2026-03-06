@@ -6142,7 +6142,8 @@ Read the full redesign spec at `docs/my-team-redesign-spec.md` first. This was w
 ---
 
 ### 160 — My Team page Phase 3: Desktop sidebar layout `MEDIUM`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Added RosterSidebar component with mini league leaderboard (live) and quick links. Desktop lg:flex layout with sticky sidebar. Files: TeamRoster.jsx, RosterSidebar.jsx (NEW)
 **Priority:** Medium — do after 159 lands
 **Spec:** `docs/my-team-redesign-spec.md` (see "Desktop Sidebar Content" section)
 
@@ -6183,6 +6184,59 @@ Wrap the main return in a flex container:
 **FILES:**
 - `frontend/src/pages/TeamRoster.jsx` (layout wrapper change)
 - `frontend/src/components/roster/RosterSidebar.jsx` (NEW)
+
+---
+
+### 161 — Fix useVaultStats: flatten history API response (vault reveal crash) `CRITICAL`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Already applied by Cowork and pushed in commit 3daabc4. Flattens seasons map into flat array. Files: useVaultStats.js
+**Priority:** Critical — vault "All-Time Rankings" page crashes with blank screen
+**Prompt:**
+
+The `useVaultStats.js` hook has already been fixed locally. **Commit and deploy these changes.**
+
+**What was wrong:** `api.getLeagueHistory(leagueId)` returns `{ leagueId, seasons: { "2025": [...], "2024": [...] }, totalSeasons }` — an object grouped by year. But `computeVaultStats()` iterates with `for (const record of history)`, expecting a flat array. The hook was storing the raw API response without flattening, causing `TypeError: r is not iterable`.
+
+**What was fixed (already in the file):** Lines 200-210 of `frontend/src/hooks/useVaultStats.js` — added flattening logic that converts `historyData.seasons` map into a flat array before storing in state:
+```javascript
+const flat = []
+if (historyData?.seasons) {
+  for (const teams of Object.values(historyData.seasons)) {
+    if (Array.isArray(teams)) {
+      for (const t of teams) flat.push(t)
+    }
+  }
+} else if (Array.isArray(historyData)) {
+  flat.push(...historyData)
+}
+setHistory(flat)
+```
+
+**FILES:** `frontend/src/hooks/useVaultStats.js` (already edited — just commit + deploy)
+
+---
+
+### 162 — Fix useVaultStats: "49 current owners" should be 12 (unmapped owners inflating count) `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-03-05 — Already applied by Cowork (earlier commit). Removed !aliasMap.has fallback so unmapped names default inactive. Files: useVaultStats.js
+**Priority:** High — vault reveal shows 49 current owners instead of 12 for BroMontana
+**Prompt:**
+
+The `useVaultStats.js` hook has already been fixed locally. **Commit and deploy these changes.**
+
+**What was wrong:** Line 62 of `useVaultStats.js` had this logic for `isActive`:
+```javascript
+isActive: activeOwners.size > 0 ? (activeOwners.has(canonical) || !aliasMap.has(rawName)) : true,
+```
+The `!aliasMap.has(rawName)` clause marked ANY team name not in the alias table as active. BroMontana has 17 seasons with many team name changes — every unmapped historical team name became its own "owner" AND was counted as active. Result: 49 "current owners" instead of 12.
+
+**What was fixed (already in the file):** Line 62 now reads:
+```javascript
+isActive: activeOwners.size > 0 ? activeOwners.has(canonical) : true,
+```
+When aliases are configured, only owners explicitly marked active in the alias table count as active. Unmapped historical team names are treated as inactive. If no aliases exist at all, everyone defaults to active (backwards compatible).
+
+**FILES:** `frontend/src/hooks/useVaultStats.js` (already edited — just commit + deploy)
 
 ---
 
