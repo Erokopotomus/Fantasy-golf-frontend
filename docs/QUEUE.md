@@ -6297,7 +6297,8 @@ The `WeatherStrip` component exists at `frontend/src/components/tournament/Weath
 ---
 
 ### 165 — CRITICAL: League scoring page shows "No current NFL season" for golf leagues `CRITICAL`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Added loading guard to LeagueLiveScoring — waits for useLeague data before choosing sport view. Spinner shown while loading. Files: LeagueLiveScoring.jsx
 **Priority:** Critical — the Scoring pill on Bro Montana Bowl (golf league) shows "Error: No current NFL season" instead of the golf live scoring view. Users can't see live tournament scores from their league.
 **Prompt:**
 
@@ -6369,7 +6370,8 @@ const LeagueLiveScoring = () => {
 ---
 
 ### 166 — Add WeatherStrip to GolfLiveScoring component (not just LeagueHome) `MEDIUM`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Added WeatherStrip below TournamentHeader in GolfLiveScoring, glassmorphic card, only during IN_PROGRESS. Files: LeagueLiveScoring.jsx
 **Priority:** Medium — WeatherStrip was added to LeagueHome (item 164) then removed (commit bff16c7) with the assumption it was on the scoring page. It's NOT on the scoring page — only on TournamentPreview and CourseDetail.
 **Prompt:**
 

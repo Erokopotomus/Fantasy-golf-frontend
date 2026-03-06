@@ -6,6 +6,7 @@ import { useLeague } from '../hooks/useLeague'
 import Card from '../components/common/Card'
 import TournamentLeaderboard from '../components/tournament/TournamentLeaderboard'
 import TournamentHeader from '../components/tournament/TournamentHeader'
+import WeatherStrip from '../components/tournament/WeatherStrip'
 import NflWeeklyScoring from '../components/nfl/NflWeeklyScoring'
 import { formatDate } from '../utils/dateUtils'
 import api from '../services/api'
@@ -264,13 +265,19 @@ const LeagueMiniStandings = ({ teams, userTeam }) => {
 
 const LeagueLiveScoring = () => {
   const { leagueId } = useParams()
-  const { league: leagueData } = useLeague(leagueId)
-  const isNfl = (leagueData?.sport || 'GOLF').toUpperCase() === 'NFL'
+  const { league: leagueData, loading } = useLeague(leagueId)
 
-  if (isNfl) {
-    return <NflWeeklyScoring leagueId={leagueId} />
+  // Wait for league data before deciding which sport view to show
+  if (loading || !leagueData) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-2 border-field/30 border-t-field rounded-full animate-spin" />
+      </div>
+    )
   }
 
+  const isNfl = leagueData.sport?.toUpperCase() === 'NFL'
+  if (isNfl) return <NflWeeklyScoring leagueId={leagueId} />
   return <GolfLiveScoring leagueId={leagueId} />
 }
 
@@ -283,6 +290,15 @@ const GolfLiveScoring = ({ leagueId }) => {
   const [fullTournament, setFullTournament] = useState(null)
   const [nextTournament, setNextTournament] = useState(null)
   const pollRef = useRef(null)
+  const [weatherData, setWeatherData] = useState([])
+
+  // Fetch weather data when tournament is live
+  useEffect(() => {
+    if (!tournament?.id || tournament.status !== 'IN_PROGRESS') return
+    api.getTournamentWeather(tournament.id)
+      .then(data => setWeatherData(data?.weather || []))
+      .catch(() => {})
+  }, [tournament?.id, tournament?.status])
 
   // Fetch full tournament data (with course object for TournamentHeader)
   useEffect(() => {
@@ -448,6 +464,13 @@ const GolfLiveScoring = ({ leagueId }) => {
           <div className="mb-6">
             <TournamentHeader tournament={headerTournament} leaderboard={leaderboard} />
           </div>
+
+          {/* Weather strip — shown when tournament is live and weather data exists */}
+          {tournament.status === 'IN_PROGRESS' && weatherData.length > 0 && (
+            <div className="mb-6 bg-[var(--surface)]/60 backdrop-blur-md rounded-xl border border-[var(--card-border)] shadow-card overflow-hidden">
+              <WeatherStrip weather={weatherData} embedded />
+            </div>
+          )}
 
           {/* Next Up card — shown when tournament is FINAL */}
           {nextTournament && tournament.status === 'COMPLETED' && (
