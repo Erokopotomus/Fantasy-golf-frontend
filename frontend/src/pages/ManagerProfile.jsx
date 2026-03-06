@@ -854,6 +854,78 @@ const ManagerProfile = () => {
                 </div>
               </Card>
             )}
+
+            {/* Rating Journey Line Chart — fits below Prove It in left column */}
+            {ratingHistory.length >= 2 && (
+              <Card>
+                <h2 className="text-sm font-semibold font-display text-text-primary mb-2">Rating Journey</h2>
+                {(() => {
+                  const values = ratingHistory.map(s => s.overall)
+                  const minVal = Math.max(0, Math.floor(Math.min(...values) / 10) * 10 - 5)
+                  const maxVal = Math.min(100, Math.ceil(Math.max(...values) / 10) * 10 + 5)
+                  const range = maxVal - minVal || 1
+                  const w = 480
+                  const h = 140
+                  const pad = { top: 12, right: 12, bottom: 22, left: 32 }
+                  const chartW = w - pad.left - pad.right
+                  const chartH = h - pad.top - pad.bottom
+                  const points = ratingHistory.map((s, i) => ({
+                    x: pad.left + (i / (ratingHistory.length - 1)) * chartW,
+                    y: pad.top + chartH - ((s.overall - minVal) / range) * chartH,
+                    val: s.overall,
+                    date: new Date(s.snapshotDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                  }))
+                  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+                  const tiers = [
+                    { label: 'Elite', min: 90, color: 'rgba(212,147,13,0.08)' },
+                    { label: 'Veteran', min: 80, color: 'rgba(212,147,13,0.05)' },
+                    { label: 'Competitor', min: 70, color: 'rgba(13,150,104,0.05)' },
+                    { label: 'Contender', min: 60, color: 'rgba(59,130,246,0.05)' },
+                  ]
+                  return (
+                    <div className="overflow-x-auto -mx-2">
+                      <svg viewBox={`0 0 ${w} ${h}`} className="w-full min-w-[260px]" preserveAspectRatio="xMidYMid meet">
+                        {tiers.map(tier => {
+                          if (tier.min > maxVal || tier.min + 10 < minVal) return null
+                          const y1 = pad.top + chartH - ((Math.min(tier.min + 10, maxVal) - minVal) / range) * chartH
+                          const y2 = pad.top + chartH - ((Math.max(tier.min, minVal) - minVal) / range) * chartH
+                          return (
+                            <g key={tier.label}>
+                              <rect x={pad.left} y={y1} width={chartW} height={y2 - y1} fill={tier.color} />
+                              <text x={pad.left + 4} y={y1 + 9} fill="var(--text-muted, #6b7280)" fontSize="7" opacity="0.6">{tier.label}</text>
+                            </g>
+                          )
+                        })}
+                        {Array.from({ length: 4 }, (_, i) => {
+                          const val = minVal + (range * i) / 3
+                          const y = pad.top + chartH - (i / 3) * chartH
+                          return (
+                            <g key={i}>
+                              <line x1={pad.left} y1={y} x2={pad.left + chartW} y2={y} stroke="var(--card-border, #2a2a2a)" strokeWidth="0.5" />
+                              <text x={pad.left - 4} y={y + 3} textAnchor="end" fill="var(--text-muted, #6b7280)" fontSize="8" fontFamily="monospace">{Math.round(val)}</text>
+                            </g>
+                          )
+                        })}
+                        <path d={pathD} fill="none" stroke="#D4930D" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                        {points.map((p, i) => (
+                          <g key={i}>
+                            <circle cx={p.x} cy={p.y} r="3" fill="#D4930D" stroke="var(--bg, #0E1015)" strokeWidth="1.5" />
+                            {(i === 0 || i === points.length - 1) && (
+                              <text x={p.x} y={h - 4} textAnchor="middle" fill="var(--text-muted, #6b7280)" fontSize="7">{p.date}</text>
+                            )}
+                          </g>
+                        ))}
+                        {points.length > 0 && (
+                          <text x={points[points.length - 1].x + 5} y={points[points.length - 1].y + 3} fill="#D4930D" fontSize="9" fontWeight="bold" fontFamily="monospace">
+                            {points[points.length - 1].val}
+                          </text>
+                        )}
+                      </svg>
+                    </div>
+                  )
+                })()}
+              </Card>
+            )}
           </div>
 
           {/* Right column — Clutch Rating compact breakdown */}
@@ -1015,90 +1087,6 @@ const ManagerProfile = () => {
           </Card>
         )}
 
-        {/* Rating Journey Line Chart */}
-        {ratingHistory.length >= 2 && (
-          <Card className="mb-4">
-            <h2 className="text-base font-semibold font-display text-text-primary mb-3">Rating Journey</h2>
-            {(() => {
-              const values = ratingHistory.map(s => s.overall)
-              const minVal = Math.max(0, Math.floor(Math.min(...values) / 10) * 10 - 5)
-              const maxVal = Math.min(100, Math.ceil(Math.max(...values) / 10) * 10 + 5)
-              const range = maxVal - minVal || 1
-              const w = 480
-              const h = 180
-              const pad = { top: 16, right: 16, bottom: 26, left: 36 }
-              const chartW = w - pad.left - pad.right
-              const chartH = h - pad.top - pad.bottom
-              const points = ratingHistory.map((s, i) => ({
-                x: pad.left + (i / (ratingHistory.length - 1)) * chartW,
-                y: pad.top + chartH - ((s.overall - minVal) / range) * chartH,
-                val: s.overall,
-                date: new Date(s.snapshotDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-              }))
-              const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
-              // Tier bands
-              const tiers = [
-                { label: 'Elite', min: 90, color: 'rgba(212,147,13,0.08)' },
-                { label: 'Veteran', min: 80, color: 'rgba(212,147,13,0.05)' },
-                { label: 'Competitor', min: 70, color: 'rgba(13,150,104,0.05)' },
-                { label: 'Contender', min: 60, color: 'rgba(59,130,246,0.05)' },
-              ]
-              return (
-                <div className="overflow-x-auto -mx-2">
-                  <svg viewBox={`0 0 ${w} ${h}`} className="w-full min-w-[300px]" preserveAspectRatio="xMidYMid meet">
-                    {/* Tier bands */}
-                    {tiers.map(tier => {
-                      if (tier.min > maxVal || tier.min + 10 < minVal) return null
-                      const y1 = pad.top + chartH - ((Math.min(tier.min + 10, maxVal) - minVal) / range) * chartH
-                      const y2 = pad.top + chartH - ((Math.max(tier.min, minVal) - minVal) / range) * chartH
-                      return (
-                        <g key={tier.label}>
-                          <rect x={pad.left} y={y1} width={chartW} height={y2 - y1} fill={tier.color} />
-                          <text x={pad.left + 4} y={y1 + 10} fill="var(--text-muted, #6b7280)" fontSize="8" opacity="0.6">{tier.label}</text>
-                        </g>
-                      )
-                    })}
-                    {/* Grid lines */}
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const val = minVal + (range * i) / 4
-                      const y = pad.top + chartH - (i / 4) * chartH
-                      return (
-                        <g key={i}>
-                          <line x1={pad.left} y1={y} x2={pad.left + chartW} y2={y} stroke="var(--card-border, #2a2a2a)" strokeWidth="0.5" />
-                          <text x={pad.left - 5} y={y + 3} textAnchor="end" fill="var(--text-muted, #6b7280)" fontSize="9" fontFamily="monospace">{Math.round(val)}</text>
-                        </g>
-                      )
-                    })}
-                    {/* Line */}
-                    <path d={pathD} fill="none" stroke="#D4930D" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-                    {/* Dots */}
-                    {points.map((p, i) => (
-                      <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="3.5" fill="#D4930D" stroke="var(--bg, #0E1015)" strokeWidth="1.5" />
-                        {(i === 0 || i === points.length - 1 || i % Math.max(1, Math.floor(points.length / 5)) === 0) && (
-                          <text x={p.x} y={h - 6} textAnchor="middle" fill="var(--text-muted, #6b7280)" fontSize="8">{p.date}</text>
-                        )}
-                      </g>
-                    ))}
-                    {/* Current value label */}
-                    {points.length > 0 && (
-                      <text
-                        x={points[points.length - 1].x + 5}
-                        y={points[points.length - 1].y + 3}
-                        fill="#D4930D"
-                        fontSize="10"
-                        fontWeight="bold"
-                        fontFamily="monospace"
-                      >
-                        {points[points.length - 1].val}
-                      </text>
-                    )}
-                  </svg>
-                </div>
-              )
-            })()}
-          </Card>
-        )}
 
         {!hasStats && achievements.length === 0 ? (
           /* Empty State */
