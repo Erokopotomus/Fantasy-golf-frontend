@@ -104,11 +104,11 @@ export default function VaultPersistent({
           </div>
 
           {/* Big league stats — instant display, no animation */}
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 mb-12">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-12">
             {statItems.map(stat => (
               <div
                 key={stat.label}
-                className="text-center px-3 py-5 bg-[var(--bg-alt)] rounded-xl border border-[var(--card-border)]"
+                className="text-center px-4 py-4 sm:py-5 bg-[var(--bg-alt)] rounded-xl border border-[var(--card-border)] min-w-[100px] flex-1 sm:flex-initial sm:min-w-[140px] max-w-[180px]"
               >
                 <div className="text-2xl sm:text-[28px] font-display font-bold text-text-primary mb-1">
                   {stat.value.toLocaleString()}

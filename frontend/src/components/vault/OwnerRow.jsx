@@ -192,7 +192,7 @@ export default function OwnerRow({
           {/* Titles */}
           <div className="text-center">
             {owner.titles > 0 ? (
-              <div className="text-sm">{'🏆'.repeat(Math.min(owner.titles, 5))}</div>
+              <div className="text-sm whitespace-nowrap">🏆{owner.titles > 1 ? `×${owner.titles}` : ''}</div>
             ) : (
               <div className="text-[11px] text-text-muted/40">&mdash;</div>
             )}
@@ -252,7 +252,7 @@ export default function OwnerRow({
               </div>
               <div className="text-[11px] font-mono text-text-muted mt-0.5">
                 {owner.totalWins}-{owner.totalLosses} &middot; {winPctStr}% &middot; {pfStr} PF
-                {owner.titles > 0 && <span> &middot; {'🏆'.repeat(Math.min(owner.titles, 3))}</span>}
+                {owner.titles > 0 && <span> &middot; 🏆{owner.titles > 1 ? `×${owner.titles}` : ''}</span>}
               </div>
             </div>
 
