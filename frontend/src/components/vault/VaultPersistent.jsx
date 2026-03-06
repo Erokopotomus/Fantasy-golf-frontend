@@ -145,12 +145,12 @@ export default function VaultPersistent({
 
           {/* Owner rows — instant, no stagger */}
           <div className="flex flex-col gap-2.5">
-            {displayOwners.map(({ owner, globalRank }) => (
+            {displayOwners.map(({ owner, globalRank }, idx) => (
               <OwnerRow
                 key={owner.name}
                 owner={owner}
-                rank={globalRank}
-                isLeader={globalRank === 1}
+                rank={activeOnly ? idx + 1 : globalRank}
+                isLeader={(activeOnly ? idx + 1 : globalRank) === 1}
                 onClick={() => handleOwnerClick(owner.name)}
                 animate={false}
                 animationDelay={0}
