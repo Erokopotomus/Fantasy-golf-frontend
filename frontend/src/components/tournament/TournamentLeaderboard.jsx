@@ -362,31 +362,27 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
               </div>
             )}
 
-            {/* Round tabs + inline legend */}
-            <div className="flex items-center gap-1.5 mt-3 mb-3">
-              {[1, 2, 3, 4].map(r => {
-                const roundScore = player.rounds?.[`r${r}`]
-                const hasScore = roundScore != null
-                const isReachable = r <= (player.currentRound || 1) || hasScore
+            {/* Round toggle pills + inline legend */}
+            <div className="flex items-center gap-2 mt-3 mb-3">
+              {[1, 2, 3, 4].filter(r => {
+                // Only show pills for rounds that have data
+                const hasRoundScore = player.rounds?.[`r${r}`] != null
+                const hasHoleData = holeScores[player.id]?.[r]?.length > 0
+                const isCurrentRound = r === player.currentRound
+                return hasRoundScore || hasHoleData || isCurrentRound
+              }).map(r => {
                 const isActive = expandedRound === r
-                const isCurrent = r === player.currentRound
                 return (
                   <button
                     key={r}
-                    onClick={(e) => { e.stopPropagation(); if (isReachable) setExpandedRound(r) }}
-                    disabled={!isReachable}
-                    className={`
-                      px-3 py-1.5 rounded-lg text-xs transition-all
-                      ${isActive
-                        ? 'bg-blaze/10 text-blaze border border-blaze/30 font-bold'
-                        : isReachable
-                          ? 'bg-white border border-gray-200 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 font-semibold hover:border-gray-300 dark:hover:border-slate-600'
-                          : 'bg-white border border-gray-200 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 font-semibold opacity-30 cursor-not-allowed'}
-                    `}
+                    onClick={(e) => { e.stopPropagation(); setExpandedRound(r) }}
+                    className={`px-3 py-1 rounded-full text-xs font-mono font-medium cursor-pointer transition-colors ${
+                      isActive
+                        ? 'bg-blaze text-white'
+                        : 'bg-[var(--bg)] text-text-secondary border border-[var(--card-border)] hover:border-gray-400 dark:hover:border-slate-500'
+                    }`}
                   >
                     R{r}
-                    {hasScore && <span className="ml-1 text-gray-400 dark:text-slate-500">({roundScore})</span>}
-                    {isCurrent && !hasScore && <span className="ml-1 text-crown">*</span>}
                   </button>
                 )
               })}

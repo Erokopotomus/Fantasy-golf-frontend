@@ -10,6 +10,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const [scorecardData, setScorecardData] = useState(null)
   const [scorecardLoading, setScorecardLoading] = useState(false)
+  const [selectedRound, setSelectedRound] = useState(null)
   const [drawerWidth, setDrawerWidth] = useState(420)
   const [leftDrawerWidth, setLeftDrawerWidth] = useState(420)
   const isResizing = useRef(false)
@@ -35,9 +36,16 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
     setSelectedPlayer(player)
     setScorecardLoading(true)
     setScorecardData(null)
+    setSelectedRound(null)
     try {
       const data = await api.getPlayerScorecard(tournament.id, player.playerId)
-      setScorecardData(data.scorecards || {})
+      const scorecards = data.scorecards || {}
+      setScorecardData(scorecards)
+      // Default to latest round with data
+      const availableRounds = Object.keys(scorecards).map(Number).filter(r => scorecards[r]?.length > 0).sort((a, b) => a - b)
+      if (availableRounds.length > 0) {
+        setSelectedRound(availableRounds[availableRounds.length - 1])
+      }
     } catch (err) {
       console.error('Failed to fetch scorecard:', err)
       setScorecardData({})
@@ -442,11 +450,16 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                   <div className="w-5 h-5 border-2 border-blaze/30 dark:border-crown/30 border-t-blaze dark:border-t-crown rounded-full animate-spin" />
                 </div>
               ) : scorecardData && Object.keys(scorecardData).length > 0 ? (
-                Object.entries(scorecardData).map(([round, holeData]) => {
+                (() => {
+                  // Determine available rounds (only those with hole data)
+                  const availableRounds = Object.keys(scorecardData).map(Number).filter(r => scorecardData[r]?.length > 0).sort((a, b) => a - b)
+                  const activeRound = selectedRound && availableRounds.includes(selectedRound) ? selectedRound : availableRounds[availableRounds.length - 1]
+                  const holeData = scorecardData[activeRound] || []
+
                   // Default 18-hole pars — merge API data into template
                   const defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]
                   const holeDataMap = {}
-                  if (holeData && holeData.length > 0) {
+                  if (holeData.length > 0) {
                     for (const h of holeData) holeDataMap[h.hole] = h
                   }
                   const holes = defaultPars.map((defPar, i) => {
@@ -493,10 +506,25 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                   }
 
                   return (
-                    <div key={round} className="mb-5">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-white/40 mb-3">
-                        Round {round}
-                      </p>
+                    <div>
+                      {/* Round toggle pills */}
+                      {availableRounds.length > 1 && (
+                        <div className="flex gap-2 mb-4">
+                          {availableRounds.map(r => (
+                            <button
+                              key={r}
+                              onClick={() => setSelectedRound(r)}
+                              className={`px-3 py-1 rounded-full text-xs font-mono font-medium cursor-pointer transition-colors ${
+                                r === activeRound
+                                  ? 'bg-blaze text-white'
+                                  : 'bg-[var(--bg)] text-text-secondary border border-[var(--card-border)] hover:border-gray-400 dark:hover:border-slate-500'
+                              }`}
+                            >
+                              R{r}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Front 9 */}
                       <div className="flex items-center gap-2 mb-2">
@@ -601,7 +629,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                       </div>
                     </div>
                   )
-                })
+                })()
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-white/40">
                   {selectedPlayer.thru === 0 || selectedPlayer.thru === null || selectedPlayer.thru === undefined ? (

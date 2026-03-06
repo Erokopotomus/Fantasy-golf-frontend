@@ -16,7 +16,6 @@ import DraftCountdown from '../components/DraftCountdown'
 import LeagueChat from '../components/ai/LeagueChat'
 import CommissionerNotes from '../components/league/CommissionerNotes'
 import LiveScoringWidget from '../components/league/LiveScoringWidget'
-import WeatherStrip from '../components/tournament/WeatherStrip'
 import TournamentHeader from '../components/tournament/TournamentHeader'
 import PhaseActionRow from '../components/league/PhaseActionRow'
 import { useLeaguePhase } from '../hooks/useLeaguePhase'
@@ -153,14 +152,6 @@ const LeagueHome = () => {
       .catch(() => {})
   }, [isNflLeague])
 
-  // Fetch weather data when tournament is IN_PROGRESS (golf leagues only)
-  const [weatherData, setWeatherData] = useState([])
-  useEffect(() => {
-    if (!currentTournament?.id || currentTournament.status !== 'IN_PROGRESS' || isNflLeague) return
-    api.getTournamentWeather(currentTournament.id)
-      .then(data => setWeatherData(data?.weather || []))
-      .catch(() => {})
-  }, [currentTournament?.id, currentTournament?.status, isNflLeague])
 
   // Fetch user's draft boards to find existing one for this league (prefer leagueId match, fall back to sport)
   useEffect(() => {
@@ -686,21 +677,9 @@ const LeagueHome = () => {
           {/* Phase-Aware Action Row */}
           <PhaseActionRow phase={leaguePhase} league={league} existingBoardId={existingBoardId} />
 
-          {/* Live / Final Tournament Scoring Widget + Weather (golf leagues only) */}
+          {/* Live / Final Tournament Scoring Widget (golf leagues only) */}
           {!isNflLeague && currentTournament && (currentTournament.status === 'IN_PROGRESS' || currentTournament.status === 'COMPLETED') && (
-            <div className={currentTournament.status === 'IN_PROGRESS' && weatherData.length > 0
-              ? 'grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4'
-              : ''
-            }>
-              <div className={currentTournament.status === 'IN_PROGRESS' && weatherData.length > 0 ? 'lg:col-span-2' : ''}>
-                <LiveScoringWidget leagueId={leagueId} tournament={currentTournament} />
-              </div>
-              {currentTournament.status === 'IN_PROGRESS' && weatherData.length > 0 && (
-                <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)]/60 backdrop-blur-md shadow-card overflow-hidden">
-                  <WeatherStrip weather={weatherData} tournamentStart={currentTournament.startDate} embedded />
-                </div>
-              )}
-            </div>
+            <LiveScoringWidget leagueId={leagueId} tournament={currentTournament} />
           )}
           {!isNflLeague && currentTournament && (currentTournament.status === 'UPCOMING' || currentTournament.status === 'IN_PROGRESS') && (
             <div className="mb-6">
