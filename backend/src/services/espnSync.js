@@ -109,14 +109,16 @@ async function syncHoleScores(tournamentId, prisma) {
 
   // 6. Process each competitor
   let matchedPlayers = 0
+  let unmatchedPlayers = 0
   let totalHoles = 0
+  let roundsCreated = 0
+  let roundsUpdated = 0
+  let holeErrors = 0
   const espnIdUpdates = [] // players we need to set espnId for
-
-  const roundScoreOps = []
-  const holeScoreOps = []
+  const unmatchedNames = []
 
   for (const comp of competitors) {
-    const espnId = comp.id
+    const espnId = String(comp.id || '')
     const espnName = comp.athlete?.fullName || comp.athlete?.displayName
 
     // Match to our player
@@ -129,169 +131,159 @@ async function syncHoleScores(tournamentId, prisma) {
       }
     }
 
-    if (!playerId) continue
+    if (!playerId) {
+      unmatchedPlayers++
+      if (unmatchedNames.length < 10) unmatchedNames.push(espnName || espnId)
+      continue
+    }
     matchedPlayers++
 
-    // Process each round's linescores
-    const linescores = comp.linescores || []
-    for (const roundData of linescores) {
-      const roundNumber = roundData.period
-      if (!roundNumber || roundNumber < 1 || roundNumber > 4) continue
+    // Process each round's linescores — wrapped in try/catch per player
+    try {
+      const linescores = comp.linescores || []
+      for (const roundData of linescores) {
+        const roundNumber = roundData.period
+        if (!roundNumber || roundNumber < 1 || roundNumber > 4) continue
 
-      const roundStrokes = roundData.value ? Math.round(roundData.value) : null
-      const holeEntries = roundData.linescores || []
+        const roundStrokes = roundData.value ? Math.round(roundData.value) : null
+        const holeEntries = roundData.linescores || []
 
-      // Extract tee time from statistics (index 6)
-      let teeTime = null
-      const stats = roundData.statistics?.categories?.[0]?.stats
-      if (stats && stats[6]?.displayValue) {
+        // Extract tee time from statistics (index 6)
+        let teeTime = null
+        const stats = roundData.statistics?.categories?.[0]?.stats
+        if (stats && stats[6]?.displayValue) {
+          try {
+            teeTime = new Date(stats[6].displayValue)
+            if (isNaN(teeTime.getTime())) teeTime = null
+          } catch (e) { teeTime = null }
+        }
+
+        if (!holeEntries.length && !roundStrokes && !teeTime) continue
+
+        // Ensure RoundScore exists
+        const rsKey = `${playerId}_${roundNumber}`
+        let roundScoreId = roundScoreMap.get(rsKey)
+
         try {
-          teeTime = new Date(stats[6].displayValue)
-          if (isNaN(teeTime.getTime())) teeTime = null
-        } catch (e) { teeTime = null }
-      }
-
-      if (!holeEntries.length && !roundStrokes && !teeTime) continue
-
-      // Ensure RoundScore exists
-      const rsKey = `${playerId}_${roundNumber}`
-      let roundScoreId = roundScoreMap.get(rsKey)
-
-      if (!roundScoreId) {
-        // Create RoundScore
-        roundScoreOps.push({
-          playerId,
-          roundNumber,
-          score: roundStrokes,
-          teeTime,
-          tournamentId,
-        })
-      } else {
-        // Update score and tee time
-        const update = { _update: true, id: roundScoreId }
-        if (roundStrokes != null) update.score = roundStrokes
-        if (teeTime) update.teeTime = teeTime
-        roundScoreOps.push(update)
-      }
-
-      // Process hole-by-hole data
-      for (const holeData of holeEntries) {
-        const holeNumber = holeData.period
-        const strokes = holeData.value != null ? Math.round(holeData.value) : null
-        const scoreTypeStr = holeData.scoreType?.displayValue
-
-        if (!holeNumber || holeNumber < 1 || holeNumber > 18) continue
-
-        // Derive par from strokes and scoreType
-        let par = null
-        let toPar = null
-        if (strokes != null && scoreTypeStr) {
-          if (scoreTypeStr === 'E') {
-            par = strokes
-            toPar = 0
+          if (!roundScoreId) {
+            // Create RoundScore
+            const rs = await prisma.roundScore.upsert({
+              where: {
+                tournamentId_playerId_roundNumber: {
+                  tournamentId,
+                  playerId,
+                  roundNumber,
+                },
+              },
+              update: { score: roundStrokes, ...(teeTime ? { teeTime } : {}) },
+              create: { playerId, roundNumber, score: roundStrokes, teeTime, tournamentId },
+            })
+            roundScoreMap.set(rsKey, rs.id)
+            roundScoreId = rs.id
+            roundsCreated++
           } else {
-            const diff = parseInt(scoreTypeStr)
-            if (!isNaN(diff)) {
-              par = strokes - diff
-              toPar = diff
+            // Update existing round score + tee time
+            const updateData = {}
+            if (roundStrokes != null) updateData.score = roundStrokes
+            if (teeTime) updateData.teeTime = teeTime
+            if (Object.keys(updateData).length > 0) {
+              await prisma.roundScore.update({ where: { id: roundScoreId }, data: updateData })
+            }
+            roundsUpdated++
+          }
+        } catch (rsErr) {
+          console.warn(`[ESPN Sync] RoundScore error for player ${playerId} R${roundNumber}: ${rsErr.message}`)
+          continue // Skip this round's holes but keep processing other rounds
+        }
+
+        // Process hole-by-hole data
+        for (const holeData of holeEntries) {
+          const holeNumber = holeData.period
+          const strokes = holeData.value != null ? Math.round(holeData.value) : null
+          const scoreTypeStr = holeData.scoreType?.displayValue
+
+          if (!holeNumber || holeNumber < 1 || holeNumber > 18) continue
+
+          // Derive par from strokes and scoreType
+          let par = null
+          let toPar = null
+          if (strokes != null && scoreTypeStr) {
+            if (scoreTypeStr === 'E') {
+              par = strokes
+              toPar = 0
+            } else {
+              const diff = parseInt(scoreTypeStr)
+              if (!isNaN(diff)) {
+                par = strokes - diff
+                toPar = diff
+              }
+            }
+          }
+
+          try {
+            await prisma.holeScore.upsert({
+              where: {
+                roundScoreId_holeNumber: {
+                  roundScoreId,
+                  holeNumber,
+                },
+              },
+              update: {
+                par: par || 4,
+                score: strokes,
+                toPar,
+              },
+              create: {
+                roundScoreId,
+                tournamentId,
+                holeNumber,
+                par: par || 4,
+                score: strokes,
+                toPar,
+              },
+            })
+            totalHoles++
+          } catch (holeErr) {
+            holeErrors++
+            if (holeErrors <= 5) {
+              console.warn(`[ESPN Sync] HoleScore error for player ${playerId} R${roundNumber} H${holeNumber}: ${holeErr.message}`)
             }
           }
         }
 
-        holeScoreOps.push({
-          playerId,
-          roundNumber,
-          holeNumber,
-          par: par || 4, // Default par 4 if can't derive
-          score: strokes,
-          toPar,
-        })
-        totalHoles++
-      }
-
-      // Compute round stats from hole data
-      if (holeEntries.length > 0) {
-        const stats = computeRoundStats(holeEntries)
-        if (roundScoreId) {
-          roundScoreOps.push({
-            _update: true,
-            id: roundScoreId,
-            ...stats,
-          })
+        // Compute and save round stats from hole data
+        if (holeEntries.length > 0 && roundScoreId) {
+          try {
+            const roundStats = computeRoundStats(holeEntries)
+            await prisma.roundScore.update({ where: { id: roundScoreId }, data: roundStats })
+          } catch (statsErr) {
+            console.warn(`[ESPN Sync] Round stats error for R${roundNumber}: ${statsErr.message}`)
+          }
         }
       }
+    } catch (playerErr) {
+      console.warn(`[ESPN Sync] Player processing error for ${espnName} (${espnId}): ${playerErr.message}`)
     }
   }
 
-  // 7. Execute database operations
-
-  // Update espnId for matched players
+  // 7. Update espnId for matched players
   if (espnIdUpdates.length > 0) {
-    const espnOps = espnIdUpdates.map((u) =>
-      prisma.player.update({ where: { id: u.id }, data: { espnId: u.espnId } })
-    )
-    await batchTransaction(prisma, espnOps)
+    for (const u of espnIdUpdates) {
+      try {
+        await prisma.player.update({ where: { id: u.id }, data: { espnId: u.espnId } })
+      } catch (e) {
+        console.warn(`[ESPN Sync] Failed to update espnId for ${u.id}: ${e.message}`)
+      }
+    }
     console.log(`[ESPN Sync] Updated espnId for ${espnIdUpdates.length} players`)
   }
 
-  // Upsert RoundScores
-  for (const op of roundScoreOps) {
-    if (op._update) {
-      const { _update, id, ...data } = op
-      await prisma.roundScore.update({ where: { id }, data })
-    } else {
-      const rs = await prisma.roundScore.upsert({
-        where: {
-          tournamentId_playerId_roundNumber: {
-            tournamentId,
-            playerId: op.playerId,
-            roundNumber: op.roundNumber,
-          },
-        },
-        update: { score: op.score, ...(op.teeTime ? { teeTime: op.teeTime } : {}) },
-        create: op,
-      })
-      // Cache the new ID
-      roundScoreMap.set(`${op.playerId}_${op.roundNumber}`, rs.id)
-    }
+  if (unmatchedNames.length > 0) {
+    console.log(`[ESPN Sync] Unmatched players (${unmatchedPlayers} total): ${unmatchedNames.join(', ')}`)
   }
 
-  // Upsert HoleScores in batches
-  const holeOps = []
-  for (const h of holeScoreOps) {
-    const rsKey = `${h.playerId}_${h.roundNumber}`
-    const roundScoreId = roundScoreMap.get(rsKey)
-    if (!roundScoreId) continue
-
-    holeOps.push(
-      prisma.holeScore.upsert({
-        where: {
-          roundScoreId_holeNumber: {
-            roundScoreId,
-            holeNumber: h.holeNumber,
-          },
-        },
-        update: {
-          par: h.par,
-          score: h.score,
-          toPar: h.toPar,
-        },
-        create: {
-          roundScoreId,
-          tournamentId,
-          holeNumber: h.holeNumber,
-          par: h.par,
-          score: h.score,
-          toPar: h.toPar,
-        },
-      })
-    )
-  }
-
-  await batchTransaction(prisma, holeOps)
-
-  console.log(`[ESPN Sync] Done: ${matchedPlayers} players matched, ${totalHoles} hole scores synced`)
-  return { matched: matchedPlayers, holes: totalHoles }
+  console.log(`[ESPN Sync] Done: ${matchedPlayers} matched (${unmatchedPlayers} unmatched), ${roundsCreated} rounds created, ${roundsUpdated} rounds updated, ${totalHoles} holes synced${holeErrors ? `, ${holeErrors} hole errors` : ''}`)
+  return { matched: matchedPlayers, unmatched: unmatchedPlayers, roundsCreated, roundsUpdated, holes: totalHoles, holeErrors }
 }
 
 /**

@@ -566,6 +566,44 @@ router.get('/:id/scorecard-status', async (req, res, next) => {
   }
 })
 
+// POST /api/tournaments/:id/trigger-espn-sync - Manually trigger ESPN hole sync (admin diagnostic)
+router.post('/:id/trigger-espn-sync', async (req, res, next) => {
+  try {
+    const tournamentId = req.params.id
+    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } })
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found' })
+
+    const espnSync = require('../services/espnSync')
+
+    // Run sync
+    const syncResult = await espnSync.syncHoleScores(tournamentId, prisma)
+
+    // Get updated counts
+    const [roundScoreCount, holeScoreCount] = await Promise.all([
+      prisma.roundScore.count({ where: { tournamentId } }),
+      prisma.holeScore.count({ where: { tournamentId } }),
+    ])
+
+    // Run aggregation
+    let aggResult = null
+    try {
+      aggResult = await espnSync.aggregateHoleScoresToPerformance(tournamentId, prisma)
+    } catch (e) {
+      aggResult = { error: e.message }
+    }
+
+    res.json({
+      tournament: tournament.name,
+      espnEventId: tournament.espnEventId,
+      syncResult,
+      aggregation: aggResult,
+      dbCounts: { roundScores: roundScoreCount, holeScores: holeScoreCount },
+    })
+  } catch (error) {
+    res.status(500).json({ error: error.message, stack: error.stack?.split('\n').slice(0, 5) })
+  }
+})
+
 // GET /api/tournaments/:id/weather - Get tournament weather forecast
 router.get('/:id/weather', async (req, res, next) => {
   try {
