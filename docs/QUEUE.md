@@ -6296,6 +6296,115 @@ The `WeatherStrip` component exists at `frontend/src/components/tournament/Weath
 
 ---
 
+### 165 — CRITICAL: League scoring page shows "No current NFL season" for golf leagues `CRITICAL`
+**Status:** `TODO`
+**Priority:** Critical — the Scoring pill on Bro Montana Bowl (golf league) shows "Error: No current NFL season" instead of the golf live scoring view. Users can't see live tournament scores from their league.
+**Prompt:**
+
+The `LeagueLiveScoring` component at `frontend/src/pages/LeagueLiveScoring.jsx` (line 265-275) determines whether to show `GolfLiveScoring` or `NflWeeklyScoring` based on `leagueData?.sport`. The Bro Montana Bowl (ID: `cmm47aj1w07klry65jxa29jwu`) is a GOLF league but the NFL component is rendering.
+
+**Evidence:**
+- Network tab shows ONLY `/api/nfl/leagues/cmm47aj1w07klry65jxa29jwu/weekly-scores/1` (NFL endpoint) being called
+- No `/api/leagues/cmm47.../live-scoring` (golf endpoint) is ever called
+- Error displayed: "Error — No current NFL season" with "Back to League" link
+- Dashboard shows golf icon for this league, LeagueHome works fine with golf features
+- `NflWeeklyScoring` component (line 122-129) catches the backend error and renders it
+
+**Current sport detection (line 268):**
+```jsx
+const isNfl = (leagueData?.sport || 'GOLF').toUpperCase() === 'NFL'
+```
+
+**Investigation needed:**
+1. Check if `leagueData` from `useLeague(leagueId)` is returning `sport: 'NFL'` for this league. The `useLeague` hook starts with `league: null` and fetches from `/api/leagues/:id`.
+2. Possible causes: (a) Database has wrong sport value; (b) `useLeague` API call fails silently and a fallback path routes to NFL; (c) Race condition where component renders before league data loads and somehow picks NFL.
+3. The `useLeague` fetch wasn't appearing in network logs — investigate whether the call is being made at all on the scoring page.
+
+**Fix approach:**
+- Add `loading` state handling to `LeagueLiveScoring` — don't render either child until `leagueData` is loaded
+- Add a console.log to trace the sport value: `console.log('[LeagueLiveScoring] sport:', leagueData?.sport, 'isNfl:', isNfl)`
+- If the database `sport` field is wrong for this league, fix it via a migration or script
+- Ensure the default fallback always routes to golf (not NFL) when sport is unknown
+
+**Current code at `frontend/src/pages/LeagueLiveScoring.jsx` lines 265-275:**
+```jsx
+const LeagueLiveScoring = () => {
+  const { leagueId } = useParams()
+  const { league: leagueData } = useLeague(leagueId)
+  const isNfl = (leagueData?.sport || 'GOLF').toUpperCase() === 'NFL'
+
+  if (isNfl) {
+    return <NflWeeklyScoring leagueId={leagueId} />
+  }
+
+  return <GolfLiveScoring leagueId={leagueId} />
+}
+```
+
+**Better pattern — wait for data before routing:**
+```jsx
+const LeagueLiveScoring = () => {
+  const { leagueId } = useParams()
+  const { league: leagueData, loading } = useLeague(leagueId)
+
+  if (loading) {
+    return <LoadingSpinner />  // or skeleton
+  }
+
+  const isNfl = (leagueData?.sport || 'GOLF').toUpperCase() === 'NFL'
+
+  if (isNfl) {
+    return <NflWeeklyScoring leagueId={leagueId} />
+  }
+
+  return <GolfLiveScoring leagueId={leagueId} />
+}
+```
+
+**FILES:**
+- `frontend/src/pages/LeagueLiveScoring.jsx` (lines 265-275) — fix sport detection + add loading state
+- `frontend/src/hooks/useLeague.js` — verify it returns `loading` correctly
+- Check database: `SELECT id, name, sport FROM "League" WHERE id = 'cmm47aj1w07klry65jxa29jwu'`
+
+---
+
+### 166 — Add WeatherStrip to GolfLiveScoring component (not just LeagueHome) `MEDIUM`
+**Status:** `TODO`
+**Priority:** Medium — WeatherStrip was added to LeagueHome (item 164) then removed (commit bff16c7) with the assumption it was on the scoring page. It's NOT on the scoring page — only on TournamentPreview and CourseDetail.
+**Prompt:**
+
+The `GolfLiveScoring` component at `frontend/src/pages/LeagueLiveScoring.jsx` (line 277+) renders the league's live tournament scoring view. It currently shows a tournament header banner, leaderboard, and team scoring — but NO weather card.
+
+**What to do:** Add `WeatherStrip` to the `GolfLiveScoring` component so users see current weather conditions while watching live scoring.
+
+**Requirements:**
+1. Import `WeatherStrip` from `../components/tournament/WeatherStrip`
+2. Fetch weather data using the same pattern as `TournamentPreview.jsx` — `api.getTournamentWeather(tournament.id)`
+3. Position it near the tournament header area (e.g., in the banner section or as a floating card)
+4. Only render when tournament is live (`isLive === true`)
+5. Match the glassmorphic card styling of the tournament banner
+6. Mobile: stack below banner. Desktop: float alongside or within the header.
+
+**Reference:** See how TournamentPreview.jsx uses it:
+```jsx
+const [weather, setWeather] = useState(null)
+useEffect(() => {
+  if (tournament?.id) {
+    api.getTournamentWeather(tournament.id).then(setWeather).catch(() => {})
+  }
+}, [tournament?.id])
+// ...
+<WeatherStrip weather={weather} tournamentStart={tournament?.startDate} />
+```
+
+**FILES:**
+- `frontend/src/pages/LeagueLiveScoring.jsx` — GolfLiveScoring component (line 277+)
+- `frontend/src/components/tournament/WeatherStrip.jsx` (already exists)
+
+**Depends on:** Item 165 (scoring page must work for golf leagues first)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
