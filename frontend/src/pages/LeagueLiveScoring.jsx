@@ -421,6 +421,13 @@ const GolfLiveScoring = ({ leagueId }) => {
         <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-3">League Standings</h3>
         <LeagueMiniStandings teams={teams} userTeam={userTeam} />
       </div>
+
+      {/* Weather — compact card in sidebar */}
+      {tournament.status === 'IN_PROGRESS' && weatherData.length > 0 && (
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--surface)] shadow-card overflow-hidden">
+          <WeatherStrip weather={weatherData} embedded />
+        </div>
+      )}
     </div>
   )
 
@@ -465,12 +472,7 @@ const GolfLiveScoring = ({ leagueId }) => {
             <TournamentHeader tournament={headerTournament} leaderboard={leaderboard} />
           </div>
 
-          {/* Weather strip — shown when tournament is live and weather data exists */}
-          {tournament.status === 'IN_PROGRESS' && weatherData.length > 0 && (
-            <div className="mb-6 bg-[var(--surface)]/60 backdrop-blur-md rounded-xl border border-[var(--card-border)] shadow-card overflow-hidden">
-              <WeatherStrip weather={weatherData} embedded />
-            </div>
-          )}
+          {/* WeatherStrip moved to sidebar — see sidebarContent */}
 
           {/* Next Up card — shown when tournament is FINAL */}
           {nextTournament && tournament.status === 'COMPLETED' && (
