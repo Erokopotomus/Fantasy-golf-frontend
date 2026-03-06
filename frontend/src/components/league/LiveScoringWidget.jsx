@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useLeagueLiveScoring } from '../../hooks/useLeagueLiveScoring'
 import api from '../../services/api'
@@ -53,6 +53,56 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
       setScorecardLoading(false)
     }
   }, [tournament?.id])
+
+  // Derive fresh player data from the live-polled teams array
+  // so the drawer header stats update when the 60s poll refreshes
+  const freshPlayerData = useMemo(() => {
+    if (!selectedPlayer?.playerId) return selectedPlayer
+    for (const team of teams) {
+      const allPlayers = [...(team.starters || []), ...(team.bench || [])]
+      for (const p of allPlayers) {
+        if (p.playerId === selectedPlayer.playerId) return p
+      }
+    }
+    return selectedPlayer
+  }, [selectedPlayer, teams])
+
+  // Re-fetch scorecard when player progresses (thru changes)
+  const previousThruRef = useRef(null)
+  useEffect(() => {
+    if (!selectedPlayer?.playerId || !freshPlayerData?.thru) return
+    // On first open, set the ref without re-fetching (openPlayerScorecard already fetched)
+    if (previousThruRef.current === null) {
+      previousThruRef.current = freshPlayerData.thru
+      return
+    }
+    // Only re-fetch when thru actually changes
+    if (freshPlayerData.thru !== previousThruRef.current) {
+      previousThruRef.current = freshPlayerData.thru
+      // Re-fetch scorecard silently (don't clear existing data to avoid flash)
+      const refetchScorecard = async () => {
+        try {
+          const data = await api.getPlayerScorecard(tournament.id, freshPlayerData.playerId)
+          const scorecards = data.scorecards || {}
+          setScorecardData(scorecards)
+          const availableRounds = Object.keys(scorecards).map(Number).filter(r => scorecards[r]?.length > 0).sort((a, b) => a - b)
+          if (availableRounds.length > 0) {
+            setSelectedRound(availableRounds[availableRounds.length - 1])
+          }
+        } catch (err) {
+          console.error('Failed to re-fetch scorecard:', err)
+        }
+      }
+      refetchScorecard()
+    }
+  }, [freshPlayerData?.thru, freshPlayerData?.playerId, selectedPlayer?.playerId, tournament?.id])
+
+  // Reset previousThruRef when drawer closes
+  useEffect(() => {
+    if (!selectedPlayer) {
+      previousThruRef.current = null
+    }
+  }, [selectedPlayer])
 
   // Drawer resize handlers
   const startResize = useCallback((e) => {
@@ -406,7 +456,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
             <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/10 px-4 py-3 flex items-center justify-between z-10">
               <div className="flex items-center gap-2 min-w-0">
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                  isOnCourse(selectedPlayer.thru) ? 'bg-field-bright animate-pulse' : selectedPlayer.thru === 18 || selectedPlayer.thru === 'F' ? 'bg-gray-400 dark:bg-white/30' : 'bg-gray-300 dark:bg-white/20'
+                  isOnCourse(freshPlayerData.thru) ? 'bg-field-bright animate-pulse' : freshPlayerData.thru === 18 || freshPlayerData.thru === 'F' ? 'bg-gray-400 dark:bg-white/30' : 'bg-gray-300 dark:bg-white/20'
                 }`} />
                 <h3 className="text-sm font-display font-bold text-gray-900 dark:text-white truncate">
                   {selectedPlayer.playerName}
@@ -423,23 +473,23 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
               </button>
             </div>
 
-            {/* Player stats strip */}
+            {/* Player stats strip — uses freshPlayerData so stats update with live poll */}
             <div className="px-4 py-3 border-b border-gray-100 dark:border-white/[0.06] flex items-center gap-4">
               <div className="text-center">
                 <p className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-white/40">Pos</p>
-                <p className="text-sm font-mono font-bold text-gray-900 dark:text-white">{formatPosition(selectedPlayer.position)}</p>
+                <p className="text-sm font-mono font-bold text-gray-900 dark:text-white">{formatPosition(freshPlayerData.position)}</p>
               </div>
               <div className="text-center">
                 <p className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-white/40">Score</p>
-                <p className={`text-sm font-mono font-bold ${toParColor(selectedPlayer.totalToPar)}`}>{formatToPar(selectedPlayer.totalToPar)}</p>
+                <p className={`text-sm font-mono font-bold ${toParColor(freshPlayerData.totalToPar)}`}>{formatToPar(freshPlayerData.totalToPar)}</p>
               </div>
               <div className="text-center">
                 <p className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-white/40">Thru</p>
-                <p className="text-sm font-mono font-bold text-gray-900 dark:text-white">{formatThru(selectedPlayer.thru)}</p>
+                <p className="text-sm font-mono font-bold text-gray-900 dark:text-white">{formatThru(freshPlayerData.thru)}</p>
               </div>
               <div className="text-center ml-auto">
                 <p className="text-[9px] uppercase tracking-wider text-gray-400 dark:text-white/40">Fantasy Pts</p>
-                <p className="text-lg font-mono font-bold text-blaze dark:text-crown">{selectedPlayer.fantasyPoints?.toFixed(1)}</p>
+                <p className="text-lg font-mono font-bold text-blaze dark:text-crown">{freshPlayerData.fantasyPoints?.toFixed(1)}</p>
               </div>
             </div>
 
@@ -632,7 +682,7 @@ const LiveScoringWidget = ({ leagueId, tournament: currentTournament }) => {
                 })()
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-white/40">
-                  {selectedPlayer.thru === 0 || selectedPlayer.thru === null || selectedPlayer.thru === undefined ? (
+                  {freshPlayerData.thru === 0 || freshPlayerData.thru === null || freshPlayerData.thru === undefined ? (
                     <>
                       <svg className="w-8 h-8 mb-2 text-gray-300 dark:text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

@@ -6407,6 +6407,120 @@ useEffect(() => {
 
 ---
 
+### 167 — Manual ESPN hole sync re-run + verify multi-round scorecard data `CRITICAL`
+**Status:** `TODO`
+**Priority:** Critical — item 163 fixed the code but said "cron needs manual re-run on Railway". Without this, scorecards only show 1 round of partial data and round toggle pills (R1/R2/R3/R4) never appear.
+**Prompt:**
+
+**Context:** The LiveScoringWidget scorecard drawer has round toggle pills (lines 510-527 of LiveScoringWidget.jsx) that only show when `availableRounds.length > 1`. Currently, the scorecard API (`GET /api/tournaments/:id/scorecards/:playerId`) returns only 1 round for all players. Example: Matt Fitzpatrick returns `{"scorecards":{"1":[9 holes]}}` — just round 1 with 9 holes. The tournament is in R2.
+
+**Diagnostic data:**
+- Tournament ID: `cmlabp7ot02mlo02tsztxojvb` (Arnold Palmer Invitational 2026)
+- Scorecard-status endpoint: 72 roundScores, 925 holeScores total (should be ~72 players × 18 holes × 2 rounds = 2592)
+- Sample player (Fitzpatrick `cmlabnu7v00oko02tapsm79ct`): only roundNumber=1, 9 holes
+
+**Action:**
+1. On Railway, run the ESPN hole sync manually for this tournament:
+```js
+const s = require('./src/services/espnSync')
+const { PrismaClient } = require('@prisma/client')
+const p = new PrismaClient()
+await s.syncHoleScores('cmlabp7ot02mlo02tsztxojvb', p)
+await s.aggregateHoleScoresToPerformance('cmlabp7ot02mlo02tsztxojvb', p)
+await p.$disconnect()
+```
+2. After sync, verify the scorecard endpoint returns multiple rounds:
+   `GET /api/tournaments/cmlabp7ot02mlo02tsztxojvb/scorecards/cmlabnu7v00oko02tapsm79ct`
+   Expected: `{"scorecards":{"1":[18 holes],"2":[N holes]}}` (R1 complete + R2 partial)
+3. If the sync still only captures 1 round, investigate the ESPN API response: does `comp.linescores` include all rounds or only the current round? The API URL is `site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard/{espnEventId}` — check if R1 linescores are present.
+4. If ESPN only returns current round data, the sync needs to PRESERVE existing round data instead of overwriting. The current upsert logic should handle this, but verify.
+
+**FILES:**
+- `backend/src/services/espnSync.js` (syncHoleScores)
+- `backend/src/index.js` (cron schedule)
+
+---
+
+### 168 — Fix stale selectedPlayer data in LiveScoringWidget scorecard drawer `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Added freshPlayerData derivation from live teams array, scorecard auto-refetch when thru changes via ref tracking. Files: LiveScoringWidget.jsx
+**Priority:** Medium — drawer header shows outdated THRU/SCORE when live scoring polls update the leaderboard
+**Prompt:**
+
+**Bug:** When you open a player's scorecard drawer in the LiveScoringWidget, the header stats (POS, SCORE, THRU, FANTASY PTS) are set once from `selectedPlayer` state at click time. When the 60-second live scoring poll updates the leaderboard, the drawer header does NOT refresh. Example: Fitzpatrick showed THRU 6 in the drawer header while the leaderboard row showed THRU 7.
+
+**Root cause:** `openPlayerScorecard()` at line 34 stores the clicked player object as `selectedPlayer` state. This is a snapshot — it never updates when `useLeagueLiveScoring` refetches data.
+
+**Fix approach:**
+In the drawer rendering section (around lines 420-444), instead of reading from `selectedPlayer.position`, `selectedPlayer.totalToPar`, `selectedPlayer.thru`, `selectedPlayer.fantasyPoints`, derive fresh data from the current `teams` array (which IS updated by the poll):
+
+```jsx
+// Derive fresh data from latest poll results
+const freshPlayerData = (() => {
+  if (!selectedPlayer?.playerId) return selectedPlayer
+  for (const team of teams) {
+    const allPlayers = [...(team.starters || []), ...(team.bench || [])]
+    for (const p of allPlayers) {
+      if (p.playerId === selectedPlayer.playerId) return p
+    }
+  }
+  return selectedPlayer // fallback to snapshot
+})()
+```
+
+Then use `freshPlayerData` instead of `selectedPlayer` for the header stats display. Keep `selectedPlayer` for the drawer open/close state and player identity.
+
+Also: when `freshPlayerData` updates (new THRU value), optionally re-fetch the scorecard to get new hole data. Add a useEffect that watches `freshPlayerData?.thru` and calls the scorecard API again if THRU changed.
+
+**FILES:**
+- `frontend/src/components/league/LiveScoringWidget.jsx` (lines 34-55 openPlayerScorecard, lines 420-444 drawer header)
+
+---
+
+### 169 — My Team page: overlay live scoring data on player rows `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-03-06 — Already implemented in item 159's TeamRoster redesign. Hook, lookup map, liveData prop, live stats display, CUT/WD badges, "Not in field" all present. Files: TeamRoster.jsx
+**Priority:** High — the plan is fully designed and approved (see plan file). Every competitor shows live fantasy points per player on the roster page. The Arnold Palmer Invitational is live NOW.
+**Prompt:**
+
+**Full plan exists at:** `/sessions/confident-cool-johnson/mnt/.claude/plans/lovely-snuggling-engelbart.md`
+
+**Summary:** Wire the existing `useLeagueLiveScoring(leagueId)` hook into `TeamRoster.jsx` to overlay live tournament data (position, score to par, thru, fantasy points) on each player row during live events.
+
+**Changes to `frontend/src/pages/TeamRoster.jsx` (~1060 lines):**
+
+1. **Import and call the hook** (top of component):
+   - Import `useLeagueLiveScoring` from `../hooks/useLeagueLiveScoring`
+   - Call: `const { tournament: liveTournament, isLive, userTeam: liveTeam, loading: liveLoading } = useLeagueLiveScoring(leagueId)`
+   - Build lookup map: `liveDataByPlayerId` — index `liveTeam.starters` + `liveTeam.bench` by `playerId`
+
+2. **Add a live scoring summary card** (below schedule summary, above Active Lineup):
+   - Only render when `isLive && liveTeam`
+   - Shows: tournament name with live pulse dot, team rank (e.g. "2nd of 4"), total fantasy points, bench points
+   - Uses existing brand classes: `bg-field-bright/10`, `font-mono`, `live-red` pulse
+   - Link to full scoring page: `/leagues/${leagueId}/scoring`
+
+3. **Pass `liveData` to each PlayerRow**:
+   - For each player, look up `liveDataByPlayerId[player.id]`
+   - Pass as new `liveData` prop to `<PlayerRow>`
+
+4. **Update PlayerRow to display live stats when available**:
+   - When `liveData` exists and NOT editing: replace static second line (OWGR/SG) with position + score + thru. Replace third line (wins/T5/T10) with fantasy points in bold.
+   - Color code: position green if top 10, score green if under par / red if over
+   - When `liveData` is null: show existing static stats + subtle "Not in field" indicator
+   - When `isLive` but player is CUT/WD: show status badge
+
+5. **What stays the same:** All lineup editing, keeper designation, IR management, player drawer, team selector, lineup lock banner.
+
+**Reused infrastructure:**
+- `useLeagueLiveScoring` hook (already handles 60s polling when live)
+- `GET /api/leagues/:id/live-scoring` (returns per-player position, totalToPar, thru, fantasyPoints)
+
+**FILES:**
+- `frontend/src/pages/TeamRoster.jsx` — only file modified
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
