@@ -25,15 +25,18 @@ export function computeVaultStats(history, aliases) {
     return { ownerStats: [], leagueStats: { totalSeasons: 0, totalOwners: 0, totalGames: 0, totalPoints: 0, totalTitles: 0 }, hasLiveSeason: false }
   }
 
-  // Build alias map: rawName → canonicalName
+  // Build alias map: rawName → canonicalName (case-insensitive)
   const aliasMap = new Map()
   const activeOwners = new Set()
+  const canonicalNames = new Set() // track all known canonical names
   const ownerColorMap = new Map()
   let colorIdx = 0
 
   if (aliases && aliases.length > 0) {
     for (const a of aliases) {
       aliasMap.set(a.ownerName, a.canonicalName)
+      aliasMap.set(a.ownerName.toLowerCase(), a.canonicalName) // case-insensitive
+      canonicalNames.add(a.canonicalName)
       if (a.isActive !== false) activeOwners.add(a.canonicalName)
       if (!ownerColorMap.has(a.canonicalName)) {
         ownerColorMap.set(a.canonicalName, OWNER_COLORS[colorIdx % OWNER_COLORS.length])
@@ -42,12 +45,17 @@ export function computeVaultStats(history, aliases) {
     }
   }
 
+  // Resolve rawName → canonical: try exact match, case-insensitive, or check if it IS a canonical name
+  const resolveCanonical = (rawName) => {
+    return aliasMap.get(rawName) || aliasMap.get(rawName.toLowerCase()) || (canonicalNames.has(rawName) ? rawName : rawName)
+  }
+
   // Group records by canonical owner name
   const ownerMap = new Map() // canonicalName → { teams: [...], ... }
 
   for (const record of history) {
     const rawName = record.ownerName || record.teamName || 'Unknown'
-    const canonical = aliasMap.get(rawName) || rawName
+    const canonical = resolveCanonical(rawName)
 
     if (!ownerMap.has(canonical)) {
       if (!ownerColorMap.has(canonical)) {
@@ -209,7 +217,7 @@ export function useVaultStats(leagueId) {
         flat.push(...historyData)
       }
       setHistory(flat)
-      setAliases(aliasData)
+      setAliases(Array.isArray(aliasData) ? aliasData : aliasData?.aliases || [])
     } catch (err) {
       setError(err.message)
     } finally {
