@@ -30,15 +30,22 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     return { eagles, birdies, bogeys }
   }
 
-  const fetchHoleScores = useCallback(async (playerId, playerObj) => {
+  const fetchHoleScores = useCallback(async (playerId, playerObj, forceRefresh = false) => {
     if (!tournamentId) return
-    if (holeScoresCache.current[playerId]) {
-      setHoleScores((prev) => ({ ...prev, [playerId]: holeScoresCache.current[playerId] }))
-      if (playerObj) {
-        const stats = computeStatsFromHoles(holeScoresCache.current[playerId])
-        onPlayerExpand?.({ ...playerObj, ...stats })
+    // Use cache only if not forcing refresh and cache has data for current round
+    const cached = holeScoresCache.current[playerId]
+    const currentRd = playerObj?.currentRound || tournamentRound
+    if (cached && !forceRefresh) {
+      // Bust cache if player is mid-round but cache has no data for their current round
+      const hasCurrentRound = currentRd && cached[currentRd]?.length > 0
+      if (hasCurrentRound || !currentRd) {
+        setHoleScores((prev) => ({ ...prev, [playerId]: cached }))
+        if (playerObj) {
+          const stats = computeStatsFromHoles(cached)
+          onPlayerExpand?.({ ...playerObj, ...stats })
+        }
+        return
       }
-      return
     }
     setLoadingScorecard(true)
     try {
@@ -55,7 +62,7 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
     } finally {
       setLoadingScorecard(false)
     }
-  }, [tournamentId, onPlayerExpand])
+  }, [tournamentId, tournamentRound, onPlayerExpand])
 
   /** Get short timezone abbreviation (e.g. "MST", "ET") from IANA zone */
   const getTimezoneAbbr = () => {
@@ -414,6 +421,17 @@ const TournamentLeaderboard = ({ leaderboard, cut, myPlayerIds = [], recentChang
                   const isCurrent = expandedRound === player.currentRound
                   const isInProgress = isCurrent && !roundScore
                   const holeData = holeScores[player.id]?.[expandedRound]
+                  const hasAnyScores = holeData && holeData.length > 0 && holeData.some(h => h.score != null)
+
+                  // Show waiting message if current round selected but no hole data yet
+                  if (isCurrent && !hasAnyScores && !loadingScorecard) {
+                    return (
+                      <div className="text-center py-4 text-xs text-gray-400 dark:text-slate-500">
+                        <p>Hole-by-hole data updating shortly...</p>
+                        <p className="mt-1 text-[10px]">Scores sync every few minutes during play</p>
+                      </div>
+                    )
+                  }
 
                   // Course par layout — always build full 18-hole array, merging ESPN data with defaults
                   const defaultPars = [4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 4]

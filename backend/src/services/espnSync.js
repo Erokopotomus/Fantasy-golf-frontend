@@ -8,12 +8,28 @@
 const espn = require('./espnClient')
 const { stageRaw } = require('./etlPipeline')
 
+// Sync lock — prevents concurrent ESPN syncs from overwhelming the DB
+let syncInProgress = false
+
 /**
  * Sync hole-by-hole scores for a tournament.
  * @param {string} tournamentId - Our internal tournament ID
  * @param {import('@prisma/client').PrismaClient} prisma
  */
 async function syncHoleScores(tournamentId, prisma) {
+  if (syncInProgress) {
+    console.log(`[ESPN Sync] Skipping — previous sync still in progress`)
+    return { matched: 0, holes: 0, skipped: true }
+  }
+  syncInProgress = true
+  try {
+    return await _syncHoleScores(tournamentId, prisma)
+  } finally {
+    syncInProgress = false
+  }
+}
+
+async function _syncHoleScores(tournamentId, prisma) {
   console.log(`[ESPN Sync] Starting hole score sync for tournament ${tournamentId}`)
 
   // 1. Get our tournament
@@ -196,63 +212,56 @@ async function syncHoleScores(tournamentId, prisma) {
           continue // Skip this round's holes but keep processing other rounds
         }
 
-        // Process hole-by-hole data
-        for (const holeData of holeEntries) {
-          const holeNumber = holeData.period
-          const strokes = holeData.value != null ? Math.round(holeData.value) : null
-          const scoreTypeStr = holeData.scoreType?.displayValue
+        // Process hole-by-hole data — batch all holes for this round in a single transaction
+        if (holeEntries.length > 0 && roundScoreId) {
+          const holeOps = []
+          for (const holeData of holeEntries) {
+            const holeNumber = holeData.period
+            const strokes = holeData.value != null ? Math.round(holeData.value) : null
+            const scoreTypeStr = holeData.scoreType?.displayValue
 
-          if (!holeNumber || holeNumber < 1 || holeNumber > 18) continue
+            if (!holeNumber || holeNumber < 1 || holeNumber > 18) continue
 
-          // Derive par from strokes and scoreType
-          let par = null
-          let toPar = null
-          if (strokes != null && scoreTypeStr) {
-            if (scoreTypeStr === 'E') {
-              par = strokes
-              toPar = 0
-            } else {
-              const diff = parseInt(scoreTypeStr)
-              if (!isNaN(diff)) {
-                par = strokes - diff
-                toPar = diff
+            // Derive par from strokes and scoreType
+            let par = null
+            let toPar = null
+            if (strokes != null && scoreTypeStr) {
+              if (scoreTypeStr === 'E') {
+                par = strokes
+                toPar = 0
+              } else {
+                const diff = parseInt(scoreTypeStr)
+                if (!isNaN(diff)) {
+                  par = strokes - diff
+                  toPar = diff
+                }
+              }
+            }
+
+            holeOps.push(
+              prisma.holeScore.upsert({
+                where: { roundScoreId_holeNumber: { roundScoreId, holeNumber } },
+                update: { par: par || 4, score: strokes, toPar },
+                create: { roundScoreId, tournamentId, holeNumber, par: par || 4, score: strokes, toPar },
+              })
+            )
+          }
+
+          // Execute all holes for this round in one transaction (max 18 ops)
+          try {
+            await prisma.$transaction(holeOps)
+            totalHoles += holeOps.length
+          } catch (batchErr) {
+            // Fallback: try individually if batch fails
+            for (const op of holeOps) {
+              try { await op; totalHoles++ } catch (e) {
+                holeErrors++
+                if (holeErrors <= 3) console.warn(`[ESPN Sync] HoleScore fallback error: ${e.message}`)
               }
             }
           }
 
-          try {
-            await prisma.holeScore.upsert({
-              where: {
-                roundScoreId_holeNumber: {
-                  roundScoreId,
-                  holeNumber,
-                },
-              },
-              update: {
-                par: par || 4,
-                score: strokes,
-                toPar,
-              },
-              create: {
-                roundScoreId,
-                tournamentId,
-                holeNumber,
-                par: par || 4,
-                score: strokes,
-                toPar,
-              },
-            })
-            totalHoles++
-          } catch (holeErr) {
-            holeErrors++
-            if (holeErrors <= 5) {
-              console.warn(`[ESPN Sync] HoleScore error for player ${playerId} R${roundNumber} H${holeNumber}: ${holeErr.message}`)
-            }
-          }
-        }
-
-        // Compute and save round stats from hole data
-        if (holeEntries.length > 0 && roundScoreId) {
+          // Compute and save round stats
           try {
             const roundStats = computeRoundStats(holeEntries)
             await prisma.roundScore.update({ where: { id: roundScoreId }, data: roundStats })
@@ -266,16 +275,17 @@ async function syncHoleScores(tournamentId, prisma) {
     }
   }
 
-  // 7. Update espnId for matched players
+  // 7. Update espnId for matched players (batched)
   if (espnIdUpdates.length > 0) {
-    for (const u of espnIdUpdates) {
-      try {
-        await prisma.player.update({ where: { id: u.id }, data: { espnId: u.espnId } })
-      } catch (e) {
-        console.warn(`[ESPN Sync] Failed to update espnId for ${u.id}: ${e.message}`)
-      }
+    try {
+      const idOps = espnIdUpdates.map(u =>
+        prisma.player.update({ where: { id: u.id }, data: { espnId: u.espnId } })
+      )
+      await prisma.$transaction(idOps)
+      console.log(`[ESPN Sync] Updated espnId for ${espnIdUpdates.length} players`)
+    } catch (e) {
+      console.warn(`[ESPN Sync] Failed to batch update espnIds: ${e.message}`)
     }
-    console.log(`[ESPN Sync] Updated espnId for ${espnIdUpdates.length} players`)
   }
 
   if (unmatchedNames.length > 0) {

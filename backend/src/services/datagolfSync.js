@@ -534,7 +534,21 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
 
   // Execute performance upserts in batched transactions
   await batchTransaction(prisma, perfUpserts)
-  await batchTransaction(prisma, roundScoreUpserts)
+
+  // Execute round score upserts individually (not batched) to prevent
+  // one bad record from rolling back an entire chunk of tee times
+  let rsSuccess = 0
+  let rsErrors = 0
+  for (const op of roundScoreUpserts) {
+    try {
+      await op
+      rsSuccess++
+    } catch (e) {
+      rsErrors++
+      if (rsErrors <= 3) console.warn(`[Sync] RoundScore upsert error: ${e.message}`)
+    }
+  }
+  if (rsErrors > 0) console.warn(`[Sync] ${rsErrors} RoundScore upsert errors (${rsSuccess} succeeded)`)
 
   // DFS slates + entries
   for (const [platform, entries] of [['DRAFTKINGS', dfsEntries.dk], ['FANDUEL', dfsEntries.fd]]) {

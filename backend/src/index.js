@@ -423,6 +423,18 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('field', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Daily 8:00 PM ET Fri-Sat — Evening field sync to pick up next-day tee times
+    // (R3/R4 pairings released evening before)
+    cron.schedule('0 20 * * 5,6', async () => {
+      const t = await getActiveTournamentDgId()
+      if (!t?.datagolfId) return cronLog('field-evening', 'No active tournament')
+      cronLog('field-evening', `Evening tee time sync for ${t.datagolfId}`)
+      try {
+        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
+        cronLog('field-evening', `Done: ${result.playersInField} players`)
+      } catch (e) { cronLog('field-evening', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Tuesday 8:00 PM ET — Early field sync (PGA fields usually published Tue evening)
     cron.schedule('0 20 * * 2', async () => {
       let t = await cronPrisma.tournament.findFirst({
@@ -527,9 +539,10 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('live', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
-    // Every 5 min Thu-Sun — ESPN hole-by-hole scores (only when tournament in progress)
+    // Every 5 min Thu-Sun (offset by 2 min from DataGolf live sync to avoid Prisma pool exhaustion)
+    // DataGolf runs at :00, :05, :10 ... — ESPN runs at :02, :07, :12 ...
     const espnSync = require('./services/espnSync')
-    cron.schedule('*/5 * * * 4,5,6,0', async () => {
+    cron.schedule('2/5 * * * 4,5,6,0', async () => {
       const t = await cronPrisma.tournament.findFirst({
         where: { status: 'IN_PROGRESS' },
         orderBy: { startDate: 'asc' },
