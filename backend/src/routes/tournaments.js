@@ -567,6 +567,7 @@ router.get('/:id/scorecard-status', async (req, res, next) => {
 })
 
 // POST /api/tournaments/:id/trigger-espn-sync - Manually trigger ESPN hole sync (admin diagnostic)
+// Responds immediately, runs sync in background
 router.post('/:id/trigger-espn-sync', async (req, res, next) => {
   try {
     const tournamentId = req.params.id
@@ -575,30 +576,52 @@ router.post('/:id/trigger-espn-sync', async (req, res, next) => {
 
     const espnSync = require('../services/espnSync')
 
-    // Run sync
-    const syncResult = await espnSync.syncHoleScores(tournamentId, prisma)
-
-    // Get updated counts
-    const [roundScoreCount, holeScoreCount] = await Promise.all([
+    // Get current counts before sync
+    const [roundScoreBefore, holeScoreBefore] = await Promise.all([
       prisma.roundScore.count({ where: { tournamentId } }),
       prisma.holeScore.count({ where: { tournamentId } }),
     ])
 
-    // Run aggregation
-    let aggResult = null
-    try {
-      aggResult = await espnSync.aggregateHoleScoresToPerformance(tournamentId, prisma)
-    } catch (e) {
-      aggResult = { error: e.message }
-    }
+    // Run sync + aggregation in background (don't block response)
+    const syncPromise = (async () => {
+      try {
+        const syncResult = await espnSync.syncHoleScores(tournamentId, prisma)
+        console.log(`[ESPN Manual Sync] Done: ${syncResult.matched} matched, ${syncResult.holes} holes`)
+        const aggResult = await espnSync.aggregateHoleScoresToPerformance(tournamentId, prisma)
+        console.log(`[ESPN Manual Sync] Aggregated: ${aggResult.performances} perfs, ${aggResult.rounds} rounds`)
+      } catch (e) {
+        console.error(`[ESPN Manual Sync] Error: ${e.message}`)
+      }
+    })()
 
-    res.json({
-      tournament: tournament.name,
-      espnEventId: tournament.espnEventId,
-      syncResult,
-      aggregation: aggResult,
-      dbCounts: { roundScores: roundScoreCount, holeScores: holeScoreCount },
-    })
+    // If sync finishes in 10s, return full results. Otherwise return accepted status.
+    const raceResult = await Promise.race([
+      syncPromise.then(() => 'done'),
+      new Promise(resolve => setTimeout(() => resolve('timeout'), 10000)),
+    ])
+
+    if (raceResult === 'done') {
+      const [roundScoreCount, holeScoreCount] = await Promise.all([
+        prisma.roundScore.count({ where: { tournamentId } }),
+        prisma.holeScore.count({ where: { tournamentId } }),
+      ])
+      res.json({
+        tournament: tournament.name,
+        espnEventId: tournament.espnEventId,
+        status: 'completed',
+        dbCounts: { roundScores: roundScoreCount, holeScores: holeScoreCount },
+        delta: { roundScores: roundScoreCount - roundScoreBefore, holeScores: holeScoreCount - holeScoreBefore },
+      })
+    } else {
+      // Sync still running in background
+      res.json({
+        tournament: tournament.name,
+        espnEventId: tournament.espnEventId,
+        status: 'accepted',
+        message: 'Sync started in background. Check logs for results.',
+        dbCountsBefore: { roundScores: roundScoreBefore, holeScores: holeScoreBefore },
+      })
+    }
   } catch (error) {
     res.status(500).json({ error: error.message, stack: error.stack?.split('\n').slice(0, 5) })
   }

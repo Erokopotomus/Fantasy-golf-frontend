@@ -214,7 +214,8 @@ async function _syncHoleScores(tournamentId, prisma) {
 
         // Process hole-by-hole data — batch all holes for this round in a single transaction
         if (holeEntries.length > 0 && roundScoreId) {
-          const holeOps = []
+          // Parse hole data into params first (reusable for retry)
+          const holeParams = []
           for (const holeData of holeEntries) {
             const holeNumber = holeData.period
             const strokes = holeData.value != null ? Math.round(holeData.value) : null
@@ -222,7 +223,6 @@ async function _syncHoleScores(tournamentId, prisma) {
 
             if (!holeNumber || holeNumber < 1 || holeNumber > 18) continue
 
-            // Derive par from strokes and scoreType
             let par = null
             let toPar = null
             if (strokes != null && scoreTypeStr) {
@@ -238,25 +238,34 @@ async function _syncHoleScores(tournamentId, prisma) {
               }
             }
 
-            holeOps.push(
-              prisma.holeScore.upsert({
-                where: { roundScoreId_holeNumber: { roundScoreId, holeNumber } },
-                update: { par: par || 4, score: strokes, toPar },
-                create: { roundScoreId, tournamentId, holeNumber, par: par || 4, score: strokes, toPar },
-              })
-            )
+            holeParams.push({ roundScoreId, holeNumber, par: par || 4, score: strokes, toPar })
           }
 
           // Execute all holes for this round in one transaction (max 18 ops)
+          const makeOps = () => holeParams.map(h =>
+            prisma.holeScore.upsert({
+              where: { roundScoreId_holeNumber: { roundScoreId: h.roundScoreId, holeNumber: h.holeNumber } },
+              update: { par: h.par, score: h.score, toPar: h.toPar },
+              create: { roundScoreId: h.roundScoreId, tournamentId, holeNumber: h.holeNumber, par: h.par, score: h.score, toPar: h.toPar },
+            })
+          )
+
           try {
-            await prisma.$transaction(holeOps)
-            totalHoles += holeOps.length
+            await prisma.$transaction(makeOps())
+            totalHoles += holeParams.length
           } catch (batchErr) {
-            // Fallback: try individually if batch fails
-            for (const op of holeOps) {
-              try { await op; totalHoles++ } catch (e) {
+            // Fallback: recreate ops and try individually
+            for (const h of holeParams) {
+              try {
+                await prisma.holeScore.upsert({
+                  where: { roundScoreId_holeNumber: { roundScoreId: h.roundScoreId, holeNumber: h.holeNumber } },
+                  update: { par: h.par, score: h.score, toPar: h.toPar },
+                  create: { roundScoreId: h.roundScoreId, tournamentId, holeNumber: h.holeNumber, par: h.par, score: h.score, toPar: h.toPar },
+                })
+                totalHoles++
+              } catch (e) {
                 holeErrors++
-                if (holeErrors <= 3) console.warn(`[ESPN Sync] HoleScore fallback error: ${e.message}`)
+                if (holeErrors <= 3) console.warn(`[ESPN Sync] HoleScore error: ${e.message}`)
               }
             }
           }
