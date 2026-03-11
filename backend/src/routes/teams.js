@@ -48,8 +48,22 @@ router.get('/:id', authenticate, async (req, res, next) => {
       }
       if (!scoringConfig) scoringConfig = getDefaultScoringConfig(team.league.settings?.scoringPreset || 'standard')
 
-      // Fetch all completed performances for rostered players
+      // Fetch current-season completed performances for rostered players
+      // Season = current calendar year (e.g. 2026 tournaments only)
+      const seasonStart = new Date(`${new Date().getFullYear()}-01-01`)
       const performances = await prisma.performance.findMany({
+        where: {
+          playerId: { in: playerIds },
+          tournament: { status: 'COMPLETED', startDate: { gte: seasonStart } },
+        },
+        include: {
+          tournament: { select: { id: true, name: true, startDate: true, courseId: true, location: true } },
+        },
+        orderBy: { tournament: { startDate: 'desc' } },
+      })
+
+      // Also fetch ALL historical performances for course history (not just this season)
+      const allPerformances = await prisma.performance.findMany({
         where: {
           playerId: { in: playerIds },
           tournament: { status: 'COMPLETED' },
@@ -100,22 +114,26 @@ router.get('/:id', authenticate, async (req, res, next) => {
           status: p.status,
         }))
 
-        // Course history for next tournament
+        // Course history for next tournament (from ALL years, not just this season)
         let courseHistory = null
         if (nextTournament) {
-          // Match by courseId or tournament name pattern (same named event across years)
-          const coursePerfs = performances.filter(p =>
+          const coursePerfs = allPerformances.filter(p =>
             p.playerId === pid && (
               (nextTournament.courseId && p.tournament.courseId === nextTournament.courseId) ||
               p.tournament.name === nextTournament.name
             )
           )
           if (coursePerfs.length > 0) {
-            const finishes = coursePerfs.map(p => p.position).filter(Boolean)
+            // Only count made-cut finishes for avg/best (exclude CUT, WD, DQ)
+            const madeCutFinishes = coursePerfs
+              .filter(p => p.position && p.status !== 'CUT' && p.status !== 'WD' && p.status !== 'DQ')
+              .map(p => p.position)
+            const cuts = coursePerfs.filter(p => p.status === 'CUT').length
             courseHistory = {
               starts: coursePerfs.length,
-              avgFinish: finishes.length > 0 ? Math.round(finishes.reduce((a, b) => a + b, 0) / finishes.length) : null,
-              bestFinish: finishes.length > 0 ? Math.min(...finishes) : null,
+              cuts,
+              avgFinish: madeCutFinishes.length > 0 ? Math.round(madeCutFinishes.reduce((a, b) => a + b, 0) / madeCutFinishes.length) : null,
+              bestFinish: madeCutFinishes.length > 0 ? Math.min(...madeCutFinishes) : null,
             }
           }
         }

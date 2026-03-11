@@ -1232,50 +1232,67 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
 
               return (
                 <>
-                  {/* Line 1: Fantasy stats + field status */}
-                  <div className="flex items-center gap-2.5">
+                  {/* Line 1: Field status + fantasy points + recent form */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     {fieldAnnounced && (
                       playerInField
                         ? <span className="text-field font-medium text-xs">In field</span>
                         : <span className="text-text-muted/60 text-xs">Not in field</span>
                     )}
-                    {player.seasonPts != null && player.seasonPts > 0 && (
-                      <span className="font-mono text-text-secondary">
-                        {player.seasonPts.toLocaleString()}<span className="text-text-muted text-xs"> pts</span>
-                      </span>
-                    )}
-                    {player.avgPts != null && (
-                      <span className="font-mono text-text-secondary">
-                        {player.avgPts}<span className="text-text-muted text-xs"> avg</span>
-                      </span>
-                    )}
-                    {player.last3?.length > 0 && (
-                      <span className="font-mono text-xs">
-                        {player.last3.map((f, i) => (
-                          <span key={i}>
-                            {i > 0 && <span className="text-text-muted/40 mx-0.5">·</span>}
-                            <span className={
-                              f.status === 'CUT' || f.status === 'WD' || f.status === 'DQ' ? 'text-red-400' :
-                              f.position && f.position <= 10 ? 'text-field' :
-                              f.position && f.position <= 25 ? 'text-text-secondary' : 'text-text-muted'
-                            }>{formatFinish(f)}</span>
-                          </span>
-                        ))}
-                      </span>
+                    {player.seasonPts != null && player.seasonPts > 0 ? (
+                      <>
+                        <span className="font-mono font-semibold text-text-primary text-sm">
+                          {player.seasonPts.toLocaleString()}
+                        </span>
+                        <span className="text-text-muted text-xs">pts</span>
+                        {player.avgPts != null && (
+                          <>
+                            <span className="text-text-muted/40">|</span>
+                            <span className="font-mono font-medium text-text-secondary text-sm">
+                              {player.avgPts}
+                            </span>
+                            <span className="text-text-muted text-xs">avg</span>
+                          </>
+                        )}
+                        {player.last3?.length > 0 && (
+                          <>
+                            <span className="text-text-muted/40">|</span>
+                            <span className="text-text-muted text-xs mr-0.5">Last:</span>
+                            {player.last3.map((f, i) => (
+                              <span key={i} className="font-mono text-xs">
+                                {i > 0 && <span className="text-text-muted/40 mx-0.5">·</span>}
+                                <span className={
+                                  f.status === 'CUT' || f.status === 'WD' || f.status === 'DQ' ? 'text-red-400 font-medium' :
+                                  f.position && f.position <= 5 ? 'text-crown font-semibold' :
+                                  f.position && f.position <= 10 ? 'text-field font-medium' :
+                                  f.position && f.position <= 25 ? 'text-text-secondary' : 'text-text-muted'
+                                }>{formatFinish(f)}</span>
+                              </span>
+                            ))}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {player.owgrRank && <span className="font-mono text-xs text-text-secondary">#{player.owgrRank} OWGR</span>}
+                        {player.sgTotal != null && <span className="font-mono text-xs text-text-secondary">SG: {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}</span>}
+                      </>
                     )}
                   </div>
-                  {/* Line 2: Course history (if upcoming tournament) */}
+                  {/* Line 2: Course history */}
                   {player.courseHistory && (
-                    <div className="flex items-center gap-2 text-xs text-text-muted/70">
-                      <span>Course: {player.courseHistory.starts} {player.courseHistory.starts === 1 ? 'start' : 'starts'}</span>
-                      {player.courseHistory.avgFinish && <span>· Avg T{player.courseHistory.avgFinish}</span>}
-                      {player.courseHistory.bestFinish && <span>· Best T{player.courseHistory.bestFinish}</span>}
-                    </div>
-                  )}
-                  {!player.courseHistory && !fieldAnnounced && player.seasonPts === 0 && (
-                    <div className="flex items-center gap-3">
-                      {player.owgrRank && <span className="font-mono text-xs">#{player.owgrRank} OWGR</span>}
-                      {player.sgTotal != null && <span className="font-mono text-xs">SG: {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}</span>}
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className="text-text-muted">⛳</span>
+                      <span className="text-text-secondary font-medium">{player.courseHistory.starts} {player.courseHistory.starts === 1 ? 'start' : 'starts'}</span>
+                      {player.courseHistory.avgFinish && (
+                        <span className="text-text-muted">· avg {player.courseHistory.avgFinish}{player.courseHistory.avgFinish <= 1 ? 'st' : player.courseHistory.avgFinish <= 2 ? 'nd' : player.courseHistory.avgFinish <= 3 ? 'rd' : 'th'}</span>
+                      )}
+                      {player.courseHistory.bestFinish && (
+                        <span className="text-text-muted">· best <span className={player.courseHistory.bestFinish <= 10 ? 'text-field font-medium' : ''}>{player.courseHistory.bestFinish}{player.courseHistory.bestFinish <= 1 ? 'st' : player.courseHistory.bestFinish <= 2 ? 'nd' : player.courseHistory.bestFinish <= 3 ? 'rd' : 'th'}</span></span>
+                      )}
+                      {player.courseHistory.cuts > 0 && (
+                        <span className="text-red-400/70">· {player.courseHistory.cuts} MC</span>
+                      )}
                     </div>
                   )}
                 </>
