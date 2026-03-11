@@ -317,10 +317,12 @@ async function computeWeeklyResults(fantasyWeekId, prisma) {
       const bestWeek = weekPoints.length > 0 ? Math.max(...weekPoints) : null
       const worstWeek = weekPoints.length > 0 ? Math.min(...weekPoints) : null
 
+      const roundedTotal = Math.round(totalSeasonPoints * 100) / 100
+
       await prisma.teamSeason.update({
         where: { id: tr.teamSeasonId },
         data: {
-          totalPoints: Math.round(totalSeasonPoints * 100) / 100,
+          totalPoints: roundedTotal,
           bestWeekPoints: bestWeek,
           worstWeekPoints: worstWeek,
           stats: {
@@ -330,6 +332,12 @@ async function computeWeeklyResults(fantasyWeekId, prisma) {
             weeksPlayed: weekPoints.length,
           },
         },
+      })
+
+      // Sync Team.totalPoints so the league home page displays correct values
+      await prisma.team.update({
+        where: { id: tr.teamId },
+        data: { totalPoints: roundedTotal },
       })
     }
   }

@@ -264,4 +264,15 @@ router.get('/status', async (req, res) => {
   })
 })
 
+// POST /api/sync/process-completed-weeks — Manually trigger fantasy scoring pipeline
+router.post('/process-completed-weeks', async (req, res) => {
+  const fantasyTracker = require('../services/fantasyTracker')
+  try {
+    const results = await fantasyTracker.processCompletedWeeks(prisma)
+    res.json({ success: true, results })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 module.exports = router

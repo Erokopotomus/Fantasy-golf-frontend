@@ -393,11 +393,40 @@ router.get('/:id', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Not authorized to view this league' } })
     }
 
-    // Add standings/rankings
-    const standings = league.teams.map((team, index) => ({
-      ...team,
-      rank: index + 1
-    }))
+    // For golf leagues, compute real standings from Performance records
+    // (Team.totalPoints is not reliably updated by the scoring pipeline)
+    const isNflLeague = (league.sport || '').toUpperCase() === 'NFL'
+    let standings
+
+    if (!isNflLeague) {
+      try {
+        const computed = await calculateLeagueStandings(league.id, prisma)
+        if (computed.standings?.length > 0) {
+          // Merge computed points onto the full team objects (which have roster, user, etc.)
+          const pointsMap = new Map(computed.standings.map(s => [s.teamId, s]))
+          standings = league.teams
+            .map((team) => {
+              const cs = pointsMap.get(team.id)
+              return {
+                ...team,
+                totalPoints: cs ? cs.totalPoints : team.totalPoints,
+              }
+            })
+            .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
+            .map((team, index) => ({ ...team, rank: index + 1 }))
+        }
+      } catch (e) {
+        // Fall through to default standings
+      }
+    }
+
+    if (!standings) {
+      // Default: use Team model values (works for NFL via TeamSeason pipeline)
+      standings = league.teams.map((team, index) => ({
+        ...team,
+        rank: index + 1
+      }))
+    }
 
     res.json({
       league: {
