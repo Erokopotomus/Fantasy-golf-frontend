@@ -108,13 +108,17 @@ router.get('/:id', authenticate, async (req, res, next) => {
           tournamentCount++
         }
 
-        // Last 3 finishes (most recent first)
-        const last3 = playerPerfs.slice(0, 3).map(p => ({
-          position: p.position,
-          status: p.status,
-        }))
+        // Last 3 finishes (most recent first, skip entries with no position)
+        const last3 = playerPerfs
+          .filter(p => p.position || p.status === 'CUT' || p.status === 'WD' || p.status === 'DQ')
+          .slice(0, 3)
+          .map(p => ({
+            position: p.position,
+            status: p.status,
+          }))
 
         // Course history for next tournament (from ALL years, not just this season)
+        // Use RoundScore count to detect missed cuts (status field is unreliable)
         let courseHistory = null
         if (nextTournament) {
           const coursePerfs = allPerformances.filter(p =>
@@ -124,11 +128,23 @@ router.get('/:id', authenticate, async (req, res, next) => {
             )
           )
           if (coursePerfs.length > 0) {
-            // Only count made-cut finishes for avg/best (exclude CUT, WD, DQ)
-            const madeCutFinishes = coursePerfs
-              .filter(p => p.position && p.status !== 'CUT' && p.status !== 'WD' && p.status !== 'DQ')
-              .map(p => p.position)
-            const cuts = coursePerfs.filter(p => p.status === 'CUT').length
+            // Fetch round counts for these performances to detect missed cuts
+            const courseTournamentIds = coursePerfs.map(p => p.tournamentId)
+            const courseRoundCounts = await prisma.roundScore.groupBy({
+              by: ['tournamentId'],
+              where: { playerId: pid, tournamentId: { in: courseTournamentIds } },
+              _count: { roundNumber: true },
+            })
+            const roundCountMap = new Map(courseRoundCounts.map(r => [r.tournamentId, r._count.roundNumber]))
+
+            // A player who played <= 2 rounds likely missed the cut
+            const madeCutPerfs = coursePerfs.filter(p => {
+              if (p.status === 'CUT' || p.status === 'WD' || p.status === 'DQ') return false
+              const rounds = roundCountMap.get(p.tournamentId) || 0
+              return rounds >= 3 // 3+ rounds = made the cut
+            })
+            const madeCutFinishes = madeCutPerfs.map(p => p.position).filter(Boolean)
+            const cuts = coursePerfs.length - madeCutPerfs.length
             courseHistory = {
               starts: coursePerfs.length,
               cuts,
