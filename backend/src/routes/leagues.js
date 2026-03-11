@@ -398,6 +398,8 @@ router.get('/:id', authenticate, async (req, res, next) => {
     const isNflLeague = (league.sport || '').toUpperCase() === 'NFL'
     let standings
 
+    let seasonProgress = null
+
     if (!isNflLeague) {
       try {
         const computed = await calculateLeagueStandings(league.id, prisma)
@@ -414,6 +416,21 @@ router.get('/:id', authenticate, async (req, res, next) => {
             })
             .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
             .map((team, index) => ({ ...team, rank: index + 1 }))
+
+          // Count completed tournaments for progress display
+          const completedCount = computed.weeklyResults?.length || 0
+
+          // Count total non-alternate tournaments remaining in season
+          const seasonRange = league.settings?.seasonRange || league.settings?.formatSettings?.seasonRange
+          const totalWhere = { status: { in: ['UPCOMING', 'IN_PROGRESS', 'COMPLETED'] }, isAlternate: false }
+          if (seasonRange?.startDate) totalWhere.startDate = { gte: new Date(seasonRange.startDate) }
+          if (seasonRange?.endDate) totalWhere.endDate = { lte: new Date(seasonRange.endDate) }
+          const totalTournaments = await prisma.tournament.count({ where: totalWhere })
+
+          seasonProgress = {
+            completed: completedCount,
+            total: totalTournaments || completedCount,
+          }
         }
       } catch (e) {
         // Fall through to default standings
@@ -431,7 +448,8 @@ router.get('/:id', authenticate, async (req, res, next) => {
     res.json({
       league: {
         ...league,
-        standings
+        standings,
+        seasonProgress,
       }
     })
   } catch (error) {

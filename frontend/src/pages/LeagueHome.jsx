@@ -861,7 +861,11 @@ const LeagueHome = () => {
                         <th className="pb-2 text-left">Team</th>
                         <th className="pb-2 text-left">Owner</th>
                         <th className="pb-2 text-center">Players</th>
-                        <th className="pb-2 text-center">W-L</th>
+                        {isNflLeague || isHeadToHead ? (
+                          <th className="pb-2 text-center">W-L</th>
+                        ) : (
+                          <th className="pb-2 text-center">Season</th>
+                        )}
                         {!isNflLeague && <th className="pb-2 text-center">This Week</th>}
                         <th className="pb-2 text-right">Points</th>
                       </tr>
@@ -924,7 +928,15 @@ const LeagueHome = () => {
                               {rosterCount || '–'}
                             </td>
                             <td className="py-3 text-center text-text-secondary">
-                              {team.wins != null ? `${team.wins}-${team.losses || 0}` : '–'}
+                              {isNflLeague || isHeadToHead ? (
+                                team.wins != null ? `${team.wins}-${team.losses || 0}` : '–'
+                              ) : (
+                                league.seasonProgress ? (
+                                  <span className="font-mono text-xs">
+                                    {league.seasonProgress.completed}<span className="text-text-muted">/{league.seasonProgress.total}</span>
+                                  </span>
+                                ) : '–'
+                              )}
                             </td>
                             {!isNflLeague && (() => {
                               const liveTeam = liveTeams?.find(lt => lt.teamId === team.id)
