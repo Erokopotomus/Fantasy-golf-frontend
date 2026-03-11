@@ -34,6 +34,7 @@ function flattenRosterEntry(entry, isNfl = false) {
   if (isNfl) {
     return { ...base, nflPosition: p.nflPosition, nflTeam: p.nflTeamAbbr, countryFlag: '' }
   }
+  const fs = entry.fantasyStats || {}
   return {
     ...base,
     countryFlag: p.countryFlag || '',
@@ -47,6 +48,12 @@ function flattenRosterEntry(entry, isNfl = false) {
     wins: p.wins,
     top5s: p.top5s,
     top10s: p.top10s,
+    // Fantasy stats from backend enrichment
+    seasonPts: fs.seasonPts ?? null,
+    avgPts: fs.avgPts ?? null,
+    eventsPlayed: fs.eventsPlayed ?? 0,
+    last3: fs.last3 || [],
+    courseHistory: fs.courseHistory || null,
   }
 }
 
@@ -1204,37 +1211,73 @@ const PlayerRow = ({ player, isActive, isEditing, isDragging, isLocked = false, 
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-3 text-sm text-text-muted">
+          <div className="flex flex-col gap-0.5 text-sm text-text-muted">
             {isNfl ? (
-              <>
+              <div className="flex items-center gap-3">
                 {player.nflPosition && <span className="font-semibold text-text-secondary">{player.nflPosition}</span>}
                 {player.nflTeam && <span>{player.nflTeam}</span>}
-              </>
+              </div>
             ) : (() => {
               // Context-aware golf stats
               const thisWeekTourney = scheduleBadge?.tournaments?.[0]
               const fieldAnnounced = thisWeekTourney && (thisWeekTourney.fieldSize > 0 || thisWeekTourney.field?.length > 0)
               const playerInField = fieldAnnounced && thisWeekTourney.field?.some(f => f.playerId === player.id)
 
-              if (fieldAnnounced) {
-                // Tournament week: show field status + tournament name
-                return playerInField ? (
-                  <>
-                    <span className="text-field font-medium">In field</span>
-                    <span className="text-text-muted/80">{thisWeekTourney.shortName || thisWeekTourney.name}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-text-muted/60">Not in field</span>
-                    {player.owgrRank && <span className="font-mono">#{player.owgrRank} OWGR</span>}
-                  </>
-                )
+              const formatFinish = (f) => {
+                if (f.status === 'CUT') return 'MC'
+                if (f.status === 'WD') return 'WD'
+                if (f.status === 'DQ') return 'DQ'
+                return f.position ? `T${f.position}` : '–'
               }
-              // Off-week: OWGR + SG
+
               return (
                 <>
-                  {player.owgrRank && <span className="font-mono">#{player.owgrRank} OWGR</span>}
-                  {player.sgTotal != null && <span className="font-mono">SG: {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}</span>}
+                  {/* Line 1: Fantasy stats + field status */}
+                  <div className="flex items-center gap-2.5">
+                    {fieldAnnounced && (
+                      playerInField
+                        ? <span className="text-field font-medium text-xs">In field</span>
+                        : <span className="text-text-muted/60 text-xs">Not in field</span>
+                    )}
+                    {player.seasonPts != null && player.seasonPts > 0 && (
+                      <span className="font-mono text-text-secondary">
+                        {player.seasonPts.toLocaleString()}<span className="text-text-muted text-xs"> pts</span>
+                      </span>
+                    )}
+                    {player.avgPts != null && (
+                      <span className="font-mono text-text-secondary">
+                        {player.avgPts}<span className="text-text-muted text-xs"> avg</span>
+                      </span>
+                    )}
+                    {player.last3?.length > 0 && (
+                      <span className="font-mono text-xs">
+                        {player.last3.map((f, i) => (
+                          <span key={i}>
+                            {i > 0 && <span className="text-text-muted/40 mx-0.5">·</span>}
+                            <span className={
+                              f.status === 'CUT' || f.status === 'WD' || f.status === 'DQ' ? 'text-red-400' :
+                              f.position && f.position <= 10 ? 'text-field' :
+                              f.position && f.position <= 25 ? 'text-text-secondary' : 'text-text-muted'
+                            }>{formatFinish(f)}</span>
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                  </div>
+                  {/* Line 2: Course history (if upcoming tournament) */}
+                  {player.courseHistory && (
+                    <div className="flex items-center gap-2 text-xs text-text-muted/70">
+                      <span>Course: {player.courseHistory.starts} {player.courseHistory.starts === 1 ? 'start' : 'starts'}</span>
+                      {player.courseHistory.avgFinish && <span>· Avg T{player.courseHistory.avgFinish}</span>}
+                      {player.courseHistory.bestFinish && <span>· Best T{player.courseHistory.bestFinish}</span>}
+                    </div>
+                  )}
+                  {!player.courseHistory && !fieldAnnounced && player.seasonPts === 0 && (
+                    <div className="flex items-center gap-3">
+                      {player.owgrRank && <span className="font-mono text-xs">#{player.owgrRank} OWGR</span>}
+                      {player.sgTotal != null && <span className="font-mono text-xs">SG: {player.sgTotal > 0 ? '+' : ''}{player.sgTotal.toFixed(1)}</span>}
+                    </div>
+                  )}
                 </>
               )
             })()}

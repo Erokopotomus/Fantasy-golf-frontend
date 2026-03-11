@@ -8,6 +8,7 @@ const { recordEvent: recordOpinionEvent } = require('../services/opinionTimeline
 
 const router = express.Router()
 const prisma = require('../lib/prisma.js')
+const { calculateFantasyPoints, getDefaultScoringConfig } = require('../services/scoringService')
 
 // GET /api/teams/:id - Get team details
 router.get('/:id', authenticate, async (req, res, next) => {
@@ -19,7 +20,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
           select: { id: true, name: true, avatar: true }
         },
         league: {
-          select: { id: true, name: true, format: true, status: true }
+          select: { id: true, name: true, format: true, status: true, sport: true, settings: true, scoringSystemId: true }
         },
         roster: {
           where: { isActive: true },
@@ -32,6 +33,106 @@ router.get('/:id', authenticate, async (req, res, next) => {
 
     if (!team) {
       return res.status(404).json({ error: { message: 'Team not found' } })
+    }
+
+    // Enrich golf roster players with fantasy stats + course history
+    const isNfl = (team.league.sport || '').toUpperCase() === 'NFL'
+    if (!isNfl && team.roster.length > 0) {
+      const playerIds = team.roster.map(r => r.playerId)
+
+      // Get scoring config for this league
+      let scoringConfig = team.league.settings?.scoringConfig
+      if (!scoringConfig && team.league.scoringSystemId) {
+        const ss = await prisma.scoringSystem.findUnique({ where: { id: team.league.scoringSystemId } })
+        scoringConfig = ss?.rules
+      }
+      if (!scoringConfig) scoringConfig = getDefaultScoringConfig(team.league.settings?.scoringPreset || 'standard')
+
+      // Fetch all completed performances for rostered players
+      const performances = await prisma.performance.findMany({
+        where: {
+          playerId: { in: playerIds },
+          tournament: { status: 'COMPLETED' },
+        },
+        include: {
+          tournament: { select: { id: true, name: true, startDate: true, courseId: true, location: true } },
+        },
+        orderBy: { tournament: { startDate: 'desc' } },
+      })
+
+      // Batch fetch round scores for bonus calculations
+      const perfTournamentIds = [...new Set(performances.map(p => p.tournamentId))]
+      const allRoundScores = await prisma.roundScore.findMany({
+        where: { playerId: { in: playerIds }, tournamentId: { in: perfTournamentIds } },
+      })
+      const rsIndex = {}
+      for (const rs of allRoundScores) {
+        const key = rs.tournamentId + ':' + rs.playerId
+        if (!rsIndex[key]) rsIndex[key] = []
+        rsIndex[key].push(rs)
+      }
+
+      // Find the upcoming/current tournament for course history
+      const nextTournament = await prisma.tournament.findFirst({
+        where: { status: { in: ['UPCOMING', 'IN_PROGRESS'] }, isAlternate: false },
+        orderBy: { startDate: 'asc' },
+        select: { id: true, name: true, courseId: true, location: true },
+      })
+
+      // Build per-player stats
+      const playerStatsMap = {}
+      for (const pid of playerIds) {
+        const playerPerfs = performances.filter(p => p.playerId === pid)
+
+        // Calculate fantasy points per tournament
+        let seasonTotal = 0
+        let tournamentCount = 0
+        for (const perf of playerPerfs) {
+          const perfWithRounds = { ...perf, roundScores: rsIndex[perf.tournamentId + ':' + pid] || [] }
+          const { total } = calculateFantasyPoints(perfWithRounds, scoringConfig)
+          seasonTotal += total
+          tournamentCount++
+        }
+
+        // Last 3 finishes (most recent first)
+        const last3 = playerPerfs.slice(0, 3).map(p => ({
+          position: p.position,
+          status: p.status,
+        }))
+
+        // Course history for next tournament
+        let courseHistory = null
+        if (nextTournament) {
+          // Match by courseId or tournament name pattern (same named event across years)
+          const coursePerfs = performances.filter(p =>
+            p.playerId === pid && (
+              (nextTournament.courseId && p.tournament.courseId === nextTournament.courseId) ||
+              p.tournament.name === nextTournament.name
+            )
+          )
+          if (coursePerfs.length > 0) {
+            const finishes = coursePerfs.map(p => p.position).filter(Boolean)
+            courseHistory = {
+              starts: coursePerfs.length,
+              avgFinish: finishes.length > 0 ? Math.round(finishes.reduce((a, b) => a + b, 0) / finishes.length) : null,
+              bestFinish: finishes.length > 0 ? Math.min(...finishes) : null,
+            }
+          }
+        }
+
+        playerStatsMap[pid] = {
+          seasonPts: Math.round(seasonTotal * 100) / 100,
+          avgPts: tournamentCount > 0 ? Math.round((seasonTotal / tournamentCount) * 10) / 10 : null,
+          eventsPlayed: tournamentCount,
+          last3,
+          courseHistory,
+        }
+      }
+
+      // Attach stats to each roster entry
+      for (const entry of team.roster) {
+        entry.fantasyStats = playerStatsMap[entry.playerId] || null
+      }
     }
 
     res.json({ team })
