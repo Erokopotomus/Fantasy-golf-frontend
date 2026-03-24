@@ -9,7 +9,7 @@ import LandingFooter from '../components/landing/LandingFooter'
 
 export default function Landing() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#07080C]">
       <HeroSection />
       <ProblemSection />
       <AiReframeSection />
