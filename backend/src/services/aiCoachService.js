@@ -503,7 +503,7 @@ async function generateGolfScoutReport(tournamentId) {
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
     include: {
-      course: { select: { name: true, par: true, yardage: true, location: true } },
+      course: { select: { name: true, nickname: true, par: true, yardage: true, city: true, state: true, country: true } },
       performances: {
         include: { player: { select: { id: true, name: true, owgr: true, country: true } } },
         take: 30,
@@ -516,8 +516,8 @@ async function generateGolfScoutReport(tournamentId) {
   const prompt = `Generate a golf tournament scouting report.
 
 Tournament: ${tournament.name}
-Course: ${tournament.course?.name || 'TBD'} (Par ${tournament.course?.par || 72}, ${tournament.course?.yardage || 'N/A'} yards)
-Location: ${tournament.course?.location || 'TBD'}
+Course: ${tournament.course?.name || 'TBD'}${tournament.course?.nickname ? ` — ${tournament.course.nickname}` : ''} (Par ${tournament.course?.par || 72}, ${tournament.course?.yardage || 'N/A'} yards)
+Location: ${[tournament.course?.city, tournament.course?.state, tournament.course?.country].filter(Boolean).join(', ') || tournament.location || 'TBD'}
 Dates: ${tournament.startDate} to ${tournament.endDate}
 Field size: ${tournament.performances?.length || 0} players confirmed
 

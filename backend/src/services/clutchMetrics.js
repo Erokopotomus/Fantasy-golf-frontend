@@ -405,12 +405,12 @@ async function computeCourseFit(playerId, tournamentId, prisma) {
     return null
   }
 
-  // Get player SG percentiles (need 8+ events for reliable data)
+  // Get player SG profile from DataGolf — compute FIT for anyone with SG data
   const player = await prisma.player.findUnique({
     where: { id: playerId },
     select: { sgOffTee: true, sgApproach: true, sgAroundGreen: true, sgPutting: true, sgTotal: true, events: true },
   })
-  if (!player || player.events < 8) return null
+  if (!player) return null
   if (player.sgOffTee == null || player.sgApproach == null || player.sgAroundGreen == null || player.sgPutting == null) return null
 
   // 8A — Recent-form SG blend: 60% recent-6 + 40% career
