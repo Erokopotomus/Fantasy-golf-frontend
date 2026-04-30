@@ -683,15 +683,12 @@ async function syncLiveScoring(tournamentDgId, prisma) {
       status: entry.status === 'cut' ? 'CUT' : entry.status === 'wd' ? 'WD' : 'ACTIVE',
     }
     if (position != null) perfUpdate.position = position
-    // DataGolf uses uppercase R1, R2, R3, R4 for round scores
-    // Clear rounds beyond current to prevent stale data from previous events
+    // DataGolf uses uppercase R1, R2, R3, R4 for round scores. Always write
+    // exactly what the API currently returns — including null — so a transient
+    // bad response can't leave completed-tournament data persisted on a
+    // Performance row mid-event. RoundScore is the canonical archival source.
     for (let r = 1; r <= 4; r++) {
-      const roundScore = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
-      if (roundScore != null) {
-        perfUpdate[`round${r}`] = roundScore
-      } else if (r > currentRound) {
-        perfUpdate[`round${r}`] = null
-      }
+      perfUpdate[`round${r}`] = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
     }
 
     perfOps.push(
