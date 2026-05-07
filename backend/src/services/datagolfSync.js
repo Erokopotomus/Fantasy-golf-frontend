@@ -454,6 +454,21 @@ async function linkTournamentsToCourses(prisma) {
 
 // ─── 2c. Sync Field & Tee Times ────────────────────────────────────────────
 
+/** Best-effort fuzzy match between two tournament names (case/whitespace-insensitive token overlap).
+ *  Used to detect when DataGolf returns a different event than the one we asked for —
+ *  e.g. /field-updates?event_id=553 (Myrtle Beach) returning Truist Championship data
+ *  because DG's PGA feed only covers the primary tour event each week. */
+function tournamentNamesMatch(dbName, dgName) {
+  if (!dbName || !dgName) return true // can't validate, allow
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const a = new Set(norm(dbName).split(/\s+/).filter(t => t.length > 2))
+  const b = new Set(norm(dgName).split(/\s+/).filter(t => t.length > 2))
+  if (a.size === 0 || b.size === 0) return true
+  // Match if ANY meaningful token appears in both — covers branding diffs ("ONEflight Myrtle Beach Classic" vs "Myrtle Beach Classic")
+  for (const tok of a) if (b.has(tok)) return true
+  return false
+}
+
 async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
   console.log(`[Sync] Syncing field for tournament DG ID: ${tournamentDgId}`)
 
@@ -465,6 +480,15 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
     where: { datagolfId: String(tournamentDgId) },
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
+
+  // Guard: if DG response is for a different event than we asked for, abort.
+  // (DG's PGA feed sometimes returns the primary tour event when queried for an
+  // opposite-field event — we'd silently overwrite our DB with the wrong field.)
+  const dgEventName = fieldData?.event_name
+  if (dgEventName && !tournamentNamesMatch(tournament.name, dgEventName)) {
+    console.warn(`[Sync] DG returned "${dgEventName}" when we asked for "${tournament.name}" (dg ${tournamentDgId}). Aborting field sync — DG likely doesn't cover this event.`)
+    return { playersInField: 0, teeTimes: 0, dfsSalaries: 0, skipped: 'event-mismatch' }
+  }
 
   // Load all players indexed by datagolfId (ONE query)
   const allPlayers = await prisma.player.findMany({
@@ -623,6 +647,14 @@ async function syncLiveScoring(tournamentDgId, prisma) {
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
 
+  // Guard: DG's in-play feed may return the primary tour event when queried
+  // for an opposite-field event_id. Abort rather than poison the leaderboard.
+  const dgEventName = liveData?.info?.event_name || liveData?.event_name
+  if (dgEventName && !tournamentNamesMatch(tournament.name, dgEventName)) {
+    console.warn(`[Sync] DG live returned "${dgEventName}" when we asked for "${tournament.name}" (dg ${tournamentDgId}). Aborting — DG likely doesn't cover this event live.`)
+    return { updated: 0, skipped: 0, tournamentStatus: tournament.status, aborted: 'event-mismatch' }
+  }
+
   // Load all players indexed by datagolfId (ONE query)
   const allPlayers = await prisma.player.findMany({
     where: { datagolfId: { not: null } },
@@ -630,8 +662,25 @@ async function syncLiveScoring(tournamentDgId, prisma) {
   })
   const playerMap = new Map(allPlayers.map((p) => [p.datagolfId, p.id]))
 
+  // Constrain live updates to players already in the tournament field.
+  // DataGolf's /preds/in-play can return the primary tour event's leaderboard
+  // when called with an opposite-field event_id, which previously polluted
+  // Performance rows for the wrong tournament. Field is established by
+  // syncFieldAndTeeTimesForTournament; if a player isn't in the field, we
+  // don't write live data for them.
+  const fieldPerfs = await prisma.performance.findMany({
+    where: { tournamentId: tournament.id },
+    select: { playerId: true },
+  })
+  const fieldPlayerIds = new Set(fieldPerfs.map(p => p.playerId))
+  if (fieldPerfs.length === 0) {
+    console.warn(`[Sync] No field players for ${tournament.name} — run field sync first. Skipping live update.`)
+    return { updated: 0, skipped: 0, tournamentStatus: tournament.status }
+  }
+
   const players = liveData?.data || liveData?.players || liveData || []
   let maxRound = 1
+  let skippedNotInField = 0
 
   const liveScoreOps = []
   const perfOps = []
@@ -640,6 +689,10 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     const dgId = String(entry.dg_id)
     const playerId = playerMap.get(dgId)
     if (!playerId) continue
+    if (!fieldPlayerIds.has(playerId)) {
+      skippedNotInField++
+      continue
+    }
 
     const currentRound = entry.current_round || entry.round || 1
     if (currentRound > maxRound) maxRound = currentRound
@@ -715,7 +768,7 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     data: { status: 'IN_PROGRESS', currentRound: effectiveRound },
   })
 
-  console.log(`[Sync] Live scoring done: ${liveScoreOps.length} players updated, round ${effectiveRound} (api=${maxRound}, date=${dateBasedRound})`)
+  console.log(`[Sync] Live scoring done: ${liveScoreOps.length} players updated, ${skippedNotInField} skipped (not in field), round ${effectiveRound} (api=${maxRound}, date=${dateBasedRound})`)
 
   // Clean up stale LiveScore records (data from previous events that leaked in)
   const deletedStale = await prisma.liveScore.deleteMany({
@@ -728,7 +781,7 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     console.log(`[Sync] Cleaned up ${deletedStale.count} stale LiveScore records (currentRound > ${effectiveRound})`)
   }
 
-  return { updated: liveScoreOps.length, tournamentStatus: 'IN_PROGRESS' }
+  return { updated: liveScoreOps.length, skipped: skippedNotInField, tournamentStatus: 'IN_PROGRESS' }
 }
 
 // ─── 2e. Sync Pre-Tournament Predictions ────────────────────────────────────
