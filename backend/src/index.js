@@ -346,48 +346,57 @@ httpServer.listen(PORT, () => {
     const cronPrisma = require('./lib/prisma')
     const sync = require('./services/datagolfSync')
 
-    /** Find the active or next upcoming tournament datagolfId (prefer non-alternate) */
+    /** Find the active or next upcoming tournament datagolfId (prefer non-alternate). Single primary event. */
     async function getActiveTournamentDgId() {
       let t = await cronPrisma.tournament.findFirst({
         where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null }, isAlternate: false },
-        orderBy: { startDate: 'asc' },
+        orderBy: [{ startDate: 'asc' }, { isSignature: 'desc' }, { isMajor: 'desc' }, { id: 'asc' }],
         select: { datagolfId: true, status: true, startDate: true },
       })
       if (!t) {
         t = await cronPrisma.tournament.findFirst({
           where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
-          orderBy: { startDate: 'asc' },
+          orderBy: [{ startDate: 'asc' }, { isSignature: 'desc' }, { isMajor: 'desc' }, { id: 'asc' }],
           select: { datagolfId: true, status: true, startDate: true },
         })
       }
       return t
     }
 
+    /** Find ALL same-week active tournaments — used by syncs that must cover concurrent events
+     *  (e.g. PGA signature + opposite-field). Returns earliest-week events, not just one. */
+    async function getActiveTournamentDgIds() {
+      const candidates = await cronPrisma.tournament.findMany({
+        where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
+        orderBy: { startDate: 'asc' },
+        select: { id: true, name: true, datagolfId: true, status: true, startDate: true },
+        take: 10,
+      })
+      if (candidates.length === 0) return []
+      const earliestDate = candidates[0].startDate?.toISOString?.()?.split('T')[0]
+      return candidates.filter(t => t.startDate?.toISOString?.()?.split('T')[0] === earliestDate)
+    }
+
     function cronLog(job, msg) {
       console.log(`[Cron:${job}] ${new Date().toISOString()} — ${msg}`)
     }
 
-    // ─── Startup: sync field for next upcoming tournament so schedule dots have data ───
+    // ─── Startup: sync field for ALL same-week upcoming tournaments ───
     ;(async () => {
       try {
-        let t = await cronPrisma.tournament.findFirst({
-          where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null }, isAlternate: false },
-          orderBy: { startDate: 'asc' },
-          select: { datagolfId: true, status: true, name: true },
-        })
-        if (!t) {
-          t = await cronPrisma.tournament.findFirst({
-            where: { status: { in: ['IN_PROGRESS', 'UPCOMING'] }, datagolfId: { not: null } },
-            orderBy: { startDate: 'asc' },
-            select: { datagolfId: true, status: true, name: true },
-          })
-        }
-        if (t?.datagolfId) {
-          cronLog('startup-field', `Syncing field for ${t.name} (${t.datagolfId})`)
-          const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
-          cronLog('startup-field', `Done: ${result.playersInField} players in field`)
-        } else {
+        const events = await getActiveTournamentDgIds()
+        if (events.length === 0) {
           cronLog('startup-field', 'No upcoming tournament with datagolfId found')
+          return
+        }
+        for (const t of events) {
+          cronLog('startup-field', `Syncing field for ${t.name} (${t.datagolfId})`)
+          try {
+            const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
+            cronLog('startup-field', `Done: ${result.playersInField} players in ${t.name}`)
+          } catch (e) {
+            cronLog('startup-field', `Error syncing ${t.name}: ${e.message}`)
+          }
         }
       } catch (e) {
         cronLog('startup-field', `Error: ${e.message}`)
@@ -412,72 +421,31 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('schedule', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // Helper: run field sync for every same-week active event (handles concurrent PGA events)
+    async function runFieldSyncForAllActive(tag) {
+      const events = await getActiveTournamentDgIds()
+      if (events.length === 0) return cronLog(tag, 'No active tournament')
+      for (const t of events) {
+        cronLog(tag, `Syncing field for ${t.name} (${t.datagolfId})`)
+        try {
+          const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
+          cronLog(tag, `Done: ${result.playersInField} players in ${t.name}`)
+        } catch (e) { cronLog(tag, `Error syncing ${t.name}: ${e.message}`) }
+      }
+    }
+
     // Daily 7:00 AM ET — Sync field updates (Thu-Sun = event days)
-    cron.schedule('0 7 * * 4,5,6,0', async () => {
-      const t = await getActiveTournamentDgId()
-      if (!t?.datagolfId) return cronLog('field', 'No active tournament')
-      cronLog('field', `Syncing field for ${t.datagolfId}`)
-      try {
-        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
-        cronLog('field', `Done: ${result.playersInField} players`)
-      } catch (e) { cronLog('field', `Error: ${e.message}`) }
-    }, { timezone: 'America/New_York' })
+    cron.schedule('0 7 * * 4,5,6,0', () => runFieldSyncForAllActive('field'), { timezone: 'America/New_York' })
 
     // Daily 8:00 PM ET Fri-Sat — Evening field sync to pick up next-day tee times
     // (R3/R4 pairings released evening before)
-    cron.schedule('0 20 * * 5,6', async () => {
-      const t = await getActiveTournamentDgId()
-      if (!t?.datagolfId) return cronLog('field-evening', 'No active tournament')
-      cronLog('field-evening', `Evening tee time sync for ${t.datagolfId}`)
-      try {
-        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
-        cronLog('field-evening', `Done: ${result.playersInField} players`)
-      } catch (e) { cronLog('field-evening', `Error: ${e.message}`) }
-    }, { timezone: 'America/New_York' })
+    cron.schedule('0 20 * * 5,6', () => runFieldSyncForAllActive('field-evening'), { timezone: 'America/New_York' })
 
     // Tuesday 8:00 PM ET — Early field sync (PGA fields usually published Tue evening)
-    cron.schedule('0 20 * * 2', async () => {
-      let t = await cronPrisma.tournament.findFirst({
-        where: { status: 'UPCOMING', datagolfId: { not: null }, isAlternate: false },
-        orderBy: { startDate: 'asc' },
-        select: { datagolfId: true },
-      })
-      if (!t) {
-        t = await cronPrisma.tournament.findFirst({
-          where: { status: 'UPCOMING', datagolfId: { not: null } },
-          orderBy: { startDate: 'asc' },
-          select: { datagolfId: true },
-        })
-      }
-      if (!t?.datagolfId) return cronLog('earlyField', 'No upcoming tournament')
-      cronLog('earlyField', `Tue 8PM — Syncing field for ${t.datagolfId}`)
-      try {
-        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
-        cronLog('earlyField', `Done: ${result.playersInField} players`)
-      } catch (e) { cronLog('earlyField', `Error: ${e.message}`) }
-    }, { timezone: 'America/New_York' })
+    cron.schedule('0 20 * * 2', () => runFieldSyncForAllActive('earlyField'), { timezone: 'America/New_York' })
 
     // Wednesday 8:00 AM ET — Catch late field updates
-    cron.schedule('0 8 * * 3', async () => {
-      let t = await cronPrisma.tournament.findFirst({
-        where: { status: 'UPCOMING', datagolfId: { not: null }, isAlternate: false },
-        orderBy: { startDate: 'asc' },
-        select: { datagolfId: true },
-      })
-      if (!t) {
-        t = await cronPrisma.tournament.findFirst({
-          where: { status: 'UPCOMING', datagolfId: { not: null } },
-          orderBy: { startDate: 'asc' },
-          select: { datagolfId: true },
-        })
-      }
-      if (!t?.datagolfId) return cronLog('earlyField', 'No upcoming tournament')
-      cronLog('earlyField', `Wed 8AM — Syncing field for ${t.datagolfId}`)
-      try {
-        const result = await sync.syncFieldAndTeeTimesForTournament(t.datagolfId, cronPrisma)
-        cronLog('earlyField', `Done: ${result.playersInField} players`)
-      } catch (e) { cronLog('earlyField', `Error: ${e.message}`) }
-    }, { timezone: 'America/New_York' })
+    cron.schedule('0 8 * * 3', () => runFieldSyncForAllActive('earlyField'), { timezone: 'America/New_York' })
 
     // ─── Tier 1 Public Data Sources (Phase 4E) ────────────────────────────────
 
@@ -522,43 +490,49 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('predictions', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
-    // Every 5 min Thu-Sun — Live scoring (only when tournament in progress)
+    // Every 5 min Thu-Sun — Live scoring for ALL same-week IN_PROGRESS events
     cron.schedule('*/5 * * * 4,5,6,0', async () => {
-      const t = await getActiveTournamentDgId()
-      if (!t || t.status !== 'IN_PROGRESS') return
-      cronLog('live', `Syncing live scoring for ${t.datagolfId}`)
-      try {
-        const result = await sync.syncLiveScoring(t.datagolfId, cronPrisma)
-        cronLog('live', `Done: ${result.updated} players`)
-        // Check roster alerts after scoring update
+      const events = (await getActiveTournamentDgIds()).filter(t => t.status === 'IN_PROGRESS')
+      if (events.length === 0) return
+      for (const t of events) {
+        cronLog('live', `Syncing live scoring for ${t.name} (${t.datagolfId})`)
         try {
-          const { checkRosterAlerts } = require('./services/engagementAlerts')
-          const alertResult = await checkRosterAlerts(cronPrisma)
-          if (alertResult.alerts > 0) cronLog('live', `Sent ${alertResult.alerts} roster alerts`)
-        } catch (alertErr) { cronLog('live', `Roster alerts error: ${alertErr.message}`) }
-      } catch (e) { cronLog('live', `Error: ${e.message}`) }
+          const result = await sync.syncLiveScoring(t.datagolfId, cronPrisma)
+          cronLog('live', `Done: ${result.updated} players in ${t.name}`)
+        } catch (e) { cronLog('live', `Error syncing ${t.name}: ${e.message}`) }
+      }
+      // Check roster alerts once after all events updated
+      try {
+        const { checkRosterAlerts } = require('./services/engagementAlerts')
+        const alertResult = await checkRosterAlerts(cronPrisma)
+        if (alertResult.alerts > 0) cronLog('live', `Sent ${alertResult.alerts} roster alerts`)
+      } catch (alertErr) { cronLog('live', `Roster alerts error: ${alertErr.message}`) }
     }, { timezone: 'America/New_York' })
 
     // Every 5 min Thu-Sun (offset by 2 min from DataGolf live sync to avoid Prisma pool exhaustion)
     // DataGolf runs at :00, :05, :10 ... — ESPN runs at :02, :07, :12 ...
     const espnSync = require('./services/espnSync')
     cron.schedule('2/5 * * * 4,5,6,0', async () => {
-      const t = await cronPrisma.tournament.findFirst({
-        where: { status: 'IN_PROGRESS' },
+      const events = await cronPrisma.tournament.findMany({
+        where: { status: 'IN_PROGRESS', espnEventId: { not: null } },
         orderBy: { startDate: 'asc' },
-        select: { id: true, name: true, espnEventId: true },
+        select: { id: true, name: true, espnEventId: true, startDate: true },
       })
-      if (!t) return cronLog('espn', 'No IN_PROGRESS tournament found')
-      cronLog('espn', `Syncing ESPN hole scores for "${t.name}" (id=${t.id}, espnEventId=${t.espnEventId})`)
-      try {
-        const result = await espnSync.syncHoleScores(t.id, cronPrisma)
-        cronLog('espn', `Done: ${result.matched} players, ${result.holes} holes${result.error ? ` (error: ${result.error})` : ''}`)
-        // Aggregate hole data into Performance + RoundScore for fantasy scoring
-        const aggResult = await espnSync.aggregateHoleScoresToPerformance(t.id, cronPrisma)
-        cronLog('espn', `Aggregated: ${aggResult.performances} performances, ${aggResult.rounds} rounds`)
-      } catch (e) {
-        cronLog('espn', `ERROR: ${e.message}`)
-        console.error('[ESPN Sync] Full error:', e.stack || e)
+      if (events.length === 0) return cronLog('espn', 'No IN_PROGRESS tournament with espnEventId')
+      // Limit to same-week events
+      const earliestDate = events[0].startDate?.toISOString?.()?.split('T')[0]
+      const sameWeek = events.filter(t => t.startDate?.toISOString?.()?.split('T')[0] === earliestDate)
+      for (const t of sameWeek) {
+        cronLog('espn', `Syncing ESPN hole scores for "${t.name}" (id=${t.id}, espnEventId=${t.espnEventId})`)
+        try {
+          const result = await espnSync.syncHoleScores(t.id, cronPrisma)
+          cronLog('espn', `Done: ${result.matched} players, ${result.holes} holes${result.error ? ` (error: ${result.error})` : ''}`)
+          const aggResult = await espnSync.aggregateHoleScoresToPerformance(t.id, cronPrisma)
+          cronLog('espn', `Aggregated: ${aggResult.performances} performances, ${aggResult.rounds} rounds`)
+        } catch (e) {
+          cronLog('espn', `ERROR for ${t.name}: ${e.message}`)
+          console.error('[ESPN Sync] Full error:', e.stack || e)
+        }
       }
     }, { timezone: 'America/New_York' })
 

@@ -66,7 +66,7 @@ router.get('/current', async (req, res, next) => {
         return d === earliest
       })
 
-      // Sort: IN_PROGRESS first, then non-alternate > major > signature > higher purse
+      // Sort: IN_PROGRESS first, then non-alternate > major > signature > higher purse > stable id
       sameWeek.sort((a, b) => {
         // Prefer IN_PROGRESS over UPCOMING
         if (a.status !== b.status) {
@@ -82,7 +82,13 @@ router.get('/current', async (req, res, next) => {
         // Signature events next
         if ((a.isSignature || false) !== (b.isSignature || false)) return b.isSignature ? 1 : -1
         // Higher purse wins
-        return (b.purse || 0) - (a.purse || 0)
+        if ((a.purse || 0) !== (b.purse || 0)) return (b.purse || 0) - (a.purse || 0)
+        // Tournament with a populated field (already synced) wins over an empty one
+        const aField = a.fieldSize || 0
+        const bField = b.fieldSize || 0
+        if (aField !== bField) return bField - aField
+        // Final stable tiebreaker so we never depend on Postgres heap order
+        return a.id < b.id ? -1 : 1
       })
 
       tournament = sameWeek[0]
