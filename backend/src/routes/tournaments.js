@@ -412,8 +412,12 @@ router.get('/:id/leaderboard', async (req, res, next) => {
 
       const live = liveByPlayer[perf.playerId]
 
-      // Derive "today" score from last completed round
-      const completedRounds = [perf.round1, perf.round2, perf.round3, perf.round4].filter((r) => r != null)
+      // Derive "today" score from last completed round (Performance.round1-4 stores to-par).
+      // Defensive: any value >= 50 is almost certainly a raw stroke count from a
+      // legacy bad write (DG returns strokes; we now convert at sync time).
+      // Treat absurd values as null rather than rendering "+72" on the leaderboard.
+      const completedRounds = [perf.round1, perf.round2, perf.round3, perf.round4]
+        .filter((r) => r != null && Math.abs(r) < 30)
       const today = completedRounds.length > 0 ? completedRounds[completedRounds.length - 1] : null
 
       const entry = {

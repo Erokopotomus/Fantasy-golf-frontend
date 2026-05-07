@@ -644,6 +644,7 @@ async function syncLiveScoring(tournamentDgId, prisma) {
 
   const tournament = await prisma.tournament.findFirst({
     where: { datagolfId: String(tournamentDgId) },
+    include: { course: { select: { par: true } } },
   })
   if (!tournament) throw new Error(`Tournament with datagolfId ${tournamentDgId} not found in DB`)
 
@@ -654,6 +655,12 @@ async function syncLiveScoring(tournamentDgId, prisma) {
     console.warn(`[Sync] DG live returned "${dgEventName}" when we asked for "${tournament.name}" (dg ${tournamentDgId}). Aborting — DG likely doesn't cover this event live.`)
     return { updated: 0, skipped: 0, tournamentStatus: tournament.status, aborted: 'event-mismatch' }
   }
+
+  // Course par for stroke→to-par conversion. DG's R1-R4 fields are RAW STROKE
+  // COUNTS (e.g., 64, 70, 72) while Performance.round1-4 stores TO-PAR. Without
+  // this conversion, the leaderboard's fallback path renders "+72" for finished
+  // rounds when DG drops a player from the live feed.
+  const coursePar = tournament.course?.par || 72
 
   // Load all players indexed by datagolfId (ONE query)
   const allPlayers = await prisma.player.findMany({
@@ -736,12 +743,16 @@ async function syncLiveScoring(tournamentDgId, prisma) {
       status: entry.status === 'cut' ? 'CUT' : entry.status === 'wd' ? 'WD' : 'ACTIVE',
     }
     if (position != null) perfUpdate.position = position
-    // DataGolf uses uppercase R1, R2, R3, R4 for round scores. Always write
-    // exactly what the API currently returns — including null — so a transient
-    // bad response can't leave completed-tournament data persisted on a
-    // Performance row mid-event. RoundScore is the canonical archival source.
+    // DataGolf uses uppercase R1, R2, R3, R4 for round scores. The fields are
+    // RAW STROKE COUNTS (e.g. 64, 70, 72) but Performance.round1-4 stores
+    // TO-PAR — convert here. Heuristic: any value >= 50 is strokes; anything
+    // smaller is already to-par (DG occasionally returns to-par directly for
+    // some events). Always write exactly what the API returns — including
+    // null — so a transient bad response can't leave stale completed-tournament
+    // data persisted. RoundScore is the canonical archival source.
     for (let r = 1; r <= 4; r++) {
-      perfUpdate[`round${r}`] = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
+      const raw = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
+      perfUpdate[`round${r}`] = raw == null ? null : (raw >= 50 ? raw - coursePar : raw)
     }
 
     perfOps.push(
