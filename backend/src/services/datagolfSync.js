@@ -504,6 +504,21 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
   let teeTimes = 0
   let dfsSalaries = 0
 
+  // Pre-tournament cleanup: when a tournament is UPCOMING, any leftover
+  // round1-4 / totalToPar / position values on existing Performance rows are
+  // stale carryover from a prior event (DG's in-play feed sometimes echoes
+  // last-week's stroke data for a few hours during the Sun→Thu transition).
+  // Resetting on every UPCOMING field sync gives the live cron a clean slate.
+  const isPretournament = tournament.status === 'UPCOMING'
+  const baseUpdate = isPretournament
+    ? {
+        status: 'ACTIVE',
+        round1: null, round2: null, round3: null, round4: null,
+        totalScore: null, totalToPar: null,
+        position: null, positionTied: false,
+      }
+    : { status: 'ACTIVE' }
+
   for (const entry of field) {
     const dgId = String(entry.dg_id)
     const playerId = playerMap.get(dgId)
@@ -513,8 +528,8 @@ async function syncFieldAndTeeTimesForTournament(tournamentDgId, prisma) {
     perfUpserts.push(
       prisma.performance.upsert({
         where: { tournamentId_playerId: { tournamentId: tournament.id, playerId } },
-        update: { status: 'ACTIVE' },
-        create: { tournamentId: tournament.id, playerId, status: 'ACTIVE' },
+        update: baseUpdate,
+        create: { tournamentId: tournament.id, playerId, ...baseUpdate },
       })
     )
     playersInField++
@@ -660,7 +675,10 @@ async function syncLiveScoring(tournamentDgId, prisma) {
   // COUNTS (e.g., 64, 70, 72) while Performance.round1-4 stores TO-PAR. Without
   // this conversion, the leaderboard's fallback path renders "+72" for finished
   // rounds when DG drops a player from the live feed.
-  const coursePar = tournament.course?.par || 72
+  const coursePar = tournament.course?.par || null
+  if (!coursePar) {
+    console.warn(`[Sync] No course.par for ${tournament.name} — skipping round-score writes (would risk wrong to-par values). Live data will repopulate once course is linked.`)
+  }
 
   // Load all players indexed by datagolfId (ONE query)
   const allPlayers = await prisma.player.findMany({
@@ -738,21 +756,28 @@ async function syncLiveScoring(tournamentDgId, prisma) {
       })
     )
 
+    // Only write scoring data when the player has actually played holes in
+    // THIS tournament. DG's in-play feed sometimes echoes prior-week data for
+    // a few hours during the Sun→Thu transition; a player with thru=0 hasn't
+    // teed off in this event yet, so any R1-R4 / current_score in the response
+    // is by definition not from this tournament — refuse to write it.
+    const hasPlayedThisEvent = typeof thru === 'number' && thru > 0
     const perfUpdate = {
-      totalToPar,
       status: entry.status === 'cut' ? 'CUT' : entry.status === 'wd' ? 'WD' : 'ACTIVE',
     }
-    if (position != null) perfUpdate.position = position
-    // DataGolf uses uppercase R1, R2, R3, R4 for round scores. The fields are
-    // RAW STROKE COUNTS (e.g. 64, 70, 72) but Performance.round1-4 stores
-    // TO-PAR — convert here. Heuristic: any value >= 50 is strokes; anything
-    // smaller is already to-par (DG occasionally returns to-par directly for
-    // some events). Always write exactly what the API returns — including
-    // null — so a transient bad response can't leave stale completed-tournament
-    // data persisted. RoundScore is the canonical archival source.
-    for (let r = 1; r <= 4; r++) {
-      const raw = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
-      perfUpdate[`round${r}`] = raw == null ? null : (raw >= 50 ? raw - coursePar : raw)
+    if (hasPlayedThisEvent) {
+      perfUpdate.totalToPar = totalToPar
+      if (position != null) perfUpdate.position = position
+      // DataGolf uses uppercase R1, R2, R3, R4 for round scores. The fields are
+      // RAW STROKE COUNTS (e.g. 64, 70, 72) but Performance.round1-4 stores
+      // TO-PAR — convert here. Skip the write if course par isn't linked
+      // (writing strokes-as-to-par would corrupt the leaderboard).
+      if (coursePar) {
+        for (let r = 1; r <= 4; r++) {
+          const raw = entry[`R${r}`] ?? entry[`r${r}`] ?? entry[`round_${r}`] ?? null
+          perfUpdate[`round${r}`] = raw == null ? null : (raw >= 50 ? raw - coursePar : raw)
+        }
+      }
     }
 
     perfOps.push(

@@ -517,12 +517,16 @@ router.get('/:id/leaderboard', async (req, res, next) => {
     // showing on Truist when he never teed off).
     let finalLeaderboard = leaderboard
     if (isLive) {
+      const now = Date.now()
       finalLeaderboard = leaderboard.filter(entry => {
         if (entry.status === 'WD') return false
         if (liveByPlayer[entry.player.id]) return true
         if (entry.today != null) return true
         const rsList = roundScoresByPlayer[entry.player.id] || []
         if (rsList.some(rs => rs.score != null)) return true
+        // Yet-to-tee-off: keep visible if any scheduled tee time is still in
+        // the future (no score yet, but they're going to play).
+        if (rsList.some(rs => rs.score == null && rs.teeTime && new Date(rs.teeTime).getTime() > now)) return true
         return false
       })
     }
