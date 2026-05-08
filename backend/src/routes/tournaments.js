@@ -420,12 +420,23 @@ router.get('/:id/leaderboard', async (req, res, next) => {
         .filter((r) => r != null && Math.abs(r) < 30)
       const today = completedRounds.length > 0 ? completedRounds[completedRounds.length - 1] : null
 
+      // For IN_PROGRESS tournaments, derive totalToPar from sum of completed rounds
+      // rather than trusting perf.totalToPar (which may carry stale values when DG
+      // drops a player from the live feed). For COMPLETED, perf.totalToPar is
+      // canonical. live.totalToPar always wins when present.
+      const summedFromRounds = completedRounds.length > 0
+        ? completedRounds.reduce((a, b) => a + b, 0)
+        : null
+      const totalToParResolved = isLive
+        ? (live?.totalToPar ?? summedFromRounds)
+        : (live?.totalToPar ?? perf.totalToPar ?? summedFromRounds)
+
       const entry = {
         position: (live?.position ?? perf.position) || index + 1,
         positionTied: live?.positionTied ?? perf.positionTied,
         player: perf.player,
         totalScore: perf.totalScore,
-        totalToPar: live?.totalToPar ?? perf.totalToPar,
+        totalToPar: totalToParResolved,
         today: live?.todayToPar ?? today,
         thru: live?.thru ?? (perf.status === 'CUT' ? 'CUT' : 18),
         status: perf.status,
@@ -499,9 +510,26 @@ router.get('/:id/leaderboard', async (req, res, next) => {
       return entry
     })
 
+    // For IN_PROGRESS tournaments, drop "ghost" players from the leaderboard:
+    // those still flagged ACTIVE in our DB but with no LiveScore, no completed
+    // round in Performance, and no scored RoundScore. This catches WDs that
+    // DataGolf's field-updates response hasn't reflected yet (e.g., Scheffler
+    // showing on Truist when he never teed off).
+    let finalLeaderboard = leaderboard
+    if (isLive) {
+      finalLeaderboard = leaderboard.filter(entry => {
+        if (entry.status === 'WD') return false
+        if (liveByPlayer[entry.player.id]) return true
+        if (entry.today != null) return true
+        const rsList = roundScoresByPlayer[entry.player.id] || []
+        if (rsList.some(rs => rs.score != null)) return true
+        return false
+      })
+    }
+
     // Sort by live position when available, fallback to performance position
     if (isLive) {
-      leaderboard.sort((a, b) => {
+      finalLeaderboard.sort((a, b) => {
         const posA = a.position ?? 999
         const posB = b.position ?? 999
         if (posA !== posB) return posA - posB
@@ -509,7 +537,7 @@ router.get('/:id/leaderboard', async (req, res, next) => {
       })
     }
 
-    res.json({ leaderboard, isLive })
+    res.json({ leaderboard: finalLeaderboard, isLive })
   } catch (error) {
     next(error)
   }
