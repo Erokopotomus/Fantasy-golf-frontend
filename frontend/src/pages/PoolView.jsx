@@ -370,13 +370,17 @@ export default function PoolView() {
               </div>
             </div>
 
-            <p className="text-center font-editorial italic text-sm text-text-2">
-              Pool locks {pool.locksAt ? new Date(pool.locksAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'soon'}.
-              {' '}
-              <Link to={`/tournaments/${pool.tournamentId}?pool=${slug}`} className="text-blaze hover:text-blaze/80 not-italic font-medium">
-                Live updates on the tournament page →
+            <div className="text-center">
+              <p className="font-editorial italic text-sm text-text-2 mb-3">
+                Pool locks {pool.locksAt ? new Date(pool.locksAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'soon'}.
+              </p>
+              <Link
+                to={`/tournaments/${pool.tournamentId}?pool=${slug}`}
+                className="inline-flex items-center gap-2 bg-slate hover:bg-slate-mid text-white font-display font-bold rounded-xl px-5 py-3 transition-colors"
+              >
+                Tournament page · Live scoring →
               </Link>
-            </p>
+            </div>
           </div>
         )}
 
