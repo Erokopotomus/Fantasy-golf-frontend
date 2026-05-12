@@ -483,6 +483,13 @@ class ApiService {
     return this.request(`/pools/${slug}/entries/${entryId}?token=${encodeURIComponent(token)}`, { method: 'DELETE' })
   }
 
+  async sendPoolInvites(slug, token, emails) {
+    return this.request(`/pools/${slug}/admin/invites?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+      body: JSON.stringify({ emails }),
+    })
+  }
+
   // Matchups
   async getLeagueMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`)

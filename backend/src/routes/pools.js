@@ -329,4 +329,48 @@ router.delete('/:slug/entries/:entryId', requireAdmin, async (req, res, next) =>
   } catch (e) { next(e) }
 })
 
+// ─── ADMIN: POST send invite emails ─────────────────────────────────────
+router.post('/:slug/admin/invites', requireAdmin, async (req, res, next) => {
+  try {
+    const { emails } = req.body
+    if (!Array.isArray(emails) || emails.length === 0) {
+      return res.status(400).json({ error: 'Provide emails as an array of strings' })
+    }
+    const cleaned = emails
+      .map(e => String(e).trim().toLowerCase())
+      .filter(e => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))
+    const unique = Array.from(new Set(cleaned))
+    if (unique.length === 0) return res.status(400).json({ error: 'No valid emails after parsing' })
+    if (unique.length > 50) return res.status(400).json({ error: 'Max 50 emails per send' })
+
+    const pool = await prisma.pool.findUnique({
+      where: { id: req.poolId },
+      include: { tournament: { select: { name: true } } },
+    })
+    const baseUrl = process.env.FRONTEND_URL || 'https://clutchfantasysports.com'
+    const shareUrl = `${baseUrl}/pools/${pool.slug}`
+
+    let sent = 0
+    let failed = 0
+    for (const to of unique) {
+      const r = await sendPoolEmail({
+        to,
+        subject: `You're invited: ${pool.name}`,
+        html: `
+          <h2 style="margin:0 0 12px;color:#1E2A3A;">${pool.name}</h2>
+          <p style="color:#444;">You've been invited to join a tiered pick'em pool for the <strong>${pool.tournament?.name || 'tournament'}</strong>.</p>
+          <p style="color:#444;">Pick one golfer from each tier, set a tiebreaker, and watch the leaderboard during play.</p>
+          <p style="margin:24px 0;">
+            <a href="${shareUrl}" style="display:inline-block;background:#F06820;color:#FFFFFF;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700;">Enter the pool →</a>
+          </p>
+          <p style="color:#666;font-size:13px;">Or copy this link: <a href="${shareUrl}" style="color:#D4930D;">${shareUrl}</a></p>
+        `,
+      }).catch(err => ({ error: err.message }))
+      if (r?.sent) sent++
+      else failed++
+    }
+    res.json({ sent, failed, total: unique.length })
+  } catch (e) { next(e) }
+})
+
 module.exports = router

@@ -42,7 +42,7 @@ function PoolCard({ pool, kind }) {
   const ctaLabel = kind === 'commish' ? 'Manage →' : 'View →'
 
   return (
-    <div className="group relative rounded-2xl border border-text-2/15 bg-surface p-5 hover:border-blaze/40 transition-colors">
+    <div className="group relative rounded-2xl border border-text-2/25 bg-white shadow-sm p-5 hover:border-blaze/40 hover:shadow-md transition-all">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <Link to={href} className="block">
@@ -163,7 +163,7 @@ export default function PoolsLanding() {
               <span className="font-mono text-xs uppercase tracking-wider text-text-2">{commish.length}</span>
             </div>
             {commish.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-text-2/20 p-6 text-sm text-text-2">
+              <div className="rounded-2xl border border-dashed border-text-2/30 p-6 text-sm text-text-2">
                 You haven't created a pool yet. <Link to="/pools/new" className="text-blaze font-medium">Start one →</Link>
               </div>
             ) : (
@@ -182,7 +182,7 @@ export default function PoolsLanding() {
               <span className="font-mono text-xs uppercase tracking-wider text-text-2">{entered.length}</span>
             </div>
             {entered.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-text-2/20 p-6 text-sm text-text-2">
+              <div className="rounded-2xl border border-dashed border-text-2/30 p-6 text-sm text-text-2">
                 No pool entries yet. When you submit picks they'll show up here.
               </div>
             ) : (
