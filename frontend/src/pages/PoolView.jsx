@@ -348,58 +348,50 @@ export default function PoolView() {
                     <div className="p-2 space-y-1 max-h-96 overflow-y-auto">
                       {tier.players.map(tp => {
                         const isPicked = picked.includes(tp.player.id)
-                        const togglePicks = () => togglePick(tier.id, tp.player.id, tier.picksRequired)
-                        const openDrawer = (e) => { e.stopPropagation(); setDrawerPlayerId(tp.player.id) }
+                        const togglePicks = (e) => { e.stopPropagation(); togglePick(tier.id, tp.player.id, tier.picksRequired) }
+                        const openDrawer = () => setDrawerPlayerId(tp.player.id)
                         return (
                           <div
                             role="button"
                             tabIndex={0}
                             key={tp.player.id}
-                            onClick={togglePicks}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePicks() } }}
-                            className={`relative w-full text-left rounded-xl px-3 py-2 flex items-center gap-3 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blaze/40 ${
+                            onClick={openDrawer}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDrawer() } }}
+                            aria-label={`View ${tp.player.name} stats`}
+                            className={`group relative w-full text-left rounded-xl pl-3 pr-2 py-2 flex items-center gap-3 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blaze/40 ${
                               isPicked
                                 ? 'bg-blaze/[0.08] ring-2 ring-blaze'
-                                : 'hover:bg-bg hover:-translate-y-px ring-2 ring-transparent'
+                                : 'hover:bg-bg ring-2 ring-transparent'
                             }`}
                           >
+                            <PlayerAvatar player={tp.player} size={36} />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-display font-semibold text-text-primary text-sm truncate group-hover:text-blaze transition-colors">
+                                {tp.player.name}
+                              </div>
+                              <div className="font-mono text-[10px] uppercase tracking-wider text-text-2 mt-0.5 flex items-center gap-1.5">
+                                {tp.player.countryFlag && (
+                                  <span className="text-sm leading-none" aria-hidden="true">{tp.player.countryFlag}</span>
+                                )}
+                                {tp.player.primaryTour && <span>{tp.player.primaryTour}</span>}
+                                {tp.player.owgrRank && (
+                                  <span className="text-text-2/70">· #{tp.player.owgrRank}</span>
+                                )}
+                              </div>
+                            </div>
                             <button
                               type="button"
-                              onClick={openDrawer}
-                              aria-label={`View ${tp.player.name} stats`}
-                              className="rounded-full transition-all hover:ring-2 hover:ring-blaze/40 focus:outline-none focus:ring-2 focus:ring-blaze/60"
+                              onClick={togglePicks}
+                              aria-label={isPicked ? `Remove ${tp.player.name} from your picks` : `Pick ${tp.player.name}`}
+                              aria-pressed={isPicked}
+                              className={`shrink-0 inline-flex items-center justify-center gap-1 font-mono text-[11px] font-bold uppercase tracking-wider rounded-lg px-2.5 py-1.5 transition-all focus:outline-none focus:ring-2 focus:ring-blaze/60 ${
+                                isPicked
+                                  ? 'bg-blaze text-white hover:bg-blaze/90'
+                                  : 'border border-text-2/30 text-text-2 hover:border-blaze hover:text-blaze'
+                              }`}
                             >
-                              <PlayerAvatar player={tp.player} size={36} />
+                              {isPicked ? '✓ Picked' : '+ Pick'}
                             </button>
-                            <div className="flex-1 min-w-0">
-                              <button
-                                type="button"
-                                onClick={openDrawer}
-                                className="block text-left font-display font-semibold text-text-primary text-sm truncate hover:text-blaze transition-colors focus:outline-none focus:text-blaze max-w-full"
-                              >
-                                {tp.player.name}
-                              </button>
-                              {tp.player.primaryTour && (
-                                <div className="font-mono text-[10px] uppercase tracking-wider text-text-2 mt-0.5">
-                                  {tp.player.primaryTour}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              {tp.player.countryFlag && (
-                                <span className="text-base leading-none" aria-hidden="true">{tp.player.countryFlag}</span>
-                              )}
-                              {tp.player.owgrRank && (
-                                <span className="font-mono text-xs font-bold text-text-2 w-8 text-right">
-                                  #{tp.player.owgrRank}
-                                </span>
-                              )}
-                            </div>
-                            {isPicked && (
-                              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-blaze text-white flex items-center justify-center text-[11px] font-bold shadow-sm">
-                                ✓
-                              </span>
-                            )}
                           </div>
                         )
                       })}
