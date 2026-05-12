@@ -89,13 +89,6 @@ export default function PoolContextBanner({ poolSlug }) {
           {isPreLock && countdown && (
             <Stat label="Locks in" value={countdown} />
           )}
-
-          <Link
-            to={`/pools/${poolSlug}`}
-            className="font-mono text-[11px] uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold whitespace-nowrap"
-          >
-            Pool page →
-          </Link>
         </div>
       </div>
 

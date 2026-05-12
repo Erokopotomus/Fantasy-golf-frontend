@@ -322,49 +322,61 @@ export default function PoolView() {
           </div>
         )}
 
-        {/* OPEN — already entered (signed-in, has entry) */}
+        {/* OPEN — already entered (signed-in, has entry). Pool page is the social/share hub;
+            the tournament page is the live home. We deliberately don't CTA back to the tournament
+            here — that creates a navigation loop. */}
         {pool.status === 'OPEN' && user && myExistingEntry && !submitted && (
-          <div className="max-w-2xl mx-auto rounded-2xl border border-field/30 bg-surface p-6 sm:p-8 text-center">
-            <div className="font-mono text-xs uppercase tracking-[0.2em] text-field mb-3">You're locked in</div>
-            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-text-primary leading-tight">
-              {myExistingEntry.teamName}
-            </h2>
-            <p className="font-editorial italic text-text-2 mt-3">
-              {pool.locksAt
-                ? <>Pool locks <span className="text-text-primary not-italic">{new Date(pool.locksAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>.</>
-                : <>Live scoring will start when the pool locks.</>}
-            </p>
-
-            {myExistingEntry.picks && myExistingEntry.picks.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-text-2/10">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-text-2 mb-3">Your picks</div>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {myExistingEntry.picks.map((pick, i) => (
-                    <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1 text-sm">
-                      <span>{pick.player?.countryFlag || ''}</span>
-                      <span className="text-text-primary font-medium">{pick.player?.name}</span>
-                    </span>
-                  ))}
+          <div className="max-w-3xl mx-auto space-y-5">
+            <div className="rounded-2xl border border-field/30 bg-surface p-6 sm:p-8 text-center">
+              <div className="font-mono text-xs uppercase tracking-[0.2em] text-field mb-3">You're locked in</div>
+              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-text-primary leading-tight">
+                {myExistingEntry.teamName}
+              </h2>
+              {myExistingEntry.picks && myExistingEntry.picks.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-text-2/10">
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-text-2 mb-3">Your picks</div>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {myExistingEntry.picks.map((pick, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1 text-sm">
+                        <span>{pick.player?.countryFlag || ''}</span>
+                        <span className="text-text-primary font-medium">{pick.player?.name}</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-              <Link
-                to={`/tournaments/${pool.tournamentId}?pool=${slug}`}
-                className="inline-flex items-center justify-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-xl px-5 py-3 transition-all hover:-translate-y-0.5"
-              >
-                Watch the tournament →
-              </Link>
-              <button
-                onClick={() => {
-                  try { navigator.clipboard?.writeText(`${window.location.origin}/pools/${slug}`) } catch {}
-                }}
-                className="inline-flex items-center justify-center gap-2 bg-bg border border-text-2/20 hover:border-blaze/40 text-text-primary font-display font-bold rounded-xl px-5 py-3 transition-colors"
-              >
-                Copy share link
-              </button>
+              )}
             </div>
+
+            {/* Share + entry count panel */}
+            <div className="rounded-2xl border border-text-2/15 bg-surface p-5 sm:p-6">
+              <div className="flex items-baseline justify-between mb-3">
+                <h3 className="font-display font-bold text-lg text-text-primary">Get your friends in</h3>
+                <span className="font-mono text-xs text-text-2">
+                  {leaderboard?.leaderboard?.length || 0} {(leaderboard?.leaderboard?.length || 0) === 1 ? 'entry' : 'entries'} so far
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1 rounded-xl border border-text-2/20 bg-bg px-3 py-2.5 font-mono text-sm text-text-primary truncate">
+                  {window.location.origin}/pools/{slug}
+                </div>
+                <button
+                  onClick={() => {
+                    try { navigator.clipboard?.writeText(`${window.location.origin}/pools/${slug}`) } catch {}
+                  }}
+                  className="bg-blaze hover:bg-blaze/90 text-white font-display font-bold px-5 py-2.5 rounded-xl transition-colors"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <p className="text-center font-editorial italic text-sm text-text-2">
+              Pool locks {pool.locksAt ? new Date(pool.locksAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'soon'}.
+              {' '}
+              <Link to={`/tournaments/${pool.tournamentId}?pool=${slug}`} className="text-blaze hover:text-blaze/80 not-italic font-medium">
+                Live updates on the tournament page →
+              </Link>
+            </p>
           </div>
         )}
 
