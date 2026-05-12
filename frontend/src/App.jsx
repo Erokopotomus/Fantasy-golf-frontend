@@ -105,6 +105,7 @@ const SurvivorBoard = lazy(() => import('./pages/SurvivorBoard'))
 const PickCenter = lazy(() => import('./pages/PickCenter'))
 import PoolCreate from './pages/PoolCreate'
 import PoolView from './pages/PoolView'
+import PoolAdmin from './pages/PoolAdmin'
 
 // Reset scroll position on route changes — prevents stale scroll restoration
 // when lazy-loaded content shifts page height during data fetching
@@ -160,6 +161,7 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/pools/new" element={<PoolCreate />} />
+          <Route path="/pools/:slug/admin" element={<PoolAdmin />} />
           <Route path="/pools/:slug" element={<PoolView />} />
           <Route path="/join/:code" element={<JoinRedirect />} />
           <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
