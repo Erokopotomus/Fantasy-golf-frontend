@@ -103,6 +103,7 @@ const PlayoffHistory = lazy(() => import('./pages/PlayoffHistory'))
 const CategoryStandings = lazy(() => import('./pages/CategoryStandings'))
 const SurvivorBoard = lazy(() => import('./pages/SurvivorBoard'))
 const PickCenter = lazy(() => import('./pages/PickCenter'))
+import PoolCreate from './pages/PoolCreate'
 
 // Reset scroll position on route changes — prevents stale scroll restoration
 // when lazy-loaded content shifts page height during data fetching
@@ -157,6 +158,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/pools/new" element={<PoolCreate />} />
           <Route path="/join/:code" element={<JoinRedirect />} />
           <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
           <Route path="/create-league" element={<Navigate to="/leagues/create" replace />} />
