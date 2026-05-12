@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 
 // --- Helper components ----------------------------------------------------
 
@@ -116,6 +117,7 @@ export default function PoolView() {
   const [entry, setEntry] = useState({ teamName: '', tiebreakerScore: 0, picks: {} })
   const [submitError, setSubmitError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [drawerPlayerId, setDrawerPlayerId] = useState(null)
 
   useEffect(() => {
     (async () => {
@@ -346,22 +348,37 @@ export default function PoolView() {
                     <div className="p-2 space-y-1 max-h-96 overflow-y-auto">
                       {tier.players.map(tp => {
                         const isPicked = picked.includes(tp.player.id)
+                        const togglePicks = () => togglePick(tier.id, tp.player.id, tier.picksRequired)
+                        const openDrawer = (e) => { e.stopPropagation(); setDrawerPlayerId(tp.player.id) }
                         return (
-                          <button
-                            type="button"
+                          <div
+                            role="button"
+                            tabIndex={0}
                             key={tp.player.id}
-                            onClick={() => togglePick(tier.id, tp.player.id, tier.picksRequired)}
-                            className={`relative w-full text-left rounded-xl px-3 py-2 flex items-center gap-3 transition-all ${
+                            onClick={togglePicks}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePicks() } }}
+                            className={`relative w-full text-left rounded-xl px-3 py-2 flex items-center gap-3 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blaze/40 ${
                               isPicked
                                 ? 'bg-blaze/[0.08] ring-2 ring-blaze'
                                 : 'hover:bg-bg hover:-translate-y-px ring-2 ring-transparent'
                             }`}
                           >
-                            <PlayerAvatar player={tp.player} size={36} />
+                            <button
+                              type="button"
+                              onClick={openDrawer}
+                              aria-label={`View ${tp.player.name} stats`}
+                              className="rounded-full transition-all hover:ring-2 hover:ring-blaze/40 focus:outline-none focus:ring-2 focus:ring-blaze/60"
+                            >
+                              <PlayerAvatar player={tp.player} size={36} />
+                            </button>
                             <div className="flex-1 min-w-0">
-                              <div className="font-display font-semibold text-text-primary text-sm truncate">
+                              <button
+                                type="button"
+                                onClick={openDrawer}
+                                className="block text-left font-display font-semibold text-text-primary text-sm truncate hover:text-blaze transition-colors focus:outline-none focus:text-blaze max-w-full"
+                              >
                                 {tp.player.name}
-                              </div>
+                              </button>
                               {tp.player.primaryTour && (
                                 <div className="font-mono text-[10px] uppercase tracking-wider text-text-2 mt-0.5">
                                   {tp.player.primaryTour}
@@ -383,7 +400,7 @@ export default function PoolView() {
                                 ✓
                               </span>
                             )}
-                          </button>
+                          </div>
                         )
                       })}
                     </div>
@@ -514,7 +531,17 @@ export default function PoolView() {
                                 {p.player?.countryFlag && (
                                   <span aria-hidden="true">{p.player.countryFlag}</span>
                                 )}
-                                <span className="font-medium text-text-primary">{lastName(p.player?.name)}</span>
+                                {p.player?.id ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDrawerPlayerId(p.player.id)}
+                                    className="font-medium text-text-primary hover:text-blaze transition-colors focus:outline-none focus:text-blaze"
+                                  >
+                                    {lastName(p.player?.name)}
+                                  </button>
+                                ) : (
+                                  <span className="font-medium text-text-primary">{lastName(p.player?.name)}</span>
+                                )}
                                 {pi < e.picks.length - 1 && <span className="text-text-2/40 ml-1">·</span>}
                               </span>
                             ))}
@@ -547,6 +574,17 @@ export default function PoolView() {
           </div>
         )}
       </div>
+
+      <PlayerDrawer
+        playerId={drawerPlayerId}
+        isOpen={!!drawerPlayerId}
+        onClose={() => setDrawerPlayerId(null)}
+        tournamentContext={pool.tournament?.course ? {
+          entry: { id: drawerPlayerId, clutchMetrics: null, courseHistory: null },
+          course: pool.tournament.course,
+          tournamentName: pool.tournament.name,
+        } : undefined}
+      />
     </div>
   )
 }
