@@ -420,6 +420,17 @@ const Navbar = () => {
                   Live
                 </Link>
                 <Link
+                  to="/pools"
+                  className={`
+                    px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
+                    ${location.pathname.startsWith('/pools')
+                      ? 'text-white bg-white/15'
+                      : 'text-white/60 hover:text-white hover:bg-white/10'}
+                  `}
+                >
+                  Pools
+                </Link>
+                <Link
                   to="/prove-it"
                   className={`
                     px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
@@ -848,6 +859,13 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Clutch Rating
+                </Link>
+                <Link
+                  to="/pools"
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-300 ${location.pathname.startsWith('/pools') ? 'text-white bg-white/15' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Pools
                 </Link>
                 <Link
                   to="/leaderboard"

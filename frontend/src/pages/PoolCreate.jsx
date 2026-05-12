@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { rememberCommishPool } from '../utils/poolStorage'
 
 export default function PoolCreate() {
   const navigate = useNavigate()
@@ -40,6 +41,13 @@ export default function PoolCreate() {
     setSubmitting(true); setError(null)
     try {
       const result = await api.createPool(form)
+      const tournament = tournaments.find(t => t.id === form.tournamentId)
+      rememberCommishPool({
+        slug: result.slug,
+        adminToken: result.adminToken,
+        name: form.name,
+        tournamentName: tournament?.name || '',
+      })
       setCreated(result)
     } catch (err) {
       setError(err.message || 'Failed to create pool')

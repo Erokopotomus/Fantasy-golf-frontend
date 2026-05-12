@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../services/api'
+import { rememberEnteredPool } from '../utils/poolStorage'
 
 export default function PoolView() {
   const { slug } = useParams()
@@ -58,6 +59,12 @@ export default function PoolView() {
         teamName: entry.teamName,
         tiebreakerScore: parseInt(entry.tiebreakerScore),
         picks,
+      })
+      rememberEnteredPool({
+        slug,
+        teamName: entry.teamName,
+        poolName: pool.name,
+        tournamentName: pool.tournament?.name || '',
       })
       setSubmitted(result.entry)
     } catch (err) {
