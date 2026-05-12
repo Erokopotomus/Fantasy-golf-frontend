@@ -96,6 +96,9 @@ model User {
   coachingMemories     CoachingMemory[]
   coachingInteractions CoachingInteraction[]
 
+  // Pools (tiered pick'em)
+  poolEntries          PoolEntry[]
+
   @@map("users")
 }
 
@@ -402,6 +405,8 @@ model Player {
   clutchProjections  ClutchProjection[]
   watchListEntries   WatchListEntry[]
   labCaptureLinks    LabCapturePlayer[]
+  poolTierPlayers    PoolTierPlayer[]
+  poolPicks          PoolPick[]
 
   @@index([owgrRank])
   @@index([name])
@@ -541,6 +546,7 @@ model Tournament {
   fantasyWeeks FantasyWeek[]
   clutchScores ClutchScore[]
   eventIdMap   ClutchEventIdMap?
+  pools        Pool[]
 
   @@map("tournaments")
 }
@@ -1610,6 +1616,89 @@ model DraftValueTracker {
   @@map("draft_value_trackers")
 }
 
+// ============ POOLS (tiered pick'em) ============
+
+model Pool {
+  id                String      @id @default(cuid())
+  slug              String      @unique
+  name              String
+  tournamentId      String      @map("tournament_id")
+  commissionerEmail String      @map("commissioner_email")
+  adminToken        String      @unique @map("admin_token")
+  status            PoolStatus  @default(DRAFT)
+  locksAt           DateTime?   @map("locks_at")
+  scoringPreset     String      @default("standard") @map("scoring_preset")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  tournament        Tournament  @relation(fields: [tournamentId], references: [id])
+  tiers             PoolTier[]
+  entries           PoolEntry[]
+
+  @@map("pools")
+}
+
+model PoolTier {
+  id            String           @id @default(cuid())
+  poolId        String           @map("pool_id")
+  tierNumber    Int              @map("tier_number")
+  label         String?
+  picksRequired Int              @map("picks_required")
+
+  pool          Pool             @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  players       PoolTierPlayer[]
+  picks         PoolPick[]
+
+  @@unique([poolId, tierNumber])
+  @@map("pool_tiers")
+}
+
+model PoolTierPlayer {
+  id       String   @id @default(cuid())
+  tierId   String   @map("tier_id")
+  playerId String   @map("player_id")
+
+  tier     PoolTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  player   Player   @relation(fields: [playerId], references: [id])
+
+  @@unique([tierId, playerId])
+  @@map("pool_tier_players")
+}
+
+model PoolEntry {
+  id                 String     @id @default(cuid())
+  poolId             String     @map("pool_id")
+  userId             String?    @map("user_id")
+  entrantName        String     @map("entrant_name")
+  entrantEmail       String     @map("entrant_email")
+  teamName           String     @map("team_name")
+  tiebreakerScore    Int        @map("tiebreaker_score")
+  totalFantasyPoints Float      @default(0) @map("total_fantasy_points")
+  submittedAt        DateTime   @default(now()) @map("submitted_at")
+
+  pool               Pool       @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  user               User?      @relation(fields: [userId], references: [id])
+  picks              PoolPick[]
+
+  @@unique([poolId, teamName])
+  @@map("pool_entries")
+}
+
+model PoolPick {
+  id            String    @id @default(cuid())
+  entryId       String    @map("entry_id")
+  tierId        String    @map("tier_id")
+  playerId      String    @map("player_id")
+  fantasyPoints Float?    @map("fantasy_points")
+
+  entry         PoolEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  tier          PoolTier  @relation(fields: [tierId], references: [id])
+  player        Player    @relation(fields: [playerId], references: [id])
+
+  @@unique([entryId, tierId, playerId])
+  @@map("pool_picks")
+}
+
 // ============ ENUMS ============
 
 enum LeagueFormat {
@@ -2258,6 +2347,13 @@ enum ImportStatus {
   REVIEW
   COMPLETE
   FAILED
+}
+
+enum PoolStatus {
+  DRAFT
+  OPEN
+  LOCKED
+  COMPLETED
 }
 
 model LeagueImport {
