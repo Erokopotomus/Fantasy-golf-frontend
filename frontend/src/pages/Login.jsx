@@ -18,7 +18,10 @@ const Login = () => {
   const location = useLocation()
 
   const fromLocation = location.state?.from
-  const from = fromLocation ? `${fromLocation.pathname}${fromLocation.search || ''}` : '/dashboard'
+  const redirectParam = new URLSearchParams(location.search).get('redirect')
+  const from = redirectParam
+    ? redirectParam
+    : (fromLocation ? `${fromLocation.pathname}${fromLocation.search || ''}` : '/dashboard')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -107,7 +110,7 @@ const Login = () => {
 
           <p className="mt-8 text-center text-text-secondary">
             Don't have an account?{' '}
-            <Link to="/signup" state={{ from: location.state?.from }} className="text-gold hover:text-gold/80 font-medium transition-colors duration-300">
+            <Link to={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'} state={{ from: location.state?.from }} className="text-gold hover:text-gold/80 font-medium transition-colors duration-300">
               Sign up free
             </Link>
           </p>

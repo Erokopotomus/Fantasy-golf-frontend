@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../services/api'
-import { rememberCommishPool } from '../utils/poolStorage'
+import { useAuth } from '../context/AuthContext'
 
 export default function PoolCreate() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [tournaments, setTournaments] = useState([])
   const [field, setField] = useState([])
   const [form, setForm] = useState({
-    tournamentId: '', name: '', commissionerEmail: '',
+    tournamentId: '', name: '',
     tiers: [{ tierNumber: 1, label: '', picksRequired: 1, playerIds: [] }],
   })
   const [created, setCreated] = useState(null)
@@ -16,10 +17,11 @@ export default function PoolCreate() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!user) return
     api.request('/tournaments/upcoming-with-fields')
       .then(d => setTournaments(d.tournaments || []))
       .catch(() => {})
-  }, [])
+  }, [user])
 
   useEffect(() => {
     if (!form.tournamentId) { setField([]); return }
@@ -41,19 +43,43 @@ export default function PoolCreate() {
     setSubmitting(true); setError(null)
     try {
       const result = await api.createPool(form)
-      const tournament = tournaments.find(t => t.id === form.tournamentId)
-      rememberCommishPool({
-        slug: result.slug,
-        adminToken: result.adminToken,
-        name: form.name,
-        tournamentName: tournament?.name || '',
-      })
       setCreated(result)
     } catch (err) {
       setError(err.message || 'Failed to create pool')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // Gate: must be signed in
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
+        <div className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center">
+          <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Members only</div>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-text-primary mb-3">
+            Sign in to <span className="font-editorial italic font-normal">create a pool</span>
+          </h1>
+          <p className="text-text-2 max-w-md mx-auto mb-7">
+            Pools live on your Clutch account so you can manage them from any device.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to={`/login?redirect=${encodeURIComponent('/pools/new')}`}
+              className="inline-flex items-center justify-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-xl px-5 py-3 transition-all hover:-translate-y-0.5"
+            >
+              Sign in
+            </Link>
+            <Link
+              to={`/signup?redirect=${encodeURIComponent('/pools/new')}`}
+              className="inline-flex items-center justify-center gap-2 bg-bg border border-text-2/20 hover:border-blaze/40 text-text-primary font-display font-bold rounded-xl px-5 py-3 transition-colors"
+            >
+              Create account
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (created) {
@@ -71,7 +97,7 @@ export default function PoolCreate() {
             <a className="text-crown break-all" href={`/pools/${created.slug}/admin?token=${created.adminToken}`}>{base}/pools/{created.slug}/admin?token={created.adminToken}</a>
           </div>
           <p className="text-sm text-text-2 pt-2">
-            Both links were sent to {form.commissionerEmail}. Open the admin link and hit Publish when you're ready to accept entries.
+            Both links were sent to {user.email}. Open the admin link and hit Publish when you're ready to accept entries.
           </p>
         </div>
       </div>
@@ -106,13 +132,9 @@ export default function PoolCreate() {
           required />
       </label>
 
-      <label className="block">
-        <span className="text-xs font-mono uppercase tracking-wide text-text-2">Your email (gets admin link)</span>
-        <input type="email" className="mt-1 w-full border rounded-md px-3 py-2 bg-surface text-text-primary"
-          value={form.commissionerEmail}
-          onChange={e => setForm({ ...form, commissionerEmail: e.target.value })}
-          required />
-      </label>
+      <p className="text-xs font-mono uppercase tracking-wide text-text-2">
+        Admin link will be sent to <span className="text-text-primary">{user.email}</span>
+      </p>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

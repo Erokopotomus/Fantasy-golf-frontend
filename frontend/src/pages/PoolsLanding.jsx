@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import { getCommishPools, getEnteredPools, forgetCommishPool, forgetEnteredPool } from '../utils/poolStorage'
 
 const STATUS_STYLES = {
   DRAFT:     'bg-text-2/15 text-text-2',
@@ -35,7 +34,7 @@ function StatusPill({ status }) {
   )
 }
 
-function PoolCard({ pool, kind, onForget }) {
+function PoolCard({ pool, kind }) {
   // kind: 'commish' or 'entered'
   const href = kind === 'commish'
     ? `/pools/${pool.slug}/admin?token=${pool.adminToken}`
@@ -64,13 +63,6 @@ function PoolCard({ pool, kind, onForget }) {
         <Link to={href} className="text-blaze font-medium text-sm">
           {ctaLabel}
         </Link>
-        <button
-          onClick={() => onForget(pool)}
-          className="text-text-2/60 hover:text-live-red text-xs font-mono"
-          title="Remove from this list (doesn't delete the pool)"
-        >
-          Hide
-        </button>
       </div>
     </div>
   )
@@ -83,90 +75,45 @@ export default function PoolsLanding() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const localCommish = getCommishPools()
-    const localEntered = getEnteredPools()
-
-    const hydrateLocalOnly = async () => {
-      const allCommish = localCommish.map(p => ({ ...p, _source: 'local' }))
-      const allEntered = localEntered.map(p => ({ ...p, _source: 'local' }))
-      await Promise.all([
-        ...allCommish.map(p =>
-          api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
-        ),
-        ...allEntered.map(p =>
-          api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
-        ),
-      ])
-      setCommish(allCommish)
-      setEntered(allEntered)
-      setLoading(false)
-    }
-
-    const loadServerPools = async () => {
-      try {
-        const { commish: serverCommish, entered: serverEntered } = await api.getMyPools()
-        // Merge server + local. Server is authoritative for slug + adminToken + status.
-        const mergedCommishMap = new Map()
-        for (const p of localCommish) mergedCommishMap.set(p.slug, { ...p, _source: 'local' })
-        for (const p of serverCommish) {
-          mergedCommishMap.set(p.slug, {
-            slug: p.slug,
-            adminToken: p.adminToken,
-            name: p.name,
-            tournamentName: p.tournamentName,
-            _source: 'server',
-            _status: p.status,
-          })
-        }
-        const mergedEnteredMap = new Map()
-        for (const p of localEntered) mergedEnteredMap.set(`${p.slug}-${p.teamName}`, { ...p, _source: 'local' })
-        for (const p of serverEntered) {
-          mergedEnteredMap.set(`${p.slug}-${p.teamName}`, {
-            slug: p.slug,
-            teamName: p.teamName,
-            name: p.poolName,
-            tournamentName: p.tournamentName,
-            _source: 'server',
-            _status: p.status,
-            totalFantasyPoints: p.totalFantasyPoints,
-          })
-        }
-        const allCommish = Array.from(mergedCommishMap.values())
-        const allEntered = Array.from(mergedEnteredMap.values())
-        // For local-only entries (anonymous browse history), fetch status individually
-        const needsFetchCommish = allCommish.filter(p => !p._status)
-        const needsFetchEntered = allEntered.filter(p => !p._status)
-        await Promise.all([
-          ...needsFetchCommish.map(p =>
-            api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
-          ),
-          ...needsFetchEntered.map(p =>
-            api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
-          ),
-        ])
-        setCommish(allCommish)
-        setEntered(allEntered)
-        setLoading(false)
-      } catch {
-        // Auth or network failure — fall back to localStorage only
-        await hydrateLocalOnly()
-      }
-    }
-
-    if (user) {
-      loadServerPools()
-    } else {
-      hydrateLocalOnly()
-    }
+    if (!user) { setLoading(false); return }
+    api.getMyPools()
+      .then(({ commish, entered }) => {
+        setCommish(commish.map(p => ({ ...p, _status: p.status })))
+        setEntered(entered.map(p => ({ ...p, _status: p.status, name: p.poolName })))
+      })
+      .catch(() => { setCommish([]); setEntered([]) })
+      .finally(() => setLoading(false))
   }, [user])
 
-  const handleForgetCommish = (p) => {
-    forgetCommishPool(p.slug)
-    setCommish(c => c.filter(x => x.slug !== p.slug))
-  }
-  const handleForgetEntered = (p) => {
-    forgetEnteredPool(p.slug, p.teamName)
-    setEntered(e => e.filter(x => !(x.slug === p.slug && x.teamName === p.teamName)))
+  // Auth gate: signed-out users see a sign-in card.
+  if (!user) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
+        <div className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center">
+          <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Members only</div>
+          <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-text-primary mb-3 tracking-tight">
+            Sign in to <span className="font-editorial italic font-normal">manage pools</span>
+          </h1>
+          <p className="text-text-2 max-w-md mx-auto mb-7">
+            Your pools live on your Clutch account. Sign in on any device to see them.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to={`/login?redirect=${encodeURIComponent('/pools')}`}
+              className="inline-flex items-center justify-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-xl px-5 py-3 transition-all hover:-translate-y-0.5"
+            >
+              Sign in
+            </Link>
+            <Link
+              to={`/signup?redirect=${encodeURIComponent('/pools')}`}
+              className="inline-flex items-center justify-center gap-2 bg-bg border border-text-2/20 hover:border-blaze/40 text-text-primary font-display font-bold rounded-xl px-5 py-3 transition-colors"
+            >
+              Create account
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const isEmpty = !loading && commish.length === 0 && entered.length === 0
@@ -198,7 +145,7 @@ export default function PoolsLanding() {
             Run your first pool.
           </h2>
           <p className="text-text-2 mb-6 max-w-md mx-auto">
-            Pick a tournament, build your tiers, share the link with friends. Anyone can enter — no signup needed.
+            Pick a tournament, build your tiers, share the link with friends.
           </p>
           <Link
             to="/pools/new"
@@ -217,12 +164,12 @@ export default function PoolsLanding() {
             </div>
             {commish.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-text-2/20 p-6 text-sm text-text-2">
-                You haven't created a pool from this browser yet. <Link to="/pools/new" className="text-blaze font-medium">Start one →</Link>
+                You haven't created a pool yet. <Link to="/pools/new" className="text-blaze font-medium">Start one →</Link>
               </div>
             ) : (
               <div className="space-y-3">
                 {commish.map(p => (
-                  <PoolCard key={p.slug} pool={p} kind="commish" onForget={handleForgetCommish} />
+                  <PoolCard key={p.slug} pool={p} kind="commish" />
                 ))}
               </div>
             )}
@@ -236,12 +183,12 @@ export default function PoolsLanding() {
             </div>
             {entered.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-text-2/20 p-6 text-sm text-text-2">
-                No pools entered from this browser yet. When you submit picks they'll show up here.
+                No pool entries yet. When you submit picks they'll show up here.
               </div>
             ) : (
               <div className="space-y-3">
                 {entered.map(p => (
-                  <PoolCard key={`${p.slug}-${p.teamName}`} pool={p} kind="entered" onForget={handleForgetEntered} />
+                  <PoolCard key={`${p.slug}-${p.teamName}`} pool={p} kind="entered" />
                 ))}
               </div>
             )}
@@ -251,7 +198,7 @@ export default function PoolsLanding() {
 
       {/* Help footer */}
       <div className="text-xs text-text-2/60 font-mono uppercase tracking-wider text-center pt-8 border-t border-text-2/10">
-        Pools you commission or enter while logged in to Clutch are saved to your account. Anonymous entries are remembered in this browser only — clearing site data will forget them.
+        Your pools live on your Clutch account. Sign in on any device to see them.
       </div>
     </div>
   )

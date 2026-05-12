@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
-import { rememberEnteredPool, getEnteredPools } from '../utils/poolStorage'
+import { useAuth } from '../context/AuthContext'
 
 // --- Helper components ----------------------------------------------------
 
@@ -108,11 +108,12 @@ function lastName(fullName) {
 
 export default function PoolView() {
   const { slug } = useParams()
+  const { user } = useAuth()
   const [pool, setPool] = useState(null)
   const [leaderboard, setLeaderboard] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitted, setSubmitted] = useState(null)
-  const [entry, setEntry] = useState({ entrantName: '', entrantEmail: '', teamName: '', tiebreakerScore: 0, picks: {} })
+  const [entry, setEntry] = useState({ teamName: '', tiebreakerScore: 0, picks: {} })
   const [submitError, setSubmitError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -157,17 +158,9 @@ export default function PoolView() {
         for (const pid of (entry.picks[tier.id] || [])) picks.push({ tierId: tier.id, playerId: pid })
       }
       const result = await api.submitPoolEntry(slug, {
-        entrantName: entry.entrantName,
-        entrantEmail: entry.entrantEmail,
         teamName: entry.teamName,
         tiebreakerScore: parseInt(entry.tiebreakerScore),
         picks,
-      })
-      rememberEnteredPool({
-        slug,
-        teamName: entry.teamName,
-        poolName: pool.name,
-        tournamentName: pool.tournament?.name || '',
       })
       setSubmitted(result.entry)
     } catch (err) {
@@ -187,20 +180,17 @@ export default function PoolView() {
       }
     }
     if (!entry.teamName?.trim()) hints.push('Add a team name')
-    if (!entry.entrantName?.trim()) hints.push('Add your name')
-    if (!entry.entrantEmail?.trim()) hints.push('Add your email')
     if (entry.tiebreakerScore === '' || entry.tiebreakerScore == null) hints.push('Set your tiebreaker')
     return { ok: hints.length === 0, hints }
   }, [pool, entry])
 
-  // Identify "your team" rows on the leaderboard for highlighting
-  const yourTeamNames = useMemo(() => {
-    try {
-      return new Set(getEnteredPools().filter(p => p.slug === slug).map(p => p.teamName))
-    } catch {
-      return new Set()
-    }
-  }, [slug, leaderboard])
+  // Identify "your team" rows on the leaderboard for highlighting (matched by current user's id)
+  const yourEntryIds = useMemo(() => {
+    if (!leaderboard?.leaderboard || !user) return new Set()
+    return new Set(
+      leaderboard.leaderboard.filter(e => e.userId === user.id).map(e => e.id)
+    )
+  }, [leaderboard, user])
 
   if (loading) {
     return (
@@ -296,8 +286,35 @@ export default function PoolView() {
           </div>
         )}
 
-        {/* OPEN — Entry flow */}
-        {pool.status === 'OPEN' && (
+        {/* OPEN — gate to logged-in users */}
+        {pool.status === 'OPEN' && !user && (
+          <div className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center max-w-2xl mx-auto">
+            <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Members only</div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-text-primary mb-3">
+              Sign in to <span className="font-editorial italic font-normal">enter</span>
+            </h2>
+            <p className="text-text-2 max-w-md mx-auto mb-7">
+              Pools require a free Clutch account so we can save your picks to you, not just this browser.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                to={`/login?redirect=${encodeURIComponent(`/pools/${slug}`)}`}
+                className="inline-flex items-center justify-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-xl px-5 py-3 transition-all hover:-translate-y-0.5"
+              >
+                Sign in
+              </Link>
+              <Link
+                to={`/signup?redirect=${encodeURIComponent(`/pools/${slug}`)}`}
+                className="inline-flex items-center justify-center gap-2 bg-bg border border-text-2/20 hover:border-blaze/40 text-text-primary font-display font-bold rounded-xl px-5 py-3 transition-colors"
+              >
+                Create account
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* OPEN — Entry flow (signed-in) */}
+        {pool.status === 'OPEN' && user && (
           <form onSubmit={submit} className="space-y-6 sm:space-y-8">
             {submitError && (
               <div className="rounded-xl bg-live-red/10 border border-live-red/30 text-live-red p-4 font-mono text-sm">
@@ -380,41 +397,21 @@ export default function PoolView() {
               <div>
                 <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-text-2 mb-1">Step 2</div>
                 <h3 className="font-display font-bold text-xl text-text-primary">Your entry</h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-text-2">Team name</span>
-                  <input
-                    className="mt-1 w-full rounded-xl border border-text-2/20 bg-bg px-3 py-2.5 text-text-primary font-display font-semibold focus:outline-none focus:border-blaze focus:ring-2 focus:ring-blaze/20 transition-colors"
-                    placeholder="The Closers"
-                    value={entry.teamName}
-                    onChange={e => setEntry({ ...entry, teamName: e.target.value })}
-                    minLength={2}
-                    maxLength={30}
-                    required
-                  />
-                </label>
-                <label className="block">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-text-2">Your name</span>
-                  <input
-                    className="mt-1 w-full rounded-xl border border-text-2/20 bg-bg px-3 py-2.5 text-text-primary focus:outline-none focus:border-blaze focus:ring-2 focus:ring-blaze/20 transition-colors"
-                    placeholder="Jane Doe"
-                    value={entry.entrantName}
-                    onChange={e => setEntry({ ...entry, entrantName: e.target.value })}
-                    required
-                  />
-                </label>
+                <p className="font-editorial italic text-sm text-text-2 mt-2">
+                  Entering as <span className="text-text-primary not-italic font-medium">{user.name}</span>
+                  <span className="text-text-2/70"> ({user.email})</span>
+                </p>
               </div>
 
               <label className="block">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-text-2">Email</span>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-text-2">Team name</span>
                 <input
-                  type="email"
-                  className="mt-1 w-full rounded-xl border border-text-2/20 bg-bg px-3 py-2.5 text-text-primary focus:outline-none focus:border-blaze focus:ring-2 focus:ring-blaze/20 transition-colors"
-                  placeholder="you@example.com"
-                  value={entry.entrantEmail}
-                  onChange={e => setEntry({ ...entry, entrantEmail: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-text-2/20 bg-bg px-3 py-2.5 text-text-primary font-display font-semibold focus:outline-none focus:border-blaze focus:ring-2 focus:ring-blaze/20 transition-colors"
+                  placeholder="The Closers"
+                  value={entry.teamName}
+                  onChange={e => setEntry({ ...entry, teamName: e.target.value })}
+                  minLength={2}
+                  maxLength={30}
                   required
                 />
               </label>
@@ -480,7 +477,7 @@ export default function PoolView() {
 
             <div className="space-y-2.5">
               {leaderboard.leaderboard.map((e, i) => {
-                const isYou = yourTeamNames.has(e.teamName)
+                const isYou = yourEntryIds.has(e.id)
                 const rank = i + 1
                 return (
                   <div

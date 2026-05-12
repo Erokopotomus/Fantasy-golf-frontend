@@ -3,7 +3,7 @@ const router = express.Router()
 const prisma = require('../lib/prisma')
 const { generateUniqueSlug, generateAdminToken } = require('../services/poolService')
 const { sendPoolEmail } = require('../services/emailService')
-const { optionalAuth } = require('../middleware/auth')
+const { authenticate, optionalAuth } = require('../middleware/auth')
 
 async function requireAdmin(req, res, next) {
   const token = req.query.token || req.headers['x-admin-token']
@@ -137,18 +137,17 @@ router.get('/:slug/leaderboard', async (req, res, next) => {
   } catch (e) { next(e) }
 })
 
-// ─── PUBLIC: POST entry ────────────────────────────────────────────────────
-router.post('/:slug/entries', optionalAuth, async (req, res, next) => {
+// ─── AUTHENTICATED: POST entry ─────────────────────────────────────────────
+router.post('/:slug/entries', authenticate, async (req, res, next) => {
   try {
-    const { entrantName, entrantEmail, teamName, tiebreakerScore, picks } = req.body
-    if (!entrantName || !entrantEmail || !teamName || tiebreakerScore == null || !Array.isArray(picks)) {
+    const { teamName, tiebreakerScore, picks } = req.body
+    const entrantName = req.user.name
+    const entrantEmail = req.user.email
+    if (!teamName || tiebreakerScore == null || !Array.isArray(picks)) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
     if (!/^[a-zA-Z0-9 _-]{2,30}$/.test(teamName)) {
       return res.status(400).json({ error: 'Team name must be 2-30 chars, letters/numbers/space/_/- only' })
-    }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(entrantEmail)) {
-      return res.status(400).json({ error: 'Invalid email' })
     }
 
     const pool = await prisma.pool.findUnique({
@@ -157,6 +156,12 @@ router.post('/:slug/entries', optionalAuth, async (req, res, next) => {
     })
     if (!pool) return res.status(404).json({ error: 'Pool not found' })
     if (pool.status !== 'OPEN') return res.status(409).json({ error: `Pool is ${pool.status.toLowerCase()}, not accepting entries` })
+
+    // One entry per user per pool
+    const existing = await prisma.poolEntry.findFirst({ where: { poolId: pool.id, userId: req.user.id } })
+    if (existing) {
+      return res.status(409).json({ error: 'You already have an entry in this pool. Want to update it? Delete the existing one first.' })
+    }
 
     // Validate exactly picksRequired per tier, all picks belong to the tier
     const picksByTier = new Map()
@@ -180,7 +185,7 @@ router.post('/:slug/entries', optionalAuth, async (req, res, next) => {
     const entry = await prisma.poolEntry.create({
       data: {
         poolId: pool.id,
-        userId: req.user?.id || null,
+        userId: req.user.id,
         entrantName, entrantEmail, teamName,
         tiebreakerScore: parseInt(tiebreakerScore),
         picks: { create: picks.map(p => ({ tierId: p.tierId, playerId: p.playerId })) },
@@ -210,10 +215,11 @@ router.post('/:slug/entries', optionalAuth, async (req, res, next) => {
 })
 
 // ─── ADMIN: POST create pool ───────────────────────────────────────────────
-router.post('/', optionalAuth, async (req, res, next) => {
+router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { name, tournamentId, commissionerEmail, scoringPreset, tiers } = req.body
-    if (!name || !tournamentId || !commissionerEmail || !Array.isArray(tiers) || tiers.length === 0) {
+    const { name, tournamentId, scoringPreset, tiers } = req.body
+    const commissionerEmail = req.body.commissionerEmail || req.user.email
+    if (!name || !tournamentId || !Array.isArray(tiers) || tiers.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
     for (const t of tiers) {
@@ -233,7 +239,7 @@ router.post('/', optionalAuth, async (req, res, next) => {
     const pool = await prisma.pool.create({
       data: {
         slug, adminToken, name, tournamentId, commissionerEmail,
-        commissionerUserId: req.user?.id || null,
+        commissionerUserId: req.user.id,
         scoringPreset: scoringPreset || 'standard',
         status: 'DRAFT',
         tiers: {
