@@ -511,6 +511,36 @@ httpServer.listen(PORT, () => {
       } catch (alertErr) { cronLog('live', `Roster alerts error: ${alertErr.message}`) }
     }, { timezone: 'America/New_York' })
 
+    // ─── Pool locking — every 2 min, all week ────────────────────────────
+    cron.schedule('*/2 * * * *', async () => {
+      try {
+        const now = new Date()
+        const due = await cronPrisma.pool.findMany({
+          where: { status: 'OPEN', locksAt: { lte: now } },
+          select: { id: true, slug: true, name: true },
+        })
+        for (const p of due) {
+          await cronPrisma.pool.update({ where: { id: p.id }, data: { status: 'LOCKED' } })
+          cronLog('pool-lock', `Locked pool ${p.slug} (${p.name})`)
+        }
+      } catch (e) { cronLog('pool-lock', `Error: ${e.message}`) }
+    })
+
+    // ─── Pool scoring — every 5 min Thu-Sun, riding alongside live ───────
+    const poolService = require('./services/poolService')
+    cron.schedule('*/5 * * * 4,5,6,0', async () => {
+      try {
+        const active = await cronPrisma.pool.findMany({
+          where: { status: { in: ['LOCKED', 'COMPLETED'] } },
+          select: { id: true, slug: true },
+        })
+        for (const p of active) {
+          const r = await poolService.recomputePoolScores(p.id, cronPrisma)
+          if (r.entriesUpdated > 0) cronLog('pool-score', `${p.slug}: ${r.entriesUpdated} entries updated`)
+        }
+      } catch (e) { cronLog('pool-score', `Error: ${e.message}`) }
+    }, { timezone: 'America/New_York' })
+
     // Every 5 min Thu-Sun (offset by 2 min from DataGolf live sync to avoid Prisma pool exhaustion)
     // DataGolf runs at :00, :05, :10 ... — ESPN runs at :02, :07, :12 ...
     const espnSync = require('./services/espnSync')
