@@ -8,6 +8,7 @@ import useTournamentScoring from '../hooks/useTournamentScoring'
 import { useLeagues } from '../hooks/useLeagues'
 import EventPredictionSlate from '../components/predictions/EventPredictionSlate'
 import WeatherStrip from '../components/tournament/WeatherStrip'
+import PoolContextBanner from '../components/pool/PoolContextBanner'
 import api from '../services/api'
 
 /** Floating player odds card shown in sidebar when a player is expanded */
@@ -108,6 +109,7 @@ const PlayerOddsCard = ({ player, onClose }) => {
 const TournamentScoring = () => {
   const { tournamentId } = useParams()
   const [searchParams] = useSearchParams()
+  const poolSlug = searchParams.get('pool')
   const navigate = useNavigate()
   const leagueId = searchParams.get('league')
 
@@ -166,6 +168,8 @@ const TournamentScoring = () => {
       <div className="space-y-4">
         <TournamentHeader tournament={tournament} leaderboard={leaderboard} />
 
+        <PoolContextBanner poolSlug={poolSlug} />
+
         {/* Preview banner */}
         <Link
           to={`/tournaments/${tournamentId}/preview`}
@@ -210,6 +214,8 @@ const TournamentScoring = () => {
     <div className="space-y-4">
       {/* Tournament Header — full width */}
       <TournamentHeader tournament={tournament} leaderboard={leaderboard} />
+
+      <PoolContextBanner poolSlug={poolSlug} />
 
       {/* Ticker: live status + refresh */}
       <div className="flex items-center justify-between px-1">

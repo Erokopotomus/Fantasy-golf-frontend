@@ -124,7 +124,8 @@ export default function PoolView() {
       try {
         const p = await api.getPool(slug)
         setPool(p.pool)
-        if (p.pool.status !== 'OPEN' && p.pool.status !== 'DRAFT') {
+        // Always fetch leaderboard if not DRAFT so we can detect "already entered" state for logged-in users
+        if (p.pool.status !== 'DRAFT') {
           const lb = await api.getPoolLeaderboard(slug)
           setLeaderboard(lb)
         }
@@ -194,6 +195,12 @@ export default function PoolView() {
     )
   }, [leaderboard, user])
 
+  // Detect existing entry so we don't show the picker again after they've already locked in
+  const myExistingEntry = useMemo(() => {
+    if (!leaderboard?.leaderboard || !user) return null
+    return leaderboard.leaderboard.find(e => e.userId === user.id) || null
+  }, [leaderboard, user])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -247,15 +254,15 @@ export default function PoolView() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
               <a
-                href={`/pools/${slug}`}
+                href={`/tournaments/${pool.tournamentId}?pool=${slug}`}
                 className="inline-flex items-center justify-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-xl px-5 py-3 transition-all hover:-translate-y-0.5"
               >
-                View leaderboard →
+                Watch the tournament →
               </a>
               <button
                 onClick={() => {
                   try {
-                    navigator.clipboard?.writeText(window.location.href)
+                    navigator.clipboard?.writeText(`${window.location.origin}/pools/${slug}`)
                   } catch {}
                 }}
                 className="inline-flex items-center justify-center gap-2 bg-bg border border-text-2/20 hover:border-blaze/40 text-text-primary font-display font-bold rounded-xl px-5 py-3 transition-colors"
@@ -315,8 +322,54 @@ export default function PoolView() {
           </div>
         )}
 
-        {/* OPEN — Entry flow (signed-in) */}
-        {pool.status === 'OPEN' && user && (
+        {/* OPEN — already entered (signed-in, has entry) */}
+        {pool.status === 'OPEN' && user && myExistingEntry && !submitted && (
+          <div className="max-w-2xl mx-auto rounded-2xl border border-field/30 bg-surface p-6 sm:p-8 text-center">
+            <div className="font-mono text-xs uppercase tracking-[0.2em] text-field mb-3">You're locked in</div>
+            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-text-primary leading-tight">
+              {myExistingEntry.teamName}
+            </h2>
+            <p className="font-editorial italic text-text-2 mt-3">
+              {pool.locksAt
+                ? <>Pool locks <span className="text-text-primary not-italic">{new Date(pool.locksAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>.</>
+                : <>Live scoring will start when the pool locks.</>}
+            </p>
+
+            {myExistingEntry.picks && myExistingEntry.picks.length > 0 && (
+              <div className="mt-6 pt-6 border-t border-text-2/10">
+                <div className="font-mono text-[11px] uppercase tracking-wider text-text-2 mb-3">Your picks</div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {myExistingEntry.picks.map((pick, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1 text-sm">
+                      <span>{pick.player?.countryFlag || ''}</span>
+                      <span className="text-text-primary font-medium">{pick.player?.name}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+              <Link
+                to={`/tournaments/${pool.tournamentId}?pool=${slug}`}
+                className="inline-flex items-center justify-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-xl px-5 py-3 transition-all hover:-translate-y-0.5"
+              >
+                Watch the tournament →
+              </Link>
+              <button
+                onClick={() => {
+                  try { navigator.clipboard?.writeText(`${window.location.origin}/pools/${slug}`) } catch {}
+                }}
+                className="inline-flex items-center justify-center gap-2 bg-bg border border-text-2/20 hover:border-blaze/40 text-text-primary font-display font-bold rounded-xl px-5 py-3 transition-colors"
+              >
+                Copy share link
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* OPEN — Entry flow (signed-in, no entry yet) */}
+        {pool.status === 'OPEN' && user && !myExistingEntry && (
           <form onSubmit={submit} className="space-y-6 sm:space-y-8">
             {submitError && (
               <div className="rounded-xl bg-live-red/10 border border-live-red/30 text-live-red p-4 font-mono text-sm">
