@@ -446,6 +446,39 @@ class ApiService {
     return this.request(`/tournaments/${tournamentId}/weather`)
   }
 
+  // ─── Pools ──────────────────────────────────────────────────────────────
+  async createPool(payload) {
+    return this.request('/pools', { method: 'POST', body: JSON.stringify(payload) })
+  }
+
+  async getPool(slug) {
+    return this.request(`/pools/${slug}`)
+  }
+
+  async getPoolLeaderboard(slug) {
+    return this.request(`/pools/${slug}/leaderboard`)
+  }
+
+  async submitPoolEntry(slug, entry) {
+    return this.request(`/pools/${slug}/entries`, { method: 'POST', body: JSON.stringify(entry) })
+  }
+
+  async getPoolAdmin(slug, token) {
+    return this.request(`/pools/${slug}/admin?token=${encodeURIComponent(token)}`)
+  }
+
+  async publishPool(slug, token) {
+    return this.request(`/pools/${slug}/publish?token=${encodeURIComponent(token)}`, { method: 'POST' })
+  }
+
+  async lockPool(slug, token) {
+    return this.request(`/pools/${slug}/lock?token=${encodeURIComponent(token)}`, { method: 'POST' })
+  }
+
+  async deletePoolEntry(slug, token, entryId) {
+    return this.request(`/pools/${slug}/entries/${entryId}?token=${encodeURIComponent(token)}`, { method: 'DELETE' })
+  }
+
   // Matchups
   async getLeagueMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`)
