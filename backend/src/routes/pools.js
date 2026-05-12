@@ -3,6 +3,18 @@ const router = express.Router()
 const prisma = require('../lib/prisma')
 const { generateUniqueSlug, generateAdminToken } = require('../services/poolService')
 
+async function requireAdmin(req, res, next) {
+  const token = req.query.token || req.headers['x-admin-token']
+  if (!token) return res.status(401).json({ error: 'Admin token required' })
+  const pool = await prisma.pool.findUnique({
+    where: { slug: req.params.slug },
+    select: { id: true, adminToken: true },
+  })
+  if (!pool || pool.adminToken !== token) return res.status(403).json({ error: 'Invalid admin token' })
+  req.poolId = pool.id
+  next()
+}
+
 // ─── PUBLIC: GET pool by slug ──────────────────────────────────────────────
 router.get('/:slug', async (req, res, next) => {
   try {
@@ -138,6 +150,105 @@ router.post('/:slug/entries', async (req, res, next) => {
     if (e.code === 'P2002') return res.status(409).json({ error: 'Team name already taken in this pool' })
     next(e)
   }
+})
+
+// ─── ADMIN: POST create pool ───────────────────────────────────────────────
+router.post('/', async (req, res, next) => {
+  try {
+    const { name, tournamentId, commissionerEmail, scoringPreset, tiers } = req.body
+    if (!name || !tournamentId || !commissionerEmail || !Array.isArray(tiers) || tiers.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' })
+    }
+    for (const t of tiers) {
+      if (typeof t.tierNumber !== 'number' || typeof t.picksRequired !== 'number' || !Array.isArray(t.playerIds)) {
+        return res.status(400).json({ error: 'Each tier needs tierNumber, picksRequired, playerIds' })
+      }
+      if (t.playerIds.length < t.picksRequired) {
+        return res.status(400).json({ error: `Tier ${t.tierNumber} has fewer players (${t.playerIds.length}) than picksRequired (${t.picksRequired})` })
+      }
+    }
+    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId }, select: { id: true } })
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found' })
+
+    const slug = await generateUniqueSlug()
+    const adminToken = generateAdminToken()
+
+    const pool = await prisma.pool.create({
+      data: {
+        slug, adminToken, name, tournamentId, commissionerEmail,
+        scoringPreset: scoringPreset || 'standard',
+        status: 'DRAFT',
+        tiers: {
+          create: tiers.map(t => ({
+            tierNumber: t.tierNumber,
+            label: t.label || null,
+            picksRequired: t.picksRequired,
+            players: { create: t.playerIds.map(pid => ({ playerId: pid })) },
+          })),
+        },
+      },
+    })
+
+    res.status(201).json({ slug: pool.slug, adminToken: pool.adminToken })
+  } catch (e) { next(e) }
+})
+
+// ─── ADMIN: POST publish (DRAFT → OPEN, computes locksAt) ─────────────────
+router.post('/:slug/publish', requireAdmin, async (req, res, next) => {
+  try {
+    const pool = await prisma.pool.findUnique({ where: { id: req.poolId }, include: { tournament: true } })
+    // locksAt = earliest R1 tee time. Fall back to tournament startDate at 15:00 UTC (11 AM ET) if no tee time.
+    const earliestR1 = await prisma.roundScore.findFirst({
+      where: { tournamentId: pool.tournamentId, roundNumber: 1, teeTime: { not: null } },
+      orderBy: { teeTime: 'asc' },
+      select: { teeTime: true },
+    })
+    let locksAt = earliestR1?.teeTime
+    if (!locksAt) {
+      locksAt = new Date(pool.tournament.startDate)
+      locksAt.setUTCHours(15)
+    }
+
+    const updated = await prisma.pool.update({
+      where: { id: req.poolId },
+      data: { status: 'OPEN', locksAt },
+    })
+    res.json({ pool: updated })
+  } catch (e) { next(e) }
+})
+
+// ─── ADMIN: POST lock (OPEN → LOCKED) ──────────────────────────────────────
+router.post('/:slug/lock', requireAdmin, async (req, res, next) => {
+  try {
+    const updated = await prisma.pool.update({
+      where: { id: req.poolId },
+      data: { status: 'LOCKED' },
+    })
+    res.json({ pool: updated })
+  } catch (e) { next(e) }
+})
+
+// ─── ADMIN: GET admin view (all entries + admin metadata) ─────────────────
+router.get('/:slug/admin', requireAdmin, async (req, res, next) => {
+  try {
+    const pool = await prisma.pool.findUnique({
+      where: { id: req.poolId },
+      include: {
+        tournament: true,
+        tiers: { orderBy: { tierNumber: 'asc' }, include: { players: { include: { player: true } } } },
+        entries: { include: { picks: { include: { player: true, tier: true } } } },
+      },
+    })
+    res.json({ pool })
+  } catch (e) { next(e) }
+})
+
+// ─── ADMIN: DELETE entry (DQ) ──────────────────────────────────────────────
+router.delete('/:slug/entries/:entryId', requireAdmin, async (req, res, next) => {
+  try {
+    await prisma.poolEntry.delete({ where: { id: req.params.entryId } })
+    res.json({ ok: true })
+  } catch (e) { next(e) }
 })
 
 module.exports = router
