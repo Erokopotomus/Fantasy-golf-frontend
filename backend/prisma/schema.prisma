@@ -34,39 +34,39 @@ model User {
 
   // Manager Analytics relations
   managerProfiles        ManagerProfile[]
-  h2hRecords             HeadToHeadRecord[]  @relation("H2HUser")
-  h2hOpponentRecords     HeadToHeadRecord[]  @relation("H2HOpponent")
+  h2hRecords             HeadToHeadRecord[]     @relation("H2HUser")
+  h2hOpponentRecords     HeadToHeadRecord[]     @relation("H2HOpponent")
   achievementUnlocks     AchievementUnlock[]
   managerSeasonSummaries ManagerSeasonSummary[]
   mockDraftResults       MockDraftResult[]
 
   // Push notifications
   pushTokens              PushToken[]
-  notificationPreferences Json    @default("{}")
+  notificationPreferences Json        @default("{}")
 
   // Predictions
-  predictions     Prediction[]
-  reputations     UserReputation[]
+  predictions Prediction[]
+  reputations UserReputation[]
 
   // League History / Migration
-  leagueImports       LeagueImport[]
-  historicalSeasons    HistoricalSeason[]    @relation("HistoricalOwner")
+  leagueImports     LeagueImport[]
+  historicalSeasons HistoricalSeason[] @relation("HistoricalOwner")
 
   // OAuth tokens (Yahoo, etc.)
-  oauthTokens         UserOAuthToken[]
+  oauthTokens UserOAuthToken[]
 
   // Workspace / The Lab
-  draftBoards      DraftBoard[]
-  watchListEntries WatchListEntry[]
-  boardActivities  BoardActivity[]
-  labCaptures      LabCapture[]
-  labInsight       LabInsightCache?
-  labCheatSheets   LabCheatSheet[]
-  opinionEvents    PlayerOpinionEvent[]
+  draftBoards          DraftBoard[]
+  watchListEntries     WatchListEntry[]
+  boardActivities      BoardActivity[]
+  labCaptures          LabCapture[]
+  labInsight           LabInsightCache?
+  labCheatSheets       LabCheatSheet[]
+  opinionEvents        PlayerOpinionEvent[]
   intelligenceProfiles UserIntelligenceProfile[]
   aiInsights           AiInsight[]
   aiReports            AiReport[]
-  aiPreferences        Json     @default("{\"ambient\":true,\"draftCoaching\":true,\"boardCoaching\":true,\"predictionCoaching\":true}")
+  aiPreferences        Json                      @default("{\"ambient\":true,\"draftCoaching\":true,\"boardCoaching\":true,\"predictionCoaching\":true}")
 
   // Custom league data imports
   customLeagueDataImports CustomLeagueData[]
@@ -75,20 +75,20 @@ model User {
   leagueQuerySessions LeagueQuerySession[]
 
   // Owner alias mapping
-  ownerAliases        OwnerAlias[]
+  ownerAliases OwnerAlias[]
 
   // Commissioner posts
-  leaguePosts        LeaguePost[]        @relation("PostAuthor")
-  postReactions      LeaguePostReaction[] @relation("PostReactor")
-  postComments       LeaguePostComment[]  @relation("PostCommenter")
-  postViews          LeaguePostView[]     @relation("PostViewer")
+  leaguePosts   LeaguePost[]         @relation("PostAuthor")
+  postReactions LeaguePostReaction[] @relation("PostReactor")
+  postComments  LeaguePostComment[]  @relation("PostCommenter")
+  postViews     LeaguePostView[]     @relation("PostViewer")
 
   // Phase 5: Manager profile + Clutch Rating
-  username    String?  @unique @db.VarChar(30)
-  bio         String?  @db.Text
-  tagline     String?  @db.VarChar(280)
-  socialLinks Json     @default("{}") @map("social_links")
-  pinnedBadges Json    @default("[]") @map("pinned_badges")
+  username            String?              @unique @db.VarChar(30)
+  bio                 String?              @db.Text
+  tagline             String?              @db.VarChar(280)
+  socialLinks         Json                 @default("{}") @map("social_links")
+  pinnedBadges        Json                 @default("[]") @map("pinned_badges")
   clutchManagerRating ClutchManagerRating?
   ratingSnapshots     RatingSnapshot[]
 
@@ -97,7 +97,7 @@ model User {
   coachingInteractions CoachingInteraction[]
 
   // Pools (tiered pick'em)
-  poolEntries          PoolEntry[]
+  poolEntries PoolEntry[]
 
   @@map("users")
 }
@@ -131,19 +131,19 @@ model League {
   settings Json @default("{}")
 
   // Relations
-  members       LeagueMember[]
-  teams         Team[]
-  drafts        Draft[]
-  trades        Trade[]
-  messages      Message[]
-  matchups      Matchup[]
-  picks         Pick[]
-  leagueSeasons LeagueSeason[]
-  rosterSlots   RosterSlotDefinition[] @relation("LeagueRosterSlots")
-  waiverClaims     WaiverClaim[]
-  predictions      Prediction[]
-  leagueImports    LeagueImport[]    @relation("LeagueImports")
-  historicalSeasons HistoricalSeason[] @relation("LeagueHistory")
+  members           LeagueMember[]
+  teams             Team[]
+  drafts            Draft[]
+  trades            Trade[]
+  messages          Message[]
+  matchups          Matchup[]
+  picks             Pick[]
+  leagueSeasons     LeagueSeason[]
+  rosterSlots       RosterSlotDefinition[] @relation("LeagueRosterSlots")
+  waiverClaims      WaiverClaim[]
+  predictions       Prediction[]
+  leagueImports     LeagueImport[]         @relation("LeagueImports")
+  historicalSeasons HistoricalSeason[]     @relation("LeagueHistory")
 
   // Draft dollar tracking
   draftDollarTransactions DraftDollarTransaction[]
@@ -152,17 +152,17 @@ model League {
   customLeagueData CustomLeagueData[]
 
   // League intelligence
-  querySessions   LeagueQuerySession[]
-  statsCache      LeagueStatsCache?
+  querySessions LeagueQuerySession[]
+  statsCache    LeagueStatsCache?
 
   // Owner alias mapping (commissioner-managed)
-  ownerAliases    OwnerAlias[]
+  ownerAliases OwnerAlias[]
 
   // Owner avatars (League Vault)
-  ownerAvatars    OwnerAvatar[]
+  ownerAvatars OwnerAvatar[]
 
   // Commissioner posts
-  posts           LeaguePost[]
+  posts LeaguePost[]
 
   // Per-week roster overrides (commissioner adjustments)
   weeklyRosterOverrides WeeklyRosterOverride[]
@@ -280,11 +280,11 @@ model Player {
   fantraxId    String? // Fantrax ID
 
   // NFL IDs (nflverse)
-  gsisId       String? @unique // NFL GSIS player ID
-  pfrId        String? // Pro-Football-Reference ID
-  nflPosition  String? // QB, RB, WR, TE, K, DEF, etc.
-  nflTeamAbbr  String? // Current NFL team abbreviation (KC, BAL, etc.)
-  nflNumber    Int?    // Jersey number
+  gsisId      String? @unique // NFL GSIS player ID
+  pfrId       String? // Pro-Football-Reference ID
+  nflPosition String? // QB, RB, WR, TE, K, DEF, etc.
+  nflTeamAbbr String? // Current NFL team abbreviation (KC, BAL, etc.)
+  nflNumber   Int? // Jersey number
 
   // Basic Info
   firstName String?
@@ -370,8 +370,8 @@ model Player {
   updatedAt DateTime @updatedAt
 
   // Sport link (nullable for backward compat)
-  sportId String?
-  sportRef Sport? @relation("PlayerSport", fields: [sportId], references: [id])
+  sportId  String?
+  sportRef Sport?  @relation("PlayerSport", fields: [sportId], references: [id])
 
   // Source tracking
   sourceProvider      String?
@@ -982,9 +982,9 @@ model DraftPick {
   player   Player @relation(fields: [playerId], references: [id])
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
-  pickTag        String?  @db.VarChar(20)  // STEAL, REACH, PLAN, FALLBACK, VALUE, PANIC
-  boardRankAtPick Int?                      // Where this player was on user's board at pick time
-  boardId        String?                    // Which board was active during draft
+  pickTag         String? @db.VarChar(20) // STEAL, REACH, PLAN, FALLBACK, VALUE, PANIC
+  boardRankAtPick Int? // Where this player was on user's board at pick time
+  boardId         String? // Which board was active during draft
 
   // Relations
   draftValueTracker DraftValueTracker?
@@ -996,10 +996,10 @@ model DraftPick {
 // ============ MATCHUPS (H2H) ============
 
 model Matchup {
-  id           String  @id @default(cuid())
-  week         Int
-  homeScore    Float   @default(0)
-  awayScore    Float   @default(0)
+  id               String  @id @default(cuid())
+  week             Int
+  homeScore        Float   @default(0)
+  awayScore        Float   @default(0)
   isPlayoff        Boolean @default(false)
   playoffRound     Int? // 1 = quarterfinals, 2 = semifinals, 3 = finals, etc.
   playoffMatchType String? // QUARTERFINAL, SEMIFINAL, FINAL, THIRD_PLACE, FIFTH_PLACE
@@ -1081,8 +1081,8 @@ model Trade {
   vetoVotes Json @default("[]")
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
-  proposerReasoning  String?  @db.VarChar(280)
-  responderReasoning String?  @db.VarChar(280)
+  proposerReasoning  String? @db.VarChar(280)
+  responderReasoning String? @db.VarChar(280)
 
   // Draft dollar trading
   senderDollars   Json @default("{}") // { current: 0, next: 0 }
@@ -1145,18 +1145,18 @@ model Sport {
   // Relations
   seasons        Season[]
   scoringSystems ScoringSystem[]
-  leagues        League[]        @relation("LeagueSport")
+  leagues        League[]             @relation("LeagueSport")
   positions      Position[]
   playerTags     PlayerTag[]
   sportProfiles  SportPlayerProfile[]
-  players        Player[]        @relation("PlayerSport")
+  players        Player[]             @relation("PlayerSport")
 
   // Manager Analytics relations
-  managerProfiles        ManagerProfile[]        @relation("ManagerProfileSport")
-  h2hRecords             HeadToHeadRecord[]      @relation("H2HSport")
-  achievements           Achievement[]           @relation("AchievementSport")
-  managerSeasonSummaries ManagerSeasonSummary[]  @relation("ManagerSeasonSummarySport")
-  mockDraftResults       MockDraftResult[]       @relation("MockDraftSport")
+  managerProfiles        ManagerProfile[]       @relation("ManagerProfileSport")
+  h2hRecords             HeadToHeadRecord[]     @relation("H2HSport")
+  achievements           Achievement[]          @relation("AchievementSport")
+  managerSeasonSummaries ManagerSeasonSummary[] @relation("ManagerSeasonSummarySport")
+  mockDraftResults       MockDraftResult[]      @relation("MockDraftSport")
 
   @@map("sports")
 }
@@ -1176,15 +1176,15 @@ model Season {
   updatedAt DateTime @updatedAt
 
   // Relations
-  weeks          FantasyWeek[]
-  leagueSeasons  LeagueSeason[]
-  playerStats    PlayerSeasonStats[]
-  scoringRecords FantasyScore[]
-  adpEntries     ADPEntry[]
-  consistency    PlayerConsistency[]
-  ownershipRates OwnershipRate[]
-  tagAssignments PlayerTagAssignment[]
-  sportProfiles  SportPlayerProfile[]
+  weeks                  FantasyWeek[]
+  leagueSeasons          LeagueSeason[]
+  playerStats            PlayerSeasonStats[]
+  scoringRecords         FantasyScore[]
+  adpEntries             ADPEntry[]
+  consistency            PlayerConsistency[]
+  ownershipRates         OwnershipRate[]
+  tagAssignments         PlayerTagAssignment[]
+  sportProfiles          SportPlayerProfile[]
   managerSeasonSummaries ManagerSeasonSummary[]
 
   @@unique([sportId, slug])
@@ -1223,10 +1223,10 @@ model FantasyWeek {
 }
 
 model WeeklyRosterOverride {
-  id            String   @id @default(cuid())
+  id            String @id @default(cuid())
   leagueId      String
   fantasyWeekId String
-  starterCount  Int      // override value for maxActiveLineup
+  starterCount  Int // override value for maxActiveLineup
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1252,7 +1252,7 @@ model ScoringSystem {
   updatedAt DateTime @updatedAt
 
   // Relations
-  leagues           League[]            @relation("LeagueScoring")
+  leagues           League[]               @relation("LeagueScoring")
   fantasyScores     FantasyScore[]
   playerConsistency PlayerConsistency[]
   rosterSlots       RosterSlotDefinition[]
@@ -1316,8 +1316,8 @@ model LeagueSeason {
   teamBudgets        TeamBudget[]
 
   // Draft dollar tracking
-  draftDollarAccounts      DraftDollarAccount[]
-  draftDollarTransactions  DraftDollarTransaction[]
+  draftDollarAccounts     DraftDollarAccount[]
+  draftDollarTransactions DraftDollarTransaction[]
 
   @@unique([leagueId, seasonId])
   @@map("league_seasons")
@@ -1347,11 +1347,11 @@ model TeamSeason {
   maxWinStreak    Int    @default(0)
 
   // Playoff tracking
-  madePlayoffs   Boolean @default(false)
-  playoffSeed    Int?
-  playoffWins    Int     @default(0)
-  playoffLosses  Int     @default(0)
-  playoffByes    Int     @default(0)
+  madePlayoffs  Boolean @default(false)
+  playoffSeed   Int?
+  playoffWins   Int     @default(0)
+  playoffLosses Int     @default(0)
+  playoffByes   Int     @default(0)
 
   // Flexible stats (avgPointsPerWeek, consistency, etc.)
   stats Json @default("{}")
@@ -1416,7 +1416,7 @@ model LineupSnapshot {
   optimalPoints Float? // Best possible arrangement
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
-  decisionNotes Json?  // { "benchedPlayers": [{ "playerId": "x", "reason": "matchup" }], "startedPlayers": [...] }
+  decisionNotes Json? // { "benchedPlayers": [{ "playerId": "x", "reason": "matchup" }], "startedPlayers": [...] }
 
   lockedAt  DateTime @default(now())
   createdAt DateTime @default(now())
@@ -1619,83 +1619,86 @@ model DraftValueTracker {
 // ============ POOLS (tiered pick'em) ============
 
 model Pool {
-  id                String      @id @default(cuid())
-  slug              String      @unique
+  id                String     @id @default(cuid())
+  slug              String     @unique
   name              String
-  tournamentId      String      @map("tournament_id")
-  commissionerEmail String      @map("commissioner_email")
-  adminToken        String      @unique @map("admin_token")
-  status            PoolStatus  @default(DRAFT)
-  locksAt           DateTime?   @map("locks_at")
-  scoringPreset     String      @default("standard") @map("scoring_preset")
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
+  tournamentId      String     @map("tournament_id")
+  commissionerEmail String     @map("commissioner_email")
+  adminToken        String     @unique @map("admin_token")
+  status            PoolStatus @default(DRAFT)
+  locksAt           DateTime?  @map("locks_at")
+  scoringPreset     String     @default("standard") @map("scoring_preset")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
 
-  tournament        Tournament  @relation(fields: [tournamentId], references: [id])
-  tiers             PoolTier[]
-  entries           PoolEntry[]
+  tournament Tournament  @relation(fields: [tournamentId], references: [id])
+  tiers      PoolTier[]
+  entries    PoolEntry[]
 
+  @@index([status, locksAt])
   @@map("pools")
 }
 
 model PoolTier {
-  id            String           @id @default(cuid())
-  poolId        String           @map("pool_id")
-  tierNumber    Int              @map("tier_number")
+  id            String  @id @default(cuid())
+  poolId        String  @map("pool_id")
+  tierNumber    Int     @map("tier_number")
   label         String?
-  picksRequired Int              @map("picks_required")
+  picksRequired Int     @map("picks_required")
 
-  pool          Pool             @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  players       PoolTierPlayer[]
-  picks         PoolPick[]
+  pool    Pool             @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  players PoolTierPlayer[]
+  picks   PoolPick[]
 
   @@unique([poolId, tierNumber])
   @@map("pool_tiers")
 }
 
 model PoolTierPlayer {
-  id       String   @id @default(cuid())
-  tierId   String   @map("tier_id")
-  playerId String   @map("player_id")
+  id       String @id @default(cuid())
+  tierId   String @map("tier_id")
+  playerId String @map("player_id")
 
-  tier     PoolTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
-  player   Player   @relation(fields: [playerId], references: [id])
+  tier   PoolTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  player Player   @relation(fields: [playerId], references: [id])
 
   @@unique([tierId, playerId])
   @@map("pool_tier_players")
 }
 
 model PoolEntry {
-  id                 String     @id @default(cuid())
-  poolId             String     @map("pool_id")
-  userId             String?    @map("user_id")
-  entrantName        String     @map("entrant_name")
-  entrantEmail       String     @map("entrant_email")
-  teamName           String     @map("team_name")
-  tiebreakerScore    Int        @map("tiebreaker_score")
-  totalFantasyPoints Float      @default(0) @map("total_fantasy_points")
-  submittedAt        DateTime   @default(now()) @map("submitted_at")
+  id                 String   @id @default(cuid())
+  poolId             String   @map("pool_id")
+  userId             String?  @map("user_id")
+  entrantName        String   @map("entrant_name")
+  entrantEmail       String   @map("entrant_email")
+  teamName           String   @map("team_name")
+  tiebreakerScore    Int      @map("tiebreaker_score")
+  totalFantasyPoints Float    @default(0) @map("total_fantasy_points")
+  submittedAt        DateTime @default(now()) @map("submitted_at")
 
-  pool               Pool       @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  user               User?      @relation(fields: [userId], references: [id])
-  picks              PoolPick[]
+  pool  Pool       @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  user  User?      @relation(fields: [userId], references: [id])
+  picks PoolPick[]
 
   @@unique([poolId, teamName])
+  @@index([poolId, totalFantasyPoints])
   @@map("pool_entries")
 }
 
 model PoolPick {
-  id            String    @id @default(cuid())
-  entryId       String    @map("entry_id")
-  tierId        String    @map("tier_id")
-  playerId      String    @map("player_id")
-  fantasyPoints Float?    @map("fantasy_points")
+  id            String @id @default(cuid())
+  entryId       String @map("entry_id")
+  tierId        String @map("tier_id")
+  playerId      String @map("player_id")
+  fantasyPoints Float? @map("fantasy_points")
 
-  entry         PoolEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  tier          PoolTier  @relation(fields: [tierId], references: [id])
-  player        Player    @relation(fields: [playerId], references: [id])
+  entry  PoolEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  tier   PoolTier  @relation(fields: [tierId], references: [id])
+  player Player    @relation(fields: [playerId], references: [id])
 
   @@unique([entryId, tierId, playerId])
+  @@index([playerId])
   @@map("pool_picks")
 }
 
@@ -1812,7 +1815,7 @@ model Position {
   updatedAt DateTime @updatedAt
 
   // Relations
-  playerPositions      PlayerPosition[]
+  playerPositions       PlayerPosition[]
   rosterSlotEligibility RosterSlotEligibility[]
 
   @@unique([sportId, abbr])
@@ -1820,12 +1823,12 @@ model Position {
 }
 
 model PlayerPosition {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   playerId   String
-  player     Player  @relation(fields: [playerId], references: [id])
+  player     Player   @relation(fields: [playerId], references: [id])
   positionId String
   position   Position @relation(fields: [positionId], references: [id])
-  isPrimary  Boolean @default(true)
+  isPrimary  Boolean  @default(true)
   source     String? // "datagolf", "espn", "manual"
 
   createdAt DateTime @default(now())
@@ -1836,12 +1839,12 @@ model PlayerPosition {
 }
 
 model RosterSlotDefinition {
-  id              String  @id @default(cuid())
+  id              String         @id @default(cuid())
   // Either league-level or scoring-system-level (one must be set)
   scoringSystemId String?
   scoringSystem   ScoringSystem? @relation(fields: [scoringSystemId], references: [id])
   leagueId        String?
-  league          League? @relation("LeagueRosterSlots", fields: [leagueId], references: [id], onDelete: Cascade)
+  league          League?        @relation("LeagueRosterSlots", fields: [leagueId], references: [id], onDelete: Cascade)
 
   slotKey     String // "QB1", "RB1", "RB2", "FLEX1", "BN1", "BN2"
   displayName String // "Quarterback", "Running Back", "Flex", "Bench"
@@ -1895,8 +1898,8 @@ model PlayerTag {
   slug     String
   name     String
   category TagCategory
-  color    String?     // Hex color for UI
-  icon     String?     // Icon name or emoji
+  color    String? // Hex color for UI
+  icon     String? // Icon name or emoji
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1916,7 +1919,7 @@ model PlayerTagAssignment {
   tag       PlayerTag @relation(fields: [tagId], references: [id])
   seasonId  String?
   season    Season?   @relation(fields: [seasonId], references: [id])
-  value     String?   // Optional value (e.g., contract amount, injury type)
+  value     String? // Optional value (e.g., contract amount, injury type)
   expiresAt DateTime?
 
   createdAt DateTime @default(now())
@@ -1928,16 +1931,16 @@ model PlayerTagAssignment {
 }
 
 model TeamBudget {
-  id              String       @id @default(cuid())
-  teamId          String
-  team            Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  leagueSeasonId  String
-  leagueSeason    LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  teamId         String
+  team           Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  leagueSeasonId String
+  leagueSeason   LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
 
-  totalBudget     Float   @default(200)
-  spent           Float   @default(0)
-  remaining       Float   @default(200)
-  spentByPosition Json    @default("{}") // { "QB": 45, "RB": 80, "WR": 60, ... }
+  totalBudget     Float @default(200)
+  spent           Float @default(0)
+  remaining       Float @default(200)
+  spentByPosition Json  @default("{}") // { "QB": 45, "RB": 80, "WR": 60, ... }
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1947,13 +1950,13 @@ model TeamBudget {
 }
 
 model SportPlayerProfile {
-  id       String  @id @default(cuid())
+  id       String @id @default(cuid())
   playerId String
-  player   Player  @relation(fields: [playerId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id])
   sportId  String
-  sport    Sport   @relation(fields: [sportId], references: [id])
+  sport    Sport  @relation(fields: [sportId], references: [id])
   seasonId String
-  season   Season  @relation(fields: [seasonId], references: [id])
+  season   Season @relation(fields: [seasonId], references: [id])
 
   stats    Json @default("{}") // Sport-specific stats JSONB
   rankings Json @default("{}") // Sport-specific rankings JSONB
@@ -1969,24 +1972,24 @@ model SportPlayerProfile {
 // ============ MANAGER ANALYTICS & ACHIEVEMENTS ============
 
 model ManagerProfile {
-  id     String  @id @default(cuid())
+  id     String @id @default(cuid())
   userId String
-  user   User    @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   // Nullable = cross-sport aggregate
   sportId String?
   sport   Sport?  @relation("ManagerProfileSport", fields: [sportId], references: [id])
 
-  totalLeagues    Int   @default(0)
-  totalSeasons    Int   @default(0)
-  championships   Int   @default(0)
-  wins            Int   @default(0)
-  losses          Int   @default(0)
-  ties            Int   @default(0)
-  winPct          Float @default(0)
-  avgFinish       Float @default(0)
+  totalLeagues    Int    @default(0)
+  totalSeasons    Int    @default(0)
+  championships   Int    @default(0)
+  wins            Int    @default(0)
+  losses          Int    @default(0)
+  ties            Int    @default(0)
+  winPct          Float  @default(0)
+  avgFinish       Float  @default(0)
   bestFinish      Int?
-  totalPoints     Float @default(0)
+  totalPoints     Float  @default(0)
   auctionROI      Float? // avg points/dollar across auction drafts
   draftEfficiency Float? // avg valueVsAdp
 
@@ -2002,23 +2005,23 @@ model ManagerProfile {
 }
 
 model HeadToHeadRecord {
-  id             String  @id @default(cuid())
+  id             String @id @default(cuid())
   userId         String
-  user           User    @relation("H2HUser", fields: [userId], references: [id])
+  user           User   @relation("H2HUser", fields: [userId], references: [id])
   opponentUserId String
-  opponent       User    @relation("H2HOpponent", fields: [opponentUserId], references: [id])
+  opponent       User   @relation("H2HOpponent", fields: [opponentUserId], references: [id])
 
   // Nullable = all sports / all formats
   sportId      String?
   sport        Sport?        @relation("H2HSport", fields: [sportId], references: [id])
   leagueFormat LeagueFormat?
 
-  wins           Int   @default(0)
-  losses         Int   @default(0)
-  ties           Int   @default(0)
-  pointsFor      Float @default(0)
-  pointsAgainst  Float @default(0)
-  matchupsPlayed Int   @default(0)
+  wins           Int       @default(0)
+  losses         Int       @default(0)
+  ties           Int       @default(0)
+  pointsFor      Float     @default(0)
+  pointsAgainst  Float     @default(0)
+  matchupsPlayed Int       @default(0)
   lastMatchupAt  DateTime?
 
   // { currentStreak, longestStreak, avgMargin }
@@ -2044,7 +2047,7 @@ model Achievement {
   tier     AchievementTier
   icon     String? // emoji or icon name
   category AchievementCategory
-  isHidden Boolean @default(false)
+  isHidden Boolean             @default(false)
 
   // { type: "championships", threshold: 1 } — for automated checking
   criteria Json @default("{}")
@@ -2135,27 +2138,27 @@ enum WaiverClaimStatus {
 // ============ WAIVER CLAIMS ============
 
 model WaiverClaim {
-  id       String            @id @default(cuid())
+  id       String @id @default(cuid())
   leagueId String
-  league   League            @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   teamId   String
-  team     Team              @relation(fields: [teamId], references: [id])
+  team     Team   @relation(fields: [teamId], references: [id])
   userId   String
   playerId String
-  player   Player            @relation(fields: [playerId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id])
 
   // Optional: player to drop if roster is full
   dropPlayerId String?
 
-  bidAmount Float   @default(0)
-  priority  Int     @default(0) // User's ordering of their own claims
+  bidAmount Float @default(0)
+  priority  Int   @default(0) // User's ordering of their own claims
 
   status      WaiverClaimStatus @default(PENDING)
   processedAt DateTime?
-  notes       String?           // "Outbid by Team X", "Insufficient budget", etc.
+  notes       String? // "Outbid by Team X", "Insufficient budget", etc.
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
-  reasoning   String?           @db.VarChar(280)
+  reasoning String? @db.VarChar(280)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2169,59 +2172,59 @@ model WaiverClaim {
 // ============ DRAFT GRADING ============
 
 model DraftGrade {
-  id             String  @id @default(cuid())
-  draftId        String
-  draft          Draft   @relation(fields: [draftId], references: [id], onDelete: Cascade)
-  teamId         String
-  team           Team    @relation(fields: [teamId], references: [id])
+  id      String @id @default(cuid())
+  draftId String
+  draft   Draft  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  teamId  String
+  team    Team   @relation(fields: [teamId], references: [id])
 
-  overallGrade   String            // "A+", "A", "A-", "B+", ... "F"
-  overallScore   Float             // 0-100
-  positionGrades Json @default("{}") // { "G": { grade, score, picks }, "QB": { ... } }
-  pickGrades     Json @default("[]") // [{ pickNumber, round, playerId, playerName, grade, score, adpDiff }]
+  overallGrade   String // "A+", "A", "A-", "B+", ... "F"
+  overallScore   Float // 0-100
+  positionGrades Json   @default("{}") // { "G": { grade, score, picks }, "QB": { ... } }
+  pickGrades     Json   @default("[]") // [{ pickNumber, round, playerId, playerName, grade, score, adpDiff }]
 
-  totalValue     Float  @default(0)
-  bestPick       Json?             // { playerId, playerName, pickNumber, score }
-  worstPick      Json?
-  sleepers       Json @default("[]")
-  reaches        Json @default("[]")
+  totalValue Float @default(0)
+  bestPick   Json? // { playerId, playerName, pickNumber, score }
+  worstPick  Json?
+  sleepers   Json  @default("[]")
+  reaches    Json  @default("[]")
 
-  sportId        String?
-  algorithm      String @default("v1")
-  gradedAt       DateTime @default(now())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  sportId   String?
+  algorithm String   @default("v1")
+  gradedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([draftId, teamId])
   @@map("draft_grades")
 }
 
 model MockDraftResult {
-  id           String  @id @default(cuid())
-  userId       String
-  user         User    @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   sportId      String?
   sport        Sport?  @relation("MockDraftSport", fields: [sportId], references: [id])
-  draftType    String            // "snake" or "auction"
+  draftType    String // "snake" or "auction"
   teamCount    Int
   rosterSize   Int
-  userPosition Int?              // draft slot (snake)
-  dataSource   String @default("api") // "api" or "mock"
+  userPosition Int? // draft slot (snake)
+  dataSource   String  @default("api") // "api" or "mock"
 
-  picks        Json @default("[]")    // ALL picks
-  userPicks    Json @default("[]")    // User's picks only
-  teamNames    Json @default("[]")    // ["Your Team", "Eagle Eyes", ...]
+  picks     Json @default("[]") // ALL picks
+  userPicks Json @default("[]") // User's picks only
+  teamNames Json @default("[]") // ["Your Team", "Eagle Eyes", ...]
 
   overallGrade   String?
   overallScore   Float?
-  positionGrades Json @default("{}")
-  pickGrades     Json @default("[]")
+  positionGrades Json    @default("{}")
+  pickGrades     Json    @default("[]")
   bestPick       Json?
   worstPick      Json?
 
-  completedAt  DateTime @default(now())
-  createdAt    DateTime @default(now())
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   @@index([userId, completedAt])
   @@map("mock_draft_results")
@@ -2237,9 +2240,9 @@ model PushToken {
   token     String
   deviceId  String?
   userAgent String?
-  endpoint  String?       // Web Push subscription endpoint
-  p256dh    String?       // Web Push encryption key
-  auth      String?       // Web Push auth secret
+  endpoint  String? // Web Push subscription endpoint
+  p256dh    String? // Web Push encryption key
+  auth      String? // Web Push auth secret
   isActive  Boolean       @default(true)
   lastUsed  DateTime      @default(now())
   createdAt DateTime      @default(now())
@@ -2277,9 +2280,9 @@ model Prediction {
   predictionData Json // {action, benchmark_value, direction, confidence, reasoning}
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
-  thesis          String?  @db.VarChar(280)  // Why the user believes this
-  confidenceLevel Int?                        // 1-5 scale
-  keyFactors      Json?                       // Array of factor tags
+  thesis          String? @db.VarChar(280) // Why the user believes this
+  confidenceLevel Int? // 1-5 scale
+  keyFactors      Json? // Array of factor tags
 
   // Outcome
   outcome       PredictionOutcome @default(PENDING)
@@ -2307,12 +2310,12 @@ model UserReputation {
   user   User   @relation(fields: [userId], references: [id])
   sport  String // 'golf', 'nfl', 'nba', 'mlb', 'all'
 
-  totalPredictions   Int   @default(0)
-  correctPredictions Int   @default(0)
-  accuracyRate       Float @default(0)
-  streakCurrent      Int   @default(0)
-  streakBest         Int   @default(0)
-  confidenceScore    Float @default(0) // Weighted accuracy factoring confidence
+  totalPredictions   Int    @default(0)
+  correctPredictions Int    @default(0)
+  accuracyRate       Float  @default(0)
+  streakCurrent      Int    @default(0)
+  streakBest         Int    @default(0)
+  confidenceScore    Float  @default(0) // Weighted accuracy factoring confidence
   percentileRank     Int? // 1-100
   tier               String @default("rookie") // 'rookie', 'contender', 'sharp', 'expert', 'elite'
 
@@ -2357,26 +2360,26 @@ enum PoolStatus {
 }
 
 model LeagueImport {
-  id              String       @id @default(cuid())
-  userId          String
-  user            User         @relation(fields: [userId], references: [id])
-  sourcePlatform  String       // 'sleeper', 'yahoo', 'espn', 'fantrax', 'mfl', 'manual_csv'
-  sourceLeagueId  String?      // External league ID on source platform
-  sourceLeagueName String?     // Name from source platform
-  status          ImportStatus @default(PENDING)
-  progressPct     Int          @default(0)
-  seasonsFound    Int?
-  seasonsImported Json         @default("[]") // Array of imported year numbers
-  mappingData     Json         @default("{}") // Player/owner mapping state
-  errorLog        Json         @default("[]") // Array of error entries
-  rawData         Json?        // Cached raw API response
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  sourcePlatform   String // 'sleeper', 'yahoo', 'espn', 'fantrax', 'mfl', 'manual_csv'
+  sourceLeagueId   String? // External league ID on source platform
+  sourceLeagueName String? // Name from source platform
+  status           ImportStatus @default(PENDING)
+  progressPct      Int          @default(0)
+  seasonsFound     Int?
+  seasonsImported  Json         @default("[]") // Array of imported year numbers
+  mappingData      Json         @default("{}") // Player/owner mapping state
+  errorLog         Json         @default("[]") // Array of error entries
+  rawData          Json? // Cached raw API response
 
   // Link to Clutch league (created or matched during import)
-  clutchLeagueId  String?
-  clutchLeague    League?      @relation("LeagueImports", fields: [clutchLeagueId], references: [id])
+  clutchLeagueId String?
+  clutchLeague   League? @relation("LeagueImports", fields: [clutchLeagueId], references: [id])
 
-  createdAt       DateTime     @default(now())
-  completedAt     DateTime?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
 
   // Relations
   historicalSeasons HistoricalSeason[]
@@ -2387,37 +2390,37 @@ model LeagueImport {
 }
 
 model HistoricalSeason {
-  id         String       @id @default(cuid())
+  id         String        @id @default(cuid())
   leagueId   String
-  league     League       @relation("LeagueHistory", fields: [leagueId], references: [id], onDelete: Cascade)
+  league     League        @relation("LeagueHistory", fields: [leagueId], references: [id], onDelete: Cascade)
   importId   String?
   import     LeagueImport? @relation(fields: [importId], references: [id])
   seasonYear Int
 
   // Team info
-  teamName     String?
-  ownerName    String?
-  ownerUserId  String?      // Nullable until claimed by a Clutch user
-  ownerUser    User?        @relation("HistoricalOwner", fields: [ownerUserId], references: [id])
+  teamName    String?
+  ownerName   String?
+  ownerUserId String? // Nullable until claimed by a Clutch user
+  ownerUser   User?   @relation("HistoricalOwner", fields: [ownerUserId], references: [id])
 
   // Results
-  finalStanding  Int?
-  wins           Int      @default(0)
-  losses         Int      @default(0)
-  ties           Int      @default(0)
-  pointsFor      Float    @default(0)
-  pointsAgainst  Float    @default(0)
-  playoffResult  String?  // 'champion', 'runner_up', 'semifinal', 'eliminated', 'missed'
+  finalStanding Int?
+  wins          Int     @default(0)
+  losses        Int     @default(0)
+  ties          Int     @default(0)
+  pointsFor     Float   @default(0)
+  pointsAgainst Float   @default(0)
+  playoffResult String? // 'champion', 'runner_up', 'semifinal', 'eliminated', 'missed'
 
   // Historical data (JSONB for flexibility across platforms)
-  draftData      Json?    // Pick-by-pick draft history
-  rosterData     Json?    // End-of-season roster
-  weeklyScores   Json?    // Week-by-week scoring
-  transactions   Json?    // Trades, adds, drops
-  awards         Json?    // MVP, most points week, etc.
-  settings       Json?    // League settings snapshot for that season
+  draftData    Json? // Pick-by-pick draft history
+  rosterData   Json? // End-of-season roster
+  weeklyScores Json? // Week-by-week scoring
+  transactions Json? // Trades, adds, drops
+  awards       Json? // MVP, most points week, etc.
+  settings     Json? // League settings snapshot for that season
 
-  createdAt      DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([leagueId, seasonYear, ownerName])
   @@index([leagueId, seasonYear])
@@ -2463,10 +2466,10 @@ model OwnerAvatar {
 // Layer 1 — Raw Provider Staging
 model RawProviderData {
   id          String    @id @default(cuid())
-  provider    String    // "datagolf", "espn", "pgatour", "owgr"
-  dataType    String    // "player_list", "rankings", "skill_ratings", "field_updates", "live_scoring", "predictions", "projections", "tournament_stats", "schedule"
-  eventRef    String?   // Provider's event ID (nullable for non-event data)
-  payload     Json      // Full raw JSON response
+  provider    String // "datagolf", "espn", "pgatour", "owgr"
+  dataType    String // "player_list", "rankings", "skill_ratings", "field_updates", "live_scoring", "predictions", "projections", "tournament_stats", "schedule"
+  eventRef    String? // Provider's event ID (nullable for non-event data)
+  payload     Json // Full raw JSON response
   recordCount Int?
   ingestedAt  DateTime  @default(now())
   processedAt DateTime?
@@ -2478,24 +2481,24 @@ model RawProviderData {
 
 // Layer 3 — Clutch Computed Metrics
 model ClutchScore {
-  id             String      @id @default(cuid())
-  playerId       String
-  player         Player      @relation(fields: [playerId], references: [id])
-  tournamentId   String?     // null = weekly snapshot, set = event-specific
-  tournament     Tournament? @relation(fields: [tournamentId], references: [id])
-  cpi            Float?      // Clutch Performance Index: -3.0 to +3.0
-  courseFitScore Float?      // 0-100
-  formScore      Float?      // 0-100
-  pressureScore  Float?      // -2.0 to +2.0
-  cpiComponents      Json?   // breakdown of CPI inputs
-  formComponents     Json?   // breakdown of form inputs
-  fitComponents      Json?   // player profile x course profile
-  pressureComponents Json?   // pressure vs baseline breakdown
-  formulaVersion String      // "v1.0"
-  inputs         Json        @default("{}")  // full input snapshot for reproducibility
-  computedAt     DateTime    @default(now())
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                 String      @id @default(cuid())
+  playerId           String
+  player             Player      @relation(fields: [playerId], references: [id])
+  tournamentId       String? // null = weekly snapshot, set = event-specific
+  tournament         Tournament? @relation(fields: [tournamentId], references: [id])
+  cpi                Float? // Clutch Performance Index: -3.0 to +3.0
+  courseFitScore     Float? // 0-100
+  formScore          Float? // 0-100
+  pressureScore      Float? // -2.0 to +2.0
+  cpiComponents      Json? // breakdown of CPI inputs
+  formComponents     Json? // breakdown of form inputs
+  fitComponents      Json? // player profile x course profile
+  pressureComponents Json? // pressure vs baseline breakdown
+  formulaVersion     String // "v1.0"
+  inputs             Json        @default("{}") // full input snapshot for reproducibility
+  computedAt         DateTime    @default(now())
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   @@unique([playerId, tournamentId, formulaVersion])
   @@index([playerId, computedAt(sort: Desc)])
@@ -2538,44 +2541,44 @@ model ClutchFormulaLog {
 // ============ CLUTCH MANAGER RATING (Phase 5) ============
 
 model ClutchManagerRating {
-  id                   String   @id @default(cuid())
-  userId               String   @unique @map("user_id")
-  user                 User     @relation(fields: [userId], references: [id])
-  overallRating        Float?   @map("overall_rating")
+  id            String @id @default(cuid())
+  userId        String @unique @map("user_id")
+  user          User   @relation(fields: [userId], references: [id])
+  overallRating Float? @map("overall_rating")
 
   // Legacy V1 prediction-only components (kept for backward compat)
-  accuracyComponent    Float?   @map("accuracy_component")
-  consistencyComponent Float?   @map("consistency_component")
-  volumeComponent      Float?   @map("volume_component")
-  breadthComponent     Float?   @map("breadth_component")
+  accuracyComponent    Float? @map("accuracy_component")
+  consistencyComponent Float? @map("consistency_component")
+  volumeComponent      Float? @map("volume_component")
+  breadthComponent     Float? @map("breadth_component")
 
   // V2 metadata
-  version              Int      @default(1)
-  confidence           Float?   @default(0)
-  dataSourceSummary    String?  @map("data_source_summary")
-  activeSince          DateTime? @map("active_since")
+  version           Int       @default(1)
+  confidence        Float?    @default(0)
+  dataSourceSummary String?   @map("data_source_summary")
+  activeSince       DateTime? @map("active_since")
 
   // V2 component scores (0-100) and confidences (0-100)
-  winRateScore         Float?   @map("win_rate_score")
-  winRateConfidence    Float?   @default(0) @map("win_rate_confidence")
-  draftIqScore         Float?   @map("draft_iq_score")
-  draftIqConfidence    Float?   @default(0) @map("draft_iq_confidence")
-  rosterMgmtScore      Float?   @map("roster_mgmt_score")
-  rosterMgmtConfidence Float?   @default(0) @map("roster_mgmt_confidence")
-  predictionsScore     Float?   @map("predictions_score")
-  predictionsConfidence Float?  @default(0) @map("predictions_confidence")
-  tradeAcumenScore     Float?   @map("trade_acumen_score")
-  tradeAcumenConfidence Float?  @default(0) @map("trade_acumen_confidence")
-  championshipsScore   Float?   @map("championships_score")
+  winRateScore            Float? @map("win_rate_score")
+  winRateConfidence       Float? @default(0) @map("win_rate_confidence")
+  draftIqScore            Float? @map("draft_iq_score")
+  draftIqConfidence       Float? @default(0) @map("draft_iq_confidence")
+  rosterMgmtScore         Float? @map("roster_mgmt_score")
+  rosterMgmtConfidence    Float? @default(0) @map("roster_mgmt_confidence")
+  predictionsScore        Float? @map("predictions_score")
+  predictionsConfidence   Float? @default(0) @map("predictions_confidence")
+  tradeAcumenScore        Float? @map("trade_acumen_score")
+  tradeAcumenConfidence   Float? @default(0) @map("trade_acumen_confidence")
+  championshipsScore      Float? @map("championships_score")
   championshipsConfidence Float? @default(0) @map("championships_confidence")
-  consistencyScore     Float?   @map("consistency_score")
-  consistencyConfidence Float?  @default(0) @map("consistency_confidence")
+  consistencyScore        Float? @map("consistency_score")
+  consistencyConfidence   Float? @default(0) @map("consistency_confidence")
 
-  tier                 String   @default("developing")
-  trend                String   @default("stable")
-  totalGradedCalls     Int      @default(0) @map("total_graded_calls")
-  computationInputs    Json     @default("{}") @map("computation_inputs")
-  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+  tier              String   @default("developing")
+  trend             String   @default("stable")
+  totalGradedCalls  Int      @default(0) @map("total_graded_calls")
+  computationInputs Json     @default("{}") @map("computation_inputs")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@index([tier])
   @@index([overallRating(sort: Desc)])
@@ -2600,7 +2603,7 @@ model UserOAuthToken {
   id           String    @id @default(cuid())
   userId       String
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider     String    // "yahoo", "espn", etc.
+  provider     String // "yahoo", "espn", etc.
   accessToken  String
   refreshToken String?
   expiresAt    DateTime?
@@ -2614,13 +2617,13 @@ model UserOAuthToken {
 // ============ DRAFT DOLLAR TRACKING ============
 
 model DraftDollarAccount {
-  id              String       @id @default(cuid())
+  id              String   @id @default(cuid())
   teamId          String
   leagueSeasonId  String
-  currentBalance  Int          @default(200)
-  nextYearBalance Int          @default(200)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  currentBalance  Int      @default(200)
+  nextYearBalance Int      @default(200)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   team         Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   leagueSeason LeagueSeason @relation(fields: [leagueSeasonId], references: [id], onDelete: Cascade)
@@ -2630,18 +2633,18 @@ model DraftDollarAccount {
 }
 
 model DraftDollarTransaction {
-  id              String    @id @default(cuid())
-  leagueId        String
-  leagueSeasonId  String
-  fromTeamId      String?
-  toTeamId        String?
-  amount          Int
-  yearType        String    // "current" | "next"
-  category        String    // "trade" | "side_bet" | "commissioner_adjustment"
-  description     String?
-  tradeId         String?
-  initiatedById   String
-  createdAt       DateTime  @default(now())
+  id             String   @id @default(cuid())
+  leagueId       String
+  leagueSeasonId String
+  fromTeamId     String?
+  toTeamId       String?
+  amount         Int
+  yearType       String // "current" | "next"
+  category       String // "trade" | "side_bet" | "commissioner_adjustment"
+  description    String?
+  tradeId        String?
+  initiatedById  String
+  createdAt      DateTime @default(now())
 
   league       League       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
   leagueSeason LeagueSeason @relation(fields: [leagueSeasonId], references: [id])
@@ -2655,54 +2658,54 @@ model DraftDollarTransaction {
 // ============ NFL EXPANSION (Phase 7) ============
 
 model NflTeam {
-  id             String   @id @default(cuid())
-  abbreviation   String   @unique // KC, BAL, SF, etc.
-  name           String   // Kansas City Chiefs
-  city           String   // Kansas City
-  conference     String   // AFC, NFC
-  division       String   // West, East, North, South
+  id             String  @id @default(cuid())
+  abbreviation   String  @unique // KC, BAL, SF, etc.
+  name           String // Kansas City Chiefs
+  city           String // Kansas City
+  conference     String // AFC, NFC
+  division       String // West, East, North, South
   logoUrl        String?
-  primaryColor   String?  // hex
-  secondaryColor String?  // hex
+  primaryColor   String? // hex
+  secondaryColor String? // hex
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  homeGames   NflGame[] @relation("NflHomeTeam")
-  awayGames   NflGame[] @relation("NflAwayTeam")
+  homeGames NflGame[] @relation("NflHomeTeam")
+  awayGames NflGame[] @relation("NflAwayTeam")
 
   @@map("nfl_teams")
 }
 
 model NflGame {
-  id            String   @id @default(cuid())
-  externalId    String?  @unique // nflverse game_id: "2024_01_KC_BAL"
-  season        Int      // 2024, 2025, 2026
-  week          Int      // 1-18 regular, 19-22 playoffs
-  gameType      String   @default("REG") // REG, WC, DIV, CON, SB
+  id         String  @id @default(cuid())
+  externalId String? @unique // nflverse game_id: "2024_01_KC_BAL"
+  season     Int // 2024, 2025, 2026
+  week       Int // 1-18 regular, 19-22 playoffs
+  gameType   String  @default("REG") // REG, WC, DIV, CON, SB
 
-  kickoff       DateTime
-  homeTeamId    String
-  awayTeamId    String
-  homeTeam      NflTeam  @relation("NflHomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam      NflTeam  @relation("NflAwayTeam", fields: [awayTeamId], references: [id])
+  kickoff    DateTime
+  homeTeamId String
+  awayTeamId String
+  homeTeam   NflTeam  @relation("NflHomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam   NflTeam  @relation("NflAwayTeam", fields: [awayTeamId], references: [id])
 
-  homeScore     Int?
-  awayScore     Int?
-  status        String   @default("UPCOMING") // UPCOMING, IN_PROGRESS, FINAL
+  homeScore Int?
+  awayScore Int?
+  status    String @default("UPCOMING") // UPCOMING, IN_PROGRESS, FINAL
 
   // Venue & conditions
-  venue         String?
-  surface       String?  // grass, fieldturf, etc.
-  roof          String?  // outdoors, dome, retractable
-  weather       Json?    // { temp, wind, humidity, condition }
+  venue   String?
+  surface String? // grass, fieldturf, etc.
+  roof    String? // outdoors, dome, retractable
+  weather Json? // { temp, wind, humidity, condition }
 
   // Lines (frozen Wednesday noon ET)
-  spreadLine    Float?   // Home team spread (negative = favored)
-  totalLine     Float?   // Over/under
-  homeMoneyline Int?     // e.g., -150
-  awayMoneyline Int?     // e.g., +130
+  spreadLine    Float? // Home team spread (negative = favored)
+  totalLine     Float? // Over/under
+  homeMoneyline Int? // e.g., -150
+  awayMoneyline Int? // e.g., +130
 
   // Source tracking
   sourceProvider      String?
@@ -2721,12 +2724,12 @@ model NflGame {
 }
 
 model NflPlayerGame {
-  id        String  @id @default(cuid())
-  playerId  String
-  player    Player  @relation(fields: [playerId], references: [id])
-  gameId    String
-  game      NflGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  teamAbbr  String  // Which team they played for that game
+  id       String  @id @default(cuid())
+  playerId String
+  player   Player  @relation(fields: [playerId], references: [id])
+  gameId   String
+  game     NflGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  teamAbbr String // Which team they played for that game
 
   // Passing
   passAttempts    Int?
@@ -2757,10 +2760,10 @@ model NflPlayerGame {
   successRate Float? // % of plays with positive EPA
 
   // Usage
-  snapCount    Int?
-  snapPct      Float?
-  targetShare  Float?
-  rushShare     Float?
+  snapCount   Int?
+  snapPct     Float?
+  targetShare Float?
+  rushShare   Float?
 
   // Defense/Special Teams
   sacks            Float?
@@ -2773,31 +2776,31 @@ model NflPlayerGame {
   defTds           Int?
 
   // 2-point conversions
-  pass2pt    Int?
-  rush2pt    Int?
-  rec2pt     Int?
+  pass2pt Int?
+  rush2pt Int?
+  rec2pt  Int?
 
   // Special teams / return stats
   returnYards Int?
   returnTds   Int?
 
   // Kicking
-  fgMade     Int?
-  fgAttempts Int?
-  fgPct      Float?
+  fgMade       Int?
+  fgAttempts   Int?
+  fgPct        Float?
   fgMade0_19   Int? // FG made 0-19 yards
   fgMade20_29  Int? // FG made 20-29 yards
   fgMade30_39  Int? // FG made 30-39 yards
   fgMade40_49  Int? // FG made 40-49 yards
   fgMade50Plus Int? // FG made 50+ yards
-  xpMade     Int?
-  xpAttempts Int?
+  xpMade       Int?
+  xpAttempts   Int?
 
   // Team defense extras
-  safeties        Int?
-  blockedKicks    Int?
-  pointsAllowed   Int? // Total points allowed (for DST scoring tiers)
-  yardsAllowed    Int? // Total yards allowed (for DST scoring tiers)
+  safeties      Int?
+  blockedKicks  Int?
+  pointsAllowed Int? // Total points allowed (for DST scoring tiers)
+  yardsAllowed  Int? // Total yards allowed (for DST scoring tiers)
 
   // Fantasy points (pre-computed for convenience)
   fantasyPtsStd  Float? // Standard scoring
@@ -2822,22 +2825,22 @@ model NflPlayerGame {
 // ============ NEWS ARTICLES ============
 
 model NewsArticle {
-  id              String    @id @default(cuid())
-  externalId      String    @unique          // ESPN article ID — dedup key
-  provider        String    @default("espn") // "espn", "nfl_rss", etc.
-  sport           String    @default("nfl")  // "nfl", "golf", "nba"
-  type            String                     // "news", "transaction", "injury", "analysis"
-  headline        String
-  description     String?
-  url             String?                    // Link to original article
-  imageUrl        String?                    // Header image from ESPN CDN
-  byline          String?                    // Reporter name
-  published       DateTime
-  teamAbbrs       String[]  @default([])     // Matched NflTeam abbreviations
-  playerIds       String[]  @default([])     // Matched Player cuid IDs
-  category        String?                    // "breaking", "transaction", "injury", "analysis"
-  priority        Int       @default(3)      // 1=breaking, 2=high, 3=normal
-  createdAt       DateTime  @default(now())
+  id          String   @id @default(cuid())
+  externalId  String   @unique // ESPN article ID — dedup key
+  provider    String   @default("espn") // "espn", "nfl_rss", etc.
+  sport       String   @default("nfl") // "nfl", "golf", "nba"
+  type        String // "news", "transaction", "injury", "analysis"
+  headline    String
+  description String?
+  url         String? // Link to original article
+  imageUrl    String? // Header image from ESPN CDN
+  byline      String? // Reporter name
+  published   DateTime
+  teamAbbrs   String[] @default([]) // Matched NflTeam abbreviations
+  playerIds   String[] @default([]) // Matched Player cuid IDs
+  category    String? // "breaking", "transaction", "injury", "analysis"
+  priority    Int      @default(3) // 1=breaking, 2=high, 3=normal
+  createdAt   DateTime @default(now())
 
   @@index([sport, published(sort: Desc)])
   @@index([category, published(sort: Desc)])
@@ -2847,33 +2850,33 @@ model NewsArticle {
 // ============ PROVE IT — WEEKLY PROP LINES ============
 
 model PropLine {
-  id        String @id @default(cuid())
-  sport     String // 'nfl', 'golf'
-  season    Int
-  week      Int    // NFL week number (1-18)
+  id     String @id @default(cuid())
+  sport  String // 'nfl', 'golf'
+  season Int
+  week   Int // NFL week number (1-18)
 
   // Subject — a player or a game
-  playerId  String?
-  player    Player?  @relation(fields: [playerId], references: [id])
-  gameId    String?  // NflGame.id for game-level props
-  teamAbbr  String?  // For display: "BUF", "PHI"
+  playerId String?
+  player   Player? @relation(fields: [playerId], references: [id])
+  gameId   String? // NflGame.id for game-level props
+  teamAbbr String? // For display: "BUF", "PHI"
 
   // Prop details
-  propType  String  // 'passing_yards', 'rushing_yards', 'receptions', 'receiving_yards', 'passing_tds', 'rushing_tds', 'game_total', 'game_spread'
-  lineValue Float   // The O/U number (e.g., 264.5)
-  category  String  // 'player_prop', 'game_prop'
+  propType  String // 'passing_yards', 'rushing_yards', 'receptions', 'receiving_yards', 'passing_tds', 'rushing_tds', 'game_total', 'game_spread'
+  lineValue Float // The O/U number (e.g., 264.5)
+  category  String // 'player_prop', 'game_prop'
 
   // Display
-  description  String  // "Josh Allen passing yards"
-  displayLine  String  // "O/U 264.5"
+  description String // "Josh Allen passing yards"
+  displayLine String // "O/U 264.5"
 
   // Generation metadata
   generatedFrom Json? // { method, seasonAvg, last3Avg, adjustment, sampleSize }
 
   // Lock + resolution
   locksAt     DateTime? // Kickoff time of the relevant game
-  actualValue Float?    // After game: actual stat value
-  result      String?   // 'over', 'under', 'push'
+  actualValue Float? // After game: actual stat value
+  result      String? // 'over', 'under', 'push'
   resolvedAt  DateTime?
 
   isActive  Boolean  @default(true)
@@ -2889,27 +2892,27 @@ model PropLine {
 // ============ WORKSPACE — DRAFT BOARDS ============
 
 model DraftBoard {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name           String
-  scoringFormat  String   @default("ppr")     // ppr, half_ppr, standard
-  sport          String   @default("nfl")     // nfl, golf
-  season         Int      @default(2026)
-  boardType      String   @default("overall") // overall, qb, rb, wr, te
-  isPublished    Boolean  @default(false)
-  publishedAt    DateTime?
-  leagueType     String?  @map("league_type")
-  teamCount      Int?     @map("team_count")
-  draftType      String?  @map("draft_type")
-  rosterConfig   Json?    @map("roster_config")
-  leagueId       String?
-  league         League?  @relation("LeagueBoards", fields: [leagueId], references: [id], onDelete: SetNull)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  entries        DraftBoardEntry[]
-  activities     BoardActivity[]
-  cheatSheets    LabCheatSheet[]
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  scoringFormat String            @default("ppr") // ppr, half_ppr, standard
+  sport         String            @default("nfl") // nfl, golf
+  season        Int               @default(2026)
+  boardType     String            @default("overall") // overall, qb, rb, wr, te
+  isPublished   Boolean           @default(false)
+  publishedAt   DateTime?
+  leagueType    String?           @map("league_type")
+  teamCount     Int?              @map("team_count")
+  draftType     String?           @map("draft_type")
+  rosterConfig  Json?             @map("roster_config")
+  leagueId      String?
+  league        League?           @relation("LeagueBoards", fields: [leagueId], references: [id], onDelete: SetNull)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  entries       DraftBoardEntry[]
+  activities    BoardActivity[]
+  cheatSheets   LabCheatSheet[]
 
   @@index([userId])
   @@index([userId, sport])
@@ -2918,11 +2921,11 @@ model DraftBoard {
 }
 
 model DraftBoardEntry {
-  id        String     @id @default(cuid())
-  boardId   String
-  board     DraftBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  playerId  String
-  player    Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  boardId      String
+  board        DraftBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  playerId     String
+  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
   rank         Int
   tier         Int?
   notes        String?    @db.Text
@@ -2940,14 +2943,14 @@ model DraftBoardEntry {
 }
 
 model DraftBoardComparison {
-  id              String   @id @default(cuid())
-  userId          String
-  draftId         String?
-  mockDraftId     String?
-  boardId         String
-  sport           String
-  comparisonData  Json
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         String
+  draftId        String?
+  mockDraftId    String?
+  boardId        String
+  sport          String
+  comparisonData Json
+  createdAt      DateTime @default(now())
 
   @@index([userId])
   @@map("draft_board_comparisons")
@@ -2956,20 +2959,20 @@ model DraftBoardComparison {
 // ============ WORKSPACE — CLUTCH PROJECTIONS (Pre-loaded Rankings) ============
 
 model ClutchProjection {
-  id             String   @id @default(cuid())
-  sport          String   // nfl, golf
-  scoringFormat  String   // ppr, half_ppr, standard (nfl); overall (golf)
-  season         Int
-  week           Int?     // null = season-long
-  playerId       String
-  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  projectedPts   Float?
-  adpRank        Int?
-  clutchRank     Int
-  tradeValue     Int?
-  position       String?  // QB, RB, WR, TE, K, DEF (cached for filtering)
-  metadata       Json?    // raw inputs for transparency
-  computedAt     DateTime @default(now())
+  id            String   @id @default(cuid())
+  sport         String // nfl, golf
+  scoringFormat String // ppr, half_ppr, standard (nfl); overall (golf)
+  season        Int
+  week          Int? // null = season-long
+  playerId      String
+  player        Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  projectedPts  Float?
+  adpRank       Int?
+  clutchRank    Int
+  tradeValue    Int?
+  position      String? // QB, RB, WR, TE, K, DEF (cached for filtering)
+  metadata      Json? // raw inputs for transparency
+  computedAt    DateTime @default(now())
 
   @@unique([sport, scoringFormat, season, week, playerId])
   @@index([sport, scoringFormat, season, clutchRank])
@@ -3002,8 +3005,8 @@ model BoardActivity {
   userId    String
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   playerId  String?
-  action    String     // board_created, player_moved, player_tagged, note_added, player_added, player_removed
-  details   Json?      // { playerName, from, to, delta, tags, reasonChips, note }
+  action    String // board_created, player_moved, player_tagged, note_added, player_added, player_removed
+  details   Json? // { playerName, from, to, delta, tags, reasonChips, note }
   createdAt DateTime   @default(now())
 
   @@index([boardId, createdAt])
@@ -3014,21 +3017,21 @@ model BoardActivity {
 // ============ THE LAB — CAPTURES ============
 
 model LabCapture {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  content     String
-  sourceType  String?  @map("source_type")
-  sourceName  String?  @map("source_name")
-  sentiment   String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  content    String
+  sourceType String?  @map("source_type")
+  sourceName String?  @map("source_name")
+  sentiment  String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   // Outcome linking (Phase 6A — feeds Decision Graph)
-  outcomeLinked    Boolean   @default(false)
-  outcomeData      Json?
-  outcomeLinkedAt  DateTime?
+  outcomeLinked   Boolean   @default(false)
+  outcomeData     Json?
+  outcomeLinkedAt DateTime?
 
-  user    User              @relation(fields: [userId], references: [id])
+  user    User               @relation(fields: [userId], references: [id])
   players LabCapturePlayer[]
 
   @@index([userId, createdAt(sort: Desc)])
@@ -3067,15 +3070,15 @@ model LabInsightCache {
 // ============ THE LAB — CHEAT SHEETS ============
 
 model LabCheatSheet {
-  id              String    @id @default(uuid())
-  userId          String    @map("user_id")
-  boardId         String    @map("board_id")
-  title           String
-  contentJson     Json      @map("content_json")
-  formatSettings  Json?     @map("format_settings")
-  generatedAt     DateTime  @default(now()) @map("generated_at")
-  reviewedAt      DateTime? @map("reviewed_at")
-  publishedAt     DateTime? @map("published_at")
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  boardId        String    @map("board_id")
+  title          String
+  contentJson    Json      @map("content_json")
+  formatSettings Json?     @map("format_settings")
+  generatedAt    DateTime  @default(now()) @map("generated_at")
+  reviewedAt     DateTime? @map("reviewed_at")
+  publishedAt    DateTime? @map("published_at")
 
   user  User       @relation(fields: [userId], references: [id])
   board DraftBoard @relation(fields: [boardId], references: [id])
@@ -3088,18 +3091,18 @@ model LabCheatSheet {
 // ============ OPINION TIMELINE (Phase 6A-5) ============
 
 model PlayerOpinionEvent {
-  id            String   @id @default(cuid())
-  userId        String
-  playerId      String
-  sport         String
-  eventType     String   // CAPTURE, WATCH_ADD, WATCH_REMOVE, BOARD_ADD, BOARD_MOVE, BOARD_TAG, etc.
-  eventData     Json
-  sentiment     String?  // positive, negative, neutral, mixed
-  sourceId      String?
-  sourceType    String?
-  createdAt     DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  playerId   String
+  sport      String
+  eventType  String // CAPTURE, WATCH_ADD, WATCH_REMOVE, BOARD_ADD, BOARD_MOVE, BOARD_TAG, etc.
+  eventData  Json
+  sentiment  String? // positive, negative, neutral, mixed
+  sourceId   String?
+  sourceType String?
+  createdAt  DateTime @default(now())
 
-  user          User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, playerId, createdAt])
   @@index([userId, sport, createdAt])
@@ -3108,15 +3111,15 @@ model PlayerOpinionEvent {
 // ============ USER INTELLIGENCE PROFILE (Phase 6B) ============
 
 model UserIntelligenceProfile {
-  id              String   @id @default(cuid())
-  userId          String
-  sport           String
-  profileData     Json
-  dataConfidence  String   // LOW, MEDIUM, HIGH
-  generatedAt     DateTime @default(now())
-  expiresAt       DateTime
+  id             String   @id @default(cuid())
+  userId         String
+  sport          String
+  profileData    Json
+  dataConfidence String // LOW, MEDIUM, HIGH
+  generatedAt    DateTime @default(now())
+  expiresAt      DateTime
 
-  user            User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, sport])
   @@index([userId])
@@ -3135,7 +3138,7 @@ model CoachingMemory {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user          User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, sport, documentType])
   @@index([userId])
@@ -3152,7 +3155,7 @@ model CoachingInteraction {
   behaviorChanged Boolean  @default(false)
   createdAt       DateTime @default(now())
 
-  user            User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([userId, createdAt])
@@ -3161,38 +3164,38 @@ model CoachingInteraction {
 // ============ AI INSIGHTS + REPORTS (Phase 6C) ============
 
 model AiInsight {
-  id              String    @id @default(cuid())
-  userId          String
-  sport           String?
-  insightType     String
-  title           String
-  body            String    @db.Text
-  metadata        Json?
-  priority        Int       @default(5)
-  status          String    @default("active")
-  expiresAt       DateTime?
-  generatedAt     DateTime  @default(now())
-  dismissedAt     DateTime?
-  tokenCount      Int?
+  id          String    @id @default(cuid())
+  userId      String
+  sport       String?
+  insightType String
+  title       String
+  body        String    @db.Text
+  metadata    Json?
+  priority    Int       @default(5)
+  status      String    @default("active")
+  expiresAt   DateTime?
+  generatedAt DateTime  @default(now())
+  dismissedAt DateTime?
+  tokenCount  Int?
 
-  user            User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, status, priority])
   @@index([userId, insightType])
 }
 
 model AiReport {
-  id              String    @id @default(cuid())
-  userId          String?
-  sport           String
-  reportType      String
-  subjectId       String?
-  contentJson     Json
-  generatedAt     DateTime  @default(now())
-  expiresAt       DateTime
-  tokenCount      Int?
+  id          String   @id @default(cuid())
+  userId      String?
+  sport       String
+  reportType  String
+  subjectId   String?
+  contentJson Json
+  generatedAt DateTime @default(now())
+  expiresAt   DateTime
+  tokenCount  Int?
 
-  user            User?     @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@index([sport, reportType, subjectId])
   @@index([userId, reportType])
@@ -3222,13 +3225,13 @@ model CustomLeagueData {
   id             String   @id @default(cuid())
   leagueId       String
   importedBy     String
-  sourceType     String   // spreadsheet, website
+  sourceType     String // spreadsheet, website
   sourceFileName String?
-  dataCategory   String   // standings, records, awards, trophies, draft_history,
-                          // transactions, custom_stats, punishments, nicknames, other
+  dataCategory   String // standings, records, awards, trophies, draft_history,
+  // transactions, custom_stats, punishments, nicknames, other
   seasonYear     Int?
-  data           Json     // Flexible JSON storage — structure varies by category
-  columnMapping  Json?    // AI-generated column mapping used during import
+  data           Json // Flexible JSON storage — structure varies by category
+  columnMapping  Json? // AI-generated column mapping used during import
   createdAt      DateTime @default(now())
 
   league League @relation(fields: [leagueId], references: [id])
@@ -3244,7 +3247,7 @@ model LeagueQuerySession {
   id        String   @id @default(cuid())
   userId    String
   leagueId  String
-  messages  Json     // Array of { role, content, timestamp }
+  messages  Json // Array of { role, content, timestamp }
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   expiresAt DateTime
@@ -3258,7 +3261,7 @@ model LeagueQuerySession {
 model LeagueStatsCache {
   id         String   @id @default(cuid())
   leagueId   String   @unique
-  stats      Json     // Full pre-computed stats object
+  stats      Json // Full pre-computed stats object
   computedAt DateTime @default(now())
   expiresAt  DateTime
 
@@ -3286,9 +3289,9 @@ model LeaguePost {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  reactions   LeaguePostReaction[]
-  comments    LeaguePostComment[]
-  views       LeaguePostView[]
+  reactions LeaguePostReaction[]
+  comments  LeaguePostComment[]
+  views     LeaguePostView[]
 
   @@index([leagueId, createdAt(sort: Desc)])
   @@map("league_posts")
@@ -3338,30 +3341,30 @@ model LeaguePostView {
 // ============ YAHOO PLAYER CACHE ============
 
 model YahooPlayerCache {
-  yahooId   Int      @id          // Permanent Yahoo player ID (e.g., 30971)
-  fullName  String                // "Patrick Mahomes"
-  position  String?               // "QB", "WR", etc.
+  yahooId   Int      @id // Permanent Yahoo player ID (e.g., 30971)
+  fullName  String // "Patrick Mahomes"
+  position  String? // "QB", "WR", etc.
   updatedAt DateTime @updatedAt
 
   @@map("yahoo_player_cache")
 }
 
 model AppError {
-  id          String   @id @default(cuid())
-  type        String   // 'api_error', 'js_error', 'component_crash', 'promise_rejection', 'churn_signal'
-  category    String   // 'server_error', 'client_error', 'render_error', 'unhandled_error', 'user_behavior'
-  severity    String   @default("low") // 'low', 'medium', 'high'
-  message     String
-  metadata    Json?
-  url         String?
-  userId      String?
-  sessionId   String?
-  userAgent   String?
-  viewport    String?
-  resolved    Boolean  @default(false)
-  resolvedAt  DateTime?
-  resolvedBy  String?
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  type       String // 'api_error', 'js_error', 'component_crash', 'promise_rejection', 'churn_signal'
+  category   String // 'server_error', 'client_error', 'render_error', 'unhandled_error', 'user_behavior'
+  severity   String    @default("low") // 'low', 'medium', 'high'
+  message    String
+  metadata   Json?
+  url        String?
+  userId     String?
+  sessionId  String?
+  userAgent  String?
+  viewport   String?
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime  @default(now())
 
   @@index([type])
   @@index([severity])
