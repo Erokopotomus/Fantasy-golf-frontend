@@ -166,8 +166,8 @@ export default function PoolCreate() {
               value={tier.playerIds}
               onChange={e => updateTier(idx, { playerIds: Array.from(e.target.selectedOptions).map(o => o.value) })}>
               {field.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.countryFlag || ''} {p.name} {p.owgrRank ? `#${p.owgrRank}` : ''}
+                <option key={p.playerId} value={p.playerId}>
+                  {p.countryFlag || ''} {p.playerName} {p.owgrRank ? `#${p.owgrRank}` : ''}
                 </option>
               ))}
             </select>
