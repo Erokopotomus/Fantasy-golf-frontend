@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const prisma = require('../lib/prisma')
 const { generateUniqueSlug, generateAdminToken } = require('../services/poolService')
+const { sendPoolEmail } = require('../services/emailService')
 
 async function requireAdmin(req, res, next) {
   const token = req.query.token || req.headers['x-admin-token']
@@ -145,6 +146,20 @@ router.post('/:slug/entries', async (req, res, next) => {
       include: { picks: { include: { player: true, tier: true } } },
     })
 
+    const baseUrl = process.env.FRONTEND_URL || 'https://clutchfantasysports.com'
+    const summary = entry.picks.map(p => `<li style="margin:4px 0;">Tier ${p.tier.tierNumber}: <strong>${p.player.name}</strong></li>`).join('')
+    sendPoolEmail({
+      to: entrantEmail,
+      subject: `You're in: ${pool.name}`,
+      html: `
+        <h2 style="margin:0 0 12px;color:#1E2A3A;">Picks locked for ${teamName}</h2>
+        <p style="color:#444;">Your picks:</p>
+        <ul style="color:#444;padding-left:20px;">${summary}</ul>
+        <p style="color:#444;margin-top:16px;">Tiebreaker: <strong>${tiebreakerScore}</strong></p>
+        <p style="margin:24px 0 0;"><a href="${baseUrl}/pools/${pool.slug}" style="color:#D4930D;font-weight:600;">Track the leaderboard →</a></p>
+      `,
+    }).catch(err => console.error('[Pool email] entry send failed:', err.message))
+
     res.status(201).json({ entry })
   } catch (e) {
     if (e.code === 'P2002') return res.status(409).json({ error: 'Team name already taken in this pool' })
@@ -188,6 +203,20 @@ router.post('/', async (req, res, next) => {
         },
       },
     })
+
+    const baseUrl = process.env.FRONTEND_URL || 'https://clutchfantasysports.com'
+    sendPoolEmail({
+      to: commissionerEmail,
+      subject: `Your Clutch pool "${name}" is ready`,
+      html: `
+        <h2 style="margin:0 0 12px;color:#1E2A3A;">${name}</h2>
+        <p style="color:#444;">Share this link with your friends so they can enter the pool:</p>
+        <p style="margin:8px 0 24px;"><a href="${baseUrl}/pools/${pool.slug}" style="color:#D4930D;font-weight:600;">${baseUrl}/pools/${pool.slug}</a></p>
+        <p style="color:#444;">Your private admin link — use this to publish, lock the pool, and view all entries:</p>
+        <p style="margin:8px 0 24px;"><a href="${baseUrl}/pools/${pool.slug}/admin?token=${pool.adminToken}" style="color:#D4930D;font-weight:600;">${baseUrl}/pools/${pool.slug}/admin?token=${pool.adminToken}</a></p>
+        <p style="color:#666;font-size:13px;">Keep the admin link private. Anyone with it can manage the pool.</p>
+      `,
+    }).catch(err => console.error('[Pool email] admin send failed:', err.message))
 
     res.status(201).json({ slug: pool.slug, adminToken: pool.adminToken })
   } catch (e) { next(e) }

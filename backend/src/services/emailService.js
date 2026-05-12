@@ -335,4 +335,31 @@ ${pickRows ? `<table style="width:100%;margin-top:16px;border-top:1px solid #EEE
   }
 }
 
-module.exports = { sendVaultInviteEmail, sendLeagueInviteEmail, sendNotificationEmail, sendWeeklyRecapEmail, sendDraftRecapEmail, isConfigured }
+/**
+ * Generic pool email — wraps body content in the Clutch branded template
+ * and sends via Resend. Used for pool admin notifications + entry confirmations.
+ * Returns a promise; safe to await or .catch(err => log) at the call site.
+ */
+async function sendPoolEmail({ to, subject, html }) {
+  if (!isConfigured || !resendClient) {
+    console.log('[email] sendPoolEmail skipped (not configured):', to, '|', subject)
+    return { skipped: true }
+  }
+  if (!to || !subject || !html) {
+    throw new Error('sendPoolEmail requires { to, subject, html }')
+  }
+  try {
+    await resendClient.emails.send({
+      from: 'Clutch Fantasy <noreply@clutchfantasysports.com>',
+      to,
+      subject,
+      html: emailWrapper(html),
+    })
+    return { sent: true }
+  } catch (err) {
+    console.error('[email] sendPoolEmail failed:', err.message)
+    return { error: err.message }
+  }
+}
+
+module.exports = { sendVaultInviteEmail, sendLeagueInviteEmail, sendNotificationEmail, sendWeeklyRecapEmail, sendDraftRecapEmail, sendPoolEmail, isConfigured }
