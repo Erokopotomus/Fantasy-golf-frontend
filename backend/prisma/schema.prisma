@@ -97,7 +97,8 @@ model User {
   coachingInteractions CoachingInteraction[]
 
   // Pools (tiered pick'em)
-  poolEntries PoolEntry[]
+  poolEntries  PoolEntry[]
+  commishPools Pool[]
 
   @@map("users")
 }
@@ -1619,23 +1620,26 @@ model DraftValueTracker {
 // ============ POOLS (tiered pick'em) ============
 
 model Pool {
-  id                String     @id @default(cuid())
-  slug              String     @unique
-  name              String
-  tournamentId      String     @map("tournament_id")
-  commissionerEmail String     @map("commissioner_email")
-  adminToken        String     @unique @map("admin_token")
-  status            PoolStatus @default(DRAFT)
-  locksAt           DateTime?  @map("locks_at")
-  scoringPreset     String     @default("standard") @map("scoring_preset")
-  createdAt         DateTime   @default(now()) @map("created_at")
-  updatedAt         DateTime   @updatedAt @map("updated_at")
+  id                 String     @id @default(cuid())
+  slug               String     @unique
+  name               String
+  tournamentId       String     @map("tournament_id")
+  commissionerEmail  String     @map("commissioner_email")
+  commissionerUserId String?    @map("commissioner_user_id")
+  adminToken         String     @unique @map("admin_token")
+  status             PoolStatus @default(DRAFT)
+  locksAt            DateTime?  @map("locks_at")
+  scoringPreset      String     @default("standard") @map("scoring_preset")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
 
-  tournament Tournament  @relation(fields: [tournamentId], references: [id])
-  tiers      PoolTier[]
-  entries    PoolEntry[]
+  tournament   Tournament  @relation(fields: [tournamentId], references: [id])
+  commissioner User?       @relation(fields: [commissionerUserId], references: [id])
+  tiers        PoolTier[]
+  entries      PoolEntry[]
 
   @@index([status, locksAt])
+  @@index([commissionerUserId])
   @@map("pools")
 }
 

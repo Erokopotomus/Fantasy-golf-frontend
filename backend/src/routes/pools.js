@@ -3,6 +3,7 @@ const router = express.Router()
 const prisma = require('../lib/prisma')
 const { generateUniqueSlug, generateAdminToken } = require('../services/poolService')
 const { sendPoolEmail } = require('../services/emailService')
+const { optionalAuth } = require('../middleware/auth')
 
 async function requireAdmin(req, res, next) {
   const token = req.query.token || req.headers['x-admin-token']
@@ -15,6 +16,46 @@ async function requireAdmin(req, res, next) {
   req.poolId = pool.id
   next()
 }
+
+// ─── PUBLIC: GET user's pools (commish + entered) ──────────────────────────
+// IMPORTANT: must come BEFORE /:slug so Express doesn't match "mine" as a slug.
+router.get('/mine', optionalAuth, async (req, res, next) => {
+  try {
+    if (!req.user) return res.json({ commish: [], entered: [] })
+    const [commish, entered] = await Promise.all([
+      prisma.pool.findMany({
+        where: { commissionerUserId: req.user.id },
+        orderBy: { createdAt: 'desc' },
+        include: { tournament: { select: { name: true, startDate: true } } },
+      }),
+      prisma.poolEntry.findMany({
+        where: { userId: req.user.id },
+        orderBy: { submittedAt: 'desc' },
+        include: {
+          pool: {
+            include: { tournament: { select: { name: true, startDate: true } } },
+          },
+        },
+      }),
+    ])
+    const commishShaped = commish.map(p => ({
+      slug: p.slug,
+      adminToken: p.adminToken,
+      name: p.name,
+      tournamentName: p.tournament?.name || '',
+      status: p.status,
+    }))
+    const enteredShaped = entered.map(e => ({
+      slug: e.pool.slug,
+      teamName: e.teamName,
+      poolName: e.pool.name,
+      tournamentName: e.pool.tournament?.name || '',
+      status: e.pool.status,
+      totalFantasyPoints: e.totalFantasyPoints,
+    }))
+    res.json({ commish: commishShaped, entered: enteredShaped })
+  } catch (e) { next(e) }
+})
 
 // ─── PUBLIC: GET pool by slug ──────────────────────────────────────────────
 router.get('/:slug', async (req, res, next) => {
@@ -97,7 +138,7 @@ router.get('/:slug/leaderboard', async (req, res, next) => {
 })
 
 // ─── PUBLIC: POST entry ────────────────────────────────────────────────────
-router.post('/:slug/entries', async (req, res, next) => {
+router.post('/:slug/entries', optionalAuth, async (req, res, next) => {
   try {
     const { entrantName, entrantEmail, teamName, tiebreakerScore, picks } = req.body
     if (!entrantName || !entrantEmail || !teamName || tiebreakerScore == null || !Array.isArray(picks)) {
@@ -139,6 +180,7 @@ router.post('/:slug/entries', async (req, res, next) => {
     const entry = await prisma.poolEntry.create({
       data: {
         poolId: pool.id,
+        userId: req.user?.id || null,
         entrantName, entrantEmail, teamName,
         tiebreakerScore: parseInt(tiebreakerScore),
         picks: { create: picks.map(p => ({ tierId: p.tierId, playerId: p.playerId })) },
@@ -168,7 +210,7 @@ router.post('/:slug/entries', async (req, res, next) => {
 })
 
 // ─── ADMIN: POST create pool ───────────────────────────────────────────────
-router.post('/', async (req, res, next) => {
+router.post('/', optionalAuth, async (req, res, next) => {
   try {
     const { name, tournamentId, commissionerEmail, scoringPreset, tiers } = req.body
     if (!name || !tournamentId || !commissionerEmail || !Array.isArray(tiers) || tiers.length === 0) {
@@ -191,6 +233,7 @@ router.post('/', async (req, res, next) => {
     const pool = await prisma.pool.create({
       data: {
         slug, adminToken, name, tournamentId, commissionerEmail,
+        commissionerUserId: req.user?.id || null,
         scoringPreset: scoringPreset || 'standard',
         status: 'DRAFT',
         tiers: {

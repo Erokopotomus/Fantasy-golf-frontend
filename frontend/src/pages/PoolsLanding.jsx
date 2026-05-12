@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import { getCommishPools, getEnteredPools, forgetCommishPool, forgetEnteredPool } from '../utils/poolStorage'
 
 const STATUS_STYLES = {
@@ -76,28 +77,88 @@ function PoolCard({ pool, kind, onForget }) {
 }
 
 export default function PoolsLanding() {
+  const { user } = useAuth()
   const [commish, setCommish] = useState([])
   const [entered, setEntered] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const commishList = getCommishPools()
-    const enteredList = getEnteredPools()
-    // Fetch live status for each
-    Promise.all([
-      ...commishList.map(p =>
-        api.getPool(p.slug).then(r => ({ ...p, _status: r.pool?.status, _tournamentName: r.pool?.tournament?.name })).catch(() => ({ ...p, _status: 'UNKNOWN' }))
-      ),
-      ...enteredList.map(p =>
-        api.getPool(p.slug).then(r => ({ ...p, _status: r.pool?.status, _tournamentName: r.pool?.tournament?.name })).catch(() => ({ ...p, _status: 'UNKNOWN' }))
-      ),
-    ]).then(results => {
-      const cLen = commishList.length
-      setCommish(results.slice(0, cLen).map(c => ({ ...c, tournamentName: c._tournamentName || c.tournamentName })))
-      setEntered(results.slice(cLen).map(e => ({ ...e, tournamentName: e._tournamentName || e.tournamentName })))
+    const localCommish = getCommishPools()
+    const localEntered = getEnteredPools()
+
+    const hydrateLocalOnly = async () => {
+      const allCommish = localCommish.map(p => ({ ...p, _source: 'local' }))
+      const allEntered = localEntered.map(p => ({ ...p, _source: 'local' }))
+      await Promise.all([
+        ...allCommish.map(p =>
+          api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
+        ),
+        ...allEntered.map(p =>
+          api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
+        ),
+      ])
+      setCommish(allCommish)
+      setEntered(allEntered)
       setLoading(false)
-    })
-  }, [])
+    }
+
+    const loadServerPools = async () => {
+      try {
+        const { commish: serverCommish, entered: serverEntered } = await api.getMyPools()
+        // Merge server + local. Server is authoritative for slug + adminToken + status.
+        const mergedCommishMap = new Map()
+        for (const p of localCommish) mergedCommishMap.set(p.slug, { ...p, _source: 'local' })
+        for (const p of serverCommish) {
+          mergedCommishMap.set(p.slug, {
+            slug: p.slug,
+            adminToken: p.adminToken,
+            name: p.name,
+            tournamentName: p.tournamentName,
+            _source: 'server',
+            _status: p.status,
+          })
+        }
+        const mergedEnteredMap = new Map()
+        for (const p of localEntered) mergedEnteredMap.set(`${p.slug}-${p.teamName}`, { ...p, _source: 'local' })
+        for (const p of serverEntered) {
+          mergedEnteredMap.set(`${p.slug}-${p.teamName}`, {
+            slug: p.slug,
+            teamName: p.teamName,
+            name: p.poolName,
+            tournamentName: p.tournamentName,
+            _source: 'server',
+            _status: p.status,
+            totalFantasyPoints: p.totalFantasyPoints,
+          })
+        }
+        const allCommish = Array.from(mergedCommishMap.values())
+        const allEntered = Array.from(mergedEnteredMap.values())
+        // For local-only entries (anonymous browse history), fetch status individually
+        const needsFetchCommish = allCommish.filter(p => !p._status)
+        const needsFetchEntered = allEntered.filter(p => !p._status)
+        await Promise.all([
+          ...needsFetchCommish.map(p =>
+            api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
+          ),
+          ...needsFetchEntered.map(p =>
+            api.getPool(p.slug).then(r => { p._status = r.pool?.status; p.tournamentName = r.pool?.tournament?.name || p.tournamentName }).catch(() => { p._status = 'UNKNOWN' })
+          ),
+        ])
+        setCommish(allCommish)
+        setEntered(allEntered)
+        setLoading(false)
+      } catch {
+        // Auth or network failure — fall back to localStorage only
+        await hydrateLocalOnly()
+      }
+    }
+
+    if (user) {
+      loadServerPools()
+    } else {
+      hydrateLocalOnly()
+    }
+  }, [user])
 
   const handleForgetCommish = (p) => {
     forgetCommishPool(p.slug)
@@ -190,7 +251,7 @@ export default function PoolsLanding() {
 
       {/* Help footer */}
       <div className="text-xs text-text-2/60 font-mono uppercase tracking-wider text-center pt-8 border-t border-text-2/10">
-        Pools are remembered in this browser. Clearing site data will forget them — keep your share / admin links if you switch browsers.
+        Pools you commission or enter while logged in to Clutch are saved to your account. Anonymous entries are remembered in this browser only — clearing site data will forget them.
       </div>
     </div>
   )

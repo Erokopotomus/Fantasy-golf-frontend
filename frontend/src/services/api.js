@@ -451,6 +451,10 @@ class ApiService {
     return this.request('/pools', { method: 'POST', body: JSON.stringify(payload) })
   }
 
+  async getMyPools() {
+    return this.request('/pools/mine')
+  }
+
   async getPool(slug) {
     return this.request(`/pools/${slug}`)
   }
