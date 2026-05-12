@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import PlayerDrawer from '../components/players/PlayerDrawer'
+import PoolEntryDrawer from '../components/pool/PoolEntryDrawer'
 
 // --- Helper components ----------------------------------------------------
 
@@ -118,6 +119,8 @@ export default function PoolView() {
   const [submitError, setSubmitError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
+  const [drawerEntryId, setDrawerEntryId] = useState(null)
+  const [tournamentLeaderboard, setTournamentLeaderboard] = useState(null)
 
   useEffect(() => {
     (async () => {
@@ -129,16 +132,47 @@ export default function PoolView() {
           const lb = await api.getPoolLeaderboard(slug)
           setLeaderboard(lb)
         }
+        // For LOCKED/COMPLETED: also fetch the tournament leaderboard so we can show live scoring
+        if ((p.pool.status === 'LOCKED' || p.pool.status === 'COMPLETED') && p.pool.tournamentId) {
+          const tlb = await api.getTournamentLeaderboard(p.pool.tournamentId).catch(() => null)
+          if (tlb) setTournamentLeaderboard(tlb.leaderboard || tlb)
+        }
       } finally { setLoading(false) }
     })()
   }, [slug])
 
-  // Auto-refresh leaderboard every 60s when LOCKED/COMPLETED
+  // Auto-refresh leaderboard + tournament leaderboard every 60s when LOCKED/COMPLETED
   useEffect(() => {
     if (!pool || (pool.status !== 'LOCKED' && pool.status !== 'COMPLETED')) return
-    const i = setInterval(() => api.getPoolLeaderboard(slug).then(setLeaderboard).catch(() => {}), 60000)
+    const i = setInterval(() => {
+      api.getPoolLeaderboard(slug).then(setLeaderboard).catch(() => {})
+      if (pool.tournamentId) {
+        api.getTournamentLeaderboard(pool.tournamentId)
+          .then(tlb => setTournamentLeaderboard(tlb.leaderboard || tlb))
+          .catch(() => {})
+      }
+    }, 60000)
     return () => clearInterval(i)
   }, [pool, slug])
+
+  // Build playerId → live performance map (totalToPar, today, thru, position, status)
+  const liveByPlayer = useMemo(() => {
+    const m = new Map()
+    if (!tournamentLeaderboard) return m
+    for (const row of tournamentLeaderboard) {
+      const pid = row.player?.id || row.playerId
+      if (!pid) continue
+      m.set(pid, {
+        position: row.position,
+        positionTied: row.positionTied,
+        totalToPar: row.totalToPar,
+        today: row.today,
+        thru: row.thru,
+        status: row.status,
+      })
+    }
+    return m
+  }, [tournamentLeaderboard])
 
   const togglePick = (tierId, playerId, picksRequired) => {
     setEntry(e => {
@@ -539,9 +573,51 @@ export default function PoolView() {
 
         {/* LOCKED / COMPLETED — Leaderboard */}
         {(pool.status === 'LOCKED' || pool.status === 'COMPLETED') && leaderboard && (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Tournament leaders mini board */}
+            {tournamentLeaderboard && tournamentLeaderboard.length > 0 && (
+              <section className="rounded-2xl border border-text-2/15 bg-surface overflow-hidden">
+                <div className="px-5 py-3 border-b border-text-2/10 flex items-baseline justify-between">
+                  <h3 className="font-display font-bold text-text-primary">Tournament leaders</h3>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-2">
+                    {pool.status === 'LOCKED' && <span className="text-live-red">Live · </span>}
+                    Top 10
+                  </span>
+                </div>
+                <div className="divide-y divide-text-2/10">
+                  {tournamentLeaderboard.slice(0, 10).map((row) => {
+                    const pid = row.player?.id || row.playerId
+                    return (
+                      <button
+                        key={pid}
+                        type="button"
+                        onClick={() => setDrawerPlayerId(pid)}
+                        className="w-full text-left px-5 py-2.5 flex items-center gap-3 hover:bg-bg transition-colors"
+                      >
+                        <span className="font-mono text-xs text-text-2 w-8 shrink-0">
+                          {row.positionTied ? 'T' : ''}{row.position || '—'}
+                        </span>
+                        <span className="text-sm leading-none" aria-hidden="true">{row.player?.countryFlag || ''}</span>
+                        <span className="flex-1 min-w-0 font-medium text-text-primary truncate">{row.player?.name}</span>
+                        <span className={`font-mono font-bold text-sm shrink-0 ${
+                          row.totalToPar == null ? 'text-text-2' :
+                          row.totalToPar < 0 ? 'text-field' :
+                          row.totalToPar > 0 ? 'text-live-red' : 'text-text-primary'
+                        }`}>
+                          {row.totalToPar == null ? '—' : row.totalToPar === 0 ? 'E' : row.totalToPar > 0 ? `+${row.totalToPar}` : `${row.totalToPar}`}
+                        </span>
+                        <span className="font-mono text-[10px] text-text-2/70 shrink-0 w-12 text-right">
+                          {row.status === 'CUT' || row.thru === 'CUT' ? 'CUT' : row.thru === 'F' || row.thru === 18 ? 'F' : row.thru ? `Thru ${row.thru}` : '—'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+
             <div className="flex items-baseline justify-between">
-              <h2 className="font-display font-bold text-2xl sm:text-3xl text-text-primary">Leaderboard</h2>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl text-text-primary">Pool standings</h2>
               <div className="font-mono text-[11px] uppercase tracking-wider text-text-2">
                 {leaderboard.leaderboard.length} {leaderboard.leaderboard.length === 1 ? 'entry' : 'entries'}
                 {pool.status === 'LOCKED' && <span className="ml-2 text-live-red">· Live</span>}
@@ -558,12 +634,14 @@ export default function PoolView() {
                 const isYou = yourEntryIds.has(e.id)
                 const rank = i + 1
                 return (
-                  <div
+                  <button
                     key={e.id}
-                    className={`relative rounded-2xl border bg-surface p-4 sm:p-5 transition-colors ${
+                    type="button"
+                    onClick={() => setDrawerEntryId(e.id)}
+                    className={`group relative block w-full text-left rounded-2xl border bg-surface p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-px ${
                       isYou
                         ? 'border-blaze/40 border-l-4 border-l-blaze'
-                        : 'border-text-2/15'
+                        : 'border-text-2/15 hover:border-text-2/30'
                     }`}
                   >
                     <div className="flex items-center gap-3 sm:gap-4">
@@ -584,7 +662,7 @@ export default function PoolView() {
                           {e.entrantName}
                         </div>
 
-                        {/* Pick chips */}
+                        {/* Pick chips (read-only — tap the row to open the entry drawer) */}
                         {e.picks && e.picks.length > 0 && (
                           <div className="mt-2 flex items-center flex-wrap gap-x-2 gap-y-1">
                             {e.picks.map((p, pi) => (
@@ -592,17 +670,7 @@ export default function PoolView() {
                                 {p.player?.countryFlag && (
                                   <span aria-hidden="true">{p.player.countryFlag}</span>
                                 )}
-                                {p.player?.id ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => setDrawerPlayerId(p.player.id)}
-                                    className="font-medium text-text-primary hover:text-blaze transition-colors focus:outline-none focus:text-blaze"
-                                  >
-                                    {lastName(p.player?.name)}
-                                  </button>
-                                ) : (
-                                  <span className="font-medium text-text-primary">{lastName(p.player?.name)}</span>
-                                )}
+                                <span className="font-medium text-text-primary">{lastName(p.player?.name)}</span>
                                 {pi < e.picks.length - 1 && <span className="text-text-2/40 ml-1">·</span>}
                               </span>
                             ))}
@@ -622,7 +690,7 @@ export default function PoolView() {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
@@ -645,6 +713,20 @@ export default function PoolView() {
           course: pool.tournament.course,
           tournamentName: pool.tournament.name,
         } : undefined}
+      />
+
+      <PoolEntryDrawer
+        entry={leaderboard?.leaderboard?.find(e => e.id === drawerEntryId) || null}
+        rank={drawerEntryId ? (leaderboard?.leaderboard?.findIndex(e => e.id === drawerEntryId) ?? -1) + 1 : null}
+        totalEntries={leaderboard?.leaderboard?.length || 0}
+        liveByPlayer={liveByPlayer}
+        isOpen={!!drawerEntryId}
+        onClose={() => setDrawerEntryId(null)}
+        onPlayerClick={(pid) => {
+          if (!pid) return
+          setDrawerEntryId(null)
+          setDrawerPlayerId(pid)
+        }}
       />
     </div>
   )
